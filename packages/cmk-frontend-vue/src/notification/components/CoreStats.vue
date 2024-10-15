@@ -26,17 +26,21 @@ defineProps<{
       </p>
       <div v-if="stats['sites']!.length !== 0" class="table">
         <table class="data even0">
-          <tr class="data even0">
-            <th>{{ stats['i18n']['sites_column_title'] }}</th>
-            <th>{{ stats['i18n']['status_column_title'] }}</th>
-          </tr>
-          <tr v-for="(item, index) in stats['sites']!" :key="index" class="data even0">
-            <td>{{ item }}</td>
-            <td>
-              <CmkIcon name="crit-problem" size="small" />
-              {{ stats['i18n']['disabled_msg'] }}
-            </td>
-          </tr>
+          <thead>
+            <tr class="data even0">
+              <th>{{ stats['i18n']['sites_column_title'] }}</th>
+              <th>{{ stats['i18n']['status_column_title'] }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in stats['sites']!" :key="index" class="data even0">
+              <td>{{ item }}</td>
+              <td>
+                <CmkIcon name="crit-problem" size="small" />
+                {{ stats['i18n']['disabled_msg'] }}
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>

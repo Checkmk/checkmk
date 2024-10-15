@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fileURLToPath, URL } from 'node:url'
-
+import { type RollupLog } from 'rollup'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -35,6 +35,20 @@ export default defineConfig(({ command }) => {
       manifest: '.manifest.json',
       sourcemap: true,
       rollupOptions: {
+        onwarn: function (message: string | RollupLog) {
+          if (typeof message === 'object') {
+            console.warn(message.message)
+            if (message.code === 'CIRCULAR_DEPENDENCY') {
+              // TODO: resolve them, and enable this CMK-19654
+              return
+            }
+          } else {
+            console.warn(message)
+          }
+          if (command === 'build') {
+            throw new Error('no warnings allowed!')
+          }
+        },
         input: {
           'main.js': './src/main.ts',
           'stage1.js': './src/stage1.ts'

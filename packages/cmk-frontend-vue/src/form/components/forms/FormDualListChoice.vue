@@ -141,132 +141,135 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 <template>
   <div class="container">
     <table class="vue multiple_choice">
-      <tr class="table-header">
-        <td class="head">
-          <div class="selected-info">
-            <div class="title">{{ props.spec.i18n.available_options }}</div>
-            <div>
-              {{ availableSelected.length }}/{{ props.spec.elements.length }}
-              {{ props.spec.i18n.selected }}
+      <thead>
+        <tr class="table-header">
+          <td class="head">
+            <div class="selected-info">
+              <div class="title">{{ props.spec.i18n.available_options }}</div>
+              <div>
+                {{ availableSelected.length }}/{{ props.spec.elements.length }}
+                {{ props.spec.i18n.selected }}
+              </div>
             </div>
-          </div>
-          <div class="search-input-wrapper" :class="!!searchInactive ? 'active' : ''">
-            <input
-              ref="search-inactive-input"
-              tabindex="1"
-              class="search"
-              data-testid="search-inactive"
-              @input="
-                (e: Event) => {
-                  searchInactive = (e.target as HTMLInputElement).value
-                  cleanSelection()
-                }
-              "
-            />
-            <span class="icon" @click="searchInactiveInput?.focus()">
-              <img />
-            </span>
-          </div>
-        </td>
-        <td class="buttons"></td>
-        <td class="head">
-          <div class="selected-info">
-            <div class="title">{{ props.spec.i18n.selected_options }}</div>
-            <div>
-              {{ activeSelected.length }}/{{ props.spec.elements.length }}
-              {{ props.spec.i18n.selected }}
+            <div class="search-input-wrapper" :class="!!searchInactive ? 'active' : ''">
+              <input
+                ref="search-inactive-input"
+                tabindex="1"
+                class="search"
+                data-testid="search-inactive"
+                @input="
+                  (e: Event) => {
+                    searchInactive = (e.target as HTMLInputElement).value
+                    cleanSelection()
+                  }
+                "
+              />
+              <span class="icon" @click="searchInactiveInput?.focus()">
+                <img />
+              </span>
             </div>
-          </div>
-          <div class="search-input-wrapper" :class="!!searchActive ? 'active' : ''">
-            <input
-              ref="search-active-input"
-              tabindex="3"
-              class="search"
-              data-testid="search-active"
-              @input="
-                (e: Event) => {
-                  searchActive = (e.target as HTMLInputElement).value
-                  cleanSelection()
-                }
-              "
-            />
-            <span class="icon" @click="searchActiveInput?.focus()">
-              <img />
-            </span>
-          </div>
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          <div v-if="items.inactive.length > 0">
-            <select
-              :id="`${componentId}_available`"
-              v-model="availableSelected"
-              tabindex="2"
-              aria-label="available"
-              multiple
-              :style="selectStyle"
-            >
-              <option
-                v-for="element in items.inactive"
-                :key="JSON.stringify(element.name)"
-                :value="element.name"
-                @dblclick="() => handleDoubleClickToAddItem(element.name)"
+          </td>
+          <td class="buttons"></td>
+          <td class="head">
+            <div class="selected-info">
+              <div class="title">{{ props.spec.i18n.selected_options }}</div>
+              <div>
+                {{ activeSelected.length }}/{{ props.spec.elements.length }}
+                {{ props.spec.i18n.selected }}
+              </div>
+            </div>
+            <div class="search-input-wrapper" :class="!!searchActive ? 'active' : ''">
+              <input
+                ref="search-active-input"
+                tabindex="3"
+                class="search"
+                data-testid="search-active"
+                @input="
+                  (e: Event) => {
+                    searchActive = (e.target as HTMLInputElement).value
+                    cleanSelection()
+                  }
+                "
+              />
+              <span class="icon" @click="searchActiveInput?.focus()">
+                <img />
+              </span>
+            </div>
+          </td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div v-if="items.inactive.length > 0">
+              <select
+                :id="`${componentId}_available`"
+                v-model="availableSelected"
+                tabindex="2"
+                aria-label="available"
+                multiple
+                :style="selectStyle"
               >
-                {{ element.title }}
-              </option>
-            </select>
-          </div>
+                <option
+                  v-for="element in items.inactive"
+                  :key="JSON.stringify(element.name)"
+                  :value="element.name"
+                  @dblclick="() => handleDoubleClickToAddItem(element.name)"
+                >
+                  {{ element.title }}
+                </option>
+              </select>
+            </div>
 
-          <div v-else :style="selectStyle" class="no-element-in-select">
-            {{ props.spec.i18n.no_elements_available }}
-          </div>
-        </td>
-        <td>
-          <div class="centered-container">
-            <button type="button" :disabled="availableSelected.length === 0" @click="addSelected">
-              {{ props.spec.i18n.add }}
-            </button>
-            <button type="button" @click="toggleAll(true)">{{ props.spec.i18n.add_all }}</button>
-            <button type="button" @click="toggleAll(false)">
-              {{ props.spec.i18n.remove_all }}
-            </button>
-            <button
-              type="button"
-              :disabled="activeSelected.length === 0"
-              value="<"
-              @click="removeSelected"
-            >
-              {{ props.spec.i18n.remove }}
-            </button>
-          </div>
-        </td>
-        <td>
-          <div v-if="items.active.length > 0">
-            <select
-              :id="`${componentId}_active`"
-              v-model="activeSelected"
-              tabindex="4"
-              aria-label="active"
-              multiple
-              :style="selectStyle"
-            >
-              <option
-                v-for="element in items.active"
-                :key="JSON.stringify(element.name)"
-                :value="element.name"
-                @dblclick="() => handleDoubleClickToRemoveItem(element.name)"
+            <div v-else :style="selectStyle" class="no-element-in-select">
+              {{ props.spec.i18n.no_elements_available }}
+            </div>
+          </td>
+          <td>
+            <div class="centered-container">
+              <button type="button" :disabled="availableSelected.length === 0" @click="addSelected">
+                {{ props.spec.i18n.add }}
+              </button>
+              <button type="button" @click="toggleAll(true)">{{ props.spec.i18n.add_all }}</button>
+              <button type="button" @click="toggleAll(false)">
+                {{ props.spec.i18n.remove_all }}
+              </button>
+              <button
+                type="button"
+                :disabled="activeSelected.length === 0"
+                value="<"
+                @click="removeSelected"
               >
-                {{ element.title }}
-              </option>
-            </select>
-          </div>
-          <div v-else :style="selectStyle" class="no-element-in-select">
-            {{ props.spec.i18n.no_elements_selected }}
-          </div>
-        </td>
-      </tr>
+                {{ props.spec.i18n.remove }}
+              </button>
+            </div>
+          </td>
+          <td>
+            <div v-if="items.active.length > 0">
+              <select
+                :id="`${componentId}_active`"
+                v-model="activeSelected"
+                tabindex="4"
+                aria-label="active"
+                multiple
+                :style="selectStyle"
+              >
+                <option
+                  v-for="element in items.active"
+                  :key="JSON.stringify(element.name)"
+                  :value="element.name"
+                  @dblclick="() => handleDoubleClickToRemoveItem(element.name)"
+                >
+                  {{ element.title }}
+                </option>
+              </select>
+            </div>
+            <div v-else :style="selectStyle" class="no-element-in-select">
+              {{ props.spec.i18n.no_elements_selected }}
+            </div>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
   <FormValidation :validation="validation"></FormValidation>

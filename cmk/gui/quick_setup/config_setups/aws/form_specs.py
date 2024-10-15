@@ -241,7 +241,7 @@ def quick_setup_stage_3() -> Mapping[str, DictElement]:
     }
 
 
-def quick_setup_advanced() -> Mapping[str, DictElement]:
+def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
     return {
         "proxy_details": DictElement(
             parameter_form=Dictionary(
@@ -274,13 +274,25 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
                 },
             ),
         ),
-        **_formspec_aws_api_access(),
-        **_formspec_aws_piggyback_naming_convention(),
+    }
+
+
+def formspec_aws_overall_tags() -> Mapping[str, DictElement]:
+    return {
         "overall_tags": DictElement(
             parameter_form=formspec_aws_tags(
                 Title("Restrict monitoring services by one of these AWS tags")
             ),
         ),
+    }
+
+
+def quick_setup_advanced() -> Mapping[str, DictElement]:
+    return {
+        **formspec_aws_proxy_details(),
+        **_formspec_aws_api_access(),
+        **_formspec_aws_piggyback_naming_convention(),
+        **formspec_aws_overall_tags(),
     }
 
 

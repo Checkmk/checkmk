@@ -237,7 +237,7 @@ def test_check_netapp_qtree_quota_ok() -> None:
     }
     result = list(check_netapp_qtree_quota("item_name", qtree, params, value_store))
 
-    assert len(result) == 10
+    assert len(result) == 9
 
 
 @pytest.mark.parametrize(

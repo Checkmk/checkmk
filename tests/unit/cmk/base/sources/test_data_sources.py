@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -14,6 +14,7 @@ from cmk.ccc.exceptions import OnError
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.fetchers import (
@@ -30,6 +31,16 @@ from cmk.checkengine.parser import NO_SELECTION
 
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
+
+
+def _dummy_rule_spec(host_name: HostName, value: Mapping[str, object] | str) -> RuleSpec:
+    return {
+        "condition": {
+            "host_name": [host_name],
+        },
+        "id": "02",
+        "value": value,
+    }
 
 
 def _make_sources(
@@ -111,6 +122,25 @@ def test_agent_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     ] == [TCPFetcher, PiggybackFetcher]
 
 
+def test_agent_host_with_special_agents(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    hostname = HostName("agent-host")
+
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset_bundle(
+        "special_agents",
+        {
+            "jolokia": [_dummy_rule_spec(hostname, {})],
+            "mqtt": [_dummy_rule_spec(hostname, {})],
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert [
+        type(source.fetcher())
+        for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
+    ] == [ProgramFetcher, PiggybackFetcher]
+
+
 @pytest.mark.parametrize("snmp_ds", (TagID("snmp-v1"), TagID("snmp-v2")))
 def test_snmp_host(snmp_ds: TagID, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("snmp-host")
@@ -146,29 +176,11 @@ def test_all_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     ts.add_host(hostname, tags=tags)
     ts.set_ruleset(
         "datasource_programs",
-        [
-            {
-                "condition": {
-                    "host_name": [hostname],
-                },
-                "id": "01",
-                "value": "echo 1",
-            },
-        ],
+        [_dummy_rule_spec(hostname, "")],
     )
     ts.set_option(
         "special_agents",
-        {
-            "jolokia": [
-                {
-                    "condition": {
-                        "host_name": [hostname],
-                    },
-                    "id": "02",
-                    "value": {},
-                },
-            ]
-        },
+        {"jolokia": [_dummy_rule_spec(hostname, {})]},
     )
     config_cache = ts.apply(monkeypatch)
     assert [
@@ -185,17 +197,7 @@ def test_special_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     ts.add_host(hostname, tags=tags)
     ts.set_option(
         "special_agents",
-        {
-            "jolokia": [
-                {
-                    "condition": {
-                        "host_name": [hostname],
-                    },
-                    "id": "02",
-                    "value": {},
-                },
-            ]
-        },
+        {"jolokia": [_dummy_rule_spec(hostname, {})]},
     )
     config_cache = ts.apply(monkeypatch)
     assert [

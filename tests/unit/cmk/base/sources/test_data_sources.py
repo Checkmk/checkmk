@@ -86,7 +86,6 @@ def _make_sources(
     )
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_ping_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("ping-host")
     tags = {TagGroupID("agent"): TagID("no-agent")}
@@ -100,7 +99,6 @@ def test_ping_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     ] == [PiggybackFetcher]
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_agent_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("agent-host")
 
@@ -113,7 +111,6 @@ def test_agent_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     ] == [TCPFetcher, PiggybackFetcher]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("snmp_ds", (TagID("snmp-v1"), TagID("snmp-v2")))
 def test_snmp_host(snmp_ds: TagID, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("snmp-host")
@@ -128,7 +125,6 @@ def test_snmp_host(snmp_ds: TagID, monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     ] == [SNMPFetcher, PiggybackFetcher]
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_dual_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("dual-host")
     tags = {TagGroupID("agent"): TagID("cmk-agent"), TagGroupID("snmp_ds"): TagID("snmp-v2")}
@@ -142,7 +138,6 @@ def test_dual_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     ] == [TCPFetcher, SNMPFetcher, PiggybackFetcher]
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_all_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("all-agents-host")
     tags = {TagGroupID("agent"): TagID("all-agents")}
@@ -182,7 +177,6 @@ def test_all_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
     ] == [ProgramFetcher, ProgramFetcher, PiggybackFetcher]
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_special_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     hostname = HostName("all-special-host")
     tags = {TagGroupID("agent"): TagID("special-agents")}

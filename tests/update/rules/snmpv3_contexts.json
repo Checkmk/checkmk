@@ -1,0 +1,12 @@
+[
+  {
+    "ruleset": "snmpv3_contexts",
+    "folder": "/",
+    "properties": {
+      "description": "My SNMPv3 context rule",
+        "comment": "My SNMPv3 context rule"
+    },
+    "value_raw": "(None, ['80001f8880542a8800a0b01010103@myContext'], 'stop_on_timeout')",
+    "conditions": {}
+  }
+]

@@ -16,7 +16,6 @@ from cmk.gui import (
     crash_handler,
     crash_reporting,
     cron,
-    customer,
     default_permissions,
     graphing,
     gui_background_job,
@@ -209,7 +208,6 @@ def register() -> None:
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(endpoint_registry, job_registry)
-    customer.CustomerAPIClass = customer.CustomerAPIStub
 
     register_userroles(config_file_registry)
     groups_io.register(config_file_registry)

@@ -14,6 +14,7 @@ from cmk.gui import hooks, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.custom_icons.registration import custom_icons_register
+from cmk.gui.customer import customer_api_registry, CustomerAPIStub
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
@@ -84,6 +85,7 @@ def register(edition: Edition) -> None:
             livestatus_only_sites_postprocess=lambda x: list(x) if x else None,
         )
     )
+    customer_api_registry.register(CustomerAPIStub(str(edition)))
     visuals.register(
         page_registry,
         visual_info_registry,

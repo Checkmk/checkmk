@@ -8,6 +8,7 @@ import { computed, ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { type FormSpecWidgetProps } from './widget_types'
 import type { ValidationMessages } from '@/form'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<FormSpecWidgetProps>()
 const emit = defineEmits(['update'])

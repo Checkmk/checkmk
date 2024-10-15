@@ -204,8 +204,7 @@ def quick_setup_guided_mode(
             ),
         ),
         complete_buttons=[
-            CompleteButton(id=save_action.id, label=save_action.label)
-            for save_action in quick_setup.actions
+            CompleteButton(id=action.id, label=action.label) for action in quick_setup.actions
         ],
     )
 
@@ -313,7 +312,6 @@ def quick_setup_overview_mode(
             for stage in stages
         ],
         complete_buttons=[
-            CompleteButton(id=save_action.id, label=save_action.label)
-            for save_action in quick_setup.actions
+            CompleteButton(id=action.id, label=action.label) for action in quick_setup.actions
         ],
     )

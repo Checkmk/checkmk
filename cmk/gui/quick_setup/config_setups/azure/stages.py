@@ -217,7 +217,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
     )
 
 
-def save_action(
+def action(
     all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
 ) -> str:
     match mode:
@@ -253,7 +253,7 @@ quick_setup_azure = QuickSetup(
         QuickSetupAction(
             id="activate_changes",
             label=_("Save & go to Activate changes"),
-            action=save_action,
+            action=action,
         ),
     ],
 )

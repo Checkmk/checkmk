@@ -55,9 +55,10 @@ const emit = defineEmits(['close'])
   position: fixed;
   top: 0;
   right: 0;
-  height: 100%;
+  bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-background-color);
+  overflow: auto;
 
   &[data-state='open'] {
     animation: slide-in__content-show 0.2s ease-in-out;

@@ -16,6 +16,7 @@ const data = ref<Record<string, Record<string, unknown>>>({
   some_topic_id: { element_ident: 'string content' }
 })
 
+const scrollOpen = ref<boolean>(false)
 const open = ref<boolean>(false)
 
 const catalog = ref<Catalog>({
@@ -53,6 +54,7 @@ const catalog = ref<Catalog>({
 </script>
 
 <template>
+  <h2>With embedded Form</h2>
   <CmkButton type="tertiary" @click="open = !open">trigger button text</CmkButton>
   <SlideIn :open="open" :header="{ title: 'some title', closeButton: true }" @close="open = false">
     <div style="margin-bottom: 1em">
@@ -64,6 +66,15 @@ const catalog = ref<Catalog>({
     </div>
   </SlideIn>
   <pre>{{ data }}</pre>
+  <h2>With very long content</h2>
+  <CmkButton @click="scrollOpen = !scrollOpen">open another slidein</CmkButton>
+  <SlideIn
+    :open="scrollOpen"
+    :header="{ title: 'some title', closeButton: true }"
+    @close="scrollOpen = false"
+  >
+    <div v-for="i in 100" :key="i">{{ i }} <br /></div>
+  </SlideIn>
 </template>
 
 <style scoped>

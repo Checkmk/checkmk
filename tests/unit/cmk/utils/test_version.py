@@ -43,7 +43,15 @@ class TestVersion:
     def test_invalid_combo(self) -> None:
         # currently invalid.
         with pytest.raises(ValueError):
-            _version = Version.from_str("1.2.3b5-2023.01.01")
+            Version.from_str("1.2.3b5-2023.01.01")
+        with pytest.raises(ValueError):
+            Version.from_str("2.2.0rc1")
+        with pytest.raises(ValueError):
+            Version.from_str("2.2.0p5-rc")
+
+    def test_roundtrip(self) -> None:
+        v = Version.from_str("2.3.0p34-rc42")
+        assert Version.from_str(str(v)) == v
 
     def test_version_base_master(self) -> None:
         assert Version.from_str("1984.04.01").version_base == ""
@@ -54,24 +62,31 @@ class TestVersion:
     def test_version_base_release(self) -> None:
         assert Version.from_str("4.5.6p8").version_base == "4.5.6"
 
+    def test_version_release_candidate(self) -> None:
+        assert Version.from_str("2.3.0b4-rc1").release_candidate.value == 1
+
     @pytest.mark.parametrize(
         "vers, expected",
         [
             (
                 Version.from_str("1.2.3"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=RType.na, value=0))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=RType.na, value=0), _ReleaseCandidate(value=None))",
             ),
             (
                 Version.from_str("2024.03.14"),
-                "Version(None, _Release(r_type=RType.daily, value=_BuildDate(year=2024, month=3, day=14)))",
+                "Version(None, _Release(r_type=RType.daily, value=_BuildDate(year=2024, month=3, day=14)), _ReleaseCandidate(value=None))",
             ),
             (
                 Version.from_str("3.4.5p8"),
-                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(r_type=RType.p, value=8))",
+                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(r_type=RType.p, value=8), _ReleaseCandidate(value=None))",
             ),
             (
                 Version.from_str("1.2.3-2024.09.09"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=RType.daily, value=_BuildDate(year=2024, month=9, day=9)))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(r_type=RType.daily, value=_BuildDate(year=2024, month=9, day=9)), _ReleaseCandidate(value=None))",
+            ),
+            (
+                Version.from_str("2.2.0p5-rc1"),
+                "Version(_BaseVersion(major=2, minor=2, sub=0), _Release(r_type=RType.p, value=5), _ReleaseCandidate(value=1))",
             ),
         ],
     )
@@ -143,10 +158,17 @@ class TestVersion:
                 Version.from_str("2.1.0-2022.06.02-sandbox-lm-2.2-thing"),
             ),
             (Version.from_str("3.4.5p8"), Version.from_str("3.5.5p4")),
+            (Version.from_str("2.3.0p8-rc1"), Version.from_str("2.3.0p8-rc2")),
+            (Version.from_str("2.3.0p8-rc1"), Version.from_str("2.3.0p9")),
+            (Version.from_str("2.3.0p8"), Version.from_str("2.3.0p9-rc1")),
         ],
     )
     def test_lt(self, smaller: Version, bigger: Version) -> None:
         assert smaller < bigger
+
+    def test_lt_unknown(self) -> None:
+        with pytest.raises(ValueError):
+            _ = Version.from_str("2.3.0p8-rc1") < Version.from_str("2.3.0p8")
 
     @pytest.mark.parametrize(
         "one, other, equal",
@@ -168,6 +190,8 @@ class TestVersion:
                 False,
             ),
             (Version.from_str("2024.03.13"), Version.from_str("3.4.5p8"), False),
+            (Version.from_str("2.3.0p5-rc2"), Version.from_str("2.3.0p5-rc2"), True),
+            (Version.from_str("2.3.0p5-rc2"), Version.from_str("2.3.0p5-rc3"), False),
         ],
     )
     def test_eq(self, one: Version, other: Version, equal: bool) -> None:

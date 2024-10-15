@@ -158,6 +158,23 @@ class BuildDate:
         return f"{self.year:04}.{self.month:02}.{self.day:02}"
 
 
+@dataclass
+class _ReleaseCandidate:
+    value: int | None
+
+    def __lt__(self, other: _ReleaseCandidate) -> bool:
+        match self.value, other.value:
+            case None, None:
+                return False
+            case int() as this, int() as that:
+                return this < that
+            case _:
+                raise ValueError(
+                    "This comparision can only be evaluated by looking at the git history: "
+                    "We cannot tell if a release candidate was released as an official release (without the rc suffix)."
+                )
+
+
 @dataclass(order=True)
 class _Release:
     release_type: ReleaseType
@@ -194,7 +211,10 @@ class Version:
     _PAT_BASE = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
     _PAT_DATE = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
-    _RGX_STABLE = re.compile(rf"{_PAT_BASE}(?:{_PAT_BUILD})?")  # e.g. "2.1.0p17"
+    _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
+    _RGX_STABLE = re.compile(
+        rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?"
+    )  # e.g. "2.1.0p17-rc3"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # -> The master branch also uses the [branch_version]-[date] schema since 2023-11-16.
@@ -215,13 +235,30 @@ class Version:
         if not (match := cls._RGX_STABLE.fullmatch(vstring)):
             raise ValueError(f'Invalid version string "{vstring}"')
 
-        match match.group(1, 2, 3, 4, 5):
-            case major, minor, sub, None, None:
-                return cls(_BaseVersion(int(major), int(minor), int(sub)), _Release.unspecified())
-            case major, minor, sub, release_type, patch:
+        match match.group(1, 2, 3, 4, 5, 6):
+            case major, minor, sub, None, None, None:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release.unspecified(),
+                    _ReleaseCandidate(None),
+                )
+            case major, minor, sub, None, None, rc:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release.unspecified(),
+                    _ReleaseCandidate(int(rc)),
+                )
+            case major, minor, sub, release_type, patch, None:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
                     _Release(ReleaseType[release_type], int(patch)),
+                    _ReleaseCandidate(None),
+                )
+            case major, minor, sub, release_type, patch, rc:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release(ReleaseType[release_type], int(patch)),
+                    _ReleaseCandidate(int(rc)),
                 )
 
         raise ValueError(f'Cannot parse version string "{vstring}".')
@@ -240,37 +277,58 @@ class Version:
                 else _BaseVersion(int(major), int(minor), int(sub))
             ),
             _Release(ReleaseType.daily, BuildDate(int(year), int(month), int(day))),
+            _ReleaseCandidate(None),
         )
 
-    def __init__(self, base: _BaseVersion | None, release: _Release) -> None:
+    def __init__(
+        self,
+        base: _BaseVersion | None,
+        release: _Release,
+        release_candidate: _ReleaseCandidate,
+    ) -> None:
         self.base: Final = base
         self.release: Final = release
+        self.release_candidate: Final = release_candidate
 
     @property
     def version_base(self) -> str:
         return "" if self.base is None else str(self.base)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.base!r}, {self.release!r})"
+        return f"{self.__class__.__name__}({self.base!r}, {self.release!r}, {self.release_candidate!r})"
 
     def __str__(self) -> str:
-        return f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip("-")
+        optional_rc_suffix = (
+            "" if self.release_candidate.value is None else f"-rc{self.release_candidate.value}"
+        )
+        return f"{'' if self.base is None else self.base}{self.release.suffix()}{optional_rc_suffix}".lstrip(
+            "-"
+        )
 
     def __lt__(self, other: Version) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
-        if self.base == other.base:
+
+        if self.base != other.base:
+            if other.base is None:
+                return True
+            if self.base is None:
+                return False
+            return self.base < other.base
+
+        if self.release != other.release:
             return self.release < other.release
-        if self.base is None:
-            return False
-        if other.base is None:
-            return True
-        return self.base < other.base
+
+        return self.release_candidate < other.release_candidate
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
-        return self.base == other.base and self.release == other.release
+        return (
+            self.base == other.base
+            and self.release == other.release
+            and self.release_candidate == other.release_candidate
+        )
 
 
 VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")

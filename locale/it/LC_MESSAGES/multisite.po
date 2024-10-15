@@ -41646,6 +41646,10 @@ msgstr "Eventi attuali in generale"
 msgid "Overall latency"
 msgstr "Latenza complessiva"
 
+#, fuzzy
+msgid "Overall response time"
+msgstr "Tempo medio di risposta"
+
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr "Stato generale di una macchina virtuale (per esempio le VM ESX)"
 
@@ -46097,6 +46101,10 @@ msgstr "Vita rimanente"
 
 msgid "Remaining Open Slots"
 msgstr "Slot rimanenti aperti"
+
+#, fuzzy
+msgid "Remaining certificate validity time"
+msgstr "Tempo di validità residuo"
 
 msgid "Remaining credits lower levels"
 msgstr "Crediti rimanenti livelli inferiori"

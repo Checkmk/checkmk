@@ -42066,6 +42066,10 @@ msgstr "Algemene actualiteit"
 msgid "Overall latency"
 msgstr "Totale latentie"
 
+#, fuzzy
+msgid "Overall response time"
+msgstr "Gemiddelde reactietijd"
+
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr "Algemene toestand van een virtuele machine (bijvoorbeeld ESX-VM's)"
 
@@ -46559,6 +46563,10 @@ msgstr "Resterende levensduur"
 
 msgid "Remaining Open Slots"
 msgstr "Overblijvende Open Slots"
+
+#, fuzzy
+msgid "Remaining certificate validity time"
+msgstr "Resterende dagen van geldigheid"
 
 msgid "Remaining credits lower levels"
 msgstr "Resterende kredieten lagere niveaus"

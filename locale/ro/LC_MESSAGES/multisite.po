@@ -42104,6 +42104,10 @@ msgstr "Evenimente curente generale"
 msgid "Overall latency"
 msgstr "Latență generală"
 
+#, fuzzy
+msgid "Overall response time"
+msgstr "Timp mediu de răspuns"
+
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr ""
 "Starea generală a unei mașini virtuale (de exemplu, mașinile virtuale ESX)"
@@ -46595,6 +46599,10 @@ msgstr "Viața rămasă"
 
 msgid "Remaining Open Slots"
 msgstr "Sloturi rămase deschise"
+
+#, fuzzy
+msgid "Remaining certificate validity time"
+msgstr "Perioada de valabilitate rămasă"
 
 msgid "Remaining credits lower levels"
 msgstr "Credite rămase niveluri inferioare"

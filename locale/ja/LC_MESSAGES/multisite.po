@@ -40701,6 +40701,10 @@ msgstr "現在の全体的なイベント"
 msgid "Overall latency"
 msgstr "全体的な遅延"
 
+#, fuzzy
+msgid "Overall response time"
+msgstr "平均応答時間"
+
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr "仮想マシン(ESX VMなど)の全体的な状態"
 
@@ -45133,6 +45137,10 @@ msgstr "残りのライフ"
 
 msgid "Remaining Open Slots"
 msgstr "残りの空きスロット"
+
+#, fuzzy
+msgid "Remaining certificate validity time"
+msgstr "有効期間の残り日数"
 
 msgid "Remaining credits lower levels"
 msgstr "残存単位数 下位レベル"

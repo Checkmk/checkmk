@@ -102,7 +102,7 @@ class CmkPage(LocatorHelper):
         self.main_area.check_page_title("Add sidebar element")
 
     def press_keyboard(self, key: Keys) -> None:
-        logger.info("Press keyboard key: %d", key.value)
+        logger.info("Press keyboard key: %s", key.value)
         self.page.keyboard.press(str(key.value))
 
     def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:

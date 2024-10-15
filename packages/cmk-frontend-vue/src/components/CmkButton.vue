@@ -10,17 +10,17 @@ import CmkIcon from '@/components/CmkIcon.vue'
 const buttonVariants = cva('', {
   variants: {
     type: {
-      primary: 'button__type-primary',
-      secondary: 'button__type-secondary',
-      tertiary: 'button__type-tertiary'
+      primary: 'button--type-primary',
+      secondary: 'button--type-secondary',
+      tertiary: 'button--type-tertiary'
     },
     spacing: {
-      small: 'button__spacing-small',
-      medium: 'button__spacing-medium'
+      small: 'button--spacing-small',
+      medium: ''
     },
     variant: {
-      submit: 'button__type-primary',
-      cancel: 'button__type-secondary'
+      submit: 'button--type-primary',
+      cancel: 'button--type-secondary'
     }
   },
   defaultVariants: {
@@ -57,10 +57,10 @@ defineProps<ButtonProps>()
 .button + .button {
   margin-left: 10px;
 }
-.button__type-primary {
+.button--type-primary {
   border: 1px solid var(--default-submit-button-border-color);
 }
-.button__type-tertiary {
+.button--type-tertiary {
   background: none;
   border: none;
   text-decoration: underline var(--success);
@@ -68,7 +68,7 @@ defineProps<ButtonProps>()
   margin: 0;
   font-weight: normal;
 }
-.button__spacing-small {
+.button--spacing-small {
   padding: 5px 8px;
 }
 </style>

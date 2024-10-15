@@ -27,7 +27,7 @@ from ._utils import (
 
 T = TypeVar("T")
 
-NO_SELECTION = ""
+NO_SELECTION = None
 
 
 class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], T]):
@@ -85,7 +85,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[shared_type_defs.SingleChoice, str]:
+    ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [

@@ -44,7 +44,7 @@ def test_invalid_single_choice_validator_keep(
     visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
-    assert vue_value == ""
+    assert vue_value is None
 
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)
@@ -73,7 +73,7 @@ def test_invalid_single_choice_validator_complain(
     visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
-    assert vue_value == ""
+    assert vue_value is None
 
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)
@@ -97,7 +97,7 @@ def test_invalid_single_choice_validator_none(
     visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
     # Do not send invalid value to vue
-    assert vue_value == ""
+    assert vue_value is None
 
     # Create validation message
     validation_messages = visitor.validate(invalid_choice)

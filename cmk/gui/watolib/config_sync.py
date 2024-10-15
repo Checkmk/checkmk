@@ -350,6 +350,8 @@ class SnapshotCreationBase:
 
 
 class SnapshotCreator(SnapshotCreationBase):
+    """Packe the snapshots into snapshot archives"""
+
     def __init__(
         self, activation_work_dir: str, all_generic_components: list[ReplicationPath]
     ) -> None:

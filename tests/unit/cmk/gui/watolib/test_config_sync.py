@@ -27,6 +27,7 @@ import cmk.gui.mkeventd.wato
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
+from cmk.gui.watolib.snapshots import SnapshotManager
 
 from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
@@ -265,9 +266,7 @@ def _generate_sync_snapshot(
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
-    snapshot_manager = activate_changes.SnapshotManager.factory(
-        str(work_dir), site_snapshot_settings, edition
-    )
+    snapshot_manager = SnapshotManager.factory(str(work_dir), site_snapshot_settings, edition)
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
     snapshot_manager.generate_snapshots()

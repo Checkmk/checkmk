@@ -12,14 +12,12 @@ import multiprocessing.pool
 import os
 import shutil
 import subprocess
-from collections.abc import Callable
 from pathlib import Path
 
 from livestatus import SiteId
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Edition
 
 import cmk.utils.paths
 
@@ -44,7 +42,6 @@ tracer = trace.get_tracer()
 def make_cre_snapshot_manager(
     work_dir: str,
     site_snapshot_settings: dict[SiteId, SnapshotSettings],
-    edition: Edition,
 ) -> SnapshotManager:
     return SnapshotManager(
         work_dir,
@@ -56,10 +53,6 @@ def make_cre_snapshot_manager(
 
 
 class SnapshotManager:
-    factory: Callable[[str, dict[SiteId, SnapshotSettings], Edition], SnapshotManager] = (
-        make_cre_snapshot_manager
-    )
-
     def __init__(
         self,
         activation_work_dir: str,

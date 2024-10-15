@@ -1707,9 +1707,9 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = SnapshotManager.factory(
-                work_dir, site_snapshot_settings, version.edition(paths.omd_root)
-            )
+            snapshot_manager = activation_features_registry[
+                str(version.edition(paths.omd_root))
+            ].snapshot_manager_factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -3462,6 +3462,7 @@ def activate_changes_wait(
 class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
+    snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):

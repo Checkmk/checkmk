@@ -3492,6 +3492,15 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         )
 
     def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if (referer := request.referer) and referer.endswith("mode=notification_rule_quick_setup"):
+            html.javascript(
+                "cmk.wato.message(%s, %s)"
+                % (
+                    json.dumps(_("New notification rule successfully created!")),
+                    json.dumps("success"),
+                )
+            )
         html.vue_app(
             app_name="quick_setup",
             data={

@@ -65,10 +65,9 @@ public:
         // empty assumes 24X7
         return tp.empty() || g_timeperiods_cache->inTimeperiod(tp);
     }
-    [[nodiscard]] std::string name() const override {
+    [[nodiscard]] std::string description() const override {
         return service_.description == nullptr ? "" : service_.description;
     }
-    [[nodiscard]] std::string description() const override { return name(); }
     [[nodiscard]] std::string host_name() const override {
         return service_.host_name == nullptr ? "" : service_.host_name;
     }

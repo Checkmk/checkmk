@@ -12,7 +12,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
-from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -175,14 +174,11 @@ def _configure() -> Sequence[Widget]:
             title="Other options",
             items=[
                 FormSpecWrapper(
-                    id=FormSpecId("aws_tags"),
+                    id=FormSpecId("aws_other_options"),
                     form_spec=DictionaryExtended(
                         elements={
-                            "overall_tags": DictElement(
-                                parameter_form=ruleset_helper.formspec_aws_tags(
-                                    Title("Restrict monitoring services by one of these AWS tags")
-                                ),
-                            ),
+                            **aws.formspec_aws_overall_tags(),
+                            **aws.formspec_aws_proxy_details(),
                         },
                         layout=DictionaryLayout.two_columns,
                     ),

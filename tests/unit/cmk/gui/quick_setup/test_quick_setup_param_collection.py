@@ -69,7 +69,7 @@ ALL_FORM_SPEC_DATA: ParsedFormData = {
         },
     },
     FormSpecId("site"): {QSSiteSelection: "my_site"},
-    FormSpecId("aws_tags"): {"overall_tags": {}},
+    FormSpecId("aws_other_options"): {"overall_tags": {}, "proxy_details": {}},
 }
 
 EXPECTED_PARAMS = {
@@ -82,6 +82,7 @@ EXPECTED_PARAMS = {
     "regions_to_monitor": {
         "input_context": {},
     },
+    "proxy_details": {},
     "global_services": {},
     "services": {
         "ec2": ["all", {"limits": "limits"}],

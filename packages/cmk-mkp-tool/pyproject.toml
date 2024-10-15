@@ -1,7 +1,6 @@
 [project]
 name = "cmk-mkp-tool"
 version = "0.2.0"
-dependencies = ["pydantic"]
 
 [build-system]
 requires = ["setuptools"]

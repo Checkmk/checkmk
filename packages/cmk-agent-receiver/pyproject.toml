@@ -1,15 +1,6 @@
 [project]
 name = "cmk-agent-receiver"
 version = "1.0.0"
-dependencies = [
-  "cryptography",
-  "fastapi",
-  "gunicorn",
-  "python-dateutil",
-  "python-multipart",
-  "requests",
-  "uvicorn",
-]
 
 [build-system]
 requires = ["setuptools"]

@@ -1,5 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_py//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = [":__subpackages__"])
 

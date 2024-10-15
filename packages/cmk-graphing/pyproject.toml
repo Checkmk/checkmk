@@ -1,7 +1,6 @@
 [project]
 name = "cmk-graphing"
 version = "1.0.0"
-dependencies = []
 
 [build-system]
 requires = ["setuptools"]

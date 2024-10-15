@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "fa9fde75d97ab1bda60e62b40ff8f3edcc988e6cff4d5cc0ca3327d037c0e711",
+  "moduleFileHash": "ef7c3e4da7b28f58a726375473c425af7acc2e1e13c7f59f44646a48fc4c6110",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -93,48 +93,14 @@
             "column": 20
           },
           "imports": {
-            "cmk_agent_based": "cmk_agent_based",
-            "cmk_werks": "cmk_werks",
-            "cmk_py": "cmk_py"
+            "cmk_requirements": "cmk_requirements"
           },
           "devImports": [],
           "tags": [
             {
               "tagName": "parse",
               "attributeValues": {
-                "hub_name": "cmk_agent_based",
-                "python_version": "3.12.3",
-                "requirements_by_platform": {
-                  "//packages/cmk-agent-based:requirements_lock.txt": "linux_*"
-                }
-              },
-              "devDependency": false,
-              "location": {
-                "file": "@@//:MODULE.bazel",
-                "line": 41,
-                "column": 10
-              }
-            },
-            {
-              "tagName": "parse",
-              "attributeValues": {
-                "hub_name": "cmk_werks",
-                "python_version": "3.12.3",
-                "requirements_by_platform": {
-                  "//packages/cmk-werks:requirements_lock.txt": "linux_*"
-                }
-              },
-              "devDependency": false,
-              "location": {
-                "file": "@@//:MODULE.bazel",
-                "line": 49,
-                "column": 10
-              }
-            },
-            {
-              "tagName": "parse",
-              "attributeValues": {
-                "hub_name": "cmk_py",
+                "hub_name": "cmk_requirements",
                 "python_version": "3.12.3",
                 "requirements_by_platform": {
                   "@//:requirements_lock.txt": "linux_*"
@@ -146,7 +112,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 57,
+                "line": 41,
                 "column": 10
               }
             }

@@ -1,7 +1,6 @@
 [project]
 name = "cmk-werks"
 version = "1.0.0"
-dependencies = ["pydantic", "lxml", "markdown", "pytest", "GitPython"]
 
 [build-system]
 requires = ["setuptools"]

@@ -278,7 +278,7 @@ Pipfile.lock:
 			fi; \
 			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
 			|| ( $(RM) -r .venv ; exit 1 ) \
-			&& ( bazel run //cmk:requirements.update ) \
+			&& ( bazel run //:requirements.update ) \
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

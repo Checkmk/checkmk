@@ -71,7 +71,6 @@ omd/pkgs_by_bzl/
 bazel_execution_log*.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
-requirements.txt
 requirements-no-dev.txt
 tags
 tests/web/data/*

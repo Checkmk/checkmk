@@ -1,7 +1,6 @@
 [project]
 name = "cmk-server-side-calls"
 version = "1.0.0"
-dependencies = []
 
 [build-system]
 requires = ["setuptools"]

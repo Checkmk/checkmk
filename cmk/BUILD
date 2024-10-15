@@ -1,7 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_py//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 genrule(
     name = "_generate_requirements_in",
@@ -24,24 +23,9 @@ FILTER_OUT = [
 genrule(
     name = "_prune_requirements_in",
     srcs = ["requirements_in.orig"],
-    outs = ["requirements_in.txt"],
+    outs = ["requirements.txt"],
     cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
-)
-
-compile_pip_requirements(
-    name = "requirements",
-    timeout = "moderate",
-    env = {
-        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
-    },
-    extra_args = [
-        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
-        "--quiet",
-    ],
-    requirements_in = "requirements_in.txt",
-    requirements_txt = "@//:requirements_lock.txt",
-    tags = ["manual"],
-    visibility = ["//visibility:public"],
+    visibility = ["//:__pkg__"],
 )
 
 REQUIRED_EXTERNAL_DEPS = [

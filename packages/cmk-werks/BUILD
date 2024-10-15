@@ -1,20 +1,12 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
-load("@cmk_werks//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
-exports_files(["pyproject.toml"])
-
-compile_pip_requirements(
-    name = "requirements",
-    extra_args = [
-        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
-        "--quiet",
-    ],
-    requirements_in = "pyproject.toml",
-    requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
-)
+exports_files([
+    "pyproject.toml",
+    "requirements.txt",
+])
 
 py_library(
     name = "cmk-werks",

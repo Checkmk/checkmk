@@ -17,7 +17,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.rulesets.v1 import Message, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String, validators
 from cmk.rulesets.v1.form_specs._base import DefaultValue
 
@@ -79,6 +79,10 @@ def _host_name_dict_element(
                     used_names=set(folder_tree().root_folder().all_hosts_recursively()),
                 )
             ),
+            help_text=Help(
+                "Specify the name of your host where all the services will be located. "
+                "The host name must be unique."
+            ),
         ),
         required=True,
     )
@@ -99,6 +103,10 @@ def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
                     regex=FOLDER_PATTERN,
                     error_msg=Message("Invalid characters in %s") % str(title),
                 ),
+            ),
+            help_text=Help(
+                "Specify the location where the host will be created. If left empty, "
+                "the host will be created in the root folder."
             ),
         ),
         required=True,

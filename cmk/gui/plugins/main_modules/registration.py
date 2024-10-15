@@ -6,7 +6,9 @@
 """Central module for common (non-edition specific) registrations"""
 
 from cmk.ccc.crash_reporting import crash_report_registry
+from cmk.ccc.version import edition
 
+from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.help
@@ -90,6 +92,7 @@ from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
+from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
@@ -138,6 +141,7 @@ def register() -> None:
         config_variable_registry,
     )
     watolib_registration.register(
+        edition(paths.omd_root),
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
@@ -151,6 +155,7 @@ def register() -> None:
         autocompleter_registry,
         match_item_generator_registry,
         replication_path_registry,
+        folder_validators_registry,
     )
     piggyback_hub.register(
         config_domain_registry,

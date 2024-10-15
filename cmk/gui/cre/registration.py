@@ -5,9 +5,7 @@
 
 """Raw edition and only raw edition specific registrations"""
 
-from cmk.ccc.version import edition
-
-from cmk.utils import paths
+from cmk.ccc.version import Edition
 
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
@@ -77,10 +75,10 @@ def register_painters() -> None:
     painter_registry.register(graph.PainterHostPnpgraph)
 
 
-def register() -> None:
+def register(edition: Edition) -> None:
     features_registry.register(
         Features(
-            edition(paths.omd_root),
+            edition,
             livestatus_only_sites_postprocess=lambda x: list(x) if x else None,
         )
     )

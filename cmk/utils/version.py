@@ -43,6 +43,10 @@ class Edition(_EditionValue, enum.Enum):
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
     @classmethod
+    def from_version_string(cls, raw: str) -> Edition:
+        return cls[raw.split(".")[-1].upper()]
+
+    @classmethod
     def from_long_edition(cls, long: str) -> Edition:
         for e in cls:
             if e.long == long:
@@ -125,37 +129,42 @@ class _VersionDate:
 
 
 @dataclass
-class _StableVersion(_VersionBase):
+class _ReleaseCandidate:
+    release_candidate: int | None
+
+
+@dataclass
+class _StableVersion(_VersionBase, _ReleaseCandidate):
     pass
 
 
 @dataclass
-class _BetaVersion(_VersionBase):
+class _BetaVersion(_VersionBase, _ReleaseCandidate):
     vtype = "b"
     patch: int
 
 
 @dataclass
-class _InnovationVersion(_VersionBase):
+class _InnovationVersion(_VersionBase, _ReleaseCandidate):
     vtype = "i"
     patch: int
 
 
 @dataclass
-class _PatchVersion(_VersionBase):
+class _PatchVersion(_VersionBase, _ReleaseCandidate):
     vtype = "p"
     patch: int
 
 
 @dataclass
 class _MasterDailyVersion(_VersionDate):
-    pass
+    release_candidate = None
 
 
 @dataclass
 class _StableDailyVersion(_VersionDate, _VersionBase):
     # Order of attributes: major, minor, sub, date
-    pass
+    release_candidate = None
 
 
 _NoneDailyVersion = _StableVersion | _BetaVersion | _InnovationVersion | _PatchVersion
@@ -170,7 +179,10 @@ class Version:
     _pat_base: str = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
     _pat_date: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _pat_build: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
-    _pat_stable: str = rf"{_pat_base}(?:{_pat_build})?"  # e.g. "2.1.0p17"
+    _pat_rc_candidate: str = r"-rc(\d+)"  # e.g. "-rc3"
+    _pat_stable: str = (
+        rf"{_pat_base}(?:{_pat_build})?(?:{_pat_rc_candidate})?"  # e.g. "2.1.0p17-rc3"
+    )
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
@@ -190,6 +202,19 @@ class Version:
             return ""
         return "%d.%d.%d" % (v.major, v.minor, v.sub)
 
+    @property
+    def version_without_rc(self) -> str:
+        suffix = ""
+        if hasattr(self.version, "vtype"):
+            suffix = f"{self.version.vtype}"
+        if hasattr(self.version, "patch"):
+            suffix = f"{suffix}{self.version.patch}"
+        return f"{'' if self.version_base is None else self.version_base}{suffix}".lstrip("-")
+
+    @property
+    def version_rc_aware(self) -> str:
+        return str(self)
+
     @classmethod
     def _parse_none_daily_version(cls, vstring: str) -> _NoneDailyVersion:
         # Match the version pattern on vstring and check if there is a match
@@ -197,16 +222,41 @@ class Version:
         if not match:
             raise ValueError('Invalid version string "%s"' % vstring)
 
-        major, minor, sub, vtype, patch = match.group(1, 2, 3, 4, 5)
+        major, minor, sub, vtype, patch, rc = match.group(1, 2, 3, 4, 5, 6)
+        if rc is not None:
+            rc = int(rc)
 
         if vtype is None and patch is None:
-            return _StableVersion(int(major), int(minor), int(sub))
+            return _StableVersion(
+                major=int(major),
+                minor=int(minor),
+                sub=int(sub),
+                release_candidate=rc,
+            )
         if vtype == "b":
-            return _BetaVersion(int(major), int(minor), int(sub), int(patch))
+            return _BetaVersion(
+                major=int(major),
+                minor=int(minor),
+                sub=int(sub),
+                patch=int(patch),
+                release_candidate=rc,
+            )
         if vtype == "i":
-            return _InnovationVersion(int(major), int(minor), int(sub), int(patch))
+            return _InnovationVersion(
+                major=int(major),
+                minor=int(minor),
+                sub=int(sub),
+                patch=int(patch),
+                release_candidate=rc,
+            )
         if vtype == "p":
-            return _PatchVersion(int(major), int(minor), int(sub), int(patch))
+            return _PatchVersion(
+                major=int(major),
+                minor=int(minor),
+                sub=int(sub),
+                patch=int(patch),
+                release_candidate=rc,
+            )
 
         raise ValueError(
             f'Invalid version type "{vtype}". Cannot parse version string "{vstring}".'
@@ -233,11 +283,21 @@ class Version:
 
     def __str__(self) -> str:
         v = self.version
+
+        optional_rc_suffix = "" if v.release_candidate is None else f"-rc{v.release_candidate}"
+
         if isinstance(v, _StableVersion):
-            return "%d.%d.%d" % (v.major, v.minor, v.sub)
+            return "%d.%d.%d%s" % (v.major, v.minor, v.sub, optional_rc_suffix)
 
         if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
-            return "%d.%d.%d%s%d" % (v.major, v.minor, v.sub, v.vtype, v.patch)
+            return "%d.%d.%d%s%d%s" % (
+                v.major,
+                v.minor,
+                v.sub,
+                v.vtype,
+                v.patch,
+                optional_rc_suffix,
+            )
 
         if isinstance(v, _MasterDailyVersion):
             return v.date.strftime("%Y.%m.%d")
@@ -291,8 +351,18 @@ class Version:
         if isinstance(o_v, _MasterDailyVersion):
             raise ValueError('%s does not have a version base "<major>.<minor>.<sub>"' % o_v)
 
-        version_base: tuple[int, int, int] = (v.major, v.minor, v.sub)
-        o_version_base: tuple[int, int, int] = (o_v.major, o_v.minor, o_v.sub)
+        version_base: tuple[int, int, int, int] = (
+            v.major,
+            v.minor,
+            v.sub,
+            v.release_candidate or 0,
+        )
+        o_version_base: tuple[int, int, int, int] = (
+            o_v.major,
+            o_v.minor,
+            o_v.sub,
+            o_v.release_candidate or 0,
+        )
 
         return (version_base > o_version_base) - (version_base < o_version_base)
 

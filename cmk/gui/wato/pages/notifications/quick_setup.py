@@ -41,6 +41,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper, Widget
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
+from cmk.gui.wato._notification_parameter import notification_parameter_registry
 from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
@@ -62,6 +63,8 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress, ValidationError
 
@@ -216,7 +219,7 @@ def triggering_events() -> QuickSetupStage:
                         ),
                         "ec_alerts": DictElement(
                             parameter_form=FixedValue(
-                                title=Title("Event console alerts"),
+                                title=Title("Event Console alerts"),
                                 value="Enabled",
                             ),
                         ),
@@ -262,8 +265,213 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
 
 
 def notification_method() -> QuickSetupStage:
+    # TODO: Remove once the "method" slidein is implemented
+    def _create_element(method: str) -> CascadingSingleChoiceElement:
+        try:
+            return CascadingSingleChoiceElement(
+                title=Title("%s") % (_("%s") % method),
+                name=method,
+                parameter_form=notification_parameter_registry.form_spec(method),
+            )
+
+        except Exception:
+            return CascadingSingleChoiceElement(
+                title=Title("%s") % (_("%s") % method),
+                name=method,
+                parameter_form=FixedValue(value="Not yet implemented - Coming soon!"),
+            )
+
+    def bulk_notification(
+        title: Literal["always", "during_timeperiod"],
+    ) -> DictionaryExtended:
+        return DictionaryExtended(
+            title=Title("Bulk notification"),
+            elements={
+                **(
+                    {
+                        "combine": DictElement(
+                            required=True,
+                            parameter_form=TimeSpan(
+                                title=Title("Combine within last"),
+                                displayed_magnitudes=[
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                    TimeMagnitude.SECOND,
+                                ],
+                                prefill=DefaultValue(60.0),
+                            ),
+                        )
+                    }
+                    if title == "always"
+                    else {}
+                ),
+                "bulking_parameters": DictElement(
+                    required=True,
+                    parameter_form=DictionaryExtended(
+                        title=Title("Separate bulk notifications for"),
+                        elements={
+                            "check_type": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Check type"),
+                                    value=None,
+                                ),
+                            ),
+                            "custom_macro": DictElement(
+                                required=False,
+                                parameter_form=String(
+                                    title=Title("Custom macro"),
+                                    field_size=FieldSize.MEDIUM,
+                                ),
+                            ),
+                            "ec_contact": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Event Console contact"),
+                                    value=None,
+                                ),
+                            ),
+                            "ec_comment": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Event Console comment"),
+                                    value=None,
+                                ),
+                            ),
+                            "folder": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Folder"),
+                                    value=None,
+                                ),
+                            ),
+                            "host": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Host"),
+                                    value=None,
+                                ),
+                            ),
+                            "host_service_state": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Host/Service state"),
+                                    value=None,
+                                ),
+                            ),
+                            "service_name": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Service name"),
+                                    value=None,
+                                ),
+                            ),
+                            "service_level": DictElement(
+                                required=False,
+                                parameter_form=FixedValue(
+                                    title=Title("Service level"),
+                                    value=None,
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+                "max_notifications": DictElement(
+                    required=True,
+                    parameter_form=Integer(
+                        title=Title("Max. notifications per bulk"),
+                        unit_symbol="notifications",
+                        prefill=DefaultValue(1000),
+                    ),
+                ),
+                "subject": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Subject line"),
+                        field_size=FieldSize.LARGE,
+                        prefill=DefaultValue(
+                            "Checkmk: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts"
+                        ),
+                    ),
+                ),
+                **(
+                    {
+                        "bulk_outside_timeperiod": DictElement(
+                            required=False,
+                            parameter_form=bulk_notification(title="always"),
+                        )
+                    }
+                    if title == "during_timeperiod"
+                    else {}
+                ),
+            },
+        )
+
     def _components() -> Sequence[Widget]:
-        return []
+        return [
+            FormSpecWrapper(
+                id=FormSpecId("notification_effect"),
+                form_spec=DictionaryExtended(
+                    layout=DictionaryLayout.two_columns,
+                    elements={
+                        # TODO: Implement a toggle formspec “Toggle”. It should toggle between two fixed values
+                        "notification_effect": DictElement(
+                            required=True,
+                            parameter_form=String(
+                                title=Title("Notification effect"),
+                                field_size=FieldSize.MEDIUM,
+                                prefill=DefaultValue("<placeholder>"),
+                                custom_validate=(),
+                            ),
+                        ),
+                        # TODO: Replace with the slide-in formspec “SlideIn”
+                        "methods": DictElement(
+                            required=True,
+                            parameter_form=CascadingSingleChoice(
+                                title=Title("Method"),
+                                elements=[
+                                    _create_element(method)
+                                    for method in notification_parameter_registry
+                                ],
+                            ),
+                        ),
+                        "bulk_notification": DictElement(
+                            required=False,
+                            # TODO: add horizontal layout (CMK-18894)
+                            parameter_form=CascadingSingleChoice(
+                                title=Title("Bulk Notification"),
+                                elements=[
+                                    CascadingSingleChoiceElement(
+                                        name="always",
+                                        title=Title("Always bulk"),
+                                        parameter_form=bulk_notification(
+                                            title="always",
+                                        ),
+                                    ),
+                                    CascadingSingleChoiceElement(
+                                        name="during_timeperiod",
+                                        title=Title("During time period"),
+                                        parameter_form=CascadingSingleChoice(
+                                            elements=[
+                                                CascadingSingleChoiceElement(
+                                                    name=timeperiod,
+                                                    title=Title("%s") % (_("%s") % timeperiod),
+                                                    parameter_form=bulk_notification(
+                                                        title="during_timeperiod",
+                                                    ),
+                                                )
+                                                for timeperiod in load_timeperiods()
+                                                if timeperiod != "24X7"
+                                            ],
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    },
+                ),
+            ),
+        ]
 
     return QuickSetupStage(
         title=_("Notification method (plug-in)"),

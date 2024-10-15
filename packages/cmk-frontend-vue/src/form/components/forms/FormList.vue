@@ -177,3 +177,9 @@ function sendDataUpstream() {
   </a>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.vlof_content {
+  padding-bottom: 8px;
+}
+</style>

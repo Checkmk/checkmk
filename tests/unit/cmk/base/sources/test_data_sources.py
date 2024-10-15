@@ -138,7 +138,7 @@ def test_agent_host_with_special_agents(monkeypatch: pytest.MonkeyPatch, tmp_pat
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
-    ] == [ProgramFetcher, PiggybackFetcher]
+    ] == [ProgramFetcher, ProgramFetcher, PiggybackFetcher]
 
 
 @pytest.mark.parametrize("snmp_ds", (TagID("snmp-v1"), TagID("snmp-v2")))

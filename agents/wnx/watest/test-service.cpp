@@ -4,12 +4,12 @@
 #include "pch.h"
 
 #include "common/wtools.h"
-#include "wnx/firewall.h"
-#include "wnx/service_processor.h"
-#include "watest/test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
+#include "wnx/firewall.h"
+#include "wnx/service_processor.h"
 #include "wnx/windows_service_api.h"
 
 using namespace std::chrono_literals;
@@ -49,16 +49,13 @@ TEST(ServiceControllerTest, CreateDelete) {
     {
         wtools::ServiceController controller(std::make_unique<TestProcessor>());
         EXPECT_EQ(TestProcessor::s_counter, 1);
-        auto p = dynamic_cast<TestProcessor *>(controller.processor_.get());
+        auto p = dynamic_cast<const TestProcessor *>(controller.processor());
         ASSERT_NE(nullptr, p);
         EXPECT_FALSE(p->started_ || p->continued_ || p->paused_ ||
                      p->shutdowned_ || p->stopped_);
-        EXPECT_NE(controller.processor_, nullptr);
-        EXPECT_EQ(controller.name_, nullptr);
-        EXPECT_NE(controller.processor_, nullptr);
+        EXPECT_NE(controller.processor(), nullptr);
     }
     EXPECT_EQ(TestProcessor::s_counter, 0);
-    EXPECT_EQ(ServiceController::s_controller_, nullptr);
 }
 
 static constexpr const wchar_t *const test_service_name = L"CmkTestService";
@@ -89,9 +86,7 @@ TEST(ServiceControllerTest, StartStop) {
             counter++;
             return true;
         }));
-    EXPECT_NE(controller.processor_, nullptr);
-    EXPECT_EQ(controller.name_, nullptr);
-    EXPECT_NE(controller.processor_, nullptr);
+    EXPECT_NE(controller.processor(), nullptr);
 
     wtools::UninstallService(test_service_name);
     ASSERT_TRUE(wtools::InstallService(test_service_name,  // name of service

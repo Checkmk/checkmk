@@ -6,13 +6,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import (
     handle_iso_utc_to_localtimestamp,
     parse_graylog_agent_data,
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 # <<<graylog_license>>>

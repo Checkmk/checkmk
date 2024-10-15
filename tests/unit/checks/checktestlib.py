@@ -14,9 +14,9 @@ from unittest import mock
 
 import pytest
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 
 
 class MissingCheckInfoError(KeyError):

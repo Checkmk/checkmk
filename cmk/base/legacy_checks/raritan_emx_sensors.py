@@ -16,7 +16,6 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_binary,
@@ -27,6 +26,7 @@ from cmk.base.check_legacy_includes.raritan import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
 
 

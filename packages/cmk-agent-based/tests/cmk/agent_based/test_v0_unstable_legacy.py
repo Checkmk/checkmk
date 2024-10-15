@@ -6,35 +6,39 @@
 # pylint: disable=protected-access
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 import pytest
 
-from cmk.utils.metrics import MetricName
+from cmk.agent_based.v0_unstable_legacy import _do_check_levels, check_levels, LegacyResult
 
-from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
-from cmk.base import check_api
+def _rmeter(x: float | int) -> str:
+    return "%.1f m" % x
+
+
+def _rint(x: float | int) -> str:
+    return str(int(x))
 
 
 @pytest.mark.parametrize(
     "value, levels, representation, result",
     [
-        (5, (3, 6), int, (1, " (warn/crit at 3/6)")),
-        (7, (3, 6), lambda x: "%.1f m" % x, (2, " (warn/crit at 3.0 m/6.0 m)")),
-        (2, (3, 6, 1, 0), int, (0, "")),
-        (1, (3, 6, 1, 0), int, (0, "")),
-        (0, (3, 6, 1, 0), int, (1, " (warn/crit below 1/0)")),
-        (-1, (3, 6, 1, 0), int, (2, " (warn/crit below 1/0)")),
+        (5, (3, 6), _rint, (1, " (warn/crit at 3/6)")),
+        (7, (3, 6), _rmeter, (2, " (warn/crit at 3.0 m/6.0 m)")),
+        (2, (3, 6, 1, 0), _rint, (0, "")),
+        (1, (3, 6, 1, 0), _rint, (0, "")),
+        (0, (3, 6, 1, 0), _rint, (1, " (warn/crit below 1/0)")),
+        (-1, (3, 6, 1, 0), _rint, (2, " (warn/crit below 1/0)")),
     ],
 )
 def test_boundaries(
-    value: float,
-    levels: check_api._Levels,
-    representation: Callable,
-    result: tuple[ServiceState, ServiceDetails],
+    value: int,
+    levels: tuple[int, int, int, int],
+    representation: Callable[[object], object],
+    result: tuple[int, str],
 ) -> None:
-    assert check_api._do_check_levels(value, levels, representation) == result
+    assert _do_check_levels(value, levels, representation) == result
 
 
 @pytest.mark.parametrize(
@@ -78,11 +82,11 @@ def test_boundaries(
         ),
     ],
 )
-def test_check_levels(  # type: ignore[no-untyped-def]
+def test_check_levels(
     value: float,
-    dsname: MetricName | None,
+    dsname: str | None,
     params: None | tuple[float, ...],
-    kwargs,
-    result: check_api.LegacyResult,
+    kwargs: Mapping[str, object],
+    result: LegacyResult,
 ) -> None:
-    assert check_api.check_levels(value, dsname, params, **kwargs) == result
+    assert check_levels(value, dsname, params, **kwargs) == result  # type: ignore[arg-type]

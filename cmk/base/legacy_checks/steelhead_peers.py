@@ -9,9 +9,9 @@
 # .1.3.6.1.4.1.17163.1.1.2.6.1.1.5.1 CX770 --> STEELHEAD-MIB::peerModel.1
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
 

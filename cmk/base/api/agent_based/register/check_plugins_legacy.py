@@ -14,8 +14,6 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
-
 from cmk.checkengine.parameters import Parameters
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, LegacyPluginLocation
@@ -23,6 +21,7 @@ from cmk.base.api.agent_based.register.check_plugins import (
     create_check_plugin,
 )
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v1.type_defs import CheckResult
 

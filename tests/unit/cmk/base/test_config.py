@@ -26,7 +26,6 @@ import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.sectionname import SectionName
@@ -53,6 +52,7 @@ from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SNMPSe
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v1 import HostLabel
 from cmk.discover_plugins import PluginLocation
 

@@ -63,7 +63,6 @@ from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import BuiltinHostLabelsStore, Labels, LabelSources
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
@@ -153,6 +152,7 @@ from cmk.base.server_side_calls import (
 from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult

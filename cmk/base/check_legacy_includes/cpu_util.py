@@ -7,8 +7,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyResult
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyResult
 from cmk.agent_based.v2 import (
     get_average,
     get_value_store,

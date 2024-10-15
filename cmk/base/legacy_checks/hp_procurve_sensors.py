@@ -45,9 +45,9 @@
 # GENERAL MAPS:
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 hp_procurve_status_map = {

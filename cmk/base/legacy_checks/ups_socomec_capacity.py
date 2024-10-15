@@ -10,9 +10,9 @@
 # upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
 

@@ -49,9 +49,9 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.collection.agent_based.suseconnect import get_data, Section
 

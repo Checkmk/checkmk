@@ -15,9 +15,9 @@
 # 2058:131030112416:drive:42:::alert:no:981020::Managed Disk error count warning threshold met
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 

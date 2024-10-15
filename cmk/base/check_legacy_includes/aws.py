@@ -6,10 +6,9 @@
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, LegacyCheckResult
-
 import cmk.plugins.aws.constants as agent_aws_types
 import cmk.plugins.aws.lib as aws  # pylint: disable=cmk-module-layer-violation
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import IgnoreResultsError, render
 
 AWSRegions = dict(agent_aws_types.AWSRegions)

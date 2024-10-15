@@ -8,11 +8,11 @@ import pytest
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 
 pytestmark = pytest.mark.checks

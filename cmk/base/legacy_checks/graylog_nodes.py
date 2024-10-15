@@ -31,8 +31,9 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 
 
 def parse_graylog_nodes(string_table):

@@ -19,9 +19,9 @@
 # SNMPv2-SMI::enterprises.789.1.2.3.8.0 = INTEGER: 4
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTable
 
 

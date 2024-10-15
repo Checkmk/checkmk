@@ -8,8 +8,9 @@
 
 from dataclasses import dataclass
 
-from cmk.base.check_api import LegacyCheckDefinition, STATE_MARKERS
 from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition, STATE_MARKERS
 
 # .
 #   .--State---------------------------------------------------------------.

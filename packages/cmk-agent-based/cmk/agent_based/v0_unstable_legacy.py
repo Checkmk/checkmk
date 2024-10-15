@@ -2,6 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# Anys all over the place :-(
+# mypy: disable-error-code="misc"
+
 """
 The things in this module specify the old Check_MK (<- see? Old!) check API
 
@@ -15,12 +19,19 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 """
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable, Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
-
 from cmk.agent_based import v1 as _v1
+from cmk.agent_based.v2 import (
+    DiscoveryResult,
+    IgnoreResults,
+    Metric,
+    Result,
+    SNMPDetectSpecification,
+    SNMPTree,
+)
 
 __all__ = [
     "STATE_MARKERS",
@@ -31,11 +42,13 @@ __all__ = [
     "LegacyCheckDefinition",
 ]
 
+_DiscoveredParameters = Mapping | tuple | str | None  # type: ignore[type-arg,misc]
 
-STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
+
+_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]  # type: ignore[misc]
+_DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]  # type: ignore[misc]
 
 _OptNumber = None | int | float
-_Levels = tuple  # Has length 2 or 4
 
 _MetricTuple = (
     tuple[str, float]
@@ -43,23 +56,37 @@ _MetricTuple = (
     | tuple[str, float, _OptNumber, _OptNumber, _OptNumber, _OptNumber]
 )
 
+_SingleResult = tuple[int, str] | tuple[int, str, list[_MetricTuple]]
+
+
+_CheckFunctionLegacy = Callable[
+    ...,
+    None | _SingleResult | Iterable[_SingleResult] | Generator[_SingleResult, None, None],
+]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
+
+
+@dataclass(frozen=True, kw_only=True)
+class LegacyCheckDefinition:
+    name: str
+    detect: SNMPDetectSpecification | None = None
+    fetch: list[SNMPTree] | SNMPTree | None = None
+    sections: list[str] | None = None
+    check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
+    discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
+    parse_function: Callable[[list], object] | None = None  # type: ignore[type-arg]
+    check_ruleset_name: str | None = None
+    check_default_parameters: Mapping[str, Any] | None = None
+    service_name: str | None = None
+
+
+STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
+
+_Levels = tuple  # type: ignore[type-arg] # Has length 2 or 4
+
 LegacyResult = tuple[int, str, list[_MetricTuple]]
 
-
 LegacyCheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
-
-
-# .
-#   .--Check API-----------------------------------------------------------.
-#   |             ____ _               _         _    ____ ___             |
-#   |            / ___| |__   ___  ___| | __    / \  |  _ \_ _|            |
-#   |           | |   | '_ \ / _ \/ __| |/ /   / _ \ | |_) | |             |
-#   |           | |___| | | |  __/ (__|   <   / ___ \|  __/| |             |
-#   |            \____|_| |_|\___|\___|_|\_\ /_/   \_\_|  |___|            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Helper API for being used in checks                                 |
-#   '----------------------------------------------------------------------'
 
 
 def _normalize_levels(levels: _Levels) -> _Levels:
@@ -75,7 +102,9 @@ def _normalize_levels(levels: _Levels) -> _Levels:
 
 
 def _do_check_levels(
-    value: int | float, levels: _Levels, human_readable_func: Callable
+    value: int | float,
+    levels: _Levels,
+    human_readable_func: Callable,  # type: ignore[type-arg]
 ) -> tuple[int, str]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
@@ -93,7 +122,10 @@ def _do_check_levels(
 
 
 def _levelsinfo_ty(
-    ty: str, warn: _OptNumber, crit: _OptNumber, human_readable_func: Callable
+    ty: str,
+    warn: _OptNumber,
+    crit: _OptNumber,
+    human_readable_func: Callable,  # type: ignore[type-arg]
 ) -> str:
     warn_str = "never" if warn is None else f"{human_readable_func(warn)}"
     crit_str = "never" if crit is None else f"{human_readable_func(crit)}"
@@ -104,20 +136,20 @@ def _build_perfdata(
     dsname: None | str,
     value: int | float,
     levels: _Levels,
-    boundaries: tuple | None,
-) -> list:
+    boundaries: tuple | None,  # type: ignore[type-arg]
+) -> list:  # type: ignore[type-arg]
     if not dsname:
         return []
     used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
-def check_levels(  # pylint: disable=too-many-branches
+def check_levels(  # noqa: PLR0913
     value: int | float,
     dsname: None | str,
     params: Any,
     unit: str = "",
-    human_readable_func: Callable | None = None,
+    human_readable_func: Callable | None = None,  # type: ignore[type-arg]
     infoname: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
 ) -> LegacyResult:
@@ -211,13 +243,13 @@ def check_levels(  # pylint: disable=too-many-branches
     return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
 
 
-def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:
+def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:  # type: ignore[type-arg]
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
     if not isinstance(pw, tuple):
         pw = ("password", pw)
 
     if pw[0] == "password":
-        return fmt % pw[1]
+        return str(fmt % pw[1])
 
     return ("store", pw[1], fmt)

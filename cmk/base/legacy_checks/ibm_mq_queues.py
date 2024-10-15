@@ -10,10 +10,10 @@ import re
 
 import dateutil.parser
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 # <<<ibm_mq_queues:sep(10)>>>

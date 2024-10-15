@@ -127,9 +127,9 @@ import re
 # Default thresholds for drbd checks
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition, STATE_MARKERS
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
 
 _drbd_block_start_match = re.compile("^[0-9]+:")

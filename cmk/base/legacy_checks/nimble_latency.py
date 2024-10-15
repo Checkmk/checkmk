@@ -8,9 +8,9 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, startswith
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO

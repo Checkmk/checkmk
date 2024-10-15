@@ -17,9 +17,9 @@
 # .1.3.6.1.4.1.3652.3.2.1.12.0 0 --> SPEEDCARRIER-MIB::nmPSU3Status.0
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 

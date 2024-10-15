@@ -5,7 +5,6 @@
 from collections.abc import Iterable
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.apc_ats import (
     CommunictionStatus,
     OverCurrentStatus,
@@ -16,6 +15,7 @@ from cmk.base.check_legacy_includes.apc_ats import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT_ATS
 

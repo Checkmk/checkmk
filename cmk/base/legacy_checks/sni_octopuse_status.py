@@ -9,9 +9,9 @@
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 

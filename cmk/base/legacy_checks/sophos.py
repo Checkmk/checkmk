@@ -6,9 +6,9 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
 
 # .1.3.6.1.4.1.2604.3.4 2 --> SOPHOS::sophosHwMemoryConsumption     Indicates whether the appliance is consuming excessive memory

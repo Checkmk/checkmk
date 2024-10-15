@@ -10,7 +10,6 @@ from dataclasses import replace
 
 from pytest import MonkeyPatch
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -19,6 +18,7 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register import check_plugins_legacy
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
 
 

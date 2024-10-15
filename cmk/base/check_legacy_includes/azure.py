@@ -10,8 +10,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, LegacyCheckResult
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,

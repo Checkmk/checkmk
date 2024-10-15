@@ -529,7 +529,9 @@ def _is_allowed_for_legacy_checks(
             _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
             _in_component(imported=imported, component=Component("cmk.plugins")),
             _in_component(imported=imported, component=Component("cmk.base.config")),
-            _in_component(imported=imported, component=Component("cmk.base.check_api")),
+            _in_component(
+                imported=imported, component=Component("cmk.agent_based.v0_unstable_legacy")
+            ),
             _in_component(
                 imported=imported,
                 component=Component("cmk.base.plugins.agent_based"),

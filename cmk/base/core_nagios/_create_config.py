@@ -521,7 +521,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     )
 
     active_checks = config_cache.active_checks(hostname)
-    actchecks = [name for name, params in active_checks if params]
     for service_data in active_check_config.get_active_service_data(active_checks):
         if do_omit_service(hostname, service_data.description):
             continue
@@ -558,7 +557,11 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
-    if actchecks:
+    active_checks_rules_exist = any(params for name, params in config_cache.active_checks(hostname))
+    # Note: ^- This is not the same as `active_checks_present = bool(active_services)`
+    # Services can be omitted, or rules can result in zero services (theoretically).
+    # I am not sure if this is intentional.
+    if active_checks_rules_exist:
         cfg.write("\n\n# Active checks\n")
 
         for service_spec in active_services:
@@ -697,7 +700,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not actchecks and not custchecks:
+    if not have_at_least_one_service and not active_checks_rules_exist and not custchecks:
         _add_ping_service(
             cfg,
             config_cache,

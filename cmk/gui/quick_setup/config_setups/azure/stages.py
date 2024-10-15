@@ -96,6 +96,7 @@ def configure_authentication() -> QuickSetupStage:
                 form_spec=DictionaryExtended(
                     elements=azure.configuration_authentication(),
                     layout=DictionaryLayout.two_columns,
+                    prefill=DefaultValue({"subscription": ""}),
                 ),
             ),
         ],

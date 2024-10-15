@@ -207,6 +207,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "subscription": DictElement(
             parameter_form=String(
                 title=Title("Subscription ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
             )
         ),
         "tenant": DictElement(

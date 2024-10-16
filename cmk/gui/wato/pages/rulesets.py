@@ -1090,7 +1090,15 @@ class ModeEditRuleset(WatoMode):
                 raise MKUserError(None, _("Cannot delete rules that are managed by Quick setup."))
             ruleset.delete_rule(rule)
         elif action == "move_to":
-            ruleset.move_rule_to(rule, request.get_integer_input_mandatory("_index"))
+            target_idx = request.get_integer_input_mandatory("_index")
+            if target_idx != ruleset.move_rule_to(rule, target_idx):
+                flash(
+                    _(
+                        "This rule cannot be moved above rules that "
+                        "are defined as part of a Quick setup."
+                    ),
+                    msg_type="warning",
+                )
 
         rulesets.save_folder()
         return redirect(back_url)

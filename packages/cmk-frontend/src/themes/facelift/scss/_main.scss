@@ -481,32 +481,42 @@ div.error {
 
 // TODO Render flashed messages in Sweetalert style, maybe we can implement
 // this one day in VUE including a button to make it disappear.
-.success.flashed {
-  padding: 16px 16px 16px 30px;
+@mixin flashed-mixin($color, $icon) {
+  padding: 16px 16px 16px 34px;
   background-color: $ux-theme-4;
   box-shadow: 0 2px rgba(0, 0, 0, 0.4);
   position: relative;
   box-sizing: border-box;
-}
-.success.flashed::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 20px;
-  height: 100%;
-  background-color: $success;
-  border-radius: 4px 0 0 4px;
 
-  background-image: url("images/icon_checkmark.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  z-index: 1;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 100%;
+    background-color: $color;
+    border-radius: 4px 0 0 4px;
+
+    background-image: $icon;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: auto;
+    z-index: 1;
+  }
 }
 
-.warning,
-body.main div.warning {
+.success.flashed {
+  @include flashed-mixin($success, url("images/icon_checkmark.svg"));
+}
+
+.warning.flashed {
+  @include flashed-mixin($yellow, url("images/icon_problem.svg"));
+}
+
+// TODO: what is using this? can we remove it?
+.warning:not(.flashed),
+body.main div.warning:not(.flashed) {
   color: $font-color-black;
   background-color: $warning;
 

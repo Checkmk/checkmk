@@ -934,12 +934,12 @@ class Ruleset:
             )
         self._on_change()
 
-    def move_rule_to(self, rule: Rule, index: int) -> None:
+    def move_rule_to(self, rule: Rule, index: int) -> int:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         index = self.get_index_for_move(rule.folder, rule, index)
         if old_index == index:
-            return
+            return index
 
         rules.remove(rule)
         rules.insert(index, rule)
@@ -950,6 +950,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
         )
+        return index
 
     # TODO: Remove these getters
     def valuespec(self) -> ValueSpec:

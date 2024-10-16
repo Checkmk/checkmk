@@ -47,7 +47,7 @@ from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
 
-from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -435,6 +435,9 @@ def notification_method() -> QuickSetupStage:
                             required=True,
                             parameter_form=String(
                                 title=Title("Notification effect"),
+                                help_text=Help(
+                                    "Specifies whether to send a notification or to cancel all previous notifications for the same method"
+                                ),
                                 field_size=FieldSize.MEDIUM,
                                 prefill=DefaultValue("<placeholder>"),
                                 custom_validate=(),
@@ -557,6 +560,9 @@ def recipient() -> QuickSetupStage:
                                 name="restrict_previous",
                                 parameter_form=CascadingSingleChoice(
                                     # TODO: add horizontal layout (CMK-18894)
+                                    help_text=Help(
+                                        "Only users who are in all the following contact groups will receive the notification"
+                                    ),
                                     prefill=DefaultValue("contact_group"),
                                     elements=[
                                         CascadingSingleChoiceElement(
@@ -675,6 +681,9 @@ def sending_conditions() -> QuickSetupStage:
                                     "throttle_periodic": DictElement(
                                         parameter_form=Tuple(
                                             title=Title("Throttling of 'Periodic notifications'"),
+                                            help_text=Help(
+                                                "Only applies if `Periodic notifications` are enabled"
+                                            ),
                                             elements=[
                                                 Integer(
                                                     label=Label("starting with notification number")
@@ -703,6 +712,9 @@ def sending_conditions() -> QuickSetupStage:
                                     "custom_by_comment": DictElement(
                                         parameter_form=String(
                                             title=Title("'Custom notifications' by comment"),
+                                            help_text=Help(
+                                                "Only applies to notifications triggered by the command `Custom notifications`"
+                                            ),
                                         )
                                     ),
                                 },

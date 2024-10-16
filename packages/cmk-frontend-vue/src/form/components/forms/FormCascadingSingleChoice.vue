@@ -117,11 +117,6 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
     return { label: element.title, value: element.name }
   })
 })
-
-const toggledButton = (value: string) => {
-  event!.preventDefault()
-  selectedOption.value = value
-}
 </script>
 
 <template>
@@ -138,11 +133,7 @@ const toggledButton = (value: string) => {
       </select>
     </template>
     <template v-else>
-      <ToggleButtonGroup
-        :options="buttonGroupButtons"
-        :value="selectedOption"
-        @change="toggledButton"
-      />
+      <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
     <HelpText :help="props.spec.help" />
   </span>

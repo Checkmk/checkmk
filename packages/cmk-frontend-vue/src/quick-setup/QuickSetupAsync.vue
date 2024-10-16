@@ -321,13 +321,20 @@ const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   props.mode
 )
 
-const setWizardMode = async (mode: WizardMode) => {
-  wizardMode.value = mode
-  quickSetupHook.setMode(mode)
-  if (mode === 'overview' && !loadedAllStages.value) {
-    stages.value = await loadAllStages()
+const quickSetupHook = useWizard(stages.value.length, props.mode)
+
+const currentMode = computed({
+  get(): WizardMode {
+    return quickSetupHook.mode.value
+  },
+  set(newMode: WizardMode) {
+    wizardMode.value = newMode
+    quickSetupHook.setMode(newMode)
+    if (newMode === 'overview' && !loadedAllStages.value) {
+      loadAllStages()
+    }
   }
-}
+})
 
 switch (props.mode) {
   case 'guided':
@@ -337,19 +344,17 @@ switch (props.mode) {
     stages.value = await loadAllStages()
     break
 }
-const quickSetupHook = useWizard(stages.value.length, props.mode)
 showQuickSetup.value = true
 </script>
 
 <template>
   <ToggleButtonGroup
     v-if="toggleEnabled"
+    v-model="currentMode"
     :options="[
       { label: GUIDED_MODE_LABEL, value: 'guided' },
       { label: OVERVIEW_MODE_LABEL, value: 'overview' }
     ]"
-    :value="quickSetupHook.mode.value"
-    @change="setWizardMode"
   />
   <QuickSetup
     v-if="showQuickSetup"

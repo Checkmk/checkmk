@@ -16,13 +16,13 @@ export interface ToggleButtonGroupProps {
   value?: string | null
 }
 
-const props = withDefaults(defineProps<ToggleButtonGroupProps>(), {
-  value: null
-})
+defineProps<ToggleButtonGroupProps>()
+const model = defineModel<string>({ required: true })
 
-defineEmits(['change'])
-
-const isSelected = (value: string) => value === props.value
+const isSelected = (value: string) => value === model.value
+function setSelectedOption(value: string) {
+  model.value = value
+}
 </script>
 
 <template>
@@ -33,7 +33,7 @@ const isSelected = (value: string) => value === props.value
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
       :aria-label="`Toggle ${option.label}`"
-      @click="$emit('change', option.value)"
+      @click.prevent="setSelectedOption(option.value)"
       >{{ option.label }}</CmkButton
     >
   </div>

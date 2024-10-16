@@ -8,21 +8,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
-const selectedOption = ref<string>('1')
+const model = ref<string>('1')
 </script>
 
 <template>
   <ToggleButtonGroup
+    v-model="model"
     :options="[
       { label: 'label1', value: '1' },
       { label: 'label2', value: '2' },
       { label: 'label3', value: '3' }
     ]"
-    :value="selectedOption"
-    @change="(newValue) => (selectedOption = newValue)"
   />
 
-  <pre>selectedOption={{ selectedOption }}</pre>
+  <pre>selectedOption={{ model }}</pre>
 </template>
 
 <style scoped>

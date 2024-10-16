@@ -199,7 +199,7 @@ def _requires_integration_team(notification_type: str, integration_team: str | N
 def _get_extra_properties(context: PluginNotificationContext) -> dict[str, str]:
     all_elements: dict[str, tuple[str, str]] = {
         "omdsite": ("Site ID", os.environ["OMD_SITE"]),
-        "hosttags": ("Tags of the Host", "\n".join((context.get("HOST_TAGS", "").split()))),
+        "hosttags": ("Tags of the Host", "\n".join(context.get("HOST_TAGS", "").split())),
         "address": ("IP address of host", context.get("HOSTADDRESS", "")),
         "abstime": ("Absolute time of alert", context.get("LONGDATETIME", "")),
         "reltime": ("Relative time of alert", context.get("LASTHOSTSTATECHANGE_REL", "")),

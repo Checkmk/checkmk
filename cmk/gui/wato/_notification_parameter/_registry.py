@@ -92,13 +92,11 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                                 parameter_form=String(
                                     title=Title("Documentation URL"),
                                     help_text=Help(
-                                        (
-                                            "An optional URL pointing to documentation or any other page. This will be "
-                                            "displayed as an icon and open "
-                                            "a new page when clicked. You can use either global URLs (beginning with "
-                                            "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                                            "URLs (that are relative to <tt>check_mk/</tt>)."
-                                        )
+                                        "An optional URL pointing to documentation or any other page. This will be "
+                                        "displayed as an icon and open "
+                                        "a new page when clicked. You can use either global URLs (beginning with "
+                                        "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                                        "URLs (that are relative to <tt>check_mk/</tt>)."
                                     ),
                                 )
                             ),

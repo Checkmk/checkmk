@@ -42,7 +42,6 @@ ignore = [
   "UP028", # Replace `yield` over `for` loop with `yield from`
   "UP031", # Use format specifiers instead of percent format
   "UP032", # Use f-string instead of `format` call
-  "UP034", # Avoid extraneous parentheses
   "UP035", # Import from `FOO` instead: `BAR`
   "UP036", # Version block is outdated for minimum Python version
   "UP037", # Remove quotes from type annotation

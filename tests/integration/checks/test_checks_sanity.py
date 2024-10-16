@@ -74,17 +74,15 @@ def _host_services(
                     },
                 )
                 site.activate_changes_and_wait_for_core_reload()
-            wait_timeout = 5 if not version_from_env().is_saas_edition() else 65
+            wait_timeout = 65
             site.wait_for_services_state_update(hostname, "Check_MK", 0, wait_timeout, 10)
 
         host_services = site.get_host_services(hostname)
 
         yield host_services
-
-    except Exception:
-        logger.error("Failed to retrieve services from the host.")
-        raise
-
+    except Exception as e:
+        logger.error("Failed to retrieve services from the host. Reason: %s", str(e))
+        raise e
     finally:
         if rule_id:
             site.openapi.delete_rule(rule_id)

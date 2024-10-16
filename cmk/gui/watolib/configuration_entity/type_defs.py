@@ -5,6 +5,8 @@
 #
 # This file is auto-generated via the cmk-shared-typing package.
 # Do not edit manually.
+#
+# fmt: off
 
 
 from __future__ import annotations

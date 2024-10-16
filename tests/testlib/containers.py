@@ -700,7 +700,7 @@ def _prepare_git_overlay(
     )
 
     if username:
-        _exec_run(container, ["chown", "-R", f"{username}:{username}", "/git"])
+        _exec_run(container, ["chown", f"{username}:{username}", "/git"])
 
 
 def _prepare_testuser(container: docker.Container, username: str) -> None:

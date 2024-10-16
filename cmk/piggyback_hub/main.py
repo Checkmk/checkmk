@@ -5,7 +5,6 @@
 
 import argparse
 import logging
-import os
 import signal
 import sys
 from dataclasses import dataclass
@@ -83,7 +82,7 @@ def _setup_logging(args: Arguments) -> logging.Logger:
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
+    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
     logger.addHandler(handler)
 
     logger.setLevel(VERBOSITY_MAP[min(args.verbosity, 2)])
@@ -144,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.foreground:
         daemonize()
-        logger.info("Daemonized with PID %d.", os.getpid())
+        logger.info("Daemonized.")
 
     try:
         with pid_file_lock(Path(args.pid_file)):

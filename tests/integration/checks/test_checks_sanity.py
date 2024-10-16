@@ -53,11 +53,9 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInf
         host_services = site.get_host_services(hostname)
 
         yield host_services
-
-    except Exception:
-        logger.error("Failed to retrieve services from the host.")
-        raise
-
+    except Exception as e:
+        logger.error("Failed to retrieve services from the host. Reason: %s", str(e))
+        raise e
     finally:
         site.openapi.delete_host(hostname)
         site.activate_changes_and_wait_for_core_reload()

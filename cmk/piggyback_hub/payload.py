@@ -109,7 +109,7 @@ class SendingPayloadProcess(multiprocessing.Process):
     ) -> None:
         config = self._check_for_config_reload(config)
 
-        if (site_id := config.targets.get(message.meta.piggybacked, self.site)) is self.site:
+        if (site_id := config.targets.get(message.meta.piggybacked, self.site)) == self.site:
             return
 
         self.logger.debug(

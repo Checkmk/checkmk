@@ -73,7 +73,7 @@ class BrokerCertificateSync(abc.ABC):
         raise NotImplementedError
 
 
-class CREBrokerCertificateSync(BrokerCertificateSync):
+class DefaultBrokerCertificateSync(BrokerCertificateSync):
     def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
         return broker_certs_created(site_id)
 

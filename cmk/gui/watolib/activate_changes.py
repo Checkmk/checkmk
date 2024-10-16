@@ -89,9 +89,10 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name
+from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.broker_certificates import BrokerCertificateSync
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -177,11 +178,6 @@ FileFilterFunc = Callable[[str], bool] | None
 ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
 
 tracer = trace.get_tracer()
-
-# might be replaced by the CME version
-BrokerCertificateSync: type[broker_certificates.BrokerCertificateSync] = (
-    broker_certificates.CREBrokerCertificateSync
-)
 
 
 class SiteReplicationStatus(TypedDict, total=False):
@@ -2247,7 +2243,7 @@ def sync_and_activate(
 
 
 def create_broker_certificates(
-    broker_cert_sync: broker_certificates.BrokerCertificateSync,
+    broker_cert_sync: BrokerCertificateSync,
     central_ca: CertificateWithPrivateKey,
     customer_ca: CertificateWithPrivateKey | None,
     settings: SiteConfiguration,
@@ -2281,7 +2277,9 @@ def _create_broker_certificates_for_remote_sites(
 ) -> Mapping[SiteId, SiteActivationState]:
     site_activation_states_certs_synced = dict(site_activation_states)
 
-    broker_sync = BrokerCertificateSync()
+    broker_sync = activation_features_registry[
+        str(version.edition(paths.omd_root))
+    ].broker_certificate_sync
     if not (
         required_sites := broker_sync.get_site_to_sync(
             myself,
@@ -3456,6 +3454,7 @@ class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
+    broker_certificate_sync: BrokerCertificateSync
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):

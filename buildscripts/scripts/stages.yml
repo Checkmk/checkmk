@@ -134,6 +134,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
 
+    - NAME: CHANGED_CMK_OTEL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel/' || true"
+
     - NAME: CHANGED_RULESETS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
 
@@ -455,6 +458,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
+
+    - NAME: "Package cmk-otel"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_OTEL_FILES
+      DIR: "non-free/packages/cmk-otel"
+      COMMAND: "../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-otel.txt"
+      TEXT_ON_SKIP: "No cmk-otel files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-otel.txt"
 
     - NAME: "Package cmk-rulesets"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_RULESETS_FILES

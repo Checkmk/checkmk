@@ -28,6 +28,10 @@ from tests.testlib.repo import git_commit_id, git_essential_directories, repo_pa
 from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.version import CMKVersion, DISTRO_CODES
 
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+from cmk.ccc.version import Version
+
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
@@ -273,7 +277,6 @@ def _create_cmk_image(
     image_name_with_tag = (
         f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
-
     if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
@@ -321,7 +324,9 @@ def _create_cmk_image(
         ),
     ) as container:
         logger.info(
-            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
+            "Building in container %s (from [%s])",
+            container.short_id,
+            base_image_name_with_tag,
         )
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -362,15 +367,23 @@ def _create_cmk_image(
         labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
-
-        if not use_local_package:
+        if (
+            not use_local_package
+            and Version.from_str(version.version).release_candidate.value is None
+        ):
             try:
-                logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+                logger.info(
+                    "Uploading [%s] to registry (%s)",
+                    image_name_with_tag,
+                    image.short_id,
+                )
                 client.images.push(image_name_with_tag)
                 logger.info("  Upload complete")
             except docker.errors.APIError as e:
                 logger.warning("  An error occurred")
                 _handle_api_error(e)
+        else:
+            logger.info("Skipping upload to registry (%s)", image.short_id)
 
     return image_name_with_tag
 
@@ -404,7 +417,10 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()
     logger.info(
-        "  CMK hash of image (%s): %s (%s)", image.short_id, cmk_hash_image, package_name_image
+        "  CMK hash of image (%s): %s (%s)",
+        image.short_id,
+        cmk_hash_image,
+        package_name_image,
     )
     cmk_hash_current = get_current_cmk_hash_for_artifact(version, package_name_image)
     logger.info("  Current CMK Hash of artifact: %s (%s)", cmk_hash_current, package_name_image)
@@ -649,7 +665,10 @@ def _copy_directory(
 
 
 def _prepare_git_overlay(
-    container: docker.Container, lower_path: str, target_path: str, username: str | None = None
+    container: docker.Container,
+    lower_path: str,
+    target_path: str,
+    username: str | None = None,
 ) -> None:
     """Prevent modification of git checkout volume contents
 
@@ -713,9 +732,14 @@ def _prepare_testuser(container: docker.Container, username: str) -> None:
     gid = str(os.getgid())
     _exec_run(container, ["groupadd", "-g", gid, username], check=False)
     _exec_run(
-        container, ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username], check=False
+        container,
+        ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username],
+        check=False,
     )
-    _exec_run(container, ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'])
+    _exec_run(
+        container,
+        ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'],
+    )
 
     _exec_run(container, ["mkdir", "-p", f"/home/{username}/.cache"])
     _exec_run(container, ["chown", "-R", f"{username}:{username}", f"/home/{username}"])

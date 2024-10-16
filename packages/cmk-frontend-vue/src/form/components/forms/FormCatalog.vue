@@ -25,15 +25,6 @@ const hiddenTopics = ref<Record<string, boolean>>({})
 
 immediateWatch(
   () => props.spec.topics,
-  (newValue) => {
-    newValue.forEach((element) => {
-      data.value[element.ident] = {}
-    })
-  }
-)
-
-immediateWatch(
-  () => props.spec.topics,
   () => {
     hiddenTopics.value = {}
   }

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const props = defineProps<{
@@ -12,6 +12,15 @@ const props = defineProps<{
 }>()
 
 const open = ref(false)
+const helpIcon = useTemplateRef('helpIcon')
+
+const checkClosing = (e: MouseEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  if (e.target !== helpIcon.value) {
+    open.value = false
+  }
+}
 
 const triggerHelp = (e: MouseEvent) => {
   e.preventDefault()
@@ -26,13 +35,14 @@ const closeHelp = () => {
 
 <template>
   <TooltipProvider v-if="!!props.help">
-    <Tooltip :open="open">
+    <Tooltip :open="open" disable-closing-trigger>
       <TooltipTrigger
         data-testid="help-tooltip-trigger"
         class="trigger"
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
         <img
+          ref="helpIcon"
           :style="open ? 'transform: scale(1.1);background-color:var(--tag-added-color-light)' : ''"
           class="help-text"
           data-testid="help-icon"
@@ -41,10 +51,11 @@ const closeHelp = () => {
         side="top"
         align="start"
         class="help-content"
-        @pointer-down-outside="closeHelp"
+        @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
-        {{ props.help }}
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div v-html="props.help"></div>
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>
@@ -57,7 +68,7 @@ const closeHelp = () => {
 }
 
 .trigger {
-  margin-left: 0.25rem;
+  display: none;
   margin: 0;
   padding: 0;
   border: none;
@@ -78,6 +89,10 @@ const closeHelp = () => {
 
 body:not(.show_help) {
   .help-text {
+    display: inline;
+  }
+
+  .trigger {
     display: inline;
   }
 }

@@ -48,14 +48,14 @@ def _handle_api_exceptions(api_call_name: str) -> Iterator[None]:
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
 class Connector:
     def __init__(self, api_key: str, host_url: str | None, proxy_url: str | None) -> None:
-        conf: "Configuration" = Configuration()
+        conf = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
             conf.proxy = proxy_url
 
-        api_client: "ApiClient" = ApiClient(configuration=conf)
+        api_client: ApiClient = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
 
     def get_existing_alert(self, alias: str) -> Alert | None:

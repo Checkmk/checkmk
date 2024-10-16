@@ -661,7 +661,7 @@ class ResultDistributor:
     """
 
     def __init__(self) -> None:
-        self._colleagues: dict[str, list["AWSSection"]] = defaultdict(list)
+        self._colleagues: dict[str, list[AWSSection]] = defaultdict(list)
 
     def add(self, sender_name: str, colleague: "AWSSection") -> None:
         self._colleagues[sender_name].append(colleague)

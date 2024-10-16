@@ -43,7 +43,6 @@ ignore = [
   "UP032", # Use f-string instead of `format` call
   "UP035", # Import from `FOO` instead: `BAR`
   "UP036", # Version block is outdated for minimum Python version
-  "UP037", # Remove quotes from type annotation
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
   "UP041", # Replace aliased errors with `TimeoutError`

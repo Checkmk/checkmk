@@ -233,9 +233,25 @@ def triggering_events() -> QuickSetupStage:
         sub_title=_("Define any events you want to be notified about."),
         configure_components=_components,
         custom_validators=[_validate_at_least_one_event],
-        recap=[recaps.recaps_form_spec],
+        recap=[custom_recap_formspec_triggering_events],
         button_label=_("Next step: Specify host/services"),
     )
+
+
+def custom_recap_formspec_triggering_events(
+    quick_setup_id: QuickSetupId,
+    stage_index: StageIndex,
+    all_stages_form_data: ParsedFormData,
+) -> Sequence[Widget]:
+    cleaned_stages_form_data = {
+        form_spec_wrapper_id: {
+            form_spec_id: data
+            for form_spec_id, data in form_data.items()
+            if form_spec_id not in ["host_events", "service_events"] or len(data) > 0
+        }
+        for form_spec_wrapper_id, form_data in all_stages_form_data.items()
+    }
+    return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
 
 
 def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:

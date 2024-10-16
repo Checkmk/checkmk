@@ -154,12 +154,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
             warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
 
     infotext = "%.1f V" % voltage
-    levelstext = " (warn/crit below {:.1f}/{:.1f} V and at or above {:.1f}/{:.1f} V)".format(
-        warn_lower,
-        crit_lower,
-        warn,
-        crit,
-    )
+    levelstext = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V and at or above {warn:.1f}/{crit:.1f} V)"
     if voltage < crit_lower or voltage >= crit:
         status = 2
     elif voltage < warn_lower or voltage >= warn:

@@ -64,10 +64,7 @@ def check_veeam_tapejobs(item, params, parsed):
 
     yield (
         0,
-        "Backup in progress since {} (currently {})".format(
-            render.datetime(running_since),
-            last_state.lower(),
-        ),
+        f"Backup in progress since {render.datetime(running_since)} (currently {last_state.lower()})",
     )
     yield check_levels(
         running_time,

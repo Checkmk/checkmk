@@ -206,17 +206,12 @@ class HostsOrServicesCounter(NamedTuple):
 def _get_hosts_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET hosts\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 2\n"
-                "Stats: check_type = 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET hosts\n"
+            "Stats: host_check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 2\n"
+            "Stats: check_type = 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
         )
     )
 
@@ -224,23 +219,18 @@ def _get_hosts_counter() -> HostsOrServicesCounter:
 def _get_services_counter() -> HostsOrServicesCounter:
     return HostsOrServicesCounter.make(
         _get_from_livestatus(
-            (
-                "GET services\n"
-                "Stats: host_check_type != 2\n"
-                "Stats: check_type != 2\n"
-                "Stats: host_labels != '{label_name}' '{label_value}'\n"
-                "Stats: service_labels != '{label_name}' '{label_value}'\n"
-                "StatsAnd: 4\n"
-                "Stats: host_check_type = 2\n"
-                "Stats: check_type = 2\n"
-                "StatsAnd: 2\n"
-                "Stats: host_labels = '{label_name}' '{label_value}'\n"
-                "Stats: service_labels = '{label_name}' '{label_value}'\n"
-                "StatsOr: 2\n"
-            ).format(
-                label_name=_LICENSE_LABEL_NAME,
-                label_value=_LICENSE_LABEL_EXCLUDE,
-            )
+            "GET services\n"
+            "Stats: host_check_type != 2\n"
+            "Stats: check_type != 2\n"
+            f"Stats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsAnd: 4\n"
+            "Stats: host_check_type = 2\n"
+            "Stats: check_type = 2\n"
+            "StatsAnd: 2\n"
+            f"Stats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            f"Stats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'\n"
+            "StatsOr: 2\n"
         )
     )
 

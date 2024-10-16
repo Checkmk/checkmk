@@ -555,10 +555,7 @@ class SidebarRenderer:
         # The heading. A click on the heading mini/maximizes the snapin
         toggle_actions: dict[str, str] = {}
         img_id = f"treeangle.snapin.{name}"
-        onclick = "cmk.sidebar.toggle_sidebar_snapin(this, {}, {})".format(
-            json.dumps(toggle_url),
-            json.dumps(img_id),
-        )
+        onclick = f"cmk.sidebar.toggle_sidebar_snapin(this, {json.dumps(toggle_url)}, {json.dumps(img_id)})"
         if user.may("general.configure_sidebar"):
             toggle_actions = {
                 "onclick": onclick,

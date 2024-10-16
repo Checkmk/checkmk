@@ -98,11 +98,7 @@ def _check_failed_offline_disks(
             if return_state is not None:
                 yield Result(
                     state=return_state,
-                    summary="Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
-                        disk_state,
-                        warn,
-                        crit,
-                    ),
+                    summary=f"Too many {disk_state} disks (warn/crit at {warn:.1f}%/{crit:.1f}%)",
                 )
 
 

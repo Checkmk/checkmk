@@ -48,12 +48,7 @@ def check_emc_datadomain_disks(item, _no_params, info):
                 yield 0, "busy %s%%" % busy, perfdata
             yield (
                 0,
-                "Model {}, Firmware {}, Serial {}, Capacity {}".format(
-                    model,
-                    firmware,
-                    serial,
-                    capacity,
-                ),
+                f"Model {model}, Firmware {firmware}, Serial {serial}, Capacity {capacity}",
             )
 
 

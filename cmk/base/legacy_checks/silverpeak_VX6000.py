@@ -96,13 +96,7 @@ def check_silverpeak(_item, _params, parsed):
 
     yield (
         0,
-        "{} active alarms. OK: {}, WARN: {}, CRIT: {}, UNKNOWN: {}".format(
-            alarm_cnt,
-            cnt_ok,
-            cnt_warn,
-            cnt_crit,
-            cnt_unkn,
-        ),
+        f"{alarm_cnt} active alarms. OK: {cnt_ok}, WARN: {cnt_warn}, CRIT: {cnt_crit}, UNKNOWN: {cnt_unkn}",
     )
 
     for elem in alarms:

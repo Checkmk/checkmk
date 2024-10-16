@@ -43,11 +43,7 @@ def _check_shrinking(
 
     wa, cr = levels
     if trend <= -wa:
-        problem = "shrinking too fast (warn/crit at {}/{} per {:.1f} h)(!".format(
-            renderer(wa),
-            renderer(cr),
-            range_hours,
-        )
+        problem = f"shrinking too fast (warn/crit at {renderer(wa)}/{renderer(cr)} per {range_hours:.1f} h)(!"
         state = 1
         if trend <= -cr:
             state = 2
@@ -138,11 +134,7 @@ def size_trend(  # pylint: disable=too-many-branches
 
     trend = rate_avg * range_sec
     sign = "+" if trend > 0 else ""
-    infotext += ", trend: {}{} / {:g} hours".format(
-        sign,
-        render.bytes(trend * MB),
-        range_hours,
-    )
+    infotext += f", trend: {sign}{render.bytes(trend * MB)} / {range_hours:g} hours"
 
     # levels for performance data
     warn_perf: float | None = None

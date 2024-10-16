@@ -2151,13 +2151,7 @@ def _page_menu_host_labels_entries(
 
 
 def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | None = None) -> str:
-    return "cmk.service_discovery.start({}, {}, {}, {}, {})".format(
-        json.dumps(host.name()),
-        json.dumps(host.folder().path()),
-        json.dumps(options._asdict()),
-        json.dumps(transactions.get()),
-        json.dumps(request_vars),
-    )
+    return f"cmk.service_discovery.start({json.dumps(host.name())}, {json.dumps(host.folder().path())}, {json.dumps(options._asdict())}, {json.dumps(transactions.get())}, {json.dumps(request_vars)})"
 
 
 def ajax_popup_service_action_menu() -> None:

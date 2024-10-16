@@ -275,10 +275,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             perfdata = [("runtime", battery_time_remain / 60.0)]
 
         if state:
-            levelstxt = " (warn/crit below {}/{})".format(
-                render.timespan(battery_time_warn),
-                render.timespan(battery_time_crit),
-            )
+            levelstxt = f" (warn/crit below {render.timespan(battery_time_warn)}/{render.timespan(battery_time_crit)})"
 
         yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
 

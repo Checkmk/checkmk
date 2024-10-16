@@ -41,10 +41,8 @@ def check_kentix_humidity(
     _no_item: None, _no_params: Mapping[str, object], section: Section
 ) -> Iterable:
     perfdata = [("humidity", section.reading, section.upper_warn, None)]
-    infotext = "{:.1f}% (min/max at {:.1f}%/{:.1f}%)".format(
-        section.reading,
-        section.lower_warn,
-        section.upper_warn,
+    infotext = (
+        f"{section.reading:.1f}% (min/max at {section.lower_warn:.1f}%/{section.upper_warn:.1f}%)"
     )
     if section.reading >= section.upper_warn or section.reading <= section.lower_warn:
         state = 1

@@ -54,16 +54,10 @@ def check_blade_bx_powerfan(item, params, info):  # pylint: disable=too-many-bra
             levels_text = ""
             if speed_perc < crit_perc_lower:
                 state = 2
-                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
-                    warn_perc_lower,
-                    crit_perc_lower,
-                )
+                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
             elif speed_perc < warn_perc_lower:
                 state = 1
-                levels_text = " (warn/crit below {:.1f}%/{:.1f}%)".format(
-                    warn_perc_lower,
-                    crit_perc_lower,
-                )
+                levels_text = f" (warn/crit below {warn_perc_lower:.1f}%/{crit_perc_lower:.1f}%)"
 
             if warn_perc:
                 if speed_perc >= crit_perc:

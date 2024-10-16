@@ -202,11 +202,7 @@ def check_oracle_diva_csm_objects(item, params, info):
     if len(info) > 4 and len(info[4]) > 0:
         object_count, remaining_size, total_size = map(int, info[4][0])
 
-        infotext = "managed objects: {}, remaining size: {} GB of {} GB".format(
-            object_count,
-            remaining_size,
-            total_size,
-        )
+        infotext = f"managed objects: {object_count}, remaining size: {remaining_size} GB of {total_size} GB"
 
         return (
             0,

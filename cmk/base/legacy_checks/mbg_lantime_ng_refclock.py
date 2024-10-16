@@ -206,12 +206,7 @@ def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):
 
     state, state_txt = refclock_states[state]
     detailed_state_txt = " (%s)" % refclock_substates[substate] if substate != "0" else ""
-    infotext = "Type: {}, Usage: {}, State: {}{}".format(
-        mbg_lantime_ng_refclock_types[clock_type],
-        refclock_usages[usage],
-        state_txt,
-        detailed_state_txt,
-    )
+    infotext = f"Type: {mbg_lantime_ng_refclock_types[clock_type]}, Usage: {refclock_usages[usage]}, State: {state_txt}{detailed_state_txt}"
 
     return state, infotext
 

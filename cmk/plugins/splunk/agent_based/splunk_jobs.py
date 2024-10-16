@@ -49,13 +49,7 @@ class Job(pydantic.BaseModel):
 
     def __str__(self) -> str:
         """Represent the job as a string."""
-        return "{} - Author: {}, Application: {}, State: {}, Zombie: {}".format(
-            render.datetime(self.published_at.timestamp()),
-            self.author,
-            self.application,
-            self.dispatch_state,
-            self.is_zombie,
-        )
+        return f"{render.datetime(self.published_at.timestamp())} - Author: {self.author}, Application: {self.application}, State: {self.dispatch_state}, Zombie: {self.is_zombie}"
 
     @classmethod
     def from_string_table_item(cls, table: list[str]) -> Self:

@@ -276,10 +276,7 @@ def check_mongodb_primary_election(_item, _params, status_dict):
     else:
         yield (
             0,
-            "Primary '{}' elected {}".format(
-                primary_name,
-                render.datetime(primary_election_time),
-            ),
+            f"Primary '{primary_name}' elected {render.datetime(primary_election_time)}",
         )
 
     # update primary information

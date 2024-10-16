@@ -45,10 +45,7 @@ def check_keepalived(item, params, info):
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is {}. IP Address: {}".format(
-                map_state[str(entry[1])],
-                hex2ip(hexaddr),
-            )
+            infotext = f"This node is {map_state[str(entry[1])]}. IP Address: {hex2ip(hexaddr)}"
     yield status, infotext
 
 

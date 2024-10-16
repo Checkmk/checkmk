@@ -1146,7 +1146,7 @@ class ESXConnection:
 
         response = self._session.postsoap(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
-            element = get_pattern("<{entry}.*>(.*)</{entry}>".format(entry=entry), response.text)
+            element = get_pattern(f"<{entry}.*>(.*)</{entry}>", response.text)
             if element:
                 system_info[entry] = element[0]
 

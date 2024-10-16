@@ -113,9 +113,8 @@ def check_emcvnx_storage_pools(item, params, parsed):
             elif percent_full >= perc_full_warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    render.bytes(perc_full_warn),
-                    render.bytes(perc_full_crit),
+                infotext += (
+                    f" (warn/crit at {render.bytes(perc_full_warn)}/{render.bytes(perc_full_crit)})"
                 )
 
         yield state, infotext

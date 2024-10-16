@@ -175,10 +175,7 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         output = wato_fileheader()
         for field, value in cfg.items():
-            output += "{} = \\\n{}\n\n".format(
-                field,
-                format_config_value(value),
-            )
+            output += f"{field} = \\\n{format_config_value(value)}\n\n"
         store.save_mk_file(self._config_file_path, output, add_header=False)
 
     def validate_and_save(self, raw: Mapping[str, object]) -> None:

@@ -1464,7 +1464,7 @@ class MetricCache(DataCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = "metric not found: {} ({})".format(metric_name, aggregation)
+                    msg = f"metric not found: {metric_name} ({aggregation})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 

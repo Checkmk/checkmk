@@ -84,10 +84,7 @@ def check_hp_msa_fan(item: str, section: Section) -> CheckResult:
     if fan_health_state is not State.OK and fan_health_reason:
         yield Result(
             state=fan_health_state,
-            summary="health: {} ({})".format(
-                fan_health_state_readable,
-                fan_health_reason,
-            ),
+            summary=f"health: {fan_health_state_readable} ({fan_health_reason})",
         )
 
 

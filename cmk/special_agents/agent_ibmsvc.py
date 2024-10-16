@@ -227,13 +227,7 @@ def _execute_ssh_command(
     host_address: str,
     opt_debug: bool,
 ) -> subprocess.CompletedProcess:
-    cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
-        opt_timeout,
-        opt_any_hostkey,
-        shlex.quote(user),
-        shlex.quote(host_address),
-        remote_command,
-    )
+    cmd = f"ssh -o ConnectTimeout={opt_timeout} {opt_any_hostkey} {shlex.quote(user)}@{shlex.quote(host_address)} '{remote_command}'"
 
     if opt_debug:
         sys.stderr.write(f"executing external command: {cmd}\n")

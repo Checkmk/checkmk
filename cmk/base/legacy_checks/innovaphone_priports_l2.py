@@ -56,11 +56,9 @@ def check_innovaphone_priports_l2(item, params, info):
                 state = 2
                 mode_label = "(!!)"
 
-            return state, "State: {}{}, Mode: {}{}".format(
-                states[l2state],
-                state_label,
-                modes[l2mode],
-                mode_label,
+            return (
+                state,
+                f"State: {states[l2state]}{state_label}, Mode: {modes[l2mode]}{mode_label}",
             )
     return 3, "Output not found"
 

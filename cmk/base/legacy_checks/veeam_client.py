@@ -110,17 +110,11 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
 
     # Check duration only if currently not running

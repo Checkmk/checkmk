@@ -694,16 +694,9 @@ class DowntimesIcon(Icon):
                 ) = downtime_entry[:11]
 
                 if fixed:
-                    time_info = "Start: {}, End: {}".format(
-                        cmk.utils.render.date_and_time(start_time),
-                        cmk.utils.render.date_and_time(end_time),
-                    )
+                    time_info = f"Start: {cmk.utils.render.date_and_time(start_time)}, End: {cmk.utils.render.date_and_time(end_time)}"
                 else:
-                    time_info = "May start from {} till {} with duration of {}".format(
-                        cmk.utils.render.date_and_time(start_time),
-                        cmk.utils.render.date_and_time(end_time),
-                        cmk.utils.render.Age(duration),
-                    )
+                    time_info = f"May start from {cmk.utils.render.date_and_time(start_time)} till {cmk.utils.render.date_and_time(end_time)} with duration of {cmk.utils.render.Age(duration)}"
                     lines.append(f"{author} ({time_info}) - {comment}")
 
             return "\n%s" % "\n".join(lines)

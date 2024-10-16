@@ -172,9 +172,7 @@ class NodeExporter:
             temp_list: list[str] = []
             for _device, device_info in node_dict.items():
                 if device_info.is_complete():
-                    device_parsed = "{0.name} {0.fstype} {0.size} {0.used} {0.available} None {0.mountpoint}".format(
-                        device_info
-                    )
+                    device_parsed = f"{device_info.name} {device_info.fstype} {device_info.size} {device_info.used} {device_info.available} None {device_info.mountpoint}"
                     temp_list.append(device_parsed)
             if temp_list:
                 result[node_name] = temp_list

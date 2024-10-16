@@ -31,16 +31,10 @@ def check_hitachi_hnas_psu(item, _no_params, info):
         if clusternode + "." + id_ == item:
             status = int(status)
             if status == 0 or status >= len(statusmap):
-                return 3, "PNode {} PSU {} reports unidentified status {}".format(
-                    clusternode,
-                    id_,
-                    status,
-                )
-            return statusmap[status][1], "PNode {} PSU {} reports status {}".format(
-                clusternode,
-                id_,
-                statusmap[status][0],
-            )
+                return 3, f"PNode {clusternode} PSU {id_} reports unidentified status {status}"
+            return statusmap[status][
+                1
+            ], f"PNode {clusternode} PSU {id_} reports status {statusmap[status][0]}"
 
     return 3, "SNMP did not report a status of this PSU"
 

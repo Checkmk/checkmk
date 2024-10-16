@@ -19,14 +19,8 @@ def check_stormshield_info(item, params, info):
     for model, version, serial, sysname, syslanguage in info:
         yield (
             0,
-            "Model: {}, Version: {}, Serial: {}, SysName: {}, \
-            SysLanguage: {}".format(
-                model,
-                version,
-                serial,
-                sysname,
-                syslanguage,
-            ),
+            f"Model: {model}, Version: {version}, Serial: {serial}, SysName: {sysname}, \
+            SysLanguage: {syslanguage}",
         )
 
 

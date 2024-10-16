@@ -56,18 +56,12 @@ def check_stormshield_cluster_node(item, params, info):
             if statusforced == "1":
                 yield (
                     1,
-                    "HA-State: {} ({})".format(
-                        active_mapping[active],
-                        forced_mapping[statusforced],
-                    ),
+                    f"HA-State: {active_mapping[active]} ({forced_mapping[statusforced]})",
                 )
             else:
                 yield (
                     0,
-                    "HA-State: {} ({})".format(
-                        active_mapping[active],
-                        forced_mapping[statusforced],
-                    ),
+                    f"HA-State: {active_mapping[active]} ({forced_mapping[statusforced]})",
                 )
             if int(quality) < crit:
                 yield 2, "Quality: %s" % quality
@@ -76,13 +70,7 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Quality: %s" % quality
 
-            infotext = "Model: {}, Version: {}, Role: {}, Priority: {}, Serial: {}".format(
-                model,
-                version,
-                license_,
-                priority,
-                serial,
-            )
+            infotext = f"Model: {model}, Version: {version}, Role: {license_}, Priority: {priority}, Serial: {serial}"
             yield 0, infotext
 
 

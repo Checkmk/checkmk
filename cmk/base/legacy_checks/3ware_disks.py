@@ -60,14 +60,7 @@ def check_3ware_disks(item, _no_params, info):
         size_type = line[4]
         disk_type = line[5]
         model = line[-1]
-        infotext = "{} (unit: {}, size: {},{}, type: {}, model: {})".format(
-            status,
-            unit_type,
-            size,
-            size_type,
-            disk_type,
-            model,
-        )
+        infotext = f"{status} (unit: {unit_type}, size: {size},{size_type}, type: {disk_type}, model: {model})"
         if status in ["OK", "VERIFYING"]:
             return (0, "disk status is " + infotext)
         if status in ["SMART_FAILURE"]:

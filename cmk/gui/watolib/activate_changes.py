@@ -1607,11 +1607,7 @@ class ActivateChangesManager(ActivateChanges):
             yield activation_id, self._load_activation_info(activation_id)
 
     def _site_snapshot_file(self, site_id: SiteId) -> str:
-        return "{}/{}/site_{}_sync.tar.gz".format(
-            ACTIVATION_TMP_BASE_DIR,
-            self._activation_id,
-            site_id,
-        )
+        return f"{ACTIVATION_TMP_BASE_DIR}/{self._activation_id}/site_{site_id}_sync.tar.gz"
 
     def _load_activation_info(self, activation_id: str) -> dict[str, Any]:
         info_path = self._info_path(activation_id)
@@ -2468,10 +2464,7 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
     html_code += "<ul>"
     for domain, warnings in sorted(configuration_warnings.items()):
         for warning in warnings:
-            html_code += "<li>{}: {}</li>".format(
-                escaping.escape_attribute(domain),
-                escaping.escape_attribute(warning),
-            )
+            html_code += f"<li>{escaping.escape_attribute(domain)}: {escaping.escape_attribute(warning)}</li>"
     html_code += "</ul>"
     html_code += "</div>"
     return html_code

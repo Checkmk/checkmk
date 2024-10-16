@@ -70,12 +70,12 @@ def _create_php_file(
         user.setdefault("language", active_config.default_language)  # Set a language for all users
         user.pop("session_info", None)  # remove the SessionInfo object
 
-    content = """<?php
-// Created by Multisite UserDB Hook ({})
+    content = f"""<?php
+// Created by Multisite UserDB Hook ({callee})
 global $mk_users, $mk_roles, $mk_groups;
-$mk_users   = {};
-$mk_roles   = {};
-$mk_groups  = {};
+$mk_users   = {format_php(nagvis_users)};
+$mk_roles   = {format_php(role_permissions)};
+$mk_groups  = {format_php(groups)};
 
 function all_users() {{
     global $mk_users;
@@ -174,12 +174,7 @@ function permitted_maps($username) {{
 }}
 
 ?>
-""".format(
-        callee,
-        format_php(nagvis_users),
-        format_php(role_permissions),
-        format_php(groups),
-    )
+"""
 
     store.makedirs(_auth_php().parent)
     store.save_text_to_file(_auth_php(), content)

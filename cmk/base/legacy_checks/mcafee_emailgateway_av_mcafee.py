@@ -21,11 +21,7 @@ def inventory_mcafee_gateway_generic(info):
 
 def check_mcafee_emailgateway_av_mcafee(item, params, info):
     eng_version, dat_version, extra_dat_version = info[0]
-    return 0, "Engine version: {}, DAT version: {} ({})".format(
-        eng_version,
-        dat_version,
-        extra_dat_version,
-    )
+    return 0, f"Engine version: {eng_version}, DAT version: {dat_version} ({extra_dat_version})"
 
 
 check_info["mcafee_emailgateway_av_mcafee"] = LegacyCheckDefinition(

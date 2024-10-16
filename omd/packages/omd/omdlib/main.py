@@ -2932,7 +2932,7 @@ def main_update(  # pylint: disable=too-many-branches
             "OMD_FROM_EDITION": from_edition,
         }
         command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
-        sys.stdout.write("Executing '{}'".format(subprocess.list2cmdline(command)))
+        sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
         returncode = _call_script(
             is_tty,
             {

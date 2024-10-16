@@ -376,32 +376,16 @@ def check_temperature(  # pylint: disable=too-many-branches
         dev_levelstext_lower = ""
 
         if usr_warn is not None and usr_crit is not None:
-            usr_levelstext = " (warn/crit at {}/{} {})".format(
-                render_temp(usr_warn, output_unit),
-                render_temp(usr_crit, output_unit),
-                temp_unitsym[output_unit],
-            )
+            usr_levelstext = f" (warn/crit at {render_temp(usr_warn, output_unit)}/{render_temp(usr_crit, output_unit)} {temp_unitsym[output_unit]})"
 
         if usr_warn_lower is not None and usr_crit_lower is not None:
-            usr_levelstext_lower = " (warn/crit below {}/{} {})".format(
-                render_temp(usr_warn_lower, output_unit),
-                render_temp(usr_crit_lower, output_unit),
-                temp_unitsym[output_unit],
-            )
+            usr_levelstext_lower = f" (warn/crit below {render_temp(usr_warn_lower, output_unit)}/{render_temp(usr_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels:
-            dev_levelstext = " (device warn/crit at {}/{} {})".format(
-                render_temp(dev_warn, output_unit),
-                render_temp(dev_crit, output_unit),
-                temp_unitsym[output_unit],
-            )
+            dev_levelstext = f" (device warn/crit at {render_temp(dev_warn, output_unit)}/{render_temp(dev_crit, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels_lower:
-            dev_levelstext_lower = " (device warn/crit below {}/{} {})".format(
-                render_temp(dev_warn_lower, output_unit),
-                render_temp(dev_crit_lower, output_unit),
-                temp_unitsym[output_unit],
-            )
+            dev_levelstext_lower = f" (device warn/crit below {render_temp(dev_warn_lower, output_unit)}/{render_temp(dev_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         # Output only levels that are relevant when computing the state
         if dlh == "usr":

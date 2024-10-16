@@ -25,12 +25,7 @@ def check_ibm_imm_voltage(item, _no_params, info):
             perfdata = [
                 ("volt", volt, str(warn_low) + ":" + str(warn), str(crit_low) + ":" + str(crit))
             ]
-            levelstext = " (levels warn/crit lower: {:.1f}/{:.1f} upper: {:.1f}/{:.1f})".format(
-                warn_low,
-                crit_low,
-                warn,
-                crit,
-            )
+            levelstext = f" (levels warn/crit lower: {warn_low:.1f}/{crit_low:.1f} upper: {warn:.1f}/{crit:.1f})"
 
             if (crit_low and volt <= crit_low) or (crit and volt >= crit):
                 state = 2

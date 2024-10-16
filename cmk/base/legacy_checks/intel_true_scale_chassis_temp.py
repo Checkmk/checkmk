@@ -37,10 +37,7 @@ def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
     }
 
     state, state_readable = map_status[info[0][0]]
-    return state, "Status: {}, Warning configuration: {}".format(
-        state_readable,
-        map_warn_config[info[0][1]],
-    )
+    return state, f"Status: {state_readable}, Warning configuration: {map_warn_config[info[0][1]]}"
 
 
 def parse_intel_true_scale_chassis_temp(string_table: StringTable) -> StringTable:

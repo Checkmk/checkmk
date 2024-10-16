@@ -140,9 +140,8 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
     elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += f"{varname}={value}\n"
-        html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
-            varname,
-            escape(value),
+        html_output += (
+            f"<tr><td class=varname>{varname}</td><td class=value>{escape(value)}</td></tr>\n"
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)

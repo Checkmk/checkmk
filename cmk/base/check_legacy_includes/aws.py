@@ -85,11 +85,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         else:
             limit_ref = p_limit
 
-        infotext = "{}: {} (of max. {})".format(
-            resource_title,
-            human_readable_func(amount),
-            human_readable_func(limit_ref),
-        )
+        infotext = f"{resource_title}: {human_readable_func(amount)} (of max. {human_readable_func(limit_ref)})"
         perfvar = f"aws_{aws_service}_{resource_key}"
         if aws.is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))

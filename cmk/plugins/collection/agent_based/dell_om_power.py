@@ -117,11 +117,7 @@ def check_dell_om_power_unit(item: str, section: Sequence[StringTable]) -> Check
             psu_type_readable = translate_type[psu_type]
             yield Result(
                 state=state,
-                summary="Status: {}, Type: {}, Name: {}".format(
-                    state_readable,
-                    psu_type_readable,
-                    location,
-                ),
+                summary=f"Status: {state_readable}, Type: {psu_type_readable}, Name: {location}",
             )
 
 

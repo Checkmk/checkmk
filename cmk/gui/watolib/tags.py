@@ -558,11 +558,11 @@ def _export_hosttags_to_php(cfg: TagConfigSpec) -> None:
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    content = """<?php
+    content = f"""<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
-$mk_hosttags = {};
-$mk_auxtags = {};
+$mk_hosttags = {format_php(hosttags_dict)};
+$mk_auxtags = {format_php(auxtags_dict)};
 
 function taggroup_title($group_id) {{
     global $mk_hosttags;
@@ -604,9 +604,6 @@ function all_taggroup_choices($object_tags) {{
 }}
 
 ?>
-""".format(
-        format_php(hosttags_dict),
-        format_php(auxtags_dict),
-    )
+"""
 
     store.save_text_to_file(path, content)

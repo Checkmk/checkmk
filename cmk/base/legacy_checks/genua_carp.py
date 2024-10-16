@@ -83,9 +83,8 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
                 if masters == 1:
                     if nodes > 1:
                         output = "one "
-                    output += "node in carp state {} with IfLinkState {}".format(
-                        ifCarpStateStr,
-                        ifLinkStateStr,
+                    output += (
+                        f"node in carp state {ifCarpStateStr} with IfLinkState {ifLinkStateStr}"
                     )
                     # first master
                     if ifLinkState == "2":
@@ -105,10 +104,7 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
                     )
             # look for non-masters, only interesting if no cluster
             elif ifName == item and nodes == 1:
-                output = "node in carp state {} with IfLinkState {}".format(
-                    ifCarpStateStr,
-                    ifLinkStateStr,
-                )
+                output = f"node in carp state {ifCarpStateStr} with IfLinkState {ifLinkStateStr}"
                 # carp backup
                 if ifCarpState == "1" and ifLinkState == "1":
                     state = 0

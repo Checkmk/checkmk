@@ -641,10 +641,8 @@ def extract_snapshot(  # pylint: disable=too-many-branches
                     errors.extend(dom_errors or [])
                 except Exception:
                     # This should NEVER happen
-                    err_info = "Restore-Phase: {}, Domain: {}\nError: {}".format(
-                        what,
-                        name,
-                        traceback.format_exc(),
+                    err_info = (
+                        f"Restore-Phase: {what}, Domain: {name}\nError: {traceback.format_exc()}"
                     )
                     errors.append(err_info)
                     logger.critical(err_info)

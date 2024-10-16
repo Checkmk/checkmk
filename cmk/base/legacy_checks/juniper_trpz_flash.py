@@ -46,10 +46,7 @@ def check_juniper_trpz_flash(_no_item, params, info):
             return 1, message + levels, perf
     else:
         perf = [("used", used, warn, crit, 0, total)]
-        levels = "Levels Warn/Crit are ({}, {})".format(
-            render.bytes(warn),
-            render.bytes(crit),
-        )
+        levels = f"Levels Warn/Crit are ({render.bytes(warn)}, {render.bytes(crit)})"
         if used > crit:
             return 2, message + levels, perf
         if used > warn:

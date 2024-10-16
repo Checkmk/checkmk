@@ -120,10 +120,7 @@ def check_aws_glacier_summary(item, params, parsed):
     if largest_vault:
         yield (
             0,
-            "Largest vault: {} ({})".format(
-                largest_vault,
-                render.disksize(largest_vault_size),
-            ),
+            f"Largest vault: {largest_vault} ({render.disksize(largest_vault_size)})",
             [("aws_glacier_largest_vault_size", largest_vault_size)],
         )
 

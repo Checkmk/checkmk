@@ -34,12 +34,7 @@ def check_stormshield_route(item, params, info):
         if line[0] == item:
             _index, typ, name, gateway_name, gateway_type, state = line
             yield route_state_mapping[state]
-            infotext = "Type: {}, Router name: {}, Gateway name: {}, Gateway type: {}".format(
-                route_type_mapping[typ],
-                name,
-                gateway_name,
-                gateway_type,
-            )
+            infotext = f"Type: {route_type_mapping[typ]}, Router name: {name}, Gateway name: {gateway_name}, Gateway type: {gateway_type}"
             yield 0, infotext
 
 

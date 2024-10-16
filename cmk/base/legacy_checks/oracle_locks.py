@@ -81,30 +81,12 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
             if ctime >= crit:
                 state = 2
                 lockcount += 1
-                infotext += "locktime {} (!!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
-                    render.time_offset(ctime),
-                    sidnr,
-                    serial,
-                    process,
-                    machine,
-                    osuser,
-                    object_owner,
-                    object_name,
-                )
+                infotext += f"locktime {render.time_offset(ctime)} (!!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
             elif ctime >= warn:
                 state = max(1, state)
                 lockcount += 1
-                infotext += "locktime {} (!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
-                    render.time_offset(ctime),
-                    sidnr,
-                    serial,
-                    process,
-                    machine,
-                    osuser,
-                    object_owner,
-                    object_name,
-                )
+                infotext += f"locktime {render.time_offset(ctime)} (!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
         if line[0] == item and line[1] == "":
             state = max(0, state)

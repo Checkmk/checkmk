@@ -47,12 +47,7 @@ def check_dell_chassis_powersupplies(item: str, section: StringTable) -> CheckRe
     for oid_end, voltage, current, maxpower in section:
         if item == re.sub(r"\.", "-", oid_end):
             power = savefloat(voltage) * savefloat(current)
-            infotext = "current/max Power: {:.2f} / {}, Current: {}, Voltage: {}".format(
-                power,
-                maxpower,
-                current,
-                voltage,
-            )
+            infotext = f"current/max Power: {power:.2f} / {maxpower}, Current: {current}, Voltage: {voltage}"
 
             if savefloat(current) == 0:
                 infotext = infotext + " - device in standby"

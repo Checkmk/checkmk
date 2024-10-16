@@ -52,11 +52,7 @@ def check_informix_dbspaces(item, params, parsed):
             size += int(entry["chksize"]) * pagesize
 
         used = size - free
-        infotext = "Data files: {}, Size: {}, Used: {}".format(
-            len(datafiles),
-            render.disksize(size),
-            render.disksize(used),
-        )
+        infotext = f"Data files: {len(datafiles)}, Size: {render.disksize(size)}, Used: {render.disksize(used)}"
         state = 0
         if "levels" in params:
             warn, crit = params["levels"]
@@ -65,10 +61,7 @@ def check_informix_dbspaces(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    render.disksize(warn),
-                    render.disksize(crit),
-                )
+                infotext += f" (warn/crit at {render.disksize(warn)}/{render.disksize(crit)})"
 
         yield state, infotext, [("tablespace_size", size), ("tablespace_used", used)]
 

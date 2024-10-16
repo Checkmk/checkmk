@@ -1472,12 +1472,7 @@ def rbn_match_contact_macros(
                         if varname.startswith("_")
                     ]
                 )
-                return "value '{}' for macro '{}' does not match '{}'. His macros are: {}".format(
-                    value,
-                    macro_name,
-                    regexp,
-                    macro_overview,
-                )
+                return f"value '{value}' for macro '{macro_name}' does not match '{regexp}'. His macros are: {macro_overview}"
     return None
 
 
@@ -1595,10 +1590,8 @@ def rbn_match_event_console(
                     prio_to, prio_from = prio_from, prio_to
                     p = int(context["EC_PRIORITY"])
                     if p < prio_from or p > prio_to:
-                        return "Event has priority {}, but matched range is {} .. {}".format(
-                            p,
-                            prio_from,
-                            prio_to,
+                        return (
+                            f"Event has priority {p}, but matched range is {prio_from} .. {prio_to}"
                         )
 
             # Match syslog facility of event

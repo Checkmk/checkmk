@@ -73,10 +73,7 @@ def check_netscaler_ha(_no_item, _no_params, info):
         if cur_status == 0:
             infotext = "System not setup for HA"
         else:
-            infotext = "State: {}, Neighbour: {}".format(
-                netscaler_ha_cur_states[cur_state][0],
-                netscaler_ha_peer_mode[peer_state][0],
-            )
+            infotext = f"State: {netscaler_ha_cur_states[cur_state][0]}, Neighbour: {netscaler_ha_peer_mode[peer_state][0]}"
             state = max(
                 netscaler_ha_cur_states[cur_state][1], netscaler_ha_peer_mode[peer_state][1]
             )

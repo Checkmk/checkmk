@@ -85,15 +85,7 @@ class MenuItem:
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
     def __repr__(self) -> str:
-        return "{}(mode_or_url={!r}, title={!r}, icon={!r}, permission={!r}, description={!r}, sort_index={!r})".format(
-            self.__class__.__name__,
-            self.mode_or_url,
-            self.title,
-            self.icon,
-            self.permission,
-            self.description,
-            self.sort_index,
-        )
+        return f"{self.__class__.__name__}(mode_or_url={self.mode_or_url!r}, title={self.title!r}, icon={self.icon!r}, permission={self.permission!r}, description={self.description!r}, sort_index={self.sort_index!r})"
 
 
 class MainModuleTopic(NamedTuple):

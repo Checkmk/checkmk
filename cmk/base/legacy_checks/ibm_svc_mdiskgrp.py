@@ -138,10 +138,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         elif provisioning >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at {}/{})".format(
-                render.percent(warn),
-                render.percent(crit),
-            )
+            infotext += f" (warn/crit at {render.percent(warn)}/{render.percent(crit)})"
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100
     else:

@@ -46,9 +46,8 @@ def check_acme_certificates(item, params, info):
                 elif time_diff < warn:
                     state = 1
                 if state:
-                    infotext += " (warn/crit below {}/{})".format(
-                        render.timespan(warn),
-                        render.timespan(crit),
+                    infotext += (
+                        f" (warn/crit below {render.timespan(warn)}/{render.timespan(crit)})"
                     )
             else:
                 state = 2

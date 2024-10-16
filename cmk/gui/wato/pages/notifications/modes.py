@@ -3489,6 +3489,12 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._new = self._edit_nr < 0
+        notifications_rules = list(NotificationRuleConfigFile().load_for_reading())
+        if self._edit_nr >= len(notifications_rules):
+            raise MKUserError(None, _("Notification rule does not exist."))
+        self._object_id: str | None = (
+            None if self._new else notifications_rules[self._edit_nr]["rule_id"]
+        )
         quick_setup = quick_setup_registry["notification_rule"]
         self._quick_setup_id = quick_setup.id
 
@@ -3532,5 +3538,6 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 "quick_setup_id": self._quick_setup_id,
                 "mode": "guided" if self._new else "overview",
                 "toggle_enabled": True,
+                "object_id": self._object_id,
             },
         )

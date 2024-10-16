@@ -15,7 +15,9 @@ pkg_files(
 
 pkg_files(
     name = "protobuf_lib",
-    srcs = ["@com_google_protobuf//:protoc_lib"],
+    srcs = [
+        "@com_google_protobuf//:protoc_lib",
+    ],
     excludes = ["libprotoc_lib.a"],
 )
 
@@ -24,6 +26,21 @@ pkg_mklink(
     name = "protobuf_lib_link",
     link_name = "libprotobuf.so.31",
     target = "libprotoc_lib.so",
+)
+
+pkg_files(
+    name = "well_known_proto_files",
+    srcs = [
+        "@com_google_protobuf//:well_known_type_protos",
+    ],
+)
+
+pkg_filegroup(
+    name = "well_known_protos",
+    srcs = [
+        ":well_known_proto_files",
+    ],
+    prefix = "include/google/protobuf",
 )
 
 pkg_filegroup(
@@ -39,8 +56,8 @@ pkg_filegroup(
     name = "protobuf",
     srcs = [
         ":protobuf_bin",
-        ":protobuf_lib",
-        ":protobuf_lib_link",
+        ":protobuf_library",
+        ":well_known_protos",
     ],
     prefix = "protobuf",
 )

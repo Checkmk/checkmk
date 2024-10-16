@@ -18,6 +18,16 @@ const props = defineProps<{
 
 // Specs
 
+const dataTransformation = ref(95)
+const specTransformation = {
+  type: 'float',
+  title: '',
+  help: '',
+  validators: [],
+  label: props.i18n.graph_operations.percentile
+}
+const backendValidationTransformation: ValidationMessages = []
+
 const dataUnit = ref(['first_with_unit', null])
 const specUnit = {
   type: 'cascading_single_choice',
@@ -284,10 +294,70 @@ const topics: Topic[] = [
     ]
   }
 ]
+
+// Operations on selected graph lines
+
+function operationIsApplicable() {
+  // Ie. there are at least two metrics selected
+  return false
+}
+
+function binaryOperationIsApplicable() {
+  // Ie. there are exactly two metrics selected
+  return false
+}
+
+function transformationIsApplicable() {
+  // Ie. there is exactly one metric selected
+  return false
+}
+
+function applySum() {}
+
+function applyProduct() {}
+
+function applyDifference() {}
+
+function applyFraction() {}
+
+function applyAverage() {}
+
+function applyMinimum() {}
+
+function applyMaximum() {}
+
+function applyTransformation() {}
 </script>
 
 <template>
   <TopicsRenderer :topics="topics">
+    <template #operations>
+      <div v-if="operationIsApplicable()">
+        <button @click="applySum">{{ props.i18n.graph_operations.sum }}</button>
+        <button @click="applyProduct">{{ props.i18n.graph_operations.product }}</button>
+        <button v-if="binaryOperationIsApplicable()" @click="applyDifference">
+          {{ props.i18n.graph_operations.difference }}
+        </button>
+        <button v-if="binaryOperationIsApplicable()" @click="applyFraction">
+          {{ props.i18n.graph_operations.fraction }}
+        </button>
+        <button @click="applyAverage">{{ props.i18n.graph_operations.average }}</button>
+        <button @click="applyMinimum">{{ props.i18n.graph_operations.minimum }}</button>
+        <button @click="applyMaximum">{{ props.i18n.graph_operations.maximum }}</button>
+      </div>
+      <div v-else>{{ props.i18n.graph_operations.no_selected_graph_lines }}</div>
+    </template>
+    <template #transformation>
+      <div v-if="transformationIsApplicable()">
+        <FormEdit
+          v-model:data="dataTransformation"
+          :spec="specTransformation"
+          :backend-validation="backendValidationTransformation"
+        />
+        <button @click="applyTransformation">{{ props.i18n.graph_operations.apply }}</button>
+      </div>
+      <div v-else>{{ props.i18n.graph_operations.no_selected_graph_line }}</div>
+    </template>
     <template #unit>
       <div>
         <FormEdit

@@ -10,6 +10,19 @@ test('Render GraphDesignerApp', () => {
   render(GraphDesignerApp, {
     props: {
       i18n: {
+        graph_operations: {
+          sum: 'sum',
+          product: 'product',
+          difference: 'difference',
+          fraction: 'fraction',
+          average: 'average',
+          minimum: 'minimum',
+          maximum: 'maximum',
+          no_selected_graph_lines: 'no_selected_graph_lines',
+          percentile: 'percentile',
+          apply: 'apply',
+          no_selected_graph_line: 'no_selected_graph_line'
+        },
         graph_options: {
           unit_first_with_unit: 'unit_first_with_unit',
           unit_custom: 'unit_custom',

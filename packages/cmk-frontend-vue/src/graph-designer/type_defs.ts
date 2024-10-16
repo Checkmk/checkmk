@@ -13,8 +13,22 @@ export interface GraphDesignerContent {
   i18n: I18N;
 }
 export interface I18N {
+  graph_operations: I18NGraphOperations;
   graph_options: I18NGraphOptions;
   topics: I18NTopics;
+}
+export interface I18NGraphOperations {
+  sum: string;
+  product: string;
+  difference: string;
+  fraction: string;
+  average: string;
+  minimum: string;
+  maximum: string;
+  no_selected_graph_lines: string;
+  percentile: string;
+  apply: string;
+  no_selected_graph_line: string;
 }
 export interface I18NGraphOptions {
   unit_first_with_unit: string;

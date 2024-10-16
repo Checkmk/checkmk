@@ -7,6 +7,35 @@
     },
     "required": ["i18n"],
     "$defs": {
+        "i18n_graph_operations": {
+            "type": "object",
+            "properties": {
+                "sum": { "type": "string" },
+                "product": { "type": "string" },
+                "difference": { "type": "string" },
+                "fraction": { "type": "string" },
+                "average": { "type": "string" },
+                "minimum": { "type": "string" },
+                "maximum": { "type": "string" },
+                "no_selected_graph_lines": { "type": "string" },
+                "percentile": { "type": "string" },
+                "apply": { "type": "string" },
+                "no_selected_graph_line": { "type": "string" }
+            },
+            "required": [
+                "sum",
+                "product",
+                "difference",
+                "fraction",
+                "average",
+                "minimum",
+                "maximum",
+                "no_selected_graph_lines",
+                "percentile",
+                "apply",
+                "no_selected_graph_line"
+            ]
+        },
         "i18n_graph_options": {
             "type": "object",
             "properties": {
@@ -92,10 +121,11 @@
         "i18n": {
             "type": "object",
             "properties": {
+                "graph_operations": { "$ref": "#/$defs/i18n_graph_operations" },
                 "graph_options": { "$ref": "#/$defs/i18n_graph_options" },
                 "topics": { "$ref": "#/$defs/i18n_topics" }
             },
-            "required": ["graph_options", "topics"]
+            "required": ["graph_operations", "graph_options", "topics"]
         }
     }
 }

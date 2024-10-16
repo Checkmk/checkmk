@@ -9,4 +9,22 @@
  * Do not edit manually.
  */
 
-export interface GraphDesignerData {}
+export interface GraphDesignerContent {
+  i18n: I18N;
+}
+export interface I18N {
+  topics: I18NTopics;
+}
+export interface I18NTopics {
+  metric: string;
+  scalar: string;
+  constant: string;
+  graph_lines: string;
+  operations: string;
+  transformation: string;
+  graph_operations: string;
+  unit: string;
+  vertical_range: string;
+  metrics_with_zero_values: string;
+  graph_options: string;
+}

@@ -1,5 +1,47 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
-    "title": "graph_designer_data"
+    "title": "graph_designer_content",
+    "properties": {
+        "i18n": { "$ref": "#/$defs/i18n" }
+    },
+    "required": ["i18n"],
+    "$defs": {
+        "i18n_topics": {
+            "type": "object",
+            "properties": {
+                "metric": { "type": "string" },
+                "scalar": { "type": "string" },
+                "constant": { "type": "string" },
+                "graph_lines": { "type": "string" },
+                "operations": { "type": "string" },
+                "transformation": { "type": "string" },
+                "graph_operations": { "type": "string" },
+                "unit": { "type": "string" },
+                "vertical_range": { "type": "string" },
+                "metrics_with_zero_values": { "type": "string" },
+                "graph_options": { "type": "string" }
+            },
+            "required": [
+                "metric",
+                "scalar",
+                "constant",
+                "graph_lines",
+                "operations",
+                "transformation",
+                "graph_operations",
+                "unit",
+                "vertical_range",
+                "metrics_with_zero_values",
+                "graph_options"
+            ]
+        },
+        "i18n": {
+            "type": "object",
+            "properties": {
+                "topics": { "$ref": "#/$defs/i18n_topics" }
+            },
+            "required": ["topics"]
+        }
+    }
 }

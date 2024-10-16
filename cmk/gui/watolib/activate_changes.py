@@ -1474,7 +1474,7 @@ class ActivateChangesManager(ActivateChanges):
         execute_activation_cleanup_background_job(maximum_age=60)
 
         self._pre_activate_changes()
-        self._create_snapshots()
+        self._create_snapshots(activation_features.snapshot_manager_factory)
         self._save_activation()
 
         self._start_activation()
@@ -1649,7 +1649,7 @@ class ActivateChangesManager(ActivateChanges):
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
-    def _pre_activate_changes(self):
+    def _pre_activate_changes(self) -> None:
         try:
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_all_hosts())
@@ -1660,7 +1660,10 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
     @tracer.start_as_current_span("create_snapshots")
-    def _create_snapshots(self):
+    def _create_snapshots(
+        self,
+        snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
+    ) -> None:
         """Creates the needed SyncSnapshots for each applicable site.
 
         Some conflict prevention is being done. This function checks for the presence of
@@ -1708,9 +1711,7 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = activation_features_registry[
-                str(version.edition(paths.omd_root))
-            ].snapshot_manager_factory(work_dir, site_snapshot_settings)
+            snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -1781,7 +1782,10 @@ class ActivateChangesManager(ActivateChanges):
         self._log_activation()
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(
-            self._activation_id, self._site_snapshot_settings, self._prevent_activate, self._source
+            self._activation_id,
+            self._site_snapshot_settings,
+            self._prevent_activate,
+            self._source,
         )
         job.start(
             job.schedule_sites,
@@ -2186,7 +2190,13 @@ def sync_and_activate(
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
 
         site_activation_states = _create_broker_certificates_for_remote_sites(
-            omd_site(), site_activation_states, site_snapshot_settings, task_pool
+            omd_site(),
+            site_activation_states,
+            site_snapshot_settings,
+            task_pool,
+            activation_features_registry[
+                str(version.edition(paths.omd_root))
+            ].broker_certificate_sync,
         )
 
         active_tasks = ActiveTasks(
@@ -2283,12 +2293,10 @@ def _create_broker_certificates_for_remote_sites(
     site_activation_states: Mapping[SiteId, SiteActivationState],
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     task_pool: ThreadPool,
+    broker_sync: BrokerCertificateSync,
 ) -> Mapping[SiteId, SiteActivationState]:
     site_activation_states_certs_synced = dict(site_activation_states)
 
-    broker_sync = activation_features_registry[
-        str(version.edition(paths.omd_root))
-    ].broker_certificate_sync
     if not (
         required_sites := broker_sync.get_site_to_sync(
             myself,

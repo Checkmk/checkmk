@@ -29,6 +29,10 @@ from tests.testlib.repo import git_commit_id, git_essential_directories, repo_pa
 from tests.testlib.utils import package_hash_path
 from tests.testlib.version import CMKVersion
 
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+from cmk.utils.version import Version
+
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
@@ -283,7 +287,6 @@ def _create_cmk_image(
     image_name_with_tag = (
         f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
-
     if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
@@ -377,8 +380,10 @@ def _create_cmk_image(
         labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
-
-        if not use_local_package:
+        if (
+            not use_local_package
+            and Version.from_str(version.version).release_candidate.value is None
+        ):
             try:
                 logger.info(
                     "Uploading [%s] to registry (%s)",
@@ -390,6 +395,8 @@ def _create_cmk_image(
             except docker.errors.APIError as e:
                 logger.warning("  An error occurred")
                 _handle_api_error(e)
+        else:
+            logger.info("Skipping upload to registry (%s)", image.short_id)
 
     return image_name_with_tag
 

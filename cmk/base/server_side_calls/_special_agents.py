@@ -77,7 +77,6 @@ class SpecialAgent:
         path = self._make_source_path(agent_name)
         args = legacy_commandline_arguments(
             self.host_name,
-            None,
             agent_configuration,
             self.stored_passwords,
             self.password_store_file,

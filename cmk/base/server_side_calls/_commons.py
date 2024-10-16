@@ -10,7 +10,6 @@ from typing import Protocol
 
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.servicename import ServiceName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.server_side_calls.v1 import Secret
@@ -41,7 +40,6 @@ class ActiveCheckError(Exception):  # or agent
 
 def legacy_commandline_arguments(
     hostname: HostName,
-    description: ServiceName | None,
     commandline_args: SpecialAgentInfoFunctionResult,
     passwords: Mapping[str, str],
     password_store_file: Path,
@@ -55,18 +53,17 @@ def legacy_commandline_arguments(
     args = getattr(commandline_args, "args", commandline_args)
 
     if not isinstance(args, list):
-        raise ActiveCheckError(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Service: %s)." % (description)
+        raise ActiveCheckError(  # Agent :-(
+            "The agent argument function needs to return either a list of arguments or a "
+            "string of the concatenated arguments."
         )
 
-    return _prepare_check_command(args, hostname, description, passwords, password_store_file)
+    return _prepare_check_command(args, hostname, passwords, password_store_file)
 
 
 def _prepare_check_command(
     command_spec: CheckCommandArguments,
     hostname: HostName,
-    description: ServiceName | None,
     passwords: Mapping[str, str],
     password_store_file: Path,
 ) -> str:
@@ -96,7 +93,7 @@ def _prepare_check_command(
             passwords,
             password_store_file,
             config_warnings.warn,
-            _make_log_label(hostname, description),
+            _make_log_label(hostname),
         ),
     )
 
@@ -157,12 +154,8 @@ def replace_passwords(
     )
 
 
-def _make_log_label(host_name: str | None, description: ServiceName | None = None) -> str:
-    if host_name and description:
-        return f' used by service "{description}" on host "{host_name}"'
-    if host_name:
-        return f' used by host "{host_name}"'
-    return ""
+def _make_log_label(host_name: str) -> str:
+    return f' used by host "{host_name}"'
 
 
 def _make_helpful_exception(index: int, arguments: Sequence[str | Secret]) -> TypeError:

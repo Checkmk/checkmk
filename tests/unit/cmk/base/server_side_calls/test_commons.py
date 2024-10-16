@@ -58,7 +58,6 @@ def test_commandline_arguments(
 ) -> None:
     cmdline_args = legacy_commandline_arguments(
         HostName("test"),
-        "test service",
         args,
         passwords,
         Path("/my/password/store"),
@@ -66,44 +65,17 @@ def test_commandline_arguments(
     assert cmdline_args == expected_result
 
 
-@pytest.mark.parametrize(
-    "host_name, service_name, expected_warning",
-    [
-        pytest.param(
-            HostName("test"),
-            "test service",
-            'The stored password "pw-id" used by service "test service" on host "test" does not exist (anymore).',
-            id="host and service names present",
-        ),
-        pytest.param(
-            HostName("test"),
-            None,
-            'The stored password "pw-id" used by host "test" does not exist (anymore).',
-            id="service name not present",
-        ),
-        pytest.param(
-            None,
-            None,
-            'The stored password "pw-id" does not exist (anymore).',
-            id="host and service names not present",
-        ),
-    ],
-)
-def test_commandline_arguments_nonexisting_password(
-    host_name: HostName,
-    service_name: str,
-    expected_warning: str,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_commandline_arguments_nonexisting_password(capsys: pytest.CaptureFixture[str]) -> None:
     legacy_commandline_arguments(
-        host_name,
-        service_name,
+        HostName("test"),
         ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
         {},
         Path("/pw/store"),
     )
-    captured = capsys.readouterr()
-    assert expected_warning in captured.out
+    assert (
+        'The stored password "pw-id" used by host "test" does not exist (anymore).'
+        in capsys.readouterr().out
+    )
 
 
 @pytest.mark.parametrize(
@@ -117,11 +89,10 @@ def test_commandline_arguments_nonexisting_password(
 def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int] | None) -> None:
     with pytest.raises(
         ActiveCheckError,
-        match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",
+        match=r"The agent argument function needs to return either a list of arguments or a string of the concatenated arguments.",
     ):
         legacy_commandline_arguments(
             HostName("test"),
-            "test service",
             args,  # type: ignore[arg-type]
             {},
             Path("/pw/store"),
@@ -135,7 +106,6 @@ def test_commandline_arguments_invalid_argument() -> None:
     ):
         legacy_commandline_arguments(
             HostName("test"),
-            "test service",
             ["arg1", (1, 2), "arg3"],  # type: ignore[list-item]
             {},
             Path("/pw/store"),

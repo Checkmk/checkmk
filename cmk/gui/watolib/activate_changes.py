@@ -1270,7 +1270,7 @@ def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
     }
 
 
-def get_rabbitmq_definitions(
+def default_rabbitmq_definitions(
     peer_to_peer_connections: BrokerConnections,
 ) -> Mapping[str, rabbitmq.Definitions]:
     replicated_sites_configs = get_all_replicated_sites()
@@ -1346,6 +1346,7 @@ class ActivateChangesManager(ActivateChanges):
         self._comment: str | None = None
         self._activate_foreign = False
         self._activation_id: str | None = None
+        self._time_started = 0.0
         self._prevent_activate = False
         self._persisted_changes: list[dict[str, Any]] = []
 
@@ -1443,6 +1444,9 @@ class ActivateChangesManager(ActivateChanges):
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
+        get_rabbitmq_definitions = activation_features_registry[
+            str(version.edition(paths.omd_root))
+        ].get_rabbitmq_definitions
         rabbitmq_definitions = get_rabbitmq_definitions(
             BrokerConnectionsConfigFile().load_for_reading()
         )
@@ -3455,6 +3459,7 @@ class ActivationFeatures:
     sync_file_filter_func: Callable[[str], bool] | None
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
     broker_certificate_sync: BrokerCertificateSync
+    get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):

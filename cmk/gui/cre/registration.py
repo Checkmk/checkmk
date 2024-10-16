@@ -43,7 +43,11 @@ from cmk.gui.wato import (
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
-from cmk.gui.watolib.activate_changes import activation_features_registry, ActivationFeatures
+from cmk.gui.watolib.activate_changes import (
+    activation_features_registry,
+    ActivationFeatures,
+    default_rabbitmq_definitions,
+)
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.broker_certificates import DefaultBrokerCertificateSync
@@ -138,6 +142,7 @@ def register(edition: Edition) -> None:
             sync_file_filter_func=None,
             snapshot_manager_factory=make_cre_snapshot_manager,
             broker_certificate_sync=DefaultBrokerCertificateSync(),
+            get_rabbitmq_definitions=default_rabbitmq_definitions,
         )
     )
     notification_parameter_registry.register(NotificationParameterMail)

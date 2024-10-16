@@ -20,10 +20,18 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
-            sh("""
-                set -o pipefail
-                ${cmd}
-            """);
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'bazel-caching-credentials',
+                    /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                    passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                    usernameVariable: 'BAZEL_CACHE_USER'),
+            ]) {
+                sh("""
+                    set -o pipefail
+                    ${cmd}
+                """);
+            }
         }
     }
 }

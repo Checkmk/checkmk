@@ -26,6 +26,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
+    AllStageErrors,
     complete_quick_setup,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
@@ -34,6 +35,7 @@ from cmk.gui.quick_setup.to_frontend import (
     retrieve_next_stage,
     Stage,
     validate_stage,
+    validate_stages,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
@@ -44,8 +46,8 @@ from cmk import fields
 
 from .request_schemas import QuickSetupFinalSaveRequest, QuickSetupRequest
 from .response_schemas import (
+    QuickSetupCompleteResponse,
     QuickSetupResponse,
-    QuickSetupSaveResponse,
     QuickSetupStageResponse,
 )
 
@@ -189,9 +191,10 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     method="post",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
+    query_params=[QUICKSETUP_MODE],
     additional_status_codes=[201],
     request_schema=QuickSetupFinalSaveRequest,
-    response_schema=QuickSetupSaveResponse,
+    response_schema=QuickSetupCompleteResponse,
 )
 def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
     """Save the quick setup"""
@@ -207,7 +210,7 @@ def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
     additional_status_codes=[201],
     request_schema=QuickSetupFinalSaveRequest,
-    response_schema=QuickSetupSaveResponse,
+    response_schema=QuickSetupCompleteResponse,
 )
 def edit_quick_setup_action(params: Mapping[str, Any]) -> Response:
     """Edit the quick setup"""
@@ -224,6 +227,20 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
+
+    if (
+        stage_errors := validate_stages(
+            quick_setup=quick_setup,
+            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        )
+    ) is not None:
+        return _serve_data(
+            AllStageErrors(
+                all_stage_errors=stage_errors,
+            ),
+            status_code=400,
+        )
+
     for action in quick_setup.actions:
         if action.id == button_id:
             return _serve_data(
@@ -245,7 +262,11 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
 
 
 def _serve_data(
-    data: QuickSetupOverview | Stage | QuickSetupSaveRedirect | QuickSetupAllStages,
+    data: QuickSetupOverview
+    | Stage
+    | QuickSetupSaveRedirect
+    | QuickSetupAllStages
+    | AllStageErrors,
     status_code: int = 200,
 ) -> Response:
     response = Response()

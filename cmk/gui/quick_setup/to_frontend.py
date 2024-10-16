@@ -91,6 +91,11 @@ class Stage:
 
 
 @dataclass
+class AllStageErrors:
+    all_stage_errors: Sequence[Errors]
+
+
+@dataclass
 class CompleteButton:
     id: str
     label: str
@@ -236,6 +241,43 @@ def validate_stage(
         )
 
     return errors if errors.exist() else None
+
+
+def validate_stages(
+    quick_setup: QuickSetup,
+    stages_raw_formspecs: Sequence[RawFormData],
+) -> Sequence[Errors] | None:
+    all_stage_errors = [Errors() for stage in stages_raw_formspecs]
+    stages = [stage() for stage in quick_setup.stages]
+    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
+
+    for n, stage_errors in enumerate(all_stage_errors):
+        # validate all form spec keys exist for stage
+        stage_errors.stage_errors.extend(
+            _stage_validate_all_form_spec_keys_existing(
+                stages_raw_formspecs[n], quick_setup_formspec_map
+            )
+        )
+
+    if [error for error in all_stage_errors if error.exist()]:
+        return all_stage_errors
+
+    for n, stage_errors in enumerate(all_stage_errors):
+        # validate form spec for stage
+        stage_errors.formspec_errors = _form_spec_validate(
+            [stages_raw_formspecs[n]], quick_setup_formspec_map
+        )
+
+        # validate custom validators for stage
+        for custom_validator in stages[n].custom_validators:
+            stage_errors.stage_errors.extend(
+                custom_validator(
+                    quick_setup.id,
+                    StageIndex(n),
+                    _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
+                )
+            )
+    return all_stage_errors if [error for error in all_stage_errors if error.exist()] else None
 
 
 def retrieve_next_stage(

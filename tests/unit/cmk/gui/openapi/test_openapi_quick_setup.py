@@ -31,7 +31,6 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
-    FieldSize,
     String,
     validators,
 )
@@ -169,7 +168,6 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
                                 "host_path": DictElement(
                                     parameter_form=String(
                                         title=Title("Host path"),
-                                        field_size=FieldSize.MEDIUM,
                                         custom_validate=(
                                             validators.LengthInRange(min_value=1),
                                             validators.MatchRegex(FOLDER_PATTERN),
@@ -372,3 +370,125 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
     )
     resp.assert_status_code(201)
     assert resp.json == {"redirect_url": "http://save/url"}
+
+
+def test_validate_non_existing_formspecs_on_save(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("id_1"),
+                        form_spec=String(),
+                    ),
+                ],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+            lambda: QuickSetupStage(
+                title="stage2",
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("id_2"),
+                        form_spec=String(),
+                    ),
+                ],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.save_quick_setup(
+        quick_setup_id="quick_setup_test",
+        payload={
+            "button_id": "save",
+            "stages": [
+                {"form_data": {"invalid_id_1": "doesnt_matter"}},
+                {"form_data": {"invalid_id_2": "doesnt_matter"}},
+            ],
+        },
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["all_stage_errors"] == [
+        {"formspec_errors": {}, "stage_errors": ["Formspec id 'invalid_id_1' not found"]},
+        {"formspec_errors": {}, "stage_errors": ["Formspec id 'invalid_id_2' not found"]},
+    ]
+
+
+def test_validate_form_specs_and_custom_validators_on_save(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("id_1"),
+                        form_spec=String(
+                            title=Title("string_id_1"),
+                            custom_validate=(validators.LengthInRange(min_value=10),),
+                        ),
+                    ),
+                ],
+                custom_validators=[_form_spec_extra_validate],
+                recap=[],
+                button_label="Next",
+            ),
+            lambda: QuickSetupStage(
+                title="stage2",
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("id_2"),
+                        form_spec=String(
+                            title=Title("string_id_2"),
+                            custom_validate=(validators.LengthInRange(max_value=10),),
+                        ),
+                    ),
+                ],
+                custom_validators=[_form_spec_extra_validate],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.save_quick_setup(
+        quick_setup_id="quick_setup_test",
+        payload={
+            "button_id": "save",
+            "stages": [
+                {"form_data": {"id_1": "too_short"}},
+                {"form_data": {"id_2": "this_is_too_long"}},
+            ],
+        },
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["all_stage_errors"] == [
+        {
+            "formspec_errors": {
+                "id_1": [
+                    {
+                        "message": "The minimum allowed length is 10.",
+                        "invalid_value": "too_short",
+                        "location": [],
+                    }
+                ],
+            },
+            "stage_errors": ["this is a general error", "and another one"],
+        },
+        {
+            "formspec_errors": {
+                "id_2": [
+                    {
+                        "message": "The maximum allowed length is 10.",
+                        "invalid_value": "this_is_too_long",
+                        "location": [],
+                    }
+                ]
+            },
+            "stage_errors": ["this is a general error", "and another one"],
+        },
+    ]

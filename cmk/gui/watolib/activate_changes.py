@@ -20,7 +20,15 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from itertools import filterfalse
@@ -39,6 +47,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
+from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
@@ -80,7 +89,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import Users
+from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import load_users, user_sync_default_config
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
@@ -116,9 +125,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import (
-    distribute_piggyback_hub_configs as distribute_piggyback_hub_configs,  # might be replcaed by the CME version
-)
 from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
@@ -1444,10 +1450,8 @@ class ActivateChangesManager(ActivateChanges):
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
-        get_rabbitmq_definitions = activation_features_registry[
-            str(version.edition(paths.omd_root))
-        ].get_rabbitmq_definitions
-        rabbitmq_definitions = get_rabbitmq_definitions(
+        activation_features = activation_features_registry[str(version.edition(paths.omd_root))]
+        rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
             BrokerConnectionsConfigFile().load_for_reading()
         )
 
@@ -1479,7 +1483,8 @@ class ActivateChangesManager(ActivateChanges):
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             logger.debug("Starting piggyback hub config distribution")
-            distribute_piggyback_hub_configs(
+
+            activation_features.distribute_piggyback_hub_configs(
                 load_configuration_settings(),
                 configured_sites(),
                 {site_id for site_id, _site_config in self.dirty_sites()},
@@ -3462,6 +3467,15 @@ class ActivationFeatures:
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
     broker_certificate_sync: BrokerCertificateSync
     get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
+    distribute_piggyback_hub_configs: Callable[
+        [
+            GlobalSettings,
+            Mapping[SiteId, SiteConfiguration],
+            Collection[SiteId],
+            Mapping[HostName, SiteId],
+        ],
+        None,
+    ]
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):

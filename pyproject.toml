@@ -35,7 +35,6 @@ ignore = [
   "UP012", # Unnecessary call to `encode` as UTF-8
   "UP015", # Unnecessary open mode parameters
   "UP017", # Use `datetime.UTC` alias
-  "UP018", # Unnecessary `FOO` call (rewrite as a literal)
   "UP024", # Replace aliased errors with `OSError`
   "UP025", # Remove unicode literals from strings
   "UP026", # `mock` is deprecated, use `unittest.mock`

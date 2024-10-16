@@ -53,7 +53,7 @@ def _parameter_valuespec_proxmox_ve_vm_backup_requirements():
                                 Age(
                                     title=_("Warning at"),
                                     display=["hours", "minutes"],
-                                    default_value=int(60),
+                                    default_value=60,
                                 ),
                                 Age(
                                     title=_("Critical at"),

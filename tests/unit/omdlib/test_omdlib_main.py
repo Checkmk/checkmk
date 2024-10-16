@@ -365,9 +365,9 @@ def test_permission_action_all_changed_streamline_standard_directories(relpath: 
             old_type="dir",
             new_type="dir",
             user_type="dir",
-            old_perm=int(0o775),
-            new_perm=int(0o770),
-            user_perm=int(0o750),
+            old_perm=0o775,
+            new_perm=0o770,
+            user_perm=0o750,
         )
         == "default"
     )

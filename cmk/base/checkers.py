@@ -86,7 +86,6 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.base.server_side_calls import SpecialAgentCommandLine
 from cmk.base.sources import (
     FetcherFactory,
     make_parser,
@@ -104,6 +103,7 @@ from cmk.agent_based.prediction_backend import (
 )
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 __all__ = [
     "CheckPluginMapper",

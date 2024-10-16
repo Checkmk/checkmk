@@ -39,11 +39,11 @@ from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
-from cmk.base import server_side_calls
 from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SectionPlugin
 from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
 from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls_backend import load_special_agents
 
 from ._host_check_config import HostCheckConfig
 
@@ -306,10 +306,7 @@ def _get_needed_plugin_names(
 
 def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: HostName) -> set[str]:
     ssc_api_special_agents = {
-        p.name
-        for p in server_side_calls.load_special_agents(
-            raise_errors=cmk.ccc.debug.enabled()
-        ).values()
+        p.name for p in load_special_agents(raise_errors=cmk.ccc.debug.enabled()).values()
     }
     return {
         f"agent_{name}"

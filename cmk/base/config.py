@@ -142,7 +142,13 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.server_side_calls import (
+from cmk.base.sources import SNMPFetcherConfig
+
+from cmk import piggyback, trace
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls import v1 as server_side_calls_api
+from cmk.server_side_calls_backend import (
     ActiveCheck,
     ActiveServiceData,
     ExecutableFinder,
@@ -152,12 +158,6 @@ from cmk.base.server_side_calls import (
     SpecialAgentCommandLine,
     SSCRules,
 )
-from cmk.base.sources import SNMPFetcherConfig
-
-from cmk import piggyback, trace
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
-from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
 cme_labels: ModuleType | None

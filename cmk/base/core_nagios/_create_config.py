@@ -33,7 +33,7 @@ from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
-from cmk.base import config, core_config, server_side_calls
+from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -42,6 +42,8 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     get_tags_with_groups_from_attributes,
 )
+
+from cmk.server_side_calls_backend import ActiveServiceData
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -360,9 +362,7 @@ def create_nagios_host_spec(  # pylint: disable=too-many-branches
     return host_spec
 
 
-def transform_active_service_command(
-    cfg: NagiosConfig, service_data: server_side_calls.ActiveServiceData
-) -> str:
+def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServiceData) -> str:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"

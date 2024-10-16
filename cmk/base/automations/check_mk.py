@@ -179,17 +179,17 @@ from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
-from cmk.base.server_side_calls import (
-    ExecutableFinder,
-    load_special_agents,
-    SpecialAgent,
-    SpecialAgentCommandLine,
-)
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.server_side_calls_backend import (
+    ExecutableFinder,
+    load_special_agents,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+)
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]

@@ -13,12 +13,12 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
-from cmk.server_side_calls_backend.config_processing import (
+
+from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
+from .config_processing import (
     process_configuration_to_parameters,
     ProxyConfig,
 )
-
-from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
 
 
 @dataclass(frozen=True)

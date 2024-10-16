@@ -30,10 +30,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
-from cmk.base import config, core_nagios, server_side_calls
+from cmk.base import config, core_nagios
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
+from cmk.server_side_calls_backend import load_active_checks
 
 
 def ip_address_of_never_called(
@@ -56,7 +57,7 @@ def _patch_plugin_loading(
 ) -> None:
     monkeypatch.setattr(
         config,
-        server_side_calls.load_active_checks.__name__,
+        load_active_checks.__name__,
         lambda *a, **kw: loaded_active_checks,
     )
 

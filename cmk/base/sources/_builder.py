@@ -25,7 +25,8 @@ from cmk.checkengine.fetcher import FetcherType
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.server_side_calls import SpecialAgentCommandLine
+
+from cmk.server_side_calls_backend import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (

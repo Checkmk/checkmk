@@ -19,12 +19,13 @@ from cmk.automations.results import DiagHostResult
 
 from cmk.fetchers import PiggybackFetcher
 
-from cmk.base import config, core_config, server_side_calls
+from cmk.base import config, core_config
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
+from cmk.server_side_calls_backend import load_active_checks
 
 
 class TestAutomationDiagHost:
@@ -86,7 +87,7 @@ def _patch_plugin_loading(
 ) -> None:
     monkeypatch.setattr(
         config,
-        server_side_calls.load_active_checks.__name__,
+        load_active_checks.__name__,
         lambda *a, **kw: loaded_active_checks,
     )
 

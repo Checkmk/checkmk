@@ -5,7 +5,7 @@
 
 from cmk.utils import password_store
 
-from cmk.base.server_side_calls import load_active_checks, load_special_agents
+from cmk.server_side_calls_backend import load_active_checks, load_special_agents
 
 
 def test_hack_apply_map_special_agents_is_complete() -> None:

@@ -10,8 +10,6 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
-from cmk.base.server_side_calls import load_special_agents
-
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
@@ -27,6 +25,8 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
+
+from cmk.server_side_calls_backend import load_special_agents
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
     FormSpecId(UniqueFormSpecIDStr): {

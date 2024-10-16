@@ -17,10 +17,9 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils import man_pages
 
-from cmk.base.server_side_calls import load_active_checks
-
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",

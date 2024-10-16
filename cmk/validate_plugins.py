@@ -21,9 +21,6 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 
-from cmk.base import (  # pylint: disable=cmk-module-layer-violation
-    server_side_calls,
-)
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
@@ -50,6 +47,10 @@ from cmk.rulesets.v1.rule_specs import (
     DiscoveryParameters,
     InventoryParameters,
     SpecialAgent,
+)
+from cmk.server_side_calls_backend import (  # pylint: disable=cmk-module-layer-violation
+    load_active_checks,
+    load_special_agents,
 )
 
 _AgentBasedPlugins = (
@@ -94,7 +95,7 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
 
 def _validate_active_checks_loading() -> ActiveCheckResult:
     try:
-        _ = server_side_calls.load_active_checks(raise_errors=True)
+        _ = load_active_checks(raise_errors=True)
     except Exception as error:
         errors = [f"At least one error: {error}"]
     else:
@@ -104,7 +105,7 @@ def _validate_active_checks_loading() -> ActiveCheckResult:
 
 def _validate_special_agent_loading() -> ActiveCheckResult:
     try:
-        _ = server_side_calls.load_special_agents(raise_errors=True)
+        _ = load_special_agents(raise_errors=True)
     except Exception as error:
         errors = [f"At least one error: {error}"]
     else:
@@ -320,8 +321,7 @@ def _validate_active_check_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name
-        for active_check in server_side_calls.load_active_checks(raise_errors=False).values()
+        active_check.name for active_check in load_active_checks(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_active_checks, referenced_ruleset_names)
 
@@ -333,8 +333,7 @@ def _validate_special_agent_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name
-        for active_check in server_side_calls.load_special_agents(raise_errors=False).values()
+        active_check.name for active_check in load_special_agents(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_special_agents, referenced_ruleset_names)
 

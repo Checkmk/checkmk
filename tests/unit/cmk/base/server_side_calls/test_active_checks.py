@@ -13,8 +13,6 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import ActiveCheck, ActiveServiceData
-
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
@@ -24,6 +22,7 @@ from cmk.server_side_calls.v1 import (
     IPv4Config,
     IPv6Config,
 )
+from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData
 
 HOST_CONFIG = HostConfig(
     name="hostname",

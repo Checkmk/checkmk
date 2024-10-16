@@ -13,8 +13,8 @@ import pytest
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
-from cmk.base.server_side_calls._commons import (
+from cmk.server_side_calls_backend import SpecialAgentInfoFunctionResult
+from cmk.server_side_calls_backend._commons import (
     ActiveCheckError,
     ExecutableFinder,
     legacy_commandline_arguments,

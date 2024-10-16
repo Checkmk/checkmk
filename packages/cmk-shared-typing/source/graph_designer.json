@@ -7,6 +7,59 @@
     },
     "required": ["i18n"],
     "$defs": {
+        "i18n_graph_options": {
+            "type": "object",
+            "properties": {
+                "unit_first_with_unit": { "type": "string" },
+                "unit_custom": { "type": "string" },
+                "unit_custom_notation": { "type": "string" },
+                "unit_custom_notation_symbol": { "type": "string" },
+                "unit_custom_notation_decimal": { "type": "string" },
+                "unit_custom_notation_si": { "type": "string" },
+                "unit_custom_notation_iec": { "type": "string" },
+                "unit_custom_notation_standard_scientific": {
+                    "type": "string"
+                },
+                "unit_custom_notation_engineering_scientific": {
+                    "type": "string"
+                },
+                "unit_custom_notation_time": { "type": "string" },
+                "unit_custom_precision": { "type": "string" },
+                "unit_custom_precision_rounding_mode": { "type": "string" },
+                "unit_custom_precision_rounding_mode_auto": {
+                    "type": "string"
+                },
+                "unit_custom_precision_rounding_mode_strict": {
+                    "type": "string"
+                },
+                "unit_custom_precision_digits": { "type": "string" },
+                "vertical_range_auto": { "type": "string" },
+                "vertical_range_explicit": { "type": "string" },
+                "vertical_range_explicit_lower": { "type": "string" },
+                "vertical_range_explicit_upper": { "type": "string" }
+            },
+            "required": [
+                "unit_first_with_unit",
+                "unit_custom",
+                "unit_custom_notation",
+                "unit_custom_notation_symbol",
+                "unit_custom_notation_decimal",
+                "unit_custom_notation_si",
+                "unit_custom_notation_iec",
+                "unit_custom_notation_standard_scientific",
+                "unit_custom_notation_engineering_scientific",
+                "unit_custom_notation_time",
+                "unit_custom_precision",
+                "unit_custom_precision_rounding_mode",
+                "unit_custom_precision_rounding_mode_auto",
+                "unit_custom_precision_rounding_mode_strict",
+                "unit_custom_precision_digits",
+                "vertical_range_auto",
+                "vertical_range_explicit",
+                "vertical_range_explicit_lower",
+                "vertical_range_explicit_upper"
+            ]
+        },
         "i18n_topics": {
             "type": "object",
             "properties": {
@@ -39,9 +92,10 @@
         "i18n": {
             "type": "object",
             "properties": {
+                "graph_options": { "$ref": "#/$defs/i18n_graph_options" },
                 "topics": { "$ref": "#/$defs/i18n_topics" }
             },
-            "required": ["topics"]
+            "required": ["graph_options", "topics"]
         }
     }
 }

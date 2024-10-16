@@ -52,6 +52,10 @@ onMounted(() => {
     childList: true,
     subtree: true
   })
+
+  // Always collect data on mount. Sometimes the observer is not triggered, when the
+  // legacyDOM does not contain input/select elements - like the FixedValue Valuespec
+  collectData()
 })
 
 onBeforeUnmount(() => {

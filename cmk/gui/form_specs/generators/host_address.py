@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 import socket
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String

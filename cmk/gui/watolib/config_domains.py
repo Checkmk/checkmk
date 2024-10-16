@@ -10,12 +10,12 @@ import signal
 import subprocess
 import traceback
 import warnings as warnings_module
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, NewType, Sequence
+from typing import Any, NewType
 
 from livestatus import SiteId
 

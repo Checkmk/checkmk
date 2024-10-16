@@ -5,9 +5,10 @@
 
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pprint import pformat
-from typing import cast, Iterator
+from typing import cast
 
 from opsgenie_sdk import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,

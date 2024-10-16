@@ -5,9 +5,10 @@
 
 import sys
 import time
+from collections.abc import Callable
 from logging import Logger
 from pathlib import Path
-from typing import Callable, ContextManager, NamedTuple
+from typing import ContextManager, NamedTuple
 
 from cmk.utils import render
 

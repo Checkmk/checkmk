@@ -8,10 +8,10 @@ from __future__ import annotations
 import functools
 import operator
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, assert_never, Callable, final, Literal, TypeVar
+from typing import Annotated, assert_never, final, Literal, TypeVar
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 

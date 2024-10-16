@@ -9,7 +9,7 @@
 # totalCreated 108141
 
 import time
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.base.config import check_info
 

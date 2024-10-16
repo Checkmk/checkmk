@@ -5,8 +5,8 @@
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-from collections.abc import Iterable, Mapping
-from typing import Any, Final, Iterator, NamedTuple
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Any, Final, NamedTuple
 
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info

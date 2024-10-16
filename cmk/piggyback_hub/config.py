@@ -5,10 +5,9 @@
 
 import logging
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from threading import Event
-from typing import Callable
 
 from pydantic import BaseModel
 

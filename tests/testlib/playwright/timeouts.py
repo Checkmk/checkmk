@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Definitions of timeouts during e2e testing."""
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 from playwright.sync_api import TimeoutError as PWTimeoutError
 

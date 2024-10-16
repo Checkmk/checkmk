@@ -6,8 +6,8 @@
 # pylint: disable=redefined-outer-name
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import docker  # type: ignore[import-untyped]
 import pytest

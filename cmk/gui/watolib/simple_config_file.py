@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
+from typing import cast, Generic, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
 

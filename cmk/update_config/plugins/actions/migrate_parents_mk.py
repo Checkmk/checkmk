@@ -6,9 +6,10 @@
 import pprint
 import re
 from ast import literal_eval
+from collections.abc import Iterator
 from logging import Logger
 from pathlib import Path
-from typing import Iterator, NamedTuple
+from typing import NamedTuple
 
 from livestatus import SiteId
 

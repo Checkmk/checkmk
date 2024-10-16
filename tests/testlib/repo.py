@@ -9,9 +9,9 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Iterator
 from contextlib import suppress
 from pathlib import Path
-from typing import Callable, Iterator
 
 LOGGER = logging.getLogger(__name__)
 

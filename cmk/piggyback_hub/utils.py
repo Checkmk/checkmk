@@ -8,9 +8,10 @@ import multiprocessing
 import signal
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 from ssl import SSLCertVerificationError
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 

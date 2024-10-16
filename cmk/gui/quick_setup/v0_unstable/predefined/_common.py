@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterator
-from typing import Any, cast, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any, cast
 
 from cmk.utils.hostaddress import HostName
 

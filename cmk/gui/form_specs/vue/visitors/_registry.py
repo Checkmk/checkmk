@@ -2,7 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from cmk.gui.form_specs.private import UnknownFormSpec
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor

@@ -6,9 +6,10 @@
 import logging
 import multiprocessing
 import signal
+from collections.abc import Callable
 from pathlib import Path
 from threading import Event
-from typing import Callable, Self
+from typing import Self
 
 from pydantic import BaseModel
 

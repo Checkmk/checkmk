@@ -12,8 +12,8 @@ import socket
 import sys
 import time
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Any
 from xml.dom import minidom
 
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11

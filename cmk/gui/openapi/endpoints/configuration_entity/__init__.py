@@ -8,9 +8,9 @@ Configuration entities are single objects corresponding to configurations in Che
 Which entities can be configured like this is defined by the configuration entity type.
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
-from typing import Any, assert_never, Sequence
+from typing import Any, assert_never
 
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import Response

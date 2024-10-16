@@ -5,8 +5,9 @@
 
 import hashlib
 import re
+from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, Mapping, NewType
+from typing import Any, NewType
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags

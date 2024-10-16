@@ -7,8 +7,8 @@
 import functools
 import inspect
 import itertools
-from collections.abc import Generator
-from typing import Any, List, Sequence
+from collections.abc import Generator, Sequence
+from typing import Any, List
 
 from cmk.ccc.exceptions import MKGeneralException
 

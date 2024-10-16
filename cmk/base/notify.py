@@ -26,11 +26,11 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, cast, Literal, overload
+from typing import Any, cast, Literal, overload
 
 import cmk.ccc.debug
 from cmk.ccc import store

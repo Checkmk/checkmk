@@ -13,12 +13,12 @@ import tarfile
 import time
 import traceback
 from collections import deque
-from collections.abc import Generator, Iterable, MutableSequence
+from collections.abc import Generator, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
-from typing import NamedTuple, Sequence
+from typing import NamedTuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api

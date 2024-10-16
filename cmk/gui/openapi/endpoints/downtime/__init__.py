@@ -30,8 +30,8 @@ Downtime object can have the following relations:
 
 import datetime as dt
 import json
-from collections.abc import Callable, Mapping
-from typing import Any, Iterable, Literal
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Literal
 
 from livestatus import SiteId
 

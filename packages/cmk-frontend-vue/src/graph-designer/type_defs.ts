@@ -13,9 +13,13 @@ export interface GraphDesignerContent {
   i18n: I18N;
 }
 export interface I18N {
+  graph_lines: I18NGraphLines;
   graph_operations: I18NGraphOperations;
   graph_options: I18NGraphOptions;
   topics: I18NTopics;
+}
+export interface I18NGraphLines {
+  add: string;
 }
 export interface I18NGraphOperations {
   sum: string;

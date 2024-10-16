@@ -7,6 +7,13 @@
     },
     "required": ["i18n"],
     "$defs": {
+        "i18n_graph_lines": {
+            "type": "object",
+            "properties": {
+                "add": { "type": "string" }
+            },
+            "required": ["add"]
+        },
         "i18n_graph_operations": {
             "type": "object",
             "properties": {
@@ -121,11 +128,17 @@
         "i18n": {
             "type": "object",
             "properties": {
+                "graph_lines": { "$ref": "#/$defs/i18n_graph_lines" },
                 "graph_operations": { "$ref": "#/$defs/i18n_graph_operations" },
                 "graph_options": { "$ref": "#/$defs/i18n_graph_options" },
                 "topics": { "$ref": "#/$defs/i18n_topics" }
             },
-            "required": ["graph_operations", "graph_options", "topics"]
+            "required": [
+                "graph_lines",
+                "graph_operations",
+                "graph_options",
+                "topics"
+            ]
         }
     }
 }

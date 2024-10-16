@@ -295,6 +295,14 @@ const topics: Topic[] = [
   }
 ]
 
+// Graph lines
+
+function addMetric() {}
+
+function addScalar() {}
+
+function addConstant() {}
+
 // Operations on selected graph lines
 
 function operationIsApplicable() {
@@ -331,6 +339,15 @@ function applyTransformation() {}
 
 <template>
   <TopicsRenderer :topics="topics">
+    <template #metric>
+      <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>
+    </template>
+    <template #scalar>
+      <button @click="addScalar">{{ props.i18n.graph_lines.add }}</button>
+    </template>
+    <template #constant>
+      <button @click="addConstant">{{ props.i18n.graph_lines.add }}</button>
+    </template>
     <template #operations>
       <div v-if="operationIsApplicable()">
         <button @click="applySum">{{ props.i18n.graph_operations.sum }}</button>

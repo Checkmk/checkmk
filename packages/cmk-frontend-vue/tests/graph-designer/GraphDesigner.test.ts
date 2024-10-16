@@ -10,6 +10,9 @@ test('Render GraphDesignerApp', () => {
   render(GraphDesignerApp, {
     props: {
       i18n: {
+        graph_lines: {
+          add: 'add'
+        },
         graph_operations: {
           sum: 'sum',
           product: 'product',

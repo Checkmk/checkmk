@@ -22,6 +22,9 @@ export interface QuickSetupAppProps {
 
   /** @property {boolean} toggleEnabled - When true, the toggling between mode via a button is enabled */
   toggleEnabled: boolean
+
+  /** @property {string} objectId - Optional, if editing an existing object created by quick setup */
+  objectId: string | null
 }
 
 /**

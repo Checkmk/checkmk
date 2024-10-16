@@ -16,6 +16,7 @@ defineProps<QuickSetupAppProps>()
       :quick_setup_id="quick_setup_id"
       :toggle-enabled="toggleEnabled"
       :mode="mode"
+      :object-id="objectId"
     />
     <template #fallback>
       <CmkIcon name="load-graph" size="xxlarge" />

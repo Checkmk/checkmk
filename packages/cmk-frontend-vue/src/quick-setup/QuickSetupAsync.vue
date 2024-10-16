@@ -8,7 +8,13 @@ import { computed, ref, toValue, type Ref } from 'vue'
 
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 
-import { completeQuickSetup, getOverview, validateStage, getAllStages } from './rest_api'
+import {
+  saveQuickSetup,
+  getOverview,
+  validateStage,
+  getAllStages,
+  editQuickSetup
+} from './rest_api'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
 import { renderContent, renderRecap, defineButtons } from './render_utils'
@@ -90,7 +96,7 @@ const nextStage = async () => {
   let result: QSStageResponse | null = null
 
   try {
-    result = await validateStage(props.quick_setup_id, userInput)
+    result = await validateStage(props.quick_setup_id, userInput, props.objectId)
   } catch (err) {
     handleError(err as RestApiError)
   }
@@ -137,7 +143,7 @@ const loadAllStages = async () => {
 
   let result: QSAllStagesResponse | null = null
   try {
-    result = await getAllStages(props.quick_setup_id)
+    result = await getAllStages(props.quick_setup_id, props.objectId)
   } catch (err) {
     handleError(err as RestApiError)
   }
@@ -200,12 +206,22 @@ const save = async (buttonId: string) => {
   }
 
   try {
-    const { redirect_url: redirectUrl } = await completeQuickSetup(
-      props.quick_setup_id,
-      buttonId,
-      userInput
-    )
-    window.location.href = redirectUrl
+    if (props.objectId) {
+      const { redirect_url: redirectUrl } = await editQuickSetup(
+        props.quick_setup_id,
+        buttonId,
+        props.objectId,
+        userInput
+      )
+      window.location.href = redirectUrl
+    } else {
+      const { redirect_url: redirectUrl } = await saveQuickSetup(
+        props.quick_setup_id,
+        buttonId,
+        userInput
+      )
+      window.location.href = redirectUrl
+    }
   } catch (err) {
     loading.value = false
     handleError(err as RestApiError)
@@ -265,7 +281,7 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const data: QSInitializationResponse = await getOverview(props.quick_setup_id)
+const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
 
 //Load stages
 for (let index = 0; index < data.overviews.length; index++) {

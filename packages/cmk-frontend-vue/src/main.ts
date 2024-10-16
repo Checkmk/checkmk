@@ -51,7 +51,8 @@ function setupVue() {
           app = createApp(QuickSetup, {
             quick_setup_id: appData.quick_setup_id,
             mode: appData.mode,
-            toggleEnabled: appData.toggle_enabled
+            toggleEnabled: appData.toggle_enabled,
+            objectId: appData.object_id
           })
           break
         }

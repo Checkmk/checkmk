@@ -8,7 +8,12 @@ from __future__ import annotations
 import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
-from cmk.utils.notify_types import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
+    NotifyPluginParamsDict,
+)
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -26,6 +31,7 @@ notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParam
     {},
 )
 notification_rules: list[EventRule] = []
+notification_parameter: NotificationParameterSpecs = {}
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60

@@ -5,6 +5,9 @@
 
 # pylint: disable=protected-access
 
+import inspect
+from collections.abc import Callable
+
 from cmk.ccc.i18n import _
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import edition
@@ -15,8 +18,10 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, CommentTextArea, not_empty, Topic
+from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec, not_empty, Topic
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.valuespec import Migrate as ValueSpecMigrate
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_title
 
@@ -35,18 +40,9 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
     def registration_hook(self, instance):
         plugin = instance()
 
-        # TODO Add FormSpec converted plugins here, remove else if all are converted
-        if plugin.ident in ["mail"]:
-            loaded_rulespec = rule_specs.NotificationParameters(
-                title=Title("%s") % notification_script_title(plugin.ident),
-                name=plugin.ident,
-                topic=rule_specs.Topic.NOTIFICATIONS,
-                parameter_form=plugin._form_spec,
-            )
-            _rulespec.register_plugins(
-                [LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))]
-            )
-        else:
+        method_source = inspect.getsource(plugin._form_spec)
+        if "raise NotImplementedError" in method_source:
+            # old ValueSpec
             _rulespecs.rulespec_registry.register(
                 _rulespecs.HostRulespec(
                     name=RuleGroup.NotificationParameters(plugin.ident),
@@ -56,6 +52,16 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                     match_type="dict",
                 )
             )
+        else:
+            loaded_rulespec = rule_specs.NotificationParameters(
+                title=Title("%s") % notification_script_title(plugin.ident),
+                name=plugin.ident,
+                topic=rule_specs.Topic.NOTIFICATIONS,
+                parameter_form=plugin._form_spec,
+            )
+            _rulespec.register_plugins(
+                [LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))]
+            )
 
     def form_spec(self, method: str) -> Catalog:
         try:
@@ -63,10 +69,14 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
         except KeyError:
             raise MKUserError(None, _("No notification parameters for method '%s' found") % method)
         except NotImplementedError:
-            raise MKUserError(
-                None,
-                _("No FormSpec implementation for method '%s' found.") % method,
-            )
+            try:
+                param_form_spec = self._construct_form_spec_from_valuespec(method)
+            except Exception as e:
+                raise MKUserError(
+                    None,
+                    _("Error on creating FormSpec from old ValueSpec for method %s: %s")
+                    % (method, e),
+                )
 
         return Catalog(
             topics=[
@@ -118,6 +128,41 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                     dictionary=param_form_spec,
                 ),
             ]
+        )
+
+    def _construct_form_spec_from_valuespec(self, method: str) -> Dictionary:
+        """
+        In case we have an old ValueSpec (e.g. custom notification), try
+        to convert it to a FormSpec. We assume that nearly all customizations
+        use a Dictionary (see typing of NotificationParameter). As we have at
+        least one built-in parameter that uses a Migrate, handle also this case.
+        """
+        migrate: Callable | None = None
+        if isinstance((valuespec := self._entries[method]().spec), ValueSpecMigrate):
+            if isinstance(valuespec._valuespec, ValueSpecDictionary):
+                valuespec_elements = valuespec._valuespec._elements()
+                required_keys = valuespec._valuespec._required_keys
+                migrate = valuespec.to_valuespec
+            else:
+                raise MKUserError(
+                    None,
+                    _("No Dictionary ValueSpec within Migrate: %s") % valuespec._valuespec,
+                )
+        else:
+            # Dictionary
+            valuespec_elements = valuespec._elements()
+            required_keys = valuespec._required_keys
+
+        new_elements: dict[str, DictElement] = {}
+        for entry in valuespec_elements:
+            new_elements[entry[0]] = DictElement(
+                parameter_form=LegacyValueSpec.wrap(entry[1]),
+                required=entry[0] in required_keys,
+            )
+
+        return Dictionary(
+            elements=new_elements,
+            migrate=migrate,
         )
 
 

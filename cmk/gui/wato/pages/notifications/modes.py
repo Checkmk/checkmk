@@ -3033,8 +3033,8 @@ class ModeNotificationParametersOverview(WatoMode):
         all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
         for script_name, title in notification_script_choices():
-            # TODO remove this if all NotificationParameters are converted to FormSpecs
-            if script_name not in ["mail", "ilert"]:
+            # Not all notification scripts have parameters
+            if script_name not in notification_parameter_registry:
                 continue
             method_parameters: dict[NotificationParameterID, NotificationParameterItem] | None = (
                 all_parameters.get(script_name)

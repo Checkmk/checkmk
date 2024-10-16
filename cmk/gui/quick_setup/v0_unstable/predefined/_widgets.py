@@ -7,6 +7,7 @@ from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -37,7 +38,8 @@ def unique_id_formspec_wrapper(
                         custom_validate=(
                             validators.LengthInRange(
                                 min_value=1,
-                                error_msg=Message("%s cannot be empty") % str(title),
+                                error_msg=Message("%s cannot be empty")
+                                % title.localize(translate_to_current_language),
                             ),
                         ),
                         prefill=DefaultValue(
@@ -59,6 +61,7 @@ def _host_name_dict_element(
     title: Title = Title("Host name"),
     prefill_template: str = "qs_host",
 ) -> DictElement:
+    title_str: str = title.localize(translate_to_current_language)
     return DictElement(
         parameter_form=String(
             title=title,
@@ -66,11 +69,11 @@ def _host_name_dict_element(
             custom_validate=(
                 validators.LengthInRange(
                     min_value=1,
-                    error_msg=Message("%s cannot be empty") % str(title),
+                    error_msg=Message("%s cannot be empty") % title_str,
                 ),
                 validators.MatchRegex(
                     regex=HOST_NAME_REGEXP,
-                    error_msg=Message("Invalid characters in %s") % str(title),
+                    error_msg=Message("Invalid characters in %s") % title_str,
                 ),
             ),
             prefill=DefaultValue(

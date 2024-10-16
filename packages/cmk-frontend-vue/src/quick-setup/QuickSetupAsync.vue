@@ -29,8 +29,7 @@ import type {
   ValidationError,
   GeneralError,
   RestApiError,
-  QSStageResponse,
-  QSAllStagesResponse
+  QSStageResponse
 } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
@@ -64,7 +63,7 @@ const props = withDefaults(defineProps<QuickSetupAppProps>(), {
 })
 
 const loadedAllStages = ref(false)
-const ready = ref(false)
+const showQuickSetup = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
@@ -135,28 +134,14 @@ const prevStage = () => {
   quickSetupHook.prev()
 }
 
-const loadAllStages = async () => {
-  ready.value = false
-  loading.value = true
-  globalError.value = null
-  stages.value = []
+const loadAllStages = async (): Promise<QSStageStore[]> => {
+  const data = await getAllStages(props.quick_setup_id, props.objectId)
+  const result: QSStageStore[] = []
 
-  let result: QSAllStagesResponse | null = null
-  try {
-    result = await getAllStages(props.quick_setup_id, props.objectId)
-  } catch (err) {
-    handleError(err as RestApiError)
-  }
-  loading.value = false
-
-  if (!result) {
-    return
-  }
-
-  for (let stageIndex = 0; stageIndex < result.stages.length; stageIndex++) {
-    const stage = result.stages[stageIndex]!
+  for (let stageIndex = 0; stageIndex < data.stages.length; stageIndex++) {
+    const stage = data.stages[stageIndex]!
     const btn: StageButtonSpec[] = []
-    if (stageIndex !== result.stages.length - 1) {
+    if (stageIndex !== data.stages.length - 1) {
       btn.push(defineButton.next(stage.button_label))
     }
 
@@ -164,34 +149,72 @@ const loadAllStages = async () => {
       btn.push(defineButton.prev(PREV_BUTTON_LABEL))
     }
 
-    stages.value.push({
+    result.push({
       title: stage.title,
       sub_title: stage?.sub_title || null,
       components: stage.components || [],
       recap: [],
       form_spec_errors: {},
       errors: [],
-      user_input: {},
+      user_input: ref({}),
       buttons: btn
     })
   }
 
   // Add save stage
-  stages.value.push({
+  result.push({
     title: '',
     sub_title: null,
     components: [],
     recap: [],
     form_spec_errors: {},
     errors: [],
-    user_input: {},
+    user_input: ref({}),
     buttons: [
-      ...result.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
+      ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
       defineButton.prev(PREV_BUTTON_LABEL)
     ]
   })
-  ready.value = true
   loadedAllStages.value = true
+  return result
+}
+
+const loadGuidedStages = async (): Promise<QSStageStore[]> => {
+  const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
+  const result: QSStageStore[] = []
+
+  //Load stages
+  for (let index = 0; index < data.overviews.length; index++) {
+    const isFirst = index === 0
+    const overview = data.overviews[index]!
+
+    result.push({
+      title: overview.title,
+      sub_title: overview.sub_title || null,
+      components: isFirst ? data.stage.next_stage_structure.components : [],
+      recap: [],
+      form_spec_errors: {},
+      errors: [],
+      user_input: ref({}),
+      buttons: isFirst ? [defineButton.next(data.stage.next_stage_structure.button_label)] : []
+    })
+  }
+
+  // Add save stage
+  result.push({
+    title: '',
+    sub_title: null,
+    components: [],
+    recap: [],
+    form_spec_errors: {},
+    errors: [],
+    user_input: ref({}),
+    buttons: [
+      ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
+      defineButton.prev(PREV_BUTTON_LABEL)
+    ]
+  })
+  return result
 }
 
 const save = async (buttonId: string) => {
@@ -281,40 +304,6 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
-
-//Load stages
-for (let index = 0; index < data.overviews.length; index++) {
-  const isFirst = index === 0
-  const overview = data.overviews[index]!
-
-  stages.value.push({
-    title: overview.title,
-    sub_title: overview.sub_title || null,
-    components: isFirst ? data.stage.next_stage_structure.components : [],
-    recap: [],
-    form_spec_errors: {},
-    errors: [],
-    user_input: {},
-    buttons: isFirst ? [defineButton.next(data.stage.next_stage_structure.button_label)] : []
-  })
-}
-
-// Add save stage
-stages.value.push({
-  title: '',
-  sub_title: null,
-  components: [],
-  recap: [],
-  form_spec_errors: {},
-  errors: [],
-  user_input: {},
-  buttons: [
-    ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
-    defineButton.prev(PREV_BUTTON_LABEL)
-  ]
-})
-
 const handleError = (err: RestApiError) => {
   if (err.type === 'general') {
     globalError.value = (err as GeneralError).general_error
@@ -327,19 +316,27 @@ const handleError = (err: RestApiError) => {
 }
 const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   'quick_setup_wizard_mode',
-  'guided'
+  props.mode
 )
 
-const quickSetupHook = useWizard(stages.value.length, props.mode)
-const setWizardMode = (mode: WizardMode) => {
+const setWizardMode = async (mode: WizardMode) => {
   wizardMode.value = mode
   quickSetupHook.setMode(mode)
   if (mode === 'overview' && !loadedAllStages.value) {
-    loadAllStages()
+    stages.value = await loadAllStages()
   }
 }
 
-ready.value = true
+switch (props.mode) {
+  case 'guided':
+    stages.value = await loadGuidedStages()
+    break
+  case 'overview':
+    stages.value = await loadAllStages()
+    break
+}
+const quickSetupHook = useWizard(stages.value.length, props.mode)
+showQuickSetup.value = true
 </script>
 
 <template>
@@ -353,7 +350,7 @@ ready.value = true
     @change="setWizardMode"
   />
   <QuickSetup
-    v-if="ready"
+    v-if="showQuickSetup"
     :loading="loading"
     :regular-stages="regularStages"
     :save-stage="saveStage"

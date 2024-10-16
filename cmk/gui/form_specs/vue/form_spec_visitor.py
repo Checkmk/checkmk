@@ -17,6 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
     AdaptiveMultipleChoice,
+    CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
     DictionaryExtended,
@@ -32,6 +33,7 @@ from cmk.gui.form_specs.private import (
 )
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.recomposers import (
+    recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
     recompose_list,
@@ -129,7 +131,7 @@ def register_form_specs():
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
     register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
     register_visitor_class(Password, PasswordVisitor)
-    register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
+    register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
@@ -160,6 +162,9 @@ def register_form_specs():
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
     register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
+    register_visitor_class(
+        CascadingSingleChoice, CascadingSingleChoiceVisitor, recompose_cascading_single_choice
+    )
 
 
 def register_validators():

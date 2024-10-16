@@ -111,9 +111,10 @@ class DualListChoiceI18n:
     no_elements_selected: str
 
 
-class CascadingChoiceLayout(str, Enum):
+class CascadingSingleChoiceLayout(str, Enum):
     vertical = "vertical"
     horizontal = "horizontal"
+    button_group = "button_group"
 
 
 @dataclass(kw_only=True)
@@ -303,7 +304,7 @@ class CascadingSingleChoice(FormSpec):
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     label: Optional[str] = None
-    layout: CascadingChoiceLayout = CascadingChoiceLayout.vertical
+    layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
 
 
 @dataclass(kw_only=True)

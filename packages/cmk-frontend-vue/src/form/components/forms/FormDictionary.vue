@@ -171,7 +171,10 @@ const componentId = useId()
                   "
                   type="checkbox"
                 />
-                <label :for="`${componentId}.${dict_element.dict_config.ident}`">
+                <label
+                  v-if="dict_element.dict_config.parameter_form.title"
+                  :for="`${componentId}.${dict_element.dict_config.ident}`"
+                >
                   {{ dict_element.dict_config.parameter_form.title }}
                 </label>
                 <HelpText :help="dict_element.dict_config.parameter_form.help" />

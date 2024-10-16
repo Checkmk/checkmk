@@ -93,9 +93,9 @@ export type CascadingSingleChoice = FormSpec & {
   no_elements_text?: string;
   label?: string;
   input_hint: unknown;
-  layout: CascadingChoiceLayout;
+  layout: CascadingSingleChoiceLayout;
 };
-export type CascadingChoiceLayout = "vertical" | "horizontal";
+export type CascadingSingleChoiceLayout = "vertical" | "horizontal" | "button_group";
 export type FixedValue = FormSpec & {
   type: "fixed_value";
   label?: string;

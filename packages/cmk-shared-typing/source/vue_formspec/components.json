@@ -501,8 +501,8 @@
                 },
                 "input_hint": {},
                 "layout": {
-                    "title": "CascadingChoiceLayout",
-                    "enum": ["vertical", "horizontal"],
+                    "title": "CascadingSingleChoiceLayout",
+                    "enum": ["vertical", "horizontal", "button_group"],
                     "default": "vertical"
                 }
             },

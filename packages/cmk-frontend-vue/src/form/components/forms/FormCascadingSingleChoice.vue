@@ -16,6 +16,7 @@ import { useId } from '@/form/utils'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import HelpText from '@/components/HelpText.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -98,35 +99,70 @@ const activeElement = computed((): ActiveElement | null => {
 })
 
 const componentId = useId()
+
+interface LayoutSettings {
+  style: Record<string, string>
+  side_by_side: boolean
+}
+
+const layoutSettings = computed((): LayoutSettings => {
+  return {
+    style: props.spec.layout === 'vertical' ? {} : { display: 'inline-block' },
+    side_by_side: props.spec.layout === 'button_group'
+  }
+})
+
+const buttonGroupButtons = computed((): Array<{ label: string; value: string }> => {
+  return props.spec.elements.map((element: CascadingSingleChoiceElement) => {
+    return { label: element.title, value: element.name }
+  })
+})
+
+const toggledButton = (value: string) => {
+  event!.preventDefault()
+  selectedOption.value = value
+}
 </script>
 
 <template>
-  <div class="choice">
-    <select :id="componentId" v-model="selectedOption">
-      <option v-if="activeElement === null" disabled selected hidden value="">
-        {{ props.spec.input_hint }}
-      </option>
-      <option v-for="element in spec.elements" :key="element.name" :value="element.name">
-        {{ element.title }}
-      </option>
-    </select>
+  <span class="choice">
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+    <template v-if="!layoutSettings.side_by_side">
+      <select :id="componentId" v-model="selectedOption">
+        <option v-if="activeElement === null" disabled selected hidden value="">
+          {{ props.spec.input_hint }}
+        </option>
+        <option v-for="element in spec.elements" :key="element.name" :value="element.name">
+          {{ element.title }}
+        </option>
+      </select>
+    </template>
+    <template v-else>
+      <ToggleButtonGroup
+        :options="buttonGroupButtons"
+        :value="selectedOption"
+        @change="toggledButton"
+      />
+    </template>
     <HelpText :help="props.spec.help" />
-  </div>
-  <template v-if="activeElement !== null">
-    <FormEdit
-      :key="data[0]"
-      v-model:data="data[1]"
-      :spec="activeElement.spec"
-      :backend-validation="elementValidation"
-    ></FormEdit>
-    <FormValidation :validation="validation"></FormValidation>
-  </template>
+  </span>
+  <span :style="layoutSettings.style">
+    <template v-if="activeElement !== null">
+      <FormEdit
+        :key="data[0]"
+        v-model:data="data[1]"
+        :spec="activeElement.spec"
+        :backend-validation="elementValidation"
+      ></FormEdit>
+      <FormValidation :validation="validation"></FormValidation>
+    </template>
+  </span>
 </template>
 
 <style scoped>
-div.choice {
+span.choice {
   margin-bottom: 5px;
   margin-right: 5px;
+  vertical-align: top;
 }
 </style>

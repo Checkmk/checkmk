@@ -18,10 +18,12 @@
             "enum": ["line", "area", "stack'"]
         },
         "graph_line_mirrored": { "type": "boolean" },
-        "graph_line": {
+        "graph_line_constant": {
             "type": "object",
+            "title": "constant",
             "properties": {
                 "id": { "$ref": "#/$defs/graph_line_id" },
+                "type": { "type": "string", "enum": ["constant"] },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
                 "title_short": {
@@ -31,21 +33,28 @@
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
                 },
-                "mirrored": { "$ref": "#/$defs/graph_line_mirrored" }
+                "mirrored": {
+                    "$ref": "#/$defs/graph_line_mirrored"
+                },
+                "value": { "type": "number" }
             },
             "required": [
                 "id",
+                "type",
                 "color",
                 "title",
                 "title_short",
                 "visible",
                 "line_type",
-                "mirrored"
+                "mirrored",
+                "value"
             ]
         },
         "graph_lines": {
             "type": "array",
-            "items": [{ "$ref": "#/$defs/graph_line" }]
+            "items": {
+                "anyOf": [{ "$ref": "#/$defs/graph_line_constant" }]
+            }
         },
         "i18n_graph_lines": {
             "type": "object",

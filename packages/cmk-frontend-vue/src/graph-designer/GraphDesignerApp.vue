@@ -32,6 +32,10 @@ const props = defineProps<{
 
 // Specs
 
+const dataConstant = ref(1)
+const specConstant = makeFloat('', '')
+const backendValidationConstant: ValidationMessages = []
+
 const specLineType: SpecLineType = {
   line: props.i18n.graph_lines.line,
   area: props.i18n.graph_lines.area,
@@ -202,6 +206,7 @@ const topics: Topic[] = [
 
 // Graph lines
 
+let id = 0
 const graphLines: Ref<GraphLines> = ref([])
 const selectedGraphLines: Ref<GraphLines> = ref([])
 
@@ -213,7 +218,20 @@ function addMetric() {}
 
 function addScalar() {}
 
-function addConstant() {}
+function addConstant() {
+  graphLines.value.push({
+    id: id++,
+    type: 'constant',
+    color: '#ff0000',
+    title: `${props.i18n.topics.constant} ${dataConstant.value}`,
+    title_short: props.i18n.topics.constant,
+    visible: true,
+    line_type: 'line',
+    mirrored: false,
+    value: dataConstant.value
+  })
+  dataConstant.value = 1
+}
 
 // Operations on selected graph lines
 
@@ -312,7 +330,11 @@ function computeOddEven(index: number) {
           <FormLineType v-model:dataLineType="graphLine.line_type" :spec="specLineType" />
         </td>
         <td class="buttons"><FormSwitch v-model:dataSwitch="graphLine.mirrored" /></td>
-        <td></td>
+        <td>
+          <div v-if="graphLine.type === 'constant'">
+            {{ graphLine.title }}
+          </div>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -325,7 +347,14 @@ function computeOddEven(index: number) {
       <button @click="addScalar">{{ props.i18n.graph_lines.add }}</button>
     </template>
     <template #constant>
-      <button @click="addConstant">{{ props.i18n.graph_lines.add }}</button>
+      <div>
+        <FormEdit
+          v-model:data="dataConstant"
+          :spec="specConstant"
+          :backend-validation="backendValidationConstant"
+        />
+        <button @click="addConstant">{{ props.i18n.graph_lines.add }}</button>
+      </div>
     </template>
     <template #operations>
       <div v-if="operationIsApplicable()">

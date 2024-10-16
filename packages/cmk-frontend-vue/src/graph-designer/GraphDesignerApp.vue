@@ -5,13 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
 import FormColorPicker from '@/graph-designer/components/FormColorPicker.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormLineType from '@/graph-designer/components/FormLineType.vue'
+import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
 import FormSwitch from '@/graph-designer/components/FormSwitch.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
+import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
-import { ref, type Ref } from 'vue'
 import {
   makeBooleanChoice,
   makeCascadingSingleChoice,
@@ -21,6 +23,7 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
+import { ref, type Ref } from 'vue'
 import { type I18N, type GraphLines } from '@/graph-designer/type_defs'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
@@ -31,6 +34,15 @@ const props = defineProps<{
 }>()
 
 // Specs
+
+const dataScalarType = ref<'warning' | 'critical' | 'minimum' | 'maximum'>('critical')
+const specScalarType = makeSingleChoice('', [
+  { name: 'warning', title: props.i18n.graph_lines.warning },
+  { name: 'critical', title: props.i18n.graph_lines.critical },
+  { name: 'minimum', title: props.i18n.graph_lines.minimum },
+  { name: 'maximum', title: props.i18n.graph_lines.maximum }
+])
+const backendValidationScalarType: ValidationMessages = []
 
 const dataConstant = ref(1)
 const specConstant = makeFloat('', '')
@@ -65,31 +77,51 @@ const specUnit = makeCascadingSingleChoice('', [
           {
             name: 'decimal',
             title: props.i18n.graph_options.unit_custom_notation_decimal,
-            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            parameter_form: makeString(
+              props.i18n.graph_options.unit_custom_notation_symbol,
+              'symbol',
+              null
+            ),
             default_value: ''
           },
           {
             name: 'si',
             title: props.i18n.graph_options.unit_custom_notation_si,
-            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            parameter_form: makeString(
+              props.i18n.graph_options.unit_custom_notation_symbol,
+              'symbol',
+              null
+            ),
             default_value: ''
           },
           {
             name: 'iec',
             title: props.i18n.graph_options.unit_custom_notation_iec,
-            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            parameter_form: makeString(
+              props.i18n.graph_options.unit_custom_notation_symbol,
+              'symbol',
+              null
+            ),
             default_value: ''
           },
           {
             name: 'standard_scientific',
             title: props.i18n.graph_options.unit_custom_notation_standard_scientific,
-            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            parameter_form: makeString(
+              props.i18n.graph_options.unit_custom_notation_symbol,
+              'symbol',
+              null
+            ),
             default_value: ''
           },
           {
             name: 'engineering_scientific',
             title: props.i18n.graph_options.unit_custom_notation_engineering_scientific,
-            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            parameter_form: makeString(
+              props.i18n.graph_options.unit_custom_notation_symbol,
+              'symbol',
+              null
+            ),
             default_value: ''
           },
           {
@@ -212,6 +244,12 @@ const topics: Topic[] = [
 
 // Graph lines
 
+const dataScalar = ref<Metric>({
+  hostName: '',
+  serviceName: '',
+  metricName: ''
+})
+
 let id = 0
 const graphLines: Ref<GraphLines> = ref([])
 const selectedGraphLines: Ref<GraphLines> = ref([])
@@ -222,7 +260,36 @@ function isDissolvable() {
 
 function addMetric() {}
 
-function addScalar() {}
+function addScalar() {
+  if (
+    dataScalar.value.hostName !== '' &&
+    dataScalar.value.serviceName !== '' &&
+    dataScalar.value.metricName !== ''
+  ) {
+    // TODO set color, title, ...
+    const scalarType = specScalarType['elements'].find((e) => e.name === dataScalarType.value)
+    const scalarTypeTitle = scalarType ? scalarType.title : ''
+    graphLines.value.push({
+      id: id++,
+      type: 'scalar',
+      color: '#ff0000',
+      title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
+      title_short: `${scalarTypeTitle} ${props.i18n.graph_lines.of} ${dataScalar.value.metricName}`,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      host_name: dataScalar.value.hostName,
+      service_name: dataScalar.value.serviceName,
+      metric_name: dataScalar.value.metricName,
+      scalar_type: dataScalarType.value
+    })
+    dataScalar.value = {
+      hostName: '',
+      serviceName: '',
+      metricName: ''
+    }
+  }
+}
 
 function addConstant() {
   graphLines.value.push({
@@ -337,7 +404,24 @@ function computeOddEven(index: number) {
         </td>
         <td class="buttons"><FormSwitch v-model:data-switch="graphLine.mirrored" /></td>
         <td>
-          <div v-if="graphLine.type === 'constant'">
+          <div v-if="graphLine.type === 'scalar'">
+            <FixedMetricRowRenderer>
+              <template #metric_type>
+                <FormEdit
+                  v-model:data="graphLine.scalar_type"
+                  :spec="specScalarType"
+                  :backend-validation="backendValidationScalarType"
+                />
+              </template>
+              <template #metric_of>
+                {{ props.i18n.graph_lines.of }}
+              </template>
+              <template #metric_title>
+                {{ graphLine.title }}
+              </template>
+            </FixedMetricRowRenderer>
+          </div>
+          <div v-else-if="graphLine.type === 'constant'">
             {{ graphLine.title }}
           </div>
         </td>
@@ -350,7 +434,23 @@ function computeOddEven(index: number) {
       <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>
     </template>
     <template #scalar>
-      <button @click="addScalar">{{ props.i18n.graph_lines.add }}</button>
+      <div>
+        <MetricRowRenderer>
+          <template #metric_cells>
+            <FormMetricCells v-model:data="dataScalar" />
+          </template>
+          <template #metric_type>
+            <FormEdit
+              v-model:data="dataScalarType"
+              :spec="specScalarType"
+              :backend-validation="backendValidationScalarType"
+            />
+          </template>
+          <template #metric_action>
+            <button @click="addScalar">{{ props.i18n.graph_lines.add }}</button>
+          </template>
+        </MetricRowRenderer>
+      </div>
     </template>
     <template #constant>
       <div>

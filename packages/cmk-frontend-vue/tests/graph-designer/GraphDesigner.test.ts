@@ -12,6 +12,11 @@ test('Render GraphDesignerApp', () => {
       graph_lines: [],
       i18n: {
         graph_lines: {
+          of: 'of',
+          warning: 'warning',
+          critical: 'critical',
+          minimum: 'minimum',
+          maximum: 'maximum',
           actions: 'actions',
           color: 'color',
           title: 'title',

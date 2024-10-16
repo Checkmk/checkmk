@@ -16,11 +16,28 @@ export type GraphLineTitleShort = string;
 export type GraphLineVisible = boolean;
 export type GraphLineLineType = "line" | "area" | "stack'";
 export type GraphLineMirrored = boolean;
-export type GraphLines = Constant[];
+export type GraphLineHostName = string;
+export type GraphLineServiceName = string;
+export type GraphLineMetricName = string;
+export type GraphLines = (Scalar | Constant)[];
 
 export interface GraphDesignerContent {
   graph_lines: GraphLines;
   i18n: I18N;
+}
+export interface Scalar {
+  id: GraphLineId;
+  type: "scalar";
+  color: GraphLineColor;
+  title: GraphLineTitle;
+  title_short: GraphLineTitleShort;
+  visible: GraphLineVisible;
+  line_type: GraphLineLineType;
+  mirrored: GraphLineMirrored;
+  host_name: GraphLineHostName;
+  service_name: GraphLineServiceName;
+  metric_name: GraphLineMetricName;
+  scalar_type: "warning" | "critical" | "minimum" | "maximum";
 }
 export interface Constant {
   id: GraphLineId;
@@ -40,6 +57,11 @@ export interface I18N {
   topics: I18NTopics;
 }
 export interface I18NGraphLines {
+  of: string;
+  warning: string;
+  critical: string;
+  minimum: string;
+  maximum: string;
   actions: string;
   color: string;
   title: string;

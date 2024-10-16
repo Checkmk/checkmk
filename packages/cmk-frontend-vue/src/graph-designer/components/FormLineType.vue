@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import FormEdit from '@/form/components/FormEdit.vue'
-import type { SpecLineType } from '@/graph-designer/components/type_defs'
-import type { ValidationMessages } from '@/form'
+import { type SpecLineType } from '@/graph-designer/components/type_defs'
+import { type ValidationMessages } from '@/form'
 
 const props = defineProps<{
   spec: SpecLineType

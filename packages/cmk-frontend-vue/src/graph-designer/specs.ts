@@ -18,15 +18,19 @@ export function makeFloat(title: string, label: string): FormSpec.Float {
   }
 }
 
-export function makeString(title: string): FormSpec.String {
+export function makeString(
+  title: string,
+  inputHint: string,
+  autocompleter: null | FormSpec.Autocompleter
+): FormSpec.String {
   return {
     type: 'string',
     title: title,
     help: '',
     validators: [],
-    input_hint: 'symbol',
-    field_size: 'SMALL',
-    autocompleter: null
+    input_hint: inputHint,
+    field_size: 'MEDIUM',
+    autocompleter: autocompleter
   }
 }
 

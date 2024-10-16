@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = ["agent-2.2.0p14-special-azure"]
+    SKIPPED_DUMPS = []  # type: ignore
 
 
 @dataclass

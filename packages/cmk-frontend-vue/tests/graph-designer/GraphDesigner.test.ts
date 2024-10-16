@@ -9,8 +9,23 @@ import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 test('Render GraphDesignerApp', () => {
   render(GraphDesignerApp, {
     props: {
+      graph_lines: [],
       i18n: {
         graph_lines: {
+          actions: 'actions',
+          color: 'color',
+          title: 'title',
+          visible: 'visible',
+          line_style: 'line_style',
+          line: 'line',
+          area: 'area',
+          stack: 'stack',
+          mirrored: 'mirrored',
+          formula: 'formula',
+          dissolve_operation: 'dissolve_operation',
+          clone_this_entry: 'clone_this_entry',
+          move_this_entry: 'move_this_entry',
+          delete_this_entry: 'delete_this_entry',
           add: 'add'
         },
         graph_operations: {

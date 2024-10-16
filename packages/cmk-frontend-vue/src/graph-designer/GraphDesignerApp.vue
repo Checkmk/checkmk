@@ -5,18 +5,29 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import FormColorPicker from '@/graph-designer/components/FormColorPicker.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
+import FormLineType from '@/graph-designer/components/FormLineType.vue'
+import FormSwitch from '@/graph-designer/components/FormSwitch.vue'
+import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
-import { ref } from 'vue'
-import { type I18N } from '@/graph-designer/type_defs'
-import { type Topic } from '@/graph-designer/components/type_defs'
+import { ref, type Ref } from 'vue'
+import { type I18N, type GraphLines } from '@/graph-designer/type_defs'
+import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
 
 const props = defineProps<{
+  graph_lines: GraphLines
   i18n: I18N
 }>()
 
 // Specs
+
+const specLineType: SpecLineType = {
+  line: props.i18n.graph_lines.line,
+  area: props.i18n.graph_lines.area,
+  stack: props.i18n.graph_lines.stack
+}
 
 const dataTransformation = ref(95)
 const specTransformation = {
@@ -297,6 +308,13 @@ const topics: Topic[] = [
 
 // Graph lines
 
+const graphLines: Ref<GraphLines> = ref([])
+const selectedGraphLines: Ref<GraphLines> = ref([])
+
+function isDissolvable() {
+  return false
+}
+
 function addMetric() {}
 
 function addScalar() {}
@@ -306,18 +324,15 @@ function addConstant() {}
 // Operations on selected graph lines
 
 function operationIsApplicable() {
-  // Ie. there are at least two metrics selected
-  return false
+  return Object.keys(selectedGraphLines.value).length >= 2
 }
 
 function binaryOperationIsApplicable() {
-  // Ie. there are exactly two metrics selected
-  return false
+  return Object.keys(selectedGraphLines.value).length === 2
 }
 
 function transformationIsApplicable() {
-  // Ie. there is exactly one metric selected
-  return false
+  return Object.keys(selectedGraphLines.value).length === 1
 }
 
 function applySum() {}
@@ -335,9 +350,79 @@ function applyMinimum() {}
 function applyMaximum() {}
 
 function applyTransformation() {}
+
+// Graph lines table
+
+function computeOddEven(index: number) {
+  // TODO n-th children
+  return index % 2 === 0 ? 'even0' : 'odd0'
+}
 </script>
 
 <template>
+  <table class="data oddeven graph_designer_metrics">
+    <tbody>
+      <tr>
+        <th class="header_buttons"></th>
+        <th class="header_buttons">{{ props.i18n.graph_lines.actions }}</th>
+        <th class="header_narrow">{{ props.i18n.graph_lines.color }}</th>
+        <th class="header_nobr narrow">{{ props.i18n.graph_lines.title }}</th>
+        <th class="header_buttons">{{ props.i18n.graph_lines.visible }}</th>
+        <th class="header_narrow">{{ props.i18n.graph_lines.line_style }}</th>
+        <th class="header_buttons">{{ props.i18n.graph_lines.mirrored }}</th>
+        <th>{{ props.i18n.graph_lines.formula }}</th>
+      </tr>
+      <tr
+        v-for="(graphLine, index) in graphLines"
+        :key="graphLine.id"
+        class="data"
+        :class="computeOddEven(index)"
+      >
+        <td class="buttons">
+          <input
+            :id="graphLine.id.toString()"
+            v-model="selectedGraphLines"
+            :value="graphLine"
+            type="checkbox"
+            class="checkbox"
+          />
+          <label :for="graphLine.id.toString()"></label>
+        </td>
+        <td class="buttons">
+          <img
+            v-if="isDissolvable()"
+            :title="props.i18n.graph_lines.dissolve_operation"
+            src="themes/facelift/images/icon_dissolve_operation.png"
+            class="icon iconbutton png"
+          />
+          <img
+            :title="props.i18n.graph_lines.clone_this_entry"
+            src="themes/facelift/images/icon_clone.svg"
+            class="icon iconbutton"
+          />
+          <img
+            :title="props.i18n.graph_lines.move_this_entry"
+            src="themes/modern-dark/images/icon_drag.svg"
+            class="icon iconbutton"
+          />
+          <img
+            :title="props.i18n.graph_lines.delete_this_entry"
+            src="themes/facelift/images/icon_delete.svg"
+            class="icon iconbutton"
+          />
+        </td>
+        <td class="narrow"><FormColorPicker v-model:dataColor="graphLine.color" /></td>
+        <td class="nobr narrow"><FormTitle v-model:dataTitle="graphLine.title" /></td>
+        <td class="buttons"><FormSwitch v-model:dataSwitch="graphLine.visible" /></td>
+        <td class="narrow">
+          <FormLineType v-model:dataLineType="graphLine.line_type" :spec="specLineType" />
+        </td>
+        <td class="buttons"><FormSwitch v-model:dataSwitch="graphLine.mirrored" /></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
   <TopicsRenderer :topics="topics">
     <template #metric>
       <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>

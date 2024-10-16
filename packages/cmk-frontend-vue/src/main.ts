@@ -74,6 +74,7 @@ function setupVue() {
         }
         case 'graph_designer': {
           app = createApp(GraphDesignerApp, {
+            graph_lines: appData.graph_lines,
             i18n: appData.i18n
           })
           break

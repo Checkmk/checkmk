@@ -3,16 +3,86 @@
     "type": "object",
     "title": "graph_designer_content",
     "properties": {
+        "graph_lines": { "$ref": "#/$defs/graph_lines" },
         "i18n": { "$ref": "#/$defs/i18n" }
     },
-    "required": ["i18n"],
+    "required": ["graph_lines", "i18n"],
     "$defs": {
+        "graph_line_id": { "type": "integer" },
+        "graph_line_color": { "type": "string" },
+        "graph_line_title": { "type": "string" },
+        "graph_line_title_short": { "type": "string" },
+        "graph_line_visible": { "type": "boolean" },
+        "graph_line_line_type": {
+            "type": "string",
+            "enum": ["line", "area", "stack'"]
+        },
+        "graph_line_mirrored": { "type": "boolean" },
+        "graph_line": {
+            "type": "object",
+            "properties": {
+                "id": { "$ref": "#/$defs/graph_line_id" },
+                "color": { "$ref": "#/$defs/graph_line_color" },
+                "title": { "$ref": "#/$defs/graph_line_title" },
+                "title_short": {
+                    "$ref": "#/$defs/graph_line_title_short"
+                },
+                "visible": { "$ref": "#/$defs/graph_line_visible" },
+                "line_type": {
+                    "$ref": "#/$defs/graph_line_line_type"
+                },
+                "mirrored": { "$ref": "#/$defs/graph_line_mirrored" }
+            },
+            "required": [
+                "id",
+                "color",
+                "title",
+                "title_short",
+                "visible",
+                "line_type",
+                "mirrored"
+            ]
+        },
+        "graph_lines": {
+            "type": "array",
+            "items": [{ "$ref": "#/$defs/graph_line" }]
+        },
         "i18n_graph_lines": {
             "type": "object",
             "properties": {
+                "actions": { "type": "string" },
+                "color": { "type": "string" },
+                "title": { "type": "string" },
+                "visible": { "type": "string" },
+                "line_style": { "type": "string" },
+                "line": { "type": "string" },
+                "area": { "type": "string" },
+                "stack": { "type": "string" },
+                "mirrored": { "type": "string" },
+                "formula": { "type": "string" },
+                "dissolve_operation": { "type": "string" },
+                "clone_this_entry": { "type": "string" },
+                "move_this_entry": { "type": "string" },
+                "delete_this_entry": { "type": "string" },
                 "add": { "type": "string" }
             },
-            "required": ["add"]
+            "required": [
+                "actions",
+                "color",
+                "title",
+                "visible",
+                "line_style",
+                "line",
+                "area",
+                "stack",
+                "mirrored",
+                "formula",
+                "dissolve_operation",
+                "clone_this_entry",
+                "move_this_entry",
+                "delete_this_entry",
+                "add"
+            ]
         },
         "i18n_graph_operations": {
             "type": "object",

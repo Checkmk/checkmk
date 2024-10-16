@@ -9,8 +9,27 @@
  * Do not edit manually.
  */
 
+export type GraphLines = [] | [GraphLine];
+export type GraphLineId = number;
+export type GraphLineColor = string;
+export type GraphLineTitle = string;
+export type GraphLineTitleShort = string;
+export type GraphLineVisible = boolean;
+export type GraphLineLineType = "line" | "area" | "stack'";
+export type GraphLineMirrored = boolean;
+
 export interface GraphDesignerContent {
+  graph_lines: GraphLines;
   i18n: I18N;
+}
+export interface GraphLine {
+  id: GraphLineId;
+  color: GraphLineColor;
+  title: GraphLineTitle;
+  title_short: GraphLineTitleShort;
+  visible: GraphLineVisible;
+  line_type: GraphLineLineType;
+  mirrored: GraphLineMirrored;
 }
 export interface I18N {
   graph_lines: I18NGraphLines;
@@ -19,6 +38,20 @@ export interface I18N {
   topics: I18NTopics;
 }
 export interface I18NGraphLines {
+  actions: string;
+  color: string;
+  title: string;
+  visible: string;
+  line_style: string;
+  line: string;
+  area: string;
+  stack: string;
+  mirrored: string;
+  formula: string;
+  dissolve_operation: string;
+  clone_this_entry: string;
+  move_this_entry: string;
+  delete_this_entry: string;
   add: string;
 }
 export interface I18NGraphOperations {

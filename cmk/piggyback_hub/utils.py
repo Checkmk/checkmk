@@ -37,6 +37,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         omd_root: Path,
         model: type[_ModelT],
         callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
+        crash_report_callback: Callable[[], str],
         queue: QueueName,
         message_ttl: int | None,
     ) -> None:
@@ -45,6 +46,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.omd_root = omd_root
         self.model = model
         self.callback = callback
+        self.crash_report_callback = crash_report_callback
         self.queue = queue
         self.message_ttl = message_ttl
         self.task_name = f"receiving on queue '{self.queue.value}'"
@@ -72,6 +74,9 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
             self.logger.error("Reconnecting failed: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
+            crash_report_msg = self.crash_report_callback()
+            self.logger.error(crash_report_msg)
+            raise
 
 
 def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:

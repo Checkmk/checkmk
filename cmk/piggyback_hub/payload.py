@@ -70,13 +70,20 @@ def save_payload_on_message(
 
 
 class SendingPayloadProcess(multiprocessing.Process):
-    def __init__(self, logger: logging.Logger, omd_root: Path, reload_config: Event) -> None:
+    def __init__(
+        self,
+        logger: logging.Logger,
+        omd_root: Path,
+        reload_config: Event,
+        crash_report_callback: Callable[[], str],
+    ) -> None:
         super().__init__()
         self.logger = logger
         self.omd_root = omd_root
         self.site = omd_root.name
         self.paths = create_paths(omd_root)
         self.reload_config = reload_config
+        self.crash_report_callback = crash_report_callback
         self.task_name = "publishing on queue 'payload'"
 
     def run(self):
@@ -102,6 +109,9 @@ class SendingPayloadProcess(multiprocessing.Process):
             self.logger.error("Connection error: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
+            crash_report_msg = self.crash_report_callback()
+            self.logger.error(crash_report_msg)
+            raise
 
     def _handle_message(
         self,

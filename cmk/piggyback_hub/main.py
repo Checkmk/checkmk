@@ -7,6 +7,7 @@ import argparse
 import logging
 import signal
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import cycle
 from logging import getLogger
@@ -89,7 +90,9 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     return logger
 
 
-def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
+def run_piggyback_hub(
+    logger: logging.Logger, omd_root: Path, crash_report_callback: Callable[[], str]
+) -> int:
     reload_config = make_event()
     processes = (
         ReceivingProcess(
@@ -97,15 +100,17 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackPayload,
             save_payload_on_message(logger, omd_root),
+            crash_report_callback,
             QueueName("payload"),
             message_ttl=600,
         ),
-        SendingPayloadProcess(logger, omd_root, reload_config),
+        SendingPayloadProcess(logger, omd_root, reload_config, crash_report_callback),
         ReceivingProcess(
             logger,
             omd_root,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
+            crash_report_callback,
             CONFIG_QUEUE,
             message_ttl=None,
         ),
@@ -134,9 +139,16 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     raise RuntimeError("Unreachable code reached")
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(crash_report_callback: Callable[[], str], argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv
+
+    if crash_report_callback is None:
+
+        def dummy_crash_report():
+            return "No crash report created"
+
+        crash_report_callback = dummy_crash_report
 
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
@@ -150,9 +162,11 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            return run_piggyback_hub(logger, omd_root)
+            return run_piggyback_hub(logger, omd_root, crash_report_callback)
     except Exception as exc:
         if args.debug:
             raise
         logger.exception("Exception: %s: %s", APP_NAME.value, exc)
+        crash_report_msg = crash_report_callback()
+        logger.error(crash_report_msg)
         return 1

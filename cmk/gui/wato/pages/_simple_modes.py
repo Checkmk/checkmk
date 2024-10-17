@@ -802,7 +802,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
         # The ident is not part of the saved config
         # So, the entry is not longer a type _T
-        cloned_entry: Any = self._clone_entry(self._entry)
+        cloned_entry: Any = copy.deepcopy(self._entry)
         cloned_entry["ident"] = self._ident
         catalog_config = catalog_converter.convert_flat_to_catalog_config(cloned_entry)
         return catalog_config, DataOrigin.DISK, True

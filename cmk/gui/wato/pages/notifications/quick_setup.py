@@ -335,9 +335,12 @@ def notification_method() -> QuickSetupStage:
                             ),
                             "custom_macro": DictElement(
                                 required=False,
-                                parameter_form=String(
+                                parameter_form=ListOfStrings(
                                     title=Title("Custom macro"),
-                                    field_size=FieldSize.MEDIUM,
+                                    layout=ListOfStringsLayout.vertical,
+                                    string_spec=String(
+                                        field_size=FieldSize.SMALL,
+                                    ),
                                 ),
                             ),
                             "ec_contact": DictElement(

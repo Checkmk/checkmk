@@ -2159,6 +2159,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
+        self.validators.validate_create_subfolder(self, attributes)
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         attributes = update_metadata(attributes, created_by=user.id)
@@ -2215,6 +2216,7 @@ class Folder(FolderProtocol):
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write")  # Inheritance is changed
+        self.validators.validate_move_subfolder_to(subfolder, target_folder)
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -2280,6 +2282,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
         self.need_unlocked()
+        self.validators.validate_edit_folder(self, new_attributes)
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -2351,6 +2354,7 @@ class Folder(FolderProtocol):
         """
         # 1. Check preconditions
         self.prepare_create_hosts()
+        self.validators.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
             [
@@ -2526,6 +2530,7 @@ class Folder(FolderProtocol):
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
+        self.validators.validate_move_hosts(self, host_names, target_folder)
 
         # 2. Actual modification
         for host_name in host_names:

@@ -21,6 +21,56 @@
         "graph_line_host_name": { "type": "string" },
         "graph_line_service_name": { "type": "string" },
         "graph_line_metric_name": { "type": "string" },
+        "graph_line_metric": {
+            "type": "object",
+            "title": "metric",
+            "properties": {
+                "id": { "$ref": "#/$defs/graph_line_id" },
+                "type": {
+                    "type": "string",
+                    "enum": ["metric"]
+                },
+                "color": { "$ref": "#/$defs/graph_line_color" },
+                "title": { "$ref": "#/$defs/graph_line_title" },
+                "title_short": {
+                    "$ref": "#/$defs/graph_line_title_short"
+                },
+                "visible": { "$ref": "#/$defs/graph_line_visible" },
+                "line_type": {
+                    "$ref": "#/$defs/graph_line_line_type"
+                },
+                "mirrored": {
+                    "$ref": "#/$defs/graph_line_mirrored"
+                },
+                "host_name": {
+                    "$ref": "#/$defs/graph_line_host_name"
+                },
+                "service_name": {
+                    "$ref": "#/$defs/graph_line_service_name"
+                },
+                "metric_name": {
+                    "$ref": "#/$defs/graph_line_metric_name"
+                },
+                "consolidation_type": {
+                    "type": "string",
+                    "enum": ["average", "minimum", "maximum"]
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "color",
+                "title",
+                "title_short",
+                "visible",
+                "line_type",
+                "mirrored",
+                "host_name",
+                "service_name",
+                "metric_name",
+                "consolidation_type"
+            ]
+        },
         "graph_line_scalar": {
             "type": "object",
             "title": "scalar",
@@ -107,6 +157,7 @@
             "type": "array",
             "items": {
                 "anyOf": [
+                    { "$ref": "#/$defs/graph_line_metric" },
                     { "$ref": "#/$defs/graph_line_scalar" },
                     { "$ref": "#/$defs/graph_line_constant" }
                 ]
@@ -116,6 +167,7 @@
             "type": "object",
             "properties": {
                 "of": { "type": "string" },
+                "average": { "type": "string" },
                 "warning": { "type": "string" },
                 "critical": { "type": "string" },
                 "minimum": { "type": "string" },
@@ -138,6 +190,7 @@
             },
             "required": [
                 "of",
+                "average",
                 "warning",
                 "critical",
                 "minimum",

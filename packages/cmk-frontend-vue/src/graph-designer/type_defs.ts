@@ -19,11 +19,25 @@ export type GraphLineMirrored = boolean;
 export type GraphLineHostName = string;
 export type GraphLineServiceName = string;
 export type GraphLineMetricName = string;
-export type GraphLines = (Scalar | Constant)[];
+export type GraphLines = (Metric | Scalar | Constant)[];
 
 export interface GraphDesignerContent {
   graph_lines: GraphLines;
   i18n: I18N;
+}
+export interface Metric {
+  id: GraphLineId;
+  type: "metric";
+  color: GraphLineColor;
+  title: GraphLineTitle;
+  title_short: GraphLineTitleShort;
+  visible: GraphLineVisible;
+  line_type: GraphLineLineType;
+  mirrored: GraphLineMirrored;
+  host_name: GraphLineHostName;
+  service_name: GraphLineServiceName;
+  metric_name: GraphLineMetricName;
+  consolidation_type: "average" | "minimum" | "maximum";
 }
 export interface Scalar {
   id: GraphLineId;
@@ -58,6 +72,7 @@ export interface I18N {
 }
 export interface I18NGraphLines {
   of: string;
+  average: string;
   warning: string;
   critical: string;
   minimum: string;

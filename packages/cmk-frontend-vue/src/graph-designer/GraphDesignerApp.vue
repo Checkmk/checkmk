@@ -35,6 +35,14 @@ const props = defineProps<{
 
 // Specs
 
+const dataConsolidationType = ref<'average' | 'minimum' | 'maximum'>('maximum')
+const specConsolidationType = makeSingleChoice('', [
+  { name: 'average', title: props.i18n.graph_lines.average },
+  { name: 'minimum', title: props.i18n.graph_lines.minimum },
+  { name: 'maximum', title: props.i18n.graph_lines.maximum }
+])
+const backendValidationConsolidationType: ValidationMessages = []
+
 const dataScalarType = ref<'warning' | 'critical' | 'minimum' | 'maximum'>('critical')
 const specScalarType = makeSingleChoice('', [
   { name: 'warning', title: props.i18n.graph_lines.warning },
@@ -244,6 +252,11 @@ const topics: Topic[] = [
 
 // Graph lines
 
+const dataMetric = ref<Metric>({
+  hostName: '',
+  serviceName: '',
+  metricName: ''
+})
 const dataScalar = ref<Metric>({
   hostName: '',
   serviceName: '',
@@ -258,7 +271,38 @@ function isDissolvable() {
   return false
 }
 
-function addMetric() {}
+function addMetric() {
+  if (
+    dataMetric.value.hostName !== '' &&
+    dataMetric.value.serviceName !== '' &&
+    dataMetric.value.metricName !== ''
+  ) {
+    // TODO set color, title, ...
+    const consolidationType = specConsolidationType['elements'].find(
+      (e) => e.name === dataConsolidationType.value
+    )
+    const consolidationTypeTitle = consolidationType ? consolidationType.title : ''
+    graphLines.value.push({
+      id: id++,
+      type: 'metric',
+      color: '#ff0000',
+      title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
+      title_short: `${consolidationTypeTitle} ${props.i18n.graph_lines.of} ${props.i18n.topics.metric}`,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      host_name: dataMetric.value.hostName,
+      service_name: dataMetric.value.serviceName,
+      metric_name: dataMetric.value.metricName,
+      consolidation_type: dataConsolidationType.value
+    })
+    dataMetric.value = {
+      hostName: '',
+      serviceName: '',
+      metricName: ''
+    }
+  }
+}
 
 function addScalar() {
   if (
@@ -404,7 +448,24 @@ function computeOddEven(index: number) {
         </td>
         <td class="buttons"><FormSwitch v-model:data-switch="graphLine.mirrored" /></td>
         <td>
-          <div v-if="graphLine.type === 'scalar'">
+          <div v-if="graphLine.type === 'metric'">
+            <FixedMetricRowRenderer>
+              <template #metric_type>
+                <FormEdit
+                  v-model:data="graphLine.consolidation_type"
+                  :spec="specConsolidationType"
+                  :backend-validation="backendValidationConsolidationType"
+                />
+              </template>
+              <template #metric_of>
+                {{ props.i18n.graph_lines.of }}
+              </template>
+              <template #metric_title>
+                {{ graphLine.title }}
+              </template>
+            </FixedMetricRowRenderer>
+          </div>
+          <div v-else-if="graphLine.type === 'scalar'">
             <FixedMetricRowRenderer>
               <template #metric_type>
                 <FormEdit
@@ -431,7 +492,23 @@ function computeOddEven(index: number) {
 
   <TopicsRenderer :topics="topics">
     <template #metric>
-      <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>
+      <div>
+        <MetricRowRenderer>
+          <template #metric_cells>
+            <FormMetricCells v-model:data="dataMetric" />
+          </template>
+          <template #metric_type>
+            <FormEdit
+              v-model:data="dataConsolidationType"
+              :spec="specConsolidationType"
+              :backend-validation="backendValidationConsolidationType"
+            />
+          </template>
+          <template #metric_action>
+            <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>
+          </template>
+        </MetricRowRenderer>
+      </div>
     </template>
     <template #scalar>
       <div>

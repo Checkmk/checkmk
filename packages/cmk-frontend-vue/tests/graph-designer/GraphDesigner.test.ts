@@ -13,6 +13,7 @@ test('Render GraphDesignerApp', () => {
       i18n: {
         graph_lines: {
           of: 'of',
+          average: 'average',
           warning: 'warning',
           critical: 'critical',
           minimum: 'minimum',

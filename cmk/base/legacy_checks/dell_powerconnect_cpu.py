@@ -50,13 +50,14 @@ def check_dell_powerconnect_cpu(item, params, info):
     if cpu_util < 0 or cpu_util > 100:
         return
 
+    levels = params["levels"]
     # Darn. It again happend. Someone mixed up load and utilization.
     # We do *not* rename the performance variables here, in order not
     # to mix up existing RRDs...
     yield check_levels(
         cpu_util,
         "util",
-        params["levels"],
+        levels,
         human_readable_func=render.percent,
         infoname="CPU utilization",
         boundaries=(0, 100),
@@ -65,8 +66,8 @@ def check_dell_powerconnect_cpu(item, params, info):
         0,
         "",
         [
-            ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
-            ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
+            ("util1", "%d%%" % saveint(oneminuteperc), levels[0], levels[1], 0, 100),
+            ("util5", "%d%%" % saveint(fiveminutesperc), levels[0], levels[1], 0, 100),
         ],
     )
 

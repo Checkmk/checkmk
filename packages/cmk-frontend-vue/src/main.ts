@@ -52,7 +52,7 @@ function setupVue() {
             quick_setup_id: appData.quick_setup_id,
             mode: appData.mode,
             toggleEnabled: appData.toggle_enabled,
-            objectId: appData.object_id
+            objectId: appData.object_id || null
           })
           break
         }

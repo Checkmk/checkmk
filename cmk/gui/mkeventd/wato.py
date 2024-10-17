@@ -133,12 +133,14 @@ from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
+    EVENT_CONSOLE,
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
@@ -1525,6 +1527,9 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 class ABCEventConsoleMode(WatoMode, abc.ABC):
     def __init__(self) -> None:
+        config_domain = config_domain_registry[EVENT_CONSOLE]
+        assert isinstance(config_domain, ConfigDomainEventConsole)
+        self._config_domain = config_domain
         self._rule_packs = list(ec.load_rule_packs())
         super().__init__()
 
@@ -1590,7 +1595,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         _changes.add_change(
             what,
             message,
-            domains=[ConfigDomainEventConsole()],
+            domains=[self._config_domain],
             sites=_get_event_console_sync_sites(),
         )
 
@@ -2602,7 +2607,11 @@ def _get_match(rule: ec.Rule) -> str:
 
 
 def _add_change_for_sites(
-    *, what: str, message: str, rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec
+    *,
+    what: str,
+    message: str,
+    rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec,
+    config_domain: ConfigDomainEventConsole,
 ) -> None:
     """If CME, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
@@ -2614,7 +2623,7 @@ def _add_change_for_sites(
     _changes.add_change(
         what,
         message,
-        domains=[ConfigDomainEventConsole()],
+        domains=[config_domain],
         sites=sites_,
     )
 
@@ -2723,12 +2732,14 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 what="new-rule-pack",
                 message=_("Created new rule pack with id %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
+                config_domain=self._config_domain,
             )
         else:
             _add_change_for_sites(
                 what="edit-rule-pack",
                 message=_("Modified rule pack %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
+                config_domain=self._config_domain,
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
@@ -2924,12 +2935,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 what="new-rule",
                 message=("Created new event correlation rule with id %s") % rule["id"],
                 rule_or_rulepack=rule,
+                config_domain=self._config_domain,
             )
         else:
             _add_change_for_sites(
                 what="edit-rule",
                 message=("Modified event correlation rule %s") % rule["id"],
                 rule_or_rulepack=rule,
+                config_domain=self._config_domain,
             )
             # Reset hit counters of this rule
             execute_command("RESETCOUNTERS", [rule["id"]], omd_site())
@@ -3071,7 +3084,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def __init__(self) -> None:
         super().__init__()
 
-        self._default_values = ConfigDomainEventConsole().default_globals()
+        self._default_values = self._config_domain.default_globals()
         self._current_settings = dict(load_configuration_settings())
 
     @staticmethod

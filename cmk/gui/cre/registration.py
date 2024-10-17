@@ -10,7 +10,7 @@ from cmk.ccc.version import Edition
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui import hooks, sidebar, visuals
+from cmk.gui import sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.custom_icons.registration import custom_icons_register
@@ -179,8 +179,8 @@ def register(edition: Edition) -> None:
         timeperiod_usage_finder_registry,
         endpoint_registry,
         replication_path_registry,
+        save_active_config,
     )
-    hooks.register_builtin("mkeventd-activate-changes", save_active_config)
     custom_icons_register(
         mode_registry,
         main_module_registry,

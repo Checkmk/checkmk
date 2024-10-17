@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
@@ -68,6 +70,7 @@ def register(
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     endpoint_registry: EndpointRegistry,
     replication_path_registry: ReplicationPathRegistry,
+    save_active_config: Callable[[], None],
 ) -> None:
     views.register(
         data_source_registry,
@@ -91,7 +94,7 @@ def register(
         replication_path_registry,
     )
     permission_section_registry.register(PermissionSectionEventConsole)
-    config_domain_registry.register(ConfigDomainEventConsole())
+    config_domain_registry.register(ConfigDomainEventConsole(save_active_config))
     autocompleter_registry.register_autocompleter(
         "syslog_facilities", syslog_facilities_autocompleter
     )

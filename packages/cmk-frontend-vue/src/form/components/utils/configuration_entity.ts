@@ -4,24 +4,21 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
-import type { FormSpec, ValidationMessage } from '../vue_formspec_components'
+import type { FormSpec } from '../vue_formspec_components'
+import type { SetDataResult } from '@/components/FormEditAsync.vue'
 
 export interface EntityDescription {
   ident: string
   description: string
 }
 
-export type SetDataResult =
-  | { type: 'success'; entity: EntityDescription }
-  | { type: 'error'; validationMessages: Array<ValidationMessage> }
-
 export type Payload = Record<string, unknown>
 
 export interface API {
   getSchema: () => Promise<{ schema: FormSpec; defaultValues: Payload }>
   getData: (entityId: string) => Promise<Payload>
-  createEntity: (data: Payload) => Promise<SetDataResult>
-  updateEntity: (update: string, data: Payload) => Promise<SetDataResult>
+  createEntity: (data: Payload) => Promise<SetDataResult<EntityDescription>>
+  updateEntity: (update: string, data: Payload) => Promise<SetDataResult<EntityDescription>>
   listEntities: () => Promise<EntityDescription[]>
 }
 
@@ -53,7 +50,7 @@ const fetchRestAPI = async (url: string, method: string, body?: Payload) => {
   return response
 }
 
-async function processSaveResponse(response: Response): Promise<SetDataResult> {
+async function processSaveResponse(response: Response): Promise<SetDataResult<EntityDescription>> {
   const returnData = await response.json()
   if (response.status === 422) {
     return { type: 'error', validationMessages: returnData.ext.validation_errors }

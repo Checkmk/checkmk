@@ -13,7 +13,11 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import { immediateWatch } from '@/form/components/utils/watch'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
 import { ref } from 'vue'
-import { getConfigEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
+import {
+  getConfigEntityAPI,
+  type Payload,
+  type EntityDescription
+} from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
 import DropDown from '@/components/DropDown.vue'
 
@@ -41,7 +45,7 @@ const error = ref<string | undefined>()
 const slideInObjectId = ref<OptionId | null>(null)
 const slideInOpen = ref<boolean>(false)
 
-const slideInAPI = ref<SlideInAPI<OptionId, Payload>>()
+const slideInAPI = ref<SlideInAPI<OptionId, EntityDescription>>()
 immediateWatch(
   () => ({
     entityType: props.spec.config_entity_type,

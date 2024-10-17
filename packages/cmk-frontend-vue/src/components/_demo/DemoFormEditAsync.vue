@@ -29,7 +29,7 @@ function sleep(ms: number) {
 type ObjectId = string
 type ObjectData = Record<string, unknown>
 
-const api: API<ObjectId, ObjectData> = {
+const api: API<ObjectId, ObjectId> = {
   getData: async (objectId: ObjectId | null): Promise<ObjectData> => {
     console.log('getData', objectId)
     await sleep(apiDelay.value)
@@ -50,7 +50,7 @@ const api: API<ObjectId, ObjectData> = {
     if (backendValidation.value.length) {
       return { type: 'error', validationMessages: toRaw(backendValidation.value) }
     } else {
-      return { type: 'success', entity: { ident: 'smth', description: 'smth description' } }
+      return { type: 'success', entity: 'smth' }
     }
   },
   getSchema: async (): Promise<FormSpec> => {

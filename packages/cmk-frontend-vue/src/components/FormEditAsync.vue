@@ -3,7 +3,7 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="ObjectIdent, Result">
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
@@ -12,27 +12,21 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 
-export type D = Record<string, unknown>
+export type Payload = Record<string, unknown>
 
-export type SetDataResult<T> =
-  | {
-      type: 'success'
-      entity: {
-        ident: T
-        description: string
-      }
-    }
+export type SetDataResult<Result> =
+  | { type: 'success'; entity: Result }
   | { type: 'error'; validationMessages: Array<ValidationMessage> }
 
-export type API<T, D> = {
+export type API<ObjectIdent, Result> = {
   getSchema: () => Promise<FormSpec>
-  getData: (objectId: T | null) => Promise<D>
-  setData: (objectId: T | null, data: D) => Promise<SetDataResult<T>>
+  getData: (objectId: ObjectIdent | null) => Promise<Payload>
+  setData: (objectId: ObjectIdent | null, data: Payload) => Promise<SetDataResult<Result>>
 }
 
-export interface FormEditAsyncProps<T, D> {
-  objectId: T | null
-  api: API<T, D>
+export interface FormEditAsyncProps<ObjectIdent, Result> {
+  objectId: ObjectIdent | null
+  api: API<ObjectIdent, Result>
   i18n: {
     save_button: string
     cancel_button: string
@@ -43,10 +37,10 @@ export interface FormEditAsyncProps<T, D> {
   }
 }
 
-const props = defineProps<FormEditAsyncProps<T, D>>()
+const props = defineProps<FormEditAsyncProps<ObjectIdent, Result>>()
 
 const schema = ref<FormSpec>()
-const data = ref<D>()
+const data = ref<Payload>()
 
 const error = ref<string>()
 const backendValidation = ref<Array<ValidationMessage>>([])
@@ -58,7 +52,7 @@ async function save() {
   backendValidation.value = []
 
   error.value = ''
-  let result
+  let result: SetDataResult<Result>
   try {
     result = await props.api.setData(props.objectId, toRaw(data.value))
   } catch (apiError: unknown) {
@@ -81,10 +75,16 @@ function cancel() {
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'submitted', entity: { ident: T; description: string }): void
+  (e: 'submitted', result: Result): void
 }>()
 
-async function reloadAll({ api, objectId }: { api: API<T, D>; objectId: T | null }) {
+async function reloadAll({
+  api,
+  objectId
+}: {
+  api: API<ObjectIdent, Result>
+  objectId: ObjectIdent | null
+}) {
   error.value = ''
   try {
     const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])

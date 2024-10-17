@@ -13,6 +13,8 @@ common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
 # We standardized on Ubuntu, a Debian-based distro, so LSB
 common --@//:filesystem_layout=lsb
+# Enable Bzlmod for every Bazel command
+common --enable_bzlmod
 
 ## For specific commands
 # Always require debug info.

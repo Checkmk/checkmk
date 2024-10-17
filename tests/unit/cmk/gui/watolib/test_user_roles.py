@@ -73,6 +73,7 @@ def test_cloning_user_roles(request_context: None) -> None:
         "guestx",
         "userx",
         "agent_registrationx",
+        "no_permissionsx",
     }
 
 
@@ -83,6 +84,7 @@ def test_get_default_user_roles(request_context: None) -> None:
         "guest",
         "user",
         "agent_registration",
+        "no_permissions",
     }
 
 

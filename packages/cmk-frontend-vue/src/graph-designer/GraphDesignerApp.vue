@@ -24,7 +24,13 @@ import {
   makeString
 } from '@/graph-designer/specs'
 import { ref, type Ref } from 'vue'
-import { type I18N, type GraphLines, type GraphLine } from '@/graph-designer/type_defs'
+import {
+  type GraphLine,
+  type GraphLines,
+  type I18N,
+  type Operation,
+  type Transformation
+} from '@/graph-designer/type_defs'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
 
@@ -281,6 +287,129 @@ function isDissolvable(graphLine: GraphLine) {
     default:
       return false
   }
+}
+
+function dissolveOperation(graphLine: Operation) {
+  const index = graphLines.value.indexOf(graphLine)
+  graphLines.value = graphLines.value.filter((l) => l !== graphLine)
+  graphLines.value.splice(index, 0, ...graphLine.operands)
+}
+
+function dissolveTransformation(graphLine: Transformation) {
+  const index = graphLines.value.indexOf(graphLine)
+  graphLines.value = graphLines.value.filter((l) => l !== graphLine)
+  graphLines.value.splice(index, 0, graphLine.operand)
+}
+
+function dissolveGraphLine(graphLine: GraphLine) {
+  switch (graphLine.type) {
+    case 'sum':
+    case 'product':
+    case 'difference':
+    case 'fraction':
+    case 'average':
+    case 'minimum':
+    case 'maximum':
+      dissolveOperation(graphLine)
+      break
+    case 'transformation':
+      dissolveTransformation(graphLine)
+      break
+  }
+}
+
+function generateOperation(graphLine: Operation): Operation {
+  const operands: GraphLines = []
+  for (const operand of graphLine.operands) {
+    operands.push(generateGraphLine(operand))
+  }
+  return {
+    id: id++,
+    type: graphLine.type,
+    color: graphLine.color,
+    title: graphLine.title,
+    title_short: graphLine.title_short,
+    visible: graphLine.visible,
+    line_type: graphLine.line_type,
+    mirrored: graphLine.mirrored,
+    operands: operands
+  }
+}
+
+function generateGraphLine(graphLine: GraphLine): GraphLine {
+  switch (graphLine.type) {
+    case 'metric':
+      return {
+        id: id++,
+        type: graphLine.type,
+        color: graphLine.color,
+        title: graphLine.title,
+        title_short: graphLine.title_short,
+        visible: graphLine.visible,
+        line_type: graphLine.line_type,
+        mirrored: graphLine.mirrored,
+        host_name: graphLine.host_name,
+        service_name: graphLine.service_name,
+        metric_name: graphLine.metric_name,
+        consolidation_type: graphLine.consolidation_type
+      }
+    case 'scalar':
+      return {
+        id: id++,
+        type: graphLine.type,
+        color: graphLine.color,
+        title: graphLine.title,
+        title_short: graphLine.title_short,
+        visible: graphLine.visible,
+        line_type: graphLine.line_type,
+        mirrored: graphLine.mirrored,
+        host_name: graphLine.host_name,
+        service_name: graphLine.service_name,
+        metric_name: graphLine.metric_name,
+        scalar_type: graphLine.scalar_type
+      }
+    case 'constant':
+      return {
+        id: id++,
+        type: graphLine.type,
+        color: graphLine.color,
+        title: graphLine.title,
+        title_short: graphLine.title_short,
+        visible: graphLine.visible,
+        line_type: graphLine.line_type,
+        mirrored: graphLine.mirrored,
+        value: graphLine.value
+      }
+    case 'sum':
+    case 'product':
+    case 'difference':
+    case 'fraction':
+    case 'average':
+    case 'minimum':
+    case 'maximum':
+      return generateOperation(graphLine)
+    case 'transformation':
+      return {
+        id: id++,
+        type: graphLine.type,
+        color: graphLine.color,
+        title: graphLine.title,
+        title_short: graphLine.title_short,
+        visible: graphLine.visible,
+        line_type: graphLine.line_type,
+        mirrored: graphLine.mirrored,
+        percentile: graphLine.percentile,
+        operand: generateGraphLine(graphLine.operand)
+      }
+  }
+}
+
+function cloneGraphLine(graphLine: GraphLine) {
+  graphLines.value.push(generateGraphLine(graphLine))
+}
+
+function deleteGraphLine(graphLine: GraphLine) {
+  graphLines.value = graphLines.value.filter((l) => l !== graphLine)
 }
 
 function isOperation(graphLine: GraphLine) {
@@ -586,11 +715,13 @@ function computeOddEven(index: number) {
             :title="props.i18n.graph_lines.dissolve_operation"
             src="themes/facelift/images/icon_dissolve_operation.png"
             class="icon iconbutton png"
+            @click="dissolveGraphLine(graphLine)"
           />
           <img
             :title="props.i18n.graph_lines.clone_this_entry"
             src="themes/facelift/images/icon_clone.svg"
             class="icon iconbutton"
+            @click="cloneGraphLine(graphLine)"
           />
           <img
             :title="props.i18n.graph_lines.move_this_entry"
@@ -601,6 +732,7 @@ function computeOddEven(index: number) {
             :title="props.i18n.graph_lines.delete_this_entry"
             src="themes/facelift/images/icon_delete.svg"
             class="icon iconbutton"
+            @click="deleteGraphLine(graphLine)"
           />
         </td>
         <td class="narrow"><FormColorPicker v-model:data-color="graphLine.color" /></td>

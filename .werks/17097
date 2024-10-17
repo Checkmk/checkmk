@@ -1,0 +1,12 @@
+Title: Increase RSA key size for Agent Controller's client TLS certificate
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1729153513
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+The Agent Controller now uses 4096-bit RSA keys for the TLS certificates required for mutual TLS authentication.
+
+This change only affects newly generated certificates for new connections. Existing certificates remain unchanged and will continue to be accepted.

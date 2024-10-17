@@ -5,27 +5,71 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
+import { immediateWatch } from '@/form/components/utils/watch'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import router from './router'
 
 const routes = computed(() => {
   return router.getRoutes()
 })
 
-function setTheme(name: 'modern-dark' | 'facelift') {
+const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')
+const selectedCss = ref<'cmk' | 'none'>('cmk')
+
+async function setTheme(name: 'modern-dark' | 'facelift') {
   document.getElementsByTagName('body')[0]!.dataset['theme'] = name
 }
 
-onMounted(() => {
-  setTheme('facelift')
-})
+async function setCss(name: 'cmk' | 'none') {
+  let url: string
+  if (name === 'none') {
+    url = ''
+  } else {
+    url = (await import(`~cmk-frontend/src/themes/${selectedTheme.value}/theme.scss?url`)).default
+  }
+  ;(document.getElementById('cmk-theming-stylesheet') as HTMLLinkElement).href = url
+}
+
+immediateWatch(
+  () => selectedCss.value,
+  (name: 'cmk' | 'none') => {
+    selectedCss.value = name
+    setCss(name)
+    setTheme(selectedTheme.value)
+  }
+)
+
+immediateWatch(
+  () => selectedTheme.value,
+  (name: 'facelift' | 'modern-dark') => {
+    selectedTheme.value = name
+    setCss(selectedCss.value)
+    setTheme(name)
+  }
+)
 </script>
 
 <template>
   <div class="demo">
     <nav>
-      <button @click="setTheme('modern-dark')">dark</button>
-      <button @click="setTheme('facelift')">light</button>
+      <fieldset>
+        <legend>global styles</legend>
+        <ToggleButtonGroup
+          v-model="selectedCss"
+          :options="[
+            { label: 'cmk', value: 'cmk' },
+            { label: 'none', value: 'none' }
+          ]"
+        />
+        <ToggleButtonGroup
+          v-model="selectedTheme"
+          :options="[
+            { label: 'light', value: 'facelift' },
+            { label: 'dark', value: 'modern-dark' }
+          ]"
+        />
+      </fieldset>
       <ul>
         <li v-for="route in routes" :key="route.path">
           <RouterLink :to="route.path">{{ route.name }}</RouterLink>
@@ -74,6 +118,11 @@ onMounted(() => {
     }
     a {
       color: inherit;
+    }
+  }
+  fieldset {
+    :deep(button) {
+      min-width: 50px;
     }
   }
 }

@@ -2538,7 +2538,9 @@ def _restart_rabbitmq_when_changed(
     old_certs_hash: str, new_certs_hash: str, old_definitions_hash: str, new_definitions_hash: str
 ) -> None:
     if old_certs_hash != new_certs_hash or old_definitions_hash != new_definitions_hash:
-        subprocess.check_output(["omd", "restart", "rabbitmq"])
+        # make sure stdout and stderr is available in local variables (crash report!)
+        process = subprocess.run(["omd", "restart", "rabbitmq"], capture_output=True, check=False)
+        process.check_returncode()
 
 
 def _activate_local_rabbitmq_changes():

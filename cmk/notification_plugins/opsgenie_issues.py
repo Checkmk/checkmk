@@ -22,6 +22,8 @@ from opsgenie_sdk.exceptions import (  # type: ignore[import-untyped]
     AuthenticationException,
 )
 
+from cmk.utils.paths import trusted_ca_file
+
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
@@ -35,6 +37,7 @@ class Connector:
             conf.host = "%s" % host_url
         if proxy_url is not None:
             conf.proxy = proxy_url
+            conf.ssl_ca_cert = trusted_ca_file
 
         api_client: "ApiClient" = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)

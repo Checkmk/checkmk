@@ -157,22 +157,44 @@ def test_diagnostics_element_hw_info() -> None:
 def test_diagnostics_element_hw_info_content(
     tmp_path: PurePath,
 ) -> None:
-    diagnostics_element = diagnostics.HWDiagnosticsElement()
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    data_dict = {
+        "/proc/meminfo": "MemTotal:       32663516 kB",
+        "/proc/loadavg": "1.19 1.58 1.75 2/1922 891074",
+        "/proc/cpuinfo": """processor	: 0
+physical id	: 0
+processor	: 1
+physical id	: 0
+processor	: 2
+physical id	: 0
+processor	: 3
+physical id	: 0""",
+        "/sys/class/dmi/id/bios_vendor": "Dull Ink",
+        "/sys/class/dmi/id/bios_version": "1.2.3",
+        "/sys/class/dmi/id/sys_vendor": "Dull Ink",
+        "/sys/class/dmi/id/product_name": "Longitude 4",
+        "/sys/class/dmi/id/chassis_asset_tag": "",
+    }
 
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("hwinfo.json")
+    def open_side_effect(name):
+        return mock_open(read_data=data_dict.get(str(name)))()
 
-    info_keys = [
-        "cpuinfo",
-        "loadavg",
-        "meminfo",
-        "vendorinfo",
-    ]
-    content = json.loads(filepath.open().read())
+    with patch("builtins.open", side_effect=open_side_effect):
+        diagnostics_element = diagnostics.HWDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
-    assert sorted(content.keys()) == sorted(info_keys)
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("hwinfo.json")
+
+        info_keys = [
+            "cpuinfo",
+            "loadavg",
+            "meminfo",
+            "vendorinfo",
+        ]
+        content = json.loads(filepath.open().read())
+
+        assert sorted(content.keys()) == sorted(info_keys)
 
 
 def test_diagnostics_element_environment() -> None:

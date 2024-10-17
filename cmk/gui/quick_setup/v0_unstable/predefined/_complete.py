@@ -60,9 +60,9 @@ from cmk.rulesets.v1.form_specs import Dictionary
 
 
 class DCDHook:
-    create_dcd_connections: Callable[[BundleId, SiteId, Folder], list[CreateDCDConnection]] = (
-        lambda *_args: []
-    )
+    create_dcd_connections: Callable[
+        [BundleId, SiteId, HostName, Folder], list[CreateDCDConnection]
+    ] = lambda *_args: []
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -269,11 +269,7 @@ def _create_and_save_special_agent_bundle(
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
-    hosts = [
-        create_special_agent_host_from_form_data(
-            host_name=HostName(host_name), folder=folder, site_id=site_id
-        )
-    ]
+    validated_host_name = HostName(host_name)
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -283,7 +279,11 @@ def _create_and_save_special_agent_bundle(
             program_id=PROGRAM_ID_QUICK_SETUP,
         ),
         entities=CreateBundleEntities(
-            hosts=hosts,
+            hosts=[
+                create_special_agent_host_from_form_data(
+                    host_name=validated_host_name, folder=folder, site_id=site_id
+                )
+            ],
             passwords=create_passwords(
                 passwords=passwords,
                 rulespec_name=rulespec_name,
@@ -292,15 +292,16 @@ def _create_and_save_special_agent_bundle(
             rules=[
                 create_rule(
                     params=params,
-                    host_name=create_host["name"],
-                    host_path=create_host["folder"].path(),
+                    host_name=validated_host_name,
+                    host_path=folder.path(),
                     rulespec_name=rulespec_name,
                     bundle_id=bundle_id,
                     site_id=site_id,
                 )
-                for create_host in hosts
             ],
-            dcd_connections=DCDHook.create_dcd_connections(bundle_id, site_id, folder),
+            dcd_connections=DCDHook.create_dcd_connections(
+                bundle_id, site_id, validated_host_name, folder
+            ),
         ),
     )
     try:

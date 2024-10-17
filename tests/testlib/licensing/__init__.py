@@ -37,16 +37,21 @@ logger = logging.getLogger(__name__)
 @contextmanager
 def ca_certificate(site: Site) -> Iterator[LicensingKeyOrCert]:
     """Update CA certificate (create a backup of the original certificate)"""
-    ca_cert_file = site.licensing_dir / "ca-certificate.pem"
+    ca_cert_file = Path(site.root) / "share" / "check_mk" / "licensing" / "ca-certificate.pem"
     ca_cert_backup = Path(site.root) / f"{ca_cert_file.name}.bak"
     # NOTE: The certificate is owned by root!
-    run(["cp", ca_cert_file.as_posix(), ca_cert_backup.as_posix()], sudo=True)
+    restore_backup = (
+        run(
+            ["cp", ca_cert_file.as_posix(), ca_cert_backup.as_posix()], check=False, sudo=True
+        ).returncode
+        == 0
+    ) and os.getenv("CLEANUP", "1") == "1"
     try:
         key_or_cert = licensing_key_or_cert()
         write_file(ca_cert_file, key_or_cert.certificate.dump_pem().bytes, sudo=True)
         yield key_or_cert
     finally:
-        if os.getenv("CLEANUP", "1") == "1":
+        if restore_backup:
             run(["cp", ca_cert_backup.as_posix(), ca_cert_file.as_posix()], sudo=True)
 
 

@@ -23,10 +23,12 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
+import { convertToUnit, convertToVerticalRange } from '@/graph-designer/converters'
 import {
   type GraphLine,
   type GraphLines,
+  type GraphOptions,
   type I18N,
   type Operation,
   type Transformation
@@ -36,6 +38,7 @@ import { type ValidationMessages } from '@/form'
 
 const props = defineProps<{
   graph_lines: GraphLines
+  graph_options: GraphOptions
   i18n: I18N
 }>()
 
@@ -72,7 +75,9 @@ const dataTransformation = ref(95)
 const specTransformation = makeFloat('', props.i18n.graph_operations.percentile)
 const backendValidationTransformation: ValidationMessages = []
 
-const dataUnit = ref(['first_with_unit', null])
+const dataUnit = computed(() => {
+  return convertToUnit(props.graph_options.unit)
+})
 const specUnit = makeCascadingSingleChoice('', [
   {
     name: 'first_with_unit',
@@ -188,7 +193,9 @@ const specUnit = makeCascadingSingleChoice('', [
 ])
 const backendValidationUnit: ValidationMessages = []
 
-const dataVerticalRange = ref(['auto', null])
+const dataVerticalRange = computed(() => {
+  return convertToVerticalRange(props.graph_options.vertical_range)
+})
 const specVerticalRange = makeCascadingSingleChoice('', [
   {
     name: 'auto',
@@ -220,7 +227,9 @@ const specVerticalRange = makeCascadingSingleChoice('', [
 ])
 const backendValidationVerticalRange: ValidationMessages = []
 
-const dataMetricsWithZeroValues = ref(true)
+const dataMetricsWithZeroValues = computed(() => {
+  return props.graph_options.metrics_with_zero_values
+})
 const specMetricsWithZeroValues = makeBooleanChoice()
 const backendValidationMetricsWithZeroValues: ValidationMessages = []
 

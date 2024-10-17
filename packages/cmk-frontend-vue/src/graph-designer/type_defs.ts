@@ -21,9 +21,11 @@ export type GraphLineHostName = string;
 export type GraphLineServiceName = string;
 export type GraphLineMetricName = string;
 export type GraphLines = GraphLine[];
+export type GraphOptionUnitCustomNotation = GraphOptionUnitCustomNotationWithSymbol | "time";
 
 export interface GraphDesignerContent {
   graph_lines: GraphLines;
+  graph_options: GraphOptions;
   i18n: I18N;
 }
 export interface Metric {
@@ -87,6 +89,27 @@ export interface Transformation {
   mirrored: GraphLineMirrored;
   percentile: number;
   operand: GraphLine;
+}
+export interface GraphOptions {
+  unit: "first_with_unit" | GraphOptionUnitCustom;
+  vertical_range: "auto" | GraphOptionVerticalRangeExplicit;
+  metrics_with_zero_values: boolean;
+}
+export interface GraphOptionUnitCustom {
+  notation: GraphOptionUnitCustomNotation;
+  precision: GraphOptionUnitCustomPrecision;
+}
+export interface GraphOptionUnitCustomNotationWithSymbol {
+  type: "decimal" | "si" | "iec" | "standard_scientific" | "engineering_scientific";
+  symbol: string;
+}
+export interface GraphOptionUnitCustomPrecision {
+  rounding_mode: "auto" | "strict";
+  digits: number;
+}
+export interface GraphOptionVerticalRangeExplicit {
+  lower: number;
+  upper: number;
 }
 export interface I18N {
   graph_lines: I18NGraphLines;

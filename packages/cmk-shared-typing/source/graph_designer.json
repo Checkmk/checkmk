@@ -4,9 +4,10 @@
     "title": "graph_designer_content",
     "properties": {
         "graph_lines": { "$ref": "#/$defs/graph_lines" },
+        "graph_options": { "$ref": "#/$defs/graph_options" },
         "i18n": { "$ref": "#/$defs/i18n" }
     },
-    "required": ["graph_lines", "i18n"],
+    "required": ["graph_lines", "graph_options", "i18n"],
     "$defs": {
         "graph_line_id": { "type": "integer" },
         "graph_line_color": { "type": "string" },
@@ -260,6 +261,83 @@
             "items": {
                 "$ref": "#/$defs/graph_line"
             }
+        },
+        "graph_option_unit_custom_notation_with_symbol": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "decimal",
+                        "si",
+                        "iec",
+                        "standard_scientific",
+                        "engineering_scientific"
+                    ]
+                },
+                "symbol": { "type": "string" }
+            },
+            "required": ["type", "symbol"]
+        },
+        "graph_option_unit_custom_notation": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/graph_option_unit_custom_notation_with_symbol"
+                },
+                { "type": "string", "enum": ["time"] }
+            ]
+        },
+        "graph_option_unit_custom_precision": {
+            "type": "object",
+            "properties": {
+                "rounding_mode": {
+                    "type": "string",
+                    "enum": ["auto", "strict"]
+                },
+                "digits": { "type": "integer" }
+            },
+            "required": ["rounding_mode", "digits"]
+        },
+        "graph_option_unit_custom": {
+            "type": "object",
+            "properties": {
+                "notation": {
+                    "$ref": "#/$defs/graph_option_unit_custom_notation"
+                },
+                "precision": {
+                    "$ref": "#/$defs/graph_option_unit_custom_precision"
+                }
+            },
+            "required": ["notation", "precision"]
+        },
+        "graph_option_vertical_range_explicit": {
+            "type": "object",
+            "properties": {
+                "lower": { "type": "number" },
+                "upper": { "type": "number" }
+            },
+            "required": ["lower", "upper"]
+        },
+        "graph_options": {
+            "type": "object",
+            "properties": {
+                "unit": {
+                    "anyOf": [
+                        { "type": "string", "enum": ["first_with_unit"] },
+                        { "$ref": "#/$defs/graph_option_unit_custom" }
+                    ]
+                },
+                "vertical_range": {
+                    "anyOf": [
+                        { "type": "string", "enum": ["auto"] },
+                        {
+                            "$ref": "#/$defs/graph_option_vertical_range_explicit"
+                        }
+                    ]
+                },
+                "metrics_with_zero_values": { "type": "boolean" }
+            },
+            "required": ["unit", "vertical_range", "metrics_with_zero_values"]
         },
         "i18n_graph_lines": {
             "type": "object",

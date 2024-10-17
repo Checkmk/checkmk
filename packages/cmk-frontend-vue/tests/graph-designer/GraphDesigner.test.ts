@@ -10,6 +10,11 @@ test('Render GraphDesignerApp', () => {
   render(GraphDesignerApp, {
     props: {
       graph_lines: [],
+      graph_options: {
+        unit: 'first_with_unit',
+        vertical_range: 'auto',
+        metrics_with_zero_values: true
+      },
       i18n: {
         graph_lines: {
           of: 'of',

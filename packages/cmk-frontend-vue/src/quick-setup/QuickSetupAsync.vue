@@ -149,7 +149,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
       btn.push(defineButton.prev(PREV_BUTTON_LABEL))
     }
 
-    const userInput = stages.value[stageIndex]!.user_input || {}
+    const userInput = stages.value[stageIndex]?.user_input || {}
     result.push({
       title: stage.title,
       sub_title: stage?.sub_title || null,
@@ -189,7 +189,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     const isFirst = index === 0
     const overview = data.overviews[index]!
 
-    const userInput = stages.value[index]!.user_input || {}
+    const userInput = stages.value[index]?.user_input || {}
     result.push({
       title: overview.title,
       sub_title: overview.sub_title || null,

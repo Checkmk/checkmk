@@ -181,6 +181,14 @@ class ListOfStringsLayout(str, Enum):
 
 
 @dataclass(kw_only=True)
+class LabelsI18n:
+    add_some_labels: str
+    key_value_format_error: str
+    uniqueness_error: str
+    max_labels_reached: str
+
+
+@dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
     message: str
@@ -409,6 +417,14 @@ class Folder(FormSpec):
     input_hint: Optional[str] = None
 
 
+@dataclass(kw_only=True)
+class Labels(FormSpec):
+    i18n: LabelsI18n
+    max_labels: int
+    type: str = "labels"
+    autocompleter: Optional[Autocompleter] = None
+
+
 Components = Union[
     Integer,
     Float,
@@ -434,6 +450,7 @@ Components = Union[
     SimplePassword,
     ListOfStrings,
     Folder,
+    Labels,
 ]
 
 

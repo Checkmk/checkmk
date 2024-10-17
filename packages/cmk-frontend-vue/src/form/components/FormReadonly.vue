@@ -87,6 +87,8 @@ function renderForm(
       return renderSimplePassword()
     case 'folder':
       return renderFolder(formSpec as Folder, value as string, backendValidation)
+    case 'labels':
+      return renderLabels(value as string)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -413,6 +415,11 @@ function renderFolder(
   backendValidation: ValidationMessages
 ): VNode {
   return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
+}
+
+// Todo: https://jira.lan.tribe29.com/browse/CMK-19962
+function renderLabels(value: string): VNode {
+  return h('div', value)
 }
 
 export default defineComponent({

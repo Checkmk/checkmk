@@ -14,6 +14,7 @@ from .fixed_value import FixedValueVisitor
 from .float import FloatVisitor
 from .folder import FolderVisitor
 from .integer import IntegerVisitor
+from .labels import LabelsVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
 from .list import ListVisitor
 from .list_of_strings import ListOfStringsVisitor
@@ -60,4 +61,5 @@ __all__ = [
     "TransformVisitor",
     "TupleVisitor",
     "VisitorOptions",
+    "LabelsVisitor",
 ]

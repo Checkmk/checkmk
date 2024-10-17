@@ -119,8 +119,12 @@
                 },
                 "autocompleter": {
                     "oneOf": [
-                        { "type": "null" },
-                        { "$ref": "#/$defs/autocompleter" }
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/$defs/autocompleter"
+                        }
                     ]
                 }
             },
@@ -256,8 +260,12 @@
                 },
                 "group": {
                     "oneOf": [
-                        { "$ref": "#/$defs/dictionary_group" },
-                        { "type": "null" }
+                        {
+                            "$ref": "#/$defs/dictionary_group"
+                        },
+                        {
+                            "type": "null"
+                        }
                     ]
                 },
                 "default_value": {},
@@ -1027,6 +1035,51 @@
                 }
             ]
         },
+        "labels": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "labels",
+                    "default": "labels"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "labels_i18n",
+                    "properties": {
+                        "add_some_labels": {
+                            "type": "string"
+                        },
+                        "key_value_format_error": {
+                            "type": "string"
+                        },
+                        "uniqueness_error": {
+                            "type": "string"
+                        },
+                        "max_labels_reached": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "add_some_labels",
+                        "key_value_format_error",
+                        "uniqueness_error",
+                        "max_labels_reached"
+                    ]
+                },
+                "autocompleter": {
+                    "$ref": "#/$defs/autocompleter"
+                },
+                "max_labels": {
+                    "type": "integer"
+                }
+            },
+            "required": ["type", "i18n", "max_labels"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -1103,6 +1156,9 @@
                 },
                 {
                     "$ref": "#/$defs/folder"
+                },
+                {
+                    "$ref": "#/$defs/labels"
                 }
             ],
             "required": ["type"]

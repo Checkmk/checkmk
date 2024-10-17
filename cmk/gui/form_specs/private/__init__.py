@@ -13,6 +13,7 @@ from .definitions import (
 )
 from .dictionary_extended import DictionaryExtended
 from .folder import Folder
+from .labels import Labels
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .monitored_host_extended import MonitoredHostExtended
@@ -42,4 +43,5 @@ __all__ = [
     "AdaptiveMultipleChoice",
     "AdaptiveMultipleChoiceLayout",
     "MonitoredHostExtended",
+    "Labels",
 ]

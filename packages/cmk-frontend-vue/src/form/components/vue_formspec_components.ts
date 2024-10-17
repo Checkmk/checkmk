@@ -33,7 +33,8 @@ export type Components =
   | OptionalChoice
   | SimplePassword
   | ListOfStrings
-  | Folder;
+  | Folder
+  | Labels;
 export type Integer = FormSpec & {
   type: "integer";
   label: string | null;
@@ -195,6 +196,12 @@ export type Folder = FormSpec & {
   type: "folder";
   input_hint?: string;
 };
+export type Labels = FormSpec & {
+  type: "labels";
+  i18n: LabelsI18N;
+  autocompleter?: Autocompleter;
+  max_labels: number;
+};
 
 export interface VueFormspecComponents {
   components?: Components;
@@ -310,6 +317,12 @@ export interface SingleChoiceEditableI18N {
 export interface I18NOptionalChoice {
   label: string;
   none_label: string;
+}
+export interface LabelsI18N {
+  add_some_labels: string;
+  key_value_format_error: string;
+  uniqueness_error: string;
+  max_labels_reached: string;
 }
 export interface ValidationMessage {
   location: string[];

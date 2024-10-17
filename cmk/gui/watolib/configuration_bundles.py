@@ -43,7 +43,10 @@ Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
 CreateFunction = Callable[[], None]
 
 # TODO: deduplicate with cmk/gui/cee/dcd/_store.py
-DCDConnectionSpec = dict[str, Any]
+# NOTE: mypy does not allow DCDConnectionSpec to be Mapping here (see TODO for solution)
+# TODO: a cee specific configuration bundle should be implemented as the raw edition does not
+#  have dcd connections
+DCDConnectionSpec = Any
 DCDConnectionDict = dict[str, DCDConnectionSpec]
 
 
@@ -473,8 +476,9 @@ def _prepare_create_dcd_connections(
     def create() -> None:
         for dcd_connection in new_connections:
             spec = dcd_connection["spec"]
-            spec["locked_by"] = bundle_ident
-            DCDConnectionHook.create_dcd_connection(dcd_connection["id"], spec)
+            DCDConnectionHook.create_dcd_connection(
+                dcd_connection["id"], {**spec, "locked_by": bundle_ident}
+            )
 
     return create
 

@@ -232,11 +232,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
-    }
-
-
-def configuration_authority() -> Mapping[str, DictElement]:
-    return {
         "authority": DictElement(
             parameter_form=SingleChoice(
                 title=Title("Authority"),
@@ -257,7 +252,7 @@ def configuration_authority() -> Mapping[str, DictElement]:
                 ),
             ),
             required=True,
-        )
+        ),
     }
 
 
@@ -371,7 +366,6 @@ def formspec() -> Dictionary:
         migrate=_migrate,
         elements={
             **configuration_authentication(),
-            **configuration_authority(),
             **configuration_services(),
             **configuration_advanced(),
         },

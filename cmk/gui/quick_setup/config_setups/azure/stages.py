@@ -14,6 +14,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
+    collect_params_with_defaults_from_form_data,
     complete,
     recaps,
     widgets,
@@ -100,7 +101,17 @@ def configure_authentication() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[qs_validators.validate_unique_id],
+        custom_validators=[
+            qs_validators.validate_unique_id,
+            qs_validators.validate_test_connection_custom_collect_params(
+                rulespec_name=RuleGroup.SpecialAgents("azure"),
+                parameter_form=azure.formspec(),
+                custom_collect_params=collect_params_with_defaults_from_form_data,
+                error_message=_(
+                    "Could not access your Azure account. Please check your credentials."
+                ),
+            ),
+        ],
         recap=[recaps.recaps_form_spec],
         button_label="Configure host and authority",
     )
@@ -109,19 +120,12 @@ def configure_authentication() -> QuickSetupStage:
 def configure_host_and_authority() -> QuickSetupStage:
     site_default_value = site_attribute_default_value()
     return QuickSetupStage(
-        title=_("Configure host and authority"),
+        title=_("Configure host"),
         sub_title=_(
-            "Name your host, define the path and select the authority you would like to monitor"
+            "Name your host and define the folder",
         ),
         configure_components=[
             widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="azure"),
-            FormSpecWrapper(
-                id=FormSpecId("configure_authority"),
-                form_spec=DictionaryExtended(
-                    elements=azure.configuration_authority(),
-                    layout=DictionaryLayout.two_columns,
-                ),
-            ),
             FormSpecWrapper(
                 id=FormSpecId("site"),
                 form_spec=DictionaryExtended(

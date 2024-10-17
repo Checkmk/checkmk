@@ -225,7 +225,7 @@ const save = async (buttonId: string) => {
 
   const userInput: StageData[] = []
 
-  for (let i = 0; i < numberOfStages.value; i++) {
+  for (let i = 0; i < regularStages.value.length; i++) {
     const formData = (stages.value[i]!.user_input || {}) as StageData
     userInput.push(formData)
   }

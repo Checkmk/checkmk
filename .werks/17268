@@ -1,0 +1,11 @@
+Title: Opsgenie: use Checkmk CA trust store
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1729170956
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+The Opsgenie notification plugin will now use the Checkmk CA trust store
+(<code>~/var/ssl/ca-certificates.crt</code>) if an HTTP proxy is configured.

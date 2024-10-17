@@ -441,13 +441,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 }
 
                 if (key == nullptr) {
-                    continue;
+                    break;
                 }
 
                 if (object_blacklist.contains(key)) {
                     // Host/Service is not needed for this query and has already
                     // been filtered out.
-                    continue;
+                    break;
                 }
 
                 // Find state object for this host/service
@@ -472,7 +472,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                                     query.timezoneOffset())) {
                             object_blacklist.insert(key);
                             delete state;  // NOLINT(cppcoreguidelines-owning-memory)
-                            continue;
+                            break;
                         }
                     }
 

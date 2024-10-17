@@ -9,7 +9,7 @@
  * Do not edit manually.
  */
 
-export type GraphLine = Metric | Scalar | Constant | Transformation;
+export type GraphLine = Metric | Scalar | Constant | Operation | Transformation;
 export type GraphLineId = number;
 export type GraphLineColor = string;
 export type GraphLineTitle = string;
@@ -64,6 +64,17 @@ export interface Constant {
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
   value: number;
+}
+export interface Operation {
+  id: GraphLineId;
+  type: "sum" | "product" | "difference" | "fraction" | "average" | "minimum" | "maximum";
+  color: GraphLineColor;
+  title: GraphLineTitle;
+  title_short: GraphLineTitleShort;
+  visible: GraphLineVisible;
+  line_type: GraphLineLineType;
+  mirrored: GraphLineMirrored;
+  operands: (Metric | Scalar | Constant | Operation | Transformation)[];
 }
 export interface Transformation {
   id: GraphLineId;

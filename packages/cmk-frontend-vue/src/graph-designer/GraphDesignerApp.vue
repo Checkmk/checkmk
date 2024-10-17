@@ -267,8 +267,35 @@ let id = 0
 const graphLines: Ref<GraphLines> = ref([])
 const selectedGraphLines: Ref<GraphLines> = ref([])
 
-function isDissolvable(graphLineType: string) {
-  return ['transformation'].includes(graphLineType)
+function isDissolvable(graphLine: GraphLine) {
+  switch (graphLine.type) {
+    case 'sum':
+    case 'product':
+    case 'difference':
+    case 'fraction':
+    case 'average':
+    case 'minimum':
+    case 'maximum':
+    case 'transformation':
+      return true
+    default:
+      return false
+  }
+}
+
+function isOperation(graphLine: GraphLine) {
+  switch (graphLine.type) {
+    case 'sum':
+    case 'product':
+    case 'difference':
+    case 'fraction':
+    case 'average':
+    case 'minimum':
+    case 'maximum':
+      return true
+    default:
+      return false
+  }
 }
 
 function addMetric() {
@@ -371,19 +398,131 @@ function addGraphLineWithSelection(graphLine: GraphLine) {
   selectedGraphLines.value = []
 }
 
-function applySum() {}
+function applySum() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'sum',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.sum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.sum,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyProduct() {}
+function applyProduct() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'product',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.product} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.product,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyDifference() {}
+function applyDifference() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'difference',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.difference} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.difference,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyFraction() {}
+function applyFraction() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'fraction',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.fraction} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.fraction,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyAverage() {}
+function applyAverage() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'average',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.average} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.average,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyMinimum() {}
+function applyMinimum() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'minimum',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.minimum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.minimum,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
-function applyMaximum() {}
+function applyMaximum() {
+  // TODO use other attributes from first operand?
+  const firstOperand = selectedGraphLines.value[0]
+  if (firstOperand) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'maximum',
+      color: firstOperand.color,
+      title: `${props.i18n.graph_operations.maximum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
+      title_short: props.i18n.graph_operations.maximum,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      operands: selectedGraphLines.value
+    })
+  }
+}
 
 function applyTransformation() {
   // TODO use other attributes from operand?
@@ -443,7 +582,7 @@ function computeOddEven(index: number) {
         </td>
         <td class="buttons">
           <img
-            v-if="isDissolvable(graphLine.type)"
+            v-if="isDissolvable(graphLine)"
             :title="props.i18n.graph_lines.dissolve_operation"
             src="themes/facelift/images/icon_dissolve_operation.png"
             class="icon iconbutton png"
@@ -520,6 +659,16 @@ function computeOddEven(index: number) {
               class="color"
             ></div>
             {{ graphLine.operand.title }}
+          </div>
+          <div v-else-if="isOperation(graphLine)">
+            {{ graphLine.title_short }}
+            <div v-for="operand in graphLine.operands" :key="operand.id">
+              <div
+                :style="{ 'background-color': operand.color, 'border-color': operand.color }"
+                class="color"
+              ></div>
+              {{ operand.title }}
+            </div>
           </div>
         </td>
       </tr>

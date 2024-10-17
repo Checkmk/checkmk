@@ -153,6 +153,60 @@
                 "value"
             ]
         },
+        "graph_line_operation": {
+            "type": "object",
+            "title": "operation",
+            "properties": {
+                "id": { "$ref": "#/$defs/graph_line_id" },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "sum",
+                        "product",
+                        "difference",
+                        "fraction",
+                        "average",
+                        "minimum",
+                        "maximum"
+                    ]
+                },
+                "color": { "$ref": "#/$defs/graph_line_color" },
+                "title": { "$ref": "#/$defs/graph_line_title" },
+                "title_short": {
+                    "$ref": "#/$defs/graph_line_title_short"
+                },
+                "visible": { "$ref": "#/$defs/graph_line_visible" },
+                "line_type": {
+                    "$ref": "#/$defs/graph_line_line_type"
+                },
+                "mirrored": {
+                    "$ref": "#/$defs/graph_line_mirrored"
+                },
+                "operands": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            { "$ref": "#/$defs/graph_line_metric" },
+                            { "$ref": "#/$defs/graph_line_scalar" },
+                            { "$ref": "#/$defs/graph_line_constant" },
+                            { "$ref": "#/$defs/graph_line_operation" },
+                            { "$ref": "#/$defs/graph_line_transformation" }
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "color",
+                "title",
+                "title_short",
+                "visible",
+                "line_type",
+                "mirrored",
+                "operands"
+            ]
+        },
         "graph_line_transformation": {
             "type": "object",
             "title": "transformation",
@@ -197,6 +251,7 @@
                 { "$ref": "#/$defs/graph_line_metric" },
                 { "$ref": "#/$defs/graph_line_scalar" },
                 { "$ref": "#/$defs/graph_line_constant" },
+                { "$ref": "#/$defs/graph_line_operation" },
                 { "$ref": "#/$defs/graph_line_transformation" }
             ]
         },

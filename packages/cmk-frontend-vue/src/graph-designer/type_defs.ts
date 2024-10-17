@@ -9,6 +9,7 @@
  * Do not edit manually.
  */
 
+export type GraphLine = Metric | Scalar | Constant | Transformation;
 export type GraphLineId = number;
 export type GraphLineColor = string;
 export type GraphLineTitle = string;
@@ -19,7 +20,7 @@ export type GraphLineMirrored = boolean;
 export type GraphLineHostName = string;
 export type GraphLineServiceName = string;
 export type GraphLineMetricName = string;
-export type GraphLines = (Metric | Scalar | Constant)[];
+export type GraphLines = GraphLine[];
 
 export interface GraphDesignerContent {
   graph_lines: GraphLines;
@@ -63,6 +64,18 @@ export interface Constant {
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
   value: number;
+}
+export interface Transformation {
+  id: GraphLineId;
+  type: "transformation";
+  color: GraphLineColor;
+  title: GraphLineTitle;
+  title_short: GraphLineTitleShort;
+  visible: GraphLineVisible;
+  line_type: GraphLineLineType;
+  mirrored: GraphLineMirrored;
+  percentile: number;
+  operand: GraphLine;
 }
 export interface I18N {
   graph_lines: I18NGraphLines;

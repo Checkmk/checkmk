@@ -153,14 +153,57 @@
                 "value"
             ]
         },
+        "graph_line_transformation": {
+            "type": "object",
+            "title": "transformation",
+            "properties": {
+                "id": { "$ref": "#/$defs/graph_line_id" },
+                "type": {
+                    "type": "string",
+                    "enum": ["transformation"]
+                },
+                "color": { "$ref": "#/$defs/graph_line_color" },
+                "title": { "$ref": "#/$defs/graph_line_title" },
+                "title_short": {
+                    "$ref": "#/$defs/graph_line_title_short"
+                },
+                "visible": { "$ref": "#/$defs/graph_line_visible" },
+                "line_type": {
+                    "$ref": "#/$defs/graph_line_line_type"
+                },
+                "mirrored": {
+                    "$ref": "#/$defs/graph_line_mirrored"
+                },
+                "percentile": { "type": "number" },
+                "operand": {
+                    "$ref": "#/$defs/graph_line"
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "color",
+                "title",
+                "title_short",
+                "visible",
+                "line_type",
+                "mirrored",
+                "percentile",
+                "operand"
+            ]
+        },
+        "graph_line": {
+            "anyOf": [
+                { "$ref": "#/$defs/graph_line_metric" },
+                { "$ref": "#/$defs/graph_line_scalar" },
+                { "$ref": "#/$defs/graph_line_constant" },
+                { "$ref": "#/$defs/graph_line_transformation" }
+            ]
+        },
         "graph_lines": {
             "type": "array",
             "items": {
-                "anyOf": [
-                    { "$ref": "#/$defs/graph_line_metric" },
-                    { "$ref": "#/$defs/graph_line_scalar" },
-                    { "$ref": "#/$defs/graph_line_constant" }
-                ]
+                "$ref": "#/$defs/graph_line"
             }
         },
         "i18n_graph_lines": {

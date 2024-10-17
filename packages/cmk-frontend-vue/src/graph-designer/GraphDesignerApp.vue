@@ -24,7 +24,7 @@ import {
   makeString
 } from '@/graph-designer/specs'
 import { ref, type Ref } from 'vue'
-import { type I18N, type GraphLines } from '@/graph-designer/type_defs'
+import { type I18N, type GraphLines, type GraphLine } from '@/graph-designer/type_defs'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
 
@@ -267,8 +267,8 @@ let id = 0
 const graphLines: Ref<GraphLines> = ref([])
 const selectedGraphLines: Ref<GraphLines> = ref([])
 
-function isDissolvable() {
-  return false
+function isDissolvable(graphLineType: string) {
+  return ['transformation'].includes(graphLineType)
 }
 
 function addMetric() {
@@ -364,6 +364,13 @@ function transformationIsApplicable() {
   return Object.keys(selectedGraphLines.value).length === 1
 }
 
+function addGraphLineWithSelection(graphLine: GraphLine) {
+  const index = Math.min(...selectedGraphLines.value.map((l) => graphLines.value.indexOf(l)))
+  graphLines.value = graphLines.value.filter((l) => !selectedGraphLines.value.includes(l))
+  graphLines.value.splice(index, 0, graphLine)
+  selectedGraphLines.value = []
+}
+
 function applySum() {}
 
 function applyProduct() {}
@@ -378,7 +385,24 @@ function applyMinimum() {}
 
 function applyMaximum() {}
 
-function applyTransformation() {}
+function applyTransformation() {
+  // TODO use other attributes from operand?
+  const selectedGraphLine = selectedGraphLines.value[0]
+  if (selectedGraphLine) {
+    addGraphLineWithSelection({
+      id: id++,
+      type: 'transformation',
+      color: '#ff0000',
+      title: `${props.i18n.graph_operations.percentile} ${props.i18n.graph_lines.of} ${selectedGraphLine.title}`,
+      title_short: props.i18n.graph_operations.percentile,
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      percentile: dataTransformation.value,
+      operand: selectedGraphLine
+    })
+  }
+}
 
 // Graph lines table
 
@@ -419,7 +443,7 @@ function computeOddEven(index: number) {
         </td>
         <td class="buttons">
           <img
-            v-if="isDissolvable()"
+            v-if="isDissolvable(graphLine.type)"
             :title="props.i18n.graph_lines.dissolve_operation"
             src="themes/facelift/images/icon_dissolve_operation.png"
             class="icon iconbutton png"
@@ -484,6 +508,18 @@ function computeOddEven(index: number) {
           </div>
           <div v-else-if="graphLine.type === 'constant'">
             {{ graphLine.title }}
+          </div>
+          <div v-else-if="graphLine.type === 'transformation'">
+            {{ graphLine.title_short }} {{ props.i18n.graph_lines.of }}
+            <br />
+            <div
+              :style="{
+                'background-color': graphLine.operand.color,
+                'border-color': graphLine.operand.color
+              }"
+              class="color"
+            ></div>
+            {{ graphLine.operand.title }}
           </div>
         </td>
       </tr>

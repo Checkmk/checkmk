@@ -402,7 +402,11 @@ function toggle_test_notification_submit(hide_options: boolean) {
 
 type MessageType = "crit" | "warn" | "info" | "success";
 
-export function message(message_text: string, message_type: MessageType) {
+export function message(
+    message_text: string,
+    message_type: MessageType,
+    del_var: string
+) {
     const iconFilenames = {
         crit: "icon_alert.crit.svg",
         warn: "icon_problem.svg",
@@ -444,4 +448,14 @@ export function message(message_text: string, message_type: MessageType) {
     };
 
     Swal.fire(args);
+
+    // Remove the var to not get the message twice on reload
+    const params = new URLSearchParams(window.location.search);
+    params.delete(del_var);
+    // And update the URL without reloading the page
+    window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + "?" + params.toString()
+    );
 }

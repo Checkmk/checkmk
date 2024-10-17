@@ -811,7 +811,7 @@ def save_and_test_action(
             raise NotImplementedError("Edit mode not supported")
         case _:
             raise ValueError(f"Unknown mode {mode}")
-    return mode_url("test_notifications")
+    return mode_url("test_notifications", result=_("New notification rule successfully created!"))
 
 
 def save_and_new_action(
@@ -824,7 +824,9 @@ def save_and_new_action(
             raise NotImplementedError("Edit mode not yet supported")
         case _:
             raise ValueError(f"Unknown mode {mode}")
-    return mode_url("notification_rule_quick_setup")
+    return mode_url(
+        "notification_rule_quick_setup", result=_("New notification rule successfully created!")
+    )
 
 
 def register(quick_setup_registry: QuickSetupRegistry) -> None:

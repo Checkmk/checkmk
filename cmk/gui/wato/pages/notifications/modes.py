@@ -1529,15 +1529,17 @@ class ModeTestNotifications(ModeNotifications):
 
     def page(self) -> None:
         # TODO temp. solution to provide flashed message after quick setup
-        if (referer := request.referer) and referer.endswith("mode=notification_rule_quick_setup"):
+        if message := request.var("result"):
             # TODO Add notification rule number
             html.javascript(
-                "cmk.wato.message(%s, %s)"
+                "cmk.wato.message(%s, %s, %s)"
                 % (
-                    json.dumps(_("New notification rule successfully created!")),
+                    json.dumps(message),
                     json.dumps("success"),
+                    json.dumps("result"),
                 )
             )
+
         self._render_test_notifications()
         context, analyse = self._result_from_request()
         self._show_notification_test_overview(context, analyse)
@@ -3513,14 +3515,17 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
     def page(self) -> None:
         # TODO temp. solution to provide flashed message after quick setup
-        if (referer := request.referer) and referer.endswith("mode=notification_rule_quick_setup"):
+        if message := request.var("result"):
+            # TODO Add notification rule number
             html.javascript(
-                "cmk.wato.message(%s, %s)"
+                "cmk.wato.message(%s, %s, %s)"
                 % (
-                    json.dumps(_("New notification rule successfully created!")),
+                    json.dumps(message),
                     json.dumps("success"),
+                    json.dumps("result"),
                 )
             )
+
         html.vue_app(
             app_name="quick_setup",
             data={

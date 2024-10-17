@@ -59,8 +59,7 @@ from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult
 
-import cmk.gui.hooks as hooks
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -2165,6 +2164,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
+        Folder.validate_create_subfolder(self, attributes)
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         attributes = update_metadata(attributes, created_by=user.id)
@@ -2237,6 +2237,7 @@ class Folder(FolderProtocol):
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write")  # Inheritance is changed
+        Folder.validate_move_subfolder_to(subfolder, target_folder)
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -2302,6 +2303,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
         self.need_unlocked()
+        Folder.validate_edit_folder(self, new_attributes)
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -2372,6 +2374,7 @@ class Folder(FolderProtocol):
         """
         # 1. Check preconditions
         self.prepare_create_hosts()
+        Folder.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
             [
@@ -2524,6 +2527,7 @@ class Folder(FolderProtocol):
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
+        Folder.validate_move_hosts(self, host_names, target_folder)
 
         # 2. Actual modification
         for host_name in host_names:
@@ -3401,10 +3405,9 @@ class Host:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
                 self.folder().save_hosts()
-        else:
-            if self.attributes.get("inventory_failed"):
-                del self.attributes["inventory_failed"]
-                self.folder().save_hosts()
+        elif self.attributes.get("inventory_failed"):
+            del self.attributes["inventory_failed"]
+            self.folder().save_hosts()
 
     def rename_cluster_node(self, oldname: HostName, newname: HostName) -> bool:
         # We must not check permissions here. Permissions

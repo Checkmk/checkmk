@@ -285,6 +285,26 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
         });
 }
 
+namespace {
+void handle_log_initial_states(
+    const LogEntry *entry,
+    const std::map<HostServiceKey, HostServiceState *> &state_info,
+    bool &in_nagios_initial_states) {
+    // This feature is only available if log_initial_states is set to 1. If
+    // log_initial_states is set, each nagios startup logs the initial states of
+    // all known hosts and services. Therefore we can detect if a host is no
+    // longer available after a nagios startup. If it still exists an INITIAL
+    // HOST/SERVICE state entry will follow up shortly.
+    for (const auto &[key, hst] : state_info) {
+        if (!hst->_has_vanished) {
+            hst->_last_known_time = entry->time();
+            hst->_may_no_longer_exist = true;
+        }
+    }
+    in_nagios_initial_states = true;
+}
+}  // namespace
+
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
@@ -449,22 +469,10 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                              entry, only_update,
                                              notification_periods, state_info);
                 break;
-            case LogEntryKind::log_initial_states: {
-                // This feature is only available if log_initial_states is set
-                // to 1. If log_initial_states is set, each nagios startup logs
-                // the initial states of all known hosts and services. Therefore
-                // we can detect if a host is no longer available after a nagios
-                // startup. If it still exists an INITIAL HOST/SERVICE state
-                // entry will follow up shortly.
-                for (const auto &[key, hst] : state_info) {
-                    if (!hst->_has_vanished) {
-                        hst->_last_known_time = entry->time();
-                        hst->_may_no_longer_exist = true;
-                    }
-                }
-                in_nagios_initial_states = true;
+            case LogEntryKind::log_initial_states:
+                handle_log_initial_states(entry, state_info,
+                                          in_nagios_initial_states);
                 break;
-            }
         }
     }
 

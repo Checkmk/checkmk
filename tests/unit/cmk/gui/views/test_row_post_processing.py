@@ -11,12 +11,12 @@ from cmk.utils.structured_data import ImmutableTree
 
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
-from cmk.gui.views.row_post_processing import _ROW_POST_PROCESSORS, post_process_rows
+from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
 from cmk.gui.views.store import multisite_builtin_views
 
 
 def test_post_processor_registrations() -> None:
-    names = [f.__name__ for f in _ROW_POST_PROCESSORS]
+    names = [f.__name__ for f in row_post_processor_registry.values()]
     expected = [
         "inventory_row_post_processor",
         "join_service_row_post_processor",

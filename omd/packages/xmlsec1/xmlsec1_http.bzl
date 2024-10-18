@@ -10,7 +10,7 @@ def xmlsec_workspace():
             "https://github.com/lsh123/xmlsec/releases/download/xmlsec_" + version_str.replace(".", "_") + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = "df3ad2548288411fc3d44c20879e4c4e90684a1a4fb76a06ae444f957171c9a6",
+        sha256 = "5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
         build_file = "@omd_packages//omd/packages/xmlsec1:BUILD.xmlsec1.bazel",
         strip_prefix = "xmlsec1-" + version_str,
     )

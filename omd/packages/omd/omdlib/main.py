@@ -1712,7 +1712,7 @@ def init_action(
     version_info: VersionInfo,
     site: SiteContext,
     _global_opts: object,
-    command: str,
+    command: Literal["start", "stop", "reload", "restart", "status"],
     args: Arguments,
     options: CommandOptions,
 ) -> int:
@@ -3081,7 +3081,7 @@ def main_init_action(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext | RootContext,
     global_opts: GlobalOptions,
-    command: str,
+    command: Literal["start", "stop", "restart", "reload", "status"],
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -4679,10 +4679,10 @@ def _run_command(
         bail_out(tty.normal + "Aborted.")
 
 
-# Handle global options. We might convert this to getopt
-# later. But a problem here is that we have options appearing
+# Handle global options.
+# A problem here is that we have options appearing
 # *before* the command and command specific ones. We handle
-# the options before the command here only
+# the options before the command here only.
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:  # pylint: disable=too-many-branches
@@ -4717,8 +4717,8 @@ def main() -> None:  # pylint: disable=too-many-branches
     if not is_root() and command.only_root:
         bail_out("omd: root permissions are needed for this command.")
 
-    # Parse command options. We need to do this now in order to know,
-    # if a site name has been specified or not
+    # Parse command options. We need to do this now in order to know
+    # if a site name has been specified or not.
 
     # Give a short description for the command when the user specifies --help:
     if args and args[0] in ["-h", "--help"]:
@@ -4726,7 +4726,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     args, command_options = _parse_command_options(args, command.options)
 
     # Some commands need a site to be specified. If we are
-    # called as root, this must be done explicitely. If we
+    # called as root, this must be done explicitly. If we
     # are site user, the site name is our user name
     site: SiteContext | RootContext
     if command.needs_site > 0:

@@ -10,6 +10,7 @@ import logging
 import os
 import subprocess
 import sys
+from typing import Literal
 
 from cmk.utils import tty
 from cmk.utils.local_secrets import SiteInternalSecret
@@ -21,10 +22,10 @@ logger = logging.getLogger("cmk.omd")
 
 def call_init_scripts(
     site_dir: str,
-    command: str,
+    command: Literal["start", "stop", "restart", "reload", "status"],
     daemon: str | None = None,
     exclude_daemons: list[str] | None = None,
-) -> int:
+) -> Literal[0, 2]:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
@@ -32,7 +33,7 @@ def call_init_scripts(
         log_security_event(SiteStartStoppedEvent(event="restart"))
         code_stop = call_init_scripts(site_dir, "stop", daemon)
         code_start = call_init_scripts(site_dir, "start", daemon)
-        return max(code_stop, code_start)
+        return 0 if (code_stop, code_start) == (0, 0) else 2
 
     # OMD guarantees OMD_ROOT to be the current directory
     with contextlib.chdir(site_dir):
@@ -60,9 +61,7 @@ def call_init_scripts(
                 if not _call_init_script(f"{rc_dir}/{script}", command):
                     success = False
 
-    if success:
-        return 0
-    return 2
+    return 0 if success else 2
 
 
 def check_status(  # pylint: disable=too-many-branches

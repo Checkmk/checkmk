@@ -69,6 +69,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationMethod,
     NotificationQuickSetupSpec,
     OtherTriggerEvent,
+    Recipient,
     SendingConditions,
     ServiceEvent,
     Settings,
@@ -1009,6 +1010,11 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         # TODO: update once slidein is implemented
         # event_rule["notify_plugin"] = notification["notification_method"]["method"]
 
+    def _set_recipients(event_rule: EventRule) -> None:
+        for _recipient in notification["recipient"]:
+            # TODO: implement migration logic
+            ...
+
     def _set_sending_conditions(event_rule: EventRule) -> None:
         frequency_and_timing = notification["sending_conditions"]["frequency_and_timing"]
         if "restrict_timeperiod" in frequency_and_timing:
@@ -1052,6 +1058,7 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
     _set_host_and_service_filters(event_rule)
     _set_triggering_events(event_rule)
     _set_notification_effect_parameters(event_rule)
+    _set_recipients(event_rule)
     _set_sending_conditions(event_rule)
     _set_general_properties(event_rule)
 
@@ -1197,6 +1204,11 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
 
         return notify_method
 
+    def _get_recipients() -> list[Recipient]:
+        # TODO: add migration logic
+        recipients: list[Recipient] = [("all_contacts_affected", None)]
+        return recipients
+
     def _get_sending_conditions() -> SendingConditions:
         frequency_and_timing = FrequencyAndTiming()
         if "match_timeperiod" in event_rule:
@@ -1238,7 +1250,7 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
         triggering_events=_get_triggering_events(),
         filter_for_hosts_and_services=_get_host_and_service_filters(),
         notification_method=_get_notification_method(),
-        recipient=[("all_contacts_affected", None)],
+        recipient=_get_recipients(),
         sending_conditions=_get_sending_conditions(),
         general_properties=_get_general_properties(),
     )

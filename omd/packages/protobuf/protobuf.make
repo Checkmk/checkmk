@@ -58,7 +58,21 @@ $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	    CXXFLAGS="-Wno-stringop-overflow" ./configure --prefix=""
 	$(TOUCH) $@
 
-$(PROTOBUF_BUILD_LIBRARY): $(INTERMEDIATE_INSTALL_BAZEL)
+$(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)
+	cd $(PROTOBUF_BUILD_DIR) && \
+	    make -j6 && \
+	    `: Hack needed for protoc to be linked statically. Tried a lot of different things to make it ` \
+	    `: work with the standard Makefile and libtool stuff, but had no luck. It always ended with a ` \
+	    `: protoc with dynamic dependencies on libgcc and libstdc++. And we really need to have a ` \
+	    `: statically linked binary at the moment. The following is a hand crafted linker command. ` \
+	    `: Let me know in case you got a cleaner approach. ` \
+	    cd src && \
+	    rm protoc && \
+	    echo -e '\nprotoc-static: $(protoc_OBJECTS) $(protoc_DEPENDENCIES) $(EXTRA_protoc_DEPENDENCIES)\n\tg++ -pthread -DHAVE_PTHREAD=1 -DHAVE_ZLIB=1 -Wall -Wno-sign-compare -static-libgcc -static-libstdc++ -s -o protoc google/protobuf/compiler/main.o -lpthread ./.libs/libprotoc.a ./.libs/libprotobuf.a' >> Makefile && \
+	    make -j6 protoc-static && \
+	    file $(PROTOBUF_BUILD_DIR)/src/protoc | grep ELF >/dev/null && \
+	    ldd $(PROTOBUF_BUILD_DIR)/src/protoc | grep -v libstdc++ >/dev/null
+	$(TOUCH) $@
 
 $(PROTOBUF_BUILD_PYTHON): $(PROTOBUF_BUILD_LIBRARY) $(INTERMEDIATE_INSTALL_BAZEL)
 	cd $(PROTOBUF_BUILD_DIR)/python && \

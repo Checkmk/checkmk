@@ -432,13 +432,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     in_nagios_initial_states = false;
                 }
                 break;
+            case LogEntryKind::state_service_initial:
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, false,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
+                break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
-            case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial) {
+                if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
                 }
@@ -447,13 +451,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                    state_info, object_blacklist, *object_filter,
                                    since);
                 break;
+            case LogEntryKind::state_host_initial:
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, true,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
+                break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
-            case LogEntryKind::state_host_initial:
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host:
-                if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_host_initial) {
+                if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
                 }

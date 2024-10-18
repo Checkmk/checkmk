@@ -22,6 +22,8 @@ from marshmallow import Schema
 
 from cmk.ccc.site import omd_site
 
+from cmk.utils.jsontype import JsonSerializable
+
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
@@ -391,9 +393,7 @@ def _transform_params(param_list):
     }
 
 
-JsonObject: TypeAlias = dict[
-    str, None | int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
-]
+JsonObject: TypeAlias = dict[str, JsonSerializable]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:

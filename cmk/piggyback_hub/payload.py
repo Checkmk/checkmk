@@ -83,7 +83,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.logger.info("Starting: %s", self.task_name)
         signal.signal(
             signal.SIGTERM,
-            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
+            make_log_and_exit(self.logger.info, f"Terminating: {self.task_name}"),
         )
 
         config = load_config(self.paths)
@@ -98,9 +98,10 @@ class SendingPayloadProcess(multiprocessing.Process):
                             self._handle_message(channel, config, piggyback_message)
                     except CMKConnectionError as exc:
                         self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
+        except CMKConnectionError as exc:
+            self.logger.error("Connection error: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
-            raise
 
     def _handle_message(
         self,

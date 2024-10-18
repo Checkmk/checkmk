@@ -53,7 +53,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.logger.info("Starting: %s", self.task_name)
         signal.signal(
             signal.SIGTERM,
-            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
+            make_log_and_exit(self.logger.info, f"Terminating: {self.task_name}"),
         )
         try:
             while True:
@@ -66,9 +66,10 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
                         channel.consume(self.queue, self.callback)
                     except CMKConnectionError as exc:
                         self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
+        except CMKConnectionError as exc:
+            self.logger.error("Connection error: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
-            raise
 
 
 def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:

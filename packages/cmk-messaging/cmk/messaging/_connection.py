@@ -332,6 +332,9 @@ class Connection:
             return self._pconnection.__exit__(exc_type, value, traceback)
         except AMQPConnectionError as e:
             raise CMKConnectionError from e
+        finally:
+            if isinstance(value, SystemExit):
+                raise value
 
 
 def check_remote_connection(

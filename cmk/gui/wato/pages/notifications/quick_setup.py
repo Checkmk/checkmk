@@ -62,6 +62,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulkTuple,
     BulkingParameters,
     ContentBasedFiltering,
+    FilterForHostsAndServices,
     FrequencyAndTiming,
     GeneralProperties,
     HostEvent,
@@ -941,6 +942,15 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         if "ec_alerts" not in notification["triggering_events"]:
             event_rule["match_ec"] = False
 
+    def _set_host_and_service_filters(event_rule: EventRule) -> None:
+        _ec_alert_filters = notification["filter_for_hosts_and_services"]["ec_alert_filters"]
+        _host_filters = notification["filter_for_hosts_and_services"]["host_filters"]
+        _service_filters = notification["filter_for_hosts_and_services"]["service_filters"]
+        _assignee_filters = notification["filter_for_hosts_and_services"]["assignee_filters"]
+        _general_filters = notification["filter_for_hosts_and_services"]["general_filters"]
+
+        # TODO: implement migration logic
+
     def _set_notification_effect_parameters(event_rule: EventRule) -> None:
         def _get_always_bulk_parameters(
             always_bulk: AlwaysBulk,
@@ -1039,6 +1049,7 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         notify_plugin=("mail", None),
     )
 
+    _set_host_and_service_filters(event_rule)
     _set_triggering_events(event_rule)
     _set_notification_effect_parameters(event_rule)
     _set_sending_conditions(event_rule)
@@ -1115,6 +1126,17 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
             trigger_events["ec_alerts"] = "Enabled"
 
         return trigger_events
+
+    def _get_host_and_service_filters() -> FilterForHostsAndServices:
+        # TODO: add migration logic
+
+        return FilterForHostsAndServices(
+            ec_alert_filters=None,
+            host_filters=None,
+            service_filters=None,
+            assignee_filters=None,
+            general_filters=None,
+        )
 
     def _get_notification_method() -> NotificationMethod:
         def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple:
@@ -1214,12 +1236,7 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
 
     return NotificationQuickSetupSpec(
         triggering_events=_get_triggering_events(),
-        filter_for_hosts_and_services={
-            "host_filters": None,
-            "service_filters": None,
-            "assignee_filters": None,
-            "general_filters": None,
-        },
+        filter_for_hosts_and_services=_get_host_and_service_filters(),
         notification_method=_get_notification_method(),
         recipient=[("all_contacts_affected", None)],
         sending_conditions=_get_sending_conditions(),

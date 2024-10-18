@@ -31,6 +31,7 @@ class TriggeringEvents(TypedDict):
 
 # TODO: add correct types after Stage 2 is implemented
 class FilterForHostsAndServices(TypedDict):
+    ec_alert_filters: object
     host_filters: object
     service_filters: object
     assignee_filters: object

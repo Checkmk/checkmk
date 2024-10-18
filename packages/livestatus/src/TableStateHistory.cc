@@ -420,13 +420,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             only_update = false;
         }
 
-        if (in_nagios_initial_states &&
-            entry->kind() != LogEntryKind::state_service_initial &&
-            entry->kind() != LogEntryKind::state_host_initial) {
-            set_unknown_to_unmonitored(state_info);
-            in_nagios_initial_states = false;
-        }
-
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -434,12 +427,24 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::log_version:
             case LogEntryKind::acknowledge_alert_host:
             case LogEntryKind::acknowledge_alert_service:
+                if (in_nagios_initial_states &&
+                    entry->kind() != LogEntryKind::state_service_initial &&
+                    entry->kind() != LogEntryKind::state_host_initial) {
+                    set_unknown_to_unmonitored(state_info);
+                    in_nagios_initial_states = false;
+                }
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
+                if (in_nagios_initial_states &&
+                    entry->kind() != LogEntryKind::state_service_initial &&
+                    entry->kind() != LogEntryKind::state_host_initial) {
+                    set_unknown_to_unmonitored(state_info);
+                    in_nagios_initial_states = false;
+                }
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, false,
                                    state_info, object_blacklist, *object_filter,
@@ -450,17 +455,35 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_host_initial:
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host:
+                if (in_nagios_initial_states &&
+                    entry->kind() != LogEntryKind::state_service_initial &&
+                    entry->kind() != LogEntryKind::state_host_initial) {
+                    set_unknown_to_unmonitored(state_info);
+                    in_nagios_initial_states = false;
+                }
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, true,
                                    state_info, object_blacklist, *object_filter,
                                    since);
                 break;
             case LogEntryKind::timeperiod_transition:
+                if (in_nagios_initial_states &&
+                    entry->kind() != LogEntryKind::state_service_initial &&
+                    entry->kind() != LogEntryKind::state_host_initial) {
+                    set_unknown_to_unmonitored(state_info);
+                    in_nagios_initial_states = false;
+                }
                 handle_timeperiod_transition(query, user, core, query_timeframe,
                                              entry, only_update,
                                              notification_periods, state_info);
                 break;
             case LogEntryKind::log_initial_states:
+                if (in_nagios_initial_states &&
+                    entry->kind() != LogEntryKind::state_service_initial &&
+                    entry->kind() != LogEntryKind::state_host_initial) {
+                    set_unknown_to_unmonitored(state_info);
+                    // in_nagios_initial_states = false;
+                }
                 handle_log_initial_states(entry, state_info);
                 in_nagios_initial_states = true;
                 break;

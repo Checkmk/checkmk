@@ -126,9 +126,9 @@ def license_site(
                 service_limit=service_limit,
                 unbound_license=True,
                 additional_features=[
-                    RawAdditionalFeature(name="ntop", enabled=True),
+                    RawAdditionalFeature(name="ntop", enabled=False),
                     RawAdditionalFeature(name="virt1_appliance", enabled=False),
-                    RawAdditionalLimitFeature(name="synthetic_monitoring", enabled=False, limit=-1),
+                    RawAdditionalLimitFeature(name="synthetic_monitoring", enabled=True, limit=100),
                 ],
             ),
             request_id=verification_request.request_id,

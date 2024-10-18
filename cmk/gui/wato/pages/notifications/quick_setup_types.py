@@ -36,11 +36,41 @@ class FilterForHostsAndServices(TypedDict):
     general_filters: object
 
 
-# TODO: add correct types after Stage 3 is implemented
+class BulkingParameters(TypedDict):
+    check_type: NotRequired[None]
+    custom_macro: NotRequired[list[str]]
+    ec_comment: NotRequired[None]
+    ec_contact: NotRequired[None]
+    folder: NotRequired[None]
+    host: NotRequired[None]
+    state: NotRequired[None]
+    service: NotRequired[None]
+    sl: NotRequired[None]
+
+
+class CommonBulk(TypedDict):
+    bulking_parameters: BulkingParameters
+    max_notifications: int
+    subject: NotRequired[str]
+
+
+class AlwaysBulk(CommonBulk):
+    combine: float
+
+
+class TimeperiodBulk(CommonBulk):
+    bulking_outside_timeperiod: NotRequired[AlwaysBulk]
+
+
+AlwaysBulkTuple = tuple[Literal["always"], AlwaysBulk]
+TimeperiodBulkTuple = tuple[Literal["timeperiod"], tuple[str, TimeperiodBulk]]
+BulkNotificatons = AlwaysBulkTuple | TimeperiodBulkTuple
+
+
 class NotificationMethod(TypedDict):
-    effect: object
-    method: object
-    bulk_notification: NotRequired[object]
+    notification_effect: object  # TODO: not implemented on the stage
+    method: tuple[str, object]  # TODO: update once slidein is implemented
+    bulk_notification: NotRequired[BulkNotificatons]
 
 
 AllContactsAffected = tuple[Literal["all_contacts_affected"], None]

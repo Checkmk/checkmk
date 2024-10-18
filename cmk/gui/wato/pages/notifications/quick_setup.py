@@ -289,7 +289,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
 
 def notification_method() -> QuickSetupStage:
     def bulk_notification(
-        title: Literal["always", "during_timeperiod"],
+        title: Literal["always", "timeperiod"],
     ) -> DictionaryExtended:
         return DictionaryExtended(
             title=Title("Bulk notification"),
@@ -362,21 +362,21 @@ def notification_method() -> QuickSetupStage:
                                     value=None,
                                 ),
                             ),
-                            "host_service_state": DictElement(
+                            "state": DictElement(
                                 required=False,
                                 parameter_form=FixedValue(
                                     title=Title("Host/Service state"),
                                     value=None,
                                 ),
                             ),
-                            "service_name": DictElement(
+                            "service": DictElement(
                                 required=False,
                                 parameter_form=FixedValue(
                                     title=Title("Service name"),
                                     value=None,
                                 ),
                             ),
-                            "service_level": DictElement(
+                            "sl": DictElement(
                                 required=False,
                                 parameter_form=FixedValue(
                                     title=Title("Service level"),
@@ -411,7 +411,7 @@ def notification_method() -> QuickSetupStage:
                             parameter_form=bulk_notification(title="always"),
                         )
                     }
-                    if title == "during_timeperiod"
+                    if title == "timeperiod"
                     else {}
                 ),
             },
@@ -469,7 +469,7 @@ def notification_method() -> QuickSetupStage:
                                         ),
                                     ),
                                     CascadingSingleChoiceElement(
-                                        name="during_timeperiod",
+                                        name="timeperiod",
                                         title=Title("During time period"),
                                         parameter_form=CascadingSingleChoice(
                                             elements=[
@@ -477,7 +477,7 @@ def notification_method() -> QuickSetupStage:
                                                     name=timeperiod,
                                                     title=Title("%s") % (_("%s") % timeperiod),
                                                     parameter_form=bulk_notification(
-                                                        title="during_timeperiod",
+                                                        title="timeperiod",
                                                     ),
                                                 )
                                                 for timeperiod in load_timeperiods()
@@ -894,9 +894,8 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
             "general_filters": None,
         },
         "notification_method": {
-            "effect": None,
-            "method": None,
-            "bulk_notification": None,
+            "notification_effect": None,
+            "method": (event_rule["notify_plugin"][0], object),
         },
         "recipient": [("all_contacts_affected", None)],
         "sending_conditions": {

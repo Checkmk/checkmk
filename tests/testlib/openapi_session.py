@@ -184,7 +184,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-        timeout: int = 60,
+        timeout: int = 120,
     ) -> bool:
         logger.info("Activate changes and wait for completion...")
         with self._wait_for_completion(timeout, "get", "activate_changes"):

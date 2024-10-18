@@ -422,7 +422,10 @@ def notification_method() -> QuickSetupStage:
                     {
                         "bulk_outside_timeperiod": DictElement(
                             required=False,
-                            parameter_form=bulk_notification(title="always"),
+                            parameter_form=DictionaryExtended(
+                                title=Title("Bulk outside of the timeperiod"),
+                                elements=bulk_notification(title="always").elements,
+                            ),
                         )
                     }
                     if title == "timeperiod"

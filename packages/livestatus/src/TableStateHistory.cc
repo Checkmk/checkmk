@@ -429,8 +429,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::acknowledge_alert_service:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
-                    in_nagios_initial_states = false;
                 }
+                in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_service_initial:
                 handle_state_entry(query, user, core, query_timeframe, entry,
@@ -444,12 +444,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::flapping_service:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
-                    in_nagios_initial_states = false;
                 }
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, false,
                                    state_info, object_blacklist, *object_filter,
                                    since);
+                in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(query, user, core, query_timeframe, entry,
@@ -463,26 +463,25 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::flapping_host:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
-                    in_nagios_initial_states = false;
                 }
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, true,
                                    state_info, object_blacklist, *object_filter,
                                    since);
+                in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
-                    in_nagios_initial_states = false;
                 }
                 handle_timeperiod_transition(query, user, core, query_timeframe,
                                              entry, only_update,
                                              notification_periods, state_info);
+                in_nagios_initial_states = false;
                 break;
             case LogEntryKind::log_initial_states:
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
-                    // in_nagios_initial_states = false;
                 }
                 handle_log_initial_states(entry, state_info);
                 in_nagios_initial_states = true;

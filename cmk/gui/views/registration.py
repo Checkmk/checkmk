@@ -15,13 +15,14 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
-from . import command, graph, icon, inventory, perfometer
+from . import command, graph, icon, perfometer
 from ._permissions import PermissionSectionViews
 from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
 from .datasource_selection import page_select_datasource
 from .host_tag_plugins import register_tag_plugins
 from .icon.page_ajax_popup_action_menu import ajax_popup_action_menu
+from .inventory import registration as inventory_registration
 from .layout import layout_registry, register_layouts
 from .page_ajax_filters import AjaxInitialViewFilters
 from .page_ajax_reschedule import PageRescheduleCheck
@@ -77,7 +78,7 @@ def register(
         permission_section_registry,
         register_post_config_load_hook,
     )
-    inventory.register(
+    inventory_registration.register(
         page_registry,
         data_source_registry,
         painter_registry,

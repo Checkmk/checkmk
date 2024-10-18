@@ -286,6 +286,16 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
 }
 
 namespace {
+// Set still unknown hosts / services to unmonitored
+void set_unknown_to_unmonitored(
+    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    for (const auto &[key, hst] : state_info) {
+        if (hst->_may_no_longer_exist) {
+            hst->_has_vanished = true;
+        }
+    }
+}
+
 void handle_log_initial_states(
     const LogEntry *entry,
     const std::map<HostServiceKey, HostServiceState *> &state_info) {
@@ -413,12 +423,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         if (in_nagios_initial_states &&
             entry->kind() != LogEntryKind::state_service_initial &&
             entry->kind() != LogEntryKind::state_host_initial) {
-            // Set still unknown hosts / services to unmonitored
-            for (const auto &[key, hst] : state_info) {
-                if (hst->_may_no_longer_exist) {
-                    hst->_has_vanished = true;
-                }
-            }
+            set_unknown_to_unmonitored(state_info);
             in_nagios_initial_states = false;
         }
 

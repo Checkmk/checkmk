@@ -1211,14 +1211,16 @@ def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> 
     resource.info["properties"]["backend_address_pools"] = backend_pools
 
 
-def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+def _get_standard_network_interface_config(
+    mgmt_client: MgmtApiClient, nic_id: str
+) -> Mapping[str, Mapping]:
     _, group, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
     )
     return mgmt_client.nic_ip_conf_view(group, nic_name, ip_conf_name)
 
 
-def get_vmss_network_interface_config(
+def _get_vmss_network_interface_config(
     mgmt_client: MgmtApiClient, nic_id: str
 ) -> Mapping[str, Mapping]:
     _, group, vmss, vm_index, nic_name, ip_conf_name = get_params_from_azure_id(
@@ -1231,6 +1233,13 @@ def get_vmss_network_interface_config(
         ],
     )
     return mgmt_client.nic_vmss_ip_conf_view(group, vmss, vm_index, nic_name, ip_conf_name)
+
+
+def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+    if "virtualMachineScaleSets" in nic_id:
+        return _get_vmss_network_interface_config(mgmt_client, nic_id)
+
+    return _get_standard_network_interface_config(mgmt_client, nic_id)
 
 
 def get_inbound_nat_rules(
@@ -1274,10 +1283,7 @@ def get_backend_address_pools(
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
-                if "virtualMachineScaleSets" in ip_config_id:
-                    nic_config = get_vmss_network_interface_config(mgmt_client, ip_config_id)
-                else:
-                    nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+                nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
                 if "name" in nic_config and "properties" in nic_config:
                     backend_address_data = {

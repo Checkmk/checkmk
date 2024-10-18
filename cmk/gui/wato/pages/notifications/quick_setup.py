@@ -2,8 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 from uuid import uuid4
 
@@ -11,7 +10,11 @@ from cmk.utils.notify_types import (
     AlwaysBulkParameters,
     EventRule,
     GroupBy,
+    HostEventType,
+    is_non_status_change_event_type,
+    NonStatusChangeEventType,
     NotificationRuleID,
+    ServiceEventType,
     TimeperiodBulkParameters,
 )
 from cmk.utils.timeperiod import TimeperiodName
@@ -61,12 +64,20 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     ContentBasedFiltering,
     FrequencyAndTiming,
     GeneralProperties,
+    HostEvent,
     NotificationMethod,
     NotificationQuickSetupSpec,
+    OtherTriggerEvent,
     SendingConditions,
+    ServiceEvent,
     Settings,
+    StatusChangeHost,
+    StatusChangeService,
+    StatusChangeStateHost,
+    StatusChangeStateService,
     TimeperiodBulk,
     TimeperiodBulkTuple,
+    TriggeringEvents,
 )
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.mode import mode_url
@@ -879,7 +890,56 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
 
 
 def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule:
-    # TODO: implement actual migration
+    def _set_triggering_events(event_rule: EventRule) -> None:
+        def _non_status_change_events(event: OtherTriggerEvent) -> NonStatusChangeEventType:
+            status_map: Mapping[OtherTriggerEvent, NonStatusChangeEventType] = {
+                ("flapping_state", None): "f",
+                ("downtime", None): "s",
+                ("acknowledgement", None): "x",
+                ("alert_handler", "success"): "as",
+                ("alert_handler", "failure"): "af",
+            }
+            return status_map[event]
+
+        def _host_event_mapper(host_event: StatusChangeHost) -> HostEventType:
+            _state_map: Mapping[StatusChangeStateHost, str] = {
+                -1: "?",
+                0: "r",
+                1: "d",
+                2: "u",
+            }
+            return cast(HostEventType, "".join([_state_map[state] for state in host_event[1]]))
+
+        def _service_event_mapper(service_event: StatusChangeService) -> ServiceEventType:
+            _state_map: Mapping[StatusChangeStateService, str] = {
+                -1: "?",
+                0: "r",
+                1: "w",
+                2: "c",
+                3: "u",
+            }
+            return cast(
+                ServiceEventType, "".join([_state_map[state] for state in service_event[1]])
+            )
+
+        if "host_events" in notification["triggering_events"]:
+            event_rule["match_host_event"] = [
+                _host_event_mapper(ev)
+                if ev[0] == "status_change"
+                else _non_status_change_events(ev)
+                for ev in notification["triggering_events"]["host_events"]
+            ]
+
+        if "service_events" in notification["triggering_events"]:
+            event_rule["match_service_event"] = [
+                _service_event_mapper(ev)
+                if ev[0] == "status_change"
+                else _non_status_change_events(ev)
+                for ev in notification["triggering_events"]["service_events"]
+            ]
+
+        if "ec_alerts" not in notification["triggering_events"]:
+            event_rule["match_ec"] = False
 
     def _set_notification_effect_parameters(event_rule: EventRule) -> None:
         def _get_always_bulk_parameters(
@@ -979,6 +1039,7 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         notify_plugin=("mail", None),
     )
 
+    _set_triggering_events(event_rule)
     _set_notification_effect_parameters(event_rule)
     _set_sending_conditions(event_rule)
     _set_general_properties(event_rule)
@@ -996,7 +1057,64 @@ def load_notifications(object_id: str) -> ParsedFormData:
 
 
 def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> NotificationQuickSetupSpec:
-    # TODO: add migration logic
+    def _get_triggering_events() -> TriggeringEvents:
+        def _non_status_change_events(event: NonStatusChangeEventType) -> OtherTriggerEvent:
+            status_map: Mapping[NonStatusChangeEventType, OtherTriggerEvent] = {
+                "f": ("flapping_state", None),
+                "s": ("downtime", None),
+                "x": ("acknowledgement", None),
+                "as": ("alert_handler", "success"),
+                "af": ("alert_handler", "failure"),
+            }
+            return status_map[event]
+
+        def _migrate_host_event(event: HostEventType) -> HostEvent:
+            state_map: Mapping[str, StatusChangeStateHost] = {
+                "?": -1,
+                "r": 0,
+                "d": 1,
+                "u": 2,
+            }
+            status_change_host: StatusChangeHost = (
+                "status_change",
+                (state_map[event[0]], state_map[event[1]]),
+            )
+
+            return status_change_host
+
+        def _migrate_service_event(event: ServiceEventType) -> ServiceEvent:
+            state_map: Mapping[str, StatusChangeStateService] = {
+                "?": -1,
+                "r": 0,
+                "w": 1,
+                "c": 2,
+                "u": 3,
+            }
+            status_change_service: StatusChangeService = (
+                "status_change",
+                (state_map[event[0]], state_map[event[1]]),
+            )
+            return status_change_service
+
+        trigger_events = TriggeringEvents(
+            host_events=[
+                _non_status_change_events(ev)
+                if is_non_status_change_event_type(ev)
+                else _migrate_host_event(ev)
+                for ev in event_rule["match_host_event"]
+            ],
+            service_events=[
+                _non_status_change_events(ev)
+                if is_non_status_change_event_type(ev)
+                else _migrate_service_event(ev)
+                for ev in event_rule["match_service_event"]
+            ],
+        )
+
+        if event_rule["match_ec"]:
+            trigger_events["ec_alerts"] = "Enabled"
+
+        return trigger_events
 
     def _get_notification_method() -> NotificationMethod:
         def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple:
@@ -1095,11 +1213,7 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
         )
 
     return NotificationQuickSetupSpec(
-        triggering_events={
-            "host_events": [],
-            "service_events": [],
-            "ec_alerts": "Enabled",
-        },
+        triggering_events=_get_triggering_events(),
         filter_for_hosts_and_services={
             "host_filters": None,
             "service_filters": None,

@@ -17,14 +17,15 @@ Downtime = tuple[Literal["downtime"], None]
 Acknowledgement = tuple[Literal["acknowledgement"], None]
 FlappingState = tuple[Literal["flapping_state"], None]
 AlertHandler = tuple[Literal["alert_handler"], Literal["success", "failure"]]
+OtherTriggerEvent = Downtime | Acknowledgement | FlappingState | AlertHandler
 
-HostEvents = StatusChangeHost | Downtime | Acknowledgement | FlappingState | AlertHandler
-ServiceEvents = StatusChangeService | Downtime | Acknowledgement | FlappingState | AlertHandler
+HostEvent = StatusChangeHost | OtherTriggerEvent
+ServiceEvent = StatusChangeService | OtherTriggerEvent
 
 
 class TriggeringEvents(TypedDict):
-    host_events: list[HostEvents]
-    service_events: list[ServiceEvents]
+    host_events: list[HostEvent]
+    service_events: list[ServiceEvent]
     ec_alerts: NotRequired[Literal["Enabled"]]
 
 

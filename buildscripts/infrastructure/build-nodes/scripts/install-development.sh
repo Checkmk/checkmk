@@ -407,6 +407,9 @@ install_for_bazel() {
     # install_packages golang-go
     "${SCRIPT_DIR}"/install-buildifier.sh
 
+    # buildifier is installed to /opt/bin by default
+    IMPORTANT_MESSAGES+=("Don't forget to call: export PATH=/opt/bin:\$PATH")
+
     print_green "Installation of Bazel/Bazelisk done"
 }
 

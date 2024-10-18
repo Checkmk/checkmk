@@ -1,6 +1,5 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//omd/packages/rules:package_wheel.bzl", "package_wheel")
 
 # static linking of protobuf because of linking issues with libgcc and listdc++.
 # Nowadays we are shipping those, so dynamic linking should work as well.
@@ -52,10 +51,4 @@ pkg_tar(
     ],
     package_file_name = "protobuf.tar",
     visibility = ["//visibility:public"],
-)
-
-package_wheel(
-    name = "proto_wheel_tar",
-    visibility = ["//visibility:public"],
-    whl = "@com_google_protobuf//python/dist:binary_wheel",
 )

@@ -16,6 +16,7 @@ from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import command, graph, icon, perfometer
+from ._join_service_rows import join_service_row_post_processor
 from ._permissions import PermissionSectionViews
 from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
@@ -89,3 +90,4 @@ def register(
         row_post_processor_registry,
     )
     graph.register(painter_option_registry, multisite_builtin_views)
+    row_post_processor_registry.register(join_service_row_post_processor)

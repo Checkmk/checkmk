@@ -63,7 +63,6 @@ from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import row_post_processor_registry
 from cmk.gui.views.sorter import sorter_registry
@@ -202,7 +201,6 @@ def register() -> None:
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    row_post_processor_registry.register(join_service_row_post_processor)
     quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
     gui_background_job.register(permission_section_registry, permission_registry)

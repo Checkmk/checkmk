@@ -119,7 +119,7 @@ class GeneralProperties(TypedDict):
     description: str
     settings: Settings
     comment: str
-    documentation: str
+    documentation_url: str
 
 
 class NotificationQuickSetupSpec(TypedDict):

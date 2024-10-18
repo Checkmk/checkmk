@@ -58,8 +58,10 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulk,
     AlwaysBulkTuple,
     BulkingParameters,
+    GeneralProperties,
     NotificationMethod,
     NotificationQuickSetupSpec,
+    Settings,
     TimeperiodBulk,
     TimeperiodBulkTuple,
 )
@@ -934,6 +936,21 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         # TODO: update once slidein is implemented
         # event_rule["notify_plugin"] = notification["notification_method"]["method"]
 
+    def _set_general_properties(event_rule: EventRule) -> None:
+        if "disable_rule" in notification["general_properties"]["settings"]:
+            event_rule["disabled"] = True
+
+        if "allow_users_to_disable" in notification["general_properties"]["settings"]:
+            event_rule["allow_disable"] = True
+
+        if "comment" in notification["general_properties"]:
+            event_rule["comment"] = notification["general_properties"]["comment"]
+
+        if "documentation_url" in notification["general_properties"]:
+            event_rule["docu_url"] = notification["general_properties"]["documentation_url"]
+
+        event_rule["description"] = notification["general_properties"]["description"]
+
     event_rule = EventRule(
         rule_id=NotificationRuleID(str(uuid4())),
         allow_disable=False,
@@ -946,6 +963,7 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
     )
 
     _set_notification_effect_parameters(event_rule)
+    _set_general_properties(event_rule)
 
     return event_rule
 
@@ -1021,6 +1039,20 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
 
         return notify_method
 
+    def _get_general_properties() -> GeneralProperties:
+        settings = Settings()
+        if event_rule["disabled"]:
+            settings["disable_rule"] = None
+        if event_rule["allow_disable"]:
+            settings["allow_users_to_disable"] = None
+
+        return GeneralProperties(
+            description=event_rule["description"],
+            settings=settings,
+            comment=event_rule.get("comment", ""),
+            documentation_url=event_rule.get("docu_url", ""),
+        )
+
     return NotificationQuickSetupSpec(
         triggering_events={
             "host_events": [],
@@ -1046,12 +1078,7 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
                 "custom_by_comment": "",
             },
         },
-        general_properties={
-            "description": "foo",
-            "settings": {"disable_rule": None, "allow_users_to_disable": None},
-            "comment": "",
-            "documentation": "",
-        },
+        general_properties=_get_general_properties(),
     )
 
 

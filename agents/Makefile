@@ -104,7 +104,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(MK_SQL):
 	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(MK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(MK_SQL)
+	install -m 755 $(REPO_PATH)/bazel-bin/packages/mk-sql/mk-sql $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

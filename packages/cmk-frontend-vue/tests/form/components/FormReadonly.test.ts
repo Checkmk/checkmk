@@ -61,7 +61,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'barTitle',
   help: 'barHelp',
   validators: [],
-  input_hint: ''
+  input_hint: '',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 test('FormReadonly renders string', () => {
@@ -82,12 +84,15 @@ const dictionaryFormSpec: FormSpec.Dictionary = {
   help: 'fooHelp',
   validators: [],
   groups: [],
+  no_elements_text: 'no_text',
+  additional_static_elements: null,
   elements: [
     {
       ident: 'bar',
       required: true,
       default_value: 'baz',
-      parameter_form: stringFormSpec
+      parameter_form: stringFormSpec,
+      group: null
     }
   ]
 }
@@ -120,6 +125,7 @@ const singleChoiceFormSpec: FormSpec.SingleChoice = {
   title: 'fooTitle',
   input_hint: '',
   help: 'fooHelp',
+  no_elements_text: 'no_text',
   elements: [
     { name: 'choice1', title: 'Choice 1' },
     { name: 'choice2', title: 'Choice 2' }
@@ -173,7 +179,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   layout: 'horizontal',
   help: 'fooHelp',
   validators: [],
-  input_hint: '',
+  input_hint: null,
   elements: [
     {
       name: 'stringChoice',
@@ -225,6 +231,7 @@ test('FormReadonly renders cascading/integer, 2nd choice', () => {
 const booleanChoiceFormSpec: FormSpec.BooleanChoice = {
   type: 'boolean_choice',
   title: 'fooTitle',
+  label: 'fooLabel',
   help: 'fooHelp',
   text_on: 'on',
   text_off: 'off',
@@ -274,7 +281,11 @@ const multilineTextFormSpec: FormSpec.MultilineText = {
   type: 'multiline_text',
   title: 'fooTitle',
   help: 'fooHelp',
-  validators: []
+  validators: [],
+  label: 'fooLabel',
+  macro_support: false,
+  monospaced: false,
+  input_hint: null
 }
 test('FormReadonly renders multiline_text', () => {
   render(FormReadonly, {

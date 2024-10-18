@@ -22,7 +22,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'barTitle',
   help: 'barHelp',
   validators: stringValidators,
-  input_hint: ''
+  input_hint: '',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
@@ -38,6 +40,8 @@ const spec: FormSpec.Dictionary = {
   layout: 'one_column',
   validators: [],
   groups: [],
+  additional_static_elements: null,
+  no_elements_text: 'no_text',
   elements: [
     {
       ident: 'bar',
@@ -154,6 +158,8 @@ test('FormDictionary appends default of required element if missing in data', as
       help: 'fooHelp',
       groups: [],
       validators: [],
+      no_elements_text: 'no_text',
+      additional_static_elements: null,
       elements: [
         {
           ident: 'bar',
@@ -197,12 +203,15 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
       help: 'fooHelp',
       groups: [],
       validators: [],
+      additional_static_elements: null,
+      no_elements_text: 'no_text',
       elements: [
         {
           ident: ident,
           required: true,
           default_value: 'something',
-          parameter_form: stringFormSpec
+          parameter_form: stringFormSpec,
+          group: null
         }
       ]
     }
@@ -230,6 +239,7 @@ test('FormDictionary is able to be rerenderd: static value', async () => {
       layout: 'one_column',
       help: 'fooHelp',
       additional_static_elements: staticElements,
+      no_elements_text: 'no_text',
       groups: [],
       validators: [],
       elements: []

@@ -31,8 +31,8 @@ const style = computed(() => {
 
 <template>
   <div style="flex">
-    <div v-if="props.spec.label">
-      <label> {{ props.spec.label }}</label
+    <div v-if="spec.label">
+      <label> {{ spec.label }}</label
       ><br />
     </div>
     <textarea

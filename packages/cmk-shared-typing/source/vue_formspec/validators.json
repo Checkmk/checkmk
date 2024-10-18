@@ -13,7 +13,7 @@
                     "type": "string"
                 }
             },
-            "required": ["type"]
+            "required": ["type", "error_message"]
         },
         "is_float": {
             "type": "object",
@@ -26,7 +26,7 @@
                     "type": "string"
                 }
             },
-            "required": ["type"]
+            "required": ["type", "error_message"]
         },
         "length_in_range": {
             "type": "object",
@@ -36,16 +36,16 @@
                     "default": "length_in_range"
                 },
                 "min_value": {
-                    "type": "integer"
+                    "type": ["integer", "null"]
                 },
                 "max_value": {
-                    "type": "integer"
+                    "type": ["integer", "null"]
                 },
                 "error_message": {
                     "type": "string"
                 }
             },
-            "required": ["type"]
+            "required": ["type", "min_value", "max_value", "error_message"]
         },
         "number_in_range": {
             "type": "object",
@@ -55,16 +55,16 @@
                     "default": "number_in_range"
                 },
                 "min_value": {
-                    "type": "number"
+                    "type": ["number", "null"]
                 },
                 "max_value": {
-                    "type": "number"
+                    "type": ["number", "null"]
                 },
                 "error_message": {
                     "type": "string"
                 }
             },
-            "required": ["type"]
+            "required": ["type", "min_value", "max_value", "error_message"]
         },
         "match_regex": {
             "type": "object",

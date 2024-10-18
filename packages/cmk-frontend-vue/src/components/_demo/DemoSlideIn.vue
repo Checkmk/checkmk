@@ -32,11 +32,14 @@ const catalog = ref<Catalog>({
         title: 'dict title',
         validators: [],
         help: 'dict help',
+        no_elements_text: 'no_text',
+        additional_static_elements: {},
         elements: [
           {
             ident: 'element_ident',
             required: false,
             default_value: '',
+            group: null,
             parameter_form: {
               type: 'string',
               title: 'string title',

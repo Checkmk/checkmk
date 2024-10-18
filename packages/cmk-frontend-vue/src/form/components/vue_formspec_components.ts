@@ -36,31 +36,30 @@ export type Components =
   | Folder;
 export type Integer = FormSpec & {
   type: "integer";
-  label?: string;
-  unit?: string;
-  input_hint?: string;
+  label: string | null;
+  unit: string | null;
+  input_hint: string | null;
 };
 export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange | MatchRegex;
 export type Float = FormSpec & {
   type: "float";
-  label?: string;
-  unit?: string;
-  input_hint?: string;
+  label: string | null;
+  unit: string | null;
+  input_hint: string | null;
 };
 export type String = FormSpec & {
   type: "string";
-  placeholder?: string;
-  input_hint?: string;
-  field_size?: StringFieldSize;
-  autocompleter?: Autocompleter;
+  input_hint: string | null;
+  field_size: StringFieldSize;
+  autocompleter: null | Autocompleter;
 };
 export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];
   groups: DictionaryGroup[];
-  no_elements_text?: string;
-  additional_static_elements?: {};
+  no_elements_text: string;
+  additional_static_elements: {} | null;
   layout: DictionaryLayout;
 };
 export type DictionaryLayout = "one_column" | "two_columns";
@@ -75,51 +74,50 @@ export type List = FormSpec & {
 };
 export type LegacyValuespec = FormSpec & {
   type: "legacy_valuespec";
-  input_html?: string;
-  readonly_html?: string;
+  input_html: string;
+  readonly_html: string;
   varprefix: string;
 };
 export type SingleChoice = FormSpec & {
   type: "single_choice";
   elements: SingleChoiceElement[];
-  no_elements_text?: string;
+  no_elements_text: string | null;
   frozen: boolean;
-  label?: string;
-  input_hint: string;
+  label: string | null;
+  input_hint: string | null;
 };
 export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
   elements: CascadingSingleChoiceElement[];
-  no_elements_text?: string;
-  label?: string;
+  label: string | null;
   input_hint: unknown;
   layout: CascadingSingleChoiceLayout;
 };
 export type CascadingSingleChoiceLayout = "vertical" | "horizontal" | "button_group";
 export type FixedValue = FormSpec & {
   type: "fixed_value";
-  label?: string;
+  label: string | null;
   value: unknown;
 };
 export type BooleanChoice = FormSpec & {
   type: "boolean_choice";
-  label?: string;
+  label: string | null;
   text_on: string;
   text_off: string;
 };
 export type MultilineText = (FormSpec & {
-  label?: string;
-  macro_support?: boolean;
-  monospaced?: boolean;
-  input_hint?: string;
+  label: string | null;
+  macro_support: boolean;
+  monospaced: boolean;
+  input_hint: string | null;
 }) & {
   type: "multiline_text";
 };
 export type CommentTextArea = ((FormSpec & {
-  label?: string;
-  macro_support?: boolean;
-  monospaced?: boolean;
-  input_hint?: string;
+  label: string | null;
+  macro_support: boolean;
+  monospaced: boolean;
+  input_hint: string | null;
 }) & {
   user_name: string;
   i18n: CommentTextAreaI18N;
@@ -136,9 +134,9 @@ export type Password = FormSpec & {
 };
 export type DataSize = FormSpec & {
   type: "data_size";
-  label?: string;
+  label: string | null;
   displayed_magnitudes: string[];
-  input_hint?: string;
+  input_hint: string | null;
 };
 export type Catalog = FormSpec & {
   type: "catalog";
@@ -156,11 +154,11 @@ export type CheckboxListChoice = FormSpec & {
   elements: MultipleChoiceElement[];
 };
 export type TimeSpan = FormSpec & {
-  type?: "time_span";
-  label?: string;
+  type: "time_span";
+  label: string | null;
   i18n: TimeSpanI18N;
   displayed_magnitudes: TimeSpanTimeMagnitude[];
-  input_hint?: number;
+  input_hint: number | null;
 };
 export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
 export type SingleChoiceEditable = FormSpec & {
@@ -190,7 +188,7 @@ export type ListOfStrings = FormSpec & {
   type: "list_of_strings";
   string_spec: FormSpec;
   string_default_value: string;
-  layout?: ListOfStringsLayout;
+  layout: ListOfStringsLayout;
 };
 export type ListOfStringsLayout = "horizontal" | "vertical";
 export type Folder = FormSpec & {
@@ -210,23 +208,23 @@ export interface FormSpec {
 }
 export interface IsInteger {
   type: "is_integer";
-  error_message?: string;
+  error_message: string;
 }
 export interface IsFloat {
   type: "is_float";
-  error_message?: string;
+  error_message: string;
 }
 export interface NumberInRange {
   type: "number_in_range";
-  min_value?: number;
-  max_value?: number;
-  error_message?: string;
+  min_value: number | null;
+  max_value: number | null;
+  error_message: string;
 }
 export interface LengthInRange {
   type: "length_in_range";
-  min_value?: number;
-  max_value?: number;
-  error_message?: string;
+  min_value: number | null;
+  max_value: number | null;
+  error_message: string;
 }
 export interface MatchRegex {
   type: "match_regex";
@@ -240,14 +238,14 @@ export interface Autocompleter {
 export interface DictionaryElement {
   ident: string;
   required: boolean;
-  group?: DictionaryGroup;
+  group: DictionaryGroup | null;
   default_value: unknown;
   parameter_form: FormSpec;
 }
 export interface DictionaryGroup {
-  key: string;
-  title: string;
-  help?: string;
+  key: string | null;
+  title: string | null;
+  help: string | null;
 }
 export interface SingleChoiceElement {
   name: string;
@@ -310,8 +308,8 @@ export interface SingleChoiceEditableI18N {
   fatal_error_reload: string;
 }
 export interface I18NOptionalChoice {
-  label?: string;
-  none_label?: string;
+  label: string;
+  none_label: string;
 }
 export interface ValidationMessage {
   location: string[];

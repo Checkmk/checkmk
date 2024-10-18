@@ -33,16 +33,16 @@
                     "default": "integer"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "unit": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             },
-            "required": ["type"],
+            "required": ["type", "label", "unit", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -57,16 +57,16 @@
                     "default": "float"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "unit": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             },
-            "required": ["type"],
+            "required": ["type", "label", "unit", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -90,7 +90,13 @@
                     "type": "string"
                 }
             },
-            "required": ["type", "html", "varprefix"],
+            "required": [
+                "type",
+                "html",
+                "varprefix",
+                "input_html",
+                "readonly_html"
+            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -104,22 +110,27 @@
                     "const": "string",
                     "default": "string"
                 },
-                "placeholder": {
-                    "type": "string"
-                },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "field_size": {
-                    "type": "string",
                     "title": "StringFieldSize",
                     "enum": ["SMALL", "MEDIUM", "LARGE"]
                 },
                 "autocompleter": {
-                    "$ref": "#/$defs/autocompleter"
+                    "oneOf": [
+                        { "type": "null" },
+                        { "$ref": "#/$defs/autocompleter" }
+                    ]
                 }
             },
-            "required": ["type"],
+            "required": [
+                "type",
+                "placeholder",
+                "input_hint",
+                "field_size",
+                "autocompleter"
+            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -223,16 +234,16 @@
             "type": "object",
             "properties": {
                 "key": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "title": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "help": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             },
-            "required": ["key", "title"]
+            "required": ["key", "title", "help"]
         },
         "dictionary_element": {
             "type": "object",
@@ -244,14 +255,23 @@
                     "type": "boolean"
                 },
                 "group": {
-                    "$ref": "#/$defs/dictionary_group"
+                    "oneOf": [
+                        { "$ref": "#/$defs/dictionary_group" },
+                        { "type": "null" }
+                    ]
                 },
                 "default_value": {},
                 "parameter_form": {
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": ["ident", "required", "parameter_form", "default_value"]
+            "required": [
+                "ident",
+                "required",
+                "parameter_form",
+                "default_value",
+                "group"
+            ]
         },
         "dictionary": {
             "id": "dictionary",
@@ -283,7 +303,7 @@
                             "type": "string"
                         },
                         "additional_static_elements": {
-                            "type": "object"
+                            "type": ["object", "null"]
                         },
                         "layout": {
                             "title": "DictionaryLayout",
@@ -295,6 +315,8 @@
                         "type",
                         "elements",
                         "static_elements_key",
+                        "additional_static_elements",
+                        "no_elements_text",
                         "groups",
                         "layout"
                     ]
@@ -328,19 +350,26 @@
                     "default": []
                 },
                 "no_elements_text": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "frozen": {
                     "type": "boolean"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             },
-            "required": ["type", "frozen", "elements", "input_hint"],
+            "required": [
+                "type",
+                "no_elements_text",
+                "label",
+                "input_hint",
+                "frozen",
+                "elements"
+            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -493,11 +522,8 @@
                     },
                     "default": []
                 },
-                "no_elements_text": {
-                    "type": "string"
-                },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "input_hint": {},
                 "layout": {
@@ -506,7 +532,7 @@
                     "default": "vertical"
                 }
             },
-            "required": ["type", "elements", "input_hint", "layout"],
+            "required": ["type", "elements", "label", "input_hint", "layout"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -521,11 +547,11 @@
                     "default": "fixed_value"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "value": {}
             },
-            "required": ["type", "value"],
+            "required": ["type", "value", "label"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -540,7 +566,7 @@
                     "default": "boolean_choice"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "text_on": {
                     "type": "string"
@@ -549,7 +575,7 @@
                     "type": "string"
                 }
             },
-            "required": ["type", "text_on", "text_off"],
+            "required": ["type", "label", "text_on", "text_off"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -573,7 +599,7 @@
                     "type": "object",
                     "properties": {
                         "label": {
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         "macro_support": {
                             "type": "boolean"
@@ -582,9 +608,15 @@
                             "type": "boolean"
                         },
                         "input_hint": {
-                            "type": "string"
+                            "type": ["string", "null"]
                         }
-                    }
+                    },
+                    "required": [
+                        "label",
+                        "macro_support",
+                        "monospaced",
+                        "input_hint"
+                    ]
                 }
             ],
             "required": ["type"]
@@ -632,7 +664,7 @@
                     "default": "data_size"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "displayed_magnitudes": {
                     "type": "array",
@@ -641,10 +673,10 @@
                     }
                 },
                 "input_hint": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             },
-            "required": ["type", "displayed_magnitudes"],
+            "required": ["type", "label", "displayed_magnitudes", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -692,7 +724,7 @@
                     "default": "time_span"
                 },
                 "label": {
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
                 "i18n": {
                     "title": "time_span_i18n",
@@ -736,10 +768,17 @@
                     }
                 },
                 "input_hint": {
-                    "type": "number"
+                    "type": ["number", "null"]
                 }
             },
-            "required": ["displayed_magnitudes", "i18n", "prefill"],
+            "required": [
+                "type",
+                "displayed_magnitudes",
+                "label",
+                "i18n",
+                "prefill",
+                "input_hint"
+            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -770,8 +809,7 @@
                     "default": "vertical"
                 },
                 "show_titles": {
-                    "type": "boolean",
-                    "default": true
+                    "type": "boolean"
                 }
             },
             "required": ["type", "elements", "layout", "show_titles"],
@@ -801,7 +839,8 @@
                         "none_label": {
                             "type": "string"
                         }
-                    }
+                    },
+                    "required": ["label", "none_label"]
                 },
                 "parameter_form_default_value": {}
             },
@@ -958,7 +997,12 @@
                     "default": "horizontal"
                 }
             },
-            "required": ["type", "string_spec", "string_default_value"],
+            "required": [
+                "type",
+                "string_spec",
+                "string_default_value",
+                "layout"
+            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"

@@ -25,13 +25,15 @@ function getStringFormspec(
     help: `ut help ${title}`,
     validators: [],
     input_hint: `ut input hint ${title}`,
+    field_size: 'SMALL',
+    autocompleter: null,
     ...options
   }
 }
 
 function getDictionaryFormspec(
-  dictionaryOptions: Partial<Omit<DictionarySpec, 'type'>>,
-  elements: Array<PartialExcept<Omit<DictionaryElement, 'type'>, 'ident' | 'parameter_form'>>
+  dictionaryOptions: Partial<DictionarySpec>,
+  elements: Array<PartialExcept<DictionaryElement, 'ident' | 'parameter_form'>>
 ): DictionarySpec {
   return {
     type: 'dictionary',
@@ -40,10 +42,14 @@ function getDictionaryFormspec(
     groups: [],
     layout: 'one_column',
     validators: [],
+    no_elements_text: 'ut no elements text',
+    additional_static_elements: null,
     elements: elements.map((element) => {
       return {
         required: false,
         default_value: '',
+        layout: 'one_column',
+        group: null,
         ...element
       }
     }),
@@ -70,7 +76,8 @@ function renderSimpleCatalog() {
               [
                 {
                   ident: 'ut_string_1',
-                  parameter_form: getStringFormspec('title of string input')
+                  parameter_form: getStringFormspec('title of string input'),
+                  group: null
                 }
               ]
             )

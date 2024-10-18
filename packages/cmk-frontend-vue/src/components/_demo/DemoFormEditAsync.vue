@@ -54,7 +54,6 @@ const api: API<ObjectId, ObjectId> = {
     }
   },
   getSchema: async (): Promise<FormSpec> => {
-    console.log('getSchema')
     await sleep(apiDelay.value)
     if (apiError.value) {
       throw Error('another error for getSchema')
@@ -64,9 +63,13 @@ const api: API<ObjectId, ObjectId> = {
       title: 'dict title',
       validators: [],
       help: 'dict help',
+      layout: 'one_column',
+      no_elements_text: 'no_text',
+      additional_static_elements: null,
       elements: [
         {
           ident: 'element_ident',
+          group: null,
           required: false,
           default_value: '',
           parameter_form: {
@@ -77,7 +80,6 @@ const api: API<ObjectId, ObjectId> = {
           }
         }
       ],
-      layout: 'one_column',
       groups: []
     }
     return dict as FormSpec

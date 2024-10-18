@@ -114,6 +114,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 frozen=self.form_spec.frozen and isinstance(raw_value, self.form_spec.type),
                 input_hint=input_hint or _("Please choose"),
+                no_elements_text=localize(self.form_spec.no_elements_text),
             ),
             NO_SELECTION if isinstance(parsed_value, EmptyValue) else self.option_id(parsed_value),
         )

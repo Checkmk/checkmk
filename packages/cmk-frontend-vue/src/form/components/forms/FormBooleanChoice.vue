@@ -27,7 +27,7 @@ const componentId = useId()
 <template>
   <span class="checkbox">
     <input :id="componentId" v-model="value" type="checkbox" />
-    <label :for="componentId">{{ props.spec.label }}</label>
+    <label v-if="spec.label" :for="componentId">{{ spec.label }}</label>
   </span>
   <FormValidation :validation="validation"></FormValidation>
 </template>

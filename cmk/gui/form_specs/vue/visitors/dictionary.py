@@ -115,6 +115,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 title=title,
                 help=help_text,
                 elements=elements_keyspec,
+                no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
                 layout=self.form_spec.layout,
             ),

@@ -15,6 +15,8 @@ function getSpec(displayedMagnitudes: TimeSpan['displayed_magnitudes']): TimeSpa
     help: 'ut Help',
     displayed_magnitudes: displayedMagnitudes,
     validators: [],
+    label: 'utLabel',
+    input_hint: null,
     i18n: {
       minute: 'ut_minute',
       second: 'ut_second',

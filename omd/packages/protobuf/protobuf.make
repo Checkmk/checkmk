@@ -17,12 +17,17 @@ PROTOBUF_BUILD_LIBRARY := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-build-library
 PROTOBUF_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install-intermediate
 PROTOBUF_INTERMEDIATE_INSTALL_PYTHON := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install-intermediate-python
 PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install-intermediate-library
+PROTOBUF_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-cache-pkg-process
+PROTOBUF_CACHE_PKG_PROCESS_PYTHON := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-cache-pkg-process-python
+PROTOBUF_CACHE_PKG_PROCESS_LIBRARY := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-cache-pkg-process-library
 PROTOBUF_INSTALL := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install
 PROTOBUF_INSTALL_PYTHON := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install-python
 PROTOBUF_INSTALL_LIBRARY := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-install-library
 
 PROTOBUF_INSTALL_DIR_PYTHON := $(INTERMEDIATE_INSTALL_BASE)/$(PROTOBUF_DIR)-python
 PROTOBUF_INSTALL_DIR_LIBRARY := $(INTERMEDIATE_INSTALL_BASE)/$(PROTOBUF_DIR)-library
+PROTOBUF_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PROTOBUF_DIR)
+#PROTOBUF_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PROTOBUF_DIR)
 
 # Used by other OMD packages
 PACKAGE_PROTOBUF_DESTDIR         := $(PROTOBUF_INSTALL_DIR_LIBRARY)
@@ -33,23 +38,83 @@ PACKAGE_PROTOBUF_PROTOC_BIN      := $(PACKAGE_PROTOBUF_DESTDIR)/bin/protoc
 
 SITE_PACKAGES_PATH_REL := "lib/python$(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)/site-packages/"
 
-$(PROTOBUF)-build-library: $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY)
+$(PROTOBUF)-build-library: $(BUILD_HELPER_DIR) $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 
-$(PROTOBUF_BUILD_LIBRARY):
-	$(BAZEL_CMD) build //omd/packages/protobuf:protobuf_tar
+# We have a globally defined $(PROTOBUF_UNPACK) target, but we need some special
+# handling here, because downloaded archive name does not match the omd package name
+$(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).tar.gz
+	$(RM) -r $(PROTOBUF_BUILD_DIR)
+	$(MKDIR) $(PACKAGE_BUILD_DIR)
+	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)
+	$(MKDIR) $(BUILD_HELPER_DIR)
+	$(TOUCH) $@
 
-$(PROTOBUF_BUILD_PYTHON): $(PROTOBUF_BUILD_LIBRARY)
-	$(BAZEL_CMD) build //omd/packages/protobuf:proto_wheel_tar
+# NOTE: We can probably remove the CXXFLAGS hack below when we use a more recent
+# protobuf version. Currently -Wall is enabled for builds with GCC, and newer
+# GCC versions complain.
+$(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
+	cd $(PROTOBUF_BUILD_DIR) && \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
+	    CXXFLAGS="-Wno-stringop-overflow" ./configure --prefix=""
+	$(TOUCH) $@
+
+$(PROTOBUF_BUILD_LIBRARY): $(INTERMEDIATE_INSTALL_BAZEL)
+
+$(PROTOBUF_BUILD_PYTHON): $(PROTOBUF_BUILD_LIBRARY) $(INTERMEDIATE_INSTALL_BAZEL)
+	cd $(PROTOBUF_BUILD_DIR)/python && \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
+	    echo "$(PYTHON3_MODULES_INSTALL_DIR)/$(SITE_PACKAGES_PATH_REL)" > "$(PYTHON_INSTALL_DIR)/$(SITE_PACKAGES_PATH_REL)python_modules.pth" && \
+	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py build --cpp_implementation
+	$(TOUCH) $@
 
 $(PROTOBUF_BUILD): $(PROTOBUF_BUILD_LIBRARY) $(PROTOBUF_BUILD_PYTHON)
+	file $(PROTOBUF_BUILD_DIR)/src/protoc | grep ELF >/dev/null
+	ldd $(PROTOBUF_BUILD_DIR)/src/protoc | grep -v libstdc++ >/dev/null
+	$(TOUCH) $@
+
+$(PROTOBUF_CACHE_PKG_PROCESS): $(PROTOBUF_CACHE_PKG_PROCESS_PYTHON) $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
+
+PROTOBUF_CACHE_PKG_PATH_PYTHON := $(call cache_pkg_path,$(PROTOBUF_DIR)-python,$(PROTOBUF_BUILD_ID))
+
+$(PROTOBUF_CACHE_PKG_PATH_PYTHON):
+	$(call pack_pkg_archive,$@,$(PROTOBUF_DIR)-python,$(PROTOBUF_BUILD_ID),$(PROTOBUF_INTERMEDIATE_INSTALL_PYTHON))
+
+$(PROTOBUF_CACHE_PKG_PROCESS_PYTHON): $(PROTOBUF_CACHE_PKG_PATH_PYTHON)
+	$(call unpack_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH_PYTHON),$(PROTOBUF_DIR)-python)
+	$(call upload_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH_PYTHON),$(PROTOBUF_DIR)-python,$(PROTOBUF_BUILD_ID))
+	$(TOUCH) $@
+
+PROTOBUF_CACHE_PKG_PATH_LIBRARY := $(call cache_pkg_path,$(PROTOBUF_DIR)-library,$(PROTOBUF_BUILD_ID))
+
+$(PROTOBUF_CACHE_PKG_PATH_LIBRARY):
+	$(call pack_pkg_archive,$@,$(PROTOBUF_DIR)-library,$(PROTOBUF_BUILD_ID),$(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY))
+
+$(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY): $(PROTOBUF_CACHE_PKG_PATH_LIBRARY)
+	$(call unpack_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH_LIBRARY),$(PROTOBUF_DIR)-library)
+	$(call upload_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH_LIBRARY),$(PROTOBUF_DIR)-library,$(PROTOBUF_BUILD_ID))
+	$(TOUCH) $@
 
 $(PROTOBUF_INTERMEDIATE_INSTALL): $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY)
 
 $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY): $(PROTOBUF_BUILD_LIBRARY)
-	$(MKDIR) $(PROTOBUF_INSTALL_DIR_LIBRARY)
-	tar -C $(PROTOBUF_INSTALL_DIR_LIBRARY) --strip-components 1 -xf $(BAZEL_BIN)/omd/packages/protobuf/protobuf.tar
+	make -C $(PROTOBUF_BUILD_DIR) DESTDIR=$(PROTOBUF_INSTALL_DIR_LIBRARY) install
+	$(TOUCH) $@
+
 
 $(PROTOBUF_INSTALL): $(PROTOBUF_INSTALL_LIBRARY)
 
-$(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY)
-	tar -C $(DESTDIR)$(OMD_ROOT)/ --strip-components 1 -xf $(BAZEL_BIN)/omd/packages/protobuf/protobuf.tar
+$(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
+# Only install the libraries we really need in run time environment. The
+# PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY step above installs the libprotobuf.a
+# for building the cmc. However, this is not needed later in runtime environment.
+# Also the libprotobuf-lite and libprotoc are not needed. We would normally exclude
+# the files from being added to the intermediate package, but since we have the
+# requirement for cmc and also want to use the build cache for that step, we need
+# to do the filtering here. See CMK-9913.
+	$(RSYNC) \
+	    --exclude 'libprotobuf.a' \
+	    --exclude 'libprotoc*' \
+	    --exclude 'libprotobuf-lite.*' \
+	    --exclude 'protobuf-lite.pc' \
+	    $(PROTOBUF_INSTALL_DIR_LIBRARY)/ $(DESTDIR)$(OMD_ROOT)/
+	$(TOUCH) $@

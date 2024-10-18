@@ -2503,7 +2503,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        warnings = get_config_domain(domain_request.name)().activate(domain_request.settings)
+        warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
         results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()

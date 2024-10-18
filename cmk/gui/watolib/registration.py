@@ -51,7 +51,6 @@ from .automations import (
 from .broker_certificates import AutomationStoreBrokerCertificates
 from .bulk_discovery import BulkDiscoveryBackgroundJob
 from .config_domain_name import (
-    ABCConfigDomain,
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
     SampleConfigGeneratorRegistry,
@@ -209,15 +208,11 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
 
 
 def _register_config_domains(config_domain_registry: ConfigDomainRegistry) -> None:
-    clss: Sequence[type[ABCConfigDomain]] = (
-        config_domains.ConfigDomainCore,
-        config_domains.ConfigDomainGUI,
-        config_domains.ConfigDomainLiveproxy,
-        config_domains.ConfigDomainCACertificates,
-        config_domains.ConfigDomainOMD,
-    )
-    for cls in clss:
-        config_domain_registry.register(cls)
+    config_domain_registry.register(config_domains.ConfigDomainCore())
+    config_domain_registry.register(config_domains.ConfigDomainGUI())
+    config_domain_registry.register(config_domains.ConfigDomainLiveproxy())
+    config_domain_registry.register(config_domains.ConfigDomainCACertificates())
+    config_domain_registry.register(config_domains.ConfigDomainOMD())
 
 
 def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> None:

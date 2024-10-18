@@ -1588,7 +1588,10 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 
     def _add_change(self, what: str, message: str) -> None:
         _changes.add_change(
-            what, message, domains=[ConfigDomainEventConsole], sites=_get_event_console_sync_sites()
+            what,
+            message,
+            domains=[ConfigDomainEventConsole()],
+            sites=_get_event_console_sync_sites(),
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
@@ -2611,7 +2614,7 @@ def _add_change_for_sites(
     _changes.add_change(
         what,
         message,
-        domains=[ConfigDomainEventConsole],
+        domains=[ConfigDomainEventConsole()],
         sites=sites_,
     )
 

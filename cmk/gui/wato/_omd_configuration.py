@@ -52,9 +52,9 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     replication_path_registry: ReplicationPathRegistry,
 ) -> None:
-    config_domain_registry.register(ConfigDomainDiskspace)
-    config_domain_registry.register(ConfigDomainApache)
-    config_domain_registry.register(ConfigDomainRRDCached)
+    config_domain_registry.register(ConfigDomainDiskspace())
+    config_domain_registry.register(ConfigDomainApache())
+    config_domain_registry.register(ConfigDomainRRDCached())
     config_variable_registry.register(ConfigVariableSiteAutostart)
     config_variable_registry.register(ConfigVariableSiteCore)
     config_variable_registry.register(ConfigVariableSiteLivestatusTCP)

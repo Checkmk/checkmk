@@ -107,7 +107,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 

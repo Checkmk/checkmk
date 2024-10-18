@@ -73,16 +73,12 @@ class ABCConfigDomain(abc.ABC):
     def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
-    def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:
+    def enabled_domains(cls) -> Sequence[ABCConfigDomain]:
         return [d for d in config_domain_registry.values() if d.enabled()]
 
     @abc.abstractmethod
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
-
-    @classmethod
-    def get_class(cls, ident: str) -> type[ABCConfigDomain]:
-        return config_domain_registry[ident]
 
     @classmethod
     def enabled(cls) -> bool:
@@ -171,20 +167,20 @@ class ABCConfigDomain(abc.ABC):
 def _get_all_default_globals() -> dict[str, Any]:
     settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
-        settings.update(domain().default_globals())
+        settings.update(domain.default_globals())
     return settings
 
 
-def get_config_domain(domain_ident: ConfigDomainName) -> type[ABCConfigDomain]:
+def get_config_domain(domain_ident: ConfigDomainName) -> ABCConfigDomain:
     return config_domain_registry[domain_ident]
 
 
-def get_always_activate_domains() -> Sequence[type[ABCConfigDomain]]:
+def get_always_activate_domains() -> Sequence[ABCConfigDomain]:
     return [d for d in config_domain_registry.values() if d.always_activate]
 
 
-class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[type[ABCConfigDomain]]):
-    def plugin_name(self, instance: type[ABCConfigDomain]) -> str:
+class ConfigDomainRegistry(cmk.ccc.plugin_registry.Registry[ABCConfigDomain]):
+    def plugin_name(self, instance: ABCConfigDomain) -> str:
         return instance.ident()
 
 
@@ -290,7 +286,7 @@ class ConfigVariable:
 
     def domain(self) -> type[ABCConfigDomain]:
         """Returns the class of the config domain this configuration variable belongs to"""
-        return config_domain_registry["check_mk"]
+        return config_domain_registry["check_mk"].__class__
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.

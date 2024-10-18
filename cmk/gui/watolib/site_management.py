@@ -606,7 +606,7 @@ def add_changes_after_editing_broker_connection(
         need_sync=True,
         need_restart=True,
         sites=[omd_site()] + sites,
-        domains=[ConfigDomainGUI],
+        domains=[ConfigDomainGUI()],
     )
 
     return change_message
@@ -641,6 +641,6 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI])
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
 
     return change_message

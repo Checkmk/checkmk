@@ -23,7 +23,7 @@ const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 const dictionaryVariants = cva('', {
   variants: {
     variant: {
-      one_column: '',
+      one_column: 'form-dictionary--one_column',
       two_columns: 'form-dictionary--two_columns'
     }
   },
@@ -83,10 +83,17 @@ immediateWatch(
   }
 )
 
+const getGroupKey = (element: DictionaryElement, index: number): string => {
+  if (variant === 'two_columns') {
+    return `${DICT_ELEMENT_NO_GROUP}${index}`
+  }
+  return element.group?.key ?? `${DICT_ELEMENT_NO_GROUP}${index}`
+}
+
 const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
   const groups: ElementsGroup[] = []
-  elements.forEach((element: DictionaryElement) => {
-    const groupKey = element.group?.key ?? DICT_ELEMENT_NO_GROUP
+  elements.forEach((element: DictionaryElement, index: number) => {
+    const groupKey = getGroupKey(element, index)
     if (!groups.some((group) => group.groupKey === groupKey)) {
       groups.push({
         groupKey: groupKey,
@@ -103,15 +110,13 @@ const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
 function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
-  props.spec.elements.forEach((element: DictionaryElement) => {
+  props.spec.elements.forEach((element: DictionaryElement, index: number) => {
     const isActive = element.ident in data.value ? true : element.required
     if (isActive && data.value[element.ident] === undefined) {
-      data.value[element.ident] = JSON.parse(JSON.stringify(getDefaultValue(element.ident)))
+      data.value[element.ident] = structuredClone(getDefaultValue(element.ident))
     }
 
-    const groupIndex = groups.findIndex(
-      (group) => group.groupKey === (element.group?.key ?? DICT_ELEMENT_NO_GROUP)
-    )
+    const groupIndex = groups.findIndex((group) => group.groupKey === getGroupKey(element, index))
     if (groupIndex === -1) {
       throw new Error('Group not found')
     }
@@ -138,6 +143,10 @@ function toggleElement(event: MouseEvent, key: string) {
 }
 
 function indentRequired(element: DictionaryElement): boolean {
+  return labelRequired(element) && !(element.group && variant === 'one_column')
+}
+
+function labelRequired(element: DictionaryElement): boolean {
   return !(
     element.required &&
     element.parameter_form.title === '' &&
@@ -155,44 +164,47 @@ const componentId = useId()
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div
-            v-for="dict_element in group.elems"
-            :key="`${componentId}.${dict_element.dict_config.ident}`"
-            class="form-dictionary__group_elem"
-          >
-            <template v-if="indentRequired(dict_element.dict_config)">
-              <span class="checkbox">
-                <input
-                  v-if="!dict_element.dict_config.required"
-                  :id="`${componentId}.${dict_element.dict_config.ident}`"
-                  v-model="dict_element.is_active"
-                  :onclick="
-                    (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
-                  "
-                  type="checkbox"
-                />
-                <label
-                  v-if="dict_element.dict_config.parameter_form.title"
-                  :for="`${componentId}.${dict_element.dict_config.ident}`"
-                >
-                  {{ dict_element.dict_config.parameter_form.title }}
-                </label>
-                <HelpText :help="dict_element.dict_config.parameter_form.help" />
-              </span>
-            </template>
+          <div :class="dictionaryVariants({ variant })">
             <div
-              :class="{
-                indent: indentRequired(dict_element.dict_config),
-                dictelement: indentRequired(dict_element.dict_config)
-              }"
+              v-for="dict_element in group.elems"
+              :key="`${componentId}.${dict_element.dict_config.ident}`"
+              class="form-dictionary__group_elem"
             >
-              <FormEdit
-                v-if="dict_element.is_active"
-                v-model:data="data[dict_element.dict_config.ident]"
-                :spec="dict_element.dict_config.parameter_form"
-                :backend-validation="elementValidation[dict_element.dict_config.ident]!"
-                :aria-label="dict_element.dict_config.parameter_form.title"
-              />
+              <template v-if="labelRequired(dict_element.dict_config)">
+                <span class="checkbox">
+                  <input
+                    v-if="!dict_element.dict_config.required"
+                    :id="`${componentId}.${dict_element.dict_config.ident}`"
+                    v-model="dict_element.is_active"
+                    :onclick="
+                      (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
+                    "
+                    type="checkbox"
+                  />
+                  <label
+                    v-if="dict_element.dict_config.parameter_form.title"
+                    :for="`${componentId}.${dict_element.dict_config.ident}`"
+                  >
+                    {{ dict_element.dict_config.parameter_form.title }}
+                  </label>
+                  <HelpText :help="dict_element.dict_config.parameter_form.help" />
+                </span>
+              </template>
+              <div
+                :class="{
+                  indent: indentRequired(dict_element.dict_config),
+                  dictelement: indentRequired(dict_element.dict_config),
+                  'group-with-more-items': group.elems.length > 1
+                }"
+              >
+                <FormEdit
+                  v-if="dict_element.is_active"
+                  v-model:data="data[dict_element.dict_config.ident]"
+                  :spec="dict_element.dict_config.parameter_form"
+                  :backend-validation="elementValidation[dict_element.dict_config.ident]!"
+                  :aria-label="dict_element.dict_config.parameter_form.title"
+                />
+              </div>
             </div>
           </div>
         </td>
@@ -213,12 +225,14 @@ span.checkbox {
 }
 
 /* Variants */
-.form-dictionary--two_columns > tbody > tr > td > .form-dictionary__group_elem {
+.form-dictionary--two_columns > .form-dictionary__group_elem {
   padding: 8px 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
 
   > span.checkbox {
     display: inline-block;
-    float: left;
     width: 160px;
     margin: 0;
     padding-top: 3px;
@@ -227,12 +241,23 @@ span.checkbox {
     white-space: normal;
   }
 
-  > .dictelement.indent:not(div[id*='DictGroup']) {
+  > .dictelement.indent {
     display: inline-block;
     margin: 0;
-    margin-left: 16px;
     padding-left: 0;
     border-left: none;
   }
+}
+.group-with-more-items {
+  border: none;
+  margin-left: 0;
+  margin-right: 8px;
+  padding-left: 0;
+}
+
+.form-dictionary--one_column {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
 }
 </style>

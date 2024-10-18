@@ -25,7 +25,7 @@ from cmk.base.modes.check_mk import mode_check
 
 from cmk.discover_plugins import PluginLocation
 
-# This will be replaced by the config genreration, when the template is instanciated.
+# This will be replaced by the config generation, when the template is instanciated.
 CONFIG = HostCheckConfig(
     delay_precompile=False,
     src="",

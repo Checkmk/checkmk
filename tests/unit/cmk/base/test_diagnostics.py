@@ -323,6 +323,93 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
     assert group_of[str(test_file)] == test_group
 
 
+def test_diagnostics_element_dpkg():
+    diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "dpkg_packages"
+    assert diagnostics_element.title == "Dpkg packages information"
+    assert diagnostics_element.description == (
+        "Output of `dpkg -l`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_dpkg_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("dpkg")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "Desired=Unknown/Install/Remove/Purge/Hold
+| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+||/ Name                                                        Version                                         Architecture Description
++++-===========================================================-===============================================-============-=====================================================================================================
+ii  accountsservice                                             22.07.5-2ubuntu1.5                              amd64        query and manipulate user account information"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", str(test_bin_dir))
+
+        diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("dpkg_packages.csv")
+
+        content = filepath.open().read()
+
+        assert "22.07.5-2ubuntu1.5" in content
+
+        shutil.rmtree(str(test_bin_dir))
+
+
+def test_diagnostics_element_rpm():
+    diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "rpm_packages"
+    assert diagnostics_element.title == "Rpm packages information"
+    assert diagnostics_element.description == (
+        "Output of `rpm -qa`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_rpm_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("rpm")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "libgcc;11.4.1;2.1.el9;x86_64
+crypto-policies;20230731;1.git94f0e2c.el9_3.1;noarch
+tzdata;2023c;1.el9;noarch"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", str(test_bin_dir))
+
+        diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("rpm_packages.csv")
+
+        content = filepath.open().read()
+
+        assert "libgcc;11.4.1;2.1.el9;x86_64" in content
+
+        shutil.rmtree(str(test_bin_dir))
+
+
 def test_diagnostics_element_omd_config() -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
     assert diagnostics_element.ident == "omd_config"

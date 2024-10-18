@@ -1,0 +1,11 @@
+Title: Support Diagnostics: Include information about Linux packages
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1729261449
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+With this werk, the Support Diagnostics dump also includes information about the installed Linux
+packages. For Debian based systems, <em>dpgk -l</em> is used, for RedHat based systems, <em>rpm -qa</em>.

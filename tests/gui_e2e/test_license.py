@@ -128,7 +128,10 @@ def test_license_valid(
             else str(service_limit)
         )
         assert licensing_page.get_named_value("Checkmk edition") == test_site.version.edition.title
-        assert licensing_page.get_named_value("Options") == "Ntopng integration"
+        assert (
+            licensing_page.get_named_value("Options")
+            == "Synthetic monitoring (licensed tests: 100)"
+        )
         assert licensing_page.get_named_value("Reseller") == "-"
         assert licensing_page.get_named_value("Operational state") == "Active"
         assert licensing_page.get_named_value("Automatic renewal") == "No"

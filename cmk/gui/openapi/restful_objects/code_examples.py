@@ -392,13 +392,15 @@ def _transform_params(param_list):
 
 
 JsonObject: TypeAlias = dict[
-    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
+    str, None | int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
 ]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
     for key, example in field.items():
         match example:
+            case None:
+                lines.append(prefix + key + ":=null")
             case bool():
                 lines.append(prefix + key + ":=" + str(example).lower())
             case int() | float():
@@ -431,6 +433,8 @@ def httpie_request_body(examples: JsonObject) -> str:
     "foo='bar bar bar'"
     >>> httpie_request_body({"foo": 5})
     'foo:=5'
+    >>> httpie_request_body({"foo": None})
+    'foo:=null'
     >>> httpie_request_body({"foo": False})
     'foo:=false'
     >>> httpie_request_body({"foo": [1,2,3]})

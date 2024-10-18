@@ -427,9 +427,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::log_version:
             case LogEntryKind::acknowledge_alert_host:
             case LogEntryKind::acknowledge_alert_service:
-                if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial &&
-                    entry->kind() != LogEntryKind::state_host_initial) {
+                if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
                 }
@@ -440,8 +438,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
                 if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial &&
-                    entry->kind() != LogEntryKind::state_host_initial) {
+                    entry->kind() != LogEntryKind::state_service_initial) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
                 }
@@ -456,7 +453,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host:
                 if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial &&
                     entry->kind() != LogEntryKind::state_host_initial) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
@@ -467,9 +463,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                    since);
                 break;
             case LogEntryKind::timeperiod_transition:
-                if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial &&
-                    entry->kind() != LogEntryKind::state_host_initial) {
+                if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                     in_nagios_initial_states = false;
                 }
@@ -478,9 +472,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                              notification_periods, state_info);
                 break;
             case LogEntryKind::log_initial_states:
-                if (in_nagios_initial_states &&
-                    entry->kind() != LogEntryKind::state_service_initial &&
-                    entry->kind() != LogEntryKind::state_host_initial) {
+                if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                     // in_nagios_initial_states = false;
                 }

@@ -67,7 +67,7 @@ private:
         std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, bool only_update,
         std::map<std::string, int> &notification_periods,
-        std::map<HostServiceKey, HostServiceState *> &state_info);
+        const std::map<HostServiceKey, HostServiceState *> &state_info);
 
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,

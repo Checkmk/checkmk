@@ -58,9 +58,12 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulk,
     AlwaysBulkTuple,
     BulkingParameters,
+    ContentBasedFiltering,
+    FrequencyAndTiming,
     GeneralProperties,
     NotificationMethod,
     NotificationQuickSetupSpec,
+    SendingConditions,
     Settings,
     TimeperiodBulk,
     TimeperiodBulkTuple,
@@ -936,6 +939,20 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         # TODO: update once slidein is implemented
         # event_rule["notify_plugin"] = notification["notification_method"]["method"]
 
+    def _set_sending_conditions(event_rule: EventRule) -> None:
+        frequency_and_timing = notification["sending_conditions"]["frequency_and_timing"]
+        if "restrict_timeperiod" in frequency_and_timing:
+            event_rule["match_timeperiod"] = frequency_and_timing["restrict_timeperiod"]
+        if "limit_by_count" in frequency_and_timing:
+            event_rule["match_escalation"] = frequency_and_timing["limit_by_count"]
+        if "throttle_periodic" in frequency_and_timing:
+            event_rule["match_escalation_throttle"] = frequency_and_timing["throttle_periodic"]
+        content_based_filtering = notification["sending_conditions"]["content_based_filtering"]
+        if "by_plugin_output" in content_based_filtering:
+            event_rule["match_plugin_output"] = content_based_filtering["by_plugin_output"]
+        if "custom_by_comment" in content_based_filtering:
+            event_rule["match_notification_comment"] = content_based_filtering["custom_by_comment"]
+
     def _set_general_properties(event_rule: EventRule) -> None:
         if "disable_rule" in notification["general_properties"]["settings"]:
             event_rule["disabled"] = True
@@ -963,6 +980,7 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
     )
 
     _set_notification_effect_parameters(event_rule)
+    _set_sending_conditions(event_rule)
     _set_general_properties(event_rule)
 
     return event_rule
@@ -1039,6 +1057,29 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
 
         return notify_method
 
+    def _get_sending_conditions() -> SendingConditions:
+        frequency_and_timing = FrequencyAndTiming()
+        if "match_timeperiod" in event_rule:
+            frequency_and_timing["restrict_timeperiod"] = event_rule["match_timeperiod"]
+
+        if "match_escalation" in event_rule:
+            frequency_and_timing["limit_by_count"] = event_rule["match_escalation"]
+
+        if "match_escalation_throttle" in event_rule:
+            frequency_and_timing["throttle_periodic"] = event_rule["match_escalation_throttle"]
+
+        content_based_filtering = ContentBasedFiltering()
+        if "match_plugin_output" in event_rule:
+            content_based_filtering["by_plugin_output"] = event_rule["match_plugin_output"]
+
+        if "match_notification_comment" in event_rule:
+            content_based_filtering["custom_by_comment"] = event_rule["match_notification_comment"]
+
+        return SendingConditions(
+            frequency_and_timing=frequency_and_timing,
+            content_based_filtering=content_based_filtering,
+        )
+
     def _get_general_properties() -> GeneralProperties:
         settings = Settings()
         if event_rule["disabled"]:
@@ -1067,17 +1108,7 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
         },
         notification_method=_get_notification_method(),
         recipient=[("all_contacts_affected", None)],
-        sending_conditions={
-            "frequency_and_timing": {
-                "restrict_timeperiod": "",
-                "limit_by_count": (1, 5),
-                "throttle_periodic": (1, 5),
-            },
-            "content_based_filtering": {
-                "by_plugin_output": "",
-                "custom_by_comment": "",
-            },
-        },
+        sending_conditions=_get_sending_conditions(),
         general_properties=_get_general_properties(),
     )
 

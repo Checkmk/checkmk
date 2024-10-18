@@ -44,7 +44,7 @@ def _create_python_requirements_impl(rctx):
     )
 
 create_python_requirements = repository_rule(
-    attrs = {"requirements": attr.string(mandatory = True), "ignored_modules": attr.string_list()},
+    attrs = {"requirements": attr.string(mandatory = True), "pipfile_lock": attr.string(mandatory = True), "ignored_modules": attr.string_list()},
     doc = """A rule for importing `Pipfile` dependencies into Bazel.""",
     implementation = _create_python_requirements_impl,
 )

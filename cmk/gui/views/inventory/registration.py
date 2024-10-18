@@ -9,6 +9,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
+from cmk.gui.views.row_post_processing import RowPostProcessorRegistry
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter
 
 from . import _builtin_display_hints, _paint_functions, _views
@@ -22,6 +23,7 @@ from ._painters import (
     PainterInvhistTime,
     PainterOptionShowInternalTreePaths,
 )
+from ._row_post_processor import inventory_row_post_processor
 from ._tree_renderer import ajax_inv_render_tree
 from .registry import inv_paint_funtions, inventory_displayhints
 
@@ -32,6 +34,7 @@ def register(
     painter_registry_: PainterRegistry,
     painter_option_registry: PainterOptionRegistry,
     multisite_builtin_views: dict[ViewName, ViewSpec],
+    row_post_processor_registry: RowPostProcessorRegistry,
 ) -> None:
     _paint_functions.register(inv_paint_funtions)
     _builtin_display_hints.register(inventory_displayhints)
@@ -51,3 +54,4 @@ def register(
     declare_1to1_sorter("invhist_changed", cmp_simple_number)
 
     _views.register(multisite_builtin_views)
+    row_post_processor_registry.register(inventory_row_post_processor)

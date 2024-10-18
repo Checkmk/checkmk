@@ -30,6 +30,7 @@ from .page_create_view import page_create_view
 from .page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
 from .page_edit_views import page_edit_views
 from .page_show_view import page_show_view
+from .row_post_processing import RowPostProcessorRegistry
 from .sorter import register_sorters, sorter_registry
 from .visual_type import VisualTypeViews
 
@@ -41,6 +42,7 @@ def register(
     visual_type_registry: VisualTypeRegistry,
     register_post_config_load_hook: Callable[[Callable[[], None]], None],
     multisite_builtin_views: dict[ViewName, ViewSpec],
+    row_post_processor_registry: RowPostProcessorRegistry,
 ) -> None:
     register_post_config_load_hook(register_tag_plugins)
 
@@ -84,5 +86,6 @@ def register(
         painter_registry,
         painter_option_registry,
         multisite_builtin_views,
+        row_post_processor_registry,
     )
     graph.register(painter_option_registry, multisite_builtin_views)

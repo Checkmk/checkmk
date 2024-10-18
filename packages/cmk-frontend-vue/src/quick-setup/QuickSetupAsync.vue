@@ -4,8 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue, type Ref, watch } from 'vue'
-
+import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 
 import {
@@ -15,6 +14,7 @@ import {
   getAllStages,
   editQuickSetup
 } from './rest_api'
+import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
 import { renderContent, renderRecap, defineButtons } from './render_utils'
@@ -72,6 +72,7 @@ const numberOfStages = computed(() => stages.value.length) //Number of stages
 
 // Data from all stages
 const formData = ref<{ [key: number]: StageData }>({})
+provide(formDataKey, readonly(formData))
 
 //
 //

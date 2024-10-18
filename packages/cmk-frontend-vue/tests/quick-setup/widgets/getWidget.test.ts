@@ -11,6 +11,9 @@ import NoneWidget from '@/quick-setup/components/quick-setup/widgets/NoneWidget.
 import FormSpecWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecWidget.vue'
 import CollapsibleWidget from '@/quick-setup/components/quick-setup/widgets/CollapsibleWidget.vue'
 import FormSpecRecapWidget from '@/quick-setup/components/quick-setup/widgets/FormSpecRecapWidget.vue'
+import ConditionalNotificationHostEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationHostEventStageWidget.vue'
+import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
+import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
 
 test('getWidget returns NoneWidget when widget_type is unknown', async () => {
   expect(getWidget('i_do_not_exist')).toBe(NoneWidget)
@@ -24,4 +27,13 @@ test('getWidget returns the proper widget', async () => {
   expect(getWidget('form_spec')).toBe(FormSpecWidget)
   expect(getWidget('collapsible')).toBe(CollapsibleWidget)
   expect(getWidget('form_spec_recap')).toBe(FormSpecRecapWidget)
+  expect(getWidget('conditional_notification_host_event_stage_widget')).toBe(
+    ConditionalNotificationHostEventStageWidget
+  )
+  expect(getWidget('conditional_notification_service_event_stage_widget')).toBe(
+    ConditionalNotificationServiceEventStageWidget
+  )
+  expect(getWidget('conditional_notification_ec_alert_stage_widget')).toBe(
+    ConditionalNotificationECAlertStageWidget
+  )
 })

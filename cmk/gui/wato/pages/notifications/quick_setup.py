@@ -27,6 +27,11 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     ListOfStringsLayout,
 )
 from cmk.gui.i18n import _
+from cmk.gui.quick_setup.private.widgets import (
+    ConditionalNotificationECAlertStageWidget,
+    ConditionalNotificationHostEventStageWidget,
+    ConditionalNotificationServiceEventStageWidget,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -41,7 +46,12 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
     StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper, Widget
+from cmk.gui.quick_setup.v0_unstable.widgets import (
+    Collapsible,
+    FormSpecId,
+    FormSpecWrapper,
+    Widget,
+)
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato._notification_parameter import notification_parameter_registry
@@ -276,7 +286,58 @@ def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> Non
 
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
-        return []
+        # TODO: add actual stage components. The conditional widgets are wrapper
+        #  widgets that allow to show/hide it's children based on the input in stage 1.
+        return [
+            ConditionalNotificationECAlertStageWidget(
+                items=[
+                    Collapsible(
+                        title=_("Event console filters"),
+                        items=[
+                            FormSpecWrapper(
+                                id=FormSpecId("filter_ec"),
+                                form_spec=DictionaryExtended(
+                                    layout=DictionaryLayout.two_columns,
+                                    elements={},
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+            ConditionalNotificationHostEventStageWidget(
+                items=[
+                    Collapsible(
+                        title=_("Host filters"),
+                        items=[
+                            FormSpecWrapper(
+                                id=FormSpecId("filter_hosts"),
+                                form_spec=DictionaryExtended(
+                                    layout=DictionaryLayout.two_columns,
+                                    elements={},
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+            ConditionalNotificationServiceEventStageWidget(
+                items=[
+                    Collapsible(
+                        title=_("Service filters"),
+                        items=[
+                            FormSpecWrapper(
+                                id=FormSpecId("filter_services"),
+                                form_spec=DictionaryExtended(
+                                    layout=DictionaryLayout.two_columns,
+                                    elements={},
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+        ]
 
     return QuickSetupStage(
         title=_("Filter for hosts/services"),

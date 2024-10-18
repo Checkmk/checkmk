@@ -16,6 +16,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 )
 from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
+from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
@@ -127,7 +128,7 @@ class QuickSetupAllStages:
 
 
 def _get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormData | None) -> dict:
-    if isinstance(widget, (ListOfWidgets, Collapsible)):
+    if isinstance(widget, (ListOfWidgets, Collapsible, ConditionalNotificationStageWidget)):
         widget_as_dict = asdict(widget)
         widget_as_dict["items"] = [
             _get_stage_components_from_widget(item, prefill_data) for item in widget.items

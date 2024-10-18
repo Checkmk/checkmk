@@ -62,6 +62,13 @@ private:
         std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
         std::chrono::system_clock::time_point since);
 
+    void handle_timeperiod_transition(
+        Query &query, const User &user, const ICore &core,
+        std::chrono::system_clock::duration query_timeframe,
+        const LogEntry *entry, bool only_update,
+        std::map<std::string, int> &notification_periods,
+        std::map<HostServiceKey, HostServiceState *> &state_info);
+
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hss);

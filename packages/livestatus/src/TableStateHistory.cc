@@ -444,22 +444,11 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                    object_blacklist, *object_filter, since);
                 break;
             }
-            case LogEntryKind::timeperiod_transition: {
-                try {
-                    const TimeperiodTransition tpt(entry->options());
-                    notification_periods[tpt.name()] = tpt.to();
-                    for (const auto &[key, hst] : state_info) {
-                        updateHostServiceState(
-                            query, user, core, query_timeframe, entry, hst,
-                            only_update, notification_periods);
-                    }
-                } catch (const std::logic_error &e) {
-                    Warning(core.loggerLivestatus())
-                        << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                        << entry->message();
-                }
+            case LogEntryKind::timeperiod_transition:
+                handle_timeperiod_transition(query, user, core, query_timeframe,
+                                             entry, only_update,
+                                             notification_periods, state_info);
                 break;
-            }
             case LogEntryKind::log_initial_states: {
                 // This feature is only available if log_initial_states is set
                 // to 1. If log_initial_states is set, each nagios startup logs
@@ -640,6 +629,25 @@ void TableStateHistory::handle_state_entry(
                                        notification_periods);
             }
         }
+    }
+}
+
+void TableStateHistory::handle_timeperiod_transition(
+    Query &query, const User &user, const ICore &core,
+    std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
+    bool only_update, std::map<std::string, int> &notification_periods,
+    std::map<HostServiceKey, HostServiceState *> &state_info) {
+    try {
+        const TimeperiodTransition tpt(entry->options());
+        notification_periods[tpt.name()] = tpt.to();
+        for (const auto &[key, hst] : state_info) {
+            updateHostServiceState(query, user, core, query_timeframe, entry,
+                                   hst, only_update, notification_periods);
+        }
+    } catch (const std::logic_error &e) {
+        Warning(core.loggerLivestatus())
+            << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+            << entry->message();
     }
 }
 

@@ -7,7 +7,13 @@ from collections.abc import Sequence
 from typing import cast, Literal
 from uuid import uuid4
 
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
+    EventRule,
+    GroupBy,
+    NotificationRuleID,
+    TimeperiodBulkParameters,
+)
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -48,7 +54,15 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper,
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato._notification_parameter import notification_parameter_registry
-from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
+from cmk.gui.wato.pages.notifications.quick_setup_types import (
+    AlwaysBulk,
+    AlwaysBulkTuple,
+    BulkingParameters,
+    NotificationMethod,
+    NotificationQuickSetupSpec,
+    TimeperiodBulk,
+    TimeperiodBulkTuple,
+)
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
@@ -858,7 +872,66 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
 
 def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule:
     # TODO: implement actual migration
-    return EventRule(
+
+    def _set_notification_effect_parameters(event_rule: EventRule) -> None:
+        def _get_always_bulk_parameters(
+            always_bulk: AlwaysBulk,
+        ) -> AlwaysBulkParameters:
+            always_bulk_params = AlwaysBulkParameters(
+                interval=int(always_bulk["combine"]),
+                count=always_bulk["max_notifications"],
+                groupby=cast(
+                    list[GroupBy],
+                    [k for k in always_bulk["bulking_parameters"] if k != "custom_macro"],
+                ),
+                groupby_custom=always_bulk["bulking_parameters"].get("custom_macro", []),
+            )
+            if "subject" in always_bulk:
+                always_bulk_params["bulk_subject"] = always_bulk["subject"]
+            return always_bulk_params
+
+        def _get_timeperiod_bulk_parameters(
+            timeperiod: str, time_period_bulk: TimeperiodBulk
+        ) -> TimeperiodBulkParameters:
+            time_period_bulk_params = TimeperiodBulkParameters(
+                timeperiod=timeperiod,
+                count=time_period_bulk["max_notifications"],
+                groupby=cast(
+                    list[GroupBy],
+                    [k for k in time_period_bulk["bulking_parameters"] if k != "custom_macro"],
+                ),
+                groupby_custom=time_period_bulk["bulking_parameters"].get("custom_macro", []),
+            )
+
+            if "subject" in time_period_bulk:
+                time_period_bulk_params["bulk_subject"] = time_period_bulk["subject"]
+
+            if "bulking_outside_timeperiod" in time_period_bulk:
+                time_period_bulk_params["bulk_outside"] = _get_always_bulk_parameters(
+                    time_period_bulk["bulking_outside_timeperiod"],
+                )
+            return time_period_bulk_params
+
+        if (
+            bulk_notification := notification["notification_method"].get("bulk_notification")
+        ) is not None:
+            if bulk_notification[0] == "always":
+                event_rule["bulk"] = (
+                    bulk_notification[0],
+                    _get_always_bulk_parameters(bulk_notification[1]),
+                )
+            else:
+                event_rule["bulk"] = (
+                    bulk_notification[0],
+                    _get_timeperiod_bulk_parameters(
+                        bulk_notification[1][0], bulk_notification[1][1]
+                    ),
+                )
+
+        # TODO: update once slidein is implemented
+        # event_rule["notify_plugin"] = notification["notification_method"]["method"]
+
+    event_rule = EventRule(
         rule_id=NotificationRuleID(str(uuid4())),
         allow_disable=False,
         contact_all=False,
@@ -868,6 +941,10 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
         disabled=False,
         notify_plugin=("mail", None),
     )
+
+    _set_notification_effect_parameters(event_rule)
+
+    return event_rule
 
 
 def load_notifications(object_id: str) -> ParsedFormData:
@@ -881,24 +958,81 @@ def load_notifications(object_id: str) -> ParsedFormData:
 
 def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> NotificationQuickSetupSpec:
     # TODO: add migration logic
-    return {
-        "triggering_events": {
+
+    def _get_notification_method() -> NotificationMethod:
+        def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple:
+            if (notifybulk := event_rule["bulk"]) is None:
+                return None
+
+            def _get_always_bulk(always_bulk_params: AlwaysBulkParameters) -> AlwaysBulk:
+                always_bulk = AlwaysBulk(
+                    combine=float(always_bulk_params["interval"]),
+                    bulking_parameters=cast(
+                        BulkingParameters,
+                        {
+                            "custom_macro": always_bulk_params["groupby_custom"],
+                            **{k: None for k in always_bulk_params["groupby"]},
+                        },
+                    ),
+                    max_notifications=always_bulk_params["count"],
+                )
+                if "bulk_subject" in always_bulk_params:
+                    always_bulk["subject"] = always_bulk_params["bulk_subject"]
+
+                return always_bulk
+
+            def _get_timeperiod_bulk(
+                timeperiod_bulk_params: TimeperiodBulkParameters,
+            ) -> TimeperiodBulk:
+                timeperiod_bulk = TimeperiodBulk(
+                    bulking_parameters=cast(
+                        BulkingParameters,
+                        {
+                            "custom_macro": timeperiod_bulk_params["groupby_custom"],
+                            **{k: None for k in timeperiod_bulk_params["groupby"]},
+                        },
+                    ),
+                    max_notifications=timeperiod_bulk_params["count"],
+                )
+
+                if "bulk_subject" in timeperiod_bulk_params:
+                    timeperiod_bulk["subject"] = timeperiod_bulk_params["bulk_subject"]
+
+                if "bulk_outside" in timeperiod_bulk_params:
+                    timeperiod_bulk["bulking_outside_timeperiod"] = _get_always_bulk(
+                        timeperiod_bulk_params["bulk_outside"]
+                    )
+
+                return timeperiod_bulk
+
+            if notifybulk[0] == "always":
+                return "always", _get_always_bulk(notifybulk[1])
+            return "timeperiod", (notifybulk[1]["timeperiod"], _get_timeperiod_bulk(notifybulk[1]))
+
+        notify_method = NotificationMethod(
+            notification_effect=object,
+            method=(event_rule["notify_plugin"][0], object),
+        )
+        if (bulk_notification := _bulk_type()) is not None:
+            notify_method["bulk_notification"] = bulk_notification
+
+        return notify_method
+
+    return NotificationQuickSetupSpec(
+        triggering_events={
             "host_events": [],
             "service_events": [],
             "ec_alerts": "Enabled",
         },
-        "filter_for_hosts_and_services": {
+        filter_for_hosts_and_services={
             "host_filters": None,
             "service_filters": None,
             "assignee_filters": None,
             "general_filters": None,
         },
-        "notification_method": {
-            "notification_effect": None,
-            "method": (event_rule["notify_plugin"][0], object),
-        },
-        "recipient": [("all_contacts_affected", None)],
-        "sending_conditions": {
+        notification_method=_get_notification_method(),
+        recipient=[("all_contacts_affected", None)],
+        sending_conditions={
             "frequency_and_timing": {
                 "restrict_timeperiod": "",
                 "limit_by_count": (1, 5),
@@ -909,13 +1043,13 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
                 "custom_by_comment": "",
             },
         },
-        "general_properties": {
+        general_properties={
             "description": "foo",
             "settings": {"disable_rule": None, "allow_users_to_disable": None},
             "comment": "",
             "documentation": "",
         },
-    }
+    )
 
 
 quick_setup_notifications = QuickSetup(

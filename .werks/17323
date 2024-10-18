@@ -1,0 +1,13 @@
+Title: Azure agent: fix query for backend IP configurations in virtual machine scale set
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1729834923
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+When retrieving backend IP configurations for a load balancer,
+the agent queried an incorrect API endpoint when handling network configurations
+associated with virtual machines, within a Virtual Machine Scale Set.
+This resulted in the error: <em>Management client: //aka.ms/ARMResourceNotFoundFix.</em>

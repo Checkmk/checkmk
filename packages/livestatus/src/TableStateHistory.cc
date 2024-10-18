@@ -404,8 +404,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             in_nagios_initial_states = false;
         }
 
-        HostServiceKey key = nullptr;
-        bool is_service = false;
         const auto *entry_host = core.find_host(entry->host_name());
         const auto *entry_service =
             core.find_service(entry->host_name(), entry->service_description());
@@ -421,23 +419,25 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service:
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
-            case LogEntryKind::flapping_service:
-                key = entry_service != nullptr
-                          ? entry_service->handleForStateHistory()
-                          : nullptr;
-                is_service = true;
-            // fall-through
+            case LogEntryKind::flapping_service: {
+                HostServiceKey key =
+                    entry_service == nullptr
+                        ? nullptr
+                        : entry_service->handleForStateHistory();
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods,
+                                   entry_host, entry_service, key, state_info,
+                                   object_blacklist, *object_filter, since);
+                break;
+            }
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
             case LogEntryKind::state_host_initial:
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host: {
-                if (!is_service) {
-                    key = entry_host == nullptr
-                              ? nullptr
-                              : entry_host->handleForStateHistory();
-                }
-
+                HostServiceKey key = entry_host == nullptr
+                                         ? nullptr
+                                         : entry_host->handleForStateHistory();
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods,
                                    entry_host, entry_service, key, state_info,

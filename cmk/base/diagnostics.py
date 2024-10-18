@@ -163,6 +163,8 @@ class DiagnosticsDump:
             FilesSizeCSVDiagnosticsElement(),
             PipFreezeDiagnosticsElement(),
             SELinuxJSONDiagnosticsElement(),
+            DpkgCSVDiagnosticsElement(),
+            RpmCSVDiagnosticsElement(),
             CMAJSONDiagnosticsElement(),
         ]
 
@@ -424,6 +426,54 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
                 )
 
         return "\n".join(csv_data)
+
+
+class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "dpkg_packages"
+
+    @property
+    def title(self) -> str:
+        return _("Dpkg packages information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `dpkg -l`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+        if not (dpkg_binary := shutil.which("dpkg")):
+            return ""
+
+        dpkg_output = subprocess.check_output([dpkg_binary, "-l"], text=True)
+        return "\n".join(
+            [";".join(l.split(maxsplit=4)) for l in dpkg_output.split("\n") if len(l.split()) > 4]
+        )
+
+
+class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
+    @property
+    def ident(self) -> str:
+        return "rpm_packages"
+
+    @property
+    def title(self) -> str:
+        return _("Rpm packages information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `rpm -qa`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+        if not (rpm_binary := shutil.which("rpm")):
+            return ""
+
+        output = subprocess.check_output(
+            [rpm_binary, "-qa", "--queryformat", r'"%{NAME};%{VERSION};%{RELEASE};%{ARCH}\n"'],
+            text=True,
+        )
+
+        return "\n".join(sorted(output.split("\n")))
 
 
 #   ---json dumps-----------------------------------------------------------

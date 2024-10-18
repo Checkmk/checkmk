@@ -424,9 +424,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             in_nagios_initial_states = false;
         }
 
-        const auto *entry_host = core.find_host(entry->host_name());
-        const auto *entry_service =
-            core.find_service(entry->host_name(), entry->service_description());
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -439,31 +436,22 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service:
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
-            case LogEntryKind::flapping_service: {
-                HostServiceKey key =
-                    entry_service == nullptr
-                        ? nullptr
-                        : entry_service->handleForStateHistory();
+            case LogEntryKind::flapping_service:
                 handle_state_entry(query, user, core, query_timeframe, entry,
-                                   only_update, notification_periods,
-                                   entry_host, entry_service, key, state_info,
-                                   object_blacklist, *object_filter, since);
+                                   only_update, notification_periods, false,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
                 break;
-            }
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
             case LogEntryKind::state_host_initial:
             case LogEntryKind::downtime_alert_host:
-            case LogEntryKind::flapping_host: {
-                HostServiceKey key = entry_host == nullptr
-                                         ? nullptr
-                                         : entry_host->handleForStateHistory();
+            case LogEntryKind::flapping_host:
                 handle_state_entry(query, user, core, query_timeframe, entry,
-                                   only_update, notification_periods,
-                                   entry_host, entry_service, key, state_info,
-                                   object_blacklist, *object_filter, since);
+                                   only_update, notification_periods, true,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
                 break;
-            }
             case LogEntryKind::timeperiod_transition:
                 handle_timeperiod_transition(query, user, core, query_timeframe,
                                              entry, only_update,
@@ -511,10 +499,21 @@ void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
     bool only_update, const std::map<std::string, int> &notification_periods,
-    const IHost *entry_host, const IService *entry_service, HostServiceKey key,
+    bool is_host_entry,
     std::map<HostServiceKey, HostServiceState *> &state_info,
     std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
     std::chrono::system_clock::time_point since) {
+    const auto *entry_host = core.find_host(entry->host_name());
+    const auto *entry_service =
+        core.find_service(entry->host_name(), entry->service_description());
+
+    HostServiceKey key =
+        is_host_entry
+            ? (entry_host == nullptr ? nullptr
+                                     : entry_host->handleForStateHistory())
+            : (entry_service == nullptr
+                   ? nullptr
+                   : entry_service->handleForStateHistory());
     if (key == nullptr) {
         return;
     }

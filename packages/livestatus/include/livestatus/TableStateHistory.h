@@ -19,8 +19,6 @@ class Column;
 class ColumnOffsets;
 class Filter;
 class ICore;
-class IHost;
-class IService;
 class LogCache;
 class LogEntry;
 class LogFiles;
@@ -56,8 +54,7 @@ private:
         std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, bool only_update,
         const std::map<std::string, int> &notification_periods,
-        const IHost *entry_host, const IService *entry_service,
-        HostServiceKey key,
+        bool is_host_entry,
         std::map<HostServiceKey, HostServiceState *> &state_info,
         std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
         std::chrono::system_clock::time_point since);

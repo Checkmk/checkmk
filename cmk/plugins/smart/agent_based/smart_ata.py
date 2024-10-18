@@ -72,6 +72,16 @@ def discover_smart_ata(section: Section) -> DiscoveryResult:
 
 
 def check_smart_ata(item: str, params: Mapping[str, int | None], section: Section) -> CheckResult:
+    yield from _check_smart_ata(item, params, section, get_value_store(), time.time())
+
+
+def _check_smart_ata(
+    item: str,
+    params: Mapping[str, int | None],
+    section: Section,
+    value_store: MutableMapping[str, object],
+    now: float,
+) -> CheckResult:
     if (disk := _get_disk_ata(section, item)) is None:
         return
 
@@ -123,7 +133,7 @@ def check_smart_ata(item: str, params: Mapping[str, int | None], section: Sectio
             metric_name="harddrive_uncorrectable_errors",
         )
 
-    yield from _check_command_timeout(disk, get_value_store(), time.time())
+    yield from _check_command_timeout(disk, value_store, now)
 
     if (reallocated_events := disk.by_id(196)) is not None:
         yield from _check_against_discovery(

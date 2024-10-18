@@ -267,7 +267,7 @@ def test_registered_configvars() -> None:
             "dcd_site_update_interval",
             "dcd_max_activation_delay",
             "dcd_max_hosts_per_bulk_discovery",
-            "dcd_prevent_non_discovered_notification",
+            "dcd_prevent_unwanted_notification",
             "dcd_web_api_connection",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",

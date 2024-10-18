@@ -288,8 +288,7 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
 namespace {
 void handle_log_initial_states(
     const LogEntry *entry,
-    const std::map<HostServiceKey, HostServiceState *> &state_info,
-    bool &in_nagios_initial_states) {
+    const std::map<HostServiceKey, HostServiceState *> &state_info) {
     // This feature is only available if log_initial_states is set to 1. If
     // log_initial_states is set, each nagios startup logs the initial states of
     // all known hosts and services. Therefore we can detect if a host is no
@@ -301,7 +300,6 @@ void handle_log_initial_states(
             hst->_may_no_longer_exist = true;
         }
     }
-    in_nagios_initial_states = true;
 }
 }  // namespace
 
@@ -458,8 +456,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                              notification_periods, state_info);
                 break;
             case LogEntryKind::log_initial_states:
-                handle_log_initial_states(entry, state_info,
-                                          in_nagios_initial_states);
+                handle_log_initial_states(entry, state_info);
+                in_nagios_initial_states = true;
                 break;
         }
     }

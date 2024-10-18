@@ -554,8 +554,8 @@ class CMKOpenApiSession(requests.Session):
 
             response = None
             while redirect_url:
-                if time.time() > (start + timeout):
-                    msg = f"Wait for completion timed out for {operation}; URL={redirect_url}!"
+                if (running_time := time.time() - start) > timeout:
+                    msg = f"Wait for completion timed out after {running_time}s for {operation}; URL={redirect_url}!"
                     if response and response.content:
                         msg += f"; Last response: {response.status_code}; {response.content}"
                     raise TimeoutError(msg)

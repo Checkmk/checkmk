@@ -781,6 +781,10 @@ msgstr "コンディション' 状態"
 msgid "'Critical' state"
 msgstr "[クリティカル]状態"
 
+#, fuzzy
+msgid "'Custom notifications' by comment"
+msgstr "通知コメントの一致"
+
 msgid "'Info' state"
 msgstr "\"情報\"状態"
 
@@ -6084,6 +6088,19 @@ msgstr ""
 "tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
 "check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
 
+#, fuzzy
+msgid ""
+"An optional URL pointing to documentation or any other page. This will be "
+"displayed as an icon and open a new page when clicked. You can use either "
+"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
+"<tt>check_mk/</tt>)."
+msgstr ""
+"ドキュメントまたはその他のページを指すオプションのURL。これはアイコン%sとして"
+"表示され、クリックすると新しいページが開きます。グローバルURL(<tt> http://</"
+"tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
+"check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
+
 msgid "An optional alias name for your MySQL socket"
 msgstr "mysqlソケットのエイリアス名 オプション"
 
@@ -6814,6 +6831,10 @@ msgstr ""
 "これらの文字列の少なくとも1つは、サーバー応答の最初の(ステータス)行に含まれて"
 "いる必要があります(デフォルト: <tt>HTTP/1.</tt>)。指定した場合、他のすべての"
 "ステータスラインロジックをスキップします(例: 3xx、4xx、5xx 処理)"
+
+#, fuzzy
+msgid "At least one selection is missing."
+msgstr "ファイルが欠落しているときの状態"
 
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -8933,6 +8954,10 @@ msgstr "バルクディスカバリー"
 msgid "Bulk ID"
 msgstr "バルクID"
 
+#, fuzzy
+msgid "Bulk Notification"
+msgstr "一括通知を開く"
+
 msgid "Bulk discovery"
 msgstr "一括発見"
 
@@ -8960,6 +8985,10 @@ msgstr "ホストの一括インポート"
 
 msgid "Bulk move"
 msgstr "一括移動"
+
+#, fuzzy
+msgid "Bulk notification"
+msgstr "一括通知を開く"
 
 #, fuzzy
 msgid "Bulk notifications"
@@ -9726,6 +9755,10 @@ msgstr "ホストグループによる"
 msgid "By number of Robotmk executions"
 msgstr "Robotmkの実行回数による"
 
+#, fuzzy
+msgid "By plugin output"
+msgstr "プラグイン出力"
+
 msgid "By service group"
 msgstr "サービスグループによる"
 
@@ -9762,7 +9795,7 @@ msgstr "特定のホストのプロキシをバイパスする"
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
 "adresses which should not be accessed through the given proxy.<br>The proxy "
-"setting is used for access to the internet, where RCC needs to ownload the "
+"setting is used for access to the internet, where RCC needs to download the "
 "installation files from. (In order to access a page through a proxy inside "
 "of the test suite, use the libraries capabilities)"
 msgstr ""
@@ -10999,11 +11032,11 @@ msgid "Changed host selection has been saved."
 msgstr "変更されたホストの選択が保存されました。"
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %d"
+msgid "Changed notification parameter #%s"
 msgstr "通知ルール %d を変更しました"
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %s"
+msgid "Changed notification parameter %d"
 msgstr "通知ルール %d を変更しました"
 
 #, python-format
@@ -12438,6 +12471,10 @@ msgstr "クローンホスト"
 msgid "Clone hosts"
 msgstr "クローンホスト"
 
+#, fuzzy, python-format
+msgid "Clone managed robot %s"
+msgstr "管理対象オブジェクト"
+
 #, python-format
 msgid "Clone report schedule entry %s"
 msgstr "レポートスケジュールエントリ %sのクローンを作成する"
@@ -12757,6 +12794,10 @@ msgstr "一致するカラム"
 
 msgid "Com. buf. max/total"
 msgstr "Com. Buf. 最大/合計"
+
+#, fuzzy
+msgid "Combine within last"
+msgstr "最後の内の通知"
 
 msgid "Combined graph"
 msgstr "結合グラフ"
@@ -13284,8 +13325,8 @@ msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
 
 #, fuzzy
-msgid "Configure host and authority"
-msgstr "コンフィギュレーション"
+msgid "Configure host"
+msgstr "設定"
 
 #, fuzzy
 msgid "Configure host and regions"
@@ -13880,6 +13921,10 @@ msgstr "[graphing#rrds|RRD] データカラムの連結機能"
 msgid "Consolidation functions"
 msgstr "統合機能"
 
+#, fuzzy
+msgid "Constant"
+msgstr "インスタンス"
+
 #, python-format
 msgid "Constant value %.2f"
 msgstr "定数値 %.2f"
@@ -14039,6 +14084,10 @@ msgstr "レポートの内容 %s"
 
 msgid "Content-Type"
 msgstr "コンテンツタイプ"
+
+#, fuzzy
+msgid "Content-based filtering"
+msgstr "ホスト名の一致"
 
 msgid "Contents"
 msgstr "内容"
@@ -14309,6 +14358,12 @@ msgid ""
 "Could not access your AWS account. Please check your Access and Secret key "
 "and try again."
 msgstr ""
+
+#, fuzzy
+msgid "Could not access your Azure account. Please check your credentials."
+msgstr ""
+"同期するユーザーオブジェクトが見つかりませんでした。フィルタ設定を確認してく"
+"ださい。"
 
 #, python-format
 msgid ""
@@ -17923,6 +17978,9 @@ msgstr "ダイジェスト(MD5)"
 msgid "Digests"
 msgstr "ダイジェスト"
 
+msgid "Digits"
+msgstr ""
+
 msgid "Direct I/O"
 msgstr "ダイレクトI/O"
 
@@ -19105,6 +19163,10 @@ msgstr "レベルを課さないでください"
 msgid "Do not impose levels, always be OK"
 msgstr "レベルを課さないでください、常に大丈夫です"
 
+#, fuzzy
+msgid "Do not include in monitoring hosts to be discovered"
+msgstr "検出されるホストがありません"
+
 msgid "Do not manage the controllers auto-registration"
 msgstr "コントローラーの自動登録を管理しない"
 
@@ -19743,6 +19805,10 @@ msgstr "ベータ・フェーズの間、サービス数は %s に制限され�
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
 
+#, fuzzy
+msgid "During time period"
+msgstr "期間中のバルク"
+
 msgid "Dw"
 msgstr "Dw"
 
@@ -19761,6 +19827,10 @@ msgid "Dynamic configuration bulk discovery timeout"
 msgstr "動的構成ロギング"
 
 msgid "Dynamic configuration logging"
+msgstr "動的構成ロギング"
+
+#, fuzzy
+msgid "Dynamic configuration site activate changes delay"
 msgstr "動的構成ロギング"
 
 #, fuzzy
@@ -20054,7 +20124,7 @@ msgid "Edit %s"
 msgstr "%sを編集する"
 
 #, fuzzy, python-format
-msgid "Edit %s notification parameter %s"
+msgid "Edit %s notification parameter #%s"
 msgstr "通知ルール %d を編集する"
 
 #, python-format
@@ -20202,6 +20272,10 @@ msgstr "レイアウトを編集する"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "ヘッダーが有効な場合のみ、レイアウトの編集が可能"
+
+#, fuzzy, python-format
+msgid "Edit managed robot %s"
+msgstr "管理対象オブジェクト"
 
 #, fuzzy
 msgid "Edit managed robots"
@@ -21130,6 +21204,9 @@ msgstr "EngineCPU使用率"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "エンジンIDs(SNMPv3にのみ必要)"
 
+msgid "Engineering scientific"
+msgstr ""
+
 msgid "English"
 msgstr "English"
 
@@ -21395,6 +21472,10 @@ msgstr "エラー処理"
 msgid "Error information log entries"
 msgstr "エラーインフォメーションログエントリ"
 
+#, python-format
+msgid "Error on creating FormSpec from old ValueSpec for method %s: %s"
+msgstr ""
+
 msgid "Error rate"
 msgstr "エラーレート"
 
@@ -21607,10 +21688,6 @@ msgstr "イベントコメント"
 
 msgid "Event console"
 msgstr "イベントコンソール"
-
-#, fuzzy
-msgid "Event console alerts"
-msgstr "イベントコンソールアラート"
 
 msgid "Event console performance"
 msgstr "イベントコンソールのパフォーマンス"
@@ -23232,10 +23309,6 @@ msgstr "以下のファイルサイズ"
 msgid "File size levels"
 msgstr "ファイルサイズレベル"
 
-#, fuzzy
-msgid "File upload"
-msgstr "バイトアップロード済"
-
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -23492,6 +23565,10 @@ msgstr "1ページ目"
 
 msgid "First time the downtime starts"
 msgstr "最初のダウンタイム開始"
+
+#, fuzzy
+msgid "First with unit"
+msgstr "長さでフェッチ"
 
 #, fuzzy
 msgid "First work day of last month"
@@ -24939,6 +25016,10 @@ msgstr "グラフコレクション '%s'は存在しません"
 msgid "Graph collections"
 msgstr "グラフコレクション"
 
+#, fuzzy
+msgid "Graph designer"
+msgstr "GUIデザイン"
+
 msgid "Graph is disabled"
 msgstr "グラフが無効になっています"
 
@@ -24947,6 +25028,18 @@ msgstr "グラフが表示されます"
 
 msgid "Graph layout"
 msgstr "グラフレイアウト"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "グラフオプション"
+
+#, fuzzy
+msgid "Graph metrics with zero values"
+msgstr "すべてゼロの値を持つメトリック"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "グラフオプション"
 
 msgid "Graph rendering options"
 msgstr "グラフレンダリングオプション"
@@ -35150,6 +35243,10 @@ msgstr "ログインを一度に1つのセッションに制限する"
 msgid "Limit maximum number used CPUs"
 msgstr "使用されるCPUの最大数を制限する"
 
+#, fuzzy
+msgid "Limit notifications by count to"
+msgstr "最終通知"
+
 msgid "Limit number of processed search results"
 msgstr "処理される検索結果の数を制限する"
 
@@ -36556,6 +36653,15 @@ msgstr ""
 msgid "MQTT broker statistics"
 msgstr "MQTTブローカー統計"
 
+msgid "MQTTv31"
+msgstr ""
+
+msgid "MQTTv311"
+msgstr ""
+
+msgid "MQTTv5"
+msgstr ""
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -37035,10 +37141,6 @@ msgstr "監視システムのユーザーを管理します。"
 
 #, fuzzy
 msgid "Managed Robot"
-msgstr "管理対象オブジェクト"
-
-#, fuzzy
-msgid "Managed Robots"
 msgstr "管理対象オブジェクト"
 
 #, fuzzy
@@ -37537,6 +37639,10 @@ msgstr "最大カウント"
 msgid "Max. duration after downtime starts: "
 msgstr "ダウンタイム開始後の最長時間: "
 
+#, fuzzy
+msgid "Max. notifications per bulk"
+msgstr "通知ルール"
+
 msgid "Max. number of SSL connections"
 msgstr "最大 SSL接続の数"
 
@@ -37606,6 +37712,9 @@ msgstr "ログファイルの最大サイズ"
 
 msgid "Maximal number of daemon threads"
 msgstr "デーモンスレッドの最大数"
+
+msgid "Maximal number of hosts per bulk discovery REST API call"
+msgstr ""
 
 msgid "Maximal number of log files to backup"
 msgstr "バックアップするログファイルの最大数"
@@ -37785,8 +37894,16 @@ msgid "Maximum latency of successful query requests"
 msgstr "成功したクエリリクエストの最大レイテンシ"
 
 #, fuzzy
+msgid "Maximum levels for current"
+msgstr "電圧の最大レベル"
+
+#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "負荷の最大レベル(パーセント)"
+
+#, fuzzy
+msgid "Maximum levels for power"
+msgstr "電圧の最大レベル"
 
 #, fuzzy
 msgid "Maximum levels for voltage"
@@ -38600,8 +38717,16 @@ msgid "Minimum error count"
 msgstr "最小エラー数"
 
 #, fuzzy
+msgid "Minimum levels for current"
+msgstr "電圧の最小レベル"
+
+#, fuzzy
 msgid "Minimum levels for load in percent"
 msgstr "負荷の最小レベル(パーセント)"
+
+#, fuzzy
+msgid "Minimum levels for power"
+msgstr "電圧の最小レベル"
 
 #, fuzzy
 msgid "Minimum levels for voltage"
@@ -40203,9 +40328,7 @@ msgstr "名前解決"
 msgid "Name your %s for easy recognition."
 msgstr "わかりやすいように%sに名前をつけます。"
 
-msgid ""
-"Name your host, define the path and select the authority you would like to "
-"monitor"
+msgid "Name your host and define the folder"
 msgstr ""
 
 msgid ""
@@ -40590,8 +40713,24 @@ msgid "New host label: "
 msgid_plural "New host labels: "
 msgstr[0] "新しいホストラベル: "
 
+#, fuzzy
+msgid "New managed robot"
+msgstr "管理対象オブジェクト"
+
 msgid "New name"
 msgstr "新しい名前"
+
+#, fuzzy, python-format
+msgid "New notification rule #%d successfully created!"
+msgstr "ホスト作成に成功しました"
+
+#, fuzzy
+msgid "New notification rule successfully created!"
+msgstr "ホスト作成に成功しました"
+
+#, fuzzy
+msgid "New notification setup"
+msgstr "次の通知"
 
 #, fuzzy
 msgid "New password"
@@ -40705,9 +40844,9 @@ msgstr "条件なし"
 msgid "No Configuration Quick setup for %s available"
 msgstr "構成変数:"
 
-#, fuzzy, python-format
-msgid "No FormSpec implementation for method '%s' found."
-msgstr "通知ルール %d を変更しました"
+#, python-format
+msgid "No Dictionary ValueSpec within Migrate: %s"
+msgstr ""
 
 msgid "No IP"
 msgstr "IPなし"
@@ -41684,8 +41823,16 @@ msgstr "通知コメント"
 msgid "Notification delivery rate"
 msgstr "通知システム"
 
+#, fuzzy
+msgid "Notification effect"
+msgstr "通知方法"
+
 msgid "Notification events of hosts."
 msgstr "ホストの通知イベント。"
+
+#, fuzzy
+msgid "Notification frequency and timing"
+msgstr "%s 通知ルール"
 
 msgid "Notification log level"
 msgstr "通知ログレベル"
@@ -41736,6 +41883,14 @@ msgstr "通知優先度（アラートソースに設定されている優先度
 
 msgid "Notification rule"
 msgstr "通知ルール"
+
+#, fuzzy
+msgid "Notification rule does not exist."
+msgstr "グラフコレクション '%s'は存在しません"
+
+#, fuzzy, python-format
+msgid "Notification rule number #%d successfully edited!"
+msgstr "ユーザー %s の通知ルール"
 
 #, python-format
 msgid "Notification rule of user '%s'"
@@ -43422,6 +43577,10 @@ msgstr "オペレーション"
 
 msgid "Operations States"
 msgstr "運用状態"
+
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "選択したメトリックの操作"
 
 msgid "Operations per second"
 msgstr "1秒あたりの操作数"
@@ -46546,10 +46705,6 @@ msgstr "通常のIPアドレスにpingを実行します"
 msgid "Ping timeout"
 msgstr "Pingタイムアウト"
 
-#, fuzzy
-msgid "Placeholder"
-msgstr "プレースホルダーVM"
-
 msgid "Placeholder VMs"
 msgstr "プレースホルダーVM"
 
@@ -46601,8 +46756,12 @@ msgstr ""
 "ければならない。"
 
 #, fuzzy
-msgid "Plan settings"
+msgid "Plan Settings"
 msgstr "グローバル設定"
+
+#, fuzzy
+msgid "Plan configuration"
+msgstr "構成"
 
 msgid "Plans"
 msgstr "Plans"
@@ -46937,6 +47096,10 @@ msgstr ".xml'ファイルをご提供ください"
 
 msgid "Please provide a hostname to test with."
 msgstr "テストするホスト名を指定してください。"
+
+#, fuzzy
+msgid "Please provide a path that is relative both on Linux and Windows."
+msgstr "有効な名前を入力してください"
 
 #, fuzzy
 msgid "Please provide a relative Windows path"
@@ -50800,6 +50963,10 @@ msgstr "インターフェイスアイテムを制限する"
 msgid "Restrict monitoring services by one of these AWS tags"
 msgstr "AWSタグで監視サービスを制限する"
 
+#, fuzzy
+msgid "Restrict notifications to a time period"
+msgstr "サービス通知期間"
+
 msgid "Restrict number of processed messages per cycle"
 msgstr "サイクルごとに処理されるメッセージの数を制限する"
 
@@ -51088,10 +51255,6 @@ msgstr "ロボット・フレーム: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "ロボットフレームワーク:最終ログ"
-
-#, fuzzy
-msgid "Robot package"
-msgstr "パッケージの取り外し"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -52210,6 +52373,9 @@ msgstr "保存された読み取り専用設定"
 msgid "Saved space"
 msgstr "保存スペース"
 
+msgid "Scalar"
+msgstr ""
+
 msgid "Scale to width of page"
 msgstr "ページの幅に合わせて拡大縮小"
 
@@ -52998,6 +53164,10 @@ msgid "Select the type of fixed page element"
 msgstr "固定ページ要素のタイプを選択します"
 
 #, fuzzy
+msgid "Select time period"
+msgstr "期間を選択してください"
+
+#, fuzzy
 msgid "Select type from list"
 msgstr "リストから個々のファイルを選択します"
 
@@ -53256,6 +53426,10 @@ msgstr "送信済みトラフィックと受信済みトラフィックの内訳
 
 msgid "Sentinel"
 msgstr "Sentinel"
+
+#, fuzzy
+msgid "Separate bulk notifications for"
+msgstr "一括通知を開く"
 
 msgid "Separate check"
 msgstr "個別チェック"
@@ -56438,6 +56612,16 @@ msgstr ""
 "\\checkmk\\agent\\robotmk_output\\working\\suites\\ ' )を、一定時間後または一"
 "定回数のテスト実行後にクリーンアップするかどうかを指定します。"
 
+#, fuzzy
+msgid ""
+"Specify here whether the working directory of Robotmk on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
+msgstr ""
+"ターゲットホスト上のRobotmkの作業ディレクトリ(デフォルトは ' C:\\ProgramData"
+"\\checkmk\\agent\\robotmk_output\\working\\suites\\ ' )を、一定時間後または一"
+"定回数のテスト実行後にクリーンアップするかどうかを指定します。"
+
 #, fuzzy, python-format
 msgid ""
 "Specify how Checkmk will translate the exit code of a task into a monitoring "
@@ -56644,6 +56828,11 @@ msgstr ""
 "できません。したがって、この値が指定されていない場合、これらのテーブルの平均"
 "使用量は計算されません。"
 
+msgid ""
+"Specify the location where the host will be created. If left empty, the host "
+"will be created in the root folder."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
@@ -56672,6 +56861,11 @@ msgstr "VMの名前を指定します(例:z4065012)。"
 
 msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
 msgstr "宛先ホストの名前、つまり <tt>checkmk.com</tt>を指定します"
+
+msgid ""
+"Specify the name of your host where all the services will be located. The "
+"host name must be unique."
+msgstr ""
 
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr "LDAPディレクトリへのバインドに使用するパスワードを指定します。"
@@ -57001,6 +57195,10 @@ msgstr "往復時間の標準偏差(ミリ秒)"
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "往復時間の標準偏差(ミリ秒)"
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "標準的なトピックス"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -58316,6 +58514,10 @@ msgstr "セクション名"
 
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
+
+#, fuzzy
+msgid "Subject line"
+msgstr "セクション名"
 
 #, fuzzy
 msgid "Subject line for host notifications"
@@ -62017,6 +62219,15 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
+
+#, fuzzy, python-format
+msgid ""
+"The managed robot with ID %s that you attempted to clone does not exist."
+msgstr "クローンしようとしているスケジュールが存在しない。"
+
+#, fuzzy, python-format
+msgid "The managed robot with ID %s that you attempted to edit does not exist."
+msgstr "編集しようとしているユーザーは存在しません。"
 
 msgid "The mandatory group name is missing"
 msgstr "必須のグループ名がありません"
@@ -68020,6 +68231,19 @@ msgstr ""
 "ルトのチェック間隔と一致します。"
 
 msgid ""
+"This setting decides how late your changes will be activated. Default is 10 "
+"minutes"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This setting decides how many hosts will be discovered in one Api call. "
+"Default is 20"
+msgstr ""
+"この設定は、Windowsファイアウォールでポートをどのように有効にするかを決定しま"
+"す。"
+
+msgid ""
 "This setting decides how often the dynamic configuration daemon will get "
 "updates from the the site. Default is 5 minutes"
 msgstr ""
@@ -68032,6 +68256,9 @@ msgstr ""
 msgid ""
 "This setting decides when the bulk discovery operation will be timed out. "
 "Default is 2 minutes"
+msgstr ""
+
+msgid "This setting decides whether we prevent false alarms. Default is True"
 msgstr ""
 
 msgid ""
@@ -68702,6 +68929,10 @@ msgstr "スロットルされたリクエスト"
 
 msgid "Throttles"
 msgstr "スロットル"
+
+#, fuzzy
+msgid "Throttling of 'Periodic notifications'"
+msgstr "スロットル定期通知"
 
 msgid "Throughput"
 msgstr "スループット"
@@ -72103,6 +72334,10 @@ msgstr "転送中:%d新規、%d変更、%d消失ファイル"
 
 msgid "Transform status output"
 msgstr "変換ステータス出力"
+
+#, fuzzy
+msgid "Transformation"
+msgstr "熱情報"
 
 msgid "Transformation on selected metric"
 msgstr "選択したメトリックの変換"
@@ -76443,6 +76678,10 @@ msgid "Vertical axis width"
 msgstr "縦軸幅"
 
 msgid "Vertical padding"
+msgstr "垂直パディング"
+
+#, fuzzy
+msgid "Vertical range"
 msgstr "垂直パディング"
 
 msgid "Vertical rules"
@@ -81264,6 +81503,10 @@ msgstr "TCP経由でのコマンドやアクションの実行を許可する"
 msgid "allow users to deactivate this notification"
 msgstr "ユーザーがこの通知を非アクティブ化できるようにする"
 
+#, fuzzy
+msgid "and"
+msgstr "バンド"
+
 msgid "any"
 msgstr "どれか"
 
@@ -81356,6 +81599,9 @@ msgstr "予測値を下回る"
 
 msgid "best state"
 msgstr "最高の状態"
+
+msgid "between"
+msgstr ""
 
 msgid "bindings"
 msgstr "バインディング"
@@ -82835,6 +83081,10 @@ msgstr "秒"
 msgid "security token"
 msgstr "セキュリティトークン"
 
+#, fuzzy
+msgid "send every"
+msgstr "すべてを送信する"
+
 msgid "send notifications of contactgroup:"
 msgstr "コンタクトグループの通知を送信します。"
 
@@ -82916,6 +83166,10 @@ msgstr "ソケットは、ネットワークに残っているパケットを閉
 
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
+
+#, fuzzy
+msgid "starting with notification number"
+msgstr "通知番号に制限する"
 
 msgid "status entries"
 msgstr "ステータスエントリ"
@@ -83268,6 +83522,34 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Configure host and authority"
+#~ msgstr "コンフィギュレーション"
+
+#, fuzzy, python-format
+#~ msgid "No FormSpec implementation for method '%s' found."
+#~ msgstr "通知ルール %d を変更しました"
+
+#, fuzzy
+#~ msgid "Event console alerts"
+#~ msgstr "イベントコンソールアラート"
+
+#, fuzzy
+#~ msgid "File upload"
+#~ msgstr "バイトアップロード済"
+
+#, fuzzy
+#~ msgid "Placeholder"
+#~ msgstr "プレースホルダーVM"
+
+#, fuzzy
+#~ msgid "Robot package"
+#~ msgstr "パッケージの取り外し"
+
+#, fuzzy
+#~ msgid "Managed Robots"
+#~ msgstr "管理対象オブジェクト"
 
 #, fuzzy
 #~ msgid ""

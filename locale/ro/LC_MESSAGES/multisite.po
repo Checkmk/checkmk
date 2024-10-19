@@ -793,6 +793,10 @@ msgstr "Starea \"Condition"
 msgid "'Critical' state"
 msgstr "Stare \"critică"
 
+#, fuzzy
+msgid "'Custom notifications' by comment"
+msgstr "Comentariu de notificare a meciului"
+
 msgid "'Info' state"
 msgstr "Starea 'Info'"
 
@@ -6376,6 +6380,20 @@ msgstr ""
 "URL-uri relative (care sunt relative la <tt>check_mk/</tt>)."
 
 #, fuzzy
+msgid ""
+"An optional URL pointing to documentation or any other page. This will be "
+"displayed as an icon and open a new page when clicked. You can use either "
+"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
+"<tt>check_mk/</tt>)."
+msgstr ""
+"Un URL opțional care indică documentația sau orice altă pagină. Aceasta va "
+"fi afișată sub forma unei pictograme %s și va deschide o nouă pagină atunci "
+"când se face clic pe ea. Puteți utiliza fie URL-uri globale (începând cu "
+"<tt>http://</tt>), fie URL-uri locale absolute (începând cu <tt>/</tt>), fie "
+"URL-uri relative (care sunt relative la <tt>check_mk/</tt>)."
+
+#, fuzzy
 msgid "An optional alias name for your MySQL socket"
 msgstr "Un nume alias opțional pentru socket-ul mysql"
 
@@ -7138,6 +7156,10 @@ msgstr ""
 "linie (de stare) a răspunsului serverului (implicit: <tt>HTTP/1.</tt>). Dacă "
 "este specificat, sare peste toate celelalte logici ale liniei de stare (ex: "
 "procesarea 3xx, 4xx, 5xx)"
+
+#, fuzzy
+msgid "At least one selection is missing."
+msgstr "Starea când lipsește fișierul"
 
 #, fuzzy
 msgid ""
@@ -9313,6 +9335,10 @@ msgstr "Descoperire în vrac"
 msgid "Bulk ID"
 msgstr "Identificare în vrac"
 
+#, fuzzy
+msgid "Bulk Notification"
+msgstr "Deschideți notificări în masă"
+
 msgid "Bulk discovery"
 msgstr "Descoperire în vrac"
 
@@ -9341,6 +9367,10 @@ msgstr "Importul de gazde în masă"
 
 msgid "Bulk move"
 msgstr "Mutarea în vrac"
+
+#, fuzzy
+msgid "Bulk notification"
+msgstr "Deschideți notificări în masă"
 
 #, fuzzy
 msgid "Bulk notifications"
@@ -10175,6 +10205,10 @@ msgid "By number of Robotmk executions"
 msgstr "În funcție de numărul de execuții Robotmk"
 
 #, fuzzy
+msgid "By plugin output"
+msgstr "Ieșirea plugin-ului"
+
+#, fuzzy
 msgid "By service group"
 msgstr "Pe grupe de servicii"
 
@@ -10213,7 +10247,7 @@ msgstr "Bypassarea Proxy pentru anumite gazde"
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
 "adresses which should not be accessed through the given proxy.<br>The proxy "
-"setting is used for access to the internet, where RCC needs to ownload the "
+"setting is used for access to the internet, where RCC needs to download the "
 "installation files from. (In order to access a page through a proxy inside "
 "of the test suite, use the libraries capabilities)"
 msgstr ""
@@ -11485,11 +11519,11 @@ msgid "Changed host selection has been saved."
 msgstr "Selecția modificată a gazdei a fost salvată."
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %d"
+msgid "Changed notification parameter #%s"
 msgstr "Regula de notificare modificată %d"
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %s"
+msgid "Changed notification parameter %d"
 msgstr "Regula de notificare modificată %d"
 
 #, python-format
@@ -13021,6 +13055,10 @@ msgstr "Clonarea gazdei"
 msgid "Clone hosts"
 msgstr "Gazde clone"
 
+#, fuzzy, python-format
+msgid "Clone managed robot %s"
+msgstr "Obiecte gestionate"
+
 #, python-format
 msgid "Clone report schedule entry %s"
 msgstr "Clonarea înregistrării din programul de raportare %s"
@@ -13348,6 +13386,10 @@ msgstr "Coloane care să corespundă"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
+
+#, fuzzy
+msgid "Combine within last"
+msgstr "notificări în ultimele"
 
 msgid "Combined graph"
 msgstr "Graficul combinat"
@@ -13892,8 +13934,8 @@ msgid "Configure grouping of interfaces"
 msgstr "Configurați gruparea interfețelor"
 
 #, fuzzy
-msgid "Configure host and authority"
-msgstr "Configurație"
+msgid "Configure host"
+msgstr "Configurați"
 
 #, fuzzy
 msgid "Configure host and regions"
@@ -14530,6 +14572,10 @@ msgstr "Funcție de consolidare pentru coloana de date [graphing#rrds|RRD]."
 msgid "Consolidation functions"
 msgstr "Funcții de consolidare"
 
+#, fuzzy
+msgid "Constant"
+msgstr "Instanța"
+
 #, python-format
 msgid "Constant value %.2f"
 msgstr "Valoare constantă %.2f"
@@ -14698,6 +14744,10 @@ msgstr "Conținutul raportului %s."
 
 msgid "Content-Type"
 msgstr "Content-Type"
+
+#, fuzzy
+msgid "Content-based filtering"
+msgstr "Potrivire bazată pe linii"
 
 msgid "Contents"
 msgstr "Cuprins"
@@ -14979,6 +15029,12 @@ msgid ""
 "Could not access your AWS account. Please check your Access and Secret key "
 "and try again."
 msgstr ""
+
+#, fuzzy
+msgid "Could not access your Azure account. Please check your credentials."
+msgstr ""
+"Nu s-a găsit niciun obiect utilizator pentru sincronizare. Vă rugăm să "
+"verificați setările de filtrare."
 
 #, python-format
 msgid ""
@@ -18776,6 +18832,9 @@ msgstr "Digest (MD5)"
 msgid "Digests"
 msgstr "Digeste"
 
+msgid "Digits"
+msgstr ""
+
 msgid "Direct I/O"
 msgstr "I/O direct"
 
@@ -20079,6 +20138,10 @@ msgstr "Nu impuneți niveluri"
 msgid "Do not impose levels, always be OK"
 msgstr "Nu impuneți niveluri, fiți întotdeauna OK"
 
+#, fuzzy
+msgid "Do not include in monitoring hosts to be discovered"
+msgstr "Nu există gazde care să fie descoperite"
+
 msgid "Do not manage the controllers auto-registration"
 msgstr "Nu gestionați auto-înregistrarea controlorilor"
 
@@ -20715,6 +20778,10 @@ msgstr ""
 msgid "During this time period no monitoring data is available"
 msgstr "În această perioadă de timp nu sunt disponibile date de monitorizare"
 
+#, fuzzy
+msgid "During time period"
+msgstr "Volumul în timpul perioadei de timp"
+
 msgid "Dw"
 msgstr "Dw"
 
@@ -20733,6 +20800,10 @@ msgid "Dynamic configuration bulk discovery timeout"
 msgstr "Înregistrarea configurației dinamice"
 
 msgid "Dynamic configuration logging"
+msgstr "Înregistrarea configurației dinamice"
+
+#, fuzzy
+msgid "Dynamic configuration site activate changes delay"
 msgstr "Înregistrarea configurației dinamice"
 
 #, fuzzy
@@ -21037,7 +21108,7 @@ msgid "Edit %s"
 msgstr "Editare %s"
 
 #, fuzzy, python-format
-msgid "Edit %s notification parameter %s"
+msgid "Edit %s notification parameter #%s"
 msgstr "Editarea regulii de notificare %d"
 
 #, python-format
@@ -21188,6 +21259,10 @@ msgstr "Editați aspectul"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Editarea aspectului este disponibilă numai dacă este activat antetul"
+
+#, fuzzy, python-format
+msgid "Edit managed robot %s"
+msgstr "Obiecte gestionate"
 
 #, fuzzy
 msgid "Edit managed robots"
@@ -22141,6 +22216,9 @@ msgstr "Utilizarea CPU a motorului"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "ID-uri de motor (necesare numai pentru SNMPv3)"
 
+msgid "Engineering scientific"
+msgstr ""
+
 msgid "English"
 msgstr "Engleză"
 
@@ -22420,6 +22498,10 @@ msgstr "Gestionarea erorilor"
 msgid "Error information log entries"
 msgstr "Intrări în jurnalul de informații despre erori"
 
+#, python-format
+msgid "Error on creating FormSpec from old ValueSpec for method %s: %s"
+msgstr ""
+
 msgid "Error rate"
 msgstr "Rata de eroare"
 
@@ -22633,10 +22715,6 @@ msgstr "Comentariu la eveniment"
 
 msgid "Event console"
 msgstr "Consola de evenimente"
-
-#, fuzzy
-msgid "Event console alerts"
-msgstr "Alertele din consola de evenimente"
 
 msgid "Event console performance"
 msgstr "Performanța consolei de evenimente"
@@ -24277,10 +24355,6 @@ msgstr "Dimensiunea fișierului de mai jos"
 msgid "File size levels"
 msgstr "Niveluri de mărime a fișierelor"
 
-#, fuzzy
-msgid "File upload"
-msgstr "Byte încărcate"
-
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -24537,6 +24611,10 @@ msgstr "Prima pagină"
 
 msgid "First time the downtime starts"
 msgstr "Prima dată când începe timpul de nefuncționare"
+
+#, fuzzy
+msgid "First with unit"
+msgstr "Preluare cu lungime"
 
 #, fuzzy
 msgid "First work day of last month"
@@ -26005,6 +26083,10 @@ msgstr "Colecția de grafice \"%s\" nu există"
 msgid "Graph collections"
 msgstr "Colecții de grafice"
 
+#, fuzzy
+msgid "Graph designer"
+msgstr "Proiectare GUI"
+
 msgid "Graph is disabled"
 msgstr "Graficul este dezactivat"
 
@@ -26013,6 +26095,18 @@ msgstr "Graficul este vizibil"
 
 msgid "Graph layout"
 msgstr "Dispunerea graficului"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "Opțiuni grafice"
+
+#, fuzzy
+msgid "Graph metrics with zero values"
+msgstr "Metrici cu toate valorile zero"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "Opțiuni grafice"
 
 msgid "Graph rendering options"
 msgstr "Opțiuni de redare grafică"
@@ -36428,6 +36522,10 @@ msgstr "Limitați autentificarea la o singură sesiune la un moment dat"
 msgid "Limit maximum number used CPUs"
 msgstr "Limitarea numărului maxim de cpu-uri utilizate"
 
+#, fuzzy
+msgid "Limit notifications by count to"
+msgstr "Notificări de testare pe"
+
 msgid "Limit number of processed search results"
 msgstr "Limitarea numărului de rezultate de căutare procesate"
 
@@ -37853,6 +37951,15 @@ msgstr ""
 msgid "MQTT broker statistics"
 msgstr "Statisticile brokerului MQTT"
 
+msgid "MQTTv31"
+msgstr ""
+
+msgid "MQTTv311"
+msgstr ""
+
+msgid "MQTTv5"
+msgstr ""
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -38340,10 +38447,6 @@ msgstr "Gestionarea utilizatorilor sistemului de monitorizare."
 
 #, fuzzy
 msgid "Managed Robot"
-msgstr "Obiecte gestionate"
-
-#, fuzzy
-msgid "Managed Robots"
 msgstr "Obiecte gestionate"
 
 #, fuzzy
@@ -38850,6 +38953,10 @@ msgstr "Numarul maxim"
 msgid "Max. duration after downtime starts: "
 msgstr "Durata maximă după începerea timpului de oprire: "
 
+#, fuzzy
+msgid "Max. notifications per bulk"
+msgstr "norma de notificare"
+
 msgid "Max. number of SSL connections"
 msgstr "Numărul maxim de conexiuni SSL"
 
@@ -38918,6 +39025,9 @@ msgstr "Dimensiunea maximă a fișierului jurnal"
 
 msgid "Maximal number of daemon threads"
 msgstr "Numărul maxim de fire de execuție ale demonului"
+
+msgid "Maximal number of hosts per bulk discovery REST API call"
+msgstr ""
 
 msgid "Maximal number of log files to backup"
 msgstr "Numărul maxim de fișiere de jurnal pentru backup"
@@ -39096,8 +39206,16 @@ msgid "Maximum latency of successful query requests"
 msgstr "Latența maximă a cererilor de interogare reușite"
 
 #, fuzzy
+msgid "Maximum levels for current"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
+msgid "Maximum levels for power"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Maximum levels for voltage"
@@ -39920,8 +40038,16 @@ msgid "Minimum error count"
 msgstr "Număr minim de erori"
 
 #, fuzzy
+msgid "Minimum levels for current"
+msgstr "Niveluri minime de tensiune"
+
+#, fuzzy
 msgid "Minimum levels for load in percent"
 msgstr "Nivelurile minime pentru sarcină în procente"
+
+#, fuzzy
+msgid "Minimum levels for power"
+msgstr "Niveluri minime de tensiune"
 
 #, fuzzy
 msgid "Minimum levels for voltage"
@@ -41538,9 +41664,7 @@ msgstr "Rezoluția numelui"
 msgid "Name your %s for easy recognition."
 msgstr "Dați un nume %s pentru a fi ușor de recunoscut."
 
-msgid ""
-"Name your host, define the path and select the authority you would like to "
-"monitor"
+msgid "Name your host and define the folder"
 msgstr ""
 
 msgid ""
@@ -41931,8 +42055,24 @@ msgstr[0] "Noua etichetă de gazdă: "
 msgstr[1] ""
 msgstr[2] "Noi etichete pentru gazde: "
 
+#, fuzzy
+msgid "New managed robot"
+msgstr "Obiecte gestionate"
+
 msgid "New name"
 msgstr "Nume nou"
+
+#, fuzzy, python-format
+msgid "New notification rule #%d successfully created!"
+msgstr "Gazdă creată cu succes"
+
+#, fuzzy
+msgid "New notification rule successfully created!"
+msgstr "Gazdă creată cu succes"
+
+#, fuzzy
+msgid "New notification setup"
+msgstr "Următoarea notificare"
 
 #, fuzzy
 msgid "New password"
@@ -42045,9 +42185,9 @@ msgstr "Fără condiții"
 msgid "No Configuration Quick setup for %s available"
 msgstr "Variabila de configurare:"
 
-#, fuzzy, python-format
-msgid "No FormSpec implementation for method '%s' found."
-msgstr "Regula de notificare modificată %d"
+#, python-format
+msgid "No Dictionary ValueSpec within Migrate: %s"
+msgstr ""
 
 msgid "No IP"
 msgstr "Fără IP"
@@ -43038,8 +43178,16 @@ msgstr "Notificare Observație"
 msgid "Notification delivery rate"
 msgstr "Sistem de notificare"
 
+#, fuzzy
+msgid "Notification effect"
+msgstr "Metoda de notificare"
+
 msgid "Notification events of hosts."
 msgstr "Evenimente de notificare a gazdelor."
+
+#, fuzzy
+msgid "Notification frequency and timing"
+msgstr "%s regulile de notificare se potrivesc"
 
 msgid "Notification log level"
 msgstr "Nivelul jurnalului de notificare"
@@ -43092,6 +43240,14 @@ msgstr ""
 
 msgid "Notification rule"
 msgstr "Regula de notificare"
+
+#, fuzzy
+msgid "Notification rule does not exist."
+msgstr "Colecția de grafice \"%s\" nu există"
+
+#, fuzzy, python-format
+msgid "Notification rule number #%d successfully edited!"
+msgstr "Reguli de notificare a utilizatorului %s."
 
 #, python-format
 msgid "Notification rule of user '%s'"
@@ -44810,6 +44966,10 @@ msgstr "Operațiuni"
 
 msgid "Operations States"
 msgstr "Operațiuni Statele"
+
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "Operațiunea privind metricele selectate"
 
 msgid "Operations per second"
 msgstr "Operațiuni pe secundă"
@@ -47957,10 +48117,6 @@ msgstr "Ping la adresa IP normală"
 msgid "Ping timeout"
 msgstr "Ping timeout"
 
-#, fuzzy
-msgid "Placeholder"
-msgstr "VM-uri de tip Placeholder"
-
 msgid "Placeholder VMs"
 msgstr "VM-uri de tip Placeholder"
 
@@ -48013,8 +48169,12 @@ msgstr ""
 "Combinațiile de nume și etichete ale aplicației suite trebuie să fie unice."
 
 #, fuzzy
-msgid "Plan settings"
+msgid "Plan Settings"
 msgstr "Setări globale"
+
+#, fuzzy
+msgid "Plan configuration"
+msgstr "configurare"
 
 msgid "Plans"
 msgstr ""
@@ -48369,6 +48529,10 @@ msgstr "Vă rugăm să furnizați un fișier '.xml'."
 
 msgid "Please provide a hostname to test with."
 msgstr "Vă rugăm să furnizați un nume de gazdă cu care să testați."
+
+#, fuzzy
+msgid "Please provide a path that is relative both on Linux and Windows."
+msgstr "Vă rugăm să furnizați o cale relativă Windows"
 
 msgid "Please provide a relative Windows path"
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
@@ -52257,6 +52421,10 @@ msgid "Restrict monitoring services by one of these AWS tags"
 msgstr ""
 "Restricționați serviciile de monitorizare prin una dintre aceste etichete AWS"
 
+#, fuzzy
+msgid "Restrict notifications to a time period"
+msgstr "Perioada de notificare a serviciului"
+
 msgid "Restrict number of processed messages per cycle"
 msgstr "Limitarea numărului de mesaje procesate pe ciclu"
 
@@ -52548,10 +52716,6 @@ msgstr "Cadrul robotului: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "Cadrul robotului: Ultimul jurnal"
-
-#, fuzzy
-msgid "Robot package"
-msgstr "Îndepărtați pachetul"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -53676,6 +53840,9 @@ msgstr "Setări salvate numai pentru citire"
 msgid "Saved space"
 msgstr "Spațiu economisit"
 
+msgid "Scalar"
+msgstr ""
+
 msgid "Scale to width of page"
 msgstr "Scala la lățimea paginii"
 
@@ -54488,6 +54655,10 @@ msgstr "Selectați tipul de element de conținut"
 msgid "Select the type of fixed page element"
 msgstr "Selectați tipul de element de pagină fix"
 
+#, fuzzy
+msgid "Select time period"
+msgstr "Selectați o perioadă de timp"
+
 msgid "Select type from list"
 msgstr "Selectați tipul din listă"
 
@@ -54757,6 +54928,10 @@ msgstr "Defalcarea traficului trimis vs. primit"
 
 msgid "Sentinel"
 msgstr "Sentinela"
+
+#, fuzzy
+msgid "Separate bulk notifications for"
+msgstr "Deschideți notificări în masă"
 
 msgid "Separate check"
 msgstr "Control separat"
@@ -58039,6 +58214,16 @@ msgstr ""
 "trebuie curățat după un anumit timp sau după un anumit număr de execuții de "
 "test."
 
+#, fuzzy
+msgid ""
+"Specify here whether the working directory of Robotmk on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
+msgstr ""
+"Specificați aici dacă directorul de lucru al Robotmk de pe gazda țintă "
+"trebuie curățat după un anumit timp sau după un anumit număr de execuții de "
+"test."
+
 #, fuzzy, python-format
 msgid ""
 "Specify how Checkmk will translate the exit code of a task into a monitoring "
@@ -58263,6 +58448,11 @@ msgstr ""
 "urmare, nu se poate calcula consumul mediu pentru aceste tabele dacă nu se "
 "specifică această valoare."
 
+msgid ""
+"Specify the location where the host will be created. If left empty, the host "
+"will be created in the root folder."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
@@ -58295,6 +58485,11 @@ msgstr "Specificați numele mașinii virtuale, de exemplu z4065012."
 msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
 msgstr ""
 "Specificați numele gazdei de destinație, de exemplu <tt>checkmk.com</tt>."
+
+msgid ""
+"Specify the name of your host where all the services will be located. The "
+"host name must be unique."
+msgstr ""
 
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr ""
@@ -58652,6 +58847,10 @@ msgstr "Diferența de abatere standard"
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Abaterea standard a timpilor de parcurs dus-întors în ms"
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Teme standard"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -59988,6 +60187,10 @@ msgstr "Denumirea secțiunii"
 
 msgid "Subject for bulk notifications"
 msgstr "Subiect pentru notificări în masă"
+
+#, fuzzy
+msgid "Subject line"
+msgstr "Denumirea secțiunii"
 
 #, fuzzy
 msgid "Subject line for host notifications"
@@ -63859,6 +64062,15 @@ msgstr "Fișierul jurnal nu există pe site."
 
 msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
+
+#, fuzzy, python-format
+msgid ""
+"The managed robot with ID %s that you attempted to clone does not exist."
+msgstr "Programul pe care încercați să îl clonați nu există."
+
+#, fuzzy, python-format
+msgid "The managed robot with ID %s that you attempted to edit does not exist."
+msgstr "Utilizatorul pe care încercați să îl editați nu există."
 
 msgid "The mandatory group name is missing"
 msgstr "Lipsește numele grupului obligatoriu"
@@ -70144,6 +70356,19 @@ msgstr ""
 "intervalului de verificare implicit."
 
 msgid ""
+"This setting decides how late your changes will be activated. Default is 10 "
+"minutes"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This setting decides how many hosts will be discovered in one Api call. "
+"Default is 20"
+msgstr ""
+"Această setare determină modul în care vor fi activate porturile în Windows "
+"Firewall."
+
+msgid ""
 "This setting decides how often the dynamic configuration daemon will get "
 "updates from the the site. Default is 5 minutes"
 msgstr ""
@@ -70156,6 +70381,9 @@ msgstr ""
 msgid ""
 "This setting decides when the bulk discovery operation will be timed out. "
 "Default is 2 minutes"
+msgstr ""
+
+msgid "This setting decides whether we prevent false alarms. Default is True"
 msgstr ""
 
 msgid ""
@@ -70852,6 +71080,10 @@ msgstr "Cereri restricționate"
 
 msgid "Throttles"
 msgstr "Clapete de accelerație"
+
+#, fuzzy
+msgid "Throttling of 'Periodic notifications'"
+msgstr "Notificări periodice ale accelerației"
 
 msgid "Throughput"
 msgstr "Randament"
@@ -74198,6 +74430,10 @@ msgstr "Transferul: %d fișiere noi, %d modificate și %d dispărute"
 
 msgid "Transform status output"
 msgstr "Transformare ieșire de stare"
+
+#, fuzzy
+msgid "Transformation"
+msgstr "Informații termice"
 
 msgid "Transformation on selected metric"
 msgstr "Transformare pe metrica selectată"
@@ -78634,6 +78870,10 @@ msgid "Vertical axis width"
 msgstr "Lățimea axei verticale"
 
 msgid "Vertical padding"
+msgstr "Căptușeală verticală"
+
+#, fuzzy
+msgid "Vertical range"
 msgstr "Căptușeală verticală"
 
 msgid "Vertical rules"
@@ -83639,6 +83879,10 @@ msgstr "permit executarea de comenzi și acțiuni prin TCP"
 msgid "allow users to deactivate this notification"
 msgstr "permite utilizatorilor să dezactiveze această notificare"
 
+#, fuzzy
+msgid "and"
+msgstr "Bandă"
+
 msgid "any"
 msgstr "orice"
 
@@ -83728,6 +83972,9 @@ msgstr "% sub valoarea prezisă"
 
 msgid "best state"
 msgstr "cel mai bun stat"
+
+msgid "between"
+msgstr ""
 
 msgid "bindings"
 msgstr "legături"
@@ -85204,6 +85451,10 @@ msgstr "secs"
 msgid "security token"
 msgstr "jeton de securitate"
 
+#, fuzzy
+msgid "send every"
+msgstr "trimite numai la fiecare"
+
 msgid "send notifications of contactgroup:"
 msgstr "trimiteți notificări ale grupului de contact:"
 
@@ -85289,6 +85540,10 @@ msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
 msgid "specify manually ->"
 msgstr "specificați manual ->"
+
+#, fuzzy
+msgid "starting with notification number"
+msgstr "Restricție la numărul de notificare"
 
 msgid "status entries"
 msgstr "intrări de stare"
@@ -85638,6 +85893,34 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Configure host and authority"
+#~ msgstr "Configurație"
+
+#, fuzzy, python-format
+#~ msgid "No FormSpec implementation for method '%s' found."
+#~ msgstr "Regula de notificare modificată %d"
+
+#, fuzzy
+#~ msgid "Event console alerts"
+#~ msgstr "Alertele din consola de evenimente"
+
+#, fuzzy
+#~ msgid "File upload"
+#~ msgstr "Byte încărcate"
+
+#, fuzzy
+#~ msgid "Placeholder"
+#~ msgstr "VM-uri de tip Placeholder"
+
+#, fuzzy
+#~ msgid "Robot package"
+#~ msgstr "Îndepărtați pachetul"
+
+#, fuzzy
+#~ msgid "Managed Robots"
+#~ msgstr "Obiecte gestionate"
 
 #, fuzzy
 #~ msgid ""

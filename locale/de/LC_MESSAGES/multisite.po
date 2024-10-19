@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-10-10 05:00+0000\n"
+"PO-Revision-Date: 2024-10-18 05:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -792,6 +792,9 @@ msgstr "'Condition' Status"
 
 msgid "'Critical' state"
 msgstr "'Critical' Status"
+
+msgid "'Custom notifications' by comment"
+msgstr "'Benutzerdefinierte Benachrichtigungen' nach Kommentar"
 
 msgid "'Info' state"
 msgstr "'Info' Status"
@@ -1931,14 +1934,15 @@ msgstr ""
 "Log-Dateien angewendet, um die passenden Log-Meldungen neu einzustufen. Das "
 "erste Muster, das auf eine Zeile greift, wird für die Neueinstufung einer "
 "Meldung verwendet. Sie können den <a href=\"wato.py?mode=pattern_editor"
-"\">Logfile Pattern Analyzer</a> verwenden, um die hier definierten Regeln zu "
-"testen.</p><p> Beachten Sie: Um ein spezielles Regex-Zeichen in Ihrem Muster "
-"zu finden, müssen Sie dieses Zeichen mit einem umgekehrten Schrägstrich "
-"(Backslash) maskieren. Dies ist besonders für Dateipfade unter Windows "
-"wichtig. Um beispielsweise den Windows-Pfad \"C:\\Users\\admin\\Desktop\" zu "
-"finden, geben Sie \"C:\\\\Users\\admin\\\\Desktop\" ein.</p><p>Wählen Sie "
-"als Zustand \"Ignorieren\", um die entsprechenden Logs zu löschen. Andere "
-"Zustände erhalten die Log-Einträge, stufen den Zustand aber neu ein.</p>"
+"\">Log file Pattern Analyzer</a> verwenden, um die hier definierten Regeln "
+"zu testen.</p><p> Beachten Sie: Um ein spezielles Regex-Zeichen in Ihrem "
+"Muster zu finden, müssen Sie dieses Zeichen mit einem umgekehrten "
+"Schrägstrich (Backslash) maskieren. Dies ist besonders für Dateipfade unter "
+"Windows wichtig. Um beispielsweise den Windows-Pfad \"C:\\Users\\admin"
+"\\Desktop\" zu finden, geben Sie \"C:\\\\Users\\admin\\\\Desktop\" ein.</"
+"p><p>Wählen Sie als Zustand \"Ignorieren\", um die entsprechenden Logs zu "
+"löschen. Andere Zustände erhalten die Log-Einträge, stufen den Zustand aber "
+"neu ein.</p>"
 
 msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
@@ -1986,7 +1990,6 @@ msgstr ""
 "Zu nutzender <tt>TNS_ADMIN</tt> für <tt>sqlnet.ora</tt> und <tt>tnsnames."
 "ora</tt> %s"
 
-#, fuzzy
 msgid ""
 "<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
 "relative to the base directory of Robot Framework projects. This file also "
@@ -1996,7 +1999,7 @@ msgstr ""
 "<tt>robot.yaml</tt> ist die Haupt-RCC-Konfigurationsdatei. Sie wird relativ "
 "zum Basisverzeichnis der Robot Framework Projekte angegeben. Diese Datei "
 "verweist auch auf die Datei <tt>conda.yaml</tt>, in der alle "
-"Umgebungsabhängigkeiten aufgeführt sind. "
+"Umgebungsabhängigkeiten aufgeführt sind."
 
 #, python-format
 msgid "<tt>sqlnet.ora</tt> permission group %s"
@@ -2659,9 +2662,8 @@ msgstr "AWS S3 Bucket"
 msgid "AWS Tags"
 msgstr "AWS-Tags"
 
-#, fuzzy
 msgid "AWS services found!"
-msgstr "Keine Hosts/Services gefunden."
+msgstr "AWS Services gefunden!"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
@@ -3089,7 +3091,7 @@ msgid "Access to the module <i>Time periods</i>"
 msgstr "Zugriff auf Modul <i>Zeitperioden</i>"
 
 msgid "Access to the module for analyzing and validating logfile patterns."
-msgstr "Zugriff auf das Modul um Logdateimuster zu analysieren/auszuwerten."
+msgstr "Zugriff auf das Modul um Log-Dateimuster zu analysieren/auszuwerten."
 
 msgid ""
 "Access to the module for managing Checkmk rules. Please note that a user can "
@@ -3312,9 +3314,8 @@ msgstr "Änderungen anderer Nutzer aktivieren"
 msgid "Activate configuration"
 msgstr "Aktiviere Konfiguration"
 
-#, fuzzy
 msgid "Activate exit on failure"
-msgstr "Authentifizierungsfehler"
+msgstr "Aktivieren des Exits bei Fehler"
 
 msgid "Activate foreign changes"
 msgstr "Aktiviere fremde Änderungen"
@@ -3901,7 +3902,7 @@ msgid "Add metric level"
 msgstr "Metrik-Level hinzufügen"
 
 msgid "Add micro seconds to timestamps in logfiles"
-msgstr "Mikrosekunden zu Zeitstempeln in Logdateien hinzufügen"
+msgstr "Mikrosekunden zu Zeitstempeln in Log-Dateien hinzufügen"
 
 msgid "Add missing, remove vanished"
 msgstr "Fehlende hinzufügen, verschwundene entfernen"
@@ -3987,9 +3988,8 @@ msgstr "Neue Knoten-Bedingung hinzufügen"
 msgid "Add new pattern"
 msgstr "Neues Muster hinzufügen"
 
-#, fuzzy
 msgid "Add new plan"
-msgstr "Neues Muster hinzufügen"
+msgstr "Neuen Plan hinzufügen"
 
 msgid "Add new project"
 msgstr "Neues Projekt hinzufügen"
@@ -4006,9 +4006,8 @@ msgstr "Neue Regel hinzufügen"
 msgid "Add new scalar"
 msgstr "Neue Konstante hinzufügen"
 
-#, fuzzy
 msgid "Add new sequence"
-msgstr "Neuen Service hinzufügen"
+msgstr "Neue Sequenz hinzufügen"
 
 msgid "Add new service"
 msgstr "Neuen Service hinzufügen"
@@ -4691,7 +4690,7 @@ msgstr ""
 
 msgid "After this number of days old logfile of event history will be deleted."
 msgstr ""
-"Alte Logdateien der Ereignisshistorie werden nach dieser Anzahl von Tagen "
+"Alte Log-Dateien der Ereignishistorie werden nach dieser Anzahl von Tagen "
 "gelöscht."
 
 msgid ""
@@ -4928,7 +4927,7 @@ msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agent Updater (Linux, Windows, Solaris)"
 
 msgid "Agent updater ruleset"
-msgstr "Regelkette des Agent Updater"
+msgstr "Regelsatz des Agent Updater"
 
 msgid ""
 "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
@@ -5548,7 +5547,7 @@ msgstr ""
 "per HTTP-Variablen gesetzt sein."
 
 msgid "All problematic logfiles"
-msgstr "Alle problematischen Logdateien"
+msgstr "Alle problematischen Log-Dateien"
 
 msgid "All problems of services not currently in a downtime."
 msgstr "Alle Probleme von Services, die gerade nicht in Wartung sind."
@@ -6224,6 +6223,19 @@ msgstr ""
 "tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
 "(die relativ zu <tt>check_mk/</tt> sind) verwenden."
 
+msgid ""
+"An optional URL pointing to documentation or any other page. This will be "
+"displayed as an icon and open a new page when clicked. You can use either "
+"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
+"<tt>check_mk/</tt>)."
+msgstr ""
+"Eine optionale URL, die auf die Dokumentation oder eine andere Seite "
+"verweist. Diese wird als Symbol angezeigt und öffnet beim Anklicken eine "
+"neue Seite. Sie können entweder globale URLs (beginnend mit <tt>http://</"
+"tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
+"(die relativ zu <tt>check_mk/</tt> sind) verwenden."
+
 msgid "An optional alias name for your MySQL socket"
 msgstr "Ein optionaler Alias-Name für Ihren MySQL-Socket"
 
@@ -6750,7 +6762,7 @@ msgid "Articles in the user guide"
 msgstr "Artikel im Handbuch"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
-msgstr "Das Einlesen der Logdateien künstlich verzögern (zum Testen!)"
+msgstr "Das Einlesen der Log-Dateien künstlich verzögern (zum Testen!)"
 
 msgid ""
 "As an alternative to fetch the complete document including the actual web "
@@ -6782,7 +6794,7 @@ msgid ""
 "filtered dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "Sobald Sie Ihren Checkmk-Server ins Monitoring aufnehmen, erscheint hier ein "
-"Graph, der die History der Host-Probleme zeigt.\n"
+"Graph, der die Historie der Host-Probleme zeigt.\n"
 "Bitte beachten Sie auch, dass diese Meldung bei einem gefilterten Dashboard "
 "erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern nach "
 "Instanzen."
@@ -6796,7 +6808,7 @@ msgid ""
 "filtered dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "Sobald Sie Ihre(n) Checkmk-Server ins Monitoring aufnehmen, erscheint hier "
-"ein Graph, der die History der Host-Probleme zeigt. Derzeit werden die "
+"ein Graph, der die Historie der Host-Probleme zeigt. Derzeit werden die "
 "folgenden Checkmk-Instanzen nicht überwacht: %s.\n"
 "Bitte beachten Sie auch, dass diese Meldung bei einem gefilterten Dashboard "
 "erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern nach "
@@ -6972,6 +6984,9 @@ msgstr ""
 "Mindestens eine dieser Zeichenketten wird in der 1. Statuszeile der Server-"
 "Antwort erwartet (Standard: <tt>HTTP/1.</tt>). Wenn definiert, werden alle "
 "anderen Statusinformationen übersprungen (z. B. 3xx, 4xx, 5xx Verarbeitung)"
+
+msgid "At least one selection is missing."
+msgstr "Mindestens eine Auswahl fehlt."
 
 msgid ""
 "At most that many notifications are kept back for bulking. A value of 1 "
@@ -7275,13 +7290,12 @@ msgstr "Automatisch erweiterbar"
 msgid "Automated environment setup (via RCC)"
 msgstr "Automatisierte Einrichtung der Umgebung (über RCC)"
 
-#, fuzzy
 msgid ""
 "Automated environment setup (via RCC, ⚠ <b>not available</b> because Robotmk "
 "Core MKP has been installed)"
 msgstr ""
-"Automatisierte Einrichtung der Umgebung (über RCC, %s, da Robotmk-Kern-MKP "
-"installiert ist)"
+"Automatisierte Einrichtung der Umgebung (über RCC, ⚠ <b>nicht verfügbar</b>, "
+"da Robotmk-Kern-MKP installiert ist)"
 
 msgid "Automatic"
 msgstr "Automatisch"
@@ -8972,6 +8986,9 @@ msgstr "Massenerkennung"
 msgid "Bulk ID"
 msgstr "Sammel-ID"
 
+msgid "Bulk Notification"
+msgstr "Sammelbenachrichtigung"
+
 msgid "Bulk discovery"
 msgstr "Bulk-Discovery"
 
@@ -9000,6 +9017,9 @@ msgstr "Host Sammel-Import"
 
 msgid "Bulk move"
 msgstr "Sammelverschiebung"
+
+msgid "Bulk notification"
+msgstr "Sammelbenachrichtigung"
 
 msgid "Bulk notifications"
 msgstr "Sammelbenachrichtigungen"
@@ -9540,7 +9560,6 @@ msgstr ""
 "erzwingen.<br>Zusätzlich können Sie einen Befehl angeben, der für die "
 "Ausführung des Python-Plugins verwendet wird."
 
-#, fuzzy
 msgid ""
 "By default, Robot Framework will execute <i>every</i> test.<br>But sometimes "
 "tests are interdependent - in the event of a failed login, for example, it "
@@ -9565,16 +9584,14 @@ msgstr ""
 "nachfolgender Tests (die fehlgeschlagen wären) werden dann nicht an Checkmk "
 "weitergeleitet; je nach den Erkennungseinstellungen <b>fehlen</b> entweder "
 "ihre Ergebnisse (wenn sie Teil eines Suite-Ergebnisses sind) oder die für "
-"sie generierten Dienste werden <b>veraltet (stale)</b>.<br> <br>  "
-"<b>Wichtiger Hinweis</b>: An dieser Stelle weicht Robotmk vom Verhalten des "
-"Robot Frameworks ab. Das HTML-Protokoll enthält weiterhin die ausgelassenen "
-"Tests und zeigt sie als <tt>FAIL</tt> an (auch wenn sie nicht ausgeführt "
-"wurden).<br>Siehe auch \"<a href=\"http://robotframework.org/robotframework/"
-"latest/RobotFrameworkUserGuide.html#stopping-when-first-test-case-fails\" "
-"target=\"_blank\">Anhalten einer Suite, wenn der erste Test fehlschlägt</a>"
-"\". "
+"sie generierten Dienste werden <b>veraltet (stale)</b>.<br><br><b>Wichtiger "
+"Hinweis</b>: An dieser Stelle weicht Robotmk vom Verhalten des Robot "
+"Frameworks ab. Das HTML-Protokoll enthält weiterhin die ausgelassenen Tests "
+"und zeigt sie als <tt>FAIL</tt> an (auch wenn sie nicht ausgeführt wurden)."
+"<br>Siehe auch \"<a href=\"http://robotframework.org/robotframework/latest/"
+"RobotFrameworkUserGuide.html#stopping-when-first-test-case-fails\" target="
+"\"_blank\">Anhalten einer Suite, wenn der erste Test fehlschlägt</a>\". "
 
-#, fuzzy
 msgid ""
 "By default, Robotmk executes all plans in the user context of the Checkmk "
 "agent, which does not have access to the desktop of the Windows computer. To "
@@ -9588,7 +9605,7 @@ msgstr ""
 "Um Tests auf Windows-GUI-Anwendungen auszuführen, können Sie den Namen eines "
 "Benutzers angeben, der permanent an einer Desktop-Sitzung angemeldet ist. "
 "Die Voraussetzungen dafür sind sicherheitsrelevant und müssen von Ihnen "
-"erfüllt werden (Auto-Login, Bildschirmschoner, Sitzungssperre, ...)"
+"erfüllt werden (Auto-Login, Bildschirmschoner, Sitzungssperre, ...)."
 
 msgid ""
 "By default, all mailboxes are checked with these parameters. If you specify "
@@ -9821,6 +9838,9 @@ msgstr "Nach Host-Gruppe"
 msgid "By number of Robotmk executions"
 msgstr "Nach Anzahl der Robotmk-Ausführungen"
 
+msgid "By plugin output"
+msgstr "Nach Plugin-Ausgabe"
+
 msgid "By service group"
 msgstr "Nach Service-Gruppe"
 
@@ -9854,11 +9874,10 @@ msgstr ""
 msgid "Bypass Proxy for certain hosts"
 msgstr "Umgehung des Proxys für bestimmte Hosts"
 
-#, fuzzy
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
 "adresses which should not be accessed through the given proxy.<br>The proxy "
-"setting is used for access to the internet, where RCC needs to ownload the "
+"setting is used for access to the internet, where RCC needs to download the "
 "installation files from. (In order to access a page through a proxy inside "
 "of the test suite, use the libraries capabilities)"
 msgstr ""
@@ -9867,7 +9886,7 @@ msgstr ""
 "werden soll. <br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
 "verwendet, von dem RCC die Installationsdateien herunterladen muss. (Um eine "
 "Seite über einen Proxy innerhalb der Test-Suite aufzurufen, verwenden Sie "
-"die Bibliotheksfunktionen)"
+"die Bibliotheksfunktionen.)"
 
 msgid "Bypass per second"
 msgstr "Bypass pro Sekunde"
@@ -11102,12 +11121,12 @@ msgid "Changed host selection has been saved."
 msgstr "Geänderte Host-Auswahl wurde gespeichert."
 
 #, python-format
-msgid "Changed notification parameter %d"
-msgstr "Benachrichtigungsparameter %d geändert"
+msgid "Changed notification parameter #%s"
+msgstr "Parameter für Benachrichtigung #%s geändert"
 
 #, python-format
-msgid "Changed notification parameter %s"
-msgstr "Parameter für Benachrichtigung %s geändert"
+msgid "Changed notification parameter %d"
+msgstr "Benachrichtigungsparameter %d geändert"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -11406,10 +11425,10 @@ msgid "Check item"
 msgstr "Check-Item"
 
 msgid "Check logfile groups"
-msgstr "Überprüfe Logfile-Gruppen"
+msgstr "Überprüfe Log-Dateigruppen"
 
 msgid "Check logfiles for relevant new messages"
-msgstr "Logdateien auf relevante Meldungen hin überwachen"
+msgstr "Log-Dateien auf relevante Meldungen hin überwachen"
 
 msgid "Check manual (for Checkmk based checks)"
 msgstr "Check-Dokumentation (für Checkmk basierte Checks)"
@@ -12093,7 +12112,7 @@ msgid ""
 "Choose the Checkmk state in case any of the forwarded logfiles cannot be read"
 msgstr ""
 "Wählen Sie den Checkmk-Status für den Fall, dass eine der weitergeleiteten "
-"Logdateien nicht gelesen werden kann"
+"Log-Dateien nicht gelesen werden kann"
 
 msgid ""
 "Choose the Checkmk state in case of probe state not OK (probe state metric "
@@ -12585,6 +12604,10 @@ msgid "Clone hosts"
 msgstr "Hosts klonen"
 
 #, python-format
+msgid "Clone managed robot %s"
+msgstr "Diesen verwalteten Roboter %s klonen"
+
+#, python-format
 msgid "Clone report schedule entry %s"
 msgstr "Berichtsplan-Eintrag %s klonen"
 
@@ -12904,6 +12927,9 @@ msgstr "Übereinstimmende Spalten"
 msgid "Com. buf. max/total"
 msgstr "Bef. buf. max/gesamt"
 
+msgid "Combine within last"
+msgstr ""
+
 msgid "Combined graph"
 msgstr "Kombigraph"
 
@@ -13077,7 +13103,7 @@ msgid "Compare against discovered state"
 msgstr "Vergleiche gegen den Discovery-Zustand"
 
 msgid "Compare history"
-msgstr "History vergleichen"
+msgstr "Historie vergleichen"
 
 msgid "Compare the current state of the VM against the discovered state"
 msgstr "Vergleiche den momentanen VM-Zustand gegen den Discovery-Zustand"
@@ -13353,7 +13379,7 @@ msgid ""
 "Configuration, status, and status history data of the CMC (Checkmk Micro "
 "Core); cmcdump output of the status and config."
 msgstr ""
-"Konfiguration, Status und Status-History des CMC (Checkmk Micro Core); "
+"Konfiguration, Status und Status-Historie des CMC (Checkmk Micro Core); "
 "cmcdump-Ausgabe des Status und der Konfiguration."
 
 msgid "Configurations"
@@ -13382,7 +13408,7 @@ msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "Konfiguriere Windows Firewall so, dass Host-Monitoring erlaubt ist"
 
 msgid "Configure a logfile section"
-msgstr "Konfiguriere eine Logdatei Sektion"
+msgstr "Konfiguriere eine Log-Dateisektion"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "Zugangsberechtigungen für NagVis-Karten konfigurieren."
@@ -13430,8 +13456,9 @@ msgstr "Fallback-E-Mail-Adresse konfigurieren"
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Schnittstellen"
 
-msgid "Configure host and authority"
-msgstr "Host und Einrichtung konfigurieren"
+#, fuzzy
+msgid "Configure host"
+msgstr "Konfiguriere"
 
 msgid "Configure host and regions"
 msgstr "Host und Regionen konfigurieren"
@@ -13591,7 +13618,7 @@ msgstr ""
 "zu werden, muss ein Service mindestens eine Beschreibungsbedingung, eine "
 "Namensbedingung und eine Statusbedingung erfüllen, soweit konfiguriert. "
 "Konfigurieren Sie keine Einschränkungen, um einfach alle systemd-Services zu "
-"entdecken. Beachten Sie, dass unabhängig von diesem Regelset einige systemd-"
+"entdecken. Beachten Sie, dass unabhängig von diesem Regelsatz einige systemd-"
 "Service-Einheiten, die vom Checkmk-Agenten verwendet werden ('check-mk-"
 "agent@...'), nie entdeckt werden, da sie häufig auftauchen und verschwinden."
 
@@ -14034,7 +14061,7 @@ msgid "Consider alerts for Prism Central only"
 msgstr "Nur Warnungen für Prism Central berücksichtigen"
 
 msgid "Consider history of"
-msgstr "Berücksichtige die History von"
+msgstr "Berücksichtige die Historie von"
 
 msgid "Consider periods of flapping states"
 msgstr "Unstetige Perioden berücksichtigen"
@@ -14059,6 +14086,10 @@ msgstr "Konsolidierungsfunktion für die Spalte [graphing#rrds|RRD]"
 
 msgid "Consolidation functions"
 msgstr "Konsolidierungsfunktionen"
+
+#, fuzzy
+msgid "Constant"
+msgstr "Instanz"
 
 #, python-format
 msgid "Constant value %.2f"
@@ -14218,6 +14249,9 @@ msgstr "Inhalt von Bericht %s"
 
 msgid "Content-Type"
 msgstr "Inhaltstyp"
+
+msgid "Content-based filtering"
+msgstr "Filterung nach Inhalt"
 
 msgid "Contents"
 msgstr "Inhalte"
@@ -14398,12 +14432,12 @@ msgstr "Kerndateien"
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core.%s"
 msgstr ""
-"Prozessorkerndateien (config, state und History) aus var/check_mk/core.%s"
+"Prozessorkerndateien (config, state und Historie) aus var/check_mk/core.%s"
 
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core: %s"
 msgstr ""
-"Prozessorkerndateien (config, state und History) aus var/check_mk/core: %s"
+"Prozessorkerndateien (config, state und Historie) aus var/check_mk/core: %s"
 
 msgid "Core produced a notification"
 msgstr "Der Kern hat eine Benachrichtigung produziert"
@@ -14496,6 +14530,12 @@ msgstr ""
 "Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
 "Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
 
+#, fuzzy
+msgid "Could not access your Azure account. Please check your credentials."
+msgstr ""
+"Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
+"Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
+
 #, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
@@ -14551,7 +14591,7 @@ msgid ""
 msgstr ""
 "Konnte keinen Service für Ihren Cluster finden. Sie müssen zunächst "
 "konfigurieren welche Services der Knoten dem Cluster zugeordnet werden "
-"sollen. Dies wird mit der Regelkette <a href=\"%s\">%s</a> konfiguriert."
+"sollen. Dies wird mit dem Regelsatz <a href=\"%s\">%s</a> konfiguriert."
 
 #, python-format
 msgid "Could not find the group \"%s\" specified for role %s"
@@ -14815,7 +14855,7 @@ msgid "Create a separate check for each VxVM volume (Linux)"
 msgstr "Separaten Check für jedes VxVM-Volumen erstellen (Linux)"
 
 msgid "Create a separate check for each logfile"
-msgstr "Separaten Service für jede Logdatei erzeugen"
+msgstr "Separaten Service für jede Log-Datei erzeugen"
 
 msgid "Create a separate check for each partition (XEN)"
 msgstr "Separaten Check für jede Partition erstellen (XEN)"
@@ -15878,7 +15918,7 @@ msgid "DB2 instance followed by database name, e.g db2taddm:CMDBS1"
 msgstr "DB2-Instanz gefolgt vom Datenbanknamen, z.B. db2taddm:CMDBS1"
 
 msgid "DB2 logfile usage"
-msgstr "DB2 Logdatei-Belegung"
+msgstr "DB2 Log-Dateibelegung"
 
 msgid "DB2 memory usage"
 msgstr "DB2-Speicherauslastung"
@@ -16815,6 +16855,7 @@ msgstr ""
 
 msgid "Define any events you want to be notified about."
 msgstr ""
+"Definieren Sie alle Ereignisse, über die Sie benachrichtigt werden möchten."
 
 msgid "Define host assignment"
 msgstr "Host-Zuweisung festlegen"
@@ -18063,7 +18104,7 @@ msgid ""
 msgstr ""
 "Systeme, welche die sog. system description OID .1.3.6.1.2.1.1.1.0 nicht "
 "bekanntgeben, werden normalerweise beim SNMP Discovery ignoriert, da sie "
-"sich nicht standardkonform verhalten. In diesem Ruleset können sie Hosts "
+"sich nicht standardkonform verhalten. In diesem Regelsatz können Sie Hosts "
 "eintragen, die trotzdem geprüft werden sollen."
 
 msgid "Diagnostics"
@@ -18132,6 +18173,9 @@ msgstr "Hashwert (MD5)"
 
 msgid "Digests"
 msgstr "Hashwerte"
+
+msgid "Digits"
+msgstr ""
 
 msgid "Direct I/O"
 msgstr "Direkte I/O"
@@ -18876,7 +18920,7 @@ msgstr ""
 "Zeige entweder Instanzen und Status oder Hosts und Status einer Instanz"
 
 msgid "Displays entries from the logfile of the monitoring core."
-msgstr "Zeigt Einträge aus der Logdatei des Monitoring-Kerns."
+msgstr "Zeigt Einträge aus der Log-Datei des Monitoring-Kerns."
 
 msgid "Displays hosts and services producing the most notifications"
 msgstr ""
@@ -19338,6 +19382,9 @@ msgstr "Keine Level anwenden"
 msgid "Do not impose levels, always be OK"
 msgstr "Keine Level anwenden, immer OK"
 
+msgid "Do not include in monitoring hosts to be discovered"
+msgstr ""
+
 msgid "Do not manage the controllers auto-registration"
 msgstr "Die automatische Registrierung von Controllern nicht verwalten"
 
@@ -19762,7 +19809,7 @@ msgid "Downtime for host/service"
 msgstr "Wartungszeit für Host/Service"
 
 msgid "Downtime history"
-msgstr "Wartungszeit-History"
+msgstr "Wartungszeit-Historie"
 
 msgid "Downtime id"
 msgstr "Wartungszeit ID"
@@ -19977,6 +20024,9 @@ msgstr ""
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
 
+msgid "During time period"
+msgstr "Innerhalb der Zeitperiode"
+
 msgid "Dw"
 msgstr "Dw"
 
@@ -19994,6 +20044,9 @@ msgstr "Dynamische Konfiguration des Timeout für Bulk-Erkennung"
 
 msgid "Dynamic configuration logging"
 msgstr "Log der Dynamischen Konfiguration"
+
+msgid "Dynamic configuration site activate changes delay"
+msgstr ""
 
 msgid "Dynamic configuration site update interval"
 msgstr "Dynamische Konfiguration des Intervals für Instanz-Updates"
@@ -20294,8 +20347,8 @@ msgid "Edit %s"
 msgstr "%s bearbeiten"
 
 #, python-format
-msgid "Edit %s notification parameter %s"
-msgstr "%s Parameter für Benachrichtigung %s bearbeiten"
+msgid "Edit %s notification parameter #%s"
+msgstr "%s Parameter für Benachrichtigung #%s bearbeiten"
 
 #, python-format
 msgid "Edit %s: %s"
@@ -20443,6 +20496,10 @@ msgstr "Layout bearbeiten"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Layout bearbeiten ist nur verfügbar, wenn der Header aktiviert ist"
+
+#, python-format
+msgid "Edit managed robot %s"
+msgstr "Verwalteten Roboter bearbeiten %s"
 
 msgid "Edit managed robots"
 msgstr "Verwaltete Roboter bearbeiten"
@@ -21377,6 +21434,9 @@ msgstr "CPU-Auslastung der Maschine"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "Engine-IDs (nur für SNMPv3 benötigt)"
 
+msgid "Engineering scientific"
+msgstr ""
+
 msgid "English"
 msgstr "Englisch"
 
@@ -21657,6 +21717,10 @@ msgstr "Fehlerbehandlung"
 msgid "Error information log entries"
 msgstr "Fehler Log Einträge"
 
+#, python-format
+msgid "Error on creating FormSpec from old ValueSpec for method %s: %s"
+msgstr ""
+
 msgid "Error rate"
 msgstr "Fehlerrate"
 
@@ -21873,9 +21937,6 @@ msgstr "Ereigniskommentar"
 msgid "Event console"
 msgstr "Event Console"
 
-msgid "Event console alerts"
-msgstr "Alarme der Event Console"
-
 msgid "Event console performance"
 msgstr "Leistung der Event Console"
 
@@ -21926,7 +21987,7 @@ msgid "Event history lifetime"
 msgstr "Lebenszeit der Ereignishistorie"
 
 msgid "Event history logfile rotation"
-msgstr "Rotation der Logdatei der Ereignishistorie"
+msgstr "Rotation der Log-Datei der Ereignishistorie"
 
 msgid "Event history of host"
 msgstr "Ereignishistorie des Hosts"
@@ -23453,9 +23514,6 @@ msgstr "Dateigröße weniger als"
 msgid "File size levels"
 msgstr "Level für Dateigrößen"
 
-msgid "File upload"
-msgstr "Datei-Upload"
-
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -23708,6 +23766,10 @@ msgstr "Erste Seite"
 
 msgid "First time the downtime starts"
 msgstr "Erster Startzeitpunkt der Wartungszeit"
+
+#, fuzzy
+msgid "First with unit"
+msgstr "Erster Eintrag mit Einheit"
 
 msgid "First work day of last month"
 msgstr "Erster Arbeitstag des letzten Monats"
@@ -24243,7 +24305,7 @@ msgid "Form factor"
 msgstr "Formfaktor"
 
 msgid "FormSpec and internal data structure mismatch"
-msgstr ""
+msgstr "FormSpec und interne Datenstruktur stimmen nicht überein"
 
 msgid "Format"
 msgstr "Format"
@@ -24388,7 +24450,7 @@ msgstr ""
 
 #, python-format
 msgid "Found no history entry at the time of '%s' for the host '%s'"
-msgstr "Es wurde keine History zum Zeitpunkt '%s' für den Host '%s' gefunden"
+msgstr "Es wurde keine Historie zum Zeitpunkt '%s' für den Host '%s' gefunden"
 
 msgid "Found no matching alternative."
 msgstr "Es wurde keine passende Alternative gefunden."
@@ -25148,6 +25210,10 @@ msgstr "Die Graphensammlung '%s' existiert nicht"
 msgid "Graph collections"
 msgstr "Graphensammlung"
 
+#, fuzzy
+msgid "Graph designer"
+msgstr "GUI-Design"
+
 msgid "Graph is disabled"
 msgstr "Graph ist deaktiviert"
 
@@ -25156,6 +25222,18 @@ msgstr "Graph ist sichtbar"
 
 msgid "Graph layout"
 msgstr "Graphenlayout"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "Graphoptionen"
+
+#, fuzzy
+msgid "Graph metrics with zero values"
+msgstr "Metriken, die überall den Wert 0 haben"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "Graphoptionen"
 
 msgid "Graph rendering options"
 msgstr "Graphanzeigeoptionen"
@@ -26094,8 +26172,8 @@ msgid ""
 "Here you can configure whether and how the creation of RRD files is being "
 "logged (in the log file var/log/cmc.log)"
 msgstr ""
-"Hier können Sie konfigurieren ob und wie die Erzeugung von RRD-Dateien "
-"geloggt wird (im Logfile var/log/cmc.log)"
+"Hier können Sie konfigurieren, ob und wie die Erzeugung von RRD-Dateien "
+"geloggt wird (in der Log-Datei var/log/cmc.log)"
 
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
@@ -26876,7 +26954,7 @@ msgid "Historic messages"
 msgstr "Historische Meldungen"
 
 msgid "History"
-msgstr "Verlauf"
+msgstr "Historie"
 
 msgid "History Line Number"
 msgstr "Zeilennummer in der Historie"
@@ -27758,7 +27836,7 @@ msgid "Host & service groups"
 msgstr "Host- & Service-Gruppen"
 
 msgid "Host & service history"
-msgstr "Host-/Service-Verlauf"
+msgstr "Host-/Service-Historie"
 
 msgid "Host & service problems"
 msgstr "Host-/Service-Probleme"
@@ -29319,7 +29397,7 @@ msgid ""
 "ancient log messages. You can enable this flag to start processing the file "
 "from the beginning and see all messages that may already be present."
 msgstr ""
-"Wenn eine neue Logdatei gefunden wird, springen wir normalerweise an ihr "
+"Wenn eine neue Log-Datei gefunden wird, springen wir normalerweise an ihr "
 "Ende, um die Verarbeitung alter Logmeldungen zu vermeiden. Sie können dieses "
 "Flag aktivieren um die Verarbeitung der Datei von Anfang an zu starten und "
 "alle Nachrichten anzuzeigen auch wenn manche davon bereits angezeigt wurden."
@@ -29436,7 +29514,7 @@ msgstr ""
 "Wenn aktiviert, wird in der ausführlichen Ausgabe des Services (Long output) "
 "eine Liste von allen Prozessen angezeigt (Mit PID, CPU-Auslastung, "
 "Speicherauslastung). Bitte beachten Sie, dass der HTML-Output nur dann "
-"funktioniert, wenn Regeln der Regelketten \"%s\" oder \"%s\" angelegt sind, "
+"funktioniert, wenn Regeln der Regelsätze \"%s\" oder \"%s\" angelegt sind, "
 "oder die globale Einstellung \"%s\" deaktiviert ist. Dies setzt Sie "
 "eventuellen Cross-Site-Scripting Angriffen aus (jeder mit Schreibzugriff auf "
 "Check-Plugins könnte Skripts auf der Monitoring-Instanz im Kontext des Users "
@@ -29472,7 +29550,7 @@ msgstr ""
 "Wenn Kontextnachrichten aktiviert sind, werden, wenn mindestens eine "
 "relevante Nachricht (als WARN oder CRIT klassifiziert) gefunden wird, alle "
 "neuen Nachrichten des momentanen Zyklus übermittelt. Dies vereinfacht die "
-"Loganalyse auf dem Monitoring-Server, kann jedoch bei Logdateien mit "
+"Log-Dateianalyse auf dem Monitoring-Server, kann jedoch bei Log-Dateien mit "
 "häufigen neuen Einträgen zu viel Traffic führen."
 
 msgid ""
@@ -29506,7 +29584,7 @@ msgid ""
 "ruleset matching process."
 msgstr ""
 "Wenn diese Option aktiviert ist, sammelt der Kern Statistiken (Cache-Treffer/"
-"Fehlschläge) während des Regelsatzabprozesses."
+"Fehlschläge) während des Regelsatzabgleichprozesses."
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -29763,11 +29841,11 @@ msgid ""
 "every time that the file has again grown by the configured size. That way "
 "you can detect a broken log file rotation or the like."
 msgstr ""
-"Wenn die Gesamtgröße der Logdatei die eingestellte Schwelle überschreitet, "
+"Wenn die Gesamtgröße der Log-Datei die eingestellte Schwelle überschreitet, "
 "dann wird eine künstliche Warnmeldung eingeschleust. Diese Meldung wird "
-"jedemal wiederholt, wenn die Datei wiederum um die konfigurierte Größe "
-"gewachsen ist. Auf diese Weise können Sie eine defekte Logfilerotation oder "
-"dergleichen erkennen."
+"jedesmal wiederholt, wenn die Datei wiederum um die konfigurierte Größe "
+"gewachsen ist. Auf diese Weise können Sie eine defekte Log-Dateirotation "
+"oder dergleichen erkennen."
 
 msgid ""
 "If there already exists an open event because of absent messages according "
@@ -29925,7 +30003,7 @@ msgid ""
 "Reinventorize this check in order to make it OK again."
 msgstr ""
 "Wenn diese Option aktiviert ist, dann überwacht der Check die Liste der "
-"weitergeleiteten Logdateien. Falls später eine Lodatei hinzukommt oder "
+"weitergeleiteten Log-Dateien. Falls später eine Log-Datei hinzukommt oder "
 "wegfällt, dann nimmt der Check einen WARNUNG-Status an. Mit einer erneuten "
 "Service-Erkennung wird der Check dann wieder OK."
 
@@ -29939,14 +30017,15 @@ msgid ""
 "logwatch reclassification rules specifically designed for a logfile "
 "<i>access.log</i>, which do not apply to other logfiles."
 msgstr ""
-"Diese Option sorgt dafür, dass die Logmeldungen zuerst von Logwatch "
-"reklassifiziert werden bevor sie zur Event Console gesendet werden. Zeilen, "
-"die Sie mit IGNORE klassifizieren, werden nicht zur Event Console gesendet. "
-"Das entlastet die Event Console, da sie diese Meldung nicht gegen die Regeln "
-"prüfen muss. Die Reklassifizierung der einzelnen Zeilen berücksichtigt, aus "
-"welcher Logdatei die Zeile stammt. Auf diese Art können Sie eine "
-"Reklassifizierung machen, die z.B. nur Meldungen aus der Datei <i>access."
-"log</i> betrifft."
+"Wenn diese Option aktiviert ist, werden die Logwatch-Zeilen zunächst durch "
+"die Logwatch-Muster neu klassifiziert, bevor sie an die Event Console "
+"gesendet werden. Wenn Sie bestimmte Zeilen auf IGNORE umklassifizieren, "
+"werden sie nicht an die Event Console weitergeleitet. Dies entlastet die "
+"Event Console von der Aufgabe, die Nachricht selbst durch alle ihre "
+"Regelsätze zu verarbeiten. Die Reklassifizierung jeder Zeile berücksichtigt, "
+"aus welcher Log-Datei die Meldung stammt. So können Sie Logwatch-Regeln "
+"erstellen, die speziell für die Log-Datei <i>access.log</i> entwickelt "
+"wurden und nicht für andere Log-Dateien gelten."
 
 msgid ""
 "If this option is enabled, there will be one separate check for each logfile "
@@ -29956,13 +30035,13 @@ msgid ""
 "discovery. Creating one check per logfile changes this behaviour so that any "
 "data from unknown logfiles is discarded."
 msgstr ""
-"Diese Option sorgt für einen separaten Service pro Logdatei, die bei der "
-"Erkennung gefunden wird. Auch das Verhalten für unbekannte Logdateien wird "
-"geändert. Normalerweise werden alle gefunden Meldungen in die Event Console "
-"geschickt - auch wenn diese aus Logdateien stammen, die bei der Erkennung "
-"noch nicht vorhanden waren. Wenn diese Option aktiv ist, werden solche "
-"Meldungen verworfen, solangen Sie nicht die fehlenden Services für die neuen "
-"Logdateien einrichten."
+"Diese Option sorgt für einen separaten Service pro Log-Datei, die bei der "
+"Service-Erkennung gefunden wird. Auch das Verhalten für unbekannte Log-"
+"Dateien wird geändert. Normalerweise werden alle gefunden Meldungen in die "
+"Event Console geschickt - auch wenn diese aus Log-Dateien stammen, die bei "
+"der Erkennung noch nicht vorhanden waren. Wenn diese Option aktiv ist, "
+"werden solche Meldungen verworfen, solange Sie nicht die fehlenden Services "
+"für die neuen Log-Dateien einrichten."
 
 msgid ""
 "If this option is selected, the resources being monitored are stored during "
@@ -30172,7 +30251,7 @@ msgstr ""
 "Host diese Anforderungen nicht erfüllt, d. h. das Aktivieren eines Services, "
 "der die IP-Beschränkung nicht realisieren kann, wird bei der Agenten-"
 "Installation verhindert, siehe „Checkmk Agent Netzwerk-Service (Linux)“ "
-"Regelkette. Selbst wenn Sie die Bäckerei nicht nutzen, werden die "
+"Regelsatz. Selbst wenn Sie die Bäckerei nicht nutzen, werden die "
 "konfigurierten IP-Adressbeschränkungen eines Hosts anhand der vom Agenten "
 "gemeldeten zulässigen IP-Adressen überprüft. Dies geschieht während dem "
 "Monitoring durch den 'Check_MK'-Service."
@@ -30526,7 +30605,7 @@ msgid ""
 "max values, too"
 msgstr ""
 "Wenn Sie eine oder mehrere Graphite-Verbindungen definiert haben, werden "
-"standardmäßig die Werte aller Metriken gesendet. Sie können dieses Regelset "
+"standardmäßig die Werte aller Metriken gesendet. Sie können diesen Regelsatz "
 "verwenden, um die Metriken bestimmter Services aus- oder einzuschließen und "
 "wenn Sie auch Warn-/Uom-/Crit-/Min-/Max-Werte senden möchten"
 
@@ -31379,11 +31458,11 @@ msgid ""
 "a per-file-base and can be configured here. Exceeding lines are simply "
 "ignored and an error is logged in the the CMC daemon logfile."
 msgstr ""
-"Um große Timeouts bei übergroßen History-Logdateien zu vermeiden, begrenzt "
-"der Kern die Anzahl der Zeilen, die aus History-Logdateien gelesen werden. "
+"Um große Timeouts bei übergroßen Historie-Log-Dateien zu vermeiden, begrenzt "
+"der Kern die Anzahl der Zeilen, die aus Historie-Log-Dateien gelesen werden. "
 "Die Begrenzung erfolgt auf Dateibasis und kann hier konfiguriert werden. "
 "Zeilen oberhalb des Limits werden einfach ignoriert und ein Fehler wird in "
-"der Logdatei des CMC-Daemons protokolliert."
+"der Log-Datei des CMC-Daemons protokolliert."
 
 #, python-format
 msgid ""
@@ -31576,7 +31655,7 @@ msgid ""
 "file is being renamed and restarted on a regular basis, which can be "
 "configured here."
 msgstr ""
-"In der History-Datei werden alle Ereignisse wie Benachrichtigungen und "
+"In der Historie-Datei werden alle Ereignisse wie Benachrichtigungen und "
 "Alarme gespeichert. Diese Datei wird in regelmäßigen Abständen umbenannt und "
 "neu gestartet, was hier konfiguriert werden kann."
 
@@ -31885,14 +31964,13 @@ msgstr "Zu durchsuchende Indexe, Standardwert ist \"*\", d.h. alle Indexe."
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
 
-#, fuzzy
 msgid ""
 "Indicates that host is waiting for bulk discovery. It is set to True once it "
 "in queue.Removed after discovery is ended."
 msgstr ""
-"Ob die letzte Bulk Discovery fehlgeschlagen ist oder nicht. Sie wird auf "
-"True gesetzt, wenn sie fehlgeschlagen ist, und nicht gesetzt, wenn eine "
-"spätere Discovery erfolgreich war."
+"Dies zeigt an, dass der Host auf eine Sammelerkennung wartet. Es wird auf "
+"True gesetzt, sobald der Host in der Warteschlange steht. Nach Beendigung "
+"der Erkennung wird es wieder entfernt."
 
 msgid "Indices"
 msgstr "Indizes"
@@ -32540,9 +32618,9 @@ msgstr "Ungültiges Zertifikat"
 msgid "Invalid certificate file: %s"
 msgstr "Ungültige Zertifikatsdatei: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid characters in %s"
-msgstr "Ungültiger Parameter %r: %s"
+msgstr "Ungültige Zeichen in %s"
 
 msgid "Invalid check parameter"
 msgstr "Ungültiger Check-Parameter"
@@ -33134,9 +33212,9 @@ msgid ""
 msgstr ""
 "Sie können mehrere Cluster definieren, welche sich manche Knoten teilen. Man "
 "könnte auch sagen, dass solche Cluster &quot;überlappen&quot;. In so einem "
-"Fall genügt die Regel <i>Geclusterte Services</i> nicht, weil dann nicht "
+"Fall genügt der Regelsatz <i>Geclusterte Services</i> nicht, weil dann nicht "
 "klar wäre, welchem der möglichen Cluster ein Service zugewiesen werden soll. "
-"Mit diesem Regelsatz können Sie daher Service explizit einem bestimmten "
+"Mit diesem Regelsatz können Sie daher Services explizit einem bestimmten "
 "Cluster zuordnen."
 
 msgid "Item"
@@ -35014,6 +35092,9 @@ msgstr "Login auf eine Sitzung pro Zeit beschränken"
 msgid "Limit maximum number used CPUs"
 msgstr "Maximale Anzahl genutzter CPUs begrenzen"
 
+msgid "Limit notifications by count to"
+msgstr "Benachrichtigungen nach Anzahl begrenzen auf"
+
 msgid "Limit number of processed search results"
 msgstr "Anzahl der verarbeiteten Suchergebnisse begrenzen"
 
@@ -35089,7 +35170,7 @@ msgid "Line Mean Apparent Power"
 msgstr "Mittlere Scheinleistung"
 
 msgid "Line number in history logfile (exact match)"
-msgstr "Zeilennummer in History-Log-Datei (exakte Übereinstimmung)"
+msgstr "Zeilennummer in Historie-Log-Datei (exakte Übereinstimmung)"
 
 msgid "Line number in log file"
 msgstr "Zeilennummer in Logdatei"
@@ -35314,7 +35395,7 @@ msgid "List of available NagVis maps"
 msgstr "Tabelle der verfügbaren NagVis-Karten"
 
 msgid "List of expected logfiles"
-msgstr "Liste der erwarteten Logdateien"
+msgstr "Liste der erwarteten Log-Dateien"
 
 msgid ""
 "List of installed, unpacked, optional files below OMD_ROOT/local. This also "
@@ -35745,7 +35826,7 @@ msgid "Log Entry"
 msgstr "Logeintrag"
 
 msgid "Log all messages into syslog-like logfiles"
-msgstr "Alle Meldungen im Syslogformat in Dateien schreiben"
+msgstr "Alle Meldungen im Syslogformat in Log-Dateien schreiben"
 
 msgid "Log backup"
 msgstr "Log-Backup"
@@ -35913,39 +35994,39 @@ msgid "Logentry class"
 msgstr "Logdateieintrags-Klasse"
 
 msgid "Logfile"
-msgstr "Logdatei"
+msgstr "Log-Datei"
 
 msgid "Logfile Grouping"
-msgstr "Logfile-Gruppierung"
+msgstr "Log-Dateigruppierung"
 
 msgid "Logfile information of logwatch plug-in"
-msgstr "Informationen zu Logdateien des Logwatch-Plugins"
+msgstr "Informationen zu Log-Dateien des Logwatch-Plugins"
 
 msgid "Logfile pattern analyzer"
-msgstr "Logdatei-Muster Analyse"
+msgstr "Log-Dateimuster Analyse"
 
 msgid "Logfile patterns"
-msgstr "Logdatei-Muster"
+msgstr "Log-Dateimuster"
 
 #, python-format
 msgid "Logfile patterns of Host %s"
-msgstr "Logdatei-Muster auf Host %s"
+msgstr "Log-Dateimuster auf Host %s"
 
 #, python-format
 msgid "Logfile patterns of logfile %s on all hosts"
-msgstr "Muster der Logdatei %s auf allen Rechnern"
+msgstr "Muster der Log-Datei %s auf allen Rechnern"
 
 #, python-format
 msgid "Logfile patterns of logfile %s on host %s"
-msgstr "Muster der Logdatei %s auf Host %s"
+msgstr "Muster der Log-Datei %s auf Host %s"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
-msgstr "Logdateien von Host %s: %s"
+msgstr "Log-Dateien von Host %s: %s"
 
 #, python-format
 msgid "Logfiles of host %s"
-msgstr "Logdateien von Host %s"
+msgstr "Log-Dateien von Host %s"
 
 #, python-format
 msgid "Logged out of remote site %s"
@@ -36404,6 +36485,15 @@ msgstr ""
 msgid "MQTT broker statistics"
 msgstr "MQTT-Broker-Statistiken"
 
+msgid "MQTTv31"
+msgstr "MQTTv31"
+
+msgid "MQTTv311"
+msgstr "MQTTv311"
+
+msgid "MQTTv5"
+msgstr "MQTTv5"
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -36799,7 +36889,7 @@ msgid "Manage All Scheduled Reports"
 msgstr "Alle geplanten Berichte verwalten"
 
 msgid "Manage Hard- and software inventory related rulesets"
-msgstr "Verwalten von Hard- und Softwareinventar-bezogenen Regelwerken"
+msgstr "Verwalten von Hard- und Softwareinventar-bezogenen Regelsätzen"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB-Verbindungen verwalten"
@@ -36878,9 +36968,6 @@ msgstr "Benutzer des Monitoring-Systems verwalten."
 
 msgid "Managed Robot"
 msgstr "Verwalteter Roboter"
-
-msgid "Managed Robots"
-msgstr "Verwaltete Roboter"
 
 msgid "Managed objects"
 msgstr "Verwaltete Objekte"
@@ -37372,6 +37459,9 @@ msgstr "Max. Anzahl"
 msgid "Max. duration after downtime starts: "
 msgstr "Maximale Dauer ab Beginn der Wartungszeit: "
 
+msgid "Max. notifications per bulk"
+msgstr "Max. Anzahl Benachrichtigungen pro Bulk"
+
 msgid "Max. number of SSL connections"
 msgstr "Max. Anzahl von SSL-Verbindungen"
 
@@ -37440,6 +37530,9 @@ msgstr "Maximale Größe der Logdatei"
 
 msgid "Maximal number of daemon threads"
 msgstr "Maximale Anzahl von Daemon Threads"
+
+msgid "Maximal number of hosts per bulk discovery REST API call"
+msgstr ""
 
 msgid "Maximal number of log files to backup"
 msgstr "Maximale Anzahl der zu sichernden Logdateien"
@@ -37612,8 +37705,14 @@ msgstr "Maximale Latenzzeit für erfolgreiche PutItem-Anfragen"
 msgid "Maximum latency of successful query requests"
 msgstr "Maximale Latenzzeit erfolgreicher Query-Anfragen"
 
+msgid "Maximum levels for current"
+msgstr "Obergrenzen für die Stromstärke"
+
 msgid "Maximum levels for load in percent"
 msgstr "Obergrenzen für die Last in Prozent"
+
+msgid "Maximum levels for power"
+msgstr "Obergrenzen für die Leistung"
 
 msgid "Maximum levels for voltage"
 msgstr "Obergrenzen für Spannung"
@@ -38412,10 +38511,15 @@ msgstr "Minimale Verbindungen pro Sekunde"
 msgid "Minimum error count"
 msgstr "Minimale Fehleranzahl"
 
+msgid "Minimum levels for current"
+msgstr "Untergrenzen für die Stromstärke"
+
 msgid "Minimum levels for load in percent"
 msgstr "Untergrenzen für die Last in Prozent"
 
-#, fuzzy
+msgid "Minimum levels for power"
+msgstr "Untergrenzen für die Leistung"
+
 msgid "Minimum levels for voltage"
 msgstr "Untergrenzen für die Spannung"
 
@@ -38725,7 +38829,7 @@ msgstr "Veränderte NFS-Daten"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
-msgstr "Verändert: %d Ordner, %d Hosts, %d Regelsätze"
+msgstr "Veränderte Ordner: %d, veränderte Hosts: %d, veränderte Regelsätze: %d"
 
 #, python-format
 msgid "Modified host %s."
@@ -39057,7 +39161,7 @@ msgid "Monitoring of container and container orchestration software"
 msgstr "Monitoring von Containern und Container-Orchestrationssoftware"
 
 msgid "Monitoring of forwarded logfiles"
-msgstr "Liste der weitergeleiteten Logdateien überwachen"
+msgstr "Liste der weitergeleiteten Log-Dateien überwachen"
 
 msgid "Monitoring server address"
 msgstr "Server-Adresse überwachen"
@@ -39932,12 +40036,8 @@ msgstr "Namensauflösung"
 msgid "Name your %s for easy recognition."
 msgstr "Benennen Sie Ihr %s zur einfachen Wiedererkennung."
 
-msgid ""
-"Name your host, define the path and select the authority you would like to "
-"monitor"
+msgid "Name your host and define the folder"
 msgstr ""
-"Benennen Sie Ihren Host, geben Sie den Pfad an und wählen Sie die "
-"Einrichtung, die Sie überwachen wollen"
 
 msgid ""
 "Name your host, define the path and select the regions you would like to "
@@ -40320,8 +40420,21 @@ msgid_plural "New host labels: "
 msgstr[0] "Neues Host-Label: "
 msgstr[1] "Neue Host-Labels: "
 
+msgid "New managed robot"
+msgstr "Neuer verwalteter Roboter"
+
 msgid "New name"
 msgstr "Neuer Name"
+
+#, python-format
+msgid "New notification rule #%d successfully created!"
+msgstr "Die neue Benachrichtigungsregel #%d wurde erfolgreich erstellt!"
+
+msgid "New notification rule successfully created!"
+msgstr "Die neue Benachrichtigungsregel wurde erfolgreich erstellt!"
+
+msgid "New notification setup"
+msgstr "Neue Benachrichtigungseinstellung"
 
 msgid "New password"
 msgstr "Neues Passwort"
@@ -40413,9 +40526,8 @@ msgstr "Nein (Fehler: %s, Code: %d, Tiefe: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "Keine API-Integrationen, kein Checkmk-Agent"
 
-#, fuzzy
 msgid "No AWS services found."
-msgstr "Keine Hosts/Services gefunden."
+msgstr "Keine AWS-Services gefunden."
 
 msgid "No CSRF token received"
 msgstr "Kein CSRF-Token erhalten"
@@ -40428,8 +40540,8 @@ msgid "No Configuration Quick setup for %s available"
 msgstr "Kein Quick Setup für die Konfiguration von %s verfügbar"
 
 #, python-format
-msgid "No FormSpec implementation for method '%s' found."
-msgstr "Keine FormSpec-Implementation für die Methode '%s' gefunden."
+msgid "No Dictionary ValueSpec within Migrate: %s"
+msgstr ""
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -40564,13 +40676,11 @@ msgstr ""
 "Für den Bundle-Gruppentyp '%s' ist kein Editierkonfigurations-Bundle "
 "implementiert."
 
-#, fuzzy
 msgid "No elements available"
-msgstr "Nicht verfügbar"
+msgstr "Keine Elemente verfügbar"
 
-#, fuzzy
 msgid "No elements selected"
-msgstr "Nicht ausgewählt"
+msgstr "Keine Elemente ausgewählt"
 
 msgid "No entries"
 msgstr "Keine Einträge"
@@ -41103,7 +41213,7 @@ msgid ""
 "Normally the resolution of the daemon logfile is in seconds. This option "
 "enable micro second precision."
 msgstr ""
-"Normalerweise ist die Zeitauflösung der Logdatei des Daemons in Sekunden. "
+"Normalerweise ist die Zeitauflösung der Log-Datei des Daemons in Sekunden. "
 "Hier können Sie dies auf Mikrosekunden erweitern."
 
 msgid ""
@@ -41400,8 +41510,14 @@ msgstr "Status des Benachrichtigungskerns"
 msgid "Notification delivery rate"
 msgstr "Zustellungsrate der Benachrichtigungen"
 
+msgid "Notification effect"
+msgstr "Benachrichtigungseffekt"
+
 msgid "Notification events of hosts."
 msgstr "Benachrichtigungsereignisse von Hosts."
+
+msgid "Notification frequency and timing"
+msgstr "Häufigkeit und Zeitpunkt der Benachrichtigung"
 
 msgid "Notification log level"
 msgstr "Loglevel für die Benachrichtigung"
@@ -41449,6 +41565,15 @@ msgstr ""
 
 msgid "Notification rule"
 msgstr "Benachrichtigungsregel"
+
+#, fuzzy
+msgid "Notification rule does not exist."
+msgstr "Benachrichtigungsmethode '%s' existiert nicht"
+
+#, python-format
+msgid "Notification rule number #%d successfully edited!"
+msgstr ""
+"Die Nummer der Benachrichtigungsregel #%d wurde erfolgreich bearbeitet!"
 
 #, python-format
 msgid "Notification rule of user '%s'"
@@ -42647,11 +42772,11 @@ msgid ""
 "text, for example a line from a logfile. Using this dialog it is possible to "
 "analyze and debug your whole set of logfile patterns."
 msgstr ""
-"Auf dieser Seite können Sie die von Ihnen definierten Logfile-Muster "
+"Auf dieser Seite können Sie die von Ihnen definierten Log-Dateimuster "
 "(reguläre Ausdrücke) mit benutzerdefiniertem Text (zum Beispiel einer Zeile "
-"aus einem Logfile) ausprobieren. Auf diese Weise können Sie Ihre Logdatei-"
-"Muster analysieren und debuggen. Mit den Feldern <i>Host-Name</i> und "
-"<i>Logdatei</i> schränken Sie dabei die zur Anwendung kommenden Muster ein. "
+"aus einer Log-Datei) ausprobieren. Auf diese Weise können Sie Ihre Log-"
+"Dateimuster analysieren und debuggen. Mit den Feldern <i>Host-Name</i> und "
+"<i>Log-Datei</i> schränken Sie dabei die zur Anwendung kommenden Muster ein. "
 "Tragen Sie bei den beiden Feldern nichts ein, werden alle Muster verwendet."
 
 msgid ""
@@ -43120,6 +43245,10 @@ msgstr "Operationen"
 
 msgid "Operations States"
 msgstr "Betriebszustände"
+
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "Operation auf den gewählten Metriken"
 
 msgid "Operations per second"
 msgstr "Operationen pro Sekunde"
@@ -44291,7 +44420,7 @@ msgid "Overall latency"
 msgstr "Gesamtlatenz"
 
 msgid "Overall response time"
-msgstr "Allgemeine Antwortzeit"
+msgstr "Antwortzeit insgesamt"
 
 msgid "Overall state of a virtual machine (for example ESX VMs)"
 msgstr "Gesamtstatus einer virtuellen Maschine (beispielsweise ESX VMs)"
@@ -44353,9 +44482,8 @@ msgstr "Check-Status basierend auf dem Jobstatus überschreiben"
 msgid "Override check state based on last build result"
 msgstr "Check-Status basierend auf dem letzten Build-Ergebnis überschreiben"
 
-#, fuzzy
 msgid "Override managed plan settings"
-msgstr "Aktuelle Planeinstellungen überschreiben"
+msgstr "Verwaltete Planeinstellungen überschreiben"
 
 msgid "Override unit of sensor"
 msgstr "Einheit des Sensors überschreiben"
@@ -45255,7 +45383,7 @@ msgstr "Muster für jeden Knoten"
 
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
-"Muster für zu monitorende Logdateien (<tt>*</tt> und <tt>?</tt> erlaubt)"
+"Muster für zu überwachende Log-Dateien (<tt>*</tt> und <tt>?</tt> erlaubt)"
 
 msgid ""
 "Patterns to identify Robot Framework keywords as Robotmk KPIs. Note that if "
@@ -45995,9 +46123,6 @@ msgstr "Die normale IP-Adresse anpingen"
 msgid "Ping timeout"
 msgstr "Ping Timeout"
 
-msgid "Placeholder"
-msgstr "Platzhalter"
-
 msgid "Placeholder VMs"
 msgstr "Platzhalter-VMs"
 
@@ -46046,8 +46171,11 @@ msgstr ""
 "Plan-IDs (Kombinationen von Applikationsnamen, Suite-Namen und Varianten) "
 "müssen eindeutig sein."
 
-msgid "Plan settings"
+msgid "Plan Settings"
 msgstr "Plan-Einstellungen"
+
+msgid "Plan configuration"
+msgstr "Plan-Konfiguration"
 
 msgid "Plans"
 msgstr "Pläne"
@@ -46074,9 +46202,8 @@ msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 msgid "Please add at least one endpoint to monitor"
 msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
 
-#, fuzzy
 msgid "Please add at least one recipient"
-msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -46395,6 +46522,11 @@ msgstr "Bitte stellen Sie eine '.xml'-Datei zur Verfügung"
 
 msgid "Please provide a hostname to test with."
 msgstr "Bitte geben Sie einen Host-Namen an, mit dem Sie testen möchten."
+
+msgid "Please provide a path that is relative both on Linux and Windows."
+msgstr ""
+"Bitte geben Sie einen Pfad an, der sowohl unter Linux als auch unter Windows "
+"relativ ist."
 
 msgid "Please provide a relative Windows path"
 msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
@@ -47366,7 +47498,7 @@ msgid "Process name matching"
 msgstr "Abgleich von Prozessnamen"
 
 msgid "Process new logfiles from the beginning"
-msgstr "Neue Logdateien von Anfang an verarbeiten"
+msgstr "Neue Log-Dateien von Anfang an verarbeiten"
 
 msgid "Process path matching"
 msgstr "Abgleich von Prozesspfaden"
@@ -47710,9 +47842,9 @@ msgid ""
 "the service \"LOG System\". You can use regular expressions which must match "
 "the beginning of the logfile name."
 msgstr ""
-"Tragen Sie hier die Item-Namen der Logdateien ein. Zum Beispiel \"System$\", "
-"um den Service \"LOG System\" auszuwählen. Sie können reguläre Ausdrücke "
-"verwenden, die mit dem Anfang des Log-Datei-Namens übereinstimmen müssen."
+"Tragen Sie hier die Item-Namen der Log-Dateien ein. Zum Beispiel \"System$"
+"\", um den Service \"LOG System\" auszuwählen. Sie können reguläre Ausdrücke "
+"verwenden, die mit dem Anfang des Log-Dateinamens übereinstimmen müssen."
 
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Geben Sie hier den Namen der Datenbank an, z.B. SATURN\\ARCSERVE_DB"
@@ -47736,7 +47868,6 @@ msgstr "Python-Version"
 msgid "Python agent plug-in execution (UNIX)"
 msgstr "Python Agent Plugin Ausführung (UNIX)"
 
-#, fuzzy
 msgid ""
 "Python or YAML file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -47747,12 +47878,10 @@ msgid ""
 msgstr ""
 "Python- oder YAML-Datei, aus der Variablen gelesen werden sollen. (<a href="
 "\"https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#variable-files\" target=\"_blank\">Über Variablendateien</a>) Mögliche "
+"html#variable-files\" target=\"_blank\">Über Variablendateien</a>). Mögliche "
 "Argumente für die Variablendatei können nach dem Dateipfad mit einem "
 "Doppelpunkt oder einem Semikolon als Trennzeichen angegeben werden. "
-"Beispiele:\n"
-"<tt>path/vars.yaml</tt>\n"
-"<tt>set_environment.py:testing</tt>"
+"Beispiele:<br><tt>path/vars.yaml</tt><br><tt>set_environment.py:testing</tt>"
 
 msgid "Python version for execution of Python agent plug-ins"
 msgstr "Python-Version zur Ausführung von Python-Agentenplugins"
@@ -47971,19 +48100,19 @@ msgstr "benutzter RAM (gemittelt)"
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
 
-#, fuzzy
 msgid ""
 "RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
 "has been installed)"
-msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
+msgstr ""
+"RCC-Profilkonfiguration (⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP "
+"installiert wurde)"
 
-#, fuzzy
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
 "specific RCC environment, for example proxy settings."
 msgstr ""
-"RCC-Profil-Konfiguration: RCC-Profile können Einstellungen für diese "
-"spezielle RCC-Umgebung festlegen, z. B. Proxy-Einstellungen. <br>"
+"RCC-Profilkonfiguration: RCC-Profile können Einstellungen für diese "
+"spezielle RCC-Umgebung festlegen, z. B. Proxy-Einstellungen."
 
 msgid "RCU"
 msgstr "RCU"
@@ -48740,7 +48869,7 @@ msgid ""
 "configured here. Note: The actual size of the log file can exceed this size "
 "by a few percent in situation with a high logging volume."
 msgstr ""
-"Unabhängig von der Einstellung <i>Rotation der History-Log-Datei</i> wird "
+"Unabhängig von der Einstellung <i>Rotation der Historie-Log-Datei</i> wird "
 "eine Rotation der Log-Datei erzwungen, wenn ihre Größe die hier eingestellte "
 "Grenze überschreitet. Hinweis: Die tatsächliche Größe der Protokolldatei "
 "kann diese Größe bei einem hohen Protokollierungsvolumen um einige Prozent "
@@ -48868,7 +48997,7 @@ msgid "Regular expression"
 msgstr "Regulärer Ausdruck"
 
 msgid "Regular expression for logfile filtering"
-msgstr "Regulärer Ausdruck für Log-Datei-Filterung"
+msgstr "Regulärer Ausdruck für Log-Dateifilterung"
 
 msgid "Regular expression for matching the syslog tag (case insensitive)"
 msgstr ""
@@ -48919,7 +49048,7 @@ msgid ""
 "Applies to the selected logfile paths."
 msgstr ""
 "Regulärer Ausdruck, der verwendet wird, um die ausgewählten Dateien weiter "
-"einzugrenzen. Gilt für die ausgewählten Logdateipfade."
+"einzugrenzen. Gilt für die ausgewählten Log-Dateipfade."
 
 msgid "Regular expression: "
 msgstr "Regulärer Ausdruck: "
@@ -49380,7 +49509,7 @@ msgstr "Host umbenannt von %s nach %s."
 
 #, python-format
 msgid "Renamed host in %d rulesets of folder %s"
-msgstr "Host in %d Regelsätzen des Ordnrs %s umbenannt"
+msgstr "Host in %d Regelsätzen des Ordners %s umbenannt"
 
 #, python-format
 msgid "Renamed parent from %s into %s."
@@ -49402,7 +49531,7 @@ msgstr "Umbenennen von Host(s) in %s..."
 
 msgid "Renaming host(s) in base configuration, rrd, history files, etc."
 msgstr ""
-"Umbenennung von Host(s) in der Basiskonfiguration, rrd, History-Dateien usw."
+"Umbenennung von Host(s) in der Basiskonfiguration, rrd, Historie-Dateien usw."
 
 msgid "Renaming host(s) in cluster nodes..."
 msgstr "Umbenennen von Host(s) in Cluster-Knoten..."
@@ -50072,7 +50201,7 @@ msgid "Restore job"
 msgstr "Job wiederherstellen"
 
 msgid "Restrict Logfiles (Prefix matching regular expressions)"
-msgstr "Beschränke Logfiles (Präfix-Übereinstimmung mit regulärem Ausdruck)"
+msgstr "Beschränke Log-Dateien (Präfix-Übereinstimmung mit regulärem Ausdruck)"
 
 msgid "Restrict access to IP addresses"
 msgstr "Zugriff über IP-Adressen beschränken"
@@ -50143,6 +50272,9 @@ msgid "Restrict monitoring services by one of these AWS tags"
 msgstr ""
 "Schränken Sie die Monitoring-Dienste durch eines der folgenden AWS-Tags ein"
 
+msgid "Restrict notifications to a time period"
+msgstr "Benachrichtigungen auf eine bestimmte Zeitperiode beschränken"
+
 msgid "Restrict number of processed messages per cycle"
 msgstr "Anzahl der verarbeiteten Nachrichten pro Zyklus begrenzen"
 
@@ -50150,7 +50282,7 @@ msgid "Restrict previous options to"
 msgstr "Vorherige Optionen einschränken auf"
 
 msgid "Restrict runtime of logfile parsing"
-msgstr "Laufzeit des Logdateien-Parsings begrenzen"
+msgstr "Laufzeit des Log-Dateien-Parsings begrenzen"
 
 msgid "Restrict severity to at worst"
 msgstr "Schränke Schweregrad ein auf höchstens"
@@ -50373,9 +50505,8 @@ msgstr "Verwerfe fremde Änderungen"
 msgid "Review and run preview service discovery"
 msgstr "Überprüfen und Ausführen einer Vorschau der Service-Erkennung"
 
-#, fuzzy
 msgid "Review and test configuration"
-msgstr "Remote-Konfiguration"
+msgstr "Konfiguration überprüfen und testen"
 
 msgid "Review your configuration and run preview service discovery"
 msgstr ""
@@ -50437,9 +50568,6 @@ msgstr "Robot-Framework: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "Robot-Framework: Letztes Protokoll"
-
-msgid "Robot package"
-msgstr "Roboter-Paket"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -50774,14 +50902,14 @@ msgid "Ruleset"
 msgstr "Regelsatz"
 
 msgid "Ruleset name"
-msgstr "Name des Regelsets"
+msgstr "Name des Regelsatzes"
 
 msgid "Rulesets"
 msgstr "Regelsätze"
 
 msgid "Rulesets that contain rules with references to the changed tags"
 msgstr ""
-"Regelsätze die Regeln enthalten die sich auf geänderte Merkmale beziehen"
+"Regelsätze, die Regeln enthalten, die sich auf geänderte Merkmale beziehen"
 
 msgid "Run agent as non-root user (Linux)"
 msgstr "Agent als nicht-root-Benutzer laufen lassen (Linux)"
@@ -51501,6 +51629,9 @@ msgstr "Gespeicherte Nur-Lese-Einstellungen"
 msgid "Saved space"
 msgstr "Gesparter Platz"
 
+msgid "Scalar"
+msgstr ""
+
 msgid "Scale to width of page"
 msgstr "Auf Papierbreite skalieren"
 
@@ -51666,7 +51797,7 @@ msgid "Search all entries one level below the base DN"
 msgstr "Alle Einträge eine Ebene unter Basis DN suchen"
 
 msgid "Search all rules and rulesets"
-msgstr "Suche nach allen Regeln und Regelketten"
+msgstr "Suche nach allen Regeln und Regelsätzen"
 
 msgid "Search field allowing regular expression and partial matches"
 msgstr "Suchfeld erlaubt reguläre Ausdrücke und Teilübereinstimmungen"
@@ -51739,7 +51870,7 @@ msgid "Search for strings"
 msgstr "Suche nach Zeichenketten"
 
 msgid "Search history"
-msgstr "Suchverlauf"
+msgstr "Suchhistorie"
 
 msgid "Search hosts"
 msgstr "Suche Hosts"
@@ -52287,6 +52418,9 @@ msgstr "Wählen Sie den Typ des Berichtelements"
 msgid "Select the type of fixed page element"
 msgstr "Wählen Sie den Typ des Seitenelements"
 
+msgid "Select time period"
+msgstr "Zeitperiode auswählen"
+
 msgid "Select type from list"
 msgstr "Typ aus der Liste auswählen"
 
@@ -52554,6 +52688,9 @@ msgstr "Vergleich versendeter und empfangener Traffic"
 
 msgid "Sentinel"
 msgstr "Markierung"
+
+msgid "Separate bulk notifications for"
+msgstr "Separate Sammelbenachrichtigungen für"
 
 msgid "Separate check"
 msgstr "Separater Check"
@@ -54882,7 +55019,7 @@ msgid "Size of extensions"
 msgstr "Größe von Erweiterungen"
 
 msgid "Size of history"
-msgstr "Größe der History"
+msgstr "Größe der Historie"
 
 msgid "Size of inventory"
 msgstr "Größe des Inventars"
@@ -55720,6 +55857,15 @@ msgstr ""
 "einer bestimmten Zeit oder nach einer bestimmten Anzahl von Testausführungen "
 "bereinigt werden soll."
 
+msgid ""
+"Specify here whether the working directory of Robotmk on the target host "
+"should be cleaned up either after a certain time or after a certain number "
+"of test executions."
+msgstr ""
+"Geben Sie hier an, ob das Arbeitsverzeichnis von Robotmk auf dem Ziel-Host "
+"entweder nach einer bestimmten Zeit oder nach einer bestimmten Anzahl von "
+"Testausführungen bereinigt werden soll."
+
 #, python-format
 msgid ""
 "Specify how Checkmk will translate the exit code of a task into a monitoring "
@@ -55941,6 +56087,11 @@ msgstr ""
 "wird."
 
 msgid ""
+"Specify the location where the host will be created. If left empty, the host "
+"will be created in the root folder."
+msgstr ""
+
+msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
 "to name the resulting services."
 msgstr ""
@@ -55969,6 +56120,13 @@ msgstr "Geben sie den Namen der VM an, z.B. z4065012."
 
 msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
 msgstr "Geben Sie den Namen des Zielhosts an, z.B. <tt>checkmk.com</tt>"
+
+msgid ""
+"Specify the name of your host where all the services will be located. The "
+"host name must be unique."
+msgstr ""
+"Geben Sie den Namen Ihres Hosts an, auf dem sich alle Services befinden "
+"werden. Der Host-Name muss eindeutig sein."
 
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr ""
@@ -56316,6 +56474,10 @@ msgstr "Differenz der Standardabweichung"
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standardabweichung der Paketumlaufzeit in Millisekunden"
 
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Standardthemen"
+
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
 "individual settings of an endpoint."
@@ -56602,9 +56764,8 @@ msgstr "Status für bestimmte Bindungsarten"
 msgid "State for unexpected number of interfaces"
 msgstr "Status für unerwartete Anzahl an Schnittstellen"
 
-#, fuzzy
 msgid "State found during service discovery"
-msgstr "Ausstehende Service-Erkennung"
+msgstr "Bei der Service-Erkennung gefundener Zustand"
 
 msgid "State if 'maintenance' services are found"
 msgstr "Zustand, falls 'Maintainane'-Services gefunden werden"
@@ -57601,6 +57762,9 @@ msgstr "Subjektname"
 msgid "Subject for bulk notifications"
 msgstr "Betreff für Sammelbenachrichtigungen"
 
+msgid "Subject line"
+msgstr "Betreffzeile"
+
 msgid "Subject line for host notifications"
 msgstr "Betreffzeile für Host-Benachrichtigungen"
 
@@ -57983,9 +58147,8 @@ msgstr "Synchron"
 msgid "Syncing"
 msgstr "Synchronisieren"
 
-#, fuzzy
 msgid "Syncing broker certificates"
-msgstr "SAP Router Zertifikat"
+msgstr "Synchronisierung von Broker-Zertifikaten"
 
 msgid "Synology Updates"
 msgstr "Updates für Synology"
@@ -58707,9 +58870,8 @@ msgstr ""
 msgid "Test authentication"
 msgstr "Test-Authentifizierung"
 
-#, fuzzy
 msgid "Test configuration"
-msgstr "Hostkonfiguration"
+msgstr "Konfiguration testen"
 
 msgid "Test connection"
 msgstr "Prüfe Verbindung"
@@ -58742,6 +58904,8 @@ msgstr "Testlaufzeit"
 
 msgid "Test the AWS connection based on your configuration settings"
 msgstr ""
+"Testen Sie die AWS-Verbindung auf der Grundlage Ihrer "
+"Konfigurationseinstellungen."
 
 msgid "Test verification"
 msgstr "Testverifizierung"
@@ -59424,7 +59588,7 @@ msgstr ""
 "ihn für Ihre Zentralinstanz"
 
 msgid "The Logfile"
-msgstr "Die Logdatei"
+msgstr "Die Log-Datei"
 
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
@@ -59623,7 +59787,7 @@ msgstr ""
 "Das Windows Updates Plugin prüft auf die Anzahl ausstehender Updates. Die "
 "Standardkonfiguration sieht eine asynchrone Ausführung und eine "
 "Zwischenspeicherung der Ausgabe für 4 Stunden (14400 Sekunden) vor. Sie "
-"können diese Werte über die Setup-Regelsets <i>Cache-Alter für Plugins und "
+"können diese Werte über die Setup-Regelsätze <i>Cache-Alter für Plugins und "
 "lokale Checks einstellen</i> und <i>Setze Ausführungsmodus für Plugins und "
 "lokale Checks</i> ändern."
 
@@ -59749,7 +59913,7 @@ msgid ""
 "update is necessary when rules need to be changed."
 msgstr ""
 "Das Agenten-Plugin <tt>mk_logwatch.py</tt> überwacht einen konfigurierten "
-"Satz von Text-Logfiles auf neue Meldungen, klassifiziert diese nach einem "
+"Satz von Text-Log-Dateien auf neue Meldungen, klassifiziert diese nach einem "
 "Satz von Regeln und sendet (nur) relevante Meldungen zur weiteren "
 "Verarbeitung an den Checkmk-Server. Hier können die Meldungen mit Hilfe des "
 "<a href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch "
@@ -59993,14 +60157,14 @@ msgid ""
 "folder with rotated logfiles where the name of the current logfilealso "
 "changes with each rotation"
 msgstr ""
-"Der<tt>logwatch</tt>-Check erstellt normalerweise einen Service für jede Log-"
+"Der<tt>Logwatch</tt>-Check erstellt normalerweise einen Service für jede Log-"
 "Datei. Durch Definition von Gruppierungsmustern können Sie auf den Check "
 "<tt>logwatch.groups</tt> umschalten. Wenn das Muster mit einer Tilde "
 "beginnt, wird dieses Muster als regulärer Ausdruck statt als Globbingmuster "
 "interpretiert und <tt>*</tt> und <tt>?</tt> werden anders behandelt. Dieser "
 "Check überwacht eine Liste von Log-Dateien gleichzeitig. Dies ist nützlich, "
 "wenn Sie z. B. einen Ordner mit rotierenden Log-Dateien haben, wo der Name "
-"der aktuellen Log-Datei sich ebenfalls mit jeder Rotation ändert"
+"der aktuellen Log-Datei sich ebenfalls mit jeder Rotation ändert."
 
 msgid ""
 "The check <tt>sap.value</tt> normally creates one service for each SAP "
@@ -60272,6 +60436,9 @@ msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
 msgstr ""
+"Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
+"gefunden. Wenn dies unbeabsichtigt ist, überprüfen Sie bitte Ihre "
+"Konfiguration."
 
 msgid "The connection to this site has been disabled."
 msgstr "Die Verbindung zu dieser Instanz wurde deaktiviert."
@@ -60774,7 +60941,7 @@ msgid ""
 "The following rulesets contain rules that do not match to any of the "
 "existing hosts."
 msgstr ""
-"Folgende Regelsätze enthalten Regel, die auf keinen existierenden Host "
+"Die folgenden Regelsätze enthalten Regel, die auf keinen existierenden Host "
 "zutreffen."
 
 msgid "The following users"
@@ -60925,7 +61092,7 @@ msgid ""
 msgstr ""
 "Die historischen Ereignisse (Zustandswechsel, Downtimes, usw.) Ihrer Hosts "
 "und Services werden in der Monitoring-Historie als Textdateien gespeichert. "
-"Eine History-Log-Datei enthält die Monitoring-Historie einer Zeitperiode "
+"Eine Historie-Log-Datei enthält die Monitoring-Historie einer Zeitperiode "
 "aller Hosts und Services. Die Dateien, die älter als die konfigurierte Zeit "
 "sind, werden bei der nächsten Ausführung des Diskspace-Cleanups gelöscht."
 "<br>Die historischen Metriken werden in Dateien pro Host und Service "
@@ -61277,7 +61444,7 @@ msgid ""
 "following command as site user 'cmk-update-license-usage --force' in order "
 "to solve this situation."
 msgstr ""
-"Die History der Lizenznutzung ist älter als fünf Tage. Um einen "
+"Die Historie der Lizenznutzung ist älter als fünf Tage. Um einen "
 "zuverlässigen Durchschnittswert für die Anzahl der Services zu erhalten, "
 "muss der Lizenznutzungsbericht eine erhebliche Anzahl von Beispielen für die "
 "Lizenznutzung enthalten. Bitte führen Sie den folgenden Befehl als "
@@ -61286,7 +61453,7 @@ msgstr ""
 
 msgid "The license usage history was updated at least three days ago."
 msgstr ""
-"Die History der Lizenznutzung wurde vor mindestens drei Tagen aktualisiert."
+"Die Historie der Lizenznutzung wurde vor mindestens drei Tagen aktualisiert."
 
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Die Grenze für das Transport-Lag in <tt>v$dataguard_stats</tt>"
@@ -61382,10 +61549,23 @@ msgstr ""
 "Der Loglevel für die Authentifizierung von Benutzern mit der Weboberfläche."
 
 msgid "The logfile does not exist on site."
-msgstr "Die Logdatei existiert in dieser Instanz nicht."
+msgstr "Die Log-Datei existiert in dieser Instanz nicht."
 
 msgid "The login is currently locked"
 msgstr "Dieses Login ist aktuell gesperrt"
+
+#, python-format
+msgid ""
+"The managed robot with ID %s that you attempted to clone does not exist."
+msgstr ""
+"Der verwaltete Roboter mit der ID %s, den Sie klonen wollten, existiert "
+"nicht."
+
+#, python-format
+msgid "The managed robot with ID %s that you attempted to edit does not exist."
+msgstr ""
+"Der verwaltete Roboter mit der ID %s, den Sie editieren wollten, existiert "
+"nicht."
 
 msgid "The mandatory group name is missing"
 msgstr "Der obligatorische Gruppenname fehlt"
@@ -61617,8 +61797,8 @@ msgid ""
 "not support fetching logfile information. Please upgrade to a newer version."
 msgstr ""
 "Der Monitoring-Kern der Zielinstanz '%s' hat die Version '%s'. Diese "
-"unterstützt das Abrufen von Logfile-Informationen nicht. Bitte aktualisieren "
-"Sie auf eine neuere Version."
+"unterstützt das Abrufen von Log-Dateiinformationen nicht. Bitte "
+"aktualisieren Sie auf eine neuere Version."
 
 msgid ""
 "The monitoring state in case the version of a local check is unparsable."
@@ -63750,7 +63930,7 @@ msgid ""
 "These custom service attributes can be assigned to services using the "
 "ruleset <a href=\"%s\">%s</a>."
 msgstr ""
-"Diese benutzerdefinierten Dienstattribute können den Diensten über den "
+"Diese benutzerdefinierten Service-Attribute können den Services über den "
 "Regelsatz <a href=\"%s\">%s</a> zugewiesen werden."
 
 msgid ""
@@ -63869,7 +64049,6 @@ msgstr "Diese Knoten sind nicht in der eingefrorenen Aggregation"
 msgid "These nodes are only in the frozen aggregation"
 msgstr "Diese Knoten sind nur in der eingefrorenen Aggregation"
 
-#, fuzzy
 msgid ""
 "These options allow specifying the most common command line parameters for "
 "the Robot Framework. In order to use other parameters, you can use the "
@@ -63877,7 +64056,7 @@ msgid ""
 msgstr ""
 "Diese Optionen ermöglichen die Angabe der gebräuchlichsten "
 "Kommandozeilenparameter für das Robot Framework. Um andere Parameter zu "
-"verwenden, können Sie die Option \"Argument-Datei\" nutzen"
+"verwenden, können Sie die Option \"Argument-Datei\" nutzen."
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -63893,7 +64072,7 @@ msgid ""
 "<i>%s</i> or <i>%s</i>."
 msgstr ""
 "Diese Services werden einem Cluster-Host durch eine Regel in einem der "
-"Regelsets <i>%s</i> oder <i>%s</i> zugewiesen."
+"Regelsätze <i>%s</i> oder <i>%s</i> zugewiesen."
 
 msgid ""
 "These services are provided by so called active checks. You can also "
@@ -64661,10 +64840,10 @@ msgid "This defines one file grouping pattern."
 msgstr "Dies definiert ein Datengruppen-Muster."
 
 msgid "This defines one logfile grouping pattern"
-msgstr "Dies definiert ein Logdateien-Gruppierungsmuster"
+msgstr "Dies definiert ein Log-Dateien-Gruppierungsmuster"
 
 msgid "This defines one logfile pattern rule"
-msgstr "Damit wird eine Suchmuster-Regel für Logdateien erzeugt"
+msgstr "Damit wird eine Suchmuster-Regel für Log-Dateien erzeugt"
 
 msgid "This defines one value grouping pattern"
 msgstr "Dies definiert ein Datengruppierungsmuster"
@@ -65103,22 +65282,22 @@ msgid "This log file"
 msgstr "Diese Logdatei"
 
 msgid "This logfile contains no unacknowledged messages."
-msgstr "Diese Logdatei enthält keine nicht-quittierten Meldungen."
+msgstr "Diese Log-Datei enthält keine nicht-quittierten Meldungen."
 
 msgid "This logfile pattern does not match the given string."
 msgstr ""
-"Dieses Logdatei Suchmuster entspricht nicht deer gegebenen Zeichenkette."
+"Dieses Log-Dateisuchmuster entspricht nicht deer gegebenen Zeichenkette."
 
 msgid "This logfile pattern matches but another matched first."
 msgstr ""
-"Dieses Logdatei Suchmuster trifft zu - allerdings gibt es ein anderes, das "
+"Dieses Log-Dateisuchmuster trifft zu - allerdings gibt es ein anderes, das "
 "vorher zutrifft."
 
 msgid ""
 "This logfile pattern matches first and will be used for defining the state "
 "of the given line."
 msgstr ""
-"Dieses Logdatei Suchmuster wird als erstes angewendet und wird dazu benutzt "
+"Dieses Log-Dateisuchmuster wird als erstes angewendet und wird dazu benutzt "
 "den Status der betreffenden Zeile zu setzen."
 
 msgid ""
@@ -65549,7 +65728,7 @@ msgid ""
 msgstr ""
 "Diese Option ist nur relevant, wenn Sie die Anzahl der Nachrichten oder die "
 "Parsezeit begrenzen. Sie Stellt das Verhalten im Falle zu vieler neuer "
-"Einträge in einer Logdatei ein."
+"Einträge in einer Log-Datei ein."
 
 msgid "This option is set by default."
 msgstr "Diese Option ist standardmäßig aktiviert."
@@ -67278,8 +67457,8 @@ msgid ""
 "This ruleset defines criteria for SNMP processes base upon the HOST "
 "Resources MIB."
 msgstr ""
-"Dieses Regelset definiert Kriterien für SNMP-Prozesse basierend auf der HOST "
-"Resources MIB."
+"Dieser Regelsatz definiert Kriterien für SNMP-Prozesse basierend auf der "
+"HOST Resources MIB."
 
 msgid ""
 "This ruleset defines criteria for automatically creating checks for running "
@@ -67623,6 +67802,16 @@ msgstr ""
 "ist 60 Sekunden - passend zum Standard-Checkintervall."
 
 msgid ""
+"This setting decides how late your changes will be activated. Default is 10 "
+"minutes"
+msgstr ""
+
+msgid ""
+"This setting decides how many hosts will be discovered in one Api call. "
+"Default is 20"
+msgstr ""
+
+msgid ""
 "This setting decides how often the dynamic configuration daemon will get "
 "updates from the the site. Default is 5 minutes"
 msgstr ""
@@ -67642,6 +67831,9 @@ msgid ""
 msgstr ""
 "Mit dieser Einstellung wird festgelegt, wann der Bulk Discovery-Vorgang "
 "abgebrochen wird. Standard ist 2 Minuten"
+
+msgid "This setting decides whether we prevent false alarms. Default is True"
+msgstr ""
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
@@ -68320,6 +68512,9 @@ msgstr "gedrosselte Anfragen"
 msgid "Throttles"
 msgstr "Drosselungen"
 
+msgid "Throttling of 'Periodic notifications'"
+msgstr "Drosselung der 'periodischen Benachrichtigungen'"
+
 msgid "Throughput"
 msgstr "Durchsatz"
 
@@ -68444,10 +68639,10 @@ msgid "Time of day to start the backup at"
 msgstr "Uhrzeit für die Erzeugung der Sicherung"
 
 msgid "Time of entry in event history"
-msgstr "Zeitstempel des Eintrags im Ereignisverlauf"
+msgstr "Zeitstempel des Eintrags in der Ereignishistorie"
 
 msgid "Time of entry in logfile"
-msgstr "Zeitstempel des Eintrags in der Logdatei"
+msgstr "Zeitstempel des Eintrags in der Log-Datei"
 
 msgid "Time of first occurrence of this serial"
 msgstr "Zeitstempel des ersten Vorkommens"
@@ -71202,6 +71397,10 @@ msgstr "Übertragen: %d neue, %d geänderte und %d verschwundene Dateien"
 msgid "Transform status output"
 msgstr "Status-Ausgabe umschreiben"
 
+#, fuzzy
+msgid "Transformation"
+msgstr "Thermische Informationen"
+
 msgid "Transformation on selected metric"
 msgstr "Transformation auf ausgewählte Metriken"
 
@@ -71939,7 +72138,7 @@ msgstr ""
 
 #, python-format
 msgid "Unable to show logfile: <b>%s</b>"
-msgstr "Logdatei <b>%s</b> kann nicht angezeigt werden"
+msgstr "Log-Datei <b>%s</b> kann nicht angezeigt werden"
 
 #, python-format
 msgid "Unable to successfully perform the LDAP search (%s)"
@@ -73969,15 +74168,15 @@ msgstr ""
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
 msgstr ""
-"Verwenden Sie diese Regelkette, um <a href=\"%s\">%s</a> den Services "
+"Verwenden Sie diesen Regelsatz, um <a href=\"%s\">%s</a> den Services "
 "zuzuweisen."
 
 msgid "Use this ruleset to assign labels to hosts of your choice."
-msgstr "Verwenden Sie diese Regelkette, um Hosts Ihrer Wahl Labels zuzuweisen."
+msgstr "Verwenden Sie diesen Regelsatz, um Hosts Ihrer Wahl Labels zuzuweisen."
 
 msgid "Use this ruleset to assign labels to service of your choice."
 msgstr ""
-"Verwenden Sie diese Regelkette, um dem Service Ihrer Wahl Labels zuzuweisen."
+"Verwenden Sie diesen Regelsatz, um dem Service Ihrer Wahl Labels zuzuweisen."
 
 msgid ""
 "Use this ruleset to automatically configure the firewall rules that are "
@@ -74017,7 +74216,7 @@ msgid ""
 "put in the long output. You should only enable this for the objects you need "
 "it for."
 msgstr ""
-"Verwenden Sie dieses Regelset, um die mehrzeilige Ausgabe in der Monitoring-"
+"Verwenden Sie diesen Regelsatz, um die mehrzeilige Ausgabe in der Monitoring-"
 "Historie verfügbar zu machen (was sie auch für die Verfügbarkeitsanalyse "
 "verfügbar macht). Seien Sie vorsichtig: Wenn Sie diese Option aktivieren, "
 "kann sich der Speicherplatzverbrauch Ihrer Monitoring-Historie erhöhen, "
@@ -75395,6 +75594,10 @@ msgstr "Breite der vertikalen Achse"
 msgid "Vertical padding"
 msgstr "Vertikaler Innenabstand"
 
+#, fuzzy
+msgid "Vertical range"
+msgstr "Vertikaler Innenabstand"
+
 msgid "Vertical rules"
 msgstr "Vertikale Linien"
 
@@ -75809,9 +76012,8 @@ msgstr "Wartende Verbindungen"
 msgid "Waiting containers"
 msgstr "Wartende Container"
 
-#, fuzzy
 msgid "Waiting for discovery"
-msgstr "Netapp Port-Erkennung"
+msgstr "Wartet auf Erkennung"
 
 msgid ""
 "Waiting for first status update from the job. In case this message is shown "
@@ -75860,7 +76062,7 @@ msgid "Warn if VM status value is not"
 msgstr "Warnen, wenn der VM-Statuswert nicht"
 
 msgid "Warn if list of forwarded logfiles changes"
-msgstr "Warnen, wenn die Liste der weitergeleiteten Logdateien sich ändert"
+msgstr "Warnen, wenn die Liste der weitergeleiteten Log-Dateien sich ändert"
 
 msgid "Warn if node status value is not"
 msgstr "Warnen, wenn der Knoten-Statuswert nicht"
@@ -76814,8 +77016,8 @@ msgid ""
 "When the monitoring of forwarded logfiles is enabled, the check verifies "
 "that all of the logfiles listed here are reported by the monitored system."
 msgstr ""
-"Falls Sie das Monitoring weitergeleiteter Logdateien aktiviert haben, dann "
-"überwacht der Check, dass alle hier gelisteten Logdateien auch wirklich "
+"Falls Sie das Monitoring weitergeleiteter Log-Dateien aktiviert haben, dann "
+"überwacht der Check, dass alle hier gelisteten Log-Dateien auch wirklich "
 "ausgelesen und übertragen wurden."
 
 msgid ""
@@ -77014,7 +77216,7 @@ msgid ""
 msgstr ""
 "Diese Option sorgt dafür, dass <b>jede</b> eingehende Meldung in das "
 "Verzeichnis <tt>messages</tt> im Zustandsverzeichnis der Event Console "
-"geloggt wird. Die Rotation der Logdateien ist analog zum Rotieren der "
+"geloggt wird. Die Rotation der Log-Dateien ist analog zum Rotieren der "
 "Dateien für die Historie der Events. Bitte beachten Sie, dass dies bei hohem "
 "Aufkommen an Nachrichten zu sehr großen Dateien führen kann."
 
@@ -77418,7 +77620,6 @@ msgstr ""
 "Wenn der Authentifizierungstyp auf 'OAuth2' eingestellt ist, muss die Option "
 "'%s' angegeben werden."
 
-#, fuzzy
 msgid ""
 "With the help of the <a href=\"https://github.com/robocorp/rcc\" target="
 "\"_blank\">RCC</a> binary, the Robotmk scheduler can generate the Python "
@@ -77468,7 +77669,7 @@ msgid ""
 "each logfile in question. "
 msgstr ""
 "Wenn diese Option aktiviert ist, wird höchstens die konfigurierte Zeit für "
-"jede in Frage kommende Logdatei aufgewandt. "
+"jede in Frage kommende Log-Datei aufgewandt. "
 
 msgid ""
 "With this option activated cluster node IPs may be mapped to a cluster. In "
@@ -77967,10 +78168,10 @@ msgid "Write latency 500+ ms"
 msgstr "Schreiblatenz 500+ ms"
 
 msgid "Write long output of hosts to monitoring history"
-msgstr "Mehrzeiligen Ausgabe von Hosts in Monitoring-History schreiben"
+msgstr "Mehrzeiligen Ausgabe von Hosts in die Monitoring-Historie schreiben"
 
 msgid "Write long output of services to monitoring history"
-msgstr "Mehrzeiligen Ausgabe von Services in Monitoring-History schreiben"
+msgstr "Mehrzeiligen Ausgabe von Services in die Monitoring-Historie schreiben"
 
 msgid "Write operations"
 msgstr "Schreibzugriffe"
@@ -78554,9 +78755,9 @@ msgid ""
 "defined for this logfile. All patterns for this logfile are listed below. "
 "Matching patterns will be highlighted after clicking the \"Try out\" button."
 msgstr ""
-"Sie können einen Text einfügen (z.B. eine Zeile der Logdatei), um die für "
-"diese Logdatei definierten Muster zu testen. Alle Muster für diese Logdatei "
-"sind unten aufgelistet. Übereinstimmende Muster werden hervorgehoben, "
+"Sie können einen Text einfügen (z.B. eine Zeile der Log-Datei), um die für "
+"diese Log-Datei definierten Muster zu testen. Alle Muster für diese Log-"
+"Datei sind unten aufgelistet. Übereinstimmende Muster werden hervorgehoben, "
 "nachdem Sie auf den \"Ausprobieren\"-Knopf geklickt haben."
 
 msgid ""
@@ -80385,6 +80586,9 @@ msgstr "erlaube Befehle und Aktionen über TCP"
 msgid "allow users to deactivate this notification"
 msgstr "Benutzern erlauben, diese Benachrichtigung zu deaktivieren"
 
+msgid "and"
+msgstr "und"
+
 msgid "any"
 msgstr "beliebig"
 
@@ -80474,6 +80678,9 @@ msgstr "unter Prognose"
 
 msgid "best state"
 msgstr "bester Zustand"
+
+msgid "between"
+msgstr "zwischen"
 
 msgid "bindings"
 msgstr "Bindungen"
@@ -81884,7 +82091,7 @@ msgid "rows"
 msgstr "Zeilen"
 
 msgid "rpm"
-msgstr "rpm"
+msgstr "U/min"
 
 msgid "rule"
 msgid_plural "rules"
@@ -81938,6 +82145,9 @@ msgstr "Sek."
 
 msgid "security token"
 msgstr "Sicherheits-Token"
+
+msgid "send every"
+msgstr "sende alle"
 
 msgid "send notifications of contactgroup:"
 msgstr "Benachrichtigungen an Kontakt-Gruppen senden:"
@@ -82016,6 +82226,9 @@ msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
 
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
+
+msgid "starting with notification number"
+msgstr "mit der Benachrichtigungsnummer beginnend"
 
 msgid "status entries"
 msgstr "Statuseinträge"
@@ -82359,9 +82572,37 @@ msgstr "{region} ({id_})"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
-#, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
-msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
+msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Configure host and authority"
+#~ msgstr "Host und Einrichtung konfigurieren"
+
+#~ msgid ""
+#~ "Name your host, define the path and select the authority you would like "
+#~ "to monitor"
+#~ msgstr ""
+#~ "Benennen Sie Ihren Host, geben Sie den Pfad an und wählen Sie die "
+#~ "Einrichtung, die Sie überwachen wollen"
+
+#, python-format
+#~ msgid "No FormSpec implementation for method '%s' found."
+#~ msgstr "Keine FormSpec-Implementation für die Methode '%s' gefunden."
+
+#~ msgid "Event console alerts"
+#~ msgstr "Alarme der Event Console"
+
+#~ msgid "File upload"
+#~ msgstr "Datei-Upload"
+
+#~ msgid "Placeholder"
+#~ msgstr "Platzhalter"
+
+#~ msgid "Robot package"
+#~ msgstr "Roboter-Paket"
+
+#~ msgid "Managed Robots"
+#~ msgstr "Verwaltete Roboter"
 
 #~ msgid ""
 #~ "Specify here whether the working directory of Robotmk (`C:\\ProgramData"

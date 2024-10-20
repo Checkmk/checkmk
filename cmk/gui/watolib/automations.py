@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import ast
 import json
-import logging
-import os
 import re
 import subprocess
 import time
@@ -34,7 +32,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-from cmk.utils.log import VERBOSE
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -70,6 +67,9 @@ from cmk.gui.watolib.utils import mk_repr
 
 from cmk import trace
 
+from . import automation_subprocess
+from .automation_executor import AutomationExecutor
+
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
 
@@ -101,81 +101,43 @@ def check_mk_local_automation_serialized(
     ) as span:
         if args is None:
             args = []
-        new_args = list(args)
 
         if stdin_data is None:
             stdin_data = repr(indata)
 
-        if timeout:
-            new_args = ["--timeout", "%d" % timeout] + new_args
-
-        cmd = ["check_mk"]
-
-        if auto_logger.isEnabledFor(logging.DEBUG):
-            cmd.append("-vv")
-        elif auto_logger.isEnabledFor(VERBOSE):
-            cmd.append("-v")
-
-        cmd += ["--automation", command] + new_args
-
         if command in ["restart", "reload"]:
             call_hook_pre_activate_changes()
 
-        # This debug output makes problems when doing bulk inventory, because
-        # it garbles the non-HTML response output
-        # if config.debug:
-        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        span.set_attribute("cmk.automation.command", subprocess.list2cmdline(cmd))
-        auto_logger.info("STDIN: %r" % stdin_data)
-
+        executor: AutomationExecutor = automation_subprocess.SubprocessExecutor()
         try:
-            completed_process = subprocess.run(
-                cmd,
-                capture_output=True,
-                close_fds=True,
-                encoding="utf-8",
-                input=stdin_data,
-                check=False,
-                # Set the environment for the trace context (TRACEPARENT + optional TRACESTATE)
-                env=dict(os.environ) | trace.context_for_environment(),
-            )
+            result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:
-            raise local_automation_failure(command=command, cmdline=cmd, exc=e)
-
-        span.set_attribute("cmk.automation.exit_code", completed_process.returncode)
-        auto_logger.info("FINISHED: %d" % completed_process.returncode)
-        auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
-
-        if completed_process.stderr:
-            auto_logger.warning(
-                "'%s' returned '%s'"
-                % (
-                    " ".join(cmd),
-                    completed_process.stderr,
-                )
+            raise local_automation_failure(
+                command=command,
+                cmdline=executor.command_description(command, args, logger, timeout),
+                exc=e,
             )
-        if completed_process.returncode:
+
+        span.set_attribute("cmk.automation.exit_code", result.exit_code)
+        auto_logger.info("FINISHED: %d" % result.exit_code)
+        auto_logger.debug("OUTPUT: %r" % result.output)
+
+        if result.exit_code:
             auto_logger.error(
-                "Error running %r (exit code %d)"
-                % (
-                    subprocess.list2cmdline(cmd),
-                    completed_process.returncode,
-                )
+                "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
             )
             raise local_automation_failure(
                 command=command,
-                cmdline=cmd,
-                code=completed_process.returncode,
-                out=completed_process.stdout,
-                err=completed_process.stderr,
+                cmdline=result.command_description,
+                code=result.exit_code,
+                out=result.output,
             )
 
         # On successful "restart" command execute the activate changes hook
         if command in ["restart", "reload"]:
             call_hook_activate_changes()
 
-        return cmd, SerializedResult(completed_process.stdout)
+        return result.command_description, SerializedResult(result.output)
 
 
 def local_automation_failure(

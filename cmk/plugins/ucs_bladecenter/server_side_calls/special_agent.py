@@ -30,6 +30,8 @@ def agent_ucsbladecenter_arguments(
 
     if params.certificate_validation is False:
         command_arguments.append("--no-cert-check")
+    else:
+        command_arguments.extend(["--cert-server-name", host_config.name])
 
     command_arguments.append(host_config.primary_ip_config.address)
 

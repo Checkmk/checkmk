@@ -43,6 +43,8 @@ HOST_CONFIG = HostConfig(
                     "username",
                     "-p",
                     Secret(23).unsafe(),
+                    "--cert-server-name",
+                    "hostname",
                     "address",
                 ]
             ),

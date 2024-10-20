@@ -3,7 +3,7 @@ load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR",
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//omd/packages/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
-load("//omd/packages/rules:make_deployable.bzl", "make_deployable")
+load("//omd/packages/rules:make_deployable.bzl", "make_deployable_dir")
 
 exports_files([
     "sitecustomize.py",
@@ -111,7 +111,7 @@ pkg_files(
     prefix = "bin",
 )
 
-make_deployable(
+make_deployable_dir(
     name = "python_lib_dynload_deployable",
     src = "@python//:gen_dir",
     input_dir = "lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR,

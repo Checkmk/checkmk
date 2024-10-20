@@ -85,6 +85,7 @@ class NVMeAll(pydantic.BaseModel, frozen=True):
 
 class SCSIAll(pydantic.BaseModel, frozen=True):
     device: SCSIDevice
+    temperature: Temperature | None = None
 
 
 class FailureAll(pydantic.BaseModel, frozen=True):

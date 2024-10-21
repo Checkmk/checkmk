@@ -6,8 +6,8 @@
 import logging
 import os
 from collections.abc import Callable, Mapping
+from multiprocessing.synchronize import Event
 from pathlib import Path
-from threading import Event
 
 from pydantic import BaseModel
 

@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
+from multiprocessing import Event as make_event
 from pathlib import Path
-from threading import Event
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
@@ -91,7 +91,7 @@ def _setup_logging(args: Arguments) -> logging.Logger:
 
 
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
-    reload_config = Event()
+    reload_config = make_event()
     processes = (
         ReceivingProcess(
             logger,

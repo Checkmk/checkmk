@@ -60,8 +60,12 @@ case "$1" in
         if process_is_running; then
             exit_with_code 0 'already running.'
         fi
-        "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT"
-        exit_with_code 0 'OK'
+
+        if "$DAEMON" "$PIDFILE" "$LOGFILE" "$OMD_ROOT"; then
+            exit_with_code 0 'OK'
+        else
+            exit_with_code 1 'failed'
+        fi
         ;;
 
     stop)

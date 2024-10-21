@@ -16,16 +16,15 @@ from pathlib import Path
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.messaging import QueueName
-from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
-from cmk.piggyback_hub.payload import (
+from cmk.messaging import CMKConnectionError, QueueName
+
+from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config_on_message
+from .payload import (
     PiggybackPayload,
     save_payload_on_message,
     SendingPayloadProcess,
 )
-
-from .config import CONFIG_QUEUE
-from .utils import APP_NAME, ReceivingProcess
+from .utils import APP_NAME, make_connection, ReceivingProcess
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -90,6 +89,15 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     return logger
 
 
+def run_initial_connection_test(logger: logging.Logger, omd_root: Path) -> int:
+    try:
+        with make_connection(omd_root, logger, "initial connection test"):
+            return 0
+    except CMKConnectionError as exc:
+        logger.error(str(exc))
+        return 1
+
+
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     reload_config = make_event()
     processes = (
@@ -138,8 +146,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
+    omd_root = Path(args.omd_root)
 
     logger.info("Starting: %s", APP_NAME)
+
+    if (ec := run_initial_connection_test(logger, omd_root)) != 0:
+        return ec
 
     if not args.foreground:
         daemonize()
@@ -147,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            return run_piggyback_hub(logger, Path(args.omd_root))
+            return run_piggyback_hub(logger, omd_root)
     except Exception as exc:
         if args.debug:
             raise

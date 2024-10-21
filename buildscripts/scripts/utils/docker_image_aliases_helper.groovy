@@ -80,7 +80,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         + (mount_credentials ? ["-v ${env.HOME}/.cmk-credentials:${env.HOME}/.cmk-credentials"] : [])
         + (mount_host_user_files ? ["-v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro"] : [])
         + ((mount_reference_repo && reference_repo_dir) ? ["-v ${reference_repo_dir}:${reference_repo_dir}:ro"] : [])
-        + (create_cache_folder ? ["-v \"${container_shadow_workspace}/cache:${env.HOME}/.cache\""] : [])
+        + (create_cache_folder ? ["-v \"${container_shadow_workspace}/home_cache:${env.HOME}/.cache\""] : [])
         + ["-v \"${container_shadow_workspace}/venv:${checkout_dir}/.venv\""]
         + ["-v \"${container_shadow_workspace}/checkout_cache:${checkout_dir}/.cache\""]
     ).join(" ");
@@ -94,17 +94,26 @@ inside_container = {Map arg1=[:], Closure arg2 ->
             # Bazel creates files without write permission
             chmod -R u+w ${container_shadow_workspace}/cache
         fi
-        mkdir -p ${container_shadow_workspace}/home
-        mkdir -p ${container_shadow_workspace}/home/.cache
-        mkdir -p ${container_shadow_workspace}/cache
-        mkdir -p ${container_shadow_workspace}/venv
-        mkdir -p ${container_shadow_workspace}/checkout_cache
-        mkdir -p ${checkout_dir}/shared_cargo_folder
-        mkdir -p ${checkout_dir}/.venv
+        mkdir -p "${container_shadow_workspace}/home"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}")"
-        mkdir -p ${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.venv")
-        mkdir -p ${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.cache")
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"
+
+        # create mount dirs for $HOME/.cache (not to confuse with <checkout_dir>/.cache)
+        mkdir -p "${container_shadow_workspace}/home_cache"
+        mkdir -p "${container_shadow_workspace}/home/.cache"
+
+        # create mount dirs for <checkout_dir>/.venv
+        mkdir -p "${checkout_dir}/.venv"
+        mkdir -p "${container_shadow_workspace}/venv"
+        mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.venv")"
+
+        # create mount dirs for <checkout_dir>/.cache
+        mkdir -p "${container_shadow_workspace}/checkout_cache"
+        mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.cache")"
+
+        # probably not needed, but kept here because things are somehow working..
+        mkdir -p "${checkout_dir}/shared_cargo_folder"
+
         # END COMMON CODE with run-in-docker.sh
     """);
     println("inside_container(image=${image} docker_args: ${run_args_str})");

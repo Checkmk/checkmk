@@ -1,0 +1,9 @@
+target-version = "py312"
+line-length = 100
+
+[lint]
+select = ["I"]
+
+[lint.isort]
+known-first-party = ["cmk"]
+order-by-type = false       # TODO: Why do we actually want this?

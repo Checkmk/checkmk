@@ -3,11 +3,11 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load(":linters.bzl", "ruff_test")
 
 exports_files([
     "pyproject.toml",
     "requirements.txt",
+    "ruff.toml",
 ])
 
 py_library(
@@ -39,15 +39,6 @@ py_library(
     visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("pydantic"),
-    ],
-)
-
-ruff_test(
-    name = "ruff_lint",
-    size = "small",
-    srcs = [
-        ":cmk-agent-based",
-        ":unit",
     ],
 )
 

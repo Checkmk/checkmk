@@ -1,0 +1,4 @@
+# A config to separte the isort linting from the rest of ruff
+lint:
+  aspects:
+    - //packages/cmk-agent-based:linters.bzl%ruff_isort

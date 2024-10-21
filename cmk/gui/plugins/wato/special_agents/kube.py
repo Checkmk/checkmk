@@ -13,6 +13,7 @@ import pydantic_core
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
+from cmk.utils.hostaddress import HostAddress
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
@@ -23,12 +24,12 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     FixedValue,
-    Hostname,
     Integer,
     ListChoice,
     ListOf,
     MigrateNotUpdated,
     RegExp,
+    TextInput,
     Tuple,
     Url,
 )
@@ -278,20 +279,35 @@ def _api_endpoint() -> tuple[str, Dictionary]:
     )
 
 
+def _validate_hostname(hostname: str, varprefix: str) -> None:
+    try:
+        HostAddress.validate(hostname)
+    except ValueError as exception:
+        raise MKUserError(
+            varprefix,
+            _(
+                "Please enter a valid host name or IPv4 address. "
+                "Only letters, digits, dash, underscore and dot are allowed."
+            ),
+        ) from exception
+
+
 def _valuespec_special_agents_kube():
     return MigrateNotUpdated(
         valuespec=Dictionary(
             elements=[
                 (
                     "cluster-name",
-                    Hostname(
-                        title=_("Cluster name"),
+                    TextInput(
+                        size=38,
                         allow_empty=False,
+                        title=_("Cluster name"),
                         help=_(
                             "You must specify a name for your Kubernetes cluster. The provided name"
                             " will be used to make the objects from your cluster unique in a "
                             "multi-cluster setup."
                         ),
+                        validate=_validate_hostname,
                     ),
                 ),
                 (

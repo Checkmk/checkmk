@@ -92,6 +92,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         # BEGIN COMMON CODE with run-in-docker.sh
 
         mkdir -p "${container_shadow_workspace}/home"
+        touch "${container_shadow_workspace}/home/.cmk-credentials"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}")"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE_TMP}")"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"

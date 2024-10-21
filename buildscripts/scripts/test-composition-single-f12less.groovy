@@ -81,6 +81,9 @@ def main() {
                 // runs somehow affecting the current run.
                 sh("rm -rf ${WORKSPACE}/test-results");
 
+                /// remove downloaded packages since they consume dozens of MiB
+                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
+
                 // Initialize our virtual environment before parallelization
                 sh("make .venv");
 

@@ -279,9 +279,9 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 void TableStateHistory::answerQuery(Query &query, const User &user,
                                     const ICore &core) {
     log_cache_->apply(
-        [this, &query, &user, &core](const LogFiles &log_cache,
+        [this, &query, &user, &core](const LogFiles &log_files,
                                      size_t /*num_cached_log_messages*/) {
-            answerQueryInternal(query, user, core, log_cache);
+            answerQueryInternal(query, user, core, log_files);
         });
 }
 

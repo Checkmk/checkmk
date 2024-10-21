@@ -27,6 +27,7 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-plugins-docker";
+    def download_dir = "package_download";
 
     currentBuild.description += (
         """
@@ -75,6 +76,9 @@ def main() {
                     // Initialize our virtual environment before parallelization
                     sh("make .venv");
 
+                    /// remove downloaded packages since they consume dozens of MiB
+                    sh("""rm -rf "${checkout_dir}/${download_dir}" """);
+
                     stage("Fetch Checkmk package") {
                         upstream_build(
                             relative_job_name: "builders/build-cmk-distro-package",
@@ -85,7 +89,7 @@ def main() {
                                 EDITION: edition,
                                 DISTRO: distro,
                             ],
-                            dest: "package_download",
+                            dest: download_dir,
                         );
                     }
                     try {

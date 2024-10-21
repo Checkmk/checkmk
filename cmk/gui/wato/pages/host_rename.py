@@ -73,7 +73,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.site_changes import SiteChanges
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -531,7 +530,7 @@ class ModeRenameHost(WatoMode):
 
     def action(self) -> ActionResult:
         renamed_host_site = self._host.site_id()
-        if SiteChanges(renamed_host_site).read():
+        if ActivateChanges().get_pending_changes_info().has_changes():
             raise MKUserError(
                 "newname",
                 _(

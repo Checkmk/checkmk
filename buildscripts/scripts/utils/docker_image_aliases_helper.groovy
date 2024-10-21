@@ -90,10 +90,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     /// poor Docker daemon.
     sh("""
         # BEGIN COMMON CODE with run-in-docker.sh
-        if [ -e "${container_shadow_workspace}/cache" ]; then
-            # Bazel creates files without write permission
-            chmod -R u+w ${container_shadow_workspace}/cache
-        fi
+
         mkdir -p "${container_shadow_workspace}/home"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}")"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE_TMP}")"

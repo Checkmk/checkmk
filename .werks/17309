@@ -7,8 +7,8 @@ Edition: cee
 Level: 1
 Version: 2.2.0p36
 
-If configured, the <code>Check_MK Agent</code> service checks the status of the agent updater plugin. In the
+If configured, the <tt>Check_MK Agent</tt> service checks the status of the agent updater plugin. In the
 case where agent updates where globally enabled but specifically disabled for the host in question,
-the setting <code>State if agent deployment is disabled for host</code> in the configuration of this service
-(rule set <code>Checkmk Agent installation auditing</code>) was not respected. Instead, the service of always
-reported <code>WARN</code>.
+the setting <tt>State if agent deployment is disabled for host</tt> in the configuration of this service
+(rule set <tt>Checkmk Agent installation auditing</tt>) was not respected. Instead, the service of always
+reported <tt>WARN</tt>.

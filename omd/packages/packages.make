@@ -18,10 +18,6 @@ TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 
-# Bazel paths
-BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
-BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
-
 # Intermediate Install Target
 # intermediate_install used to be necessary to link external dependecies with each other.
 # This is now done inside of Bazel

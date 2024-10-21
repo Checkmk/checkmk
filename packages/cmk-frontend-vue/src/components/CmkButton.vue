@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { getIconVariable } from '@/lib/utils'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 const buttonVariants = cva('', {
   variants: {
@@ -37,8 +37,8 @@ defineProps<ButtonProps>()
 
 <template>
   <button class="button" :class="buttonVariants({ type, variant })">
-    <img v-if="variant === 'submit'" class="icon submit" />
-    <img v-if="variant === 'cancel'" class="icon cancel" />
+    <CmkIcon v-if="variant === 'submit'" variant="inline" name="save" />
+    <CmkIcon v-if="variant === 'cancel'" variant="inline" name="cancel" />
     <slot />
   </button>
 </template>
@@ -60,16 +60,5 @@ defineProps<ButtonProps>()
   padding: 0;
   margin: 0;
   font-weight: normal;
-}
-.icon {
-  margin-right: 0.8em;
-  margin-left: -0.5em;
-}
-/* TODO: replace with icon component */
-.icon.submit {
-  content: v-bind('getIconVariable("save")');
-}
-.icon.cancel {
-  content: v-bind('getIconVariable("cancel")');
 }
 </style>

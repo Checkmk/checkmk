@@ -108,6 +108,7 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.venv")"
 
         # create mount dirs for <checkout_dir>/.cache
+        mkdir -p "${checkout_dir}/.cache"
         mkdir -p "${container_shadow_workspace}/checkout_cache"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${checkout_dir}/.cache")"
 

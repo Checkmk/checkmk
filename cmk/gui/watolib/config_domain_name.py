@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import os
 import pprint
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, Literal
@@ -189,9 +189,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[type[ABCConfigDoma
 config_domain_registry = ConfigDomainRegistry()
 
 
-def generate_hosts_to_update_settings(
-    hostnames: Iterable[HostName],
-) -> SerializedSettings:
+def generate_hosts_to_update_settings(hostnames: Sequence[HostName]) -> SerializedSettings:
     return {"hosts_to_update": hostnames}
 
 

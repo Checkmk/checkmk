@@ -301,14 +301,14 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: list[HostName] | None = None) -> results.RestartResult:
+def restart(hosts_to_update: Sequence[HostName] | None = None) -> results.RestartResult:
     return _deserialize(
         _automation_serialized("restart", args=hosts_to_update),
         results.RestartResult,
     )
 
 
-def reload(hosts_to_update: list[HostName] | None = None) -> results.ReloadResult:
+def reload(hosts_to_update: Sequence[HostName] | None = None) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized("reload", args=hosts_to_update),
         results.ReloadResult,

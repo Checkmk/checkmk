@@ -934,7 +934,7 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
 
 
 def _generate_domain_settings(
-    ident: ConfigDomainName, hostnames: Iterable[HostName]
+    ident: ConfigDomainName, hostnames: Sequence[HostName]
 ) -> SerializedSettings:
     return {ident: generate_hosts_to_update_settings(hostnames)}
 

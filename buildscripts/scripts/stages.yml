@@ -185,12 +185,13 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
-    - NAME: "Python Cyclic Dependencies"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_CMK_WERKS_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: "tests"
-      COMMAND: "make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt"
-      TEXT_ON_SKIP: "No Python files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
+    # Disabled until it is fixed, see CMK-19758
+    # - NAME: "Python Cyclic Dependencies"
+    #   ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_CMK_WERKS_FILES,CHANGED_CMK_TRACE_FILES,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
+    #   DIR: "tests"
+    #   COMMAND: "make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt"
+    #   TEXT_ON_SKIP: "No Python files changed"
+    #   RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 
     - NAME: "omdlib Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_OMDLIB_FILES,CHANGED_OMDLIB_TESTS

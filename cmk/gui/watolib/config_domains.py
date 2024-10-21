@@ -117,11 +117,11 @@ class ConfigDomainCore(ABCConfigDomain):
         # The incremental activate only works, if all changes use the hosts_to_update option
         hosts_to_update: set[HostName] = set()
         for setting in settings:
-            if len(setting.get("hosts_to_update", [])) == 0:
+            if not setting.get("hosts_to_update"):
                 return DomainRequest(cls.ident(), generate_hosts_to_update_settings([]))
             hosts_to_update.update(setting["hosts_to_update"])
 
-        return DomainRequest(cls.ident(), generate_hosts_to_update_settings(hosts_to_update))
+        return DomainRequest(cls.ident(), generate_hosts_to_update_settings(list(hosts_to_update)))
 
 
 class ConfigDomainGUI(ABCConfigDomain):

@@ -127,16 +127,15 @@ def register(
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs()
-
     folder_validators_registry.register(
         FolderValidators(
             str(edition),
-            validate_edit_host=noop,
-            validate_create_hosts=noop,
-            validate_create_subfolder=noop,
-            validate_edit_folder=noop,
-            validate_move_hosts=noop,
-            validate_move_subfolder_to=noop,
+            validate_edit_host=lambda s, n, a: None,
+            validate_create_hosts=lambda e, s: None,
+            validate_create_subfolder=lambda f, a: None,
+            validate_edit_folder=lambda f, a: None,
+            validate_move_hosts=lambda f, n, t: None,
+            validate_move_subfolder_to=lambda f, t: None,
         )
     )
     _sync_remote_sites.register(automation_command_registry, job_registry)
@@ -181,11 +180,6 @@ def register(
             collect_all_hosts,
         )
     )
-
-
-# Hot fix for composition tests. Real fix will follow
-def noop(*arg, **kwargs):  # type: ignore[no-untyped-def]
-    pass
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:

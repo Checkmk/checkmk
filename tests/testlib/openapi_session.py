@@ -186,7 +186,7 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 120,
     ) -> bool:
-        logger.info("Activate changes and wait for completion...")
+        logger.info("Activate changes and wait %ds for completion...", timeout)
         with self._wait_for_completion(timeout, "get", "activate_changes"):
             if activation_started := self.activate_changes(sites, force_foreign_changes):
                 pending_changes = self.pending_changes()
@@ -565,13 +565,18 @@ class CMKOpenApiSession(requests.Session):
                     url=redirect_url,
                     allow_redirects=False,
                 )
-                if response.status_code == 204 and not response.content:  # job has finished
+                if response.status_code == 204 and not response.content:
+                    logger.info(
+                        "Wait for completion finished after %ss for %s", running_time, operation
+                    )
                     break
 
                 if not 300 <= response.status_code < 400:
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)
+        else:
+            logger.info("Wait for completion finished instantly for %s", operation)
 
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None

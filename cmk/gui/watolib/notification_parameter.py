@@ -116,17 +116,21 @@ def get_list_of_notification_parameter(
 
 
 def get_notification_parameter(
+    registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
 ) -> NotificationParameterItem:
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
-    item = next(
+    method, item = next(
         (
-            item.get(parameter_id)
-            for item in notification_parameter.values()
+            (method, item.get(parameter_id))
+            for method, item in notification_parameter.items()
             if parameter_id in item
         ),
-        None,
+        (None, None),
     )
-    if item is None:
+    if item is None or method is None:
         raise KeyError(parameter_id)
-    return item
+    form_spec = registry.form_spec(method)
+    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
+    _, values = visitor.to_vue(item)
+    return values

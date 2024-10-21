@@ -78,6 +78,7 @@ def get_configuration_entity_data(
     match entity_type:
         case ConfigEntityType.notification_parameter:
             return get_notification_parameter(
+                notification_parameter_registry,
                 NotificationParameterID(entity_id),
             )
         case other:

@@ -12,6 +12,7 @@ from cmk.utils.notify_types import (
 
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.wato._notification_parameter import NotificationParameter
 from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
@@ -25,7 +26,13 @@ from cmk.gui.watolib.notification_parameter import (
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, String
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+)
 
 
 class DummyNotificationParams(NotificationParameter):
@@ -46,6 +53,15 @@ class DummyNotificationParams(NotificationParameter):
                         custom_validate=[not_empty()], prefill=DefaultValue("some_default_value")
                     ),
                     required=True,
+                ),
+                "select_param": DictElement(
+                    parameter_form=SingleChoice(
+                        elements=[
+                            SingleChoiceElement(name="name1", title=Title("title1")),
+                            SingleChoiceElement(name="name2", title=Title("title2")),
+                        ]
+                    ),
+                    required=False,
                 ),
             },
         )
@@ -158,7 +174,7 @@ def test_get_list_of_notification_parameter() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_notification_parameter() -> None:
+def test_get_notification_parameter(registry: NotificationParameterRegistry) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
         {
@@ -174,8 +190,36 @@ def test_get_notification_parameter() -> None:
     )
 
     # WHEN
-    param = get_notification_parameter(NotificationParameterID("some-id"))
+    param = get_notification_parameter(registry, NotificationParameterID("some-id"))
 
     # THEN
     assert param["general"]["description"] == "foo"
     assert param["parameter_properties"]["test_param"] == "bar"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_notification_parameter_doesnt_just_return_from_disk(
+    registry: NotificationParameterRegistry,
+) -> None:
+    # GIVEN
+    NotificationParameterConfigFile().save(
+        {
+            "dummy_params": {
+                NotificationParameterID("some-id"): NotificationParameterItem(
+                    general=NotificationParameterGeneralInfos(
+                        description="foo", comment="", docu_url=""
+                    ),
+                    parameter_properties={
+                        "test_param": "bar",
+                        "select_param": "name1",
+                    },
+                )
+            }
+        }
+    )
+
+    # WHEN
+    param = get_notification_parameter(registry, NotificationParameterID("some-id"))
+
+    # THEN
+    assert param["parameter_properties"]["select_param"] == SingleChoiceVisitor.option_id("name1")

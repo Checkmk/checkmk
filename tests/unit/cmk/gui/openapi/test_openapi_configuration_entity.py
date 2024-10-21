@@ -107,7 +107,7 @@ def test_update_configuration_entity(
     )
 
     # THEN
-    updated_entity = get_notification_parameter(entity.ident)
+    updated_entity = get_notification_parameter(registry, entity.ident)
     assert updated_entity["parameter_properties"]["test_param"] == "bar"
 
 

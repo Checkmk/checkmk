@@ -261,11 +261,11 @@ test-update-cse:
 	EDITION=cse $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --disable-interactive-mode
 
 test-update-cross-edition-cce: # from CEE to CCE
-	EDITION=cee $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode
 
 test-update-cross-edition-cme: # from CEE to CME
-	EDITION=cee $(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode
 
 test-schemathesis-openapi:

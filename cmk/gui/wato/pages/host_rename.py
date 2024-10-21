@@ -69,6 +69,7 @@ from cmk.gui.watolib.host_rename import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
+    folder_tree,
     Host,
     validate_host_uniqueness,
 )
@@ -175,7 +176,7 @@ class ModeBulkRenameHost(WatoMode):
 
             try:
                 host_renaming_job.start(
-                    partial(rename_hosts_background_job, renamings),
+                    partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
                     InitialStatusArgs(
                         title=title,
                         lock_wato=True,
@@ -432,10 +433,11 @@ def _confirm(html_title, message):
 
 
 def rename_hosts_background_job(
-    renamings: Sequence[tuple[Folder, HostName, HostName]],
+    renaming_args: Sequence[tuple[str, HostName, HostName]],
     job_interface: BackgroundProcessInterface,
 ) -> None:
     with job_interface.gui_context():
+        renamings = _renamings_from_job_args(renaming_args)
         actions, auth_problems = _rename_hosts(
             renamings, job_interface
         )  # Already activates the changes!
@@ -556,7 +558,7 @@ class ModeRenameHost(WatoMode):
 
         try:
             host_renaming_job.start(
-                partial(rename_hosts_background_job, renamings),
+                partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
                 InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
                     lock_wato=True,
@@ -609,6 +611,22 @@ class ModeRenameHost(WatoMode):
             forms.end()
             html.set_focus("newname")
             html.hidden_fields()
+
+
+def _renamings_to_job_args(
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
+) -> Sequence[tuple[str, HostName, HostName]]:
+    return [(folder.path(), old_name, new_name) for folder, old_name, new_name in renamings]
+
+
+def _renamings_from_job_args(
+    rename_args: Sequence[tuple[str, HostName, HostName]],
+) -> Sequence[tuple[Folder, HostName, HostName]]:
+    tree = folder_tree()
+    return [
+        (tree.folder(folder_path), old_name, new_name)
+        for folder_path, old_name, new_name in rename_args
+    ]
 
 
 def _rename_hosts(

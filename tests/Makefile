@@ -485,8 +485,8 @@ test-unit-neb:
 test-unit-cmc:
 	cd ../packages/cmc/test && ./.f12
 
-test-find-dirty-files-in-git:
-	scripts/find_dirty_files_in_git
+test-find-modified-lock-files:
+	scripts/find_modified_lock_files
 
 test-flake8: ../.flake8
 	cd ..; $(PIPENV) run flake8 --jobs=6 $$($(FIND_PYTHON_FILES))

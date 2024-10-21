@@ -157,6 +157,7 @@ class ApiSession:
             method,
             urljoin(self._base_url, url),
             params=params,
+            verify=self.verify,
         )
 
     def get(

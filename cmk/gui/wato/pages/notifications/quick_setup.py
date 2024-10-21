@@ -3,14 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import cast, Literal
+from typing import cast, get_args, Literal
 
+from cmk.utils.notify_types import (
+    SysLogFacilityStrType,
+    SysLogPriorityStrType,
+)
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
+    AdaptiveMultipleChoice,
+    AdaptiveMultipleChoiceLayout,
     CascadingSingleChoiceExtended,
     CommentTextArea,
     DictionaryExtended,
@@ -52,6 +58,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecWrapper,
     Widget,
 )
+from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato.pages.notifications.migrate import (
@@ -61,7 +68,13 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
+from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
+from cmk.gui.watolib.groups_io import (
+    load_host_group_information,
+    load_service_group_information,
+)
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -79,6 +92,7 @@ from cmk.rulesets.v1.form_specs import (
     HostState,
     InputHint,
     Integer,
+    MultipleChoiceElement,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
@@ -282,21 +296,118 @@ def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> Non
         )
 
 
+def _get_contact_group_users() -> list[tuple[UserId, str]]:
+    return sorted(
+        (name, f"{name} - {user.get('alias', name)}")
+        for name, user in load_users().items()
+        if user["contactgroups"]
+    )
+
+
+def _get_check_types() -> list[tuple[str, str]]:
+    return [
+        (str(cn), (str(cn) + " - " + c["title"])[:60])
+        for (cn, c) in get_check_information_cached().items()
+        if not cn.is_management_name()
+    ]
+
+
+def _get_service_levels_single_choice() -> Sequence[CascadingSingleChoiceElement]:
+    return [
+        CascadingSingleChoiceElement(
+            name=name,
+            title=Title("%s") % _(" %s") % title,
+            parameter_form=FixedValue(value=None),
+        )
+        for name, title in (
+            ("no_service", "No service level"),
+            ("silver", "Silver"),
+            ("gold", "Gold"),
+            ("platinum", "Platinum"),
+        )
+    ]
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
-        # TODO: add actual stage components. The conditional widgets are wrapper
-        #  widgets that allow to show/hide it's children based on the input in stage 1.
         return [
             ConditionalNotificationECAlertStageWidget(
                 items=[
                     Collapsible(
-                        title=_("Event console filters"),
+                        title=_("Event console alert filters"),
                         items=[
                             FormSpecWrapper(
                                 id=FormSpecId("filter_ec"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
-                                    elements={},
+                                    elements={
+                                        "rule_ids": DictElement(
+                                            parameter_form=ListExtended(
+                                                title=Title("Rule IDs"),
+                                                element_template=String(
+                                                    field_size=FieldSize.SMALL,
+                                                ),
+                                                prefill=DefaultValue([]),
+                                            ),
+                                        ),
+                                        "syslog_priority": DictElement(
+                                            parameter_form=Tuple(
+                                                title=Title("Syslog priority"),
+                                                elements=[
+                                                    CascadingSingleChoice(
+                                                        title=Title("from:"),
+                                                        elements=[
+                                                            CascadingSingleChoiceElement(
+                                                                name=name,
+                                                                title=Title("%s") % _(" %s") % name,
+                                                                parameter_form=FixedValue(
+                                                                    value=None
+                                                                ),
+                                                            )
+                                                            for name in get_args(
+                                                                SysLogPriorityStrType
+                                                            )
+                                                        ],
+                                                    ),
+                                                    CascadingSingleChoice(
+                                                        title=Title("to:"),
+                                                        elements=[
+                                                            CascadingSingleChoiceElement(
+                                                                name=name,
+                                                                title=Title("%s") % _(" %s") % name,
+                                                                parameter_form=FixedValue(
+                                                                    value=None
+                                                                ),
+                                                            )
+                                                            for name in get_args(
+                                                                SysLogPriorityStrType
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                                layout="horizontal",
+                                            )
+                                        ),
+                                        "syslog_facility": DictElement(
+                                            parameter_form=CascadingSingleChoice(
+                                                title=Title("Syslog facility"),
+                                                elements=[
+                                                    CascadingSingleChoiceElement(
+                                                        name=name,
+                                                        title=Title("%s") % _(" %s") % name,
+                                                        parameter_form=FixedValue(value=None),
+                                                    )
+                                                    for name in get_args(SysLogFacilityStrType)
+                                                ],
+                                            ),
+                                        ),
+                                        "event_comment": DictElement(
+                                            parameter_form=String(
+                                                title=Title("Event comment"),
+                                                field_size=FieldSize.LARGE,
+                                            ),
+                                        ),
+                                    },
                                 ),
                             )
                         ],
@@ -312,7 +423,50 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 id=FormSpecId("filter_hosts"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
-                                    elements={},
+                                    elements={
+                                        "host_tags": DictElement(  # TODO: Waiting on team engelbart
+                                            parameter_form=FixedValue(
+                                                title=Title("Host tags"),
+                                                help_text=Help("Waiting on team Engelbart"),
+                                                value=None,
+                                            ),
+                                        ),
+                                        "host_labels": DictElement(  # TODO: Waiting on team engelbart
+                                            parameter_form=FixedValue(
+                                                title=Title("Host labels"),
+                                                help_text=Help("Waiting on team Engelbart"),
+                                                value=None,
+                                            ),
+                                        ),
+                                        "match_host_groups": DictElement(
+                                            parameter_form=AdaptiveMultipleChoice(
+                                                title=Title("Match host groups"),
+                                                elements=[
+                                                    MultipleChoiceElement(
+                                                        name=group_name,
+                                                        title=Title("%s") % group_name,
+                                                    )
+                                                    for group_name in load_host_group_information().keys()
+                                                ],
+                                                show_toggle_all=True,
+                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                            ),
+                                        ),
+                                        "match_hosts": DictElement(  # TODO: Waiting on team engelbart
+                                            parameter_form=FixedValue(
+                                                title=Title("Match hosts"),
+                                                help_text=Help("Waiting on team Engelbart"),
+                                                value=None,
+                                            ),
+                                        ),
+                                        "exclude_hosts": DictElement(  # TODO: Waiting on team engelbart
+                                            parameter_form=FixedValue(
+                                                title=Title("Exclude hosts"),
+                                                help_text=Help("Waiting on team Engelbart"),
+                                                value=None,
+                                            ),
+                                        ),
+                                    },
                                 ),
                             )
                         ],
@@ -328,11 +482,205 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 id=FormSpecId("filter_services"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
-                                    elements={},
+                                    elements={
+                                        "service_labels": DictElement(  # TODO: Waiting on team engelbart
+                                            parameter_form=FixedValue(
+                                                title=Title("Service labels"),
+                                                help_text=Help("Waiting on team Engelbart"),
+                                                value=None,
+                                            ),
+                                        ),
+                                        "match_service_groups": DictElement(
+                                            parameter_form=AdaptiveMultipleChoice(
+                                                title=Title("Match service groups"),
+                                                elements=[
+                                                    MultipleChoiceElement(
+                                                        name=group_name,
+                                                        title=Title("%s") % group_name,
+                                                    )
+                                                    for group_name in load_service_group_information().keys()
+                                                ],
+                                                show_toggle_all=True,
+                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                            ),
+                                        ),
+                                        "exclude_service_groups": DictElement(
+                                            parameter_form=AdaptiveMultipleChoice(
+                                                title=Title("Exclude service groups"),
+                                                elements=[
+                                                    MultipleChoiceElement(
+                                                        name=group_name,
+                                                        title=Title("%s") % group_name,
+                                                    )
+                                                    for group_name in load_service_group_information().keys()
+                                                ],
+                                                show_toggle_all=True,
+                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                            ),
+                                        ),
+                                        "match_services": DictElement(
+                                            parameter_form=ListOfStrings(
+                                                title=Title("Match services"),
+                                                string_spec=String(
+                                                    field_size=FieldSize.MEDIUM,
+                                                ),
+                                            ),
+                                        ),
+                                        "exclude_services": DictElement(
+                                            parameter_form=ListOfStrings(
+                                                title=Title("Exclude services"),
+                                                string_spec=String(
+                                                    field_size=FieldSize.MEDIUM,
+                                                ),
+                                            ),
+                                        ),
+                                    },
                                 ),
                             )
                         ],
-                    )
+                    ),
+                ],
+            ),
+            Collapsible(
+                title="Assignee filters",
+                items=[
+                    FormSpecWrapper(
+                        id=FormSpecId("assignee_filters"),
+                        form_spec=DictionaryExtended(
+                            layout=DictionaryLayout.two_columns,
+                            help_text=Help(
+                                "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
+                            ),
+                            elements={
+                                "contact_group": DictElement(
+                                    parameter_form=AdaptiveMultipleChoice(
+                                        title=Title("Contact group"),
+                                        elements=[
+                                            MultipleChoiceElement(
+                                                name=name,
+                                                title=Title("%s") % title,
+                                            )
+                                            for name, title in sorted_contact_group_choices()
+                                        ],
+                                        show_toggle_all=True,
+                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                    ),
+                                ),
+                                "users": DictElement(
+                                    parameter_form=ListExtended(
+                                        title=Title("Users"),
+                                        element_template=SingleChoice(
+                                            prefill=InputHint(Title("Select user")),
+                                            no_elements_text=Message(  # TODO:  Doesn't seem to do anything.
+                                                "No users available"
+                                            ),
+                                            elements=[
+                                                SingleChoiceElement(
+                                                    name=userid,
+                                                    title=Title("%s") % user,
+                                                )
+                                                for userid, user in _get_contact_group_users()
+                                            ],
+                                        ),
+                                        prefill=DefaultValue([]),
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
+                ],
+            ),
+            Collapsible(
+                title="General filters",
+                items=[
+                    FormSpecWrapper(
+                        id=FormSpecId("general_filters"),
+                        form_spec=DictionaryExtended(
+                            layout=DictionaryLayout.two_columns,
+                            elements={
+                                "service_level": DictElement(
+                                    required=True,
+                                    parameter_form=CascadingSingleChoiceExtended(
+                                        prefill=DefaultValue("explicit"),
+                                        layout=CascadingSingleChoiceLayout.button_group,
+                                        help_text=Help(
+                                            "Describes the business impact of a host or service"
+                                        ),
+                                        title=Title("Match service level"),
+                                        elements=[
+                                            CascadingSingleChoiceElement(
+                                                name="explicit",
+                                                title=Title("Explicit"),
+                                                parameter_form=CascadingSingleChoiceExtended(
+                                                    elements=_get_service_levels_single_choice(),
+                                                ),
+                                            ),
+                                            CascadingSingleChoiceElement(
+                                                name="suppress",
+                                                title=Title("Range"),
+                                                parameter_form=Tuple(
+                                                    title=Title("Match service level"),
+                                                    elements=[
+                                                        CascadingSingleChoiceExtended(
+                                                            title=Title("From:"),
+                                                            elements=_get_service_levels_single_choice(),
+                                                        ),
+                                                        CascadingSingleChoiceExtended(
+                                                            title=Title("to:"),
+                                                            elements=_get_service_levels_single_choice(),
+                                                        ),
+                                                    ],
+                                                    layout="horizontal",
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                ),
+                                "folder": DictElement(
+                                    parameter_form=CascadingSingleChoiceExtended(
+                                        title=Title("Folder"),
+                                        elements=[
+                                            CascadingSingleChoiceElement(
+                                                name="main" if name == "" else name,
+                                                title=Title("%s") % _(" %s") % folder,
+                                                parameter_form=FixedValue(value=None),
+                                            )
+                                            for name, folder in folder_tree().folder_choices()
+                                        ],
+                                        layout=CascadingSingleChoiceLayout.horizontal,
+                                    ),
+                                ),
+                                "sites": DictElement(
+                                    parameter_form=AdaptiveMultipleChoice(
+                                        title=Title("Match sites"),
+                                        elements=[
+                                            MultipleChoiceElement(
+                                                name=name,
+                                                title=Title("%s") % title,
+                                            )
+                                            for name, title in get_activation_site_choices()
+                                        ],
+                                        show_toggle_all=True,
+                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                    ),
+                                ),
+                                "check_type_plugin": DictElement(
+                                    parameter_form=AdaptiveMultipleChoice(
+                                        title=Title("Match check types"),
+                                        elements=[
+                                            MultipleChoiceElement(
+                                                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
+                                                title=Title("%s") % title,
+                                            )
+                                            for name, title in _get_check_types()
+                                        ],
+                                        show_toggle_all=True,
+                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                    ),
+                                ),
+                            },
+                        ),
+                    ),
                 ],
             ),
         ]

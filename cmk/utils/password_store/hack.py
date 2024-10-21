@@ -73,6 +73,7 @@ HACK_AGENTS = {
     "ucs_bladecenter": True,
     "smb_share": True,
     "jira": True,
+    "salesforce": False,  # needs no secret
 }
 
 

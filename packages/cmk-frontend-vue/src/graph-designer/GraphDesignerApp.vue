@@ -678,10 +678,54 @@ function computeOddEven(index: number) {
   // TODO n-th children
   return index % 2 === 0 ? 'even0' : 'odd0'
 }
+
+const tableRef = ref<HTMLTableElement | null>(null)
+
+function dragStart(event: DragEvent) {
+  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
+}
+
+function dragEnd(event: DragEvent) {
+  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.remove('dragging')
+}
+
+function dragging(event: DragEvent) {
+  if (tableRef.value === null || event.clientY === 0) {
+    return
+  }
+  const tableChildren = [...tableRef.value!.children]
+  const draggedRow = (event.target! as HTMLImageElement).closest('tr')!
+  const draggedIndex = tableChildren.indexOf(draggedRow)
+
+  const yCoords = event.clientY
+  function siblingMiddlePoint(sibling: Element) {
+    const siblingRect = sibling.getBoundingClientRect()
+    return siblingRect.top + siblingRect.height / 2
+  }
+
+  let targetIndex = -1
+  let previous: null | undefined | Element = draggedRow.previousElementSibling
+  while (previous && yCoords < siblingMiddlePoint(previous)) {
+    targetIndex = tableChildren.indexOf(previous)
+    previous = tableRef.value!.children[targetIndex - 1]
+  }
+
+  let next: null | undefined | Element = draggedRow.nextElementSibling
+  while (next && yCoords > siblingMiddlePoint(next)) {
+    targetIndex = tableChildren.indexOf(next)
+    next = tableRef.value!.children[targetIndex + 1]
+  }
+
+  if (draggedIndex === targetIndex || targetIndex === -1) {
+    return
+  }
+  const movedEntry = graphLines.value.splice(draggedIndex, 1)[0]!
+  graphLines.value.splice(targetIndex, 0, movedEntry)
+}
 </script>
 
 <template>
-  <table class="data oddeven graph_designer_metrics">
+  <table ref="tableRef" class="data oddeven graph_designer_metrics">
     <tbody>
       <tr>
         <th class="header_buttons"></th>
@@ -727,6 +771,9 @@ function computeOddEven(index: number) {
             :title="props.i18n.graph_lines.move_this_entry"
             src="themes/modern-dark/images/icon_drag.svg"
             class="icon iconbutton"
+            @dragstart="dragStart"
+            @drag="dragging"
+            @dragend="dragEnd"
           />
           <img
             :title="props.i18n.graph_lines.delete_this_entry"

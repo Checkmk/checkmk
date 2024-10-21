@@ -7,34 +7,47 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeUnmount, onBeforeMount, ref } from 'vue'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
+import { getConfigEntityAPI } from '@/form/components/utils/configuration_entity'
 
 import { passthrough, bypass, http } from 'msw'
 import { setupWorker } from 'msw/browser'
 
-const spec: SingleChoiceEditable = {
-  type: 'single_choice_editable',
-  title: 'some title',
-  help: 'some help',
-  validators: [],
-  elements: [{ title: 'fffff', name: '93ecd724-c043-4b16-96c0-e634cacbf442' }],
-  config_entity_type: 'notification_parameter',
-  config_entity_type_specifier: 'mail',
-  i18n: {
-    slidein_save_button: 'i18n slidein_save_button',
-    slidein_cancel_button: 'i18n slidein_cancel_button',
-    slidein_create_button: 'i18n slidein_create_button',
-    edit: 'i18n edit',
-    create: 'i18n create',
-    loading: 'i18n loading',
-    no_objects: 'i18n no_objects',
-    no_selection: 'i18n_no_selection',
-    validation_error: 'i18n validation_error',
-    fatal_error: 'i18n fatal_error',
-    fatal_error_reload: 'i18n fatal_error_reload',
-    // TODO: save & create vs. new and edit!
-    slidein_new_title: 'i18n_slidein_new_title',
-    slidein_edit_title: 'i18n_slidein_edit_title'
+async function loadSpec() {
+  const specTemplate: SingleChoiceEditable = {
+    type: 'single_choice_editable',
+    title: 'some title',
+    help: 'some help',
+    validators: [],
+    elements: [],
+    config_entity_type: 'notification_parameter',
+    config_entity_type_specifier: 'mail',
+    i18n: {
+      slidein_save_button: 'i18n slidein_save_button',
+      slidein_cancel_button: 'i18n slidein_cancel_button',
+      slidein_create_button: 'i18n slidein_create_button',
+      edit: 'i18n edit',
+      create: 'i18n create',
+      loading: 'i18n loading',
+      no_objects: 'i18n no_objects',
+      no_selection: 'i18n_no_selection',
+      validation_error: 'i18n validation_error',
+      fatal_error: 'i18n fatal_error',
+      fatal_error_reload: 'i18n fatal_error_reload',
+      // TODO: save & create vs. new and edit!
+      slidein_new_title: 'i18n_slidein_new_title',
+      slidein_edit_title: 'i18n_slidein_edit_title'
+    }
   }
+  const api = getConfigEntityAPI({
+    entityType: 'notification_parameter',
+    entityTypeSpecifier: 'mail'
+  })
+  specTemplate.elements = (await api.listEntities()).map(
+    ({ ident, description }: { ident: string; description: string }) => {
+      return { name: ident, title: description }
+    }
+  )
+  spec.value = specTemplate
 }
 
 // demo stuff
@@ -83,6 +96,7 @@ const worker = setupWorker(...handlers)
 
 onBeforeMount(async () => {
   await worker.start()
+  await loadSpec()
   mockLoaded.value = true
 })
 
@@ -90,7 +104,7 @@ onBeforeUnmount(() => {
   worker.stop()
 })
 
-const data = ref<string | null>('93ecd724-c043-4b16-96c0-e634cacbf442') // TODO better demo, should fetch at the start?!
+const data = ref<string | null>(null)
 
 const mockLoaded = ref<boolean>(false)
 const username = ref<string>('cmkadmin')
@@ -99,6 +113,7 @@ const site = ref<string>('heute')
 const reloadCount = ref<number>(0)
 const apiDelay = ref<number>(0)
 const apiError = ref<boolean>(false)
+const spec = ref<SingleChoiceEditable>()
 </script>
 
 <template>
@@ -126,7 +141,7 @@ const apiError = ref<boolean>(false)
       </select>
     </label>
   </div>
-  <div v-if="mockLoaded">
+  <div v-if="mockLoaded && spec !== undefined">
     <FormSingleChoiceEditable
       :key="reloadCount"
       :spec="spec"

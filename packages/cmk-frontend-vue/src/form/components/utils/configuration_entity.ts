@@ -32,8 +32,8 @@ const GET_CONFIG_ENTITY_SCHEMA = (entityType: ConfigEntityType, entityTypeSpecif
 /* TODO the way we define a new collection for every entity type risks a name clash with rulespecs for example. */
 const GET_CONFIG_ENTITY_DATA = (entityType: ConfigEntityType, entityId: string) =>
   `${API_ROOT}/objects/${entityType}/${entityId}`
-const LIST_CONFIG_ENTITIES = (entityType: ConfigEntityType) =>
-  `${API_ROOT}/domain-types/${entityType}/collections/all`
+const LIST_CONFIG_ENTITIES = (entityType: ConfigEntityType, entityTypeSpecifier: string) =>
+  `${API_ROOT}/domain-types/${entityType}/collections/${entityTypeSpecifier}`
 const CREATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/collections/all`
 const UPDATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/actions/edit-single-entity/invoke`
 
@@ -90,7 +90,10 @@ export function getConfigEntityAPI({
   }
   /* TODO we should use an openAPI-generated client here */
   const listEntities = async () => {
-    const response = await fetchRestAPI(LIST_CONFIG_ENTITIES(entityType), 'GET')
+    const response = await fetchRestAPI(
+      LIST_CONFIG_ENTITIES(entityType, entityTypeSpecifier),
+      'GET'
+    )
     const data = await response.json()
     return data.value.map((entity: { id: string; title: string }) => ({
       ident: entity.id,

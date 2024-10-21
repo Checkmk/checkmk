@@ -295,24 +295,33 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
     default_state = State.WARN
     summary = first_line if (first_line := error.split("\n")[0].strip()) else "See details"
     details = None if summary == error else error  # drop details if same as the summary
-    if "deployment is currently globally disabled" in error.lower():
+    if (
+        # Keep in sync with corresponding gui code
+        "deployment is currently globally disabled"
+    ) in error.lower():
         yield Result(
             state=State(params.get("error_deployment_globally_disabled", default_state)),
             summary=summary,
             details=details,
         )
-    elif "agent updates are disabled for hostname" in error.lower():
+        return
+
+    if (
+        # Keep in sync with corresponding gui code
+        "agent updates are disabled for host"
+    ) in error.lower():
         yield Result(
             state=State(params.get("error_deployment_disabled_for_hostname", default_state)),
             summary=summary,
             details=details,
         )
-    else:
-        yield Result(
-            state=default_state,
-            summary=f"Update error: {summary}",
-            details=details,
-        )
+        return
+
+    yield Result(
+        state=default_state,
+        summary=f"Update error: {summary}",
+        details=details,
+    )
 
 
 def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:

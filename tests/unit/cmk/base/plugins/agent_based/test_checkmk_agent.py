@@ -22,6 +22,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
+    _get_error_result,
     check_checkmk_agent,
     discover_checkmk_agent,
 )
@@ -539,6 +540,20 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
         Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
         Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
+    ]
+
+
+def test_get_error_result() -> None:
+    assert list(
+        _get_error_result(
+            "agent updates are disabled for host name my-host because it is on the exclusion list",
+            {"error_deployment_disabled_for_hostname": 0},
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary="agent updates are disabled for host name my-host because it is on the exclusion list",
+        ),
     ]
 
 

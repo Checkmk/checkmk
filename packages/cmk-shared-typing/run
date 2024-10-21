@@ -168,7 +168,8 @@ run_build() {
                 --input-file-type jsonschema \
                 --output "python/${target_base}.py" \
                 --target-python-version 3.12 \
-                --output-model-type=dataclasses.dataclass \
+                --output-model-type=pydantic.BaseModel \
+                --collapse-root-models \
                 --use-field-description \
                 --use-title-as-name \
                 --use-double-quotes \

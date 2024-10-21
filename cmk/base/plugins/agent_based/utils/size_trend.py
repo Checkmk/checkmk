@@ -176,8 +176,12 @@ def size_trend(
     free_space = max(size_mb - used_mb, 0)
 
     if mb_in_range > 0 and not math.isinf(value := free_space / mb_in_range):
+        hours_till_full = value * range_sec / SEC_PER_H
+        # Ignore time left if it's more than 10 years
+        if hours_till_full > 10 * 365 * 24:
+            return
         yield from check_levels(
-            value * range_sec / SEC_PER_H,
+            hours_till_full,
             levels_lower=levels.get("trend_timeleft"),
             metric_name="trend_hoursleft" if "trend_showtimeleft" in levels else None,
             render_func=lambda x: render.timespan(x * SEC_PER_H),

@@ -86,7 +86,6 @@ def test_size_trend_full_in_eternity(args: ArgsDict) -> None:
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +21 B"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +<0.01%"),
         Metric("trend", 0.0004800000001523585, boundaries=(0.0, 2000.0)),
-        Result(state=State.OK, summary="Time left until resource_name full: 10844 years 273 days"),
     ]
 
 

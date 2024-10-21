@@ -1,0 +1,12 @@
+Title: Stop showing longer time ranges in size_trend
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1729235563
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+In case you're trend calculation (using <code>size_trend</code>) has a very small growth rate, your check may have displayed a very high "Time left until full".
+
+We now stop showing the message if the time until your resource is full is more than 10 years.

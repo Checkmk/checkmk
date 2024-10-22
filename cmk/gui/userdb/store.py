@@ -123,16 +123,16 @@ def get_authserials_lines() -> list[str]:
         return f.readlines()
 
 
-def load_users_uncached(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users_uncached(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
 @request_memoize()
-def load_users(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
-def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # pylint: disable=too-many-branches
+def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -142,11 +142,11 @@ def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # 
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     # ? exact type of keys and items returned from load_mk_file seems to be unclear
-    contacts = load_contacts(skip_validation)
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_multisite_users(skip_validation)
+    users = load_multisite_users()
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -683,22 +683,16 @@ def convert_idle_timeout(value: str) -> int | bool | None:
         return None  # Invalid value -> use global setting
 
 
-def load_contacts(skip_contact_validation: bool = False) -> dict[str, Any]:
-    contacts = load_from_mk_file(_contacts_filepath(), "contacts", {})
-    if not skip_contact_validation:
-        validate_contacts(contacts)
-    return contacts
+def load_contacts() -> dict[str, Any]:
+    return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
-def load_multisite_users(skip_user_validation: bool = False) -> dict[str, Any]:
-    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
-    if not skip_user_validation:
-        validate_users(users)
-    return users
+def load_multisite_users() -> dict[str, Any]:
+    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:

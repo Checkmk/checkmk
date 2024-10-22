@@ -854,7 +854,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda flag: {},
+        lambda *args, **kwargs: {},
     )
 
     resp = clients.User.get_all()

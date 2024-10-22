@@ -505,14 +505,19 @@ class Site:
     def run(
         self,
         args: list[str],
+        capture_output: bool = True,
+        check: bool = True,
+        encoding: str | None = "utf-8",
         input: str | None = None,  # pylint: disable=redefined-builtin
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> subprocess.CompletedProcess:
         return run(
             args=args,
+            capture_output=capture_output,
+            check=check,
             input=input,
-            encoding="utf-8",
+            encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
             substitute_user=self.id,
@@ -581,22 +586,32 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "omd", mode, self.id] + list(args)
+        cmd = ["omd", mode] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = subprocess.run(
+        completed_process = self.run(
             cmd,
+            capture_output=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            encoding="utf-8",
             check=False,
         )
-
         log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
         logger.log(log_level, "Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
             logger.log(log_level, "Output:")
         for line in completed_process.stdout.strip().split("\n"):
             logger.log(log_level, "> %s", line)
+
+        if mode == "status":
+            logger.info(
+                "OMD status: %d (%s)",
+                completed_process.returncode,
+                {
+                    0: "fully running",
+                    1: "fully stopped",
+                    2: "partially running",
+                }.get(completed_process.returncode, "unknown meaning"),
+            )
 
         return completed_process.returncode
 
@@ -1043,31 +1058,13 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return self._omd_status() == 0
+        return self.omd("status") == 0
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return self._omd_status() == 1
-
-    def _omd_status(self) -> int:
-        def _fmt_output(msg: str) -> str:
-            return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
-
-        try:
-            self.run(["omd", "status", "--bare"])
-            logger.info("Exit code was: 0 (fully running)")
-            return 0
-        except subprocess.CalledProcessError as e:
-            status_text = {
-                0: "fully running",
-                1: "fully stopped",
-                2: "partially running",
-            }.get(e.returncode, "unknown meaning")
-            logger.info("Exit code was: %d (%s)", e.returncode, status_text)
-            logger.debug(str(e))
-            return e.returncode
+        return self.omd("status") == 1
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:

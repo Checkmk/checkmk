@@ -12,7 +12,9 @@ export function makeFloat(title: string, label: string): FormSpec.Float {
     title: title,
     help: '',
     validators: [],
-    label: label
+    unit: null,
+    label: label,
+    input_hint: null
   }
 }
 
@@ -23,7 +25,8 @@ export function makeString(title: string): FormSpec.String {
     help: '',
     validators: [],
     input_hint: 'symbol',
-    field_size: 'SMALL'
+    field_size: 'SMALL',
+    autocompleter: null
   }
 }
 
@@ -33,6 +36,7 @@ export function makeFixedValue(): FormSpec.FixedValue {
     title: '',
     help: '',
     validators: [],
+    label: null,
     value: null
   }
 }
@@ -43,6 +47,7 @@ export function makeBooleanChoice(): FormSpec.BooleanChoice {
     title: '',
     help: '',
     validators: [],
+    label: null,
     text_on: '',
     text_off: ''
   }
@@ -58,8 +63,10 @@ export function makeSingleChoice(
     help: '',
     validators: [],
     elements: elements,
-    input_hint: '',
-    frozen: false
+    no_elements_text: '',
+    frozen: false,
+    label: null,
+    input_hint: null
   }
 }
 
@@ -74,6 +81,8 @@ export function makeDictionary(
     validators: [],
     elements: elements,
     groups: [],
+    no_elements_text: '',
+    additional_static_elements: null,
     layout: 'two_columns'
   }
 }
@@ -88,8 +97,7 @@ export function makeCascadingSingleChoice(
     help: '',
     validators: [],
     elements: elements,
-    no_elements_text: '',
-    label: '',
+    label: null,
     input_hint: '',
     layout: 'vertical'
   }

@@ -99,7 +99,8 @@ const specUnit = makeCascadingSingleChoice('', [
             default_value: null
           }
         ]),
-        default_value: { notation: ['decimal', null] }
+        default_value: { notation: ['decimal', null] },
+        group: null
       },
       {
         ident: 'precision',
@@ -121,16 +122,19 @@ const specUnit = makeCascadingSingleChoice('', [
                 }
               ]
             ),
-            default_value: 'auto'
+            default_value: 'auto',
+            group: null
           },
           {
             ident: 'digits',
             required: true,
             parameter_form: makeFloat(props.i18n.graph_options.unit_custom_precision_digits, ''),
-            default_value: 2
+            default_value: 2,
+            group: null
           }
         ]),
-        default_value: { rounding_mode: 'auto', digits: 2 }
+        default_value: { rounding_mode: 'auto', digits: 2 },
+        group: null
       }
     ]),
     default_value: { notation: ['decimal', ''], precision: { rounding_mode: 'auto', digits: 2 } }
@@ -154,13 +158,15 @@ const specVerticalRange = makeCascadingSingleChoice('', [
         ident: 'lower',
         required: true,
         parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_lower, ''),
-        default_value: 0.0
+        default_value: 0.0,
+        group: null
       },
       {
         ident: 'upper',
         required: true,
         parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_upper, ''),
-        default_value: 1.0
+        default_value: 1.0,
+        group: null
       }
     ]),
     default_value: { lower: 0.0, upper: 1.0 }

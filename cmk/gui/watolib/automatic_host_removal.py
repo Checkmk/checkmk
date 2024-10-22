@@ -49,6 +49,10 @@ def execute_host_removal_background_job() -> None:
         _LOGGER.debug("Another host removal job is already running, skipping this time.")
         return
 
+    if not _load_automatic_host_removal_ruleset():
+        _LOGGER.debug("Automatic host removal not configured")
+        return
+
     job.start(
         _do_remove_hosts,
         InitialStatusArgs(

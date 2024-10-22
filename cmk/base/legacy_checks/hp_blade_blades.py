@@ -41,7 +41,7 @@ hp_blade_status2nagios_map = {
 }
 
 
-def saveint(i: str) -> int:
+def saveint(i: object) -> int:
     """Tries to cast a string to an integer and return it. In case this
     fails, it returns 0.
 
@@ -49,7 +49,7 @@ def saveint(i: str) -> int:
     bad style these days, because in case you get 0 back from this function,
     you can not know whether it is really 0 or something went wrong."""
     try:
-        return int(i)
+        return int(i)  # type: ignore[call-overload]
     except (TypeError, ValueError):
         return 0
 

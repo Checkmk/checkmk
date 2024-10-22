@@ -137,9 +137,9 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
             params.get("subtract_reserved", False) and reserved_mb > 0,
             params.get("show_reserved") and reserved_mb > 0,
         )
-        # params might still be a tuple
+        # params might still be a tuple  # (mo): I don't think so.
         if isinstance(params, dict)
-        else (False, False, False)
+        else ("onproblem", False, False)
     )
 
     used_mb = size_mb - avail_mb

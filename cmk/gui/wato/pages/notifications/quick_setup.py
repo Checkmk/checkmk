@@ -14,6 +14,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
+    CascadingSingleChoiceExtended,
     CommentTextArea,
     DictionaryExtended,
     ListExtended,
@@ -23,7 +24,11 @@ from cmk.gui.form_specs.private import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout, ListOfStringsLayout
+from cmk.gui.form_specs.vue.shared_type_defs import (
+    CascadingSingleChoiceLayout,
+    DictionaryLayout,
+    ListOfStringsLayout,
+)
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps
@@ -197,9 +202,9 @@ def triggering_events() -> QuickSetupStage:
                             parameter_form=ListExtended(
                                 title=Title("Host events"),
                                 prefill=DefaultValue([]),
-                                element_template=CascadingSingleChoice(
-                                    # TODO: add horizontal layout (CMK-18894)
+                                element_template=CascadingSingleChoiceExtended(
                                     elements=_event_choices("host"),
+                                    layout=CascadingSingleChoiceLayout.horizontal,
                                 ),
                                 add_element_label=Label("Add event"),
                                 editable_order=False,
@@ -210,9 +215,9 @@ def triggering_events() -> QuickSetupStage:
                             parameter_form=ListExtended(
                                 title=Title("Service events"),
                                 prefill=DefaultValue([]),
-                                element_template=CascadingSingleChoice(
-                                    # TODO: add horizontal layout (CMK-18894)
+                                element_template=CascadingSingleChoiceExtended(
                                     elements=_event_choices("service"),
+                                    layout=CascadingSingleChoiceLayout.horizontal,
                                 ),
                                 add_element_label=Label("Add event"),
                                 editable_order=False,
@@ -434,7 +439,7 @@ def notification_method() -> QuickSetupStage:
                         ),
                         "methods": DictElement(
                             required=True,
-                            parameter_form=CascadingSingleChoice(
+                            parameter_form=CascadingSingleChoiceExtended(
                                 title=Title("Method"),
                                 elements=[
                                     CascadingSingleChoiceElement(
@@ -448,12 +453,12 @@ def notification_method() -> QuickSetupStage:
                                     )
                                     for method in notification_parameter_registry
                                 ],
+                                layout=CascadingSingleChoiceLayout.horizontal,
                             ),
                         ),
                         "bulk_notification": DictElement(
                             required=False,
-                            # TODO: add horizontal layout (CMK-18894)
-                            parameter_form=CascadingSingleChoice(
+                            parameter_form=CascadingSingleChoiceExtended(
                                 title=Title("Bulk Notification"),
                                 elements=[
                                     CascadingSingleChoiceElement(
@@ -481,6 +486,7 @@ def notification_method() -> QuickSetupStage:
                                         ),
                                     ),
                                 ],
+                                layout=CascadingSingleChoiceLayout.horizontal,
                             ),
                         ),
                     },
@@ -525,8 +531,7 @@ def recipient() -> QuickSetupStage:
                 form_spec=ListExtended(
                     title=Title("Recipients"),
                     prefill=DefaultValue([("all_contacts_affected", None)]),
-                    element_template=CascadingSingleChoice(
-                        # TODO: add horizontal layout (CMK-18894)
+                    element_template=CascadingSingleChoiceExtended(
                         elements=[
                             CascadingSingleChoiceElement(
                                 title=Title("All contacts of the affected object"),
@@ -554,8 +559,7 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Restrict previous options to"),
                                 name="restrict_previous",
-                                parameter_form=CascadingSingleChoice(
-                                    # TODO: add horizontal layout (CMK-18894)
+                                parameter_form=CascadingSingleChoiceExtended(
                                     help_text=Help(
                                         "Only users who are in all the following contact groups will receive the notification"
                                     ),
@@ -590,6 +594,7 @@ def recipient() -> QuickSetupStage:
                                             ),
                                         ),
                                     ],
+                                    layout=CascadingSingleChoiceLayout.horizontal,
                                 ),
                             ),
                             CascadingSingleChoiceElement(
@@ -613,6 +618,7 @@ def recipient() -> QuickSetupStage:
                                 parameter_form=FixedValue(value=None),
                             ),
                         ],
+                        layout=CascadingSingleChoiceLayout.horizontal,
                     ),
                     add_element_label=Label("Add recipient"),
                     editable_order=False,

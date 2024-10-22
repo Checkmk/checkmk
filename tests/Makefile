@@ -59,7 +59,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-all test-unit-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
-	test-unit-omdlib test-unit-doctests \
+	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core test-flake8
 
@@ -386,23 +386,7 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
-test-unit-doctests: prepare-protobuf-files
-	# Different files with the same name but in different namespace packages
-	# confuse our tooling.  Let's help by removing those caches as indicated
-	# in the error message.
-	find ../cmk/ -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
-	# The `consider_namespace_packages` option requires pytest >= 8.1
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--doctest-modules \
-		--override-ini="pythonpath=." \
-		--override-ini="consider_namespace_packages=true" \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		-- \
-		cmk/
-
-test-unit: prepare-protobuf-files test-unit-doctests
+test-unit:
 	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

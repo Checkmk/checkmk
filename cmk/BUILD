@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -264,3 +264,39 @@ py_wheel(
     "cme",
     "cse",
 ]]
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+        # pytest-xdist for `--numprocesses=NPROC`
+        requirement("pytest-xdist"),
+    ],
+)
+
+py_test(
+    name = "doctest",
+    srcs = [
+        "__test__.py",
+        "//cmk:lib_cmk",
+        "//cmk:lib_cmk_cre",
+    ],
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "--doctest-modules",
+        "--override-ini=consider_namespace_packages=true",
+    ],
+    data = ["@//:pyproject.toml"],
+    imports = [".."],
+    main = ":__test__.py",
+    visibility = ["//tests:__subpackages__"],
+    deps = [
+        ":__test__",
+        "//agents/plugins:mk_jolokia",
+        "//cmk:lib_cmk",
+        "//cmk:lib_cmk_cre",
+        requirement("pytest"),
+        requirement("polyfactory"),
+        requirement("marshmallow"),
+    ] + CMK_PACKAGES,
+)

@@ -26,6 +26,11 @@ py_pytest_main(
     ],
 )
 
+test_suite(
+    name = "doctest",
+    tests = ["//cmk:doctest"],
+)
+
 write_file(
     name = "cannot_fail",
     out = "test_cannot_fail.py",

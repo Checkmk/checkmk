@@ -130,6 +130,10 @@ class PackageStore:
     def read_bytes(self, package_id: PackageID) -> bytes:
         return self._get_existing_package_path(package_id).read_bytes()
 
+    def is_package_pushed_from_central(self, package_id: PackageID) -> bool:
+        """Return whether the package was pushed from the central site, not created locally"""
+        return self._get_existing_package_path(package_id).parent == self.enabled_packages
+
     def _get_existing_package_path(self, package_id: PackageID) -> Path:
         """Return the path of an existing package
 
@@ -294,6 +298,7 @@ def install(
     parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
+        pushed_from_central_site = package_store.is_package_pushed_from_central(package_id)
         return _install(
             installer,
             package_store,
@@ -303,6 +308,7 @@ def install(
             site_version=site_version,
             allow_outdated=allow_outdated,
             parse_version=parse_version,
+            pushed_from_central_site=pushed_from_central_site,
         )
     finally:
         # it is enabled, even if installing failed
@@ -323,6 +329,7 @@ def _install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool,
+    pushed_from_central_site: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -362,7 +369,9 @@ def _install(
             new_files = set(manifest.files.get(part, []))
             callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
-        package_store.remove_enabled_mark(old_manifest.id)
+        if not pushed_from_central_site:
+            # If we are a remote site and the mkp was pushed, we mustn't delete our only copy
+            package_store.remove_enabled_mark(old_manifest.id)
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)

@@ -75,6 +75,7 @@ fi
 
 # Create bind source and targets to avoid dockerd creating them with root ownership
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
+touch "${CONTAINER_SHADOW_WORKSPACE}/home/.cmk-credentials"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/venv"

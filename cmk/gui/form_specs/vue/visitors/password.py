@@ -83,7 +83,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
         self, raw_value: object, parsed_value: ParsedPassword | EmptyValue
     ) -> tuple[VueComponents.Password, VuePassword]:
         title, help_text = get_title_and_help(self.form_spec)
-        value = (
+        value: VuePassword = (
             ("explicit_password", "", "", False)
             if isinstance(parsed_value, EmptyValue)
             else (

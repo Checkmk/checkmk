@@ -14,7 +14,7 @@
 import time
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, render
+from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render
 
 check_info = {}
 
@@ -96,13 +96,17 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
     rates = {}
     this_time = time.time()
     for title, col, fmt in columns:
-        counter_value = status[col + "s"]
-        rate = get_rate(get_value_store(), col, this_time, counter_value, raise_overflow=True)
+        try:
+            rate = get_rate(
+                get_value_store(), col, this_time, status[col + "s"], raise_overflow=True
+            )
+        except GetRateError:
+            continue
         rates[col] = rate
         yield 0, ("%s: " + fmt) % (title, rate), [("average_%s_rate" % col, rate)]
 
     # Hit rate
-    if rates["rule_trie"] == 0.0:
+    if rates.get("rule_trie", 0.0) == 0.0:
         hit_rate_txt = "-"
     else:
         value = rates["rule_hit"] / rates["rule_trie"] * 100

@@ -231,7 +231,7 @@ def main() {
                 "${upload_path}",
                 INTERNAL_DEPLOY_PORT,
             );
-            assert_no_modified_lock_file(checkout_dir);
+            assert_no_modified_lock_files(checkout_dir);
         }
     }
 
@@ -406,7 +406,7 @@ def main() {
                 |""".stripMargin());
         def exclude_pattern = versioning.get_internal_artifacts_pattern();
         inside_container(ulimit_nofile: 1024) {
-            assert_no_modified_lock_file(checkout_dir);
+            assert_no_modified_lock_files(checkout_dir);
             artifacts_helper.download_version_dir(
                 upload_path,
                 INTERNAL_DEPLOY_PORT,

@@ -177,24 +177,6 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
     };
 }
 
-bool processLogEntries(
-    const std::function<bool(const LogEntry &)> &process_log_entry,
-    const Logfile::map_type *entries, const LogFilter &log_filter) {
-    auto it =
-        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        const auto &entry = *it->second;
-        if (entry.time() < log_filter.since) {
-            return false;  // time limit exceeded
-        }
-        if (!process_log_entry(entry)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 // Call the given callback for each log entry matching the filter in a
 // chronologically backwards fashion, until the callback returns false.
 void for_each_log_entry(
@@ -206,29 +188,36 @@ void for_each_log_entry(
         if (log_files.begin() == log_files.end()) {
             return;
         }
-        auto it = log_files.end();  // it now points beyond last log file
-        --it;  // switch to last logfile (we have at least one)
+        auto it_logs = log_files.end();  // it now points beyond last log file
+        --it_logs;  // switch to last logfile (we have at least one)
 
         // Now find newest log where 'until' is contained. The problem here:
         // For each logfile we only know the time of the *first* entry, not
         // that of the last.
-        while (it != log_files.begin() &&
-               it->second->since() > log_filter.until) {
-            --it;  // while logfiles are too new go back in history
+        while (it_logs != log_files.begin() &&
+               it_logs->second->since() > log_filter.until) {
+            --it_logs;  // while logfiles are too new go back in history
         }
-        if (it->second->since() > log_filter.until) {
+        if (it_logs->second->since() > log_filter.until) {
             return;  // all logfiles are too new
         }
 
         while (true) {
-            const auto *entries = it->second->getEntriesFor(log_filter);
-            if (!processLogEntries(process_log_entry, entries, log_filter)) {
-                break;  // end of time range found
+            const auto *entries = it_logs->second->getEntriesFor(log_filter);
+            auto it_entries = entries->upper_bound(
+                Logfile::makeKey(log_filter.until, 999999999));
+            while (it_entries != entries->begin()) {
+                --it_entries;
+                const auto &entry = *it_entries->second;
+                if (entry.time() < log_filter.since ||
+                    !process_log_entry(entry)) {
+                    break;
+                }
             }
-            if (it == log_files.begin()) {
+            if (it_logs == log_files.begin()) {
                 break;  // this was the oldest one
             }
-            --it;
+            --it_logs;
         }
     });
 }

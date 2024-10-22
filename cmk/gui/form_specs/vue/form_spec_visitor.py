@@ -13,6 +13,7 @@ from typing import Any, Literal, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
@@ -222,9 +223,10 @@ def render_form_spec(
     vue_app_config = serialize_data_for_frontend(
         form_spec, field_id, origin, do_validate, value, display_mode
     )
-    logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
-    logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
-    logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+    if active_config.experimental_features.get("load_frontend_vue", "static_files") == "inject":
+        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
+        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 
 

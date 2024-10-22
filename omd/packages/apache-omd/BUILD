@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_mklink")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 genrule(
@@ -110,6 +110,14 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+pkg_files(
+    name = "skel_files",
+    srcs = glob(
+        include = ["skel/**/*"],
+    ),
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
 pkg_mklink(
     name = "85-apache-symlink",
     link_name = "skel/etc/rc.d/85-apache",
@@ -118,9 +126,10 @@ pkg_mklink(
 
 pkg_tar(
     name = "skel_dir",
-    srcs = glob(
-        include = ["skel/**/*"],
-    ) + ["85-apache-symlink"],
+    srcs = [
+        "85-apache-symlink",
+        "skel_files",
+    ],
     extension = "tar.gz",
     package_file_name = "apache-skel.tar.gz",
     strip_prefix = ".",

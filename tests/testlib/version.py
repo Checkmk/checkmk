@@ -8,6 +8,7 @@ import hashlib
 import logging
 import operator
 import os
+import re
 import subprocess
 import time
 from collections.abc import Callable
@@ -156,12 +157,19 @@ class CMKVersion:
         Uses `packaging.version.Version` to wrap Checkmk version.
         """
         _timestamp = None
+
+        # ignore release candidate
+        _version = re.sub(r"-rc(\d+)", "", version)
+
         # treat `patch-version` as `micro-version`.
-        _version = version.replace("0p", "")
+        _version = _version.replace("0p", "")
+
         # detect daily builds
-        if "-" in version:
-            _timestamp = time.strptime(version.split("-")[-1], CMKVersion.TIMESTAMP_FORMAT)
-            _version = version.split("-")[0]
+        if match := re.search(
+            r"([1-9]?\d\.[1-9]?\d\.[1-9]?\d)-([1-9]\d{3}\.[0-1]\d\.[0-3]\d)", _version
+        ):
+            _version = match.groups()[0]
+            _timestamp = time.strptime(match.groups()[1], CMKVersion.TIMESTAMP_FORMAT)
         return Version(_version), _timestamp
 
     @staticmethod

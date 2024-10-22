@@ -33,8 +33,6 @@ import {
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
 
-const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
-
 function renderForm(
   formSpec: FormSpec,
   value: unknown,
@@ -236,10 +234,7 @@ function renderDict(
       return
     }
     dictElements.push(
-      h('tr', [
-        h('th', `${element.parameter_form.title}: `),
-        h('td', { style: 'align: left' }, [elementForm])
-      ])
+      h('tr', [h('th', `${element.parameter_form.title}: `), h('td', [elementForm])])
     )
   })
   return h(
@@ -265,11 +260,8 @@ function renderSimpleValue(
   backendValidation: ValidationMessages = []
 ): VNode {
   let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
-  return h(
-    'div',
-    isError ? { style: ERROR_BACKGROUND_COLOR } : {},
-    isError ? [`${usedValue} - ${errorMessage}`] : [usedValue]
-  )
+  const cssClasses = ['form-readonly__simple-value', isError ? 'form-readonly__error' : '']
+  return h('div', { class: cssClasses }, isError ? [`${usedValue} - ${errorMessage}`] : [usedValue])
 }
 
 function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
@@ -313,16 +305,12 @@ function renderSingleChoice(
   // Value not found in valid values. Try to show error
   let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   if (isError) {
-    return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-      `${usedValue} - ${errorMessage}`
-    ])
+    return h('div', { class: 'form-readonly__error' }, [`${usedValue} - ${errorMessage}`])
   }
 
   // In case no validation message is present, we still want to show raw_value
   // (This should not happen in production, but is useful for debugging)
-  return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-    `${usedValue} - Invalid value`
-  ])
+  return h('div', { class: 'form-readonly__error' }, [`${usedValue} - Invalid value`])
 }
 
 function renderList(
@@ -440,6 +428,22 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.form-readonly__error {
+  background-color: var(--form-readonly-error-bg-color);
+}
+
+.form-readonly__simple-value {
+  display: inline-block;
+}
+
+.form-readonly__dictionary {
+  display: inline-table;
+
+  > tr > th {
+    padding-right: var(--spacing-half);
+  }
+}
+
 .form-readonly__dictionary--two_columns > tr {
   line-height: 18px;
 
@@ -449,7 +453,7 @@ export default defineComponent({
     font-weight: var(--font-weight-bold);
   }
 
-  .form-readonly__multiple-choice span {
+  > td > .form-readonly__multiple-choice span {
     display: block;
 
     &:before {

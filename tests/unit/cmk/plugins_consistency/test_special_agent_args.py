@@ -104,9 +104,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "vsphere": None,
 }
 
-UNMIGRATED = {
-    "ruckus_spot",
-}
+UNMIGRATED: set[str] = set()
 
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {

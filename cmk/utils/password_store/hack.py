@@ -75,6 +75,7 @@ HACK_AGENTS = {
     "jira": True,
     "salesforce": False,  # needs no secret
     "ipmi_sensors": True,
+    "ruckus_spot": True,
 }
 
 

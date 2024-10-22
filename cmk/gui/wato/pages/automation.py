@@ -17,6 +17,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
+from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
@@ -42,6 +43,7 @@ from cmk.gui.watolib.automations import (
 )
 
 from cmk import trace
+from cmk.crypto.password import Password
 
 tracer = trace.get_tracer()
 
@@ -85,7 +87,7 @@ class PageAutomationLogin(AjaxPage):
                 {
                     "version": cmk_version.__version__,
                     "edition_short": cmk_version.edition(cmk.utils.paths.omd_root).short,
-                    "login_secret": _get_login_secret(create_on_demand=True),
+                    "login_secret": DistributedSetupSecret().read_or_create(),
                 }
             )
         )
@@ -111,14 +113,11 @@ class PageAutomation(AjaxPage):
 
     @staticmethod
     def _authenticate() -> None:
-        secret = request.var("secret")
-
+        secret = request.get_validated_type_input(Password, "secret")
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
 
-        login_secret = _get_login_secret()
-
-        if (login_secret is None) or not secrets.compare_digest(secret, login_secret):
+        if not DistributedSetupSecret().compare(secret):
             raise MKAuthException(_("Invalid automation secret."))
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This

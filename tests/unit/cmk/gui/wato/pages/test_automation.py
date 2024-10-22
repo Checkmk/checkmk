@@ -13,6 +13,8 @@ import pytest
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.utils.local_secrets import DistributedSetupSecret
+
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
 from cmk.gui.exceptions import MKAuthException
@@ -72,7 +74,9 @@ class TestPageAutomation:
 
     @pytest.fixture(name="fix_secret_checking")
     def patch_distributed_setup_secret(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(automation, "_get_login_secret", lambda **_kwargs: "secret")
+        monkeypatch.setattr(
+            DistributedSetupSecret, "compare", lambda _self, other: other.raw == "secret"
+        )
 
     @pytest.fixture(name="setup_request")
     def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:

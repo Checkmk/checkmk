@@ -8,7 +8,6 @@
 #include <fcntl.h>
 
 #include <algorithm>
-#include <bitset>
 #include <cerrno>
 #include <fstream>
 #include <stdexcept>

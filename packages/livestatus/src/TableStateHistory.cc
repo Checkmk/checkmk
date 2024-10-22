@@ -192,7 +192,7 @@ const Logfile::map_type *getEntries(Logfile *logfile,
     return logfile->getEntriesFor({
         .max_lines_per_log_file = max_lines_per_log_file,
         .log_entry_classes =
-            std::bitset<32>{}
+            LogEntryClasses{}
                 .set(static_cast<int>(LogEntry::Class::alert))
                 .set(static_cast<int>(LogEntry::Class::program))
                 .set(static_cast<int>(LogEntry::Class::state)),

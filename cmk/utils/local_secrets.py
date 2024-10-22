@@ -7,6 +7,7 @@
 import hashlib
 import secrets
 from pathlib import Path
+from typing import assert_never
 
 from cmk.ccc import store
 
@@ -109,12 +110,22 @@ class AutomationUserSecret:
 class DistributedSetupSecret:
     """The secret used by the central site to sync the config"""
 
+    # Todo: why are we not generating this anyways? If somebody wants to access the deploy_remote
+    # site and no secret was set yet, access will be blocked... That is IMHO the only advantage
+
     def __init__(self) -> None:
         self.password = (
             Password(pw)
             if (pw := store.load_object_from_file(self.path, default=None)) is not None
             else None
         )
+        self._secret = None if self.password is None else Secret(self.password.raw_bytes)
+
+    @property
+    def secret(self) -> Secret:
+        if self._secret is None:
+            raise ValueError("Secret was not set yet, so nothing to read yet")
+        return self._secret
 
     @property
     def path(self) -> Path:
@@ -132,9 +143,16 @@ class DistributedSetupSecret:
         If the file already exists, it will be overwritten.
         """
         self.password = Password(secrets.token_urlsafe(32))
+        self._secret = Secret(self.password.raw_bytes)
         store.save_object_to_file(self.path, self.password.raw)
 
-    def compare(self, other: Password) -> bool:
-        if self.password is None:
+    def compare(self, other: Password | Secret) -> bool:
+        if self.password is None or self._secret is None:
             return False
-        return self.password == other
+        match other:
+            case Password():
+                return self.password == other
+            case Secret():
+                return self.secret.compare(other)
+            case _ as unreachable:
+                assert_never(unreachable)

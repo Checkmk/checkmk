@@ -449,6 +449,20 @@ class LoggedInSuperUser(LoggedInUser):
         raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
 
 
+class LoggedInRemoteSite(LoggedInUser):
+    def __init__(self, *, site_name: str) -> None:
+        super().__init__(None)
+        self.alias = f"Remote site {site_name}"
+        self.email = "?"
+        self.site_name = site_name
+
+    def _gather_roles(self, _user_id: UserId | None) -> list[str]:
+        return ["no_permissions"]
+
+    def save_file(self, name: str, content: Any) -> None:
+        raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
+
+
 class LoggedInNobody(LoggedInUser):
     def __init__(self) -> None:
         super().__init__(None)

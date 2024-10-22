@@ -25,7 +25,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInSuperUser, user
+from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
@@ -61,7 +61,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             if not authenticated:
                 return _handle_not_authenticated()
 
-            if isinstance(session.user, LoggedInSuperUser):
+            if isinstance(session.user, (LoggedInRemoteSite, LoggedInSuperUser)):
                 func()
                 return response
 

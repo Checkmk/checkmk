@@ -95,6 +95,7 @@ AuthType = Literal[
     "http_header",
     "internal_token",
     "login_form",
+    "remote_site",
     "saml",
     "web_server",
 ]

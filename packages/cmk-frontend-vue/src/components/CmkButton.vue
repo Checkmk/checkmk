@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import CmkIcon from '@/components/CmkIcon.vue'
 
 const buttonVariants = cva('', {
   variants: {
@@ -18,10 +17,6 @@ const buttonVariants = cva('', {
     spacing: {
       small: 'button--spacing-small',
       medium: ''
-    },
-    variant: {
-      submit: 'button--type-primary',
-      cancel: 'button--type-secondary'
     }
   },
   defaultVariants: {
@@ -32,8 +27,6 @@ const buttonVariants = cva('', {
 export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 interface ButtonProps {
-  /** @property {ButtonVariants['variant']} variant - shortcut for often used buttons*/
-  variant?: ButtonVariants['variant']
   /** @property {ButtonVariants['type']} type - three different levels of importance */
   type?: ButtonVariants['type']
   spacing?: ButtonVariants['spacing']
@@ -43,9 +36,7 @@ defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button class="button" :class="buttonVariants({ type, variant, spacing })">
-    <CmkIcon v-if="variant === 'submit'" variant="inline" name="save" />
-    <CmkIcon v-if="variant === 'cancel'" variant="inline" name="cancel" />
+  <button class="button" :class="buttonVariants({ type, spacing })">
     <slot />
   </button>
 </template>

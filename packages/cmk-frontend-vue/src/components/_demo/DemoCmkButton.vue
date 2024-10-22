@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 </script>
 
 <template>
@@ -26,13 +28,13 @@ import CmkButton from '@/components/CmkButton.vue'
     <dd>
       <CmkButton type="transparent">button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButton variant="cancel"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
     <dd>
-      <CmkButton variant="cancel">button</CmkButton>
+      <CmkButtonCancel>button</CmkButtonCancel>
     </dd>
-    <dt><code>&lt;CmkButton variant="submit"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButtonSubmit&gt;button&lt;/CmkButtonSubmit&gt;</code></dt>
     <dd>
-      <CmkButton variant="submit">button</CmkButton>
+      <CmkButtonSubmit>button</CmkButtonSubmit>
     </dd>
     <dt><code>&lt;CmkButton spacing="small"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>

@@ -7,8 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 
@@ -100,10 +101,12 @@ immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 
 <template>
   <div v-if="!error" class="edit-object__buttons">
-    <CmkButton variant="submit" @click="save">
-      {{ objectId === undefined ? props.i18n.create_button : props.i18n.save_button }}</CmkButton
+    <CmkButtonSubmit @click="save">
+      {{
+        objectId === undefined ? props.i18n.create_button : props.i18n.save_button
+      }}</CmkButtonSubmit
     >
-    <CmkButton variant="cancel" @click="cancel">{{ props.i18n.cancel_button }}</CmkButton>
+    <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
     <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
     <AlertBox v-if="backendValidation.length !== 0" variant="error">
       {{ i18n.validation_error }}

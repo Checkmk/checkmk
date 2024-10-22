@@ -9,6 +9,8 @@ import SlideIn from '@/components/slidein/SlideIn.vue'
 import type { Catalog } from '@/form/components/vue_formspec_components'
 
 import CmkButton from '@/components/CmkButton.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import { ref } from 'vue'
 
@@ -61,8 +63,8 @@ const catalog = ref<Catalog>({
   <CmkButton type="tertiary" @click="open = !open">trigger button text</CmkButton>
   <SlideIn :open="open" :header="{ title: 'some title', closeButton: true }" @close="open = false">
     <div style="margin-bottom: 1em">
-      <CmkButton variant="submit">save</CmkButton>
-      <CmkButton variant="cancel" @click="open = false">cancel</CmkButton>
+      <CmkButtonSubmit>save</CmkButtonSubmit>
+      <CmkButtonCancel @click="open = false">cancel</CmkButtonCancel>
     </div>
     <div class="content">
       <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="[]" />

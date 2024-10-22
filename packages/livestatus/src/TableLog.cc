@@ -209,7 +209,8 @@ void for_each_log_entry(
         }
 
         while (true) {
-            const auto *entries = it_logs->second->getEntriesFor(log_filter);
+            const auto *entries =
+                it_logs->second->getEntriesFor(log_filter.restrictions);
             auto it_entries =
                 entries->upper_bound(Logfile::makeKey(until, 999999999));
             while (it_entries != entries->begin()) {

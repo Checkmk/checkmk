@@ -190,15 +190,12 @@ namespace {
 const Logfile::map_type *getEntries(Logfile *logfile,
                                     size_t max_lines_per_log_file) {
     return logfile->getEntriesFor({
-        .restrictions{
-            .max_lines_per_log_file = max_lines_per_log_file,
-            .log_entry_classes =
-                LogEntryClasses{}
-                    .set(static_cast<int>(LogEntry::Class::alert))
-                    .set(static_cast<int>(LogEntry::Class::program))
-                    .set(static_cast<int>(LogEntry::Class::state)),
-        },
-        .period = {},  // TODO(sp)
+        .max_lines_per_log_file = max_lines_per_log_file,
+        .log_entry_classes =
+            LogEntryClasses{}
+                .set(static_cast<int>(LogEntry::Class::alert))
+                .set(static_cast<int>(LogEntry::Class::program))
+                .set(static_cast<int>(LogEntry::Class::state)),
     });
 }
 

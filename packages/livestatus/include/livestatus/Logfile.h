@@ -16,7 +16,7 @@
 
 #include "livestatus/LogEntry.h"
 class LogCache;
-class LogFilter;
+class LogRestrictions;
 class Logger;
 
 class Logfile {
@@ -46,7 +46,13 @@ public:
 
     // Used by TableLog::answerQueryReverse() and
     // TableStateHistory::getEntries().
-    const Logfile::map_type *getEntriesFor(const LogFilter &log_filter);
+    // NOTE: The map of returned entries could be incomplete because the maximum
+    // number of lines per log file has been exceeded, but we don't have an
+    // indication of that here! In addition, the map of returned entries contain
+    // *at least* the requested log classes, but they could contain entries with
+    // other classes, too! Both are weird API design decisions which need to be
+    // fixed.
+    const Logfile::map_type *getEntriesFor(const LogRestrictions &restrictions);
 
     // Used internally and by TableLog::answerQueryReverse(). Should be nuked.
     static Logfile::key_type makeKey(std::chrono::system_clock::time_point t,
@@ -65,8 +71,8 @@ private:
     Logfile::map_type _entries;
     unsigned _logclasses_read;  // only these types have been read
 
-    void load(const LogFilter &log_filter);
-    void loadRange(const LogFilter &log_filter, FILE *file,
+    void load(const LogRestrictions &restrictions);
+    void loadRange(const LogRestrictions &restrictions, FILE *file,
                    unsigned missing_types);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
 };

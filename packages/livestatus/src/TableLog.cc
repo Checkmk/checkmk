@@ -216,8 +216,19 @@ void for_each_log_entry(
             while (it_entries != entries->begin()) {
                 --it_entries;
                 const auto &entry = *it_entries->second;
-                if (entry.time() < since || !process_log_entry(entry)) {
+                if (entry.time() < since) {
+                    // The current log line is older than requested, so stop
+                    // processing all log entries and log files.
                     return;
+                }
+
+                // NOTE: The test() call below is just an optimization,
+                // Logfile::getEntriesFor() can return more than it is being
+                // asked for. :-/
+                if (log_filter.restrictions.log_entry_classes.test(
+                        static_cast<size_t>(entry.log_class())) &&
+                    !process_log_entry(entry)) {
+                    return;  // The callback has requested to stop processing.
                 }
             }
             if (it_logs == log_files.begin()) {

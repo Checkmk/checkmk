@@ -219,7 +219,7 @@ span.checkbox {
   > span.checkbox {
     display: inline-block;
     float: left;
-    width: 130px;
+    width: 150px;
     margin: 0;
     padding-top: 3px;
     font-weight: bold;

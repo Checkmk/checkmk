@@ -60,8 +60,8 @@ function getClass(ident: string) {
 </script>
 
 <template>
-  <!--  <input type="button" value="Open all" @click="setAllTopics(true)" />-->
-  <!--  <input type="button" value="Collapse all" @click="setAllTopics(false)" />-->
+  <!-- <input type="button" :value="props.spec.i18n.open_all" @click="setAllTopics(true)" /> -->
+  <!--  <input type="button" :value="props.spec.i18n.collapse_all" @click="setAllTopics(false)" />-->
   <table
     v-for="topic in props.spec.topics"
     :key="topic.ident"

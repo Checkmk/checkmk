@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <bitset>
 #include <cerrno>
-#include <compare>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
@@ -171,23 +170,4 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
 const Logfile::map_type *Logfile::getEntriesFor(const LogFilter &log_filter) {
     load(log_filter);  // make sure all messages are present
     return &_entries;
-}
-
-// static
-bool Logfile::processLogEntries(
-    const std::function<bool(const LogEntry &)> &process_log_entry,
-    const map_type *entries, const LogFilter &log_filter) {
-    auto it =
-        entries->upper_bound(Logfile::makeKey(log_filter.until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        const auto &entry = *it->second;
-        if (entry.time() < log_filter.since) {
-            return false;  // time limit exceeded
-        }
-        if (!process_log_entry(entry)) {
-            return false;
-        }
-    }
-    return true;
 }

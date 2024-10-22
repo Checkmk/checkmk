@@ -9,7 +9,6 @@
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -54,10 +53,6 @@ public:
                                      size_t lineno) {
         return {t, lineno};
     }
-
-    static bool processLogEntries(
-        const std::function<bool(const LogEntry &)> &process_log_entry,
-        const map_type *entries, const LogFilter &log_filter);
 
 private:
     Logger *const _logger;

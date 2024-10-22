@@ -36,7 +36,10 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-composition-docker";
-    def download_dir = "downloaded_packages_for_integration_tests";
+
+    // Use the directory also used by tests/testlib/containers.py to have it find
+    // the downloaded package.
+    def download_dir = "package_download";
 
     currentBuild.description += (
         """

@@ -12,6 +12,15 @@ import FormSwitch from '@/graph-designer/components/FormSwitch.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
 import { ref, type Ref } from 'vue'
+import {
+  makeBooleanChoice,
+  makeCascadingSingleChoice,
+  makeDictionary,
+  makeFixedValue,
+  makeFloat,
+  makeSingleChoice,
+  makeString
+} from '@/graph-designer/specs'
 import { type I18N, type GraphLines } from '@/graph-designer/type_defs'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
@@ -30,248 +39,133 @@ const specLineType: SpecLineType = {
 }
 
 const dataTransformation = ref(95)
-const specTransformation = {
-  type: 'float',
-  title: '',
-  help: '',
-  validators: [],
-  label: props.i18n.graph_operations.percentile
-}
+const specTransformation = makeFloat('', props.i18n.graph_operations.percentile)
 const backendValidationTransformation: ValidationMessages = []
 
 const dataUnit = ref(['first_with_unit', null])
-const specUnit = {
-  type: 'cascading_single_choice',
-  title: '',
-  help: '',
-  validators: [],
-  elements: [
-    {
-      name: 'first_with_unit',
-      title: props.i18n.graph_options.unit_first_with_unit,
-      parameter_form: {
-        type: 'fixed_value',
-        title: '',
-        help: '',
-        validators: []
-      },
-      default_value: null
-    },
-    {
-      name: 'custom',
-      title: props.i18n.graph_options.unit_custom,
-      parameter_form: {
-        type: 'dictionary',
-        title: '',
-        help: '',
-        validators: [],
-        elements: [
+const specUnit = makeCascadingSingleChoice('', [
+  {
+    name: 'first_with_unit',
+    title: props.i18n.graph_options.unit_first_with_unit,
+    parameter_form: makeFixedValue(),
+    default_value: null
+  },
+  {
+    name: 'custom',
+    title: props.i18n.graph_options.unit_custom,
+    parameter_form: makeDictionary('', [
+      {
+        ident: 'notation',
+        required: true,
+        parameter_form: makeCascadingSingleChoice(props.i18n.graph_options.unit_custom_notation, [
           {
-            ident: 'notation',
-            required: true,
-            parameter_form: {
-              type: 'cascading_single_choice',
-              title: props.i18n.graph_options.unit_custom_notation,
-              help: '',
-              validators: [],
-              elements: [
-                {
-                  name: 'decimal',
-                  title: props.i18n.graph_options.unit_custom_notation_decimal,
-                  parameter_form: {
-                    type: 'string',
-                    title: props.i18n.graph_options.unit_custom_notation_symbol,
-                    help: '',
-                    validators: [],
-                    input_hint: 'symbol',
-                    field_size: 'SMALL'
-                  },
-                  default_value: ''
-                },
-                {
-                  name: 'si',
-                  title: props.i18n.graph_options.unit_custom_notation_si,
-                  parameter_form: {
-                    type: 'string',
-                    title: props.i18n.graph_options.unit_custom_notation_symbol,
-                    help: '',
-                    validators: [],
-                    input_hint: 'symbol',
-                    field_size: 'SMALL'
-                  },
-                  default_value: ''
-                },
-                {
-                  name: 'iec',
-                  title: props.i18n.graph_options.unit_custom_notation_iec,
-                  parameter_form: {
-                    type: 'string',
-                    title: props.i18n.graph_options.unit_custom_notation_symbol,
-                    help: '',
-                    validators: [],
-                    input_hint: 'symbol',
-                    field_size: 'SMALL'
-                  },
-                  default_value: ''
-                },
-                {
-                  name: 'standard_scientific',
-                  title: props.i18n.graph_options.unit_custom_notation_standard_scientific,
-                  parameter_form: {
-                    type: 'string',
-                    title: props.i18n.graph_options.unit_custom_notation_symbol,
-                    help: '',
-                    validators: [],
-                    input_hint: 'symbol',
-                    field_size: 'SMALL'
-                  },
-                  default_value: ''
-                },
-                {
-                  name: 'engineering_scientific',
-                  title: props.i18n.graph_options.unit_custom_notation_engineering_scientific,
-                  parameter_form: {
-                    type: 'string',
-                    title: props.i18n.graph_options.unit_custom_notation_symbol,
-                    help: '',
-                    validators: [],
-                    input_hint: 'symbol',
-                    field_size: 'SMALL'
-                  },
-                  default_value: ''
-                },
-                {
-                  name: 'time',
-                  title: props.i18n.graph_options.unit_custom_notation_time,
-                  parameter_form: {
-                    type: 'fixed_value',
-                    title: '',
-                    help: '',
-                    validators: []
-                  },
-                  default_value: null
-                }
-              ]
-            },
-            default_value: { decimal: '' }
+            name: 'decimal',
+            title: props.i18n.graph_options.unit_custom_notation_decimal,
+            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            default_value: ''
           },
           {
-            ident: 'precision',
+            name: 'si',
+            title: props.i18n.graph_options.unit_custom_notation_si,
+            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            default_value: ''
+          },
+          {
+            name: 'iec',
+            title: props.i18n.graph_options.unit_custom_notation_iec,
+            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            default_value: ''
+          },
+          {
+            name: 'standard_scientific',
+            title: props.i18n.graph_options.unit_custom_notation_standard_scientific,
+            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            default_value: ''
+          },
+          {
+            name: 'engineering_scientific',
+            title: props.i18n.graph_options.unit_custom_notation_engineering_scientific,
+            parameter_form: makeString(props.i18n.graph_options.unit_custom_notation_symbol),
+            default_value: ''
+          },
+          {
+            name: 'time',
+            title: props.i18n.graph_options.unit_custom_notation_time,
+            parameter_form: makeFixedValue(),
+            default_value: null
+          }
+        ]),
+        default_value: { notation: ['decimal', null] }
+      },
+      {
+        ident: 'precision',
+        required: true,
+        parameter_form: makeDictionary(props.i18n.graph_options.unit_custom_precision, [
+          {
+            ident: 'rounding_mode',
             required: true,
-            parameter_form: {
-              type: 'dictionary',
-              title: props.i18n.graph_options.unit_custom_precision,
-              help: '',
-              validators: [],
-              elements: [
+            parameter_form: makeSingleChoice(
+              props.i18n.graph_options.unit_custom_precision_rounding_mode,
+              [
                 {
-                  ident: 'rounding_mode',
-                  required: true,
-                  parameter_form: {
-                    type: 'single_choice',
-                    title: props.i18n.graph_options.unit_custom_precision_rounding_mode,
-                    help: '',
-                    validators: [],
-                    elements: [
-                      {
-                        name: 'auto',
-                        title: props.i18n.graph_options.unit_custom_precision_rounding_mode_auto
-                      },
-                      {
-                        name: 'strict',
-                        title: props.i18n.graph_options.unit_custom_precision_rounding_mode_strict
-                      }
-                    ],
-                    frozen: false
-                  },
-                  default_value: 'auto'
+                  name: 'auto',
+                  title: props.i18n.graph_options.unit_custom_precision_rounding_mode_auto
                 },
                 {
-                  ident: 'digits',
-                  required: true,
-                  parameter_form: {
-                    type: 'float',
-                    title: props.i18n.graph_options.unit_custom_precision_digits,
-                    help: '',
-                    validators: []
-                  },
-                  default_value: 2
+                  name: 'strict',
+                  title: props.i18n.graph_options.unit_custom_precision_rounding_mode_strict
                 }
               ]
-            },
-            default_value: { rounding_mode: 'auto', digits: 2 }
+            ),
+            default_value: 'auto'
+          },
+          {
+            ident: 'digits',
+            required: true,
+            parameter_form: makeFloat(props.i18n.graph_options.unit_custom_precision_digits, ''),
+            default_value: 2
           }
-        ]
-      },
-      default_value: { notation: ['decimal', ''], precision: { rounding_mode: 'auto', digits: 2 } }
-    }
-  ]
-}
+        ]),
+        default_value: { rounding_mode: 'auto', digits: 2 }
+      }
+    ]),
+    default_value: { notation: ['decimal', ''], precision: { rounding_mode: 'auto', digits: 2 } }
+  }
+])
 const backendValidationUnit: ValidationMessages = []
 
 const dataVerticalRange = ref(['auto', null])
-const specVerticalRange = {
-  type: 'cascading_single_choice',
-  title: '',
-  help: '',
-  validators: [],
-  elements: [
-    {
-      name: 'auto',
-      title: props.i18n.graph_options.vertical_range_auto,
-      parameter_form: {
-        type: 'fixed_value',
-        title: 'i18n:Title',
-        help: '',
-        validators: []
-      }
-    },
-    {
-      name: 'explicit',
-      title: props.i18n.graph_options.vertical_range_explicit,
-      parameter_form: {
-        type: 'dictionary',
-        title: '',
-        help: '',
-        validators: [],
-        elements: [
-          {
-            ident: 'lower',
-            required: true,
-            parameter_form: {
-              type: 'float',
-              title: props.i18n.graph_options.vertical_range_explicit_lower,
-              help: '',
-              validators: []
-            },
-            default_value: 0.0
-          },
-          {
-            ident: 'upper',
-            required: true,
-            parameter_form: {
-              type: 'float',
-              title: props.i18n.graph_options.vertical_range_explicit_upper,
-              help: '',
-              validators: []
-            },
-            default_value: 1.0
-          }
-        ]
+const specVerticalRange = makeCascadingSingleChoice('', [
+  {
+    name: 'auto',
+    title: props.i18n.graph_options.vertical_range_auto,
+    parameter_form: makeFixedValue(),
+    default_value: null
+  },
+  {
+    name: 'explicit',
+    title: props.i18n.graph_options.vertical_range_explicit,
+    parameter_form: makeDictionary('', [
+      {
+        ident: 'lower',
+        required: true,
+        parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_lower, ''),
+        default_value: 0.0
       },
-      default_value: { lower: 0.0, upper: 1.0 }
-    }
-  ]
-}
+      {
+        ident: 'upper',
+        required: true,
+        parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_upper, ''),
+        default_value: 1.0
+      }
+    ]),
+    default_value: { lower: 0.0, upper: 1.0 }
+  }
+])
 const backendValidationVerticalRange: ValidationMessages = []
 
 const dataMetricsWithZeroValues = ref(true)
-const specMetricsWithZeroValues = {
-  type: 'boolean_choice',
-  title: '',
-  help: '',
-  validators: []
-}
+const specMetricsWithZeroValues = makeBooleanChoice()
 const backendValidationMetricsWithZeroValues: ValidationMessages = []
 
 const topics: Topic[] = [

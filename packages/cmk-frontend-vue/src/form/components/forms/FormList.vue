@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
+
 import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
@@ -152,14 +154,15 @@ function sendDataUpstream() {
             @drag="dragging"
             @dragend="dragEnd"
           >
-            <img class="icon iconbutton vue element_dragger" />
+            <CmkIcon name="drag" size="small" />
           </CmkButton>
+          <!-- TODO: move this delete text to the backend to make it translatable (CMK-19020) -->
           <CmkButton
             variant="transparent"
             title="Delete this entry"
             @click.prevent="removeElement(backendIndex)"
           >
-            <img class="icon iconbutton vue icon_close" />
+            <CmkIcon name="close" size="small" />
           </CmkButton>
         </td>
         <td class="vlof_content">
@@ -173,16 +176,39 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <CmkButton variant="transparent" @click.prevent="addElement">
-    <img class="vue icon_plus" />
-    {{ spec.add_element_label }}
-  </CmkButton>
+  <CmkButton variant="secondary" @click.prevent="addElement">{{
+    spec.add_element_label
+  }}</CmkButton>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
-.vlof_content {
-  padding-bottom: 8px;
+.valuespec_listof {
+  border-collapse: collapse;
+  margin-bottom: var(--spacing);
+
+  > .listof_element {
+    border-bottom: 2px solid var(--default-form-element-bg-color);
+
+    > .vlof_buttons {
+      padding: 2px 0 0;
+    }
+
+    > .vlof_content {
+      padding: var(--spacing) 0;
+      padding-left: 8px;
+    }
+
+    &:first-child {
+      > .vlof_buttons {
+        padding-bottom: var(--spacing-half);
+      }
+
+      > .vlof_content {
+        padding-top: var(--spacing-half);
+      }
+    }
+  }
 }
 .vlof_buttons > * {
   display: flex;

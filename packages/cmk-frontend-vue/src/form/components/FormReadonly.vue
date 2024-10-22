@@ -237,11 +237,11 @@ function renderDict(
       h('tr', [h('th', `${element.parameter_form.title}: `), h('td', [elementForm])])
     )
   })
-  return h(
-    'table',
-    { class: formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : '' },
-    dictElements
-  )
+  const cssClasses = [
+    'form-readonly__dictionary',
+    formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : ''
+  ]
+  return h('table', { class: cssClasses }, dictElements)
 }
 
 function computeUsedValue(
@@ -341,7 +341,7 @@ function renderList(
       ])
     )
   }
-  return h('ul', { style: 'display: contents' }, listResults)
+  return h('ul', { class: 'form-readonly__list' }, listResults)
 }
 
 function renderListOfStrings(
@@ -470,5 +470,10 @@ export default defineComponent({
   &.form-readonly__multiple-choice__max-entries:before {
     content: '';
   }
+}
+
+.form-readonly__list {
+  padding-left: var(--spacing-half);
+  list-style-position: inside;
 }
 </style>

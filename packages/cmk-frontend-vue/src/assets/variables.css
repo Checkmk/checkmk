@@ -54,6 +54,7 @@
     --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
     --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/src/themes/facelift/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/src/themes/facelift/images/icon_drag.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -82,6 +83,7 @@
     --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
     --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/src/themes/modern-dark/images/icon_folder_blue.svg');
+    --icon-drag: url('~cmk-frontend/src/themes/modern-dark/images/icon_drag.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

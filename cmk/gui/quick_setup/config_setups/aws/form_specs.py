@@ -280,10 +280,9 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
 def formspec_aws_overall_tags() -> Mapping[str, DictElement]:
     return {
         "overall_tags": DictElement(
-            parameter_form=formspec_aws_tags(
-                Title("Restrict monitoring services by one of these AWS tags")
-            ),
-        ),
+            parameter_form=formspec_aws_tags(Title("AWS tags")),
+            required=True,
+        )
     }
 
 

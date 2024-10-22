@@ -39,7 +39,7 @@ QUICK_SETUP_PARAMS = {
         "ecs",
         "elasticache",
     ],
-    "overall_tags": [{"key": "foo", "values": ["a", "b"]}],
+    "overall_tags": {"restriction_tags": [{"key": "foo", "values": ["a", "b"]}]},
 }
 
 EXPECTED_RULE_PARAMS = {

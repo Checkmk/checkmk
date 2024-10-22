@@ -213,7 +213,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
 
 
 def action(
-    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    object_id: str | None,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
@@ -279,8 +281,10 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "piggyback_naming_convention": "ip_region_instance",
     }
     if overall_tags is not None:
-        assert isinstance(overall_tags, list)
-        params["overall_tags"] = [(tag["key"], tag["values"]) for tag in overall_tags]
+        assert isinstance(overall_tags, dict)
+        if (restriction_tags := overall_tags.get("restriction_tags")) is not None:
+            assert isinstance(restriction_tags, list)
+            params["overall_tags"] = [(tag["key"], tag["values"]) for tag in restriction_tags]
 
     return params
 

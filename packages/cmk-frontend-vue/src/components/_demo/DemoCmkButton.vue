@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 </script>
@@ -40,8 +41,15 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
     <dd>
       <CmkButton spacing="small">button</CmkButton>
     </dd>
-    <dt>TODO: add CmkButton with Icon, after icon component is ready</dt>
-    <dd></dd>
+    <dt>
+      <code
+        >&lt;CmkButton&gt;&lt;CmkIcon name="about_checkmk" variant="inline"
+        /&gt;button&lt;/CmkButton&gt;</code
+      >
+    </dt>
+    <dd>
+      <CmkButton><CmkIcon name="about_checkmk" variant="inline" />button</CmkButton>
+    </dd>
   </dl>
 </template>
 

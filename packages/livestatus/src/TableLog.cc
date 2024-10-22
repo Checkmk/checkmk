@@ -172,8 +172,10 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
     return {
         .max_lines_per_log_file = max_lines_per_logfile,
         .log_entry_classes = log_entry_classes,
-        .since = since,
-        .until = until,
+        .period{
+            .since = since,
+            .until = until,
+        },
     };
 }
 
@@ -188,6 +190,8 @@ void for_each_log_entry(
         if (log_files.begin() == log_files.end()) {
             return;
         }
+
+        const auto &[since, until] = log_filter.period;
         auto it_logs = log_files.end();  // it now points beyond last log file
         --it_logs;  // switch to last logfile (we have at least one)
 
@@ -195,22 +199,21 @@ void for_each_log_entry(
         // For each logfile we only know the time of the *first* entry, not
         // that of the last.
         while (it_logs != log_files.begin() &&
-               it_logs->second->since() > log_filter.until) {
+               it_logs->second->since() > until) {
             --it_logs;  // while logfiles are too new go back in history
         }
-        if (it_logs->second->since() > log_filter.until) {
+        if (it_logs->second->since() > until) {
             return;  // all logfiles are too new
         }
 
         while (true) {
             const auto *entries = it_logs->second->getEntriesFor(log_filter);
-            auto it_entries = entries->upper_bound(
-                Logfile::makeKey(log_filter.until, 999999999));
+            auto it_entries =
+                entries->upper_bound(Logfile::makeKey(until, 999999999));
             while (it_entries != entries->begin()) {
                 --it_entries;
                 const auto &entry = *it_entries->second;
-                if (entry.time() < log_filter.since ||
-                    !process_log_entry(entry)) {
+                if (entry.time() < since || !process_log_entry(entry)) {
                     break;
                 }
             }

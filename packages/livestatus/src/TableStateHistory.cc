@@ -196,8 +196,7 @@ const Logfile::map_type *getEntries(Logfile *logfile,
                 .set(static_cast<int>(LogEntry::Class::alert))
                 .set(static_cast<int>(LogEntry::Class::program))
                 .set(static_cast<int>(LogEntry::Class::state)),
-        .since = {},  // TODO(sp)
-        .until = {},  // TODO(sp)
+        .period = {},  // TODO(sp)
     });
 }
 

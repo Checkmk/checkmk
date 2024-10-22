@@ -113,7 +113,6 @@ function openSlideIn(objectId: null | OptionId) {
 
 <template>
   <div>
-    <!-- TODO the resulting data of the ternary operator for the input_hint switch not being watched  -->
     <DropDown
       v-model:selected-option="selectedObjectId"
       :options="choices"
@@ -133,7 +132,6 @@ function openSlideIn(objectId: null | OptionId) {
       {{ spec.i18n.create }}
     </CmkButton>
 
-    <!-- TODO the resulting data of the ternary operator for the title switch not being watched  -->
     <SlideIn
       :open="slideInOpen"
       :header="{

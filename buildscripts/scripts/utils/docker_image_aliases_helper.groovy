@@ -98,6 +98,10 @@ inside_container = {Map arg1=[:], Closure arg2 ->
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE_TMP}")"
         mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${reference_repo_dir}")"
 
+        # not needed every time, but easier done unconditionally
+        mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE}/dependencyscanner")"
+        mkdir -p "${container_shadow_workspace}/home/\$(realpath -s --relative-to="${env.HOME}" "${env.WORKSPACE}/dependencyscanner_tmp")"
+
         # create mount dirs for $HOME/.cache (not to confuse with <checkout_dir>/.cache)
         mkdir -p "${container_shadow_workspace}/home_cache"
         mkdir -p "${container_shadow_workspace}/home/.cache"

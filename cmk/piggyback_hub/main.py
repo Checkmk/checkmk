@@ -123,19 +123,22 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     for p in processes:
         p.start()
 
-    def terminate_all_processes() -> int:
-        logger.info("Stopping: %s", APP_NAME)
+    def terminate_all_processes(reason: str) -> int:
+        logger.info("Stopping: %s (%s)", APP_NAME.value, reason)
         for p in processes:
             p.terminate()
         return 0
 
-    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes()))
+    signal.signal(
+        signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM"))
+    )
 
     # All processes should run forever. Die if either finishes.
     for proc in cycle(processes):
         proc.join(timeout=5)
         if not proc.is_alive():
-            return terminate_all_processes()
+            assert isinstance(proc, (ReceivingProcess, SendingPayloadProcess))  # mypy :-/
+            return terminate_all_processes(f"{proc.task_name} died")
 
     raise RuntimeError("Unreachable code reached")
 
@@ -148,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     logger = _setup_logging(args)
     omd_root = Path(args.omd_root)
 
-    logger.info("Starting: %s", APP_NAME)
+    logger.info("Starting: %s", APP_NAME.value)
 
     if (ec := run_initial_connection_test(logger, omd_root)) != 0:
         return ec
@@ -163,5 +166,5 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         if args.debug:
             raise
-        logger.exception("Exception: %s: %s", APP_NAME, exc)
+        logger.exception("Exception: %s: %s", APP_NAME.value, exc)
         return 1

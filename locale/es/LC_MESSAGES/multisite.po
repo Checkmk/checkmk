@@ -632,22 +632,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s podría faltar, no debe estar vacío si está configurado."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s no en las carpetas de Configuración seleccionadas."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s no conocido en la configuración de monitorización activada"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s no enumerada en la lista explícita de nombres de host."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s no monitorizado por uno de los sitios seleccionados explícitamente."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s las reglas de notificación coinciden"
 
@@ -666,10 +650,6 @@ msgstr "%s de %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s en la lista de exclusión."
 
 #, python-format
 msgid "%s operations"
@@ -4988,7 +4968,7 @@ msgid "Agent updates are currently disabled"
 msgstr "Las actualizaciones de los agentes están actualmente desactivadas"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr ""
 "Las actualizaciones del agente están deshabilitadas para el nombre de host "
 "%s porque es"
@@ -22352,6 +22332,12 @@ msgstr "Solicitudes de archivos fallidas"
 msgid "Failed get locations requests"
 msgstr "Solicitudes fallidas de obtención de ubicaciones"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr ""
+"Este host ha fallado en la condición de etiqueta de host '%s' (tiene las "
+"etiquetas %s)"
+
 msgid "Failed index operations"
 msgstr "Operaciones de índice fallidas"
 
@@ -37320,6 +37306,10 @@ msgstr "Falta el parámetro custom_graph necesario."
 msgid "Missing needed host parameter."
 msgstr "Falta un parámetro de host necesario."
 
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr ""
 "Falta el modo o no es válido. Se permiten los modos \"agente\" y \"estado\""
@@ -39797,11 +39787,27 @@ msgstr "No habilitado"
 msgid "Not found"
 msgstr "No se ha encontrado"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s no en las carpetas de Configuración seleccionadas."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s no conocido en la configuración de monitorización activada"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s no enumerada en la lista explícita de nombres de host."
+
 msgid "Not locked"
 msgstr "No bloqueado"
 
 msgid "Not logged in."
 msgstr "No está conectado."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s no monitorizado por uno de los sitios seleccionados explícitamente."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "No se permite cambiar la contraseña. No se puede imponer el cambio."
@@ -41197,6 +41203,10 @@ msgstr "En todos los sitios"
 
 msgid "On down host"
 msgstr "En host caído"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s en la lista de exclusión."
 
 #, fuzzy
 msgid "On recovery (OK/UP)"
@@ -62657,12 +62667,6 @@ msgstr "Este grupo no existe."
 msgid "This host does not exist."
 msgstr "Este host no existe."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Este host ha fallado en la condición de etiqueta de host '%s' (tiene las "
-"etiquetas %s)"
-
 msgid "This host has a baked agent"
 msgstr "Este host tiene un agente horneado"
 
@@ -62681,11 +62685,6 @@ msgstr "Este host está deshabilitado"
 
 msgid "This host is flapping"
 msgstr "Este host está aleteando"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Este host está caducado"

@@ -634,22 +634,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s pode estar em falta. Não deverá estar vazio se estiver definido."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s não nas pastas de configuração seleccionadas."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s não conhecido na ativação de configurações de monitorização"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s não listado na lista explicita de nomes de servidores."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s não monitorizado por um dos sites explicitamente selecionados."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s regras de notificação são correspondentes"
 
@@ -668,10 +652,6 @@ msgstr "%s de %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s na lista de exclusões."
 
 #, python-format
 msgid "%s operations"
@@ -4946,7 +4926,7 @@ msgid "Agent updates are currently disabled"
 msgstr "As actualizações dos agentes estão actualmente desactivadas"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr "Agent Updates são desativados para hostname %s porque é"
 
 msgid "Agent updates are enabled"
@@ -22149,6 +22129,10 @@ msgstr "Pedidos de Arquivos Falhados"
 msgid "Failed get locations requests"
 msgstr "Pedidos de localização falhados"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr "Esta condição do host falhou no host tag '%s' (ele tem as tags %s)"
+
 msgid "Failed index operations"
 msgstr "Operações de índice falhadas"
 
@@ -36988,6 +36972,10 @@ msgstr "Falta o parâmetro custom_graph necessário."
 msgid "Missing needed host parameter."
 msgstr "Falta o parâmetro de anfitrião necessário."
 
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Modo em falta ou inválido. Permitidos são 'agente' e 'status'"
 
@@ -39437,11 +39425,27 @@ msgstr "Não ativado"
 msgid "Not found"
 msgstr "Não encontrado"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s não nas pastas de configuração seleccionadas."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s não conhecido na ativação de configurações de monitorização"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s não listado na lista explicita de nomes de servidores."
+
 msgid "Not locked"
 msgstr "Não bloqueado"
 
 msgid "Not logged in."
 msgstr "Não está logado."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s não monitorizado por um dos sites explicitamente selecionados."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "Não é permitido alterar a senha. A alteração não pode ser aplicada."
@@ -40803,6 +40807,10 @@ msgstr "Em todos os sites"
 
 msgid "On down host"
 msgstr "No anfitrião inferior"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s na lista de exclusões."
 
 msgid "On recovery (OK/UP)"
 msgstr ""
@@ -62026,10 +62034,6 @@ msgstr "Este grupo não existe."
 msgid "This host does not exist."
 msgstr "Este hospedeiro não existe."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr "Esta condição do host falhou no host tag '%s' (ele tem as tags %s)"
-
 msgid "This host has a baked agent"
 msgstr "Este anfitrião tem um agente cozido"
 
@@ -62048,11 +62052,6 @@ msgstr "Este anfitrião está desactivado"
 
 msgid "This host is flapping"
 msgstr "Este anfitrião está a bater"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Este hospedeiro está fora de moda"

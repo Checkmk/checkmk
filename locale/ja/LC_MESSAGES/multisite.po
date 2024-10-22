@@ -626,22 +626,6 @@ msgstr ""
 "す。"
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "選択した Setup フォルダに %s がありません。"
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s が不明 アクティブ化された監視構成で"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%sはホスト名の明示的なリストに存在しません。"
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s は、明示的に選択されたサイトの1つによって監視されていません。"
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s 通知ルール"
 
@@ -660,10 +644,6 @@ msgstr "%s の %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s of %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s 除外リスト。"
 
 #, python-format
 msgid "%s operations"
@@ -4735,8 +4715,8 @@ msgstr "エージェントの更新"
 msgid "Agent updates are currently disabled"
 msgstr "エージェントの更新は現在無効になっています"
 
-#, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+#, fuzzy, python-format
+msgid "Agent updates are disabled for host name %s:"
 msgstr "ホスト名 %s のエージェント更新は無効になっています"
 
 msgid "Agent updates are enabled"
@@ -21153,6 +21133,10 @@ msgstr "失敗したファイル要求"
 msgid "Failed get locations requests"
 msgstr "場所の取得リクエストに失敗しました"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr "このホストはホストタグ条件 '%s'に失敗しました(タグ%sがあります)"
+
 msgid "Failed index operations"
 msgstr "失敗したインデックス操作"
 
@@ -35708,6 +35692,10 @@ msgstr "必要なcustom_graphパラメーターがありません。"
 msgid "Missing needed host parameter."
 msgstr "必要なホストパラメータがありません。"
 
+#, fuzzy, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr "このホストには 1 つ以上のラベルがありません： %s(ラベル %s があります)"
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr ""
 "モードがないか無効です。許可されるのは\"エージェント\"と\"ステータス\"です"
@@ -38147,11 +38135,27 @@ msgstr "有効になっていません"
 msgid "Not found"
 msgstr "見つかりません"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "選択した Setup フォルダに %s がありません。"
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s が不明 アクティブ化された監視構成で"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%sはホスト名の明示的なリストに存在しません。"
+
 msgid "Not locked"
 msgstr "ロックされていません"
 
 msgid "Not logged in."
 msgstr "ログインしていない。"
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s は、明示的に選択されたサイトの1つによって監視されていません。"
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "パスワードの変更は許可されていません。変更を強制することはできません。"
@@ -39493,6 +39497,10 @@ msgstr "すべてのサイトで"
 
 msgid "On down host"
 msgstr "ダウンホスト上"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s 除外リスト。"
 
 #, fuzzy
 msgid "On recovery (OK/UP)"
@@ -60289,10 +60297,6 @@ msgstr "このグループは存在しません。"
 msgid "This host does not exist."
 msgstr "このホストは存在しません。"
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr "このホストはホストタグ条件 '%s'に失敗しました(タグ%sがあります)"
-
 msgid "This host has a baked agent"
 msgstr "このホストにはベイクされたエージェントがあります"
 
@@ -60311,11 +60315,6 @@ msgstr "このホストは無効になっています"
 
 msgid "This host is flapping"
 msgstr "このホストはフラッピングしています"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr "このホストには 1 つ以上のラベルがありません： %s(ラベル %s があります)"
 
 msgid "This host is stale"
 msgstr "このホストは古くなっています"

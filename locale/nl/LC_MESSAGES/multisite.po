@@ -632,22 +632,6 @@ msgstr "%s overeenkomende labels: %s"
 msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s mag ontbreken, het mag niet leeg zijn indien het gezet is."
 
-#, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s niet in de geselecteerde Setup-mappen."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s niet bekend in de actieve monitoring configuratie"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s niet bekend in de explicite lijst van host namen."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s niet gemonitored door een van de expliciet geselecteerde sites."
-
 #, fuzzy, python-format
 msgid "%s notification rules are matching"
 msgstr "kennisgevingsregel"
@@ -667,10 +651,6 @@ msgstr "%s van %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s van %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s op de uitsluit lijst."
 
 #, python-format
 msgid "%s operations"
@@ -4959,7 +4939,7 @@ msgid "Agent updates are currently disabled"
 msgstr "Agent updates zijn momenteel uitgeschakeld"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr "Agent Updates zijn uitgeschakeld voor hostnaam %s omdat het"
 
 msgid "Agent updates are enabled"
@@ -22163,6 +22143,12 @@ msgstr "Mislukte bestandsaanvragen"
 msgid "Failed get locations requests"
 msgstr "Mislukte verzoeken om locaties te krijgen"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr ""
+"Deze host is niet geslaagd voor host tag voorwaarde '%s' (hij heeft de tags "
+"%s)"
+
 msgid "Failed index operations"
 msgstr "Mislukte index operaties"
 
@@ -37004,6 +36990,10 @@ msgstr "Ontbrekende benodigde custom_graph parameter."
 msgid "Missing needed host parameter."
 msgstr "Ontbrekende benodigde host parameter."
 
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Ontbrekende of ongeldige modus. Toegestaan zijn 'agent' en 'status'"
 
@@ -39457,11 +39447,27 @@ msgstr "Niet ingeschakeld"
 msgid "Not found"
 msgstr "Niet gevonden"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s niet in de geselecteerde Setup-mappen."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s niet bekend in de actieve monitoring configuratie"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s niet bekend in de explicite lijst van host namen."
+
 msgid "Not locked"
 msgstr "Niet vergrendeld"
 
 msgid "Not logged in."
 msgstr "Niet ingelogd."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s niet gemonitored door een van de expliciet geselecteerde sites."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr ""
@@ -40843,6 +40849,10 @@ msgstr "Op alle sites"
 
 msgid "On down host"
 msgstr "Op down host"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s op de uitsluit lijst."
 
 msgid "On recovery (OK/UP)"
 msgstr ""
@@ -62079,12 +62089,6 @@ msgstr "Deze groep bestaat niet."
 msgid "This host does not exist."
 msgstr "Deze host bestaat niet."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Deze host is niet geslaagd voor host tag voorwaarde '%s' (hij heeft de tags "
-"%s)"
-
 msgid "This host has a baked agent"
 msgstr "Deze host heeft een gebakken agent"
 
@@ -62103,11 +62107,6 @@ msgstr "Deze host is uitgeschakeld"
 
 msgid "This host is flapping"
 msgstr "Deze gastheer wappert"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Deze gastheer is oud"

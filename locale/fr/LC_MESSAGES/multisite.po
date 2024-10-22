@@ -632,22 +632,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s peut être manquant, s'il ne doit pas être vide s'il est défini."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s pas dans les dossiers Setup sélectionnés."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s non connu dans la configuration de surveillance activée"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s ne figure pas dans la liste explicite des noms d'hôtes."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s n'est pas surveillé par l'un des sites explicitement sélectionnés."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s des règles de notification correspondent"
 
@@ -666,10 +650,6 @@ msgstr "%s de %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s sur la liste d'exclusion."
 
 #, python-format
 msgid "%s operations"
@@ -5002,7 +4982,7 @@ msgid "Agent updates are currently disabled"
 msgstr "Les mises à jour de l'agent sont actuellement désactivées"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr ""
 "Les mises à jour de l'agent sont désactivées pour le nom d'hôte %s car il est"
 
@@ -22370,6 +22350,11 @@ msgstr "Échec des demandes de fichiers"
 msgid "Failed get locations requests"
 msgstr "Échec des demandes de localisation (Get Locations)"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr ""
+"Cet hôte a échoué à la condition de balise d'hôte '%s' (il a les balises %s)"
+
 msgid "Failed index operations"
 msgstr "Échec des opérations d'indexation"
 
@@ -37349,6 +37334,10 @@ msgstr "Paramètre custom_graph manquant."
 msgid "Missing needed host parameter."
 msgstr "Paramètre d'hôte nécessaire manquant."
 
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr ""
 "Mode manquant ou invalide. Les modes autorisés sont 'agent' et 'status'"
@@ -39824,11 +39813,27 @@ msgstr "Non activé"
 msgid "Not found"
 msgstr "Non trouvé"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s pas dans les dossiers Setup sélectionnés."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s non connu dans la configuration de surveillance activée"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s ne figure pas dans la liste explicite des noms d'hôtes."
+
 msgid "Not locked"
 msgstr "Non verrouillé"
 
 msgid "Not logged in."
 msgstr "Non connecté."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s n'est pas surveillé par l'un des sites explicitement sélectionnés."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr ""
@@ -41220,6 +41225,10 @@ msgstr "Sur tous les sites"
 
 msgid "On down host"
 msgstr "L'hôte en bas"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s sur la liste d'exclusion."
 
 msgid "On recovery (OK/UP)"
 msgstr ""
@@ -62706,11 +62715,6 @@ msgstr "Ce groupe n'existe pas."
 msgid "This host does not exist."
 msgstr "Cet hôte n'existe pas."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Cet hôte a échoué à la condition de balise d'hôte '%s' (il a les balises %s)"
-
 msgid "This host has a baked agent"
 msgstr "Cet hôte a un agent cuit"
 
@@ -62729,11 +62733,6 @@ msgstr "Cet hôte est désactivé"
 
 msgid "This host is flapping"
 msgstr "Cet hôte est en train de s'agiter"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Cet hôte est périmé"

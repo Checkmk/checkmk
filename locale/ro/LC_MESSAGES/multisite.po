@@ -633,24 +633,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s ar putea să lipsească, dacă nu trebuie să fie gol dacă este setat."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s nu se află în dosarele de configurare selectate."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s nu este cunoscut în configurația de monitorizare activată"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s care nu figurează în lista explicită de nume de gazdă."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr ""
-"%s care nu este monitorizat de unul dintre site-urile selectate în mod "
-"explicit."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s regulile de notificare se potrivesc"
 
@@ -669,10 +651,6 @@ msgstr "%s din %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s pe lista de excludere."
 
 #, python-format
 msgid "%s operations"
@@ -4959,7 +4937,7 @@ msgid "Agent updates are currently disabled"
 msgstr "Actualizările agentului sunt în prezent dezactivate"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr ""
 "Actualizările agentului sunt dezactivate pentru numele de gazdă %s, deoarece "
 "acesta este"
@@ -22191,6 +22169,12 @@ msgstr "Solicitări de fișiere eșuate"
 msgid "Failed get locations requests"
 msgstr "Solicitări eșuate de obținere a locațiilor"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr ""
+"Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
+"%s)"
+
 msgid "Failed index operations"
 msgstr "Operațiuni de indexare eșuate"
 
@@ -37024,6 +37008,10 @@ msgstr "Lipsește parametrul necesar custom_graph."
 msgid "Missing needed host parameter."
 msgstr "Lipsește un parametru gazdă necesar."
 
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
+
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Mod lipsă sau invalid. Permise sunt 'agent' și 'status'"
 
@@ -39496,11 +39484,29 @@ msgstr "Neactivat"
 msgid "Not found"
 msgstr "Nu a fost găsit"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s nu se află în dosarele de configurare selectate."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s nu este cunoscut în configurația de monitorizare activată"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s care nu figurează în lista explicită de nume de gazdă."
+
 msgid "Not locked"
 msgstr "Nu este blocat"
 
 msgid "Not logged in."
 msgstr "Nu sunteți conectat."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr ""
+"%s care nu este monitorizat de unul dintre site-urile selectate în mod "
+"explicit."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "Nu este permisă schimbarea parolei. Schimbarea nu poate fi impusă."
@@ -40867,6 +40873,10 @@ msgstr "Pe toate site-urile"
 
 msgid "On down host"
 msgstr "Pe jos gazdă"
+
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s pe lista de excludere."
 
 msgid "On recovery (OK/UP)"
 msgstr "La recuperare (OK/UP)"
@@ -62229,12 +62239,6 @@ msgstr "Acest grup nu există."
 msgid "This host does not exist."
 msgstr "Această gazdă nu există."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
-"%s)"
-
 msgid "This host has a baked agent"
 msgstr "Această gazdă are un agent copt"
 
@@ -62253,11 +62257,6 @@ msgstr "Această gazdă este dezactivată"
 
 msgid "This host is flapping"
 msgstr "Gazda asta se agită"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Această gazdă este veche"

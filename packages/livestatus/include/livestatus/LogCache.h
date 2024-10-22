@@ -35,6 +35,12 @@ private:
 
 using LogEntryClasses = std::bitset<32>;
 
+class LogRestrictions {
+public:
+    size_t max_lines_per_log_file{};
+    LogEntryClasses log_entry_classes;
+};
+
 class LogPeriod {
 public:
     std::chrono::system_clock::time_point since;
@@ -43,8 +49,7 @@ public:
 
 class LogFilter {
 public:
-    size_t max_lines_per_log_file{};
-    LogEntryClasses log_entry_classes;
+    LogRestrictions restrictions;
     LogPeriod period;
 };
 

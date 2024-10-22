@@ -170,8 +170,10 @@ LogFilter constructFilter(Query &query, size_t max_lines_per_logfile) {
         query.valueSetLeastUpperBoundFor("class").value_or(~std::bitset<32>{});
 
     return {
-        .max_lines_per_log_file = max_lines_per_logfile,
-        .log_entry_classes = log_entry_classes,
+        .restrictions{
+            .max_lines_per_log_file = max_lines_per_logfile,
+            .log_entry_classes = log_entry_classes,
+        },
         .period{
             .since = since,
             .until = until,
@@ -229,7 +231,7 @@ void for_each_log_entry(
 
 void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
     auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
-    if (log_filter.log_entry_classes == 0) {  // optimization only
+    if (log_filter.restrictions.log_entry_classes == 0) {  // optimization only
         return;
     }
 

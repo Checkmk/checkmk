@@ -43,8 +43,9 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     , _logclasses_read(0) {}
 
 void Logfile::load(const LogFilter &log_filter) {
-    const unsigned missing_types = log_filter.log_entry_classes.to_ulong() &
-                                   ~_logclasses_read;  // TODO(sp)
+    const unsigned missing_types =
+        log_filter.restrictions.log_entry_classes.to_ulong() &
+        ~_logclasses_read;  // TODO(sp)
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
@@ -107,8 +108,9 @@ void Logfile::loadRange(const LogFilter &log_filter, FILE *file,
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(linebuffer.data(), static_cast<int>(linebuffer.size()),
                  file) != nullptr) {
-        if (_lineno >= log_filter.max_lines_per_log_file) {
-            Error(_logger) << "more than " << log_filter.max_lines_per_log_file
+        if (_lineno >= log_filter.restrictions.max_lines_per_log_file) {
+            Error(_logger) << "more than "
+                           << log_filter.restrictions.max_lines_per_log_file
                            << " lines in " << _path << ", ignoring the rest!";
             return;
         }
@@ -121,7 +123,8 @@ void Logfile::loadRange(const LogFilter &log_filter, FILE *file,
             *it = '\0';
         }
         if (processLogLine(_lineno, linebuffer.data(), missing_types)) {
-            _log_cache->logLineHasBeenAdded(this, log_filter.log_entry_classes);
+            _log_cache->logLineHasBeenAdded(
+                this, log_filter.restrictions.log_entry_classes);
         }
     }
 }

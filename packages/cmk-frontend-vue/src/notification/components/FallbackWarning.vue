@@ -44,7 +44,7 @@ function openInNewTab(url: string) {
       <p>{{ props.properties['i18n']['title'] }}</p>
       <p>{{ props.properties['i18n']['message'] }}</p>
       <div class="buttons">
-        <CmkButton @click="openInNewTab(properties['setup_link'])">
+        <CmkButton variant="info" @click="openInNewTab(properties['setup_link'])">
           {{ properties['i18n']['setup_link_title'] }}
         </CmkButton>
         <CmkButton @click="hideContent">
@@ -79,12 +79,6 @@ div.help {
 
   a:first-child {
     margin-right: var(--spacing);
-  }
-
-  .button {
-    background-color: rgb(6 103 193);
-    color: var(--white);
-    border: unset;
   }
 }
 </style>

@@ -50,6 +50,10 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
     <dd>
       <CmkButton><CmkIcon name="about_checkmk" variant="inline" />button</CmkButton>
     </dd>
+    <dt><code>&lt;CmkButton variant="info"&gt;info&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="info">info</CmkButton>
+    </dd>
   </dl>
 </template>
 

@@ -12,7 +12,8 @@ const buttonVariants = cva('', {
       primary: 'button--variant-primary',
       secondary: 'button--variant-secondary',
       tertiary: 'button--variant-tertiary',
-      transparent: 'button--variant-transparent'
+      transparent: 'button--variant-transparent',
+      info: 'button--variant-info'
     },
     spacing: {
       small: 'button--spacing-small',
@@ -63,6 +64,10 @@ defineProps<ButtonProps>()
   padding: 0;
   margin: 0;
   font-weight: normal;
+}
+.button--variant-info {
+  background-color: var(--default-help-icon-bg-color);
+  color: var(--white);
 }
 .button--spacing-small {
   padding: 5px 8px;

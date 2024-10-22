@@ -71,6 +71,7 @@
     --custom-scroll-bar-backgroud-color: rgb(249, 249, 255);
     --default-text-color: rgb(39, 39, 39);
     --default-component-bg-color: rgb(240, 240, 240);
+    --default-help-icon-bg-color: rgb(12, 129, 238);
   }
 
   body[data-theme='modern-dark'] {
@@ -96,5 +97,6 @@
     --custom-scroll-bar-backgroud-color: rgb(48, 57, 70);
     --default-text-color: rgb(255, 255, 255);
     --default-component-bg-color: rgb(46, 44, 44);
+    --default-help-icon-bg-color: rgb(6, 103, 193);
   }
 }

@@ -109,7 +109,8 @@ class PageAutomation(AjaxPage):
             ignore_license_compatibility=self._command == "distribute-verification-response"
         )
 
-    def _authenticate(self) -> None:
+    @staticmethod
+    def _authenticate() -> None:
         secret = request.var("secret")
 
         if not secret:

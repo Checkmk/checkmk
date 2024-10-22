@@ -15,6 +15,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
 from cmk.gui.watolib.utils import mk_repr
@@ -69,9 +70,12 @@ class TestPageAutomation:
     def patch_edition_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(cmk_version, "edition", lambda *args, **kw: cmk_version.Edition.CEE)
 
+    @pytest.fixture(name="fix_secret_checking")
+    def patch_distributed_setup_secret(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(automation, "_get_login_secret", lambda **_kwargs: "secret")
+
     @pytest.fixture(name="setup_request")
     def setup_request_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(automation, "_get_login_secret", lambda **_kwargs: "secret")
         request.set_var("secret", "secret")
         request.set_var("command", "checkmk-automation")
         request.set_var("automation", "test")
@@ -86,6 +90,7 @@ class TestPageAutomation:
         "check_mk_local_automation_serialized",
         "setup_request",
         "patch_edition",
+        "fix_secret_checking",
     )
     def test_execute_cmk_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
         with monkeypatch.context() as m:
@@ -102,6 +107,7 @@ class TestPageAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
+        "fix_secret_checking",
         "patch_edition",
     )
     def test_execute_cmk_automation_previous_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,6 +132,7 @@ class TestPageAutomation:
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
+        "fix_secret_checking",
         "patch_edition",
     )
     def test_execute_cmk_automation_incompatible(
@@ -139,3 +146,30 @@ class TestPageAutomation:
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
                 automation.PageAutomation()._execute_cmk_automation()
+
+    @pytest.mark.usefixtures(
+        "request_context",
+        "patch_edition",
+    )
+    def test_no_secret(self) -> None:
+        with pytest.raises(MKAuthException):
+            automation.PageAutomation._authenticate()
+
+    @pytest.mark.usefixtures(
+        "request_context",
+        "patch_edition",
+        "fix_secret_checking",
+    )
+    def test_wrong_secret(self) -> None:
+        request.set_var("secret", "wrong")
+        with pytest.raises(MKAuthException):
+            automation.PageAutomation._authenticate()
+
+    @pytest.mark.usefixtures(
+        "request_context",
+        "patch_edition",
+        "fix_secret_checking",
+    )
+    def test_correct_secret(self) -> None:
+        request.set_var("secret", "secret")
+        automation.PageAutomation._authenticate()

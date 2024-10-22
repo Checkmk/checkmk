@@ -70,9 +70,9 @@ exit_failure() {
 }
 
 ensure_broker_certs() {
-    printf "Ensuring broker certificates presence..."
+    printf "Ensuring broker certificates presence...\n"
     if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
-        printf "Creating broker certificates..."
+        printf "Creating broker certificates...\n"
         "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "###SITE###"
     fi
 }

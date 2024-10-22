@@ -47,12 +47,6 @@ public:
     std::chrono::system_clock::time_point until;
 };
 
-class LogFilter {
-public:
-    LogRestrictions restrictions;
-    LogPeriod period;
-};
-
 // NOTE: This class is currently broken due to race conditions: Although it uses
 // a lock internally to guard against concurrent modifications happening by its
 // own functions, there is no locking at all regarding the writing of log

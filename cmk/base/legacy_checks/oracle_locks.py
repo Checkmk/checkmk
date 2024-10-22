@@ -78,7 +78,21 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
 
             ctime = int(ctime)
 
-            if ctime >= crit:
+            if not crit and not warn:
+                infotext += (
+                    "locktime %s Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; "
+                    % (
+                        render.time_offset(ctime),
+                        sidnr,
+                        serial,
+                        process,
+                        machine,
+                        osuser,
+                        object_owner,
+                        object_name,
+                    )
+                )
+            elif ctime >= crit:
                 state = 2
                 lockcount += 1
                 infotext += "locktime {} (!!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(

@@ -4,21 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormEditAsync, { type API as SlideInAPI } from '@/components/FormEditAsync.vue'
+import FormEditAsync from '@/components/FormEditAsync.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import SlideIn from '@/components/slidein/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
-import { immediateWatch } from '@/form/components/utils/watch'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
 import { ref } from 'vue'
-import {
-  getConfigEntityAPI,
-  type Payload,
-  type EntityDescription
-} from '@/form/components/utils/configuration_entity'
+import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
 import DropDown from '@/components/DropDown.vue'
 
@@ -46,42 +41,51 @@ const error = ref<string | undefined>()
 const slideInObjectId = ref<OptionId | null>(null)
 const slideInOpen = ref<boolean>(false)
 
-const slideInAPI = ref<SlideInAPI<OptionId, EntityDescription>>()
-immediateWatch(
-  () => ({
-    entityType: props.spec.config_entity_type,
-    entityTypeSpecifier: props.spec.config_entity_type_specifier
-  }),
-  ({ entityType, entityTypeSpecifier }) => {
-    const configEntityAPI = getConfigEntityAPI({
-      entityType: entityType as ConfigEntityType,
-      entityTypeSpecifier
-    })
-    slideInAPI.value = {
-      getSchema: async () => {
-        try {
-          return (await configEntityAPI.getSchema()).schema
-        } catch (e: unknown) {
-          error.value = e as string
-          throw e
-        }
-      },
-      getData: async (objectId: OptionId | null) => {
-        if (objectId === null) {
-          return (await configEntityAPI.getSchema()).defaultValues
-        }
-        const result = await configEntityAPI.getData(objectId)
-        return result
-      },
-      setData: async (objectId: OptionId | null, data: Payload) => {
-        if (objectId === null) {
-          return await configEntityAPI.createEntity(data)
-        }
-        return await configEntityAPI.updateEntity(objectId, data)
-      }
+const slideInAPI = {
+  getSchema: async () => {
+    try {
+      return (
+        await configEntityAPI.getSchema(
+          props.spec.config_entity_type as ConfigEntityType,
+          props.spec.config_entity_type_specifier
+        )
+      ).schema
+    } catch (e: unknown) {
+      error.value = e as string
+      throw e
     }
+  },
+  getData: async (objectId: OptionId | null) => {
+    if (objectId === null) {
+      return (
+        await configEntityAPI.getSchema(
+          props.spec.config_entity_type as ConfigEntityType,
+          props.spec.config_entity_type_specifier
+        )
+      ).defaultValues
+    }
+    const result = await configEntityAPI.getData(
+      props.spec.config_entity_type as ConfigEntityType,
+      objectId
+    )
+    return result
+  },
+  setData: async (objectId: OptionId | null, data: Payload) => {
+    if (objectId === null) {
+      return await configEntityAPI.createEntity(
+        props.spec.config_entity_type as ConfigEntityType,
+        props.spec.config_entity_type_specifier,
+        data
+      )
+    }
+    return await configEntityAPI.updateEntity(
+      props.spec.config_entity_type as ConfigEntityType,
+      props.spec.config_entity_type_specifier,
+      objectId,
+      data
+    )
   }
-)
+}
 
 function slideInSubmitted(event: { ident: string; description: string }) {
   data.value = event.ident
@@ -144,7 +148,6 @@ function openSlideIn(objectId: null | OptionId) {
         {{ error }}
       </AlertBox>
       <FormEditAsync
-        v-if="slideInAPI !== undefined"
         :object-id="slideInObjectId"
         :api="slideInAPI"
         :i18n="{

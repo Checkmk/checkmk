@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
-import type { FormSpec } from '../vue_formspec_components'
 import type { SetDataResult } from '@/components/FormEditAsync.vue'
 
 export interface EntityDescription {
@@ -13,14 +12,6 @@ export interface EntityDescription {
 }
 
 export type Payload = Record<string, unknown>
-
-export interface API {
-  getSchema: () => Promise<{ schema: FormSpec; defaultValues: Payload }>
-  getData: (entityId: string) => Promise<Payload>
-  createEntity: (data: Payload) => Promise<SetDataResult<EntityDescription>>
-  updateEntity: (update: string, data: Payload) => Promise<SetDataResult<EntityDescription>>
-  listEntities: () => Promise<EntityDescription[]>
-}
 
 const API_ROOT = 'api/1.0'
 
@@ -59,34 +50,22 @@ async function processSaveResponse(response: Response): Promise<SetDataResult<En
   return { type: 'success', entity: { ident: returnData.id, description: returnData.title } }
 }
 
-export function getConfigEntityAPI({
-  entityType,
-  entityTypeSpecifier
-}: {
-  /**
-   * The type of the entity to be managed, e.g., "notification_parameter"
-   */
-  entityType: ConfigEntityType
-  /**
-   * The specifier of the entity to be managed, e.g., "mail"
-   */
-  entityTypeSpecifier: string
-}): API {
-  const getSchema = async () => {
+export const configEntityAPI = {
+  getSchema: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
     const response = await fetchRestAPI(
       GET_CONFIG_ENTITY_SCHEMA(entityType, entityTypeSpecifier),
       'GET'
     )
     const data = await response.json()
     return { schema: data.extensions.schema, defaultValues: data.extensions.default_values }
-  }
-  const getData = async (entityId: string) => {
+  },
+  getData: async (entityType: ConfigEntityType, entityId: string) => {
     const response = await fetchRestAPI(GET_CONFIG_ENTITY_DATA(entityType, entityId), 'GET')
     const data = await response.json()
     return data.extensions
-  }
+  },
   /* TODO we should use an openAPI-generated client here */
-  const listEntities = async () => {
+  listEntities: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
     const response = await fetchRestAPI(
       LIST_CONFIG_ENTITIES(entityType, entityTypeSpecifier),
       'GET'
@@ -96,17 +75,25 @@ export function getConfigEntityAPI({
       ident: entity.id,
       description: entity.title
     }))
-  }
-
-  const createEntity = async (data: Payload) => {
+  },
+  createEntity: async (
+    entityType: ConfigEntityType,
+    entityTypeSpecifier: string,
+    data: Payload
+  ) => {
     const response = await fetchRestAPI(CREATE_CONFIG_ENTITY, 'POST', {
       entity_type: entityType,
       entity_type_specifier: entityTypeSpecifier,
       data
     })
     return await processSaveResponse(response)
-  }
-  const updateEntity = async (entityId: string, data: Payload) => {
+  },
+  updateEntity: async (
+    entityType: ConfigEntityType,
+    entityTypeSpecifier: string,
+    entityId: string,
+    data: Payload
+  ) => {
     const response = await fetchRestAPI(UPDATE_CONFIG_ENTITY, 'PUT', {
       entity_type: entityType,
       entity_type_specifier: entityTypeSpecifier,
@@ -115,6 +102,4 @@ export function getConfigEntityAPI({
     })
     return await processSaveResponse(response)
   }
-
-  return { getSchema, getData, listEntities, createEntity, updateEntity }
 }

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { onBeforeUnmount, onBeforeMount, ref } from 'vue'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
-import { getConfigEntityAPI } from '@/form/components/utils/configuration_entity'
+import { configEntityAPI } from '@/form/components/utils/configuration_entity'
 
 import { passthrough, bypass, http } from 'msw'
 import { setupWorker } from 'msw/browser'
@@ -38,15 +38,13 @@ async function loadSpec() {
       slidein_edit_title: 'i18n_slidein_edit_title'
     }
   }
-  const api = getConfigEntityAPI({
-    entityType: 'notification_parameter',
-    entityTypeSpecifier: 'mail'
+
+  specTemplate.elements = (
+    await configEntityAPI.listEntities('notification_parameter', 'mail')
+  ).map(({ ident, description }: { ident: string; description: string }) => {
+    return { name: ident, title: description }
   })
-  specTemplate.elements = (await api.listEntities()).map(
-    ({ ident, description }: { ident: string; description: string }) => {
-      return { name: ident, title: description }
-    }
-  )
+
   spec.value = specTemplate
 }
 

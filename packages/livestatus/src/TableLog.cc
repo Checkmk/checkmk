@@ -214,7 +214,7 @@ void for_each_log_entry(
                 --it_entries;
                 const auto &entry = *it_entries->second;
                 if (entry.time() < since || !process_log_entry(entry)) {
-                    break;
+                    return;
                 }
             }
             if (it_logs == log_files.begin()) {

@@ -44,6 +44,7 @@ from cmk.utils.livestatus_helpers.testing import (
 )
 
 import cmk.crypto.password_hashing
+from cmk.agent_based.legacy import FileLoader, find_plugin_files
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +312,12 @@ class FixPluginLegacy:
         )
 
         result = config.discover_legacy_checks(
-            config.plugin_pathnames_in_directory(str(repo_path() / "cmk/base/legacy_checks")),
+            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            FileLoader(
+                precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                local_path="/not_relevant_for_test",
+                makedirs=store.makedirs,
+            ),
         )
         assert not result.ignored_plugins_errors
         self.check_info = {p.name: p for p in result.sane_check_info}

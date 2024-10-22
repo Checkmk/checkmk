@@ -13,18 +13,14 @@ import functools
 import ipaddress
 import itertools
 import logging
-import marshal
 import numbers
 import os
 import pickle
-import py_compile
 import socket
-import struct
 import sys
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
-from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from types import ModuleType
 from typing import (
@@ -145,6 +141,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
+from cmk.agent_based.legacy import FileLoader, find_plugin_files
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
@@ -1408,7 +1405,7 @@ def load_all_plugins(
 
     with tracer.start_as_current_span("load_legacy_check_plugins"):
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
-            filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
+            filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         errors.extend(load_checks(filelist))
 
@@ -1420,21 +1417,21 @@ def _initialize_data_structures() -> None:
     special_agent_info.clear()
 
 
-def _get_plugin_paths(*dirs: str) -> list[str]:
-    filelist: list[str] = []
-    for directory in dirs:
-        filelist += plugin_pathnames_in_directory(directory)
-    return filelist
-
-
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
 @tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
-    filelist: list[str],
+    filelist: Iterable[str],
 ) -> list[str]:
-    discovered_legacy_checks = discover_legacy_checks(filelist)
+    discovered_legacy_checks = discover_legacy_checks(
+        filelist,
+        FileLoader(
+            precomile_path=cmk.utils.paths.precompiled_checks_dir,
+            local_path=str(cmk.utils.paths.local_checks_dir),
+            makedirs=store.makedirs,
+        ),
+    )
 
     section_errors, sections = _make_agent_and_snmp_sections(
         discovered_legacy_checks.sane_check_info, discovered_legacy_checks.plugin_files
@@ -1460,7 +1457,8 @@ class _DiscoveredLegacyChecks:
 
 
 def discover_legacy_checks(
-    filelist: list[str],
+    filelist: Iterable[str],
+    loader: FileLoader,
 ) -> _DiscoveredLegacyChecks:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
@@ -1479,7 +1477,7 @@ def discover_legacy_checks(
         try:
             check_context = new_check_context()
 
-            did_compile |= load_precompiled_plugin(f, check_context)
+            did_compile |= loader.load_into(f, check_context)
 
             loaded_files.add(file_name)
 
@@ -1519,91 +1517,6 @@ def new_check_context() -> CheckContext:
     return {
         "special_agent_info": special_agent_info,
     }
-
-
-def plugin_pathnames_in_directory(path: str) -> list[str]:
-    if path and os.path.exists(path):
-        return sorted(
-            [
-                f"{path}/{f}"
-                for f in os.listdir(path)
-                if not f.startswith(".") and not f.endswith(".include") and not f == "__pycache__"
-            ]
-        )
-    return []
-
-
-class _PYCHeader:
-    """A pyc header according to https://www.python.org/dev/peps/pep-0552/"""
-
-    SIZE = 16
-
-    def __init__(self, magic: bytes, hash_: int, origin_mtime: int, f_size: int) -> None:
-        self.magic = magic
-        self.hash = hash_
-        self.origin_mtime = origin_mtime
-        self.f_size = f_size
-
-    @classmethod
-    def from_file(cls, path: str) -> _PYCHeader:
-        with open(path, "rb") as handle:
-            raw_bytes = handle.read(cls.SIZE)
-        return cls(*struct.unpack("4s3I", raw_bytes))
-
-
-def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
-    """Loads the given check or check include plug-in into the given
-    check context.
-
-    To improve loading speed the files are not read directly. The files are
-    python byte-code compiled before in case it has not been done before. In
-    case there is already a compiled file that is newer than the current one,
-    then the precompiled file is loaded.
-
-    Returns `True` if something has been compiled, else `False`.
-    """
-
-    # https://docs.python.org/3/library/py_compile.html
-    # HACK:
-    precompiled_path = _precompiled_plugin_path(path)
-
-    do_compile = not _is_plugin_precompiled(path, precompiled_path)
-    if do_compile:
-        console.debug(f"Precompile {path} to {precompiled_path}")
-        store.makedirs(os.path.dirname(precompiled_path))
-        py_compile.compile(path, precompiled_path, doraise=True)
-        # The original file is from the version so the calculated mode is world readable...
-        os.chmod(precompiled_path, 0o640)
-
-    exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)  # nosec B102 # BNS:aee528
-
-    return do_compile
-
-
-def _is_plugin_precompiled(path: str, precompiled_path: str) -> bool:
-    # Check precompiled file header
-    try:
-        header = _PYCHeader.from_file(precompiled_path)
-    except (FileNotFoundError, struct.error):
-        return False
-
-    if header.magic != _MAGIC_NUMBER:
-        return False
-
-    # Skip the hash and assure that the timestamp format is used, i.e. the hash is 0.
-    # For further details see: https://www.python.org/dev/peps/pep-0552/#id15
-    assert header.hash == 0
-
-    return int(os.stat(path).st_mtime) == header.origin_mtime
-
-
-def _precompiled_plugin_path(path: str) -> str:
-    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
-    return os.path.join(
-        cmk.utils.paths.precompiled_checks_dir,
-        "local" if is_local else "builtin",
-        os.path.basename(path),
-    )
 
 
 AUTO_MIGRATION_ERR_MSG = (

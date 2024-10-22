@@ -29,6 +29,10 @@ ignore = [
   "PLR2004", # Magic value used in comparison, consider replacing `FOO` with a constant variable
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Explicit re-exports is fine in __init__.py, still a code smell elsewhere.
+"__init__.py" = ["PLC0414"]
+
 #[tool.ruff.lint.isort]
 # see ruff.toml for the isort section
 

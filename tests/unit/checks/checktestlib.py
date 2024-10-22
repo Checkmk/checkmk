@@ -16,8 +16,13 @@ import pytest
 
 from tests.testlib.repo import repo_path
 
+from cmk.ccc import store
+
+import cmk.utils.paths
+
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.agent_based.legacy import FileLoader, find_plugin_files
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 
 
@@ -47,7 +52,12 @@ class Check(BaseCheck):
         super().__init__(name)
         if not self._LEGACY_CHECKS:
             for legacy_check in config.discover_legacy_checks(
-                config.plugin_pathnames_in_directory(str(repo_path() / "cmk/base/legacy_checks"))
+                find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+                FileLoader(
+                    precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                    local_path="/not_relevant_for_test",
+                    makedirs=store.makedirs,
+                ),
             ).sane_check_info:
                 self._LEGACY_CHECKS[legacy_check.name] = legacy_check
 

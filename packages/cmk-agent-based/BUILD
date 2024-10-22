@@ -13,6 +13,8 @@ exports_files([
 py_library(
     name = "cmk-agent-based",
     srcs = [
+        "cmk/agent_based/legacy/__init__.py",
+        "cmk/agent_based/legacy/_loading.py",
         "cmk/agent_based/prediction_backend.py",
         "cmk/agent_based/v0_unstable_legacy.py",
         "cmk/agent_based/v1/__init__.py",

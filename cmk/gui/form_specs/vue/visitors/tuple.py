@@ -84,4 +84,8 @@ class TupleVisitor(FormSpecVisitor[Tuple, tuple[object, ...]]):
         return validation_errors
 
     def _to_disk(self, raw_value: object, parsed_value: tuple[object, ...]) -> tuple[object, ...]:
-        return parsed_value
+        disk_values = []
+        for parameter_form, value in zip(self.form_spec.elements, parsed_value, strict=True):
+            element_visitor = get_visitor(parameter_form, self.options)
+            disk_values.append(element_visitor.to_disk(value))
+        return tuple(disk_values)

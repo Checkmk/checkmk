@@ -118,12 +118,12 @@ function openSlideIn(objectId: null | OptionId) {
     />
     <CmkButton
       v-if="selectedObjectId !== null"
-      type="tertiary"
+      variant="tertiary"
       @click="openSlideIn(selectedObjectId)"
     >
       {{ spec.i18n.edit }}
     </CmkButton>
-    <CmkButton type="tertiary" @click="openSlideIn(null)">
+    <CmkButton variant="tertiary" @click="openSlideIn(null)">
       {{ spec.i18n.create }}
     </CmkButton>
 

@@ -12,21 +12,21 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 
 <template>
   <dl>
-    <dt><code>&lt;CmkButton type="primary"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButton variant="primary"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton type="primary">button</CmkButton>
+      <CmkButton variant="primary">button</CmkButton>
     </dd>
     <dt><code>&lt;CmkButton&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
       <CmkButton>button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButton type="tertiary"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButton variant="tertiary"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton type="tertiary">button</CmkButton>
+      <CmkButton variant="tertiary">button</CmkButton>
     </dd>
-    <dt><code>&lt;CmkButton type="transparent"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButton variant="transparent"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton type="transparent">button</CmkButton>
+      <CmkButton variant="transparent">button</CmkButton>
     </dd>
     <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
     <dd>

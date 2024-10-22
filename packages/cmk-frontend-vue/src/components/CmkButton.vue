@@ -8,11 +8,11 @@ import { type VariantProps, cva } from 'class-variance-authority'
 
 const buttonVariants = cva('', {
   variants: {
-    type: {
-      primary: 'button--type-primary',
-      secondary: 'button--type-secondary',
-      tertiary: 'button--type-tertiary',
-      transparent: 'button--type-transparent'
+    variant: {
+      primary: 'button--variant-primary',
+      secondary: 'button--variant-secondary',
+      tertiary: 'button--variant-tertiary',
+      transparent: 'button--variant-transparent'
     },
     spacing: {
       small: 'button--spacing-small',
@@ -20,23 +20,24 @@ const buttonVariants = cva('', {
     }
   },
   defaultVariants: {
-    type: 'secondary',
+    variant: 'secondary',
     spacing: 'medium'
   }
 })
 export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 interface ButtonProps {
-  /** @property {ButtonVariants['type']} type - three different levels of importance */
-  type?: ButtonVariants['type']
+  /** @property {ButtonVariants['variant']} variant - three different levels of importance */
+  variant?: ButtonVariants['variant']
   spacing?: ButtonVariants['spacing']
+  type?: never // This should help finding problems with changes still using type. Can be removed after 2024-12-01
 }
 
 defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button class="button" :class="buttonVariants({ type, spacing })">
+  <button class="button" :class="buttonVariants({ variant, spacing })">
     <slot />
   </button>
 </template>
@@ -49,14 +50,14 @@ defineProps<ButtonProps>()
 .button + .button {
   margin-left: 10px;
 }
-.button--type-primary {
+.button--variant-primary {
   border: 1px solid var(--default-submit-button-border-color);
 }
-.button--type-tertiary {
+.button--variant-tertiary {
   text-decoration: underline var(--success);
 }
-.button--type-tertiary,
-.button--type-transparent {
+.button--variant-tertiary,
+.button--variant-transparent {
   background: none;
   border: none;
   padding: 0;

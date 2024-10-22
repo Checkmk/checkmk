@@ -72,6 +72,8 @@
     --default-text-color: rgb(39, 39, 39);
     --default-component-bg-color: rgb(240, 240, 240);
     --default-help-icon-bg-color: rgb(12, 129, 238);
+    --help-text-bg-color: rgb(235, 235, 241); /* $ux-theme-3 */
+    --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
   }
 
   body[data-theme='modern-dark'] {
@@ -98,5 +100,7 @@
     --default-text-color: rgb(255, 255, 255);
     --default-component-bg-color: rgb(46, 44, 44);
     --default-help-icon-bg-color: rgb(6, 103, 193);
+    --help-text-bg-color: rgb(38, 47, 56); /* $ux-theme-3 */
+    --help-text-font-color: var(--white);
   }
 }

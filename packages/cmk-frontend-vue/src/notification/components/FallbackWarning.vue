@@ -61,8 +61,8 @@ div.help {
   margin-bottom: 24px;
 
   div.help_text {
-    background-color: rgb(38 47 56);
-    color: var(--white);
+    background-color: var(--help-text-bg-color);
+    color: var(--help-text-font-color);
   }
 
   p {

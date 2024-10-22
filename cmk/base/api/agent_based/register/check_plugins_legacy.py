@@ -22,8 +22,7 @@ from cmk.base.api.agent_based.register.check_plugins import (
 )
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 
 
 def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:

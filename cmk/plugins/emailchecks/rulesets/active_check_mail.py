@@ -14,7 +14,6 @@ from cmk.utils import paths
 from cmk.gui.mkeventd import syslog_facilities  # pylint: disable=cmk-module-layer-violation
 
 from cmk.plugins.emailchecks.forwarding_option import ECForwarding
-from cmk.plugins.emailchecks.server_side_calls.check_mail import Parameters
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -70,7 +69,6 @@ def _valuespec_active_checks_mail() -> Dictionary:
                 else {"forward": DictElement(parameter_form=_forward_to_ec_form())}
             ),
         },
-        custom_validate=(Parameters.model_validate,),
     )
 
 

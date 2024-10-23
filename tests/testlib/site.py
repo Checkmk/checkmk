@@ -1431,6 +1431,29 @@ class SiteFactory:
             create_cse_initial_config()
         site.create()
 
+        try:
+            return self._initialize_site(
+                site,
+                init_livestatus=init_livestatus,
+                start=start,
+                prepare_for_tests=prepare_for_tests,
+                activate_changes=activate_changes,
+                auto_restart_httpd=auto_restart_httpd,
+            )
+        except Exception:
+            site.save_results()
+            raise
+
+    def _initialize_site(
+        self,
+        site: Site,
+        *,
+        init_livestatus: bool,
+        start: bool,
+        prepare_for_tests: bool,
+        activate_changes: bool,
+        auto_restart_httpd: bool,
+    ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
 

@@ -36,7 +36,22 @@ from cmk.update_config.plugins.actions.migrate_notification_parameters import (
 class EventRuleFactory(TypedDictFactory[EventRule]): ...
 
 
-PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_parameter_id()
+@pytest.fixture(autouse=True)
+def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
+    """Swap out random uuid generation with an accumulating mock uuid.
+
+    This helps with asserting the output of the tests. Ideally, we could inject this stub into
+    `MigrateNotificationParameters`. However, the class relies on an abstract base class, so there
+    is little we can do in terms of changing the method signatures - so patching it is.
+    """
+    current_id = 0
+
+    def patch() -> NotificationParameterID:
+        nonlocal current_id
+        current_id += 1
+        return NotificationParameterID(f"<uuid-{current_id}>")
+
+    monkeypatch.setattr(sample_config, "new_notification_parameter_id", patch)
 
 
 @pytest.mark.parametrize(
@@ -57,7 +72,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
             ],
             {
                 "spectrum": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-1>": {
                         "general": {
                             "description": "Migrated from notification rule #0",
                             "comment": "Auto migrated on update",
@@ -99,7 +114,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
             ],
             {
                 "asciimail": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-1>": {
                         "general": {
                             "description": "Migrated from notification rule #0",
                             "comment": "Auto migrated on update",
@@ -137,7 +152,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
             ],
             {
                 "cisco_webex_teams": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-1>": {
                         "general": {
                             "description": "Migrated from notification rule #0",
                             "comment": "Auto migrated on update",
@@ -168,7 +183,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
             ],
             {
                 "mkeventd": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-1>": {
                         "general": {
                             "description": "Migrated from notification rule #0",
                             "comment": "Auto migrated on update",
@@ -237,7 +252,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
             ],
             {
                 "opsgenie_issues": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-1>": {
                         "general": {
                             "description": "Migrated from notification rule #0",
                             "comment": "Auto migrated on update",
@@ -252,7 +267,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                     }
                 },
                 "mail": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-2>": {
                         "general": {
                             "description": "Migrated from notification rule #1",
                             "comment": "Auto migrated on update",
@@ -263,7 +278,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                             "disable_multiplexing": True,
                         },
                     },
-                    str(PARAMETER_UUID): {
+                    "<uuid-3>": {
                         "general": {
                             "description": "Migrated from notification rule #2",
                             "comment": "Auto migrated on update",
@@ -277,7 +292,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                     },
                 },
                 "mkeventd": {
-                    str(PARAMETER_UUID): {
+                    "<uuid-4>": {
                         "general": {
                             "description": "Migrated from notification rule #3",
                             "comment": "Auto migrated on update",
@@ -294,15 +309,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
 def test_migrate_notification_parameters(
     rule_config: list[EventRule],
     notification_parameter: NotificationParameterSpecs,
-    monkeypatch: MonkeyPatch,
 ) -> None:
-    # TODO How to handle multiple UUIDs?
-    monkeypatch.setattr(
-        sample_config,
-        "new_notification_parameter_id",
-        lambda: str(PARAMETER_UUID),
-    )
-
     with gui_context():
         NotificationRuleConfigFile().save(rule_config)
 

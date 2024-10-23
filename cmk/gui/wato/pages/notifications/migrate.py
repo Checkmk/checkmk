@@ -390,7 +390,8 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
         notify_plugin=("mail", None),
     )
 
-    _set_host_and_service_filters(event_rule)
+    # TODO: add correct migration after implementing stage 2
+    # _set_host_and_service_filters(event_rule)
     _set_triggering_events(event_rule)
     _set_notification_effect_parameters(event_rule)
     _set_recipients(event_rule)

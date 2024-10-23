@@ -427,7 +427,7 @@ def notification_method() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
             FormSpecWrapper(
-                id=FormSpecId("notification_effect"),
+                id=FormSpecId("notification_method"),
                 form_spec=DictionaryExtended(
                     layout=DictionaryLayout.two_columns,
                     elements={

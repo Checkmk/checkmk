@@ -14,6 +14,8 @@ export default [
   {
     name: 'app/files-to-ignore',
     ignores: [
+      '*.config.js',
+      'vite.config.*',
       '**/dist/**',
       '**/dist-ssr/**',
       '**/coverage/**',
@@ -32,6 +34,14 @@ export default [
   skipFormatting,
 
   {
+    languageOptions: {
+      parserOptions: {
+        project: ['tsconfig.test.json', 'tsconfig.app.json'],
+        tsconfigRootDir: '.',
+        parser: '@typescript-eslint/parser',
+        ecmaVersion: 'latest'
+      }
+    },
     rules: {
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/naming-convention': [

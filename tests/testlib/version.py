@@ -37,7 +37,8 @@ class CMKVersion:
 
     def __init__(self, version_spec: str, edition: Edition, branch: str) -> None:
         self.version_spec: Final = version_spec
-        self.version: Final = self._version(version_spec, branch)
+        self.version_rc_aware: Final = self._version(version_spec, branch)  # branch_version
+        self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
         self.edition: Final = edition
         self.branch: Final = branch
 
@@ -73,6 +74,9 @@ class CMKVersion:
 
     def is_cloud_edition(self) -> bool:
         return self.edition is Edition.CCE
+
+    def is_release_candidate(self) -> bool:
+        return self.version != self.version_rc_aware
 
     def version_directory(self) -> str:
         return self.omd_version()

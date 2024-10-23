@@ -30,7 +30,10 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         path_config = get_path_config()
         _installer, package_map = get_installer_and_package_map(path_config)
         for _module_name, error in load_plugins("cmk.base.plugins.agent_based"):
-            path = Path(traceback.extract_tb(error.__traceback__)[-1].filename)
+            path_s = traceback.extract_tb(error.__traceback__)[-1].filename
+            if "base/plugins/agent_based" not in path_s:
+                continue  # ignore errors from the plugin loader itself, if it finds nothing at all
+            path = Path(path_s)
             package_id = package_map.get(path.resolve())
             logger.error(_error_message_inactive_local_file(path, package_id))
 

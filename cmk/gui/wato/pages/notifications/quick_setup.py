@@ -830,7 +830,8 @@ def save_and_test_action(
         case QuickSetupActionMode.SAVE:
             _save(all_stages_form_data)
         case QuickSetupActionMode.EDIT:
-            raise NotImplementedError("Edit mode not supported")
+            assert object_id is not None
+            _edit(all_stages_form_data, object_id)
         case _:
             raise ValueError(f"Unknown mode {mode}")
     return mode_url("test_notifications", result=_("New notification rule successfully created!"))
@@ -843,7 +844,8 @@ def save_and_new_action(
         case QuickSetupActionMode.SAVE:
             _save(all_stages_form_data)
         case QuickSetupActionMode.EDIT:
-            raise NotImplementedError("Edit mode not yet supported")
+            assert object_id is not None
+            _edit(all_stages_form_data, object_id)
         case _:
             raise ValueError(f"Unknown mode {mode}")
     return mode_url(
@@ -862,6 +864,18 @@ def _save(all_stages_form_data: ParsedFormData) -> None:
         migrate_to_event_rule(cast(NotificationQuickSetupSpec, all_stages_form_data))
     ]
     config_file.save(notifications_rules)
+
+
+def _edit(all_stages_form_data: ParsedFormData, object_id: str) -> None:
+    config_file = NotificationRuleConfigFile()
+    notification_rules = list(config_file.load_for_modification())
+    for n, rule in enumerate(notification_rules):
+        if rule["rule_id"] == object_id:
+            notification_rules[n] = migrate_to_event_rule(
+                cast(NotificationQuickSetupSpec, all_stages_form_data)
+            )
+            break
+    config_file.save(notification_rules)
 
 
 def load_notifications(object_id: str) -> ParsedFormData:

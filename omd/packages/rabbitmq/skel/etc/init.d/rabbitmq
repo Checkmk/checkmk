@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
-RABBITMQ_NODENAME="rabbit-###SITE###@localhost"
+RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
@@ -16,6 +16,7 @@ RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
+INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
@@ -38,19 +39,26 @@ await_process_stop() {
 }
 
 rabbitmq_accepting_connections() {
-    "${RABBITMQ_DIAGNOSTICS}" -q check_port_connectivity --node "${RABBITMQ_NODENAME}" &>/dev/null
+    "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
 }
 
 await_process_start() {
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && return 0
-        [ -e "${PIDFILE}" ] || return 1
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+            date +"%F %T.%N RabbitMQ considered ready"
+            return 0
+        }
+        [ -e "${PIDFILE}" ] || {
+            date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
+            return 1
+        }
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
     done
-    # give up after timeout.
+
+    date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1
 }
 
@@ -73,7 +81,7 @@ ensure_broker_certs() {
     printf "Ensuring broker certificates presence...\n"
     if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
         printf "Creating broker certificates...\n"
-        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "###SITE###"
+        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "${OMD_SITE}"
     fi
 }
 
@@ -112,10 +120,10 @@ case "$1" in
         touch "${PIDFILE}"
         mkdir -p "${RABBITMQ_LOG_BASE}"
 
-        nohup "${0}" "start-blocking" &>"${RABBITMQ_LOG_BASE}/init.log" &
+        nohup "${0}" "start-blocking" &>"${INITLOG}" &
 
         # try for one minute to interpret the outcome
-        await_process_start 60 && exit_successfully "OK"
+        await_process_start 60 &>>"${INITLOG}" && exit_successfully "OK"
 
         # Give up
         exit_failure "failed"

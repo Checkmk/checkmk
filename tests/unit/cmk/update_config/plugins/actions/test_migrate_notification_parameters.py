@@ -6,6 +6,7 @@
 import logging
 
 import pytest
+from polyfactory.factories import TypedDictFactory
 from pytest import MonkeyPatch
 
 from cmk.utils.notify_types import (
@@ -16,7 +17,6 @@ from cmk.utils.notify_types import (
     MKEventdPluginModel,
     NotificationParameterID,
     NotificationParameterSpecs,
-    NotificationRuleID,
     OpsGenieIssuesPluginModel,
     SpectrumPluginModel,
 )
@@ -32,6 +32,10 @@ from cmk.update_config.plugins.actions.migrate_notification_parameters import (
     MigrateNotificationParameters,
 )
 
+
+class EventRuleFactory(TypedDictFactory[EventRule]): ...
+
+
 PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_parameter_id()
 
 
@@ -40,16 +44,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
     [
         pytest.param(
             [
-                EventRule(
-                    description="Notify via spectrum",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("411b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "spectrum",
                         SpectrumPluginModel(
@@ -80,16 +75,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
         ),
         pytest.param(
             [
-                EventRule(
-                    description="Notify via ASCII Email",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("411b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "asciimail",
                         AsciiMailPluginModel(
@@ -137,16 +123,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
         ),
         pytest.param(
             [
-                EventRule(
-                    description="Notify via Cisco Webex Teams",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("511b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "cisco_webex_teams",
                         CiscoPluginModel(
@@ -179,16 +156,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
         ),
         pytest.param(
             [
-                EventRule(
-                    description="Notify via Forward notification to Event Console",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("611b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "mkeventd",
                         MKEventdPluginModel(
@@ -214,16 +182,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
         ),
         pytest.param(
             [
-                EventRule(
-                    description="Notify via Opsgenie",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("711b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "opsgenie_issues",
                         OpsGenieIssuesPluginModel(
@@ -234,16 +193,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                         ),
                     ),
                 ),
-                EventRule(
-                    description="Notify via HTML Email",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("811b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "mail",
                         MailPluginModel(
@@ -254,16 +204,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                         ),
                     ),
                 ),
-                EventRule(
-                    description="Notify via HTML Email (differs)",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("911b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "mail",
                         MailPluginModel(
@@ -275,16 +216,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                         ),
                     ),
                 ),
-                EventRule(
-                    description="Notify via MKeventd",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("921b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "mkeventd",
                         MKEventdPluginModel(
@@ -293,16 +225,7 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                         ),
                     ),
                 ),
-                EventRule(
-                    description="Notify via MKeventd (same)",
-                    comment="",
-                    docu_url="",
-                    disabled=False,
-                    allow_disable=True,
-                    contact_object=True,
-                    contact_all=False,
-                    contact_all_with_email=False,
-                    rule_id=NotificationRuleID("921b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                EventRuleFactory.build(
                     notify_plugin=(
                         "mkeventd",
                         MKEventdPluginModel(

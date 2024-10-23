@@ -56,6 +56,7 @@ from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
+from cmk.gui.watolib.users import notification_script_choices
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -449,15 +450,16 @@ def notification_method() -> QuickSetupStage:
                                 title=Title("Method"),
                                 elements=[
                                     CascadingSingleChoiceElement(
-                                        title=Title("%s") % (_("%s") % method),
-                                        name=method,
+                                        title=Title("%s") % (_("%s") % title),
+                                        name=script_name,
                                         parameter_form=SingleChoiceEditable(
                                             title=Title("Notification method"),
                                             entity_type=ConfigEntityType.notification_parameter,
-                                            entity_type_specifier=method,
+                                            entity_type_specifier=script_name,
                                         ),
                                     )
-                                    for method in notification_parameter_registry
+                                    for script_name, title in notification_script_choices()
+                                    if script_name in notification_parameter_registry
                                 ],
                                 layout=CascadingSingleChoiceLayout.horizontal,
                             ),

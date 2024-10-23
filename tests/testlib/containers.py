@@ -28,10 +28,6 @@ from tests.testlib.repo import git_commit_id, git_essential_directories, repo_pa
 from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
 from tests.testlib.version import CMKVersion, DISTRO_CODES
 
-# Make the tests.testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-from cmk.ccc.version import Version
-
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
@@ -274,9 +270,7 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name_with_tag = (
-        f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
-    )
+    image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version_rc_aware}:{docker_tag}"
     if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
@@ -311,6 +305,7 @@ def _create_cmk_image(
             "com.checkmk.base_image_hash": base_image.short_id,
             "com.checkmk.cmk_edition_short": version.edition.short,
             "com.checkmk.cmk_version": version.version,
+            "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
             "com.checkmk.cmk_branch": version.branch,
             # override the base image label
             "com.checkmk.image_type": "cmk-image",
@@ -367,10 +362,7 @@ def _create_cmk_image(
         labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
-        if (
-            not use_local_package
-            and Version.from_str(version.version).release_candidate.value is None
-        ):
+        if not use_local_package and not version.is_release_candidate():
             try:
                 logger.info(
                     "Uploading [%s] to registry (%s)",
@@ -439,7 +431,7 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) -> str:
     hash_file_name = f"{package_name}.hash"
     r = requests.get(
-        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version}/{hash_file_name}",
+        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version_rc_aware}/{hash_file_name}",
         auth=get_cmk_download_credentials(),
         timeout=30,
     )

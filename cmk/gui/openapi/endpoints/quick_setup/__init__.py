@@ -40,7 +40,7 @@ from cmk.gui.quick_setup.to_frontend import (
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 
 from cmk import fields
 
@@ -164,6 +164,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         errors := validate_stage(
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+            stage_index=StageIndex(len(body["stages"]) - 1),
         )
     ) is not None:
         return _serve_data(Stage(errors=errors), status_code=400)

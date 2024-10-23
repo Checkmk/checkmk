@@ -216,6 +216,7 @@ def quick_setup_guided_mode(
 def validate_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
+    stage_index: StageIndex,
 ) -> Errors | None:
     errors = Errors()
     stages = [stage() for stage in quick_setup.stages]
@@ -236,7 +237,7 @@ def validate_stage(
     if errors.exist():
         return errors
 
-    for custom_validator in stages[StageIndex(len(stages_raw_formspecs) - 1)].custom_validators:
+    for custom_validator in stages[stage_index].custom_validators:
         errors.stage_errors.extend(
             custom_validator(
                 quick_setup.id,
@@ -253,8 +254,8 @@ def validate_stages(
 ) -> Sequence[Errors] | None:
     return [
         errors
-        for raw_formspec in stages_raw_formspecs
-        if (errors := validate_stage(quick_setup, [raw_formspec]))
+        for stage_index, raw_formspec in enumerate(stages_raw_formspecs)
+        if (errors := validate_stage(quick_setup, [raw_formspec], StageIndex(stage_index)))
     ] or None
 
 

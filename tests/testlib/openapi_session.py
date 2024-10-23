@@ -874,3 +874,27 @@ class CMKOpenApiSession(requests.Session):
         resp = self.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
+
+    def create_password(
+        self,
+        ident: str,
+        title: str,
+        comment: str,
+        password: str,
+        owner: str = "admin",
+    ) -> None:
+        """Create a password via REST API."""
+        response = self.post(
+            "/domain-types/password/collections/all",
+            json={
+                "ident": ident,
+                "title": title,
+                "comment": comment,
+                "documentation_url": "localhost",
+                "password": password,
+                "owner": owner,
+                "shared": ["all"],
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)

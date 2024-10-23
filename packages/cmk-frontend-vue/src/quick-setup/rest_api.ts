@@ -169,7 +169,7 @@ export const editQuickSetup = async (
     }
 
     axios
-      .post(url, payload)
+      .put(url, payload)
       .then((response) => {
         resolve(response.data)
       })

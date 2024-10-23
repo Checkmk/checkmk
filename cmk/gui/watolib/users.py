@@ -13,7 +13,6 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
-from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
@@ -352,19 +351,15 @@ def verify_password_policy(password: Password, varname: str = "password") -> Non
         )
 
 
-class UsersConfigFile(WatoSingleConfigFile[dict]):
+class UsersConfigFile(WatoSingleConfigFile[Users]):
     """Handles reading and writing users.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(multisite_dir()) / "users.mk",
             config_variable="multisite_users",
-            spec_class=dict,
+            spec_class=Users,
         )
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_users(cfg)
 
 
 class ContactsConfigFile(WatoSingleConfigFile[dict]):

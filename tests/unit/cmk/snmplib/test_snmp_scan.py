@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.conftest import FixPluginLegacy
+from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.ccc.exceptions import MKSNMPError, OnError
 
@@ -242,7 +242,11 @@ def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
 
 
 @pytest.mark.usefixtures("cache_oids")
-def test_gather_available_raw_section_names_defaults(backend: SNMPBackend, tmp_path: Path) -> None:
+def test_gather_available_raw_section_names_defaults(
+    backend: SNMPBackend,
+    tmp_path: Path,
+    fix_register: FixRegister,
+) -> None:
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 

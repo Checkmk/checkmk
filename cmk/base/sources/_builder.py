@@ -164,7 +164,7 @@ class _Builder:
                 self._add_agent()
 
     def _initialize_snmp_plugin_store(self) -> None:
-        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
+        if len(SNMPFetcher.plugin_store) != len(self.plugins.snmp_sections):
             # That's a hack.
             #
             # `make_plugin_store()` depends on

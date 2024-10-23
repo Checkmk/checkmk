@@ -211,10 +211,6 @@ def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
     return registered_snmp_sections.values()
 
 
-def len_snmp_sections() -> int:
-    return len(registered_snmp_sections)
-
-
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
     rules: Sequence[RuleSpec],

@@ -313,7 +313,7 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
     if "icons_per_item" in internal_attrs:
         iia["icons_per_item"] = internal_attrs["icons_per_item"]
     if "show_mode" in internal_attrs:
-        iia["show_mode"] = internal_attrs["show_mode"]  # type: ignore[typeddict-item]
+        iia["show_mode"] = internal_attrs["show_mode"]
     if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 

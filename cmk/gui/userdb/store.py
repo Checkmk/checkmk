@@ -41,7 +41,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
+from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserDetails, Users, UserSpec
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
@@ -238,7 +238,7 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
     return result
 
 
-def _merge_users_and_contacts(users: dict[str, Any], contacts: dict[str, Any]) -> Users:
+def _merge_users_and_contacts(users: dict[str, UserDetails], contacts: dict[str, Any]) -> Users:
     result: Users = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
@@ -691,7 +691,7 @@ def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
-def load_multisite_users() -> dict[str, Any]:
+def load_multisite_users() -> dict[str, UserDetails]:
     return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 

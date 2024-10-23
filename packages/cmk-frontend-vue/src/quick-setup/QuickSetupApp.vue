@@ -39,6 +39,5 @@ onUnmounted(() => {
 </template>
 
 <style>
-@import '@/assets/variables.css';
 @import './variables.css';
 </style>

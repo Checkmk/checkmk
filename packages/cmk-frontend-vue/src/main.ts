@@ -17,6 +17,8 @@ import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
+import '@/assets/variables.css'
+
 function setupVue() {
   document
     .querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app_name]')

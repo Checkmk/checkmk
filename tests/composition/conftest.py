@@ -41,10 +41,8 @@ def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator
         except StopIteration as excp:
             excp.add_note("I should have received a remote site...")
 
-        _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
-        remote_site.ensure_running()
-
         try:
+            _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
             yield remote_site
         finally:
             # Teardown of remote site. We first stop the central site to avoid crashes due to

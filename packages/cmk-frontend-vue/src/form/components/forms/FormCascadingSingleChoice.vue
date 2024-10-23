@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 import type {
@@ -57,7 +57,7 @@ immediateWatch(
       if (data.value[0] === key) {
         currentValues[key] = data.value[1]
       } else {
-        currentValues[key] = element.default_value
+        currentValues[key] = structuredClone(toRaw(element.default_value))
       }
     })
   }

@@ -171,6 +171,11 @@ test('FormCascadingSingleChoice renders backend validation messages', async () =
 })
 
 test('FormCascadingSingleChoice does not poisen the template value', async () => {
+  // before this test FormCascadingSingleChoice would use the the default_value by reference.
+  // so if you next FormCascadingSingleChoice in a FormList, then all
+  // FormCascadingSingleChoice would share the same value, as they all use the
+  // very same default value. the problem can also be demonstrated in a simplified form:
+
   const dictFromSpec: FormSpec.Dictionary = {
     type: 'dictionary',
     title: 'fooTitle',
@@ -205,25 +210,30 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
       {
         name: 'dictChoice',
         title: 'stringChoiceTitle',
+        // the default_value is an object
         default_value: defaultValue,
         parameter_form: dictFromSpec
       }
     ]
   }
-
   render(FormCascadingSingleChoice, {
     props: {
       spec,
+      // the current data does not match, so when...
       data: ['null', 'null'],
       backendValidation: []
     }
   })
 
+  // ... chosing only available option, the default value will be used to fill
+  // the dictionary with values
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
   await fireEvent.update(element, 'dictChoice')
 
+  // now we change the nested value of said default value
   const stringElement = screen.getByRole<HTMLInputElement>('textbox')
   await fireEvent.update(stringElement, 'other_value')
 
-  expect(defaultValue).toEqual({ value: 'other_value' }) // TODO: THIS IS A BUG, default Value is passed by reference and modified inside CascadingSingleChoice
+  // but we expect that our local defaultValue is not affected by this change:
+  expect(defaultValue).toEqual({ value: 'something' })
 })

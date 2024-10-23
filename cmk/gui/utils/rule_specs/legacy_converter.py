@@ -1071,7 +1071,8 @@ def _convert_to_legacy_regular_expression(
 
 
 def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
-    return repr(dict_group).replace(" ", "")
+    """Strip dict group down to html-id friendly string."""
+    return "".join(filter(str.isalnum, repr(dict_group)))
 
 
 def _get_group_keys(

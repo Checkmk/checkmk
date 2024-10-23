@@ -159,7 +159,7 @@ LogRestrictions constructRestrictions(Query &query,
     return {
         .max_lines_per_log_file = max_lines_per_logfile,
         .log_entry_classes = query.valueSetLeastUpperBoundFor("class").value_or(
-            ~std::bitset<32>{}),
+            LogEntryClasses{}.set()),
     };
 }
 
@@ -239,7 +239,7 @@ void for_each_log_entry(
 
 void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
     auto restrictions = constructRestrictions(query, core.maxLinesPerLogFile());
-    if (restrictions.log_entry_classes == 0) {  // optimization only
+    if (restrictions.log_entry_classes.none()) {  // optimization only
         return;
     }
 

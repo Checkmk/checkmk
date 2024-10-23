@@ -39,7 +39,7 @@ class WatoConfigFile(ABC, Generic[_G]):
         self._config_file_path = config_file_path
         self.validator = TypeAdapter(spec_class)
 
-    def _validate(self, raw: object) -> _G:
+    def validate(self, raw: object) -> _G:
         try:
             return self.validator.validate_python(raw, strict=True)
         except ValidationError as exc:
@@ -67,7 +67,7 @@ class WatoConfigFile(ABC, Generic[_G]):
 
     def read_file_and_validate(self) -> None:
         cfg = self._load_file(lock=False)
-        self._validate(cfg)
+        self.validate(cfg)
 
 
 class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
@@ -181,7 +181,7 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
     def validate_and_save(self, raw: Mapping[str, object]) -> None:
         with_defaults = dict(self.load_default())
         with_defaults.update(raw)
-        cfg = self._validate(with_defaults)
+        cfg = self.validate(with_defaults)
         self.save(cfg)
 
 

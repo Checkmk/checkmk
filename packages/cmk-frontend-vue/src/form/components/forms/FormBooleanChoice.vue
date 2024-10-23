@@ -25,9 +25,15 @@ const componentId = useId()
 </script>
 
 <template>
-  <span class="checkbox">
+  <span class="checkbox form-boolean-choice">
     <input :id="componentId" v-model="value" type="checkbox" />
     <label :for="componentId">{{ spec.label ?? '' }}</label>
   </span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-boolean-choice label {
+  cursor: pointer;
+}
+</style>

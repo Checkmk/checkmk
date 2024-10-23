@@ -13,6 +13,7 @@ import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -54,6 +55,11 @@ const router = createRouter({
       path: '/button',
       name: 'CmkButton',
       component: DemoCmkButton
+    },
+    {
+      path: '/formbooleanchoice',
+      name: 'FormBoleanChoice',
+      component: DemoFormBooleanChoice
     },
     {
       path: '/FormSingleChoiceEditable',

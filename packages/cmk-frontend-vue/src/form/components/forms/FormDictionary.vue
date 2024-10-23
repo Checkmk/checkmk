@@ -224,6 +224,10 @@ span.checkbox {
   margin-right: 5px;
 }
 
+span.checkbox label {
+  cursor: pointer;
+}
+
 /* Variants */
 .form-dictionary--two_columns > .form-dictionary__group_elem {
   padding: 8px 0;

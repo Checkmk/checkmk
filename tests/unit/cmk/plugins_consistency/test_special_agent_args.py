@@ -106,7 +106,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 
 UNMIGRATED = {
     "ipmi_sensors",
-    "jira",
     "ruckus_spot",
     "salesforce",
 }

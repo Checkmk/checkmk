@@ -72,6 +72,7 @@ HACK_AGENTS = {
     "vnx_quotas": True,
     "ucs_bladecenter": True,
     "smb_share": True,
+    "jira": True,
 }
 
 

@@ -54,6 +54,7 @@ PERMISSIONS = permissions.Perm("wato.timeperiods")
 RW_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
         PERMISSIONS,
     ]
 )

@@ -309,7 +309,9 @@ def _convert_to_legacy_rulespec_group(
             legacy_main_group, topic_to_convert, localizer
         )
     if isinstance(topic_to_convert, ruleset_api_v1.rule_specs.CustomTopic):
-        return _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
+        return _custom_to_builtin_legacy_group(
+            legacy_main_group, topic_to_convert
+        ) or _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
     raise ValueError(topic_to_convert)
 
 
@@ -659,6 +661,18 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
             assert_never(other)
 
     raise NotImplementedError(topic_to_convert)
+
+
+def _custom_to_builtin_legacy_group(
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    custom_topic_to_convert: ruleset_api_v1.rule_specs.CustomTopic,
+) -> type[legacy_rulespecs.RulespecBaseGroup] | None:
+    if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
+        ruleset_api_v1.Title("Generic Options")
+    ):
+        if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
+            return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
+    return None
 
 
 def _convert_to_custom_group(

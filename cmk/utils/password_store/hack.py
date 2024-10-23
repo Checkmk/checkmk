@@ -76,6 +76,7 @@ HACK_AGENTS = {
     "salesforce": False,  # needs no secret
     "ipmi_sensors": True,
     "ruckus_spot": True,
+    "kube": True,
 }
 
 

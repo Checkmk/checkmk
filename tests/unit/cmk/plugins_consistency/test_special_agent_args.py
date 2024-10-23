@@ -18,6 +18,7 @@ from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
+from cmk.plugins.kube.special_agents import agent_kube
 from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.server_side_calls_backend import load_special_agents
 from cmk.special_agents import (
@@ -102,6 +103,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "zerto": None,
     "prometheus": agent_prometheus,
     "vsphere": None,
+    "kube": agent_kube,
 }
 
 UNMIGRATED: set[str] = set()

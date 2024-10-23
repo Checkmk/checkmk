@@ -12,9 +12,12 @@ from cmk.utils.notify_types import (
     AsciiMailPluginModel,
     CiscoPluginModel,
     EventRule,
+    MailPluginModel,
+    MKEventdPluginModel,
     NotificationParameterID,
     NotificationParameterSpecs,
     NotificationRuleID,
+    OpsGenieIssuesPluginModel,
     SpectrumPluginModel,
 )
 
@@ -173,6 +176,195 @@ PARAMETER_UUID: NotificationParameterID = sample_config.new_notification_paramet
                 }
             },
             id="Cisco Webex Teams",
+        ),
+        pytest.param(
+            [
+                EventRule(
+                    description="Notify via Forward notification to Event Console",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("611b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "mkeventd",
+                        MKEventdPluginModel(
+                            facility=5,
+                            remote="1.1.1.1",
+                        ),
+                    ),
+                )
+            ],
+            {
+                "mkeventd": {
+                    str(PARAMETER_UUID): {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {"facility": 5, "remote": "1.1.1.1"},
+                    }
+                }
+            },
+            id="Forward notification to Event Console",
+        ),
+        pytest.param(
+            [
+                EventRule(
+                    description="Notify via Opsgenie",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("711b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "opsgenie_issues",
+                        OpsGenieIssuesPluginModel(
+                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            host_desc="Host: $HOSTNAME$\nEvent:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
+                            actions=["MY_ACTION"],
+                            tags=["MY_TAG"],
+                        ),
+                    ),
+                ),
+                EventRule(
+                    description="Notify via HTML Email",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("811b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "mail",
+                        MailPluginModel(
+                            {
+                                "url_prefix": {"automatic": "https"},
+                                "disable_multiplexing": True,
+                            }
+                        ),
+                    ),
+                ),
+                EventRule(
+                    description="Notify via HTML Email (differs)",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("911b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "mail",
+                        MailPluginModel(
+                            {
+                                "url_prefix": {"automatic": "https"},
+                                "from": {"address": "from@me.com"},
+                                "disable_multiplexing": True,
+                            }
+                        ),
+                    ),
+                ),
+                EventRule(
+                    description="Notify via MKeventd",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("921b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "mkeventd",
+                        MKEventdPluginModel(
+                            facility=5,
+                            remote="1.1.1.1",
+                        ),
+                    ),
+                ),
+                EventRule(
+                    description="Notify via MKeventd (same)",
+                    comment="",
+                    docu_url="",
+                    disabled=False,
+                    allow_disable=True,
+                    contact_object=True,
+                    contact_all=False,
+                    contact_all_with_email=False,
+                    rule_id=NotificationRuleID("921b0e48-310f-4d7a-a6a6-dee03b262dda"),
+                    notify_plugin=(
+                        "mkeventd",
+                        MKEventdPluginModel(
+                            facility=5,
+                            remote="1.1.1.1",
+                        ),
+                    ),
+                ),
+            ],
+            {
+                "opsgenie_issues": {
+                    str(PARAMETER_UUID): {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "host_desc": "Host: $HOSTNAME$\nEvent:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
+                            "actions": ["MY_ACTION"],
+                            "tags": ["MY_TAG"],
+                        },
+                    }
+                },
+                "mail": {
+                    str(PARAMETER_UUID): {
+                        "general": {
+                            "description": "Migrated from notification rule #1",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "url_prefix": {"automatic": "https"},
+                            "disable_multiplexing": True,
+                        },
+                    },
+                    str(PARAMETER_UUID): {
+                        "general": {
+                            "description": "Migrated from notification rule #2",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "url_prefix": {"automatic": "https"},
+                            "from": {"address": "from@me.com"},
+                            "disable_multiplexing": True,
+                        },
+                    },
+                },
+                "mkeventd": {
+                    str(PARAMETER_UUID): {
+                        "general": {
+                            "description": "Migrated from notification rule #3",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {"facility": 5, "remote": "1.1.1.1"},
+                    }
+                },
+            },
+            id="Mixed notification rules",
         ),
     ],
 )

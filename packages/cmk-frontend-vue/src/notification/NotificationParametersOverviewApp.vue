@@ -9,11 +9,23 @@ import type { RuleSection } from '@/notification/type_defs'
 
 defineProps<{
   parameters: RuleSection[]
+  i18n: Record<string, string>
 }>()
 </script>
 
 <template>
-  <NotificationRules :rule_sections="parameters"></NotificationRules>
+  <NotificationRules v-if="parameters.length !== 0" :rule_sections="parameters"></NotificationRules>
+  <table v-else class="table ruleset">
+    <tbody>
+      <tr>
+        <td>
+          <div class="ruleset data odd0 no_match">
+            {{ i18n.no_parameter_match }}
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <style scoped></style>

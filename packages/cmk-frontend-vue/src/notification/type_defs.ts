@@ -71,6 +71,7 @@ export interface Rule {
 }
 export interface NotificationParametersOverview {
   parameters: RuleSection1[];
+  i18n: {};
 }
 export interface RuleSection1 {
   i18n: string;

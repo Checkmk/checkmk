@@ -47,9 +47,15 @@
                         "type": "object",
                         "$ref": "#/$defs/rule_section"
                     }
+                },
+                "i18n": {
+                    "type": "object",
+                    "no_parameter_match": {
+                        "type": "string"
+                    }
                 }
             },
-            "required": ["parameters"]
+            "required": ["parameters", "i18n"]
         },
         "fallback_warning": {
             "type": "object",

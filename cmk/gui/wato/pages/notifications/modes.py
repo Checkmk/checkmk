@@ -6,6 +6,7 @@
 
 import abc
 import json
+import re
 import time
 from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
@@ -3034,10 +3035,17 @@ class ModeNotificationParametersOverview(WatoMode):
         self,
         all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
+        search_term = request.get_str_input("search", "")
+        search_term = search_term.lower() if search_term else ""
+        match_regex = re.compile(search_term, re.IGNORECASE)
         for script_name, title in notification_script_choices():
             # Not all notification scripts have parameters
             if script_name not in notification_parameter_registry:
                 continue
+
+            if not match_regex.search(title):
+                continue
+
             method_parameters: dict[NotificationParameterID, NotificationParameterItem] | None = (
                 all_parameters.get(script_name)
             )
@@ -3056,18 +3064,21 @@ class ModeNotificationParametersOverview(WatoMode):
 
     def _get_notification_parameters_data(self) -> NotificationParametersOverview:
         all_parameters = NotificationParameterConfigFile().load_for_reading()
+        filtered_parameters = list(self._get_parameter_rulesets(all_parameters))
         return NotificationParametersOverview(
             parameters=[
                 RuleSection(
                     i18n=_("Parameters for"),
-                    topics=[
-                        RuleTopic(
-                            i18n=None,
-                            rules=list(self._get_parameter_rulesets(all_parameters)),
-                        )
-                    ],
+                    topics=[RuleTopic(i18n=None, rules=filtered_parameters)],
                 )
             ]
+            if filtered_parameters
+            else [],
+            i18n={
+                "no_parameter_match": _(
+                    "Found no matching parameters. Please try another search term."
+                )
+            },
         )
 
 

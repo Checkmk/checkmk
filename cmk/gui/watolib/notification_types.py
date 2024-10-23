@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass(kw_only=True)
@@ -94,6 +94,7 @@ class Notifications:
 @dataclass(kw_only=True)
 class NotificationParametersOverview:
     parameters: list[RuleSection]
+    i18n: dict[str, Any]
 
 
 @dataclass(kw_only=True)

@@ -284,6 +284,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
+        plugins = agent_based_register.get_previously_loaded_plugins()
         ruleset_matcher = config_cache.ruleset_matcher
 
         results: dict[HostName, DiscoveryResult] = {}
@@ -291,7 +292,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         parser = CMKParser(
             config_cache.parser_factory(),
             checking_sections=lambda hostname: config_cache.make_checking_sections(
-                hostname, selected_sections=NO_SELECTION
+                plugins, hostname, selected_sections=NO_SELECTION
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
@@ -300,6 +301,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = CMKFetcher(
             config_cache,
             config_cache.fetcher_factory(),
+            plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             ip_address_of=config.ConfiguredIPLookup(
@@ -444,6 +446,7 @@ class AutomationDiscoveryPreview(Automation):
         fetcher = CMKFetcher(
             config_cache,
             config_cache.fetcher_factory(),
+            agent_based_register.get_previously_loaded_plugins(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
             ip_address_of=config.ConfiguredIPLookup(
@@ -592,11 +595,12 @@ def _execute_discovery(
 ) -> CheckPreview:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -693,6 +697,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
+    ab_plugins = agent_based_register.get_previously_loaded_plugins()
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
         # error handling: we're redirecting stdout to /dev/null anyway,
@@ -705,7 +710,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            ab_plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -714,6 +719,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        ab_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2093,6 +2099,7 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
+        plugins = agent_based_register.get_previously_loaded_plugins()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
         # In 1.5 the tcp connect timeout has been added. The automation may
@@ -2145,6 +2152,7 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_agent(
                         config_cache,
+                        plugins,
                         host_name,
                         ipaddress,
                         agent_port=agent_port,
@@ -2221,6 +2229,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         config_cache: ConfigCache,
+        plugins: agent_based_register.AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
@@ -2252,6 +2261,7 @@ class AutomationDiagHost(Automation):
             oid_cache_dir=oid_cache_dir,
         )
         for source in sources.make_sources(
+            plugins,
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
@@ -2665,6 +2675,7 @@ class AutomationGetAgentOutput(Automation):
         ty = args[1]
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -2702,6 +2713,7 @@ class AutomationGetAgentOutput(Automation):
                     LATEST_CONFIG
                 )
                 for source in sources.make_sources(
+                    plugins,
                     hostname,
                     ipaddress,
                     ip_stack_config,
@@ -2759,7 +2771,7 @@ class AutomationGetAgentOutput(Automation):
                             source_info.hostname,
                             source_info.fetcher_type,
                             checking_sections=config_cache.make_checking_sections(
-                                hostname, selected_sections=NO_SELECTION
+                                plugins, hostname, selected_sections=NO_SELECTION
                             ),
                             persisted_section_dir=make_persisted_section_dir(
                                 source_info.hostname,

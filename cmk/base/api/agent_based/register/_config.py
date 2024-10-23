@@ -179,7 +179,7 @@ def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -
 
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
-    return is_registered_snmp_section_plugin(section_name) or is_registered_agent_section_plugin(
+    return section_name in registered_snmp_sections or is_registered_agent_section_plugin(
         section_name
     )
 
@@ -232,7 +232,3 @@ def set_discovery_ruleset(
 def set_host_label_ruleset(ruleset_name: RuleSetName, rules: Sequence[RuleSpec]) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
-
-
-def is_registered_snmp_section_plugin(section_name: SectionName) -> bool:
-    return section_name in registered_snmp_sections

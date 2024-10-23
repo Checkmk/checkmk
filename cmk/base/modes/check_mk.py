@@ -552,6 +552,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     try:
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         hosts_config = config.make_hosts_config()
         if hostname in hosts_config.clusters:
@@ -585,6 +586,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         has_errors = False
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         for source in sources.make_sources(
+            plugins,
             hostname,
             ipaddress,
             ip_stack_config,
@@ -643,7 +645,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     source_info.hostname,
                     source_info.fetcher_type,
                     checking_sections=config_cache.make_checking_sections(
-                        hostname, selected_sections=NO_SELECTION
+                        plugins, hostname, selected_sections=NO_SELECTION
                     ),
                     persisted_section_dir=make_persisted_section_dir(
                         source_info.hostname,
@@ -711,6 +713,7 @@ modes.register(
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     hosts_config = config_cache.hosts_config
     all_hosts = {
         hn
@@ -725,7 +728,9 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     for hostname in sorted(hosts - all_hosts):
         sys.stderr.write(f"unknown host: {hostname}\n")
     for hostname in sorted(hosts & all_hosts):
-        cmk.base.dump_host.dump_host(config_cache, hostname, simulation_mode=config.simulation_mode)
+        cmk.base.dump_host.dump_host(
+            config_cache, plugins, hostname, simulation_mode=config.simulation_mode
+        )
 
 
 modes.register(
@@ -1787,6 +1792,7 @@ def mode_check_discovery(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     check_interval = config_cache.check_mk_check_interval(hostname)
@@ -1794,6 +1800,7 @@ def mode_check_discovery(
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -1814,7 +1821,7 @@ def mode_check_discovery(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2087,6 +2094,7 @@ def _preprocess_hostnames(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
@@ -2118,7 +2126,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2127,6 +2135,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2287,11 +2296,14 @@ def mode_check(
 
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
+
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2313,7 +2325,7 @@ def mode_check(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2512,6 +2524,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
 
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
@@ -2535,6 +2548,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2552,7 +2566,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2789,10 +2803,12 @@ def mode_inventory_as_check(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     parameters = HWSWInventoryParameters.from_raw(options)
+    plugins = agent_based_register.get_previously_loaded_plugins()
 
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2808,7 +2824,7 @@ def mode_inventory_as_check(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2945,10 +2961,11 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
 
     config.load()
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2957,6 +2974,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(

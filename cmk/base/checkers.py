@@ -322,6 +322,7 @@ class CMKFetcher:
         self,
         config_cache: ConfigCache,
         factory: FetcherFactory,
+        plugins: agent_based_register.AgentBasedPlugins,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
@@ -337,6 +338,7 @@ class CMKFetcher:
     ) -> None:
         self.config_cache: Final = config_cache
         self.factory: Final = factory
+        self.plugins: Final = plugins
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.ip_address_of: Final = ip_address_of
@@ -402,6 +404,7 @@ class CMKFetcher:
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
+                    self.plugins,
                     current_host_name,
                     current_ip_address,
                     current_ip_stack_config,

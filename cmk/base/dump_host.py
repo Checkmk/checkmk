@@ -41,6 +41,7 @@ from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.core
 from cmk.base import sources
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
@@ -125,6 +126,7 @@ def print_(txt: str) -> None:
 
 def dump_host(
     config_cache: ConfigCache,
+    plugins: AgentBasedPlugins,
     hostname: HostName,
     *,
     simulation_mode: bool,
@@ -229,6 +231,7 @@ def dump_host(
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
+            plugins,
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),

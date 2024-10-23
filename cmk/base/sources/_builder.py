@@ -50,6 +50,7 @@ __all__ = ["make_sources"]
 class _Builder:
     def __init__(
         self,
+        plugins: agent_based_register.AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress | None,
         ip_stack_config: IPStackConfig,
@@ -76,6 +77,7 @@ class _Builder:
         super().__init__()
         assert not is_cluster
 
+        self.plugins: Final = plugins
         self.host_name: Final = host_name
         self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
@@ -192,6 +194,7 @@ class _Builder:
             self._add(
                 SNMPSource(
                     self.fetcher_factory,
+                    self.plugins,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
                     fetcher_config=self.snmp_fetcher_config,
@@ -211,6 +214,7 @@ class _Builder:
         self._add(
             SNMPSource(
                 self.fetcher_factory,
+                self.plugins,
                 self.host_name,
                 self.ipaddress,
                 fetcher_config=self.snmp_fetcher_config,
@@ -236,6 +240,7 @@ class _Builder:
                 self._add(
                     MgmtSNMPSource(
                         self.fetcher_factory,
+                        self.plugins,
                         self.host_name,
                         self.management_ip,
                         fetcher_config=self.snmp_fetcher_config,
@@ -307,6 +312,7 @@ class _Builder:
 
 
 def make_sources(
+    plugins: agent_based_register.AgentBasedPlugins,
     host_name: HostName,
     ipaddress: HostAddress | None,
     address_family: IPStackConfig,
@@ -354,6 +360,7 @@ def make_sources(
         return file_cache_max_age
 
     return _Builder(
+        plugins,
         host_name,
         ipaddress,
         address_family,

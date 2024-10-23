@@ -18,8 +18,6 @@ from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
 from ._config import (
     AgentBasedPlugins,
     get_relevant_raw_sections,
-    is_registered_snmp_section_plugin,
-    iter_all_snmp_sections,
 )
 
 __all__ = ["make_plugin_store"]
@@ -32,7 +30,7 @@ def _make_inventory_sections(plugins: AgentBasedPlugins) -> frozenset[SectionNam
             check_plugin_names=(),
             inventory_plugin_names=plugins.inventory_plugins,
         )
-        if is_registered_snmp_section_plugin(s)
+        if s in plugins.snmp_sections
     )
 
 
@@ -45,6 +43,6 @@ def make_plugin_store(plugins: AgentBasedPlugins) -> SNMPPluginStore:
                 SNMPDetectSpec(s.detect_spec),
                 s.name in inventory_sections,
             )
-            for s in iter_all_snmp_sections()
+            for s in plugins.snmp_sections.values()
         }
     )

@@ -1331,11 +1331,14 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
+    plugins = (
+        agent_based_register.get_previously_loaded_plugins()
+    )  # loaded by "fix_regsiter" fixture
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -1344,6 +1347,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(

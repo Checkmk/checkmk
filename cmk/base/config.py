@@ -1932,7 +1932,11 @@ class ConfigCache:
         return snmp_config
 
     def make_checking_sections(
-        self, hostname: HostName, *, selected_sections: SectionNameCollection
+        self,
+        plugins: agent_based_register.AgentBasedPlugins,
+        hostname: HostName,
+        *,
+        selected_sections: SectionNameCollection,
     ) -> frozenset[SectionName]:
         if selected_sections is not NO_SELECTION:
             checking_sections = selected_sections
@@ -1947,11 +1951,7 @@ class ConfigCache:
                     inventory_plugin_names=(),
                 )
             )
-        return frozenset(
-            s
-            for s in checking_sections
-            if agent_based_register.is_registered_snmp_section_plugin(s)
-        )
+        return frozenset(s for s in checking_sections if s in plugins.snmp_sections)
 
     def invalidate_host_config(self) -> None:
         self.__enforced_services_table.clear()
@@ -4073,6 +4073,7 @@ class FetcherFactory:
 
     def make_snmp_fetcher(
         self,
+        plugins: agent_based_register.AgentBasedPlugins,
         host_name: HostName,
         ip_address: HostAddress,
         *,
@@ -4089,7 +4090,7 @@ class FetcherFactory:
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self._config_cache.make_checking_sections(
-                    host_name, selected_sections=fetcher_config.selected_sections
+                    plugins, host_name, selected_sections=fetcher_config.selected_sections
                 ),
             ),
             scan_config=fetcher_config.scan_config,

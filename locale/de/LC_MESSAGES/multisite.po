@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-10-17 08:50+0000\n"
+"PO-Revision-Date: 2024-10-23 06:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -4849,9 +4849,9 @@ msgstr "Agentenupdates"
 msgid "Agent updates are currently disabled"
 msgstr "Agentenupdates sind aktuell deaktiviert"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Agent updates are disabled for host name %s:"
-msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert, weil er"
+msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert:"
 
 msgid "Agent updates are enabled"
 msgstr "Agentenupdates sind eingeschaltet"
@@ -21648,10 +21648,9 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Failed host tag condition '%s' (Has the tags %s)"
-msgstr ""
-"Dieser Host erfüllt nicht die Hosttag-Bedingung '%s' (er hat die Tags %s)"
+msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Tags %s)"
 
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
@@ -36154,10 +36153,9 @@ msgstr "Der Parameter custom_graph fehlt."
 msgid "Missing needed host parameter."
 msgstr "Der Parameter host ist nicht gesetzt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Missing one or more of the labels: %s (Has the labels %s)"
-msgstr ""
-"Diesem Host fehlen ein oder mehrere der Labels: %s (er hat das Label %s)"
+msgstr "Es fehlen ein oder mehrere der Labels: %s (hat die Labels %s)"
 
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'"
@@ -38564,17 +38562,14 @@ msgstr "Nicht aktiviert"
 msgid "Not found"
 msgstr "Nicht gefunden"
 
-#, fuzzy
 msgid "Not in the selected Setup folders."
-msgstr "%s ist nicht in den ausgewählten Setup-Ordnern."
+msgstr "Befindet sich nicht in den ausgewählten Setup-Ordnern."
 
-#, fuzzy
 msgid "Not known in the activated monitoring configuration"
-msgstr "%s ist in der aktivierten Monitoring-Konfiguration nicht bekannt"
+msgstr "In der aktivierten Monitoring-Konfiguration nicht bekannt"
 
-#, fuzzy
 msgid "Not listed in the explicit list of host names."
-msgstr "%s nicht in der expliziten Liste von Host-Namen aufgelistet."
+msgstr "Nicht in der expliziten Liste von Host-Namen aufgelistet."
 
 msgid "Not locked"
 msgstr "Nicht gesperrt"
@@ -38582,9 +38577,8 @@ msgstr "Nicht gesperrt"
 msgid "Not logged in."
 msgstr "Nicht angemeldet."
 
-#, fuzzy
 msgid "Not monitored by one of the explicitly selected sites."
-msgstr "%s wird durch keine der explizit ausgewählten Instanzen überwacht."
+msgstr "Wird nicht durch eine der explizit ausgewählten Instanzen überwacht."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr ""
@@ -39924,9 +39918,8 @@ msgstr "Auf allen Instanzen"
 msgid "On down host"
 msgstr "Bei Host DOWN"
 
-#, fuzzy
 msgid "On host name exclusion list."
-msgstr "%s auf der Ausschlussliste."
+msgstr "Auf der Host-Namen-Ausschlussliste."
 
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"

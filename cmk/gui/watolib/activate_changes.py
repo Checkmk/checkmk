@@ -1303,7 +1303,7 @@ def create_and_activate_central_rabbitmq_changes(
         str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
     )
 
-    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
 
     store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
@@ -2516,10 +2516,10 @@ def _create_folder_content_hash(folder_path: str) -> str:
     return sha256_hash.hexdigest()
 
 
-def _restart_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
+def _reload_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
     if old_definitions_hash != new_definitions_hash:
         # make sure stdout and stderr is available in local variables (crash report!)
-        process = subprocess.run(["omd", "restart", "rabbitmq"], capture_output=True, check=False)
+        process = subprocess.run(["omd", "reload", "rabbitmq"], capture_output=True, check=False)
         process.check_returncode()
 
 
@@ -2529,7 +2529,7 @@ def _activate_local_rabbitmq_changes():
         str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
     )
 
-    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
 
     store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 

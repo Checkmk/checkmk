@@ -85,10 +85,17 @@ ensure_broker_certs() {
     fi
 }
 
-stop_process() {
+stop_and_reset_app() {
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" stop_app &>/dev/null
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" reset &>/dev/null
+}
 
+start_app() {
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" start_app &>/dev/null
+}
+
+stop_process() {
+    stop_and_reset_app
     printf "killing %s..." "${1}"
     kill "${1}" 2>/dev/null
 }
@@ -159,8 +166,8 @@ case "$1" in
         ;;
 
     reload)
-        $0 stop
-        $0 start
+        stop_and_reset_app
+        start_app
         ;;
 
     status)

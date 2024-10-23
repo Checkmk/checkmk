@@ -2431,7 +2431,7 @@ def test_level_conversion(
             },
             {"a": 1, "b": 2, "c": 3},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2},
+                "DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1, "b": 2},
                 "c": 3,
             },
             id="some elements grouped, some not",
@@ -2452,8 +2452,8 @@ def test_level_conversion(
             },
             {"a": 1, "b": 2},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1},
-                "DictGroup(title=Title('Grouptitle'),help_text=Help('Helptext'))": {"b": 2},
+                "DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1},
+                "DictGrouptitleTitleGrouptitlehelptextHelpHelptext": {"b": 2},
             },
             id="different groups",
         ),
@@ -2488,10 +2488,10 @@ def test_level_conversion(
             },
             {"a": 1, "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4}},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+                "DictGrouptitleTitleGrouptitlehelptextNone": {
                     "a": 1,
                     "b": {
-                        "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                        "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                             "a_nested": 2,
                             "b_nested": 3,
                         },
@@ -2556,10 +2556,10 @@ def test_dictionary_groups_ignored_elements() -> None:
         "c": 6,
     }
     form_model = {
-        "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+        "DictGrouptitleTitleGrouptitlehelptextNone": {
             "a": 1,
             "b": {
-                "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                     "a_nested": 2,
                     "b_nested": 3,
                 },
@@ -2614,7 +2614,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2624,7 +2624,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="no dictelement props",
@@ -2648,7 +2648,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2659,7 +2659,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="some required dictelements/vertical rendering",
@@ -2683,7 +2683,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2695,7 +2695,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="all required dictelements/horizontal rendering",
@@ -2718,7 +2718,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2729,7 +2729,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only dictelements",
@@ -2753,7 +2753,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2765,7 +2765,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                         ),
                     ],
                     required_keys=[],
-                    hidden_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    hidden_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only all dictelements",
@@ -2799,7 +2799,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABChidden'),help_text=None)",
+                            "DictGrouptitleTitleABChiddenhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC hidden"),
                                 elements=[
@@ -2810,7 +2810,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                         (
-                            "DictGroup(title=Title('ABCshown'),help_text=None)",
+                            "DictGrouptitleTitleABCshownhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC shown"),
                                 elements=[
@@ -2821,8 +2821,8 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABCshown'),help_text=None)"],
-                    hidden_keys=["DictGroup(title=Title('ABChidden'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABCshownhelptextNone"],
+                    hidden_keys=["DictGrouptitleTitleABChiddenhelptextNone"],
                 ),
             ),
             id="render_only some dictelements",

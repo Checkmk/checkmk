@@ -313,7 +313,8 @@ class Connection:
                 make_connection_params(omd_root, "localhost", get_local_port())
             )
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def channel(self, model: type[_ModelT]) -> Channel[_ModelT]:
         return Channel(self.app, self._pconnection.channel(), model)
@@ -331,8 +332,10 @@ class Connection:
         try:
             return self._pconnection.__exit__(exc_type, value, traceback)
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
         finally:
+            # the pika connections __exit__ will swallow these :-(
             if isinstance(value, SystemExit):
                 raise value
 

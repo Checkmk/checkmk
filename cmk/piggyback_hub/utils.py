@@ -65,9 +65,11 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
                         self.logger.debug("Consuming: %s", self.task_name)
                         channel.consume(self.queue, self.callback)
                     except CMKConnectionError as exc:
-                        self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
+                        self.logger.info(
+                            "Interrupted by failed connection: %s: %s", self.task_name, exc
+                        )
         except CMKConnectionError as exc:
-            self.logger.error("Connection error: %s: %s", self.task_name, exc)
+            self.logger.error("Reconnecting failed: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
 
@@ -76,8 +78,7 @@ def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> C
     attempts = 10
     interval = 3
 
-    error_message = ""
-    for _attempt in range(attempts):
+    for attempt in range(1, attempts):
         try:
             # Note: We re-read the certificates here.
             return Connection(APP_NAME, omd_root)
@@ -87,8 +88,9 @@ def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> C
             # and/or broker is restarting
             CMKConnectionError,
         ) as exc:
+            logger.info("Connection failed (will retry): %s: %s", task_name, exc)
             # Retry.
             time.sleep(interval)
-            logger.debug("Reconnecting: %s: %s", task_name, exc)
-            error_message = str(exc)
-    raise CMKConnectionError(f"Unable to reconnect after {attempts} attempts: {error_message}")
+            logger.info("Reconnection attempt %s: %s: %s", attempt, task_name, exc)
+
+    return Connection(APP_NAME, omd_root)

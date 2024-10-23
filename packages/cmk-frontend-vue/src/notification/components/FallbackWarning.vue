@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { FallbackWarning } from '@/notification/type_defs'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButton from '@/components/CmkButton.vue'
 
 const props = defineProps<{
@@ -47,6 +48,7 @@ function openInNewTab(url: string) {
         <CmkButton variant="info" @click="openInNewTab(properties['setup_link'])">
           {{ properties['i18n']['setup_link_title'] }}
         </CmkButton>
+        <CmkSpace />
         <CmkButton @click="hideContent">
           {{ properties['i18n']['do_not_show_again_title'] }}
         </CmkButton>

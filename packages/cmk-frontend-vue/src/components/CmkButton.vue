@@ -48,9 +48,6 @@ defineProps<ButtonProps>()
   margin: 0;
   letter-spacing: unset;
 }
-.button + .button {
-  margin-left: 10px;
-}
 .button--variant-primary {
   border: 1px solid var(--default-submit-button-border-color);
 }

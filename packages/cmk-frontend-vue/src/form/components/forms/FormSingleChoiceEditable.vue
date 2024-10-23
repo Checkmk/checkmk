@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import FormEditAsync, { type API as SlideInAPI } from '@/components/FormEditAsync.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import SlideIn from '@/components/slidein/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
@@ -117,12 +118,13 @@ function openSlideIn(objectId: null | OptionId) {
       class="fsce__dropdown"
     />
     <CmkButton
-      v-if="selectedObjectId !== null"
+      v-show="selectedObjectId !== null"
       variant="tertiary"
       @click="openSlideIn(selectedObjectId)"
     >
       {{ spec.i18n.edit }}
     </CmkButton>
+    <CmkSpace v-show="selectedObjectId !== null" />
     <CmkButton variant="tertiary" @click="openSlideIn(null)">
       {{ spec.i18n.create }}
     </CmkButton>

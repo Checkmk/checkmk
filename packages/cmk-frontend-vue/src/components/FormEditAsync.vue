@@ -8,6 +8,7 @@ import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import AlertBox from '@/components/AlertBox.vue'
@@ -106,6 +107,7 @@ immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
         objectId === undefined ? props.i18n.create_button : props.i18n.save_button
       }}</CmkButtonSubmit
     >
+    <CmkSpace />
     <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
     <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
     <AlertBox v-if="backendValidation.length !== 0" variant="error">

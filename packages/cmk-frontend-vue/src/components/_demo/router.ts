@@ -9,6 +9,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DemoEmpty from './DemoEmpty.vue'
 import DemoAlertBox from './DemoAlertBox.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
+import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoDropDown from './DemoDropDown.vue'
@@ -41,6 +42,11 @@ const router = createRouter({
       path: '/formeditasync',
       name: 'FormEditAsync',
       component: DemoFormEditAsync
+    },
+    {
+      path: '/cmkspace',
+      name: 'CmkSpace',
+      component: DemoCmkSpace
     },
     {
       path: '/cmkicon',

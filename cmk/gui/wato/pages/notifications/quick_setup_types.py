@@ -24,8 +24,8 @@ ServiceEvent = StatusChangeService | OtherTriggerEvent
 
 
 class TriggeringEvents(TypedDict):
-    host_events: list[HostEvent]
-    service_events: list[ServiceEvent]
+    host_events: NotRequired[list[HostEvent]]
+    service_events: NotRequired[list[ServiceEvent]]
     ec_alerts: NotRequired[Literal["Enabled"]]
 
 

@@ -84,22 +84,25 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             )
             return status_change_service
 
-        trigger_events = TriggeringEvents(
-            host_events=[
+        trigger_events = TriggeringEvents()
+
+        if "match_host_event" in event_rule:
+            trigger_events["host_events"] = [
                 _non_status_change_events(ev)
                 if is_non_status_change_event_type(ev)
                 else _migrate_host_event(ev)
                 for ev in event_rule["match_host_event"]
-            ],
-            service_events=[
+            ]
+
+        if "match_service_event" in event_rule:
+            trigger_events["service_events"] = [
                 _non_status_change_events(ev)
                 if is_non_status_change_event_type(ev)
                 else _migrate_service_event(ev)
                 for ev in event_rule["match_service_event"]
-            ],
-        )
+            ]
 
-        if event_rule["match_ec"]:
+        if event_rule.get("match_ec", False):
             trigger_events["ec_alerts"] = "Enabled"
 
         return trigger_events
@@ -116,8 +119,8 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
         )
 
     def _get_notification_method() -> NotificationMethod:
-        def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple:
-            if (notifybulk := event_rule["bulk"]) is None:
+        def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple | None:
+            if (notifybulk := event_rule.get("bulk")) is None:
                 return None
 
             def _get_always_bulk(always_bulk_params: AlwaysBulkParameters) -> AlwaysBulk:

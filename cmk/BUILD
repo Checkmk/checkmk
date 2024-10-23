@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
 genrule(
@@ -17,14 +18,21 @@ genrule(
 FILTER_OUT = [
     # Provided elsewhere
     "rrdtool",
-    "protobuf",
 ]
 
 genrule(
     name = "_prune_requirements_in",
     srcs = ["requirements_in.orig"],
-    outs = ["requirements.txt"],
+    outs = ["requirements_pruned.txt"],
     cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
+)
+
+genrule(
+    name = "_pin_protobuf_requirement",
+    srcs = ["requirements_pruned.txt"],
+    outs = ["requirements.txt"],
+    # We go for "compatible release" with `~=`.
+    cmd = "cat $< <(echo protobuf~=%s) > $@" % PROTOBUF_PYTHON_VERSION,
     visibility = ["//:__pkg__"],
 )
 

@@ -149,7 +149,7 @@ pyparsing = "*"
 redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "*"  # used for GUI 2fa webauthn
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
-protobuf = "*"  # For development, Runtime modules are shipped by omd/packages/protobuf
+protobuf = "~=4.24.4"  # Keep in synch with MODULE.bazel---will work automatically when we drop pipenv
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-crypto = {editable = true, path = "./packages/cmk-crypto"}
@@ -181,13 +181,13 @@ typing-extensions = "*"
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP
 robotframework = "~=7.0"  # used for parsing robotmk agent data
-opentelemetry-api = "==1.25.0" # used for distributed tracing of Checkmk
-opentelemetry-sdk = "==1.25.0" # used for distributed tracing of Checkmk
-opentelemetry-exporter-otlp = "==1.25.0" # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-wsgi = "==0.46b0" # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-requests = "==0.46b0" # used for distributed tracing of Checkmk
-opentelemetry-instrumentation-redis = "==0.46b0" # used for distributed tracing of Checkmk
-opentelemetry-semantic-conventions = "==0.46b0" # used for distributed tracing of Checkmk
+opentelemetry-api = "*" # used for distributed tracing of Checkmk
+opentelemetry-sdk = "*" # used for distributed tracing of Checkmk
+opentelemetry-exporter-otlp = "*" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-wsgi = "*" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-requests = "*" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-redis = "*" # used for distributed tracing of Checkmk
+opentelemetry-semantic-conventions = "*" # used for distributed tracing of Checkmk
 
 [requires]
 python_version = "3.12"

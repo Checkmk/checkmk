@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue, type Ref } from 'vue'
+import { computed, ref, toValue, type Ref, watch } from 'vue'
 
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 
@@ -321,16 +321,13 @@ const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   props.mode
 )
 
-const currentMode = computed({
-  get(): WizardMode {
-    return quickSetupHook.mode.value
-  },
-  set(newMode: WizardMode) {
-    wizardMode.value = newMode
-    quickSetupHook.setMode(newMode)
-    if (newMode === 'overview' && !loadedAllStages.value) {
-      loadAllStages()
-    }
+const currentMode = ref<WizardMode>(props.mode)
+
+watch(currentMode, async (mode: WizardMode) => {
+  wizardMode.value = mode
+  quickSetupHook.setMode(mode)
+  if (mode === 'overview' && !loadedAllStages.value) {
+    stages.value = await loadAllStages()
   }
 })
 

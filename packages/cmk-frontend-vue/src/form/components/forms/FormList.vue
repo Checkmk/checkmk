@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
@@ -144,19 +145,22 @@ function sendDataUpstream() {
     <template v-for="backendIndex in frontendOrder" :key="backendIndex">
       <tr class="listof_element">
         <td class="vlof_buttons">
-          <a
+          <CmkButton
             v-if="props.spec.editable_order"
+            variant="transparent"
             @dragstart="dragStart"
             @drag="dragging"
             @dragend="dragEnd"
-            ><img class="vue element_dragger" />
-          </a>
-          <a title="Delete this entry">
-            <img
-              class="icon iconbutton vue icon_close"
-              @click.prevent="removeElement(backendIndex)"
-            />
-          </a>
+          >
+            <img class="icon iconbutton vue element_dragger" />
+          </CmkButton>
+          <CmkButton
+            variant="transparent"
+            title="Delete this entry"
+            @click.prevent="removeElement(backendIndex)"
+          >
+            <img class="icon iconbutton vue icon_close" />
+          </CmkButton>
         </td>
         <td class="vlof_content">
           <FormEdit
@@ -169,15 +173,18 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <a class="vlof_add_button" @click.prevent="addElement">
+  <CmkButton variant="transparent" @click.prevent="addElement">
     <img class="vue icon_plus" />
-    <span class="vue add_element_text">{{ spec.add_element_label }}</span>
-  </a>
+    {{ spec.add_element_label }}
+  </CmkButton>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
 .vlof_content {
   padding-bottom: 8px;
+}
+.vlof_buttons > * {
+  display: flex;
 }
 </style>

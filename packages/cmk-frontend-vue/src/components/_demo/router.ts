@@ -15,6 +15,7 @@ import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoDropDown from './DemoDropDown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoFormList from './DemoFormList.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
@@ -67,6 +68,11 @@ const router = createRouter({
       path: '/dropdown',
       name: 'DropDown',
       component: DemoDropDown
+    },
+    {
+      path: '/formlist',
+      name: 'FormList',
+      component: DemoFormList
     },
     {
       path: '/formbooleanchoice',

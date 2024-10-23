@@ -28,7 +28,7 @@ hypothesis-jsonschema = "*"  # used by unit tests
 jsonschema = "*"
 libcst = "*" # concrete syntax trees for plugin migration helpers
 msrest = "*"
-mypy = "*"  # used by test/static/Makefile's test-mypy target
+mypy = "<1.12"  # used by test/static/Makefile's test-mypy target--unpin after CMK-19779
 mypy-protobuf = "*" # for mypy
 networkx = "*" # needed for py-import-cycles
 pexpect = "*" # used for update testing
@@ -134,7 +134,7 @@ pymssql = "==2.2.11"  # needed by check_sql active check
 pymysql = "~=1.1.1"  # needed by check_sql active check
 psycopg2-binary = "==2.9.6"  # needed by check_sql active check
 apispec = "*"
-marshmallow = "*"
+marshmallow = "~=3.22.0"  # unpin after CMK-19779
 marshmallow-oneofschema = "*"
 apispec-oneofschema = "*"
 pydantic = "~=2.7"

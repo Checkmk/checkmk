@@ -41,6 +41,24 @@ def notification_macro_help() -> str:
     )
 
 
+# TODO: remove this and replace with the above function, once all callsites are migrated
+def notification_macro_help_fs() -> Help:
+    return Help(
+        "Here you are allowed to use all macros that are defined in the "
+        "notification context.<br>"
+        "The most important are:"
+        "<ul>"
+        "<li><tt>$HOSTNAME$</li>"
+        "<li><tt>$SERVICEDESC$</li>"
+        "<li><tt>$SERVICESHORTSTATE$</li>"
+        "<li><tt>$SERVICEOUTPUT$</li>"
+        "<li><tt>$LONGSERVICEOUTPUT$</li>"
+        "<li><tt>$SERVICEPERFDATA$</li>"
+        "<li><tt>$EVENT_TXT$</li>"
+        "</ul>"
+    )
+
+
 def local_site_url() -> str:
     return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
 

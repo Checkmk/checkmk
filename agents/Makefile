@@ -95,7 +95,7 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 $(AGENT_CTL):
 	$(AGENT_CTL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
+	install -m 755 $(BAZEL_BIN)/packages/cmk-agent-ctl/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)

@@ -33,6 +33,7 @@ from ._connection import (
     QueueName,
     RoutingKey,
 )
+from ._logging import set_logging_level
 
 __all__ = [
     "all_cme_cacert_files",
@@ -56,6 +57,7 @@ __all__ = [
     "QueueName",
     "rabbitmq",
     "RoutingKey",
+    "set_logging_level",
     "site_cert_file",
     "site_key_file",
     "TLS_PATH_CUSTOMERS",

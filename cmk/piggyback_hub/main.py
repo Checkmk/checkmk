@@ -17,7 +17,7 @@ from pathlib import Path
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.messaging import QueueName
+from cmk.messaging import QueueName, set_logging_level
 
 from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config_on_message
 from .payload import (
@@ -76,7 +76,7 @@ def _parse_arguments(argv: list[str]) -> Arguments:
 
 
 def _setup_logging(args: Arguments) -> logging.Logger:
-    logger = getLogger("cmk.piggyback_hub")
+    logger = getLogger(__name__)
     handler: logging.StreamHandler | WatchedFileHandler = (
         logging.StreamHandler(stream=sys.stderr)
         if args.foreground
@@ -85,7 +85,9 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
     logger.addHandler(handler)
 
-    logger.setLevel(VERBOSITY_MAP[min(args.verbosity, 2)])
+    level = VERBOSITY_MAP[min(args.verbosity, 2)]
+    logger.setLevel(level)
+    set_logging_level(level)
 
     return logger
 

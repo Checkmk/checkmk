@@ -15,6 +15,7 @@ py_library(
         "cmk/messaging/_config.py",
         "cmk/messaging/_connection.py",
         "cmk/messaging/_constants.py",
+        "cmk/messaging/_logging.py",
         "cmk/messaging/rabbitmq.py",
     ],
     imports = ["."],

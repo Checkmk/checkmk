@@ -75,8 +75,8 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
 
 
 def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:
-    attempts = 10
-    interval = 3
+    attempts = 120  # 10
+    interval = 5  # 3
 
     for attempt in range(1, attempts):
         try:

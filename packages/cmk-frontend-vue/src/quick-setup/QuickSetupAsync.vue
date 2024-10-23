@@ -321,8 +321,6 @@ const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   props.mode
 )
 
-const quickSetupHook = useWizard(stages.value.length, props.mode)
-
 const currentMode = computed({
   get(): WizardMode {
     return quickSetupHook.mode.value
@@ -344,6 +342,7 @@ switch (props.mode) {
     stages.value = await loadAllStages()
     break
 }
+const quickSetupHook = useWizard(stages.value.length, props.mode)
 showQuickSetup.value = true
 </script>
 

@@ -13,11 +13,10 @@ from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from multiprocessing import Event as make_event
 from pathlib import Path
-from ssl import SSLCertVerificationError
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.messaging import CMKConnectionError, Connection, QueueName
+from cmk.messaging import QueueName
 
 from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config_on_message
 from .payload import (
@@ -90,17 +89,6 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     return logger
 
 
-def run_initial_connection_test(logger: logging.Logger, omd_root: Path) -> int:
-    try:
-        with Connection(APP_NAME, omd_root):
-            return 0
-    except SSLCertVerificationError as exc:
-        logger.error("Initial connection check: Certificate verification failed: %s", exc)
-    except CMKConnectionError as exc:
-        logger.error("Initial connection check: Failed to connect: %s", exc)
-    return 1
-
-
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     reload_config = make_event()
     processes = (
@@ -155,9 +143,6 @@ def main(argv: list[str] | None = None) -> int:
     omd_root = Path(args.omd_root)
 
     logger.info("Starting: %s", APP_NAME.value)
-
-    if (ec := run_initial_connection_test(logger, omd_root)) != 0:
-        return ec
 
     if not args.foreground:
         daemonize()

@@ -207,10 +207,6 @@ def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
     return stored_rulesets.keys()
 
 
-def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
-    return registered_snmp_sections.values()
-
-
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
     rules: Sequence[RuleSpec],

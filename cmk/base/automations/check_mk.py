@@ -1905,21 +1905,22 @@ class AutomationGetSectionInformation(Automation):
     needs_checks = True
 
     def execute(self, args: object) -> GetSectionInformationResult:
+        plugins = agent_based_register.get_previously_loaded_plugins()
         section_infos = {
-            str(section.name): {
+            str(section_name): {
                 # for now, we need only these two.
-                "name": str(section.name),
+                "name": str(section_name),
                 "type": "agent",
             }
-            for section in agent_based_register.iter_all_agent_sections()
+            for section_name in plugins.agent_sections
         }
         section_infos.update(
             {
-                str(section.name): {
-                    "name": str(section.name),
+                str(section_name): {
+                    "name": str(section_name),
                     "type": "snmp",
                 }
-                for section in agent_based_register.iter_all_snmp_sections()
+                for section_name in plugins.snmp_sections
             }
         )
         return GetSectionInformationResult(section_infos)

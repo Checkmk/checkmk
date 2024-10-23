@@ -25,8 +25,6 @@ from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPV
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
 
-import cmk.base.api.agent_based.register as agent_based_register
-
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
 from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
 
@@ -228,8 +226,11 @@ def test_snmp_scan_fake_description_object__success(backend: SNMPBackend) -> Non
 
 
 @pytest.mark.usefixtures("cache_oids")
-def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
-    sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
+def test_snmp_scan_find_plugins__success(
+    backend: SNMPBackend,
+    fix_register: FixRegister,
+) -> None:
+    sections = [(s.name, s.detect_spec) for s in fix_register.snmp_sections.values()]
     found = snmp_scan._find_sections(
         sections,
         on_error=OnError.RAISE,
@@ -251,7 +252,7 @@ def test_gather_available_raw_section_names_defaults(
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 
     assert snmp_scan.gather_available_raw_section_names(
-        [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
+        [(s.name, s.detect_spec) for s in fix_register.snmp_sections.values()],
         scan_config=snmp_scan.SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,

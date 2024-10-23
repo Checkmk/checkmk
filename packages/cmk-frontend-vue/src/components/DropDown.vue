@@ -32,7 +32,12 @@ const selectedOption = defineModel<T | null>('selectedOption', { required: true 
 </script>
 
 <template>
-  <select :id="props.componentId" v-model="selectedOption" :disabled="props.disabled">
+  <select
+    :id="props.componentId"
+    v-model="selectedOption"
+    :disabled="props.disabled"
+    class="drop-down"
+  >
     <option v-if="selectedOption === null" disabled selected hidden :value="null">
       {{ props.input_hint }}
     </option>
@@ -42,4 +47,8 @@ const selectedOption = defineModel<T | null>('selectedOption', { required: true 
   </select>
 </template>
 
-<style scoped></style>
+<style scoped>
+select.drop-down {
+  cursor: pointer;
+}
+</style>

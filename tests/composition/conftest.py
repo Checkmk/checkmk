@@ -42,6 +42,7 @@ def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator
             excp.add_note("I should have received a remote site...")
 
         _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+        remote_site.ensure_running()
 
         try:
             yield remote_site

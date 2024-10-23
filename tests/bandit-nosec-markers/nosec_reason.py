@@ -323,7 +323,7 @@ def cmd_local_check(args: argparse.Namespace) -> None:
         " ".join(
             (
                 "P",
-                '"Bandit markers"',
+                '"[SecDev] Bandit markers"',
                 "|".join(
                     (
                         f"not_annotated={sum_not_annotated};1;5",

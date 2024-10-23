@@ -269,6 +269,14 @@ class Version:
     def version_base(self) -> str:
         return "" if self.base is None else str(self.base)
 
+    @property
+    def version_without_rc(self) -> str:
+        return f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip("-")
+
+    @property
+    def version_rc_aware(self) -> str:
+        return str(self)
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.base!r}, {self.release!r}, {self.release_candidate!r})"
 

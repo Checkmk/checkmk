@@ -267,7 +267,6 @@ beautifulsoup4==4.12.3 ; python_full_version >= "3.6.0" \
     # via
     #   -r requirements_cmk.txt
     #   furo
-    #   webtest
 black==24.10.0 \
     --hash=sha256:14b3502784f09ce2443830e3133dacf2c0110d45191ed470ecb04d0f5f6fcb0f \
     --hash=sha256:17374989640fbca88b6a448129cd1745c5eb8d9547b464f281b251dd00155ccd \
@@ -762,9 +761,9 @@ cython==3.0.11 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.
     --hash=sha256:f3953d2f504176f929862e5579cfc421860c33e9707f585d70d24e1096accdf7 \
     --hash=sha256:f988f7f8164a6079c705c39e2d75dbe9967e3dacafe041420d9af7b9ee424162
     # via -r requirements_cmk.txt
-datamodel-code-generator==0.26.2 \
-    --hash=sha256:03c153434d5a308e31fb4528c0199015054570642ccda8cd2f2cb3cc2c497622 \
-    --hash=sha256:f62576a27c9083f2b22cf8c97ed79a394155f131db3e3bf55cd72893f48c5d80
+datamodel-code-generator==0.26.1 \
+    --hash=sha256:3b7b49c4230fa197ca28847e1e8996cd664638a7e91796c826a61c60d4ccd8a2 \
+    --hash=sha256:bbe8a6cc0b9cfdbfd294e336e02b4c50b481ffc3b3c608b5578b6d7aa02cc8ae
     # via -r packages/cmk-shared-typing/requirements.txt
 decorator==5.1.1 ; python_version >= "3.5" \
     --hash=sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330 \
@@ -4329,34 +4328,18 @@ virtualenv==20.27.1 ; python_version >= "3.8" \
     # via
     #   -r requirements_cmk.txt
     #   pre-commit
-waitress==3.0.1 ; python_full_version >= "3.9.0" \
-    --hash=sha256:26cdbc593093a15119351690752c99adc13cbc6786d75f7b6341d1234a3730ac \
-    --hash=sha256:ef0c1f020d9f12a515c4ec65c07920a702613afcad1dbfdc3bcec256b6c072b3
-    # via
-    #   -r requirements_cmk.txt
-    #   webtest
 webcolors==24.8.0 \
     --hash=sha256:08b07af286a01bcd30d583a7acadf629583d1f79bfef27dd2c2c5c263817277d \
     --hash=sha256:fc4c3b59358ada164552084a8ebee637c221e4059267d0f8325b3b560f6c7f0a
     # via
     #   -r requirements_cmk.txt
     #   jsonschema
-webob==1.8.9 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2, 3.3" \
-    --hash=sha256:45e34c58ed0c7e2ecd238ffd34432487ff13d9ad459ddfd77895e67abba7c1f9 \
-    --hash=sha256:ad6078e2edb6766d1334ec3dee072ac6a7f95b1e32ce10def8ff7f0f02d56589
-    # via
-    #   -r requirements_cmk.txt
-    #   webtest
 websocket-client==1.8.0 ; python_version >= "3.8" \
     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526 \
     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da
     # via
     #   -r requirements_cmk.txt
     #   kubernetes
-webtest==3.0.1 ; python_version >= "3.7" \
-    --hash=sha256:493b5c802f8948a65b5e3a1ad5b2524ee5e1ab60cd713d9a3da3b8da082c06fe \
-    --hash=sha256:b3bc75d020d0576ee93a5f149666045e58fe2400ea5f0c214d7430d7d213d0d0
-    # via -r requirements_cmk.txt
 werkzeug==3.0.6 ; python_version >= "3.8" \
     --hash=sha256:1bc0c2310d2fbb07b1dd1105eba2f7af72f322e1e455f2f93c993bee8c8a5f17 \
     --hash=sha256:a8dd59d4de28ca70471a34cba79bed5f7ef2e036a76b3ab0835474246eb41f8d

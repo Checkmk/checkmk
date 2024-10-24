@@ -93,7 +93,7 @@ export interface Transformation {
 export interface GraphOptions {
   unit: "first_with_unit" | GraphOptionUnitCustom;
   vertical_range: "auto" | GraphOptionVerticalRangeExplicit;
-  metrics_with_zero_values: boolean;
+  omit_zero_metrics: boolean;
 }
 export interface GraphOptionUnitCustom {
   notation: GraphOptionUnitCustomNotation;
@@ -184,6 +184,6 @@ export interface I18NTopics {
   graph_operations: string;
   unit: string;
   vertical_range: string;
-  metrics_with_zero_values: string;
+  omit_zero_metrics: string;
   graph_options: string;
 }

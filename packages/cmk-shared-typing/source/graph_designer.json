@@ -335,9 +335,9 @@
                         }
                     ]
                 },
-                "metrics_with_zero_values": { "type": "boolean" }
+                "omit_zero_metrics": { "type": "boolean" }
             },
-            "required": ["unit", "vertical_range", "metrics_with_zero_values"]
+            "required": ["unit", "vertical_range", "omit_zero_metrics"]
         },
         "i18n_graph_lines": {
             "type": "object",
@@ -482,7 +482,7 @@
                 "graph_operations": { "type": "string" },
                 "unit": { "type": "string" },
                 "vertical_range": { "type": "string" },
-                "metrics_with_zero_values": { "type": "string" },
+                "omit_zero_metrics": { "type": "string" },
                 "graph_options": { "type": "string" }
             },
             "required": [
@@ -495,7 +495,7 @@
                 "graph_operations",
                 "unit",
                 "vertical_range",
-                "metrics_with_zero_values",
+                "omit_zero_metrics",
                 "graph_options"
             ]
         },

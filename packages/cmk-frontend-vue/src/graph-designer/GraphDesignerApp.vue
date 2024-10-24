@@ -227,11 +227,11 @@ const specVerticalRange = makeCascadingSingleChoice('', [
 ])
 const backendValidationVerticalRange: ValidationMessages = []
 
-const dataMetricsWithZeroValues = computed(() => {
-  return props.graph_options.metrics_with_zero_values
+const dataOmitZeroMetrics = computed(() => {
+  return props.graph_options.omit_zero_metrics
 })
-const specMetricsWithZeroValues = makeBooleanChoice()
-const backendValidationMetricsWithZeroValues: ValidationMessages = []
+const specOmitZeroMetrics = makeBooleanChoice()
+const backendValidationOmitZeroMetrics: ValidationMessages = []
 
 const topics: Topic[] = [
   {
@@ -258,8 +258,8 @@ const topics: Topic[] = [
       { ident: 'unit', title: props.i18n.topics.unit },
       { ident: 'vertical_range', title: props.i18n.topics.vertical_range },
       {
-        ident: 'metrics_with_zero_values',
-        title: props.i18n.topics.metrics_with_zero_values
+        ident: 'omit_zero_metrics',
+        title: props.i18n.topics.omit_zero_metrics
       }
     ]
   }
@@ -957,12 +957,12 @@ function dragging(event: DragEvent) {
         />
       </div>
     </template>
-    <template #metrics_with_zero_values>
+    <template #omit_zero_metrics>
       <div>
         <FormEdit
-          v-model:data="dataMetricsWithZeroValues"
-          :spec="specMetricsWithZeroValues"
-          :backend-validation="backendValidationMetricsWithZeroValues"
+          v-model:data="dataOmitZeroMetrics"
+          :spec="specOmitZeroMetrics"
+          :backend-validation="backendValidationOmitZeroMetrics"
         />
       </div>
     </template>

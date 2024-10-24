@@ -13,7 +13,7 @@ test('Render GraphDesignerApp', () => {
       graph_options: {
         unit: 'first_with_unit',
         vertical_range: 'auto',
-        metrics_with_zero_values: true
+        omit_zero_metrics: true
       },
       i18n: {
         graph_lines: {
@@ -84,7 +84,7 @@ test('Render GraphDesignerApp', () => {
           graph_operations: 'graph_operations',
           unit: 'unit',
           vertical_range: 'vertical_range',
-          metrics_with_zero_values: 'metrics_with_zero_values',
+          omit_zero_metrics: 'omit_zero_metrics',
           graph_options: 'graph_options'
         }
       }

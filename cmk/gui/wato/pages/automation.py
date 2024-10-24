@@ -87,7 +87,7 @@ class PageAutomationLogin(AjaxPage):
                 {
                     "version": cmk_version.__version__,
                     "edition_short": cmk_version.edition(cmk.utils.paths.omd_root).short,
-                    "login_secret": DistributedSetupSecret().read_or_create(),
+                    "login_secret": DistributedSetupSecret().read_or_create().raw,
                 }
             )
         )

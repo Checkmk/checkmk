@@ -114,6 +114,7 @@ def expected_items() -> dict[str, list[str]]:
         "quick_setups": [
             "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aaws",
             "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aazure",
+            "wato.py?mode=edit_configuration_bundles&varname=special_agents%3Agcp",
         ],
         "services": [
             "wato.py?group=monconf&mode=rulesets",

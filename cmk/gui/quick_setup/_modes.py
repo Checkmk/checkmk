@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import ABC
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Protocol
 
@@ -71,6 +72,7 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     mode_registry.register(ModeQuickSetupSpecialAgent)
     main_module_registry.register(MainModuleQuickSetupAWS)
     main_module_registry.register(MainModuleQuickSetupAzure)
+    main_module_registry.register(MainModuleQuickSetupGCP)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -365,14 +367,24 @@ class ModeEditConfigurationBundles(WatoMode):
         )
 
 
-class MainModuleQuickSetupAWS(ABCMainModule):
-    @property
-    def mode_or_url(self) -> str:
-        return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
-
+class ABCMainModuleQuickSetup(ABCMainModule, ABC):
     @property
     def topic(self) -> MainModuleTopic:
         return MainModuleTopicQuickSetup
+
+    @property
+    def permission(self) -> None | str:
+        return None
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
 
     @property
     def title(self) -> str:
@@ -383,10 +395,6 @@ class MainModuleQuickSetupAWS(ABCMainModule):
         return "quick_setup_aws"
 
     @property
-    def permission(self) -> None | str:
-        return None
-
-    @property
     def description(self) -> str:
         return _("Configure Amazon Web Service (AWS) monitoring in Checkmk")
 
@@ -394,26 +402,18 @@ class MainModuleQuickSetupAWS(ABCMainModule):
     def sort_index(self) -> int:
         return 10
 
-    @property
-    def is_show_more(self) -> bool:
-        return False
-
     @classmethod
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["aws"]
 
 
-class MainModuleQuickSetupAzure(ABCMainModule):
+class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
     def mode_or_url(self) -> str:
         return mode_url(
             ModeEditConfigurationBundles.name(),
             varname=RuleGroup.SpecialAgents("azure"),
         )
-
-    @property
-    def topic(self) -> MainModuleTopic:
-        return MainModuleTopicQuickSetup
 
     @property
     def title(self) -> str:
@@ -424,10 +424,6 @@ class MainModuleQuickSetupAzure(ABCMainModule):
         return "quick_setup_azure"
 
     @property
-    def permission(self) -> None | str:
-        return None
-
-    @property
     def description(self) -> str:
         return _("Configure Microsoft Azure monitoring in Checkmk")
 
@@ -435,13 +431,38 @@ class MainModuleQuickSetupAzure(ABCMainModule):
     def sort_index(self) -> int:
         return 11
 
-    @property
-    def is_show_more(self) -> bool:
-        return False
-
     @classmethod
     def megamenu_search_terms(cls) -> Sequence[str]:
         return ["azure"]
+
+
+class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("gcp"),
+        )
+
+    @property
+    def title(self) -> str:
+        return _("Google Cloud Platform (GCP)")
+
+    @property
+    def icon(self) -> Icon:
+        return "quick_setup_gcp"
+
+    @property
+    def description(self) -> str:
+        return _("Configure Google Cloud Platform (GCP) monitoring in Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 12
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["gcp"]
 
 
 class EditDCDConnection(Protocol):

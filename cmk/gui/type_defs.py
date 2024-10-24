@@ -154,6 +154,11 @@ class LastLoginInfo(TypedDict, total=False):
     remote_address: str
 
 
+class DisableNotificationsAttribute(TypedDict):
+    disable: NotRequired[Literal[True]]
+    timerange: NotRequired[tuple[float, float]]
+
+
 class UserDetails(TypedDict):
     alias: str
     connector: NotRequired[str | None]

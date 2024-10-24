@@ -14,6 +14,7 @@ from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, P
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.type_defs import DisableNotificationsAttribute
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -48,11 +49,6 @@ class SyncAttribute(TypedDict, total=False):
 class GroupsToContactGroups(TypedDict, total=False):
     nested: Literal[True]
     other_connections: list[str]
-
-
-class DisableNotificationsAttribute(TypedDict):
-    disable: NotRequired[Literal[True]]
-    timerange: NotRequired[tuple[float, float]]
 
 
 DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]

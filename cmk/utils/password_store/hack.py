@@ -74,6 +74,7 @@ HACK_AGENTS = {
     "smb_share": True,
     "jira": True,
     "salesforce": False,  # needs no secret
+    "ipmi_sensors": True,
 }
 
 

@@ -37,7 +37,7 @@ echo >&2 "run-in-docker.sh checkpoint 1"
 echo >&2 "run-in-docker.sh checkpoint 2 $IMAGE_ID"
 
 # TODO: Remove all operations on *.cid files as soon as we finished debugging
-find "${CHECKOUT_ROOT}" -maxdepth 1 -name "*.cid" -delete
+find "${CHECKOUT_ROOT}" -name "*.cid" -delete
 
 IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
 
@@ -123,8 +123,8 @@ fi
 echo >&2 "run-in-docker.sh checkpoint 4"
 
 function cleanup {
-    echo >&2 "run-in-docker.sh checkpoint 5 $(cat "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid" 2>/dev/null || echo CID_FILE_NOT_FOUND)"
-    rm -f "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid"
+    echo >&2 "run-in-docker.sh checkpoint 5 $(cat "$CONTAINER_NAME.cid" || echo CID_FILE_NOT_FOUND)"
+    rm -f "$CONTAINER_NAME.cid"
 
     # FIXME: eventually created image is not being cleaned up
 

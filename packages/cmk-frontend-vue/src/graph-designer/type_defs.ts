@@ -92,7 +92,7 @@ export interface Transformation {
 }
 export interface GraphOptions {
   unit: "first_entry_with_unit" | GraphOptionUnitCustom;
-  vertical_range: "auto" | GraphOptionVerticalRangeExplicit;
+  explicit_vertical_range: "auto" | GraphOptionExplicitVerticalRangeBoundaries;
   omit_zero_metrics: boolean;
 }
 export interface GraphOptionUnitCustom {
@@ -107,7 +107,7 @@ export interface GraphOptionUnitCustomPrecision {
   type: "auto" | "strict";
   digits: number;
 }
-export interface GraphOptionVerticalRangeExplicit {
+export interface GraphOptionExplicitVerticalRangeBoundaries {
   lower: number;
   upper: number;
 }
@@ -169,10 +169,10 @@ export interface I18NGraphOptions {
   unit_custom_precision_type_auto: string;
   unit_custom_precision_type_strict: string;
   unit_custom_precision_digits: string;
-  vertical_range_auto: string;
-  vertical_range_explicit: string;
-  vertical_range_explicit_lower: string;
-  vertical_range_explicit_upper: string;
+  explicit_vertical_range_auto: string;
+  explicit_vertical_range_explicit: string;
+  explicit_vertical_range_explicit_lower: string;
+  explicit_vertical_range_explicit_upper: string;
 }
 export interface I18NTopics {
   metric: string;
@@ -183,7 +183,7 @@ export interface I18NTopics {
   transformation: string;
   graph_operations: string;
   unit: string;
-  vertical_range: string;
+  explicit_vertical_range: string;
   omit_zero_metrics: string;
   graph_options: string;
 }

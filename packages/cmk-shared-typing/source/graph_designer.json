@@ -310,7 +310,7 @@
             },
             "required": ["notation", "precision"]
         },
-        "graph_option_vertical_range_explicit": {
+        "graph_option_explicit_vertical_range_boundaries": {
             "type": "object",
             "properties": {
                 "lower": { "type": "number" },
@@ -327,17 +327,17 @@
                         { "$ref": "#/$defs/graph_option_unit_custom" }
                     ]
                 },
-                "vertical_range": {
+                "explicit_vertical_range": {
                     "anyOf": [
                         { "type": "string", "enum": ["auto"] },
                         {
-                            "$ref": "#/$defs/graph_option_vertical_range_explicit"
+                            "$ref": "#/$defs/graph_option_explicit_vertical_range_boundaries"
                         }
                     ]
                 },
                 "omit_zero_metrics": { "type": "boolean" }
             },
-            "required": ["unit", "vertical_range", "omit_zero_metrics"]
+            "required": ["unit", "explicit_vertical_range", "omit_zero_metrics"]
         },
         "i18n_graph_lines": {
             "type": "object",
@@ -443,10 +443,10 @@
                     "type": "string"
                 },
                 "unit_custom_precision_digits": { "type": "string" },
-                "vertical_range_auto": { "type": "string" },
-                "vertical_range_explicit": { "type": "string" },
-                "vertical_range_explicit_lower": { "type": "string" },
-                "vertical_range_explicit_upper": { "type": "string" }
+                "explicit_vertical_range_auto": { "type": "string" },
+                "explicit_vertical_range_explicit": { "type": "string" },
+                "explicit_vertical_range_explicit_lower": { "type": "string" },
+                "explicit_vertical_range_explicit_upper": { "type": "string" }
             },
             "required": [
                 "unit_first_entry_with_unit",
@@ -464,10 +464,10 @@
                 "unit_custom_precision_type_auto",
                 "unit_custom_precision_type_strict",
                 "unit_custom_precision_digits",
-                "vertical_range_auto",
-                "vertical_range_explicit",
-                "vertical_range_explicit_lower",
-                "vertical_range_explicit_upper"
+                "explicit_vertical_range_auto",
+                "explicit_vertical_range_explicit",
+                "explicit_vertical_range_explicit_lower",
+                "explicit_vertical_range_explicit_upper"
             ]
         },
         "i18n_topics": {
@@ -481,7 +481,7 @@
                 "transformation": { "type": "string" },
                 "graph_operations": { "type": "string" },
                 "unit": { "type": "string" },
-                "vertical_range": { "type": "string" },
+                "explicit_vertical_range": { "type": "string" },
                 "omit_zero_metrics": { "type": "string" },
                 "graph_options": { "type": "string" }
             },
@@ -494,7 +494,7 @@
                 "transformation",
                 "graph_operations",
                 "unit",
-                "vertical_range",
+                "explicit_vertical_range",
                 "omit_zero_metrics",
                 "graph_options"
             ]

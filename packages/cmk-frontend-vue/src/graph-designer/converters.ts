@@ -7,7 +7,7 @@
 import {
   type GraphOptionUnitCustom,
   type GraphOptionUnitCustomNotation,
-  type GraphOptionVerticalRangeExplicit
+  type GraphOptionExplicitVerticalRangeBoundaries
 } from '@/graph-designer/type_defs'
 
 function convertToNotation(notation: GraphOptionUnitCustomNotation) {
@@ -35,12 +35,14 @@ export function convertToUnit(unit: 'first_entry_with_unit' | GraphOptionUnitCus
   }
 }
 
-export function convertToVerticalRange(verticalRange: 'auto' | GraphOptionVerticalRangeExplicit) {
+export function convertToExplicitVerticalRange(
+  explicitVerticalRange: 'auto' | GraphOptionExplicitVerticalRangeBoundaries
+) {
   //  [ "auto", null ]
   //  [ "explicit", { "lower": <NUMBER>, "upper": <NUMBER> } ]
-  if (verticalRange === 'auto') {
+  if (explicitVerticalRange === 'auto') {
     return ['auto', null]
   } else {
-    return ['explicit', { lower: verticalRange.lower, upper: verticalRange.upper }]
+    return ['explicit', { lower: explicitVerticalRange.lower, upper: explicitVerticalRange.upper }]
   }
 }

@@ -24,7 +24,7 @@ import {
   makeString
 } from '@/graph-designer/specs'
 import { computed, ref, type Ref } from 'vue'
-import { convertToUnit, convertToVerticalRange } from '@/graph-designer/converters'
+import { convertToUnit, convertToExplicitVerticalRange } from '@/graph-designer/converters'
 import {
   type GraphLine,
   type GraphLines,
@@ -190,31 +190,37 @@ const specUnit = makeCascadingSingleChoice('', [
 ])
 const backendValidationUnit: ValidationMessages = []
 
-const dataVerticalRange = computed(() => {
-  return convertToVerticalRange(props.graph_options.vertical_range)
+const dataExplicitVerticalRange = computed(() => {
+  return convertToExplicitVerticalRange(props.graph_options.explicit_vertical_range)
 })
-const specVerticalRange = makeCascadingSingleChoice('', [
+const specExplicitVerticalRange = makeCascadingSingleChoice('', [
   {
     name: 'auto',
-    title: props.i18n.graph_options.vertical_range_auto,
+    title: props.i18n.graph_options.explicit_vertical_range_auto,
     parameter_form: makeFixedValue(),
     default_value: null
   },
   {
     name: 'explicit',
-    title: props.i18n.graph_options.vertical_range_explicit,
+    title: props.i18n.graph_options.explicit_vertical_range_explicit,
     parameter_form: makeDictionary('', [
       {
         ident: 'lower',
         required: true,
-        parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_lower, ''),
+        parameter_form: makeFloat(
+          props.i18n.graph_options.explicit_vertical_range_explicit_lower,
+          ''
+        ),
         default_value: 0.0,
         group: null
       },
       {
         ident: 'upper',
         required: true,
-        parameter_form: makeFloat(props.i18n.graph_options.vertical_range_explicit_upper, ''),
+        parameter_form: makeFloat(
+          props.i18n.graph_options.explicit_vertical_range_explicit_upper,
+          ''
+        ),
         default_value: 1.0,
         group: null
       }
@@ -222,7 +228,7 @@ const specVerticalRange = makeCascadingSingleChoice('', [
     default_value: { lower: 0.0, upper: 1.0 }
   }
 ])
-const backendValidationVerticalRange: ValidationMessages = []
+const backendValidationExplicitVerticalRange: ValidationMessages = []
 
 const dataOmitZeroMetrics = computed(() => {
   return props.graph_options.omit_zero_metrics
@@ -253,7 +259,7 @@ const topics: Topic[] = [
     title: props.i18n.topics.graph_options,
     elements: [
       { ident: 'unit', title: props.i18n.topics.unit },
-      { ident: 'vertical_range', title: props.i18n.topics.vertical_range },
+      { ident: 'explicit_vertical_range', title: props.i18n.topics.explicit_vertical_range },
       {
         ident: 'omit_zero_metrics',
         title: props.i18n.topics.omit_zero_metrics
@@ -945,12 +951,12 @@ function dragging(event: DragEvent) {
         />
       </div>
     </template>
-    <template #vertical_range>
+    <template #explicit_vertical_range>
       <div>
         <FormEdit
-          v-model:data="dataVerticalRange"
-          :spec="specVerticalRange"
-          :backend-validation="backendValidationVerticalRange"
+          v-model:data="dataExplicitVerticalRange"
+          :spec="specExplicitVerticalRange"
+          :backend-validation="backendValidationExplicitVerticalRange"
         />
       </div>
     </template>

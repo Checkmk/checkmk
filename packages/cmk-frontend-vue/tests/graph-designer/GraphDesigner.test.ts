@@ -12,7 +12,7 @@ test('Render GraphDesignerApp', () => {
       graph_lines: [],
       graph_options: {
         unit: 'first_entry_with_unit',
-        vertical_range: 'auto',
+        explicit_vertical_range: 'auto',
         omit_zero_metrics: true
       },
       i18n: {
@@ -69,10 +69,10 @@ test('Render GraphDesignerApp', () => {
           unit_custom_precision_type_auto: 'unit_custom_precision_type_auto',
           unit_custom_precision_type_strict: 'unit_custom_precision_type_strict',
           unit_custom_precision_digits: 'unit_custom_precision_digits',
-          vertical_range_auto: 'vertical_range_auto',
-          vertical_range_explicit: 'vertical_range_explicit',
-          vertical_range_explicit_lower: 'vertical_range_explicit_lower',
-          vertical_range_explicit_upper: 'vertical_range_explicit_upper'
+          explicit_vertical_range_auto: 'explicit_vertical_range_auto',
+          explicit_vertical_range_explicit: 'explicit_vertical_range_explicit',
+          explicit_vertical_range_explicit_lower: 'explicit_vertical_range_explicit_lower',
+          explicit_vertical_range_explicit_upper: 'explicit_vertical_range_explicit_upper'
         },
         topics: {
           metric: 'metric',
@@ -83,7 +83,7 @@ test('Render GraphDesignerApp', () => {
           transformation: 'transformation',
           graph_operations: 'graph_operations',
           unit: 'unit',
-          vertical_range: 'vertical_range',
+          explicit_vertical_range: 'explicit_vertical_range',
           omit_zero_metrics: 'omit_zero_metrics',
           graph_options: 'graph_options'
         }

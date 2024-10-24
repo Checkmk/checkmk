@@ -24,8 +24,6 @@ set -e
 
 CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 
-echo >&2 "run-in-docker.sh checkpoint 1"
-
 : "${IMAGE_ID:="$(
     if [ -n "${IMAGE_ALIAS}" ]; then
         "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
@@ -34,11 +32,7 @@ echo >&2 "run-in-docker.sh checkpoint 1"
     fi
 )"}"
 
-echo >&2 "run-in-docker.sh checkpoint 2 $IMAGE_ID"
-
 IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
-
-echo >&2 "run-in-docker.sh checkpoint 3 $IMAGE_VERSION"
 
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
@@ -117,25 +111,8 @@ if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
 
-echo >&2 "run-in-docker.sh checkpoint 4"
-
-function cleanup {
-    echo >&2 "run-in-docker.sh checkpoint 5 $(cat "$CONTAINER_NAME.cid" || echo CID_FILE_NOT_FOUND)"
-    rm -f "$CONTAINER_NAME.cid"
-
-    # FIXME: eventually created image is not being cleaned up
-
-    ROOT_ARTIFACTS=$(find . -user root)
-    if [ -n "${ROOT_ARTIFACTS}" ]; then
-        echo >&2 "WARNING: there are files/directories owned by root:"
-        echo >&2 "${ROOT_ARTIFACTS}"
-    fi
-}
-trap cleanup EXIT
-
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
-    --cidfile "$CONTAINER_NAME.cid" \
     --rm \
     --name $CONTAINER_NAME \
     ${TERMINAL_FLAG} \
@@ -168,3 +145,11 @@ docker run -a stdout -a stderr \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"
+
+# FIXME: eventually created image is not being cleaned up
+
+ROOT_ARTIFACTS=$(find . -user root)
+if [ -n "${ROOT_ARTIFACTS}" ]; then
+    echo >&2 "WARNING: there are files/directories owned by root:"
+    echo >&2 "${ROOT_ARTIFACTS}"
+fi

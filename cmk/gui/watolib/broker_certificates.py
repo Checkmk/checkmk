@@ -31,6 +31,7 @@ from cmk.messaging import (
     BrokerCertificates,
     ca_key_file,
     cacert_file,
+    clear_brokers_certs_cache,
     multisite_cert_file,
     site_cert_file,
     site_key_file,
@@ -188,5 +189,6 @@ class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
         store.save_bytes_to_file(site_key_file(paths.omd_root), api_request.key)
         cacert_file(paths.omd_root).unlink(missing_ok=True)
         ca_key_file(paths.omd_root).unlink(missing_ok=True)
+        clear_brokers_certs_cache()
 
         return True

@@ -88,6 +88,23 @@ def service_url_from_context(context: PluginNotificationContext) -> str:
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
+def graph_url_from_context(context: PluginNotificationContext) -> str:
+    base = _base_url(context)
+    view_url = base + "/check_mk/view.py?"
+    if context["WHAT"] == "HOST":
+        return (
+            view_url + f'siteopt={context["OMD_SITE"]}&'
+            f'view_name=host_graphs&'
+            f'host={context["HOSTNAME"]}'
+        )
+    return (
+        view_url + f'siteopt={context["OMD_SITE"]}&'
+        f'view_name=service_graphs&'
+        f'host={context["HOSTNAME"]}&'
+        f'service={context["SERVICEDESC"]}'
+    )
+
+
 def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",

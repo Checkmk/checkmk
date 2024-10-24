@@ -225,14 +225,14 @@ def validate_stage(
 
     errors.stage_errors.extend(
         _stage_validate_all_form_spec_keys_existing(
-            stages_raw_formspecs[-1], quick_setup_formspec_map
+            stages_raw_formspecs[stage_index], quick_setup_formspec_map
         )
     )
     if errors.exist():
         return errors
 
     errors.formspec_errors = _form_spec_validate(
-        stages_raw_formspecs[-1],
+        stages_raw_formspecs[stage_index],
         quick_setup_formspec_map,
     )
     if errors.exist():
@@ -242,7 +242,7 @@ def validate_stage(
         errors.stage_errors.extend(
             custom_validator(
                 quick_setup.id,
-                StageIndex(len(stages_raw_formspecs) - 1),
+                stage_index,
                 _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             )
         )
@@ -255,8 +255,8 @@ def validate_stages(
 ) -> Sequence[Errors] | None:
     return [
         errors
-        for stage_index, raw_formspec in enumerate(stages_raw_formspecs)
-        if (errors := validate_stage(quick_setup, [raw_formspec], StageIndex(stage_index)))
+        for stage_index in range(len(stages_raw_formspecs))
+        if (errors := validate_stage(quick_setup, stages_raw_formspecs, StageIndex(stage_index)))
     ] or None
 
 

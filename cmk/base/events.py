@@ -424,8 +424,7 @@ def complete_raw_context(
             enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
         enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_enriched_context_with_labels(enriched_context)
-        _update_enriched_context_with_tags(enriched_context)
+        _update_enriched_context_from_notify_host_file(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -445,7 +444,7 @@ def complete_raw_context(
     return enriched_context
 
 
-def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
+def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEventContext) -> None:
     notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
@@ -457,9 +456,6 @@ def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext)
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
 
-
-def _update_enriched_context_with_tags(enriched_context: EnrichedEventContext) -> None:
-    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.tags.items():
         enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]
 
@@ -615,7 +611,7 @@ def event_match_hosttags(
     if required_tags:
         context_str = "HOSTTAG_"
         host_tags = {
-            TagGroupID(variable.replace(context_str, "").lower()): TagID(str(value))
+            TagGroupID(variable.replace(context_str, "")): TagID(str(value))
             for variable, value in context.items()
             if variable.startswith(context_str)
         }

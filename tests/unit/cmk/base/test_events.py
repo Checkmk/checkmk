@@ -17,7 +17,7 @@ from cmk.events.event_context import EnrichedEventContext, EventContext
 
 import cmk.base.events
 from cmk.base.events import (
-    _update_enriched_context_with_labels,
+    _update_enriched_context_from_notify_host_file,
     add_to_event_context,
     event_match_hosttags,
     raw_context_from_string,
@@ -262,6 +262,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTLABEL_rule": "label",
                 "HOSTLABEL_explicit": "label",
                 "HOSTLABEL_cmk/site": "heute",
+                "HOSTTAG_criticality": "prod",
                 "SERVICELABEL_dicovered": "label",
                 "SERVICELABEL_rule": "label",
             },
@@ -285,7 +286,8 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
                 tags={
-                    TagGroupID("criticality"): TagID("prod"),
+                    TagGroupID("networking"): TagID("wan"),
+                    TagGroupID("criticality"): TagID("critical"),
                 },
             ),
             {
@@ -299,12 +301,14 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTLABEL_rule": "label",
                 "HOSTLABEL_explicit": "label",
                 "HOSTLABEL_cmk/site": "heute",
+                "HOSTTAG_networking": "wan",
+                "HOSTTAG_criticality": "critical",
             },
             id="host notification",
         ),
     ],
 )
-def test_update_enriched_contect_with_labels(
+def test_update_enriched_context_from_host_file(
     enriched_context: EnrichedEventContext,
     config: NotificationHostConfig,
     expected: EventContext,
@@ -315,7 +319,7 @@ def test_update_enriched_contect_with_labels(
         "read_notify_host_file",
         lambda *args, **kw: config,
     )
-    _update_enriched_context_with_labels(enriched_context)
+    _update_enriched_context_from_notify_host_file(enriched_context)
     assert enriched_context == expected
 
 
@@ -325,7 +329,7 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
-                "HOSTTAG_CRITICALITY": "prod",
+                "HOSTTAG_criticality": "prod",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -351,9 +355,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
-                "HOSTTAG_CRITICALITY": "prod",
-                "HOSTTAG_HURZ": "blub",
-                "HOSTTAG_HANS": "wurst",
+                "HOSTTAG_criticality": "prod",
+                "HOSTTAG_hurz": "blub",
+                "HOSTTAG_hans": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -385,9 +389,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
-                "HOSTTAG_CRITICALITY": "prod",
-                "HOSTTAG_HURZ": "blub",
-                "HOSTTAG_HANS": "wurst",
+                "HOSTTAG_criticality": "prod",
+                "HOSTTAG_hurz": "blub",
+                "HOSTTAG_hans": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},

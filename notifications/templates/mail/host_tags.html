@@ -38,7 +38,8 @@
                 padding: 10px 10px 30px 0;
             "
         >
-            {% for tag_with_id in data.HOSTTAGS.split(' ') %}
+            {% for key, value in data.items() %}
+                {% if key.startswith('HOSTTAG_')%}
                 <span
                     style="
                         margin: 0px 5px 10px 0;
@@ -53,8 +54,9 @@
                         border: 1px solid #ccc;
                     "
                 >
-                    {{ tag_with_id }}
+                    {{ key[8:] }}:{{ value }}
                 </span>
+                {% endif %}
             {% endfor %}
         </td>
     </tr>

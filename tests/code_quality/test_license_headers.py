@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from tests.testlib.repo import repo_path
 
-LOGGER = logging.getLogger()
+logger = logging.getLogger()
 
 GPL = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
@@ -116,9 +116,8 @@ def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=t
     elif rel_path.startswith("notifications/"):
         if not GPL_HEADER_NOTIFICATION.match(get_file_header(abs_path, length=10)):
             yield "gpl header with notification not matching", rel_path
-    else:
-        if not GPL_HEADER.match(get_file_header(abs_path, length=4)):
-            yield "gpl header not matching", rel_path
+    elif not GPL_HEADER.match(get_file_header(abs_path, length=4)):
+        yield "gpl header not matching", rel_path
 
 
 def test_license_headers(python_files: Sequence[str]) -> None:

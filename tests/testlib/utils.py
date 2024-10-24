@@ -25,7 +25,7 @@ from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.utils.version import Edition
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class UtilCalledProcessError(subprocess.CalledProcessError):
@@ -155,7 +155,7 @@ def spawn_expect_process(
     2: unexpected timeout
     3: any other exception
     """
-    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    logger.info("Executing: %s", subprocess.list2cmdline(args))
     with open(logfile_path, "w") as logfile:
         p = pexpect.spawn(" ".join(args), encoding="utf-8", logfile=logfile)
         try:
@@ -171,7 +171,7 @@ def spawn_expect_process(
                                 break_long_words=break_long_words,
                             )
                         )
-                    LOGGER.info("Expecting: '%s'", dialog.expect)
+                    logger.info("Expecting: '%s'", dialog.expect)
                     rc = p.expect(
                         [
                             dialog.expect,  # rc=0
@@ -182,7 +182,7 @@ def spawn_expect_process(
                     )
                     if rc == 0:
                         # msg found; sending input
-                        LOGGER.info(
+                        logger.info(
                             "%s; sending: %s",
                             (
                                 "Optional message found"
@@ -193,10 +193,10 @@ def spawn_expect_process(
                         )
                         p.send(dialog.send)
                     elif dialog.optional:
-                        LOGGER.info("Optional message not found; ignoring!")
+                        logger.info("Optional message not found; ignoring!")
                         break
                     else:
-                        LOGGER.error(
+                        logger.error(
                             "Required message not found. "
                             "The following has been found instead:\n"
                             "%s",
@@ -211,8 +211,8 @@ def spawn_expect_process(
             else:
                 rc = p.status
         except Exception as e:
-            LOGGER.exception(e)
-            LOGGER.debug(p)
+            logger.exception(e)
+            logger.debug(p)
             rc = 3
 
     assert isinstance(rc, int)
@@ -221,7 +221,7 @@ def spawn_expect_process(
 
 def run(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
     """Run a process and return a CompletedProcess object."""
-    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    logger.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
             args,
@@ -261,7 +261,7 @@ def execute(  # type: ignore[no-untyped-def]
     kwargs.setdefault("encoding", "utf-8")
     cmd = sudo_cmd + (su_cmd + ["-c", shlex.quote(shlex.join(cmd))] if substitute_user else cmd)
     cmd_txt = " ".join(cmd)
-    LOGGER.info("Executing: %s", cmd_txt)
+    logger.info("Executing: %s", cmd_txt)
     kwargs["shell"] = kwargs.get("shell", True)
     return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
 
@@ -369,7 +369,7 @@ def get_services_with_status(
         if host_data[service].state == service_status and service not in skipped_services:
             services_list.add(service)
 
-    LOGGER.debug(
+    logger.debug(
         "%s service(s) found in state %s:\n%s",
         len(services_list),
         service_status,
@@ -391,12 +391,12 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
 def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[str, list[str]]:
     """Parse file(s) for a given pattern."""
     pattern_obj = re.compile(pattern, re.IGNORECASE if ignore_case else 0)
-    LOGGER.info("Parsing logs for '%s' in %s", pattern, pathname)
+    logger.info("Parsing logs for '%s' in %s", pattern, pathname)
     match_dict: dict[str, list[str]] = {}
     for file_path in glob.glob(str(pathname), recursive=True):
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
                 if pattern_obj.search(line):
-                    LOGGER.info("Match found in %s: %s", file_path, line.strip())
+                    logger.info("Match found in %s: %s", file_path, line.strip())
                     match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict

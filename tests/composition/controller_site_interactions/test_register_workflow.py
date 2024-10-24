@@ -16,11 +16,10 @@ from tests.testlib.pytest_helpers.marks import (
     skip_if_not_containerized,
 )
 from tests.testlib.site import Site
+from tests.testlib.utils import logger
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.hostaddress import HostName
-
-from ..utils import LOGGER
 
 
 def _test_register_workflow(
@@ -35,7 +34,7 @@ def _test_register_workflow(
 
     register_controller(agent_ctl, site, hostname)
 
-    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    logger.info("Waiting for controller to open TCP socket or push data")
     wait_until_host_receives_data(site, hostname)
 
     site.openapi.discover_services_and_wait_for_completion(hostname)

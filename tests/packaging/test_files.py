@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-LOGGER = logging.getLogger()
+logger = logging.getLogger()
 
 
 def _get_omd_version(cmk_version: str, package_path: str) -> str:
@@ -177,10 +177,10 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     else:
         raise NotImplementedError()
 
-    LOGGER.info("Testing %s", package_path)
+    logger.info("Testing %s", package_path)
 
     omd_version = _get_omd_version(cmk_version, package_path)
-    LOGGER.info("Checking OMD version: %s", omd_version)
+    logger.info("Checking OMD version: %s", omd_version)
 
     for path in paths:
         is_allowed = any(

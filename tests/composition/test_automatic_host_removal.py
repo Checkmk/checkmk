@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
-from tests.testlib.utils import wait_until
-
-from .utils import LOGGER
+from tests.testlib.utils import logger, wait_until
 
 
 @skip_if_saas_edition
@@ -33,7 +31,7 @@ def test_automatic_host_removal(
             "value"
         ]
 
-    LOGGER.info("Waiting for hosts to be removed")
+    logger.info("Waiting for hosts to be removed")
     wait_until(
         _no_hosts_exist,
         timeout=150,

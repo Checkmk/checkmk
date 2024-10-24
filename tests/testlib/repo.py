@@ -13,7 +13,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Callable, Iterator
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def repo_path() -> Path:
@@ -114,7 +114,7 @@ def current_base_branch_name() -> str:
             if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
                 return head[7:]
 
-    LOGGER.warning("Could not determine base branch, using %s", branch_name)
+    logger.warning("Could not determine base branch, using %s", branch_name)
     return branch_name
 
 

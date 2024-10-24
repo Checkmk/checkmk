@@ -14,7 +14,7 @@ from tests.testlib.repo import repo_path
 
 from ..conftest import ChangedFiles
 
-LOGGER = logging.getLogger()
+logger = logging.getLogger()
 
 check_paths = [
     "bin",
@@ -94,6 +94,6 @@ def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
                             nr + 1,
                         )
             except UnicodeDecodeError:
-                LOGGER.warning("Could not read %r due to UnicodeDecodeError", file_path)
+                logger.warning("Could not read %r due to UnicodeDecodeError", file_path)
 
     assert scanned > 0

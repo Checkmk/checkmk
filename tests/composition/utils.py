@@ -13,8 +13,8 @@ from tests.testlib.site import Site
 
 from tests.composition.constants import TEST_HOST_1
 
-LOGGER = logging.getLogger("composition-tests")
-LOGGER.setLevel(logging.INFO)
+logger = logging.getLogger("composition-tests")
+logger.setLevel(logging.INFO)
 
 
 def get_package_extension() -> str:

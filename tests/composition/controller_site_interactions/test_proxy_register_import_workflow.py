@@ -12,11 +12,9 @@ from tests.testlib.agent import (
 )
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
-from tests.testlib.utils import run
+from tests.testlib.utils import logger, run
 
 from cmk.utils.hostaddress import HostName
-
-from ..utils import LOGGER
 
 
 @skip_if_not_containerized
@@ -56,7 +54,7 @@ def test_proxy_register_import_workflow(
         check=True,
     )
 
-    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    logger.info("Waiting for controller to open TCP socket or push data")
     wait_until_host_receives_data(central_site, hostname)
 
     central_site.openapi.discover_services_and_wait_for_completion(hostname)

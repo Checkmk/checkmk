@@ -111,6 +111,16 @@ if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
 
+function cleanup {
+    # FIXME: eventually created image is not being cleaned up
+    ROOT_ARTIFACTS=$(find . -user root)
+    if [ -n "${ROOT_ARTIFACTS}" ]; then
+        echo >&2 "WARNING: there are files/directories owned by root:"
+        echo >&2 "${ROOT_ARTIFACTS}"
+    fi
+}
+trap cleanup EXIT
+
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
     --rm \
@@ -145,11 +155,3 @@ docker run -a stdout -a stderr \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"
-
-# FIXME: eventually created image is not being cleaned up
-
-ROOT_ARTIFACTS=$(find . -user root)
-if [ -n "${ROOT_ARTIFACTS}" ]; then
-    echo >&2 "WARNING: there are files/directories owned by root:"
-    echo >&2 "${ROOT_ARTIFACTS}"
-fi

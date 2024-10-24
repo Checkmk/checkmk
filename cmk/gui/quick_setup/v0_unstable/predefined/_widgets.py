@@ -12,16 +12,26 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
+    QSSiteSelection,
     UniqueBundleIDStr,
     UniqueFormSpecIDStr,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
+from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.rulesets.v1 import Help, Message, Title
-from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String, validators
-from cmk.rulesets.v1.form_specs._base import DefaultValue
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    FieldSize,
+    InputHint,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    validators,
+)
 
 
 def unique_id_formspec_wrapper(
@@ -114,6 +124,38 @@ def host_name_and_host_path_formspec_wrapper(
             elements={
                 QSHostName: _host_name_dict_element(prefill_template=host_prefill_template),
                 QSHostPath: _host_path_dict_element(),
+            },
+            layout=DictionaryLayout.two_columns,
+        ),
+    )
+
+
+def site_formspec_wrapper() -> FormSpecWrapper:
+    site_default_value = site_attribute_default_value()
+    return FormSpecWrapper(
+        id=FormSpecId("site"),
+        form_spec=DictionaryExtended(
+            elements={
+                QSSiteSelection: DictElement(
+                    parameter_form=SingleChoice(
+                        elements=[
+                            SingleChoiceElement(
+                                name=site_id,
+                                title=Title(  # pylint: disable=localization-of-non-literal-string
+                                    title
+                                ),
+                            )
+                            for site_id, title in get_configured_site_choices()
+                        ],
+                        title=Title("Site selection"),
+                        prefill=(
+                            DefaultValue(site_default_value)
+                            if site_default_value
+                            else InputHint(Title("Please choose"))
+                        ),
+                    ),
+                    required=True,
+                )
             },
             layout=DictionaryLayout.two_columns,
         ),

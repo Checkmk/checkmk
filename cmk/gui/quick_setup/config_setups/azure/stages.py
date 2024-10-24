@@ -11,7 +11,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
-from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -39,20 +38,12 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
 from cmk.plugins.azure.rulesets import (  # pylint: disable=cmk-module-layer-violation
     azure,
 )
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
-    DictElement,
-    Dictionary,
-    InputHint,
-    SingleChoice,
-    SingleChoiceElement,
-)
+from cmk.rulesets.v1.form_specs import DefaultValue, Dictionary
 
 
 def configure_authentication() -> QuickSetupStage:
@@ -118,7 +109,6 @@ def configure_authentication() -> QuickSetupStage:
 
 
 def configure_host_and_authority() -> QuickSetupStage:
-    site_default_value = site_attribute_default_value()
     return QuickSetupStage(
         title=_("Configure host"),
         sub_title=_(
@@ -126,34 +116,7 @@ def configure_host_and_authority() -> QuickSetupStage:
         ),
         configure_components=[
             widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="azure"),
-            FormSpecWrapper(
-                id=FormSpecId("site"),
-                form_spec=DictionaryExtended(
-                    elements={
-                        QSSiteSelection: DictElement(
-                            parameter_form=SingleChoice(
-                                elements=[
-                                    SingleChoiceElement(
-                                        name=site_id,
-                                        title=Title(  # pylint: disable=localization-of-non-literal-string
-                                            title
-                                        ),
-                                    )
-                                    for site_id, title in get_configured_site_choices()
-                                ],
-                                title=Title("Site selection"),
-                                prefill=(
-                                    DefaultValue(site_default_value)
-                                    if site_default_value
-                                    else InputHint(Title("Please choose"))
-                                ),
-                            ),
-                            required=True,
-                        )
-                    },
-                    layout=DictionaryLayout.two_columns,
-                ),
-            ),
+            widgets.site_formspec_wrapper(),
         ],
         custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],

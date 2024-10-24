@@ -225,11 +225,6 @@ span.checkbox {
     font-weight: bold;
     word-wrap: break-word;
     white-space: normal;
-
-    > label {
-      display: flex;
-      flex-direction: row;
-    }
   }
 
   > .dictelement.indent:not(div[id*='DictGroup']) {

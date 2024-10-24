@@ -37,6 +37,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
@@ -398,7 +399,7 @@ def _create_core_config(
     config_warnings.initialize()
 
     _verify_non_duplicate_hosts(duplicates)
-    _verify_non_deprecated_checkgroups()
+    _verify_non_deprecated_checkgroups(plugins.check_plugins.values())
 
     # recompute and save passwords, to ensure consistency:
     passwords = config_cache.collect_passwords()
@@ -420,14 +421,12 @@ def _create_core_config(
     )
 
 
-def _verify_non_deprecated_checkgroups() -> None:
+def _verify_non_deprecated_checkgroups(check_plugins: Iterable[CheckPlugin]) -> None:
     """Verify that the user has no deprecated check groups configured."""
     # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an PluginName (good),
     # but config.checkgroup_parameters contains strings (todo)
     check_ruleset_names_with_plugin = {
-        str(plugin.check_ruleset_name)
-        for plugin in agent_based_register.iter_all_check_plugins()
-        if plugin.check_ruleset_name
+        str(plugin.check_ruleset_name) for plugin in check_plugins if plugin.check_ruleset_name
     }
 
     for checkgroup in config.checkgroup_parameters:

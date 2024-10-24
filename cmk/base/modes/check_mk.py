@@ -473,6 +473,8 @@ modes.register(
 def mode_list_checks() -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
+    plugins = agent_based_register.get_previously_loaded_plugins()
+
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
@@ -481,9 +483,7 @@ def mode_list_checks() -> None:
         ).items()
     }
 
-    all_checks: list[CheckPluginName | str] = [
-        p.name for p in agent_based_register.iter_all_check_plugins()
-    ]
+    all_checks: list[CheckPluginName | str] = list(plugins.check_plugins)
 
     all_checks.extend(
         "check_" + p.name for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()

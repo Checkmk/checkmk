@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -59,7 +59,6 @@ from cmk.checkengine.discovery._autodiscovery import (
     ServicesTableEntry,
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
-from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
@@ -1122,10 +1121,8 @@ def test__check_host_labels_changed() -> None:
 
 @pytest.mark.usefixtures("fix_register")
 def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
-    # This test doesn't test much:
-    #  1. It concentrates on implementation details and private functions.
-    #  2. Because it tests private functions, it also copy-pastes a lot of
-    #     production code!
+    # plugins have been loaded by the fixture. Better: load the ones we need for this test
+    plugins = agent_based_register.get_previously_loaded_plugins()
     config_cache = Scenario().apply(monkeypatch)
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
@@ -1143,8 +1140,12 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("kernel"), SectionName("uptime"))
+                    SectionName("kernel"): _as_plugin(
+                        plugins.agent_sections[SectionName("kernel")]
+                    ),
+                    SectionName("uptime"): _as_plugin(
+                        plugins.agent_sections[SectionName("uptime")]
+                    ),
                 },
             )
         ),
@@ -1165,66 +1166,20 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (
-                        SectionName("uptime"),
-                        SectionName("liebert_fans"),
-                        SectionName("mgmt_snmp_info"),
-                    )
+                    SectionName("uptime"): _as_plugin(
+                        plugins.agent_sections[SectionName("uptime")]
+                    ),
+                    SectionName("liebert_fans"): _as_plugin(
+                        plugins.snmp_sections[SectionName("liebert_fans")]
+                    ),
+                    SectionName("mgmt_snmp_info"): SectionPlugin(
+                        supersedes=set(),
+                        parsed_section_name=ParsedSectionName("mgmt_snmp_info"),
+                        parse_function=lambda x: x,
+                    ),
                 },
             )
         ),
-    }
-
-    preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
-    parsed_sections_of_interest = {
-        parsed_section_name
-        for plugin in preliminary_candidates
-        for parsed_section_name in plugin.sections
-    }
-
-    def __iter(
-        section_names: Iterable[ParsedSectionName],
-        providers: Mapping[HostKey, Provider],
-    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
-        for host_key, provider in providers.items():
-            # filter section names for sections that cannot be resolved
-            for section_name in (
-                section_name
-                for section_name in section_names
-                if provider.resolve(section_name) is not None
-            ):
-                yield host_key, section_name
-
-    resolved = tuple(__iter(parsed_sections_of_interest, providers))
-    assert _find_host_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.HOST
-        ),
-    ) == {
-        CheckPluginName("docker_container_status_uptime"),
-        CheckPluginName("if64"),
-        CheckPluginName("kernel"),
-        CheckPluginName("kernel_performance"),
-        CheckPluginName("kernel_util"),
-        CheckPluginName("uptime"),
-    }
-
-    assert _find_mgmt_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.MANAGEMENT
-        ),
-    ) == {
-        CheckPluginName("mgmt_docker_container_status_uptime"),
-        CheckPluginName("mgmt_if64"),
-        CheckPluginName("mgmt_liebert_fans"),
-        CheckPluginName("mgmt_uptime"),
     }
 
     assert find_plugins(

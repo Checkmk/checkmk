@@ -9,7 +9,7 @@ import enum
 import os
 import sys
 from argparse import ArgumentParser
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.ccc import debug
@@ -25,12 +25,12 @@ from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-viol
 )
 
 from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+    CheckPlugin,
     InventoryPlugin,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
     get_previously_loaded_plugins,
-    iter_all_check_plugins,
     iter_all_discovery_rulesets,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
@@ -282,7 +282,7 @@ def _check_if_referenced(
     return reference_errors
 
 
-def _validate_check_parameters_usage() -> Sequence[str]:
+def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Sequence[str]:
     discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {CheckParameters: entry_point_prefixes()[CheckParameters]},
@@ -291,7 +291,7 @@ def _validate_check_parameters_usage() -> Sequence[str]:
 
     referenced_ruleset_names = {
         str(plugin.check_ruleset_name)
-        for plugin in iter_all_check_plugins()
+        for plugin in check_plugins
         if plugin.check_ruleset_name is not None
     }
     return _check_if_referenced(discovered_check_parameters, referenced_ruleset_names)
@@ -351,7 +351,7 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
     # only for ruleset API v1
     errors: list[str] = []
 
-    errors.extend(_validate_check_parameters_usage())
+    errors.extend(_validate_check_parameters_usage(plugins.check_plugins.values()))
     errors.extend(_validate_discovery_parameters_usage())
     errors.extend(_validate_inventory_parameters_usage(plugins.inventory_plugins))
     errors.extend(_validate_active_check_usage())

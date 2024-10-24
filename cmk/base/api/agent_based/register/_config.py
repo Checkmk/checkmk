@@ -195,10 +195,6 @@ def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
     return registered_agent_sections.values()
 
 
-def iter_all_check_plugins() -> Iterable[CheckPlugin]:
-    return registered_check_plugins.values()
-
-
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
     return stored_rulesets.keys()
 

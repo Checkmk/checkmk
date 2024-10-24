@@ -1860,9 +1860,10 @@ class AutomationGetCheckInformation(Automation):
         man_page_path_map = man_pages.make_man_page_path_map(
             discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         plugin_infos: dict[str, dict[str, Any]] = {}
-        for plugin in agent_based_register.iter_all_check_plugins():
+        for plugin in plugins.check_plugins.values():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
                 {

@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
@@ -18,6 +19,10 @@ py_library(
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
+    deps = [
+        requirement("pika"),
+        requirement("pydantic"),
+    ],
 )
 
 py_wheel(

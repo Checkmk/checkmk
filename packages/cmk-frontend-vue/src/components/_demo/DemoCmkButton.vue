@@ -37,9 +37,9 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
     <dd>
       <CmkButtonSubmit>button</CmkButtonSubmit>
     </dd>
-    <dt><code>&lt;CmkButton spacing="small"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dt><code>&lt;CmkButton size="small"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
-      <CmkButton spacing="small">button</CmkButton>
+      <CmkButton size="small">button</CmkButton>
     </dd>
     <dt>
       <code

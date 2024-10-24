@@ -176,7 +176,7 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <CmkButton variant="secondary" @click.prevent="addElement">{{
+  <CmkButton variant="secondary" size="small" @click.prevent="addElement">{{
     spec.add_element_label
   }}</CmkButton>
   <FormValidation :validation="validation"></FormValidation>

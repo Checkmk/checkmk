@@ -54,7 +54,6 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
           })"
           :key="button.label"
           :aria-label="buttonConfig.ariaLabel"
-          spacing="small"
           :variant="
             button.variant === 'next' || button.variant === 'save' ? 'primary' : 'secondary'
           "

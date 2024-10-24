@@ -15,14 +15,14 @@ const buttonVariants = cva('', {
       transparent: 'button--variant-transparent',
       info: 'button--variant-info'
     },
-    spacing: {
-      small: 'button--spacing-small',
+    size: {
+      small: 'button--size-small',
       medium: ''
     }
   },
   defaultVariants: {
     variant: 'secondary',
-    spacing: 'medium'
+    size: 'medium'
   }
 })
 export type ButtonVariants = VariantProps<typeof buttonVariants>
@@ -30,7 +30,7 @@ export type ButtonVariants = VariantProps<typeof buttonVariants>
 interface ButtonProps {
   /** @property {ButtonVariants['variant']} variant - three different levels of importance */
   variant?: ButtonVariants['variant']
-  spacing?: ButtonVariants['spacing']
+  size?: ButtonVariants['size']
   type?: never // This should help finding problems with changes still using type. Can be removed after 2024-12-01
 }
 
@@ -38,14 +38,18 @@ defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button class="button" :class="buttonVariants({ variant, spacing })">
+  <button class="button" :class="buttonVariants({ variant, size })">
     <slot />
   </button>
 </template>
 
 <style scoped>
 .button {
+  display: inline-flex;
+  height: 30px;
   margin: 0;
+  padding: 0 8px;
+  align-items: center;
   letter-spacing: unset;
 }
 .button--variant-primary {
@@ -66,7 +70,7 @@ defineProps<ButtonProps>()
   background-color: var(--default-help-icon-bg-color);
   color: var(--white);
 }
-.button--spacing-small {
-  padding: 5px 8px;
+.button--size-small {
+  height: 25px;
 }
 </style>

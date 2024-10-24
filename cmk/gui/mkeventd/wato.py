@@ -52,6 +52,13 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.generators.host_address import HostAddressValidator
+from cmk.gui.form_specs.private import (
+    DictionaryExtended,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -102,7 +109,6 @@ from cmk.gui.valuespec import (
     Integer,
     IPAddress,
     IPNetwork,
-    IPv4Address,
     ListChoice,
     ListOf,
     ListOfStrings,
@@ -153,7 +159,10 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
-from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    CollectedHostAttributes,
+    make_action_link,
+)
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespec_groups import (
@@ -177,6 +186,11 @@ from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 import cmk.mkp_tool
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    String,
+)
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -5568,31 +5582,47 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
         return "mkeventd"
 
     @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            elements=[
-                (
-                    "facility",
-                    DropdownChoice(
-                        title=_("Syslog facility to use"),
-                        help=_(
+    def spec(self) -> Dictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> DictionaryExtended:
+        # TODO register CSE specific version
+        return DictionaryExtended(
+            title=Title("Create notification with the following parameters"),
+            elements={
+                "facility": DictElement(
+                    parameter_form=SingleChoiceExtended(
+                        title=Title("Syslog facility to use"),
+                        help_text=Help(
                             "The notifications will be converted into syslog messages with "
                             "the facility that you choose here. In the Event Console you can "
                             "later create a rule matching this facility."
                         ),
-                        choices=syslog_facilities,
+                        elements=[
+                            SingleChoiceElementExtended(
+                                title=Title("%s") % title,
+                                name=str(ident),
+                            )
+                            for ident, title in syslog_facilities
+                        ],
+                        type=str,
                     ),
                 ),
-                (
-                    "remote",
-                    IPv4Address(
-                        title=_("IP address of remote Event Console"),
-                        help=_(
+                "remote": DictElement(
+                    parameter_form=String(
+                        title=Title("IP address of remote Event Console"),
+                        help_text=Help(
                             "If you set this parameter then the notifications will be sent via "
                             "syslog/UDP (port 514) to a remote Event Console or syslog server."
                         ),
-                    ),
+                        custom_validate=[
+                            HostAddressValidator(
+                                allow_host_name=False,
+                                allow_empty=False,
+                            )
+                        ],
+                    )
                 ),
-            ],
+            },
         )

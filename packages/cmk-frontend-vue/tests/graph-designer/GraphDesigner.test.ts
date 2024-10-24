@@ -11,7 +11,7 @@ test('Render GraphDesignerApp', () => {
     props: {
       graph_lines: [],
       graph_options: {
-        unit: 'first_with_unit',
+        unit: 'first_entry_with_unit',
         vertical_range: 'auto',
         omit_zero_metrics: true
       },
@@ -53,7 +53,7 @@ test('Render GraphDesignerApp', () => {
           no_selected_graph_line: 'no_selected_graph_line'
         },
         graph_options: {
-          unit_first_with_unit: 'unit_first_with_unit',
+          unit_first_entry_with_unit: 'unit_first_entry_with_unit',
           unit_custom: 'unit_custom',
           unit_custom_notation: 'unit_custom_notation',
           unit_custom_notation_symbol: 'unit_custom_notation_symbol',

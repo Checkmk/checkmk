@@ -91,7 +91,7 @@ export interface Transformation {
   operand: GraphLine;
 }
 export interface GraphOptions {
-  unit: "first_with_unit" | GraphOptionUnitCustom;
+  unit: "first_entry_with_unit" | GraphOptionUnitCustom;
   vertical_range: "auto" | GraphOptionVerticalRangeExplicit;
   omit_zero_metrics: boolean;
 }
@@ -154,7 +154,7 @@ export interface I18NGraphOperations {
   no_selected_graph_line: string;
 }
 export interface I18NGraphOptions {
-  unit_first_with_unit: string;
+  unit_first_entry_with_unit: string;
   unit_custom: string;
   unit_custom_notation: string;
   unit_custom_notation_symbol: string;

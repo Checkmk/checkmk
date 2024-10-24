@@ -18,12 +18,12 @@ function convertToNotation(notation: GraphOptionUnitCustomNotation) {
   }
 }
 
-export function convertToUnit(unit: 'first_with_unit' | GraphOptionUnitCustom) {
-  // [ "first_with_unit", null ]
+export function convertToUnit(unit: 'first_entry_with_unit' | GraphOptionUnitCustom) {
+  // [ "first_entry_with_unit", null ]
   // [ "custom", { "notation": [ "<TYPE>", "<SYMBOL>" ], "precision": { "rounding_mode": "<MODE>", "digits": <INTEGER> } } ]
   // [ "custom", { "notation": [ "time", null ], "precision": { "rounding_mode": "<MODE>", "digits": <INTEGER> } } ]
-  if (unit === 'first_with_unit') {
-    return ['first_with_unit', null]
+  if (unit === 'first_entry_with_unit') {
+    return ['first_entry_with_unit', null]
   } else {
     return [
       'custom',

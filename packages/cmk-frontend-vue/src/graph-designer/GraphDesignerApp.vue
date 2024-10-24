@@ -80,8 +80,8 @@ const dataUnit = computed(() => {
 })
 const specUnit = makeCascadingSingleChoice('', [
   {
-    name: 'first_with_unit',
-    title: props.i18n.graph_options.unit_first_with_unit,
+    name: 'first_entry_with_unit',
+    title: props.i18n.graph_options.unit_first_entry_with_unit,
     parameter_form: makeFixedValue(),
     default_value: null
   },

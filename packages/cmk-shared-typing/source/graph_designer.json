@@ -323,7 +323,7 @@
             "properties": {
                 "unit": {
                     "anyOf": [
-                        { "type": "string", "enum": ["first_with_unit"] },
+                        { "type": "string", "enum": ["first_entry_with_unit"] },
                         { "$ref": "#/$defs/graph_option_unit_custom" }
                     ]
                 },
@@ -420,7 +420,7 @@
         "i18n_graph_options": {
             "type": "object",
             "properties": {
-                "unit_first_with_unit": { "type": "string" },
+                "unit_first_entry_with_unit": { "type": "string" },
                 "unit_custom": { "type": "string" },
                 "unit_custom_notation": { "type": "string" },
                 "unit_custom_notation_symbol": { "type": "string" },
@@ -449,7 +449,7 @@
                 "vertical_range_explicit_upper": { "type": "string" }
             },
             "required": [
-                "unit_first_with_unit",
+                "unit_first_entry_with_unit",
                 "unit_custom",
                 "unit_custom_notation",
                 "unit_custom_notation_symbol",

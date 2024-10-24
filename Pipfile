@@ -90,6 +90,7 @@ uvicorn = "*"
 webtest = "*"  # used by WSGI based tests
 
 [packages]
+markdown = "*"  # Should be in cmk-werks, see CMK-19819
 setuptools = "<=70.3.0"  # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
 setuptools-scm = "==4.1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python-active-directory

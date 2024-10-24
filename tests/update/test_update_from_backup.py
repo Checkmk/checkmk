@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from tests.testlib.agent_dumps import inject_dumps
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.repo import current_base_branch_name, qa_test_data_path
 from tests.testlib.site import Site, SiteFactory
@@ -15,7 +16,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
-from .conftest import BaseVersions, DUMPS_DIR, inject_dumps
+from .conftest import BaseVersions, DUMPS_DIR
 
 logger = logging.getLogger(__name__)
 

@@ -14,9 +14,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.testlib.agent_dumps import inject_dumps
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, restart_httpd, run
+from tests.testlib.utils import edition_from_env, restart_httpd
 from tests.testlib.version import CMKVersion, get_min_version
 
 from cmk.utils.version import Edition
@@ -217,23 +218,22 @@ def _get_site(  # pylint: disable=too-many-branches
                     )
                 else:
                     raise
-    else:
-        if update:
-            # non-interactive update as site-user
-            sf.update_as_site_user(site, target_version=version, min_version=min_version)
+    elif update:
+        # non-interactive update as site-user
+        sf.update_as_site_user(site, target_version=version, min_version=min_version)
 
-        else:  # use SiteFactory for non-interactive site creation
-            try:
-                site = sf.get_site("central")
-                restart_httpd()
-            except Exception as e:
-                if f"Version {version.version} could not be installed" in str(e):
-                    pytest.skip(
-                        f"Base-version {version.version} not available in "
-                        f'{os.environ.get("DISTRO")}'
-                    )
-                else:
-                    raise
+    else:  # use SiteFactory for non-interactive site creation
+        try:
+            site = sf.get_site("central")
+            restart_httpd()
+        except Exception as e:
+            if f"Version {version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
 
     return site
 
@@ -263,32 +263,3 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
     """Update the test site to the target version."""
     logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
     return _get_site(target_version, base_site=site, interactive=interactive_mode)
-
-
-def inject_dumps(site: Site, dumps_dir: Path) -> None:
-    # create dump folder in the test site
-    site_dumps_path = site.path("var/check_mk/dumps")
-    logger.info('Creating folder "%s"...', site_dumps_path)
-    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
-    assert rc == 0
-
-    logger.info("Injecting agent-output...")
-
-    for dump_name in list(os.listdir(dumps_dir)):
-        assert (
-            run(
-                [
-                    "sudo",
-                    "cp",
-                    "-f",
-                    f"{dumps_dir}/{dump_name}",
-                    f"{site_dumps_path}/{dump_name}",
-                ]
-            ).returncode
-            == 0
-        )
-
-    ruleset_name = "datasource_programs"
-    logger.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
-    logger.info('Rule "%s" created!', ruleset_name)

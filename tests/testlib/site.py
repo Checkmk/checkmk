@@ -123,6 +123,10 @@ class Site:
     def internal_url_mobile(self) -> str:
         return self.internal_url + "mobile.py"
 
+    @property
+    def licensing_dir(self) -> Path:
+        return Path(self.root) / "var" / "check_mk" / "licensing"
+
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
     # or internal_url.

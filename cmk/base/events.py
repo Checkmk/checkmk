@@ -30,6 +30,7 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
 from cmk.events.event_context import EnrichedEventContext, EventContext
@@ -424,6 +425,7 @@ def complete_raw_context(
         enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
         _update_enriched_context_with_labels(enriched_context)
+        _update_enriched_context_with_tags(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -454,6 +456,12 @@ def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext)
         ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+
+
+def _update_enriched_context_with_tags(enriched_context: EnrichedEventContext) -> None:
+    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
+    for k, v in notify_host_config.tags.items():
+        enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?
@@ -605,8 +613,12 @@ def event_match_hosttags(
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
-        notify_host_config = read_notify_host_file(HostName(context["HOSTNAME"]))
-        host_tags = notify_host_config.tags
+        context_str = "HOSTTAG_"
+        host_tags = {
+            TagGroupID(variable.replace(context_str, "").lower()): TagID(str(value))
+            for variable, value in context.items()
+            if variable.startswith(context_str)
+        }
         if not matches_host_tags(set(host_tags.items()), required_tags):
             return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"
     return None

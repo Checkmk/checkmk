@@ -325,6 +325,7 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_CRITICALITY": "prod",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -350,6 +351,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_CRITICALITY": "prod",
+                "HOSTTAG_HURZ": "blub",
+                "HOSTTAG_HANS": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -381,6 +385,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_CRITICALITY": "prod",
+                "HOSTTAG_HURZ": "blub",
+                "HOSTTAG_HANS": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},

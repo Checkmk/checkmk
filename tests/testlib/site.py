@@ -696,6 +696,9 @@ class Site:
             base=16,
         )
 
+    def file_timestamp(self, rel_path: str | Path) -> int:
+        return int(self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()]).rstrip())
+
     def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())
 

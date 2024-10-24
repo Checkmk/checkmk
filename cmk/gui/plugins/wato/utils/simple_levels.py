@@ -29,11 +29,11 @@ def _FixedLevels(
         title = title_upper if direction == "upper" else title_lower
         dv = default_value[idx]
         if issubclass(spec, Integer):
-            return Integer(title=title, default_value=int(dv), unit=unit)
+            return spec(title=title, default_value=int(dv), unit=unit)
         if issubclass(spec, Float):
-            return Float(title=title, default_value=float(dv), unit=unit)
+            return spec(title=title, default_value=float(dv), unit=unit)
         if issubclass(spec, Age):
-            return Age(title=title, default_value=int(dv))
+            return spec(title=title, default_value=int(dv))
         raise ValueError(f"illegal ValueSpec type {spec}, expected Integer or Float or Age")
 
     return Tuple(

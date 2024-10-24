@@ -16,6 +16,7 @@ import DemoDropDown from './DemoDropDown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoFormList from './DemoFormList.vue'
+import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
@@ -70,21 +71,6 @@ const router = createRouter({
       component: DemoDropDown
     },
     {
-      path: '/formlist',
-      name: 'FormList',
-      component: DemoFormList
-    },
-    {
-      path: '/formbooleanchoice',
-      name: 'FormBoleanChoice',
-      component: DemoFormBooleanChoice
-    },
-    {
-      path: '/FormSingleChoiceEditable',
-      name: 'FormSingleChoiceEditable',
-      component: DemoFormSingleChoiceEditable
-    },
-    {
       path: '/cmk_switch',
       name: 'CmkSwitch',
       component: DemoCmkSwitch
@@ -93,6 +79,28 @@ const router = createRouter({
       path: '/cmk_color_picker',
       name: 'CmkColorPicker',
       component: DemoCmkColorPicker
+    },
+    {
+      path: '/form',
+      name: 'Form',
+      component: DemoForm,
+      children: [
+        {
+          path: 'formsinglechoiceeditable',
+          name: 'FormSingleChoiceEditable',
+          component: DemoFormSingleChoiceEditable
+        },
+        {
+          path: 'formlist',
+          name: 'FormList',
+          component: DemoFormList
+        },
+        {
+          path: 'formbooleanchoice',
+          name: 'FormBoleanChoice',
+          component: DemoFormBooleanChoice
+        }
+      ]
     }
   ]
 })

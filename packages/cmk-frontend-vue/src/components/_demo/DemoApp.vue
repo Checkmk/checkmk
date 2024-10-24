@@ -10,8 +10,10 @@ import { immediateWatch } from '@/form/components/utils/watch'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import router from './router'
 
+import { filterRoutes } from './utils'
+
 const routes = computed(() => {
-  return router.getRoutes()
+  return filterRoutes(router.getRoutes(), '')
 })
 
 const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')

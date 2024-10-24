@@ -20,8 +20,8 @@ function convertToNotation(notation: GraphOptionUnitCustomNotation) {
 
 export function convertToUnit(unit: 'first_entry_with_unit' | GraphOptionUnitCustom) {
   // [ "first_entry_with_unit", null ]
-  // [ "custom", { "notation": [ "<TYPE>", "<SYMBOL>" ], "precision": { "rounding_mode": "<MODE>", "digits": <INTEGER> } } ]
-  // [ "custom", { "notation": [ "time", null ], "precision": { "rounding_mode": "<MODE>", "digits": <INTEGER> } } ]
+  // [ "custom", { "notation": [ "<TYPE>", "<SYMBOL>" ], "precision": { "type": "<MODE>", "digits": <INTEGER> } } ]
+  // [ "custom", { "notation": [ "time", null ], "precision": { "type": "<MODE>", "digits": <INTEGER> } } ]
   if (unit === 'first_entry_with_unit') {
     return ['first_entry_with_unit', null]
   } else {
@@ -29,7 +29,7 @@ export function convertToUnit(unit: 'first_entry_with_unit' | GraphOptionUnitCus
       'custom',
       {
         notation: convertToNotation(unit.notation),
-        precision: { rounding_mode: unit.precision.rounding_mode, digits: unit.precision.digits }
+        precision: { type: unit.precision.type, digits: unit.precision.digits }
       }
     ]
   }

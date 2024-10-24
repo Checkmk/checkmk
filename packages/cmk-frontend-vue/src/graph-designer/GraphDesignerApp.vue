@@ -158,21 +158,18 @@ const specUnit = makeCascadingSingleChoice('', [
         required: true,
         parameter_form: makeDictionary(props.i18n.graph_options.unit_custom_precision, [
           {
-            ident: 'rounding_mode',
+            ident: 'type',
             required: true,
-            parameter_form: makeSingleChoice(
-              props.i18n.graph_options.unit_custom_precision_rounding_mode,
-              [
-                {
-                  name: 'auto',
-                  title: props.i18n.graph_options.unit_custom_precision_rounding_mode_auto
-                },
-                {
-                  name: 'strict',
-                  title: props.i18n.graph_options.unit_custom_precision_rounding_mode_strict
-                }
-              ]
-            ),
+            parameter_form: makeSingleChoice(props.i18n.graph_options.unit_custom_precision_type, [
+              {
+                name: 'auto',
+                title: props.i18n.graph_options.unit_custom_precision_type_auto
+              },
+              {
+                name: 'strict',
+                title: props.i18n.graph_options.unit_custom_precision_type_strict
+              }
+            ]),
             default_value: 'auto',
             group: null
           },
@@ -184,11 +181,11 @@ const specUnit = makeCascadingSingleChoice('', [
             group: null
           }
         ]),
-        default_value: { rounding_mode: 'auto', digits: 2 },
+        default_value: { type: 'auto', digits: 2 },
         group: null
       }
     ]),
-    default_value: { notation: ['decimal', ''], precision: { rounding_mode: 'auto', digits: 2 } }
+    default_value: { notation: ['decimal', ''], precision: { type: 'auto', digits: 2 } }
   }
 ])
 const backendValidationUnit: ValidationMessages = []

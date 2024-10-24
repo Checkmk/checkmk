@@ -104,7 +104,7 @@ export interface GraphOptionUnitCustomNotationWithSymbol {
   symbol: string;
 }
 export interface GraphOptionUnitCustomPrecision {
-  rounding_mode: "auto" | "strict";
+  type: "auto" | "strict";
   digits: number;
 }
 export interface GraphOptionVerticalRangeExplicit {
@@ -165,9 +165,9 @@ export interface I18NGraphOptions {
   unit_custom_notation_engineering_scientific: string;
   unit_custom_notation_time: string;
   unit_custom_precision: string;
-  unit_custom_precision_rounding_mode: string;
-  unit_custom_precision_rounding_mode_auto: string;
-  unit_custom_precision_rounding_mode_strict: string;
+  unit_custom_precision_type: string;
+  unit_custom_precision_type_auto: string;
+  unit_custom_precision_type_strict: string;
   unit_custom_precision_digits: string;
   vertical_range_auto: string;
   vertical_range_explicit: string;

@@ -290,13 +290,13 @@
         "graph_option_unit_custom_precision": {
             "type": "object",
             "properties": {
-                "rounding_mode": {
+                "type": {
                     "type": "string",
                     "enum": ["auto", "strict"]
                 },
                 "digits": { "type": "integer" }
             },
-            "required": ["rounding_mode", "digits"]
+            "required": ["type", "digits"]
         },
         "graph_option_unit_custom": {
             "type": "object",
@@ -435,11 +435,11 @@
                 },
                 "unit_custom_notation_time": { "type": "string" },
                 "unit_custom_precision": { "type": "string" },
-                "unit_custom_precision_rounding_mode": { "type": "string" },
-                "unit_custom_precision_rounding_mode_auto": {
+                "unit_custom_precision_type": { "type": "string" },
+                "unit_custom_precision_type_auto": {
                     "type": "string"
                 },
-                "unit_custom_precision_rounding_mode_strict": {
+                "unit_custom_precision_type_strict": {
                     "type": "string"
                 },
                 "unit_custom_precision_digits": { "type": "string" },
@@ -460,9 +460,9 @@
                 "unit_custom_notation_engineering_scientific",
                 "unit_custom_notation_time",
                 "unit_custom_precision",
-                "unit_custom_precision_rounding_mode",
-                "unit_custom_precision_rounding_mode_auto",
-                "unit_custom_precision_rounding_mode_strict",
+                "unit_custom_precision_type",
+                "unit_custom_precision_type_auto",
+                "unit_custom_precision_type_strict",
                 "unit_custom_precision_digits",
                 "vertical_range_auto",
                 "vertical_range_explicit",

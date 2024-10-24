@@ -5,15 +5,20 @@
 
 # pylint: disable=protected-access
 
+import ast
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
+from flask import Flask
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.utils import paths
 from cmk.utils.local_secrets import DistributedSetupSecret
+from cmk.utils.user import UserId
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
@@ -177,3 +182,31 @@ class TestPageAutomation:
     def test_correct_secret(self) -> None:
         request.set_var("secret", "secret")
         automation.PageAutomation._authenticate()
+
+
+def test_automation_login(with_admin: tuple[UserId, str], flask_app: Flask) -> None:
+    Path(paths.var_dir, "wato", "automation_secret.mk").write_text(repr("pssst"))
+
+    with flask_app.app_context():
+        client = flask_app.test_client(use_cookies=True)
+
+        origtarget = f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition(paths.omd_root).short}"
+        login_resp = client.post(
+            "/NO_SITE/check_mk/login.py",
+            data={
+                "_username": with_admin[0],
+                "_password": with_admin[1],
+                "_login": "Login",
+                "_origtarget": origtarget,
+            },
+        )
+        assert login_resp.status_code == 302
+        assert login_resp.location == origtarget
+
+        resp = client.get(f"/NO_SITE/check_mk/{origtarget}")
+        assert resp.status_code == 200
+        assert ast.literal_eval(resp.text) == {
+            "version": cmk_version.__version__,
+            "edition_short": cmk_version.edition(paths.omd_root).short,
+            "login_secret": "pssst",
+        }

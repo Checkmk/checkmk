@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 import pytest
 
@@ -31,6 +31,7 @@ from tests.testlib.utils import (
     makedirs,
     PExpectDialog,
     restart_httpd,
+    run,
     ServiceInfo,
     spawn_expect_process,
     wait_until,
@@ -449,16 +450,30 @@ class Site:
         )
         return state
 
-    def execute(  # type: ignore[no-untyped-def]
+    def execute(
         self,
         cmd: list[str],
-        *args,
         preserve_env: list[str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> subprocess.Popen:
-        return execute(
-            cmd,
-            *args,
+        return execute(cmd, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs)
+
+    def run(
+        self,
+        args: list[str],
+        capture_output: bool = True,
+        check: bool = True,
+        encoding: str | None = "utf-8",
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess:
+        return run(
+            args=args,
+            capture_output=capture_output,
+            check=check,
+            input=input,
+            encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
             substitute_user=self.id,

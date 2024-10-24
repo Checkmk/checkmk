@@ -64,6 +64,7 @@ from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.sites import site_management_registry, SiteManagement
 from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
@@ -147,6 +148,8 @@ def register(edition: Edition) -> None:
             distribute_piggyback_hub_configs=distribute_piggyback_hub_configs,
         )
     )
+
+    site_management_registry.register(SiteManagement())
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()
     register_painters()

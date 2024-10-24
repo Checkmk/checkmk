@@ -49,7 +49,7 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.crypto.password import Password
 
@@ -1358,7 +1358,7 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
 
 
 def _site_is_using_livestatus_proxy(site_id):
-    site_configs = SiteManagementFactory().factory().load_sites()
+    site_configs = site_management_registry["site_management"].load_sites()
     return site_configs[site_id].get("proxy") is not None
 
 

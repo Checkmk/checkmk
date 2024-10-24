@@ -129,7 +129,7 @@ from cmk.gui.watolib.site_management import (
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
-    SiteManagementFactory,
+    site_management_registry,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
@@ -175,7 +175,7 @@ class ModeEditSite(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
 
         _site_id_return = request.get_ascii_input("site")
         self._site_id = None if _site_id_return is None else SiteId(_site_id_return)
@@ -830,7 +830,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
 
     def title(self) -> str:
         return _("Distributed monitoring")
@@ -1291,7 +1291,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = SiteManagementFactory().factory().load_sites()
+        sites = site_management_registry["site_management"].load_sites()
         replication_sites = [
             (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
         ]
@@ -1545,7 +1545,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -1681,7 +1681,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
-            self._configured_sites = SiteManagementFactory().factory().load_sites()
+            self._configured_sites = site_management_registry["site_management"].load_sites()
             try:
                 site = self._configured_sites[self._site_id]
             except KeyError:
@@ -1697,7 +1697,9 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return [self._site_id]
 
     def _save(self) -> None:
-        SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
+        site_management_registry["site_management"].save_sites(
+            self._configured_sites, activate=False
+        )
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
@@ -1727,7 +1729,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]

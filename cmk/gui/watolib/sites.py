@@ -13,6 +13,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
@@ -453,19 +454,12 @@ class SiteManagement:
         return [ConfigDomainGUI]
 
 
-class SiteManagementFactory:
-    @staticmethod
-    def factory() -> SiteManagement:
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE:
-            cls: type[SiteManagement] = CRESiteManagement
-        else:
-            cls = CEESiteManagement
-
-        return cls()
+class SiteManagementRegistry(Registry[SiteManagement]):
+    def plugin_name(self, instance: SiteManagement) -> str:
+        return "site_management"
 
 
-class CRESiteManagement(SiteManagement):
-    pass
+site_management_registry = SiteManagementRegistry()
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible
@@ -894,7 +888,7 @@ def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname:
     if is_remote_site:
         current_settings = load_configuration_settings(site_specific=True)
     else:
-        sites = SiteManagementFactory.factory().load_sites()
+        sites = site_management_registry["site_management"].load_sites()
         current_settings = sites.get(site_id, SiteConfiguration({})).get("globals", {})
 
     if varname in current_settings:

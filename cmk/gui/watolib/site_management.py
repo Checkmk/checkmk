@@ -41,7 +41,7 @@ from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
 
 class SiteDoesNotExistException(Exception): ...
@@ -553,7 +553,7 @@ class SiteConfig:
 
 class SitesApiMgr:
     def __init__(self) -> None:
-        self.site_mgmt = SiteManagementFactory().factory()
+        self.site_mgmt = site_management_registry["site_management"]
         self.all_sites = self.site_mgmt.load_sites()
 
     def get_all_sites(self) -> SiteConfigurations:

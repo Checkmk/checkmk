@@ -1479,23 +1479,6 @@ class ActivateChangesManager(ActivateChanges):
 
         self._start_activation()
 
-        create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
-
-        if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
-            logger.debug("Starting piggyback hub config distribution")
-
-            activation_features.distribute_piggyback_hub_configs(
-                load_configuration_settings(),
-                configured_sites(),
-                {site_id for site_id, _site_config in self.dirty_sites()},
-                {
-                    host_name: host.site_id()
-                    for host_name, host in folder_tree()
-                    .root_folder()
-                    .all_hosts_recursively()
-                    .items()
-                },
-            )
         return self._activation_id
 
     def _verify_valid_host_config(self):
@@ -1786,6 +1769,7 @@ class ActivateChangesManager(ActivateChanges):
             self._site_snapshot_settings,
             self._prevent_activate,
             self._source,
+            has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]),
         )
         job.start(
             job.schedule_sites,
@@ -2443,12 +2427,14 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         site_snapshot_settings: dict[SiteId, SnapshotSettings],
         prevent_activate: bool,
         source: ActivationSource,
+        piggyback_hub_relevant_changes: bool,
     ) -> None:
         super().__init__(f"{self.job_prefix}-{activation_id}")
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
         self._source = source
+        self._piggyback_hub_relevant_changes = piggyback_hub_relevant_changes
 
     def schedule_sites(self, job_interface: BackgroundProcessInterface) -> None:
         with job_interface.gui_context():
@@ -2470,6 +2456,29 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
                 self._source,
                 self._prevent_activate,
             )
+
+            activation_features = activation_features_registry[str(version.edition(paths.omd_root))]
+            rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
+                BrokerConnectionsConfigFile().load_for_reading()
+            )
+            create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
+
+            if self._piggyback_hub_relevant_changes:
+                logger.debug("Starting piggyback hub config distribution")
+
+                activation_features.distribute_piggyback_hub_configs(
+                    load_configuration_settings(),
+                    configured_sites(),
+                    {site_id for site_id, _settings in self._site_snapshot_settings.items()},
+                    {
+                        host_name: host.site_id()
+                        for host_name, host in folder_tree()
+                        .root_folder()
+                        .all_hosts_recursively()
+                        .items()
+                    },
+                )
+
             job_interface.send_result_message(_("Activate changes finished"))
 
 

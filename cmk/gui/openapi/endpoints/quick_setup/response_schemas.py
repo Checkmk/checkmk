@@ -22,6 +22,10 @@ class QuickSetupStageOverviewResponse(BaseSchema):
 
 
 class Errors(BaseSchema):
+    stage_index = fields.Integer(
+        example=0,
+        description="Index of the stage containing errors.",
+    )
     formspec_errors = fields.Dict(
         example={},
         description="A mapping of formspec ids to formspec validation errors",

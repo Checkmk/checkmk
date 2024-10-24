@@ -141,6 +141,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     )
     resp.assert_status_code(400)
     assert resp.json["errors"] == {
+        "stage_index": 0,
         "formspec_errors": {
             "formspec_unique_id": [
                 {
@@ -192,6 +193,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
     )
     resp.assert_status_code(400)
     assert resp.json["errors"] == {
+        "stage_index": 0,
         "formspec_errors": {
             "host_data": [
                 {
@@ -382,6 +384,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
             ],
             [
                 {
+                    "stage_index": 0,
                     "formspec_errors": {
                         "id_1": [
                             {
@@ -394,6 +397,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                     "stage_errors": [],
                 },
                 {
+                    "stage_index": 1,
                     "formspec_errors": {
                         "id_2": [
                             {
@@ -414,10 +418,12 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
             ],
             [
                 {
+                    "stage_index": 0,
                     "formspec_errors": {},
                     "stage_errors": ["Formspec id 'invalid_id_1' not found"],
                 },
                 {
+                    "stage_index": 1,
                     "formspec_errors": {},
                     "stage_errors": ["Formspec id 'invalid_id_2' not found"],
                 },
@@ -430,10 +436,12 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
             ],
             [
                 {
+                    "stage_index": 0,
                     "formspec_errors": {},
                     "stage_errors": ["this is a general error", "and another one"],
                 },
                 {
+                    "stage_index": 1,
                     "formspec_errors": {},
                     "stage_errors": ["this is a general error", "and another one"],
                 },

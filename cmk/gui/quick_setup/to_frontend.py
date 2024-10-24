@@ -71,6 +71,7 @@ class StageOverview:
 
 @dataclass
 class Errors:
+    stage_index: StageIndex
     formspec_errors: ValidationErrorMap = field(default_factory=dict)
     stage_errors: GeneralStageErrors = field(default_factory=list)
 
@@ -219,7 +220,7 @@ def validate_stage(
     stages_raw_formspecs: Sequence[RawFormData],
     stage_index: StageIndex,
 ) -> Errors | None:
-    errors = Errors()
+    errors = Errors(stage_index=stage_index)
     stages = [stage() for stage in quick_setup.stages]
     quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
 

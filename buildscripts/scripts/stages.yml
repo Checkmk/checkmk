@@ -48,7 +48,13 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' || true"
 
     - NAME: CHANGED_REQUIREMENTS_LOCK
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^requirements_.*_lock.txt' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'requirements.*_lock.txt' || true"
+
+    - NAME: CHANGED_PYTHON_REQUIREMENTS
+      SH: "echo '${CHANGED_FILES_REL}' | grep 'requirements.*.txt' || true"
+
+    - NAME: CHANGED_BAZEL_MODULES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^MODULE.bazel' || true"
 
     - NAME: CHANGED_FIND_PYTHON_FILES_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/find-python-files' || true"
@@ -60,7 +66,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-uvenv' || true"
 
     - NAME: CHANGED_BAZEL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD\\|WORKSPACE' || true"
 
     - NAME: CHANGED_CMK_BUILD_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/BUILD' || true"
@@ -619,3 +625,10 @@ STAGES:
       COMMAND: "./run --clean --all &> ${RESULTS}/cmk-frontend.txt"
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"
+
+    - NAME: "Enforced package build"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_REQUIREMENTS_LOCK
+      DIR: ""
+      JENKINS_API_ACCESS: true
+      COMMAND: "scripts/run-uvenv ci-artifacts --credentials url_env=JENKINS_URL,username_env=JENKINS_USERNAME,password_env=JENKINS_PASSWORD --log-level info validate checkmk/master/builders/build-cmk-distro-package --params=DISTRO=ubuntu-22.04,VERSION=daily,EDITION=enterprise,CUSTOM_GIT_REF=${PATCHSET_REVISION}"
+      TEXT_ON_SKIP: "No package dependencies changed"

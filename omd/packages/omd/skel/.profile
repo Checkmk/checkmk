@@ -17,7 +17,10 @@ export MAILRC="$OMD_ROOT/etc/mail.rc"
 # rabbitmq will search for its configuration under $RABBITMQ_HOME/etc, see also
 # https://www.rabbitmq.com/docs/install-generic-unix#file-locations
 export RABBITMQ_HOME="${OMD_ROOT}"
-export RABBITMQ_ERLANG_COOKIE="$(cat "${RABBITMQ_HOME}/.erlang.cookie")"
+if [ -f "${RABBITMQ_HOME}/.erlang.cookie" ]; then
+    # Early in the site initialization the file does not exist yet
+    export RABBITMQ_ERLANG_COOKIE="$(cat "${RABBITMQ_HOME}/.erlang.cookie")"
+fi
 export RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
 export PATH="$OMD_ROOT/lib/rabbitmq/sbin:$PATH"
 

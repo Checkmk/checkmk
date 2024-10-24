@@ -107,6 +107,7 @@ def test_registered_painters() -> None:
         "crash_type",
         "crash_source",
         "crash_version",
+        "dcd_batch",
         "downtime_author",
         "downtime_comment",
         "downtime_duration",

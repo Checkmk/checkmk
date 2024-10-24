@@ -192,7 +192,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("Generic Options")
+        return _("Generic agent options")
 
 
 class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):

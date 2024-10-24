@@ -52,18 +52,18 @@ from cmk.gui.watolib.rulespecs import (
 )
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
-RulespecGroupMonitoringAgentsLinuxAgent: type[RulespecSubGroup] | None
+RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsWindowsAgent: type[RulespecSubGroup] | None
 
 try:
     from cmk.gui.cee.agent_bakery import (  # type: ignore[no-redef, unused-ignore]  # pylint: disable=cmk-module-layer-violation
         RulespecGroupMonitoringAgentsAgentPlugins,
-        RulespecGroupMonitoringAgentsLinuxAgent,
+        RulespecGroupMonitoringAgentsLinuxUnixAgent,
         RulespecGroupMonitoringAgentsWindowsAgent,
     )
 except ImportError:
     RulespecGroupMonitoringAgentsAgentPlugins = None
-    RulespecGroupMonitoringAgentsLinuxAgent = None
+    RulespecGroupMonitoringAgentsLinuxUnixAgent = None
     RulespecGroupMonitoringAgentsWindowsAgent = None
 
 from cmk.rulesets import v1 as ruleset_api_v1
@@ -556,9 +556,9 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
         case ruleset_api_v1.rule_specs.Topic.LINUX:
             if (
                 legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
-                and RulespecGroupMonitoringAgentsLinuxAgent is not None
+                and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
             ):
-                return RulespecGroupMonitoringAgentsLinuxAgent
+                return RulespecGroupMonitoringAgentsLinuxUnixAgent
             return _to_generated_builtin_sub_group(legacy_main_group, "Linux", localizer)
         case ruleset_api_v1.rule_specs.Topic.NETWORKING:
             if (
@@ -677,10 +677,13 @@ def _custom_to_builtin_legacy_group(
     custom_topic_to_convert: ruleset_api_v1.rule_specs.CustomTopic,
 ) -> type[legacy_rulespecs.RulespecBaseGroup] | None:
     if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
-        ruleset_api_v1.Title("Generic Options")
+        ruleset_api_v1.Title("Linux/UNIX Agent Options")
     ):
-        if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
-            return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
+        if (
+            legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents
+            and RulespecGroupMonitoringAgentsLinuxUnixAgent is not None
+        ):
+            return RulespecGroupMonitoringAgentsLinuxUnixAgent
     return None
 
 

@@ -121,7 +121,7 @@ def _expected_rulespec_group_choices():
         ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
         ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
         ("agents", "Agent rules"),
-        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic Options"),
+        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic agent options"),
         ("checkparams", "Service discovery rules"),
         ("checkparams/discovery", "&nbsp;&nbsp;\u2319 Discovery of individual services"),
         (
@@ -174,8 +174,8 @@ def _expected_rulespec_group_choices():
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
-            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux Agent"),
-            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows Agent"),
+            ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux/UNIX agent options"),
+            ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows agent options"),
             ("agents/windows_modules", "&nbsp;&nbsp;\u2319 Windows Modules"),
         ]
 

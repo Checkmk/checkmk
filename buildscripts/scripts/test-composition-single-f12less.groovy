@@ -103,7 +103,7 @@ def main() {
                         build_params_no_check: [
                             CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                         ],
-                        dest: "${download_dir}/${cmk_version}",
+                        dest: download_dir,
                     );
                 }
                 try {
@@ -114,7 +114,7 @@ def main() {
                                     RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
                                     EDITION='${edition}' \
                                     DOCKER_TAG='${docker_tag}' \
-                                    VERSION='${cmk_version}' \
+                                    VERSION='daily' \
                                     DISTRO='${distro}' \
                                     BRANCH='${branch_name}' \
                                     make ${make_target}

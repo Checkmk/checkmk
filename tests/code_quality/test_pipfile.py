@@ -356,6 +356,7 @@ def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
     known_unused_packages.add("setuptools")  # pinned transitive dependency
     known_unused_packages.add("markdown")  # Should be in cmk-werks, see CMK-19819
+    known_unused_packages.add("pika")  # Should be in cmk-messaging, see CMK-19819
 
     if not is_enterprise_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))

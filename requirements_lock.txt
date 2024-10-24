@@ -694,7 +694,7 @@ cssselect==1.2.0 ; python_version >= "3.7" \
     # via
     #   -r requirements_cmk.txt
     #   types-lxml
-cython==0.29.34 ; python_version >= "2.6" and python_version not in "3.0, 3.1, 3.2" \
+cython==0.29.34 ; python_version >= "2.6" and python_version not in "3.0, 3.1, 3.2, 3.3" \
     --hash=sha256:03daae07f8cbf797506446adae512c3dd86e7f27a62a541fa1ee254baf43e32c \
     --hash=sha256:0963266dad685812c1dbb758fcd4de78290e3adc7db271c8664dcde27380b13e \
     --hash=sha256:0ab3cbf3d62b0354631a45dc93cfcdf79098663b1c65a6033af4a452b52217a7 \
@@ -3206,7 +3206,7 @@ python-active-directory==2.0.1 \
     --hash=sha256:fc5f5bf45840e33e000527eaa9241b264e651c764b800bdd9a920449e3f3c57a \
     --hash=sha256:febd238057469a11650db2a178d269a5142e106381197e3754c6c15815c97082
     # via -r requirements_cmk.txt
-python-dateutil==2.9.0.post0 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2" \
+python-dateutil==2.9.0.post0 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2, 3.3" \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
@@ -3728,7 +3728,7 @@ sgmllib3k==1.0.0 \
     # via
     #   -r requirements_cmk.txt
     #   feedparser
-six==1.16.0 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2" \
+six==1.16.0 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2, 3.3" \
     --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
     # via
@@ -3950,7 +3950,7 @@ time-machine==2.16.0 ; python_version >= "3.9" \
     # via
     #   -r packages/cmk-crypto/requirements.txt
     #   -r requirements_cmk.txt
-toml==0.10.2 ; python_version >= "2.6" and python_version not in "3.0, 3.1, 3.2" \
+toml==0.10.2 ; python_version >= "2.6" and python_version not in "3.0, 3.1, 3.2, 3.3" \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
     # via
@@ -3980,7 +3980,7 @@ tqdm==4.66.5 ; python_version >= "3.7" \
     # via
     #   -r requirements_cmk.txt
     #   pysmb
-trickkiste==0.1.7 ; python_full_version >= "3.10.4" and python_version < "4" \
+trickkiste==0.1.7 ; python_version < "4" and python_full_version >= "3.10.4" \
     --hash=sha256:9479ad147f23de5ed4da6e73bccdcd19699da1d78bb0121dc25978265d30128d \
     --hash=sha256:e7a03ab19c0fd8f512506d382fb966ff09d13fc4b8411c7fb66fc6f3f72da2a7
     # via
@@ -4296,7 +4296,7 @@ webcolors==24.8.0 \
     # via
     #   -r requirements_cmk.txt
     #   jsonschema
-webob==1.8.9 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2" \
+webob==1.8.9 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2, 3.3" \
     --hash=sha256:45e34c58ed0c7e2ecd238ffd34432487ff13d9ad459ddfd77895e67abba7c1f9 \
     --hash=sha256:ad6078e2edb6766d1334ec3dee072ac6a7f95b1e32ce10def8ff7f0f02d56589
     # via

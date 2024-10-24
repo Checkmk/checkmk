@@ -1413,15 +1413,7 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(
-        self,
-        name: str,
-        start: bool = True,
-        init_livestatus: bool = True,
-        prepare_for_tests: bool = True,
-        activate_changes: bool = True,
-        auto_restart_httpd: bool = False,
-    ) -> Site:
+    def get_site(self, name: str) -> Site:
         site = self._site_obj(name)
 
         if self.version.is_saas_edition():
@@ -1430,29 +1422,17 @@ class SiteFactory:
             # before the site is created.
             create_cse_initial_config()
         site.create()
+        return site
 
-        try:
-            return self._initialize_site(
-                site,
-                init_livestatus=init_livestatus,
-                start=start,
-                prepare_for_tests=prepare_for_tests,
-                activate_changes=activate_changes,
-                auto_restart_httpd=auto_restart_httpd,
-            )
-        except Exception:
-            site.save_results()
-            raise
-
-    def _initialize_site(
+    def initialize_site(
         self,
         site: Site,
         *,
-        init_livestatus: bool,
-        start: bool,
-        prepare_for_tests: bool,
-        activate_changes: bool,
-        auto_restart_httpd: bool,
+        start: bool = True,
+        init_livestatus: bool = True,
+        prepare_for_tests: bool = True,
+        activate_changes: bool = True,
+        auto_restart_httpd: bool = False,
     ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
@@ -1747,34 +1727,36 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(
-                name,
+            site = self.get_site(name)
+
+        try:
+            self.initialize_site(
+                site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
             )
-        site.start()
-        if auto_restart_httpd:
-            restart_httpd()
-        logger.info(
-            'Site "%s" is ready!%s',
-            site.id,
-            f" [{description}]" if description else "",
-        )
-        with (
-            cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-            if self.version.is_saas_edition()
-            else nullcontext()
-        ):
-            try:
+            site.start()
+            if auto_restart_httpd:
+                restart_httpd()
+            logger.info(
+                'Site "%s" is ready!%s',
+                site.id,
+                f" [{description}]" if description else "",
+            )
+            with (
+                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
+                if self.version.is_saas_edition()
+                else nullcontext()
+            ):
                 yield site
-            finally:
-                if save_results:
-                    site.save_results()
-                if report_crashes:
-                    site.report_crashes()
-                if auto_cleanup and cleanup_site:
-                    logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
-                    site.rm()
+        finally:
+            if save_results:
+                site.save_results()
+            if report_crashes:
+                site.report_crashes()
+            if auto_cleanup and cleanup_site:
+                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:

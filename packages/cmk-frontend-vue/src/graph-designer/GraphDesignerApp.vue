@@ -5,12 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import CmkColorPicker from '@/components/CmkColorPicker.vue'
+import CmkSwitch from '@/components/CmkSwitch.vue'
 import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
-import FormColorPicker from '@/graph-designer/components/FormColorPicker.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormLineType from '@/graph-designer/components/FormLineType.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
-import FormSwitch from '@/graph-designer/components/FormSwitch.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
@@ -791,13 +791,13 @@ function dragging(event: DragEvent) {
             @click="deleteGraphLine(graphLine)"
           />
         </td>
-        <td class="narrow"><FormColorPicker v-model:data="graphLine.color" /></td>
+        <td class="narrow"><CmkColorPicker v-model:data="graphLine.color" /></td>
         <td class="nobr narrow"><FormTitle v-model:data="graphLine.title" /></td>
-        <td class="buttons"><FormSwitch v-model:data="graphLine.visible" /></td>
+        <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
         <td class="narrow">
           <FormLineType v-model:data="graphLine.line_type" :spec="specLineType" />
         </td>
-        <td class="buttons"><FormSwitch v-model:data="graphLine.mirrored" /></td>
+        <td class="buttons"><CmkSwitch v-model:data="graphLine.mirrored" /></td>
         <td>
           <div v-if="graphLine.type === 'metric'">
             <FixedMetricRowRenderer>

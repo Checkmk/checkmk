@@ -106,6 +106,7 @@ if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
 fi
 
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
+: "${CPU_LIMITATION:="--cpus="$(($(nproc) - 3))""}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
@@ -125,6 +126,7 @@ trap cleanup EXIT
 docker run -a stdout -a stderr \
     --rm \
     --name $CONTAINER_NAME \
+    ${CPU_LIMITATION} \
     ${TERMINAL_FLAG} \
     --init \
     -u "$(id -u):$(id -g)" \

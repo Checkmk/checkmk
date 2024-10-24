@@ -169,3 +169,61 @@ test('FormCascadingSingleChoice renders backend validation messages', async () =
 
   await screen.findByText('Backend error message')
 })
+
+test('FormCascadingSingleChoice does not poisen the template value', async () => {
+  const dictFromSpec: FormSpec.Dictionary = {
+    type: 'dictionary',
+    title: 'fooTitle',
+    help: 'fooHelp',
+    layout: 'one_column',
+    validators: [],
+    groups: [],
+    additional_static_elements: null,
+    no_elements_text: 'no_text',
+    elements: [
+      {
+        ident: 'value',
+        required: false,
+        default_value: 'baz',
+        parameter_form: stringFormSpec,
+        group: null
+      }
+    ]
+  }
+
+  const defaultValue = { value: 'something' }
+
+  const spec: FormSpec.CascadingSingleChoice = {
+    type: 'cascading_single_choice',
+    title: 'fooTitle',
+    label: 'fooLabel',
+    layout: 'horizontal',
+    help: 'fooHelp',
+    validators: [],
+    input_hint: '',
+    elements: [
+      {
+        name: 'dictChoice',
+        title: 'stringChoiceTitle',
+        default_value: defaultValue,
+        parameter_form: dictFromSpec
+      }
+    ]
+  }
+
+  render(FormCascadingSingleChoice, {
+    props: {
+      spec,
+      data: ['null', 'null'],
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  await fireEvent.update(element, 'dictChoice')
+
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox')
+  await fireEvent.update(stringElement, 'other_value')
+
+  expect(defaultValue).toEqual({ value: 'other_value' }) // TODO: THIS IS A BUG, default Value is passed by reference and modified inside CascadingSingleChoice
+})

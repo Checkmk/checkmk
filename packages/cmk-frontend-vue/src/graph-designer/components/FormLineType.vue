@@ -8,31 +8,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 import FormEdit from '@/form/components/FormEdit.vue'
 import { type SpecLineType } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
+import { makeSingleChoice } from '@/graph-designer/specs'
 
 const props = defineProps<{
   spec: SpecLineType
 }>()
 
-const dataLineType = defineModel('dataLineType', { type: String, default: 'line' })
-const specLineType = {
-  type: 'single_choice',
-  title: '',
-  help: '',
-  validators: [],
-  elements: [
-    { name: 'line', title: props.spec.line },
-    { name: 'area', title: props.spec.area },
-    { name: 'stack', title: props.spec.stack }
-  ],
-  frozen: false
-}
-const backendValidationLineType: ValidationMessages = []
+const data = defineModel('data', { type: String, default: 'line' })
+const spec = makeSingleChoice('', [
+  { name: 'line', title: props.spec.line },
+  { name: 'area', title: props.spec.area },
+  { name: 'stack', title: props.spec.stack }
+])
+const backendValidation: ValidationMessages = []
 </script>
 
 <template>
-  <FormEdit
-    v-model:data="dataLineType"
-    :spec="specLineType"
-    :backend-validation="backendValidationLineType"
-  />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
 </template>

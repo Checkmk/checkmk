@@ -5,11 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-const dataColor = defineModel('dataColor', { type: String, default: '#ff0000' })
+const data = defineModel('data', { type: String, default: '#ff0000' })
 </script>
 
 <template>
-  <input id="color-picker" v-model="dataColor" type="color" />
+  <input id="color-picker" v-model="data" type="color" />
 </template>
 
 <style scoped>

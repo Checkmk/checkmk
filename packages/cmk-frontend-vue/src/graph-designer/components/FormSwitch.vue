@@ -5,12 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-const dataSwitch = defineModel('dataSwitch', { type: Boolean, default: false })
+const data = defineModel('data', { type: Boolean, default: false })
 </script>
 
 <template>
   <label class="switch">
-    <input v-model="dataSwitch" type="checkbox" />
+    <input v-model="data" type="checkbox" />
     <span class="slider round"></span>
   </label>
 </template>

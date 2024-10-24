@@ -791,13 +791,13 @@ function dragging(event: DragEvent) {
             @click="deleteGraphLine(graphLine)"
           />
         </td>
-        <td class="narrow"><FormColorPicker v-model:data-color="graphLine.color" /></td>
-        <td class="nobr narrow"><FormTitle v-model:data-title="graphLine.title" /></td>
-        <td class="buttons"><FormSwitch v-model:data-switch="graphLine.visible" /></td>
+        <td class="narrow"><FormColorPicker v-model:data="graphLine.color" /></td>
+        <td class="nobr narrow"><FormTitle v-model:data="graphLine.title" /></td>
+        <td class="buttons"><FormSwitch v-model:data="graphLine.visible" /></td>
         <td class="narrow">
-          <FormLineType v-model:data-line-type="graphLine.line_type" :spec="specLineType" />
+          <FormLineType v-model:data="graphLine.line_type" :spec="specLineType" />
         </td>
-        <td class="buttons"><FormSwitch v-model:data-switch="graphLine.mirrored" /></td>
+        <td class="buttons"><FormSwitch v-model:data="graphLine.mirrored" /></td>
         <td>
           <div v-if="graphLine.type === 'metric'">
             <FixedMetricRowRenderer>

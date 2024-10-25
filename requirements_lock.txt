@@ -304,9 +304,9 @@ boto3==1.35.48 ; python_version >= "3.8" \
     --hash=sha256:5007a5cdd09e4db9309adf2ee090455a34ae639bd10a68a1fefca72cd77070fc \
     --hash=sha256:60889bb6e21f0af662ac9404e00125d3b8a5808f190e89462e5ddf73604adfc1
     # via -r requirements_cmk.txt
-boto3-stubs[logs]==1.35.46 ; python_version >= "3.8" \
-    --hash=sha256:5b2887214d0953e7e6d5aeb4276e3b9e3cc3fb7375ef39a9da8aaa0c3e48b223 \
-    --hash=sha256:a5bddda9eaa277b615d9e394f42f51d97e6652166db6810f645cc52a4f4efccb
+boto3-stubs[logs]==1.35.48 ; python_version >= "3.8" \
+    --hash=sha256:0e7f433b20c4279fb34f3cf28afe6ae3ac392f1c8d66928c253d54e61fc87511 \
+    --hash=sha256:cd67ba0f576ec255cf8201cf6e4ae0e7698861e58020ca9a0db52b048c9968e4
     # via -r requirements_cmk.txt
 botocore==1.35.48 ; python_version >= "3.8" \
     --hash=sha256:34fa25fd717208b05745e60f271a39636108fa87a3512fbca18e7e6f787a3239 \
@@ -331,9 +331,9 @@ build==1.2.2.post1 ; python_version >= "3.8" \
     #   -r requirements_cmk.txt
     #   check-manifest
     #   devpi-client
-cached-property==2.0 \
-    --hash=sha256:0f82cf6c50cd808d9331fff35e1fead3c101d2aa5d3fbe39852a7f6d6cbe028b \
-    --hash=sha256:fd4a5530c01c2fa42fa89f423caf2f54c7edd5cd1da38507d06d4067af414763
+cached-property==2.0.1 ; python_version >= "3.8" \
+    --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
+    --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
     # via
     #   -r requirements_cmk.txt
     #   exchangelib

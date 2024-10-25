@@ -54,7 +54,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
-from cmk.gui.wato._notification_parameter import notification_parameter_registry
 from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
@@ -520,7 +519,6 @@ def notification_method() -> QuickSetupStage:
                                         ),
                                     )
                                     for script_name, title in notification_script_choices()
-                                    if script_name in notification_parameter_registry
                                 ],
                                 layout=CascadingSingleChoiceLayout.horizontal,
                             ),

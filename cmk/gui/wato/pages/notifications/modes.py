@@ -41,9 +41,10 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog
+from cmk.gui.form_specs.private import Catalog, LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -119,7 +120,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato._group_selection import ContactGroupSelection
 from cmk.gui.wato._notification_parameter import (
     notification_parameter_registry,
-    NotificationParameter,
 )
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
@@ -3039,10 +3039,6 @@ class ModeNotificationParametersOverview(WatoMode):
         search_term = search_term.lower() if search_term else ""
         match_regex = re.compile(search_term, re.IGNORECASE)
         for script_name, title in notification_script_choices():
-            # Not all notification scripts have parameters
-            if script_name not in notification_parameter_registry:
-                continue
-
             if not match_regex.search(title):
                 continue
 
@@ -3148,10 +3144,15 @@ class ABCNotificationParameterMode(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
-    def _notification_parameter(self) -> type[NotificationParameter]:
+    def _spec(self) -> Dictionary | LegacyValueSpec:
         try:
-            return notification_parameter_registry[self._method()]
+            return notification_parameter_registry[self._method()]().spec
         except KeyError:
+            if any(
+                self._method() == script_name
+                for script_name, _title in notification_script_choices()
+            ):
+                return recompose(notification_parameter_registry.parameter_called())
             raise MKUserError(
                 None, _("No notification parameters for method '%s' found") % self._method()
             )
@@ -3300,7 +3301,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         self,
         parameters,
     ):
-        notification_parameter = self._notification_parameter()
+        spec = self._spec()
         method_name = self._method_name()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
@@ -3338,10 +3339,12 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     title=title,
                     indent=False,
                 ):
+                    if isinstance(spec, LegacyValueSpec):
+                        spec = spec.valuespec  # type: ignore[assignment]  # expects ValueSpec[Any]
+
+                    assert isinstance(spec, Dictionary)
                     html.write_text_permissive(
-                        notification_parameter().spec.value_to_html(
-                            parameter["parameter_properties"]
-                        )
+                        spec.value_to_html(parameter["parameter_properties"])
                     )
 
     def _add_change(self, log_what, log_text):

@@ -18,12 +18,19 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec, not_empty, Topic
+from cmk.gui.form_specs.private import (
+    Catalog,
+    CommentTextArea,
+    LegacyValueSpec,
+    ListOfStrings,
+    not_empty,
+    Topic,
+)
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.valuespec import Migrate as ValueSpecMigrate
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
-from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.users import notification_script_choices, notification_script_title
 
 from cmk.rulesets.v1 import Help, rule_specs, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String
@@ -63,11 +70,33 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                 [LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root))]
             )
 
+    def parameter_called(self) -> Dictionary:
+        return Dictionary(
+            title=Title("Parameters"),
+            elements={
+                "params": DictElement(
+                    required=True,
+                    parameter_form=ListOfStrings(
+                        title=Title("Call with the following parameters"),
+                        help_text=Help(
+                            "The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc."
+                        ),
+                        string_spec=String(),
+                    ),
+                )
+            },
+        )
+
     def form_spec(self, method: str) -> Catalog:
         try:
             param_form_spec = self._entries[method]()._form_spec()
         except KeyError:
-            raise MKUserError(None, _("No notification parameters for method '%s' found") % method)
+            if any(method == script_name for script_name, _title in notification_script_choices()):
+                param_form_spec = self.parameter_called()
+            else:
+                raise MKUserError(
+                    None, _("No notification parameters for method '%s' found") % method
+                )
         except NotImplementedError:
             try:
                 param_form_spec = self._construct_form_spec_from_valuespec(method)

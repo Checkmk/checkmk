@@ -3074,7 +3074,8 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         checks=(),
         raise_errors=True,  # we don't expect any errors
     )
-    assert agent_based_register.get_snmp_section_plugin(SectionName("duplicate_plugin")).detect_spec
+    plugins = agent_based_register.get_previously_loaded_plugins()
+    assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 
 @pytest.mark.parametrize(

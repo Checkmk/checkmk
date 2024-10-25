@@ -35,7 +35,6 @@ def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
         agent_based_register._config, "registered_check_plugins", {test_plugin.name: test_plugin}
     )
 
-    assert agent_based_register.is_registered_check_plugin(test_plugin.name)
     assert agent_based_register.get_check_plugin(test_plugin.name) is test_plugin
     assert (
         agent_based_register.get_check_plugin(CheckPluginName("mgmt_this_should_not_exists"))

@@ -165,10 +165,6 @@ def get_section_producers(parsed_section_name: ParsedSectionName) -> set[Section
     return set(_sections_by_parsed_name[parsed_section_name])
 
 
-def get_snmp_section_plugin(section_name: SectionName) -> SNMPSectionPlugin:
-    return registered_snmp_sections[section_name]
-
-
 def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
     return check_plugin_name in registered_check_plugins
 
@@ -188,10 +184,6 @@ def is_stored_ruleset(ruleset_name: RuleSetName) -> bool:
 def needs_redetection(section_name: SectionName) -> bool:
     section = get_section_plugin(section_name)
     return len(get_section_producers(section.parsed_section_name)) > 1
-
-
-def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
-    return registered_agent_sections.values()
 
 
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:

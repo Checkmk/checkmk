@@ -12,11 +12,8 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
-from tests.unit.conftest import FixRegister
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Result, Service, SimpleSNMPSection, State
 from cmk.plugins.collection.agent_based import mcafee_webgateway_info
 
 WALK_MCAFEE = """
@@ -35,34 +32,61 @@ WALK_SKYHIGH = """
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_info.snmp_section_mcafee_webgateway_info,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
+        ),
+    ],
 )
 def test_detect(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
-    assert snmp_is_detected(SectionName(detected_section), as_path(walk))
+    assert snmp_is_detected(detected_section, as_path(walk))
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_info.snmp_section_mcafee_webgateway_info,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
+        ),
+    ],
 )
 def test_parse(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
 
     assert section is not None
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_info.snmp_section_mcafee_webgateway_info,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
+        ),
+    ],
 )
 def test_discovery(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
     assert section is not None
 
     services = list(mcafee_webgateway_info.discovery_webgateway_info(section=section))
@@ -75,13 +99,13 @@ def test_discovery(
     [
         pytest.param(
             WALK_MCAFEE,
-            "mcafee_webgateway_info",
+            mcafee_webgateway_info.snmp_section_mcafee_webgateway_info,
             [Result(state=State.OK, summary="Product version: 7.6.1.2.0, Revision: 64221")],
             id="Check mcafee",
         ),
         pytest.param(
             WALK_SKYHIGH,
-            "skyhigh_security_webgateway_info",
+            mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
             [Result(state=State.OK, summary="Product version: 7.6.1.2.0, Revision: 64221")],
             id="Check skyhigh",
         ),
@@ -89,12 +113,11 @@ def test_discovery(
 )
 def test_check_results(
     walk: str,
-    detected_section: str,
-    fix_register: FixRegister,
+    detected_section: SimpleSNMPSection,
     expected_results: list[Result],
     as_path: Callable[[str], Path],
 ) -> None:
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
     assert section is not None
 
     results = [

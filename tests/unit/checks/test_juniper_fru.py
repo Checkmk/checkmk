@@ -6,9 +6,9 @@
 
 import pytest
 
-from .checktestlib import Check
+from cmk.base.legacy_checks.juniper_fru import check_juniper_fru
 
-pytestmark = pytest.mark.checks
+from cmk.plugins.juniper.agent_based.juniper_fru_section import parse_juniper_fru
 
 _SECTION = {
     "Power Supply 0": {"fru_type": "7", "fru_state": "6"},
@@ -27,7 +27,7 @@ _SECTION = {
 
 def test_parse_juniper_fru() -> None:
     assert (
-        Check("juniper_fru").run_parse(
+        parse_juniper_fru(
             [
                 ["Power Supply 0", "7", "6"],
                 ["Power Supply 1", "7", "3"],
@@ -65,11 +65,4 @@ def test_check_juniper_fru(
     item: str,
     expected_result: tuple[int, str],
 ) -> None:
-    assert (
-        Check("juniper_fru").run_check(
-            item,
-            None,
-            _SECTION,
-        )
-        == expected_result
-    )
+    assert check_juniper_fru(item, None, _SECTION) == expected_result

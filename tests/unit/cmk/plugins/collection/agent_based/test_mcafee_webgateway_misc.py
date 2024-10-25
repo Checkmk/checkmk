@@ -13,12 +13,12 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
     snmp_is_detected,
 )
-from tests.unit.conftest import FixRegister
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import mcafee_webgateway_misc
+from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State
+from cmk.plugins.collection.agent_based import (
+    mcafee_webgateway_misc,
+    mcafee_webgateway_misc_section,
+)
 from cmk.plugins.lib import mcafee_gateway
 
 # SUP-13087
@@ -63,23 +63,41 @@ WALK_SKYHIGH = """
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
+        ),
+    ],
 )
 def test_detect(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
-    assert snmp_is_detected(SectionName(detected_section), as_path(walk))
+    assert snmp_is_detected(detected_section, as_path(walk))
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
+        ),
+    ],
 )
 def test_parse(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
     # Act
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
 
     # Assert
     assert section is not None
@@ -87,13 +105,22 @@ def test_parse(
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (
+            WALK_MCAFEE,
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
+        ),
+        (
+            WALK_SKYHIGH,
+            mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
+        ),
+    ],
 )
 def test_discovery(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str, detected_section: SimpleSNMPSection, as_path: Callable[[str], Path]
 ) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
     assert section is not None
 
     # Act
@@ -108,7 +135,7 @@ def test_discovery(
     [
         pytest.param(
             WALK_MCAFEE,
-            "mcafee_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
             {"clients": None, "network_sockets": None},
             [
                 Result(state=State.OK, summary="Clients: 2"),
@@ -118,7 +145,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK_SKYHIGH,
-            "skyhigh_security_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
             {"clients": None, "network_sockets": None},
             [
                 Result(state=State.OK, summary="Clients: 2"),
@@ -128,7 +155,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK_MCAFEE,
-            "mcafee_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
             {"clients": (3, 3), "network_sockets": (3, 3)},
             [
                 Result(state=State.OK, summary="Clients: 2"),
@@ -138,7 +165,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK_MCAFEE,
-            "mcafee_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
             {"clients": (2, 3), "network_sockets": (2, 3)},
             [
                 Result(state=State.WARN, summary="Clients: 2 (warn/crit at 2/3)"),
@@ -148,7 +175,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK_SKYHIGH,
-            "skyhigh_security_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_skyhigh_security_webgateway_misc,
             {"clients": (2, 3), "network_sockets": (2, 3)},
             [
                 Result(state=State.WARN, summary="Clients: 2 (warn/crit at 2/3)"),
@@ -158,7 +185,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK_MCAFEE,
-            "mcafee_webgateway_misc",
+            mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc,
             {"clients": (1, 2), "network_sockets": (1, 2)},
             [
                 Result(state=State.CRIT, summary="Clients: 2 (warn/crit at 1/2)"),
@@ -170,14 +197,13 @@ def test_discovery(
 )
 def test_check_results(
     walk: str,
-    detected_section: str,
-    fix_register: FixRegister,
+    detected_section: SimpleSNMPSection,
     params_misc: dict[str, object],
     expected_results: list[Result],
     as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
+    section = get_parsed_snmp_section(detected_section, as_path(walk))
     assert section is not None
     params = typing.cast(
         mcafee_gateway.MiscParams, mcafee_gateway.MISC_DEFAULT_PARAMS | params_misc
@@ -194,9 +220,11 @@ def test_check_results(
     assert results == expected_results
 
 
-def test_check_metrics(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+def test_check_metrics(as_path: Callable[[str], Path]) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(WALK_MCAFEE))
+    section = get_parsed_snmp_section(
+        mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc, as_path(WALK_MCAFEE)
+    )
     assert section is not None
 
     # Act
@@ -218,10 +246,12 @@ INVALID_WALK = """
 """
 
 
-def test_check_invalid_values(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
+def test_check_invalid_values(as_path: Callable[[str], Path]) -> None:
     # Assemble
     # This walk is made up.
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), as_path(INVALID_WALK))
+    section = get_parsed_snmp_section(
+        mcafee_webgateway_misc_section.snmp_section_mcafee_webgateway_misc, as_path(INVALID_WALK)
+    )
 
     # Assume
     assert section is not None

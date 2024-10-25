@@ -14,7 +14,6 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
@@ -24,7 +23,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import UserObject, Users, UserSpec
+from cmk.gui.type_defs import UserContactDetails, UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -367,19 +366,15 @@ class UsersConfigFile(WatoSingleConfigFile[Users]):
         )
 
 
-class ContactsConfigFile(WatoSingleConfigFile[dict]):
+class ContactsConfigFile(WatoSingleConfigFile[dict[UserId, UserContactDetails]]):
     """Handles reading and writing contacts.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir()) / "contacts.mk",
             config_variable="contacts",
-            spec_class=dict,
+            spec_class=dict[UserId, UserContactDetails],
         )
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_contacts(cfg)
 
 
 @dataclass(frozen=True, kw_only=True)

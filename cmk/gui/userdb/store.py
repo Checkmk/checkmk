@@ -28,7 +28,6 @@ from cmk.ccc.store import (
 )
 
 import cmk.utils.paths
-from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.user import UserId
@@ -57,7 +56,7 @@ from cmk.crypto.password import Password
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
 from ._user_attribute import get_user_attributes
-from ._user_spec import add_internal_attributes, validate_users_details
+from ._user_spec import add_internal_attributes, validate_contact_details, validate_users_details
 
 T = TypeVar("T")
 
@@ -567,7 +566,7 @@ def write_contacts_and_users_file(
 
     if not skip_validation:
         validate_users_details(users)
-        validate_contacts(contacts)
+        validate_contact_details(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(

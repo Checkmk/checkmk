@@ -5,7 +5,7 @@
 from pydantic import TypeAdapter
 
 from cmk.gui.config import active_config
-from cmk.gui.type_defs import UserDetails, UserSpec
+from cmk.gui.type_defs import UserContactDetails, UserDetails, UserSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -34,3 +34,8 @@ def validate_users_details(users: object) -> dict[str, UserDetails]:
     # nosemgrep: type-adapter-detected
     validator = TypeAdapter(dict[str, UserDetails])
     return validator.validate_python(users, strict=True)
+
+
+def validate_contact_details(contacts: object) -> dict[str, UserContactDetails]:
+    validator = TypeAdapter(dict[str, UserContactDetails])
+    return validator.validate_python(contacts, strict=True)

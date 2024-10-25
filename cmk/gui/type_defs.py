@@ -164,9 +164,9 @@ class DisableNotificationsAttribute(TypedDict):
 
 # TODO: verify if this is the same notify_types.Contact (merge if yes)
 #  should be sure with first validation update
-class UserContactDetails(TypedDict, total=True):
+class UserContactDetails(TypedDict):
     alias: str
-    disable_notifications: DisabledNotificationsOptions
+    disable_notifications: NotRequired[DisabledNotificationsOptions]
     email: NotRequired[str]
     pager: NotRequired[str]
     contactgroups: NotRequired[list[str]]

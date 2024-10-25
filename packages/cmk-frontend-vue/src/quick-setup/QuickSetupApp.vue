@@ -7,8 +7,34 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from '@/components/CmkIcon.vue'
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
+import { onBeforeMount, onUnmounted, getCurrentInstance } from 'vue'
+import type { AppConfig, ComponentInternalInstance } from 'vue'
 
 defineProps<QuickSetupAppProps>()
+
+onBeforeMount(() => {
+  const instance = getCurrentInstance() as ComponentInternalInstance | null
+
+  if (instance && instance.appContext.config) {
+    const originalWarnHandler: AppConfig['warnHandler'] = instance.appContext.config.warnHandler
+
+    // Suppress warning about <Suspense> being an experimental feature explicitly here (since we use it intentionally)
+    instance.appContext.config.warnHandler = (msg, instance, trace) => {
+      if (msg.includes('<Suspense> is an experimental feature')) {
+        return
+      }
+      if (originalWarnHandler) {
+        originalWarnHandler(msg, instance, trace)
+      }
+    }
+
+    onUnmounted(() => {
+      if (originalWarnHandler !== undefined) {
+        instance.appContext.config.warnHandler = originalWarnHandler
+      }
+    })
+  }
+})
 </script>
 <template>
   <Suspense>

@@ -144,7 +144,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
         # after starting the agent controller, so we retry for some time
         wait_until(
             lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
-            timeout=3,
+            timeout=30,
             interval=0.1,
         )
         yield agent_ctl_daemon

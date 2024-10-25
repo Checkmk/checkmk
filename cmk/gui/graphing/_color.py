@@ -345,14 +345,14 @@ def color_to_rgb(color: metrics_api.Color) -> RGB:
         case metrics_api.Color.RED:
             return RGB(255, 41, 41)
         case metrics_api.Color.DARK_RED:
-            return RGB(164, 0, 0)
+            return RGB(230, 37, 37)
 
         case metrics_api.Color.LIGHT_ORANGE:
             return RGB(255, 150, 100)
         case metrics_api.Color.ORANGE:
             return RGB(255, 110, 33)
         case metrics_api.Color.DARK_ORANGE:
-            return RGB(180, 70, 10)
+            return RGB(204, 88, 25)
 
         case metrics_api.Color.LIGHT_YELLOW:
             return RGB(255, 255, 120)
@@ -373,7 +373,7 @@ def color_to_rgb(color: metrics_api.Color) -> RGB:
         case metrics_api.Color.BLUE:
             return RGB(30, 144, 255)
         case metrics_api.Color.DARK_BLUE:
-            return RGB(30, 30, 200)
+            return RGB(24, 115, 204)
 
         case metrics_api.Color.LIGHT_CYAN:
             return RGB(150, 255, 255)
@@ -383,11 +383,11 @@ def color_to_rgb(color: metrics_api.Color) -> RGB:
             return RGB(20, 135, 140)
 
         case metrics_api.Color.LIGHT_PURPLE:
-            return RGB(220, 160, 255)
+            return RGB(225, 179, 249)
         case metrics_api.Color.PURPLE:
-            return RGB(180, 65, 240)
+            return RGB(210, 141, 246)
         case metrics_api.Color.DARK_PURPLE:
-            return RGB(120, 20, 160)
+            return RGB(180, 65, 240)
 
         case metrics_api.Color.LIGHT_PINK:
             return RGB(255, 160, 240)
@@ -401,7 +401,7 @@ def color_to_rgb(color: metrics_api.Color) -> RGB:
         case metrics_api.Color.BROWN:
             return RGB(191, 133, 72)
         case metrics_api.Color.DARK_BROWN:
-            return RGB(124, 62, 4)
+            return RGB(153, 106, 58)
 
         case metrics_api.Color.LIGHT_GRAY:
             return RGB(200, 200, 200)

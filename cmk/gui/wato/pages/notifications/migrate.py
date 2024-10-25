@@ -111,11 +111,11 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
         # TODO: add migration logic
 
         return FilterForHostsAndServices(
-            ec_alert_filters=None,
-            host_filters=None,
-            service_filters=None,
-            assignee_filters=None,
-            general_filters=None,
+            ec_alert_filters={},
+            host_filters={},
+            service_filters={},
+            assignee_filters={},
+            general_filters={},
         )
 
     def _get_notification_method() -> NotificationMethod:

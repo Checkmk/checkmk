@@ -54,7 +54,7 @@
                 },
                 "consolidation_type": {
                     "type": "string",
-                    "enum": ["average", "minimum", "maximum"]
+                    "enum": ["average", "min", "max"]
                 }
             },
             "required": [
@@ -104,7 +104,7 @@
                 },
                 "scalar_type": {
                     "type": "string",
-                    "enum": ["warning", "critical", "minimum", "maximum"]
+                    "enum": ["warn", "crit", "min", "max"]
                 }
             },
             "required": [

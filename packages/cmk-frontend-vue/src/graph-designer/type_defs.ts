@@ -40,7 +40,7 @@ export interface Metric {
   host_name: GraphLineHostName;
   service_name: GraphLineServiceName;
   metric_name: GraphLineMetricName;
-  consolidation_type: "average" | "minimum" | "maximum";
+  consolidation_type: "average" | "min" | "max";
 }
 export interface Scalar {
   id: GraphLineId;
@@ -54,7 +54,7 @@ export interface Scalar {
   host_name: GraphLineHostName;
   service_name: GraphLineServiceName;
   metric_name: GraphLineMetricName;
-  scalar_type: "warning" | "critical" | "minimum" | "maximum";
+  scalar_type: "warn" | "crit" | "min" | "max";
 }
 export interface Constant {
   id: GraphLineId;

@@ -44,20 +44,20 @@ const props = defineProps<{
 
 // Specs
 
-const dataConsolidationType = ref<'average' | 'minimum' | 'maximum'>('maximum')
+const dataConsolidationType = ref<'average' | 'min' | 'max'>('max')
 const specConsolidationType = makeSingleChoice('', [
   { name: 'average', title: props.i18n.graph_lines.average },
-  { name: 'minimum', title: props.i18n.graph_lines.minimum },
-  { name: 'maximum', title: props.i18n.graph_lines.maximum }
+  { name: 'min', title: props.i18n.graph_lines.minimum },
+  { name: 'max', title: props.i18n.graph_lines.maximum }
 ])
 const backendValidationConsolidationType: ValidationMessages = []
 
-const dataScalarType = ref<'warning' | 'critical' | 'minimum' | 'maximum'>('critical')
+const dataScalarType = ref<'warn' | 'crit' | 'min' | 'max'>('crit')
 const specScalarType = makeSingleChoice('', [
-  { name: 'warning', title: props.i18n.graph_lines.warning },
-  { name: 'critical', title: props.i18n.graph_lines.critical },
-  { name: 'minimum', title: props.i18n.graph_lines.minimum },
-  { name: 'maximum', title: props.i18n.graph_lines.maximum }
+  { name: 'warn', title: props.i18n.graph_lines.warning },
+  { name: 'crit', title: props.i18n.graph_lines.critical },
+  { name: 'min', title: props.i18n.graph_lines.minimum },
+  { name: 'max', title: props.i18n.graph_lines.maximum }
 ])
 const backendValidationScalarType: ValidationMessages = []
 

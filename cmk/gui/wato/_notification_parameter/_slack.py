@@ -8,7 +8,7 @@ from typing import cast
 from cmk.gui.form_specs.private.definitions import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.watolib.password_store import passwordstore_choices
+from cmk.gui.watolib.password_store import passwordstore_choices_without_user
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -72,7 +72,7 @@ class NotificationParameterSlack(NotificationParameter):
                                         SingleChoiceElementExtended(
                                             title=Title("%s") % title, name=ident
                                         )
-                                        for ident, title in passwordstore_choices()
+                                        for ident, title in passwordstore_choices_without_user()
                                         if ident is not None
                                     ],
                                     type=str,

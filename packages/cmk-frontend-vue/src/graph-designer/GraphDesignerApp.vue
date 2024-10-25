@@ -270,6 +270,33 @@ const topics: Topic[] = [
 
 // Graph lines
 
+function formulaOf(graphLine: GraphLine): string {
+  switch (graphLine.type) {
+    case 'metric':
+    case 'scalar':
+    case 'constant':
+      return ''
+    case 'sum':
+      return `${props.i18n.graph_operations.sum} ${props.i18n.graph_lines.of}`
+    case 'product':
+      return `${props.i18n.graph_operations.product} ${props.i18n.graph_lines.of}`
+    case 'difference':
+      return `${props.i18n.graph_operations.difference} ${props.i18n.graph_lines.of}`
+    case 'fraction':
+      return `${props.i18n.graph_operations.fraction} ${props.i18n.graph_lines.of}`
+    case 'average':
+      return `${props.i18n.graph_operations.average} ${props.i18n.graph_lines.of}`
+    case 'minimum':
+      return `${props.i18n.graph_operations.minimum} ${props.i18n.graph_lines.of}`
+    case 'maximum':
+      return `${props.i18n.graph_operations.maximum} ${props.i18n.graph_lines.of}`
+    case 'transformation':
+      return `${props.i18n.graph_operations.percentile} ${props.i18n.graph_lines.of}`
+    default:
+      return ''
+  }
+}
+
 const dataMetric = ref<Metric>({
   hostName: '',
   serviceName: '',
@@ -340,7 +367,6 @@ function generateOperation(graphLine: Operation): Operation {
     type: graphLine.type,
     color: graphLine.color,
     title: graphLine.title,
-    title_short: graphLine.title_short,
     visible: graphLine.visible,
     line_type: graphLine.line_type,
     mirrored: graphLine.mirrored,
@@ -356,7 +382,6 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         type: graphLine.type,
         color: graphLine.color,
         title: graphLine.title,
-        title_short: graphLine.title_short,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -371,7 +396,6 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         type: graphLine.type,
         color: graphLine.color,
         title: graphLine.title,
-        title_short: graphLine.title_short,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -386,7 +410,6 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         type: graphLine.type,
         color: graphLine.color,
         title: graphLine.title,
-        title_short: graphLine.title_short,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -406,7 +429,6 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         type: graphLine.type,
         color: graphLine.color,
         title: graphLine.title,
-        title_short: graphLine.title_short,
         visible: graphLine.visible,
         line_type: graphLine.line_type,
         mirrored: graphLine.mirrored,
@@ -446,16 +468,11 @@ function addMetric() {
     dataMetric.value.metricName !== ''
   ) {
     // TODO set color, title, ...
-    const consolidationType = specConsolidationType['elements'].find(
-      (e) => e.name === dataConsolidationType.value
-    )
-    const consolidationTypeTitle = consolidationType ? consolidationType.title : ''
     graphLines.value.push({
       id: id++,
       type: 'metric',
       color: '#ff0000',
       title: `${dataMetric.value.hostName} > ${dataMetric.value.serviceName} > ${dataMetric.value.metricName}`,
-      title_short: `${consolidationTypeTitle} ${props.i18n.graph_lines.of} ${props.i18n.topics.metric}`,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -479,14 +496,11 @@ function addScalar() {
     dataScalar.value.metricName !== ''
   ) {
     // TODO set color, title, ...
-    const scalarType = specScalarType['elements'].find((e) => e.name === dataScalarType.value)
-    const scalarTypeTitle = scalarType ? scalarType.title : ''
     graphLines.value.push({
       id: id++,
       type: 'scalar',
       color: '#ff0000',
       title: `${dataScalar.value.hostName} > ${dataScalar.value.serviceName} > ${dataScalar.value.metricName}`,
-      title_short: `${scalarTypeTitle} ${props.i18n.graph_lines.of} ${dataScalar.value.metricName}`,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -509,7 +523,6 @@ function addConstant() {
     type: 'constant',
     color: '#ff0000',
     title: `${props.i18n.topics.constant} ${dataConstant.value}`,
-    title_short: props.i18n.topics.constant,
     visible: true,
     line_type: 'line',
     mirrored: false,
@@ -548,7 +561,6 @@ function applySum() {
       type: 'sum',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.sum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.sum,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -566,7 +578,6 @@ function applyProduct() {
       type: 'product',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.product} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.product,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -584,7 +595,6 @@ function applyDifference() {
       type: 'difference',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.difference} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.difference,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -602,7 +612,6 @@ function applyFraction() {
       type: 'fraction',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.fraction} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.fraction,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -620,7 +629,6 @@ function applyAverage() {
       type: 'average',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.average} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.average,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -638,7 +646,6 @@ function applyMinimum() {
       type: 'minimum',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.minimum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.minimum,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -656,7 +663,6 @@ function applyMaximum() {
       type: 'maximum',
       color: firstOperand.color,
       title: `${props.i18n.graph_operations.maximum} ${props.i18n.graph_lines.of} ${selectedGraphLines.value.map((l) => l.title).join(', ')}`,
-      title_short: props.i18n.graph_operations.maximum,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -674,7 +680,6 @@ function applyTransformation() {
       type: 'transformation',
       color: '#ff0000',
       title: `${props.i18n.graph_operations.percentile} ${props.i18n.graph_lines.of} ${selectedGraphLine.title}`,
-      title_short: props.i18n.graph_operations.percentile,
       visible: true,
       line_type: 'line',
       mirrored: false,
@@ -840,7 +845,7 @@ function dragging(event: DragEvent) {
             {{ graphLine.title }}
           </div>
           <div v-else-if="graphLine.type === 'transformation'">
-            {{ graphLine.title_short }} {{ props.i18n.graph_lines.of }}
+            {{ formulaOf(graphLine) }}
             <br />
             <div
               :style="{
@@ -852,7 +857,7 @@ function dragging(event: DragEvent) {
             {{ graphLine.operand.title }}
           </div>
           <div v-else-if="isOperation(graphLine)">
-            {{ graphLine.title_short }}
+            {{ formulaOf(graphLine) }}
             <div v-for="operand in graphLine.operands" :key="operand.id">
               <div
                 :style="{ 'background-color': operand.color, 'border-color': operand.color }"

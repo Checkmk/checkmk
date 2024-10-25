@@ -12,7 +12,6 @@
         "graph_line_id": { "type": "integer" },
         "graph_line_color": { "type": "string" },
         "graph_line_title": { "type": "string" },
-        "graph_line_title_short": { "type": "string" },
         "graph_line_visible": { "type": "boolean" },
         "graph_line_line_type": {
             "type": "string",
@@ -33,9 +32,6 @@
                 },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
-                "title_short": {
-                    "$ref": "#/$defs/graph_line_title_short"
-                },
                 "visible": { "$ref": "#/$defs/graph_line_visible" },
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
@@ -62,7 +58,6 @@
                 "type",
                 "color",
                 "title",
-                "title_short",
                 "visible",
                 "line_type",
                 "mirrored",
@@ -83,9 +78,6 @@
                 },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
-                "title_short": {
-                    "$ref": "#/$defs/graph_line_title_short"
-                },
                 "visible": { "$ref": "#/$defs/graph_line_visible" },
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
@@ -112,7 +104,6 @@
                 "type",
                 "color",
                 "title",
-                "title_short",
                 "visible",
                 "line_type",
                 "mirrored",
@@ -130,9 +121,6 @@
                 "type": { "type": "string", "enum": ["constant"] },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
-                "title_short": {
-                    "$ref": "#/$defs/graph_line_title_short"
-                },
                 "visible": { "$ref": "#/$defs/graph_line_visible" },
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
@@ -147,7 +135,6 @@
                 "type",
                 "color",
                 "title",
-                "title_short",
                 "visible",
                 "line_type",
                 "mirrored",
@@ -173,9 +160,6 @@
                 },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
-                "title_short": {
-                    "$ref": "#/$defs/graph_line_title_short"
-                },
                 "visible": { "$ref": "#/$defs/graph_line_visible" },
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
@@ -201,7 +185,6 @@
                 "type",
                 "color",
                 "title",
-                "title_short",
                 "visible",
                 "line_type",
                 "mirrored",
@@ -219,9 +202,6 @@
                 },
                 "color": { "$ref": "#/$defs/graph_line_color" },
                 "title": { "$ref": "#/$defs/graph_line_title" },
-                "title_short": {
-                    "$ref": "#/$defs/graph_line_title_short"
-                },
                 "visible": { "$ref": "#/$defs/graph_line_visible" },
                 "line_type": {
                     "$ref": "#/$defs/graph_line_line_type"
@@ -239,7 +219,6 @@
                 "type",
                 "color",
                 "title",
-                "title_short",
                 "visible",
                 "line_type",
                 "mirrored",

@@ -13,7 +13,6 @@ export type GraphLine = Metric | Scalar | Constant | Operation | Transformation;
 export type GraphLineId = number;
 export type GraphLineColor = string;
 export type GraphLineTitle = string;
-export type GraphLineTitleShort = string;
 export type GraphLineVisible = boolean;
 export type GraphLineLineType = "line" | "area" | "stack";
 export type GraphLineMirrored = boolean;
@@ -33,7 +32,6 @@ export interface Metric {
   type: "metric";
   color: GraphLineColor;
   title: GraphLineTitle;
-  title_short: GraphLineTitleShort;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -47,7 +45,6 @@ export interface Scalar {
   type: "scalar";
   color: GraphLineColor;
   title: GraphLineTitle;
-  title_short: GraphLineTitleShort;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -61,7 +58,6 @@ export interface Constant {
   type: "constant";
   color: GraphLineColor;
   title: GraphLineTitle;
-  title_short: GraphLineTitleShort;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -72,7 +68,6 @@ export interface Operation {
   type: "sum" | "product" | "difference" | "fraction" | "average" | "minimum" | "maximum";
   color: GraphLineColor;
   title: GraphLineTitle;
-  title_short: GraphLineTitleShort;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;
@@ -83,7 +78,6 @@ export interface Transformation {
   type: "transformation";
   color: GraphLineColor;
   title: GraphLineTitle;
-  title_short: GraphLineTitleShort;
   visible: GraphLineVisible;
   line_type: GraphLineLineType;
   mirrored: GraphLineMirrored;

@@ -5,7 +5,6 @@
 
 import contextlib
 import os
-import sys
 from collections.abc import Iterator
 from unittest import mock
 
@@ -36,14 +35,8 @@ def mock_livestatus() -> Iterator[MockLiveStatusConnection]:
         yield mock_live
 
 
-def running_in_pytest():
-    assert "pytest" in sys.modules, "This code should never be run. This is a bug, please report."
-    return True
-
-
 @contextlib.contextmanager
 def mock_site() -> Iterator[None]:
-    assert running_in_pytest()
     env_vars = {"OMD_ROOT": "/", "OMD_SITE": os.environ.get("OMD_SITE", "NO_SITE")}
     with mock.patch.dict(os.environ, env_vars):
         # We don't want to be polluted by other tests.

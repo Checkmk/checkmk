@@ -99,6 +99,13 @@ def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
+    # Some smoke test to ensure the cmk-agent-ctl is executable in the current environment before
+    # trying to install and use it in the following steps.
+    # Please note: We can not verify the agent controller from the package below, as it is
+    # automatically deleted by the post install script in case it is not executable (see also
+    # agents/scripts/super-server/0_systemd/setup).
+    run([site.path("share/check_mk/agents/linux/cmk-agent-ctl"), "--version"])
+
     if site.version.is_raw_edition():
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download/invoke",

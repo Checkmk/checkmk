@@ -870,7 +870,7 @@ mssql:
     piggyback_host: "my_pb_host"
     discovery: # optional
       detect: true # optional(default:yes)
-      include: ["foo", "bar"] # optional prio 2; use instance even if excluded
+      include: ["foo", "bar", "INST2"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "socket" # optional(default:"port") - "socket", "port" or "special"
     instances: # optional
@@ -881,7 +881,15 @@ mssql:
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
           sections: # optional, same as above
-      - sid: "INST2" # mandatory
+      - sid: "INST2"
+        authentication:
+          username: "u"
+          password: "p"
+          type: "sql_server"
+          access_token: "b"
+        connection:
+          hostname: "local"
+          port: 500
   configs:
     - main:
         options:
@@ -1424,11 +1432,18 @@ connection:
             "myPiggybackHost"
         );
         assert_eq!(c.instances()[0].name().to_string(), "INST1");
-        assert_eq!(c.instances()[1].name().to_string(), "INST2");
+        let inst2 = &c.instances()[1];
+
+        assert_eq!(inst2.name().to_string(), "INST2");
+        assert_eq!(inst2.auth().password, Some("p".to_string()));
+        assert_eq!(&inst2.auth().username, "u");
+        assert_eq!(inst2.auth().auth_type, AuthType::SqlServer);
+        assert_eq!(inst2.conn().hostname, HostName::from("local".to_string()));
+        assert_eq!(inst2.conn().port, Port(500));
         assert_eq!(c.mode(), &Mode::Socket);
         assert_eq!(
             c.discovery().include(),
-            &vec!["foo".to_string(), "bar".to_string()]
+            &vec!["foo".to_string(), "bar".to_string(), "INST2".to_string()]
         );
         assert_eq!(c.discovery().exclude(), &vec!["baz".to_string()]);
         assert!(c.discovery().detect());

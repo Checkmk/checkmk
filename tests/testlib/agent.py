@@ -63,13 +63,19 @@ def install_agent_package(package_path: Path) -> Path:
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
         try:
-            run(["dpkg", "-i", package_path.as_posix()], sudo=True)
+            run(["dpkg", "-i", package_path.as_posix()], sudo=True, capture_output=False)
         except RuntimeError as e:
             process_table = run(["ps", "aux"]).stdout
             raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
+        assert installed_ctl_path.exists()
         return installed_ctl_path
     if package_type == "linux_rpm":
-        run(["rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()], sudo=True)
+        run(
+            ["rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()],
+            sudo=True,
+            capture_output=False,
+        )
+        assert installed_ctl_path.exists()
         return installed_ctl_path
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"

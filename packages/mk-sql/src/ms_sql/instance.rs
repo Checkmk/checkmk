@@ -429,7 +429,13 @@ impl SqlInstance {
         endpoint: &Endpoint,
         database: Option<String>,
     ) -> Result<UniClient> {
-        log::info!("create client {}", self.name);
+        log::info!(
+            "Create client {} TCP:{} user:{} host:{}",
+            self.name,
+            self.tcp,
+            endpoint.auth().username(),
+            endpoint.conn().hostname()
+        );
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {

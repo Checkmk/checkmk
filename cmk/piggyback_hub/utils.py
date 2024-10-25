@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 import multiprocessing
 import signal
@@ -80,10 +81,10 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
 
 
 def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:
-    attempts = 120  # 10
-    interval = 5  # 3
+    retry_during_presumed_broker_restart = itertools.repeat(3, 20)
+    retry_forever = itertools.repeat(60)
 
-    for attempt in range(1, attempts):
+    for interval in itertools.chain(retry_during_presumed_broker_restart, retry_forever):
         try:
             # Note: We re-read the certificates here.
             return Connection(APP_NAME, omd_root)
@@ -96,6 +97,5 @@ def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> C
             logger.info("Connection failed (will retry): %s: %s", task_name, exc)
             # Retry.
             time.sleep(interval)
-            logger.info("Reconnection attempt %s: %s: %s", attempt, task_name, exc)
 
-    return Connection(APP_NAME, omd_root)
+    raise RuntimeError("Unreachable code reached")

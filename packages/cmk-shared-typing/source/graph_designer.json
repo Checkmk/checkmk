@@ -16,7 +16,7 @@
         "graph_line_visible": { "type": "boolean" },
         "graph_line_line_type": {
             "type": "string",
-            "enum": ["line", "area", "stack'"]
+            "enum": ["line", "area", "stack"]
         },
         "graph_line_mirrored": { "type": "boolean" },
         "graph_line_host_name": { "type": "string" },

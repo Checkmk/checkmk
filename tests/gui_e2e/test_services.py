@@ -38,10 +38,12 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     Create a host with a 'PING' service. Navigate to 'Service search' page and reschedule active
     checks. Check that the 'age' of the 'PING' service is updated.
     """
+    host_name = created_host.name
     dashboard_page.main_menu.monitor_menu("Service search").click()
     service_search_page = ServiceSearchPage(dashboard_page.page)
 
     logger.info("Apply filters and wait for the table to load")
+    service_search_page.filter_sidebar.apply_host_filter(host_name)
     service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
 
     sleep_time = 5
@@ -63,9 +65,9 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     expect(service_search_page.services_table).to_be_visible()
 
     logger.info("Check that the service was rescheduled")
-    services_count = service_search_page.service_rows.count()
+    services_count = service_search_page.service_rows(host_name).count()
     assert services_count == 1, "Unexpected number of services in the table"
-    time_since_last_check = service_search_page.checked_column_cells.all_inner_texts()
+    time_since_last_check = service_search_page.checked_column_cells(host_name).all_inner_texts()
     (number, unit) = time_since_last_check[0].split()
     assert unit == "ms" or (
         unit == "s" and float(number) < sleep_time
@@ -73,7 +75,7 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
 
 
 @pytest.mark.parametrize(
-    "service_filter, expected_graphs, create_host_using_agent_dump",
+    "service_filter, expected_graphs",
     [
         pytest.param(
             "cpu",
@@ -81,7 +83,6 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
                 "CPU load average of last minute - {host_name} - CPU load",
                 "CPU utilization - {host_name} - CPU utilization",
             ],
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
             id="cpu_service_filter",
         ),
         pytest.param(
@@ -91,25 +92,24 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
                 "Size and used space - {host_name} - sum (3 objects)",
                 "Growth trend - {host_name} - sum (1 objects)",
             ],
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
             id="filesystem_service_filter",
         ),
     ],
-    indirect=["create_host_using_agent_dump"],
 )
 def test_filtered_services_combined_graphs(
     dashboard_page: Dashboard,
     service_filter: str,
     expected_graphs: list[str],
-    create_host_using_agent_dump: list[str],
+    linux_hosts: list[str],
 ) -> None:
     """Test filtered services combined graphs.
 
     Navigate to 'Service search' page, apply a filter, click on
     'All metrics of same type in one graph' and check that all expected graphs are displayed.
     """
-    host_name = create_host_using_agent_dump[0]
+    host_name = linux_hosts[0]
     service_search_page = ServiceSearchPage(dashboard_page.page)
+    service_search_page.filter_sidebar.apply_host_filter(host_name)
     service_search_page.filter_sidebar.apply_service_filter(service_filter)
     service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
     service_search_page.main_area.click_item_in_dropdown_list(
@@ -124,18 +124,8 @@ def test_filtered_services_combined_graphs(
         combined_graphs_service_search_page.check_graph_with_timeranges(formatted_graph_title)
 
 
-@pytest.mark.parametrize(
-    "create_host_using_agent_dump",
-    [
-        pytest.param(
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
-            id="no_errors_on_combined_graphs_page",
-        )
-    ],
-    indirect=["create_host_using_agent_dump"],
-)
 def test_no_errors_on_combined_graphs_page(
-    dashboard_page: Dashboard, create_host_using_agent_dump: list[str]
+    dashboard_page: Dashboard, linux_hosts: list[str]
 ) -> None:
     """Test that there are no errors on the 'Combined graphs - Service search' page."""
     service_search_page = ServiceSearchPage(dashboard_page.page)

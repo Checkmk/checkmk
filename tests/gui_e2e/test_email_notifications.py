@@ -57,20 +57,10 @@ def create_notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
     test_site.openapi.activate_changes_and_wait_for_completion()
 
 
-@pytest.mark.parametrize(
-    "create_host_using_agent_dump",
-    [
-        pytest.param(
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
-            id="filesystem_email_notifications",
-        ),
-    ],
-    indirect=["create_host_using_agent_dump"],
-)
 @pytest.mark.skip(reason="New email templates need adjustments")
 def test_filesystem_email_notifications(
     dashboard_page: Dashboard,
-    create_host_using_agent_dump: list[str],
+    linux_hosts: list[str],
     notification_user: tuple[str, str],
     email_manager: EmailManager,
     test_site: Site,
@@ -81,7 +71,7 @@ def test_filesystem_email_notifications(
     the email notification is sent and contains the expected data.
     """
     username, email = notification_user
-    host_name = create_host_using_agent_dump[0]
+    host_name = linux_hosts[0]
     service_name = "Filesystem /"
     expected_event = "OK -> WARN"
     expected_notification_subject = f"Check_MK: {host_name}/{service_name} {expected_event}"
@@ -108,8 +98,8 @@ def test_filesystem_email_notifications(
         service_search_page = ServiceSearchPage(dashboard_page.page)
         logger.info("Reschedule the 'Check_MK' service to trigger the notification")
         service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-        service_search_page.reschedule_check("Check_MK")
-        service_summary = service_search_page.service_summary(service_name).inner_text()
+        service_search_page.reschedule_check(host_name, "Check_MK")
+        service_summary = service_search_page.service_summary(host_name, service_name).inner_text()
 
         email_file_path = email_manager.wait_for_email(expected_notification_subject)
         expected_fields = {"To": email}

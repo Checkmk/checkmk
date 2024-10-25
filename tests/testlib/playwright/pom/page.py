@@ -434,6 +434,10 @@ class FilterSidebar(LocatorHelper):
         return self.page.frame_locator("iframe[name='main']").get_by_role("searchbox")
 
     @property
+    def select_host_field(self) -> Locator:
+        return self.locator("#select2-host_regex-container")
+
+    @property
     def last_service_state_change_filter(self):
         return self.locator("span:text-is('Last service state change')")
 
@@ -479,6 +483,12 @@ class FilterSidebar(LocatorHelper):
         self.select_service_field.click()
         self.search_text_field.fill(service_filter)
         self.dropdown_option(service_filter, exact=True).click()
+
+    def apply_host_filter(self, host_filter: str) -> None:
+        self.select_host_field.click()
+        self.search_text_field.fill(host_filter)
+        # TODO: remove 'nth(0)' after fixing CMK-19975
+        self.dropdown_option(host_filter, exact=True).nth(0).click()
 
     def apply_filters(self, expected_locator: Locator) -> None:
         self.apply_filters_button.click()

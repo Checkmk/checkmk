@@ -25,11 +25,11 @@ class WatchLog:
         self._tail_process: subprocess.Popen[str] | None = None
 
     def __enter__(self) -> "WatchLog":
-        if not self._site.file_exists(self._log_path):
+        if not self._log_path.exists():
             self._site.write_text_file(self._log_path, "")
 
         self._tail_process = self._site.execute(
-            ["tail", "-f", self._site.path(self._log_path).as_posix()],
+            ["tail", "-f", self._log_path.as_posix()],
             stdout=subprocess.PIPE,
             bufsize=1,  # line buffered
         )

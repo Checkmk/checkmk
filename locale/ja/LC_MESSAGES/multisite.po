@@ -376,6 +376,10 @@ msgstr "%d の変更"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%dカオス状態は%sから%s(%s)まで変化します"
 
+#, fuzzy, python-format
+msgid "%d check plug-ins trying to use the removed API: %s"
+msgstr "%d 非推奨のAPIを使用しているプラグイン: %s"
+
 #, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
 msgstr "%d 非推奨のAPIを使用しているプラグイン: %s"
@@ -633,22 +637,6 @@ msgstr ""
 "す。"
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "選択した Setup フォルダに %s がありません。"
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s が不明 アクティブ化された監視構成で"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%sはホスト名の明示的なリストに存在しません。"
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s は、明示的に選択されたサイトの1つによって監視されていません。"
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s 通知ルール"
 
@@ -667,10 +655,6 @@ msgstr "%s の %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s of %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s 除外リスト。"
 
 #, fuzzy, python-format
 msgid "%s other service"
@@ -814,14 +798,14 @@ msgstr ""
 "フィギュレーション・トラッキングを無効にしてください。"
 
 #, fuzzy, python-format
-msgid "(%s more entries)"
+msgid "(%s more items)"
 msgstr "削除されたエントリ"
 
 msgid "(0 is current period)"
 msgstr "(0は現在の期間です)"
 
 #, fuzzy
-msgid "(1 more entry)"
+msgid "(1 more item)"
 msgstr "(ノーエントリ)"
 
 msgid "(Edit presets)"
@@ -923,12 +907,20 @@ msgstr "(syslogによって設定)"
 msgid "(syslog)"
 msgstr "(syslog)"
 
+#, fuzzy
+msgid "(unknown)"
+msgstr "不明"
+
 #, python-format
 msgid "(unknown: %d)"
 msgstr "(不明: %d)"
 
 msgid "(unset)"
 msgstr "(未設定)"
+
+#, fuzzy
+msgid "(untitled ruleset)"
+msgstr "(無題モジュール)"
 
 msgid ", "
 msgstr ""
@@ -957,6 +949,9 @@ msgstr "、最後の %.1f チェック期間内にデータが受信されてい
 
 msgid ", the first match skips this rule pack"
 msgstr ",最初の一致はこのルールパックをスキップします"
+
+msgid "-"
+msgstr ""
 
 msgid "-.-- %"
 msgstr "-.--%"
@@ -2851,6 +2846,10 @@ msgstr "アイドル接続の絶対数"
 msgid "Absolute number of incoming connections"
 msgstr "着信接続の絶対数"
 
+#, fuzzy
+msgid "Absolute path to catalog ZIP file"
+msgstr "CA証明書への絶対パス"
+
 msgid "Absolute time of alert"
 msgstr "アラートの絶対時間"
 
@@ -3303,6 +3302,10 @@ msgid "Activating"
 msgstr "アクティベート"
 
 msgid "Activation"
+msgstr "アクティベーション"
+
+#, fuzzy, python-format
+msgid "Activation (%s)"
 msgstr "アクティベーション"
 
 #, python-format
@@ -4841,8 +4844,8 @@ msgstr "エージェントの更新"
 msgid "Agent updates are currently disabled"
 msgstr "エージェントの更新は現在無効になっています"
 
-#, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+#, fuzzy, python-format
+msgid "Agent updates are disabled for host name %s:"
 msgstr "ホスト名 %s のエージェント更新は無効になっています"
 
 msgid "Agent updates are enabled"
@@ -6019,6 +6022,10 @@ msgstr "例外が発生しました: %s"
 #, fuzzy
 msgid "An exception occurred"
 msgstr "例外が発生しました"
+
+#, fuzzy
+msgid "An fatal error occured:"
+msgstr "%d エラーが発生しました:"
 
 msgid ""
 "An identifier must only consist of letters, digits, dash and underscore and "
@@ -8589,6 +8596,14 @@ msgstr "BasicAuth設定(オプション)"
 msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
 
+#, fuzzy
+msgid "Batch num"
+msgstr "スイッチ番号"
+
+#, fuzzy
+msgid "Batches"
+msgstr "一致"
+
 msgid "Battery Levels"
 msgstr "バッテリーレベル"
 
@@ -8993,6 +9008,10 @@ msgstr "一括通知を開く"
 #, fuzzy
 msgid "Bulk notifications"
 msgstr "一括通知を開く"
+
+#, fuzzy
+msgid "Bulk outside of the timeperiod"
+msgstr "また 期間外のバルク"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "明示的な属性の一括削除"
@@ -12501,6 +12520,10 @@ msgid "Clone this element"
 msgstr "この要素のクローンを作成します"
 
 #, fuzzy
+msgid "Clone this entry"
+msgstr "このメトリックのクローンを作成します"
+
+#, fuzzy
 msgid "Clone this managed robot"
 msgstr "管理対象オブジェクト"
 
@@ -13878,6 +13901,10 @@ msgstr "1秒あたりの接続数"
 msgid "Connectivity"
 msgstr "接続性"
 
+#, fuzzy
+msgid "Connector Id"
+msgstr "接続ID"
+
 msgid "Connector outlets"
 msgstr "コネクタアウトレット"
 
@@ -14465,6 +14492,9 @@ msgstr "ID トークンを取得できませんでした。(%s)"
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "変更を保存できませんでした: %s"
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
 
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
@@ -15750,6 +15780,10 @@ msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
 msgid "DCD status"
 msgstr "DCDステータス"
 
+#, fuzzy
+msgid "DCD work state"
+msgstr "最悪の状態"
+
 msgid "DD.MM.YYYY"
 msgstr "DD.MM.YYYY"
 
@@ -16737,9 +16771,10 @@ msgid ""
 "Define the lower levels for the time, the systemd service is active since."
 msgstr "終了したコンテナ数の下位レベルの定義"
 
+#, fuzzy
 msgid ""
-"Define the maximum session duration. If reached, the user has to re-"
-"authenticate."
+"Define the maximum allowed session duration. If reached, the user has to re-"
+"authenticate. Sessions are not set to persist on browser termination."
 msgstr ""
 "最大セッション時間を定義します。最大値に達した場合、ユーザは再認証する必要が"
 "あります。"
@@ -17695,7 +17730,12 @@ msgstr "非推奨"
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "非推奨のHW/SWインベントリプラグイン"
 
-msgid "Deprecated check plug-ins"
+#, fuzzy
+msgid "Deprecated check plug-ins (legacy)"
+msgstr "非推奨のチェックプラグイン"
+
+#, fuzzy
+msgid "Deprecated check plug-ins (v1)"
 msgstr "非推奨のチェックプラグイン"
 
 msgid "Deprecated choice, please re-select"
@@ -18278,7 +18318,15 @@ msgstr "検出されたプロセス名"
 msgid "Discovered service labels"
 msgstr "発見されたサービスラベル"
 
+#, fuzzy
+msgid "Discovering"
+msgstr "発見"
+
 msgid "Discovery"
+msgstr "発見"
+
+#, fuzzy, python-format
+msgid "Discovery (%s)"
 msgstr "発見"
 
 msgid "Discovery Output"
@@ -19474,6 +19522,10 @@ msgstr "ダウンロード"
 msgid "Download %s package of agent for %s"
 msgstr "%sのエージェントの%sパッケージをダウンロードします"
 
+#, fuzzy
+msgid "Download (internet connection)"
+msgstr "クライアント接続"
+
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
@@ -20291,6 +20343,10 @@ msgstr "モデルを編集する"
 msgid "Edit my view"
 msgstr "ビューを編集する"
 
+#, fuzzy
+msgid "Edit notification parameter"
+msgstr "この通知ルールを編集する"
+
 #, python-format
 msgid "Edit notification rule %d"
 msgstr "通知ルール %d を編集する"
@@ -20787,6 +20843,10 @@ msgstr "マネジメントボードのSNMPv2cを有効化する"
 
 msgid "Enable TLS"
 msgstr "TLSを有効にする"
+
+#, fuzzy
+msgid "Enable TLS certificate validation"
+msgstr "SSL証明書の検証を無効にする"
 
 msgid "Enable active checks"
 msgstr "アクティブチェックを有効にする"
@@ -21422,6 +21482,9 @@ msgstr "環境変数"
 #, fuzzy
 msgid "Environment build timeout"
 msgstr "環境変数"
+
+msgid "Environment dependency handling"
+msgstr ""
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "エピソード1: Checkmkのインストールと最初のホスト監視"
@@ -22716,6 +22779,10 @@ msgstr "失敗したファイル要求"
 msgid "Failed get locations requests"
 msgstr "場所の取得リクエストに失敗しました"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr "このホストはホストタグ条件 '%s'に失敗しました(タグ%sがあります)"
+
 msgid "Failed index operations"
 msgstr "失敗したインデックス操作"
 
@@ -23105,6 +23172,9 @@ msgstr "すべてをフェッチ"
 
 msgid "Fetch failed"
 msgstr "フェッチに失敗しました"
+
+msgid "Fetch from RCC remote server"
+msgstr ""
 
 msgid "Fetch had bad headers"
 msgstr "フェッチのヘッダーが不良でした"
@@ -23510,6 +23580,10 @@ msgid "Fingerprint: %s"
 msgstr "フィンガープリント: %s"
 
 msgid "Finished"
+msgstr "終了しました"
+
+#, fuzzy, python-format
+msgid "Finished %s"
 msgstr "終了しました"
 
 msgid "Finished."
@@ -24253,6 +24327,10 @@ msgstr "一致する選択肢は見つかりませんでした。"
 
 msgid "Found no matching entry."
 msgstr "一致するエントリが見つかりませんでした。"
+
+#, fuzzy
+msgid "Found no matching parameters. Please try another search term."
+msgstr "一致する行が見つかりませんでした。別の検索語を試してください。"
 
 msgid "Found no matching rows. Please try another search term."
 msgstr "一致する行が見つかりませんでした。別の検索語を試してください。"
@@ -31335,6 +31413,10 @@ msgstr ""
 msgid "In Progress"
 msgstr "進行中"
 
+#, fuzzy, python-format
+msgid "In Progress %s"
+msgstr "進行中"
+
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -32203,6 +32285,10 @@ msgstr "アグリゲーションの初期拡大"
 msgid "Initial scheduling"
 msgstr "初期スケジューリング"
 
+#, fuzzy
+msgid "Initialized"
+msgstr "初期化中"
+
 msgid "Initialized GIT for Checkmk"
 msgstr "Checkmkの初期化されたGIT"
 
@@ -32785,6 +32871,10 @@ msgstr "無効なfixel要素タイプ '%s'"
 #, fuzzy
 msgid "Invalid float number"
 msgstr "無効なファイル名"
+
+#, fuzzy
+msgid "Invalid folder"
+msgstr "無効なID"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33772,9 +33862,6 @@ msgstr "キーID"
 
 msgid "Key Type and Length"
 msgstr ""
-
-msgid "Key from password store"
-msgstr "パスワードストアからのキー"
 
 msgid "Key pair will be generated when you save."
 msgstr "保存するとキーペアが生成されます。"
@@ -35747,6 +35834,10 @@ msgstr "ロードバランサー"
 msgid "Load balancers target groups"
 msgstr "ロードバランサーのターゲットグループ"
 
+#, fuzzy
+msgid "Load from ZIP file"
+msgstr "MIBファイルをアップロードする"
+
 msgid "Load in a new window / tab"
 msgstr "新しいウィンドウ/タブにロード"
 
@@ -35762,6 +35853,10 @@ msgstr "Citrixサーバーの負荷"
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "\"%s/%s\" の読み込みに失敗しました: %s"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "読み込んでいます..."
 
 msgid "Loading maps..."
 msgstr "マップを読み込んでいます..."
@@ -37150,6 +37245,11 @@ msgstr "管理対象オブジェクト"
 #, fuzzy
 msgid "Managed robot deleted."
 msgstr "管理対象オブジェクト"
+
+msgid ""
+"Managed robot names are restricted to the following characters: a-z, A-Z, "
+"0-9, `-`, `_`, `.`"
+msgstr ""
 
 msgid "Managed robot not found while attempting to delete it."
 msgstr ""
@@ -38808,6 +38908,10 @@ msgstr "垂直軸をミラーリングします"
 msgid "Mirror views"
 msgstr "ミラービュー"
 
+#, fuzzy
+msgid "Mirrored"
+msgstr "ミラーリングされた領域"
+
 msgid "Mirrored Area"
 msgstr "ミラーリングされた領域"
 
@@ -38886,6 +38990,10 @@ msgstr "必要なcustom_graphパラメーターがありません。"
 
 msgid "Missing needed host parameter."
 msgstr "必要なホストパラメータがありません。"
+
+#, fuzzy, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr "このホストには 1 つ以上のラベルがありません： %s(ラベル %s があります)"
 
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr ""
@@ -40720,6 +40828,10 @@ msgstr "管理対象オブジェクト"
 msgid "New name"
 msgstr "新しい名前"
 
+#, fuzzy
+msgid "New notification parameter"
+msgstr "通知フェーズ"
+
 #, fuzzy, python-format
 msgid "New notification rule #%d successfully created!"
 msgstr "ホスト作成に成功しました"
@@ -40912,6 +41024,10 @@ msgid "No certificate"
 msgstr "証明書なし"
 
 #, fuzzy
+msgid "No check plug-ins trying to use the removed API"
+msgstr "非推奨のAPIを使用するプラグインをチェックしない"
+
+#, fuzzy
 msgid "No check plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用するプラグインをチェックしない"
 
@@ -40980,6 +41096,10 @@ msgstr ""
 
 #, fuzzy
 msgid "No elements available"
+msgstr "利用不可"
+
+#, fuzzy
+msgid "No elements available, create one"
 msgstr "利用不可"
 
 #, fuzzy
@@ -41210,6 +41330,14 @@ msgstr "検索なし"
 
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
+
+#, fuzzy
+msgid "No selected graph line"
+msgstr "選択したメトリックの操作"
+
+#, fuzzy
+msgid "No selected graph lines"
+msgstr "選択したメトリックの操作"
 
 #, fuzzy
 msgid "No smarthosts"
@@ -41477,13 +41605,13 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Normally a user login session is valid until the password is changed or the "
-"user is locked. By enabling this option, you can apply a time limit to login "
-"sessions which is applied when the user stops interacting with the GUI for a "
-"given amount of time. When a user is exceeding the configured maximum idle "
-"time, the user will be logged out and redirected to the login screen to "
-"renew the login session. This setting can be overridden in each individual "
-"user's profile."
+"Normally a user login session is valid until the password is changed, the "
+"browser is closed or the user is locked. By enabling this option, you can "
+"apply a time limit to login sessions which is applied when the user stops "
+"interacting with the GUI for a given amount of time. When a user exceeds the "
+"configured maximum idle time, the user will be logged out and redirected to "
+"the login screen to renew the login session. This setting can be overridden "
+"in each individual user's profile."
 msgstr ""
 "通常、ユーザーログインセッションは、パスワードが変更されるか、ユーザーがロッ"
 "クされるまで有効です。このオプションを有効にすると、ログインセッションに時間"
@@ -41617,11 +41745,27 @@ msgstr "有効になっていません"
 msgid "Not found"
 msgstr "見つかりません"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "選択した Setup フォルダに %s がありません。"
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s が不明 アクティブ化された監視構成で"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%sはホスト名の明示的なリストに存在しません。"
+
 msgid "Not locked"
 msgstr "ロックされていません"
 
 msgid "Not logged in."
 msgstr "ログインしていない。"
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "%s は、明示的に選択されたサイトの1つによって監視されていません。"
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "パスワードの変更は許可されていません。変更を強制することはできません。"
@@ -43063,6 +43207,10 @@ msgid "On down host"
 msgstr "ダウンホスト上"
 
 #, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s 除外リスト。"
+
+#, fuzzy
 msgid "On recovery (OK/UP)"
 msgstr "コアの再起動またはリカバリー（OK/UP）時"
 
@@ -43237,6 +43385,15 @@ msgstr ""
 "リュームを単独でサービスの説明として使用する場合は、このボックスをオンにしま"
 "す。これにより、サービスの説明が一意でなくなり、一部のサービスが表示されなく"
 "なる可能性があることに注意してください！"
+
+#, fuzzy
+msgid "Only applies if `Periodic notifications` are enabled"
+msgstr "定期的な通知を有効にする"
+
+#, fuzzy
+msgid ""
+"Only applies to notifications triggered by the command `Custom notifications`"
+msgstr "一括通知の通知の並べ替え順序"
 
 #, fuzzy
 msgid ""
@@ -43437,6 +43594,11 @@ msgstr "大文字のみ使用できます"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
+
+msgid ""
+"Only users who are in all the following contact groups will receive the "
+"notification"
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "キャンセルされたイベントがOPENフェーズの場合のみ"
@@ -47098,6 +47260,10 @@ msgid "Please provide a hostname to test with."
 msgstr "テストするホスト名を指定してください。"
 
 #, fuzzy
+msgid "Please provide a path that is absolute on either Linux or Windows."
+msgstr "有効な名前を入力してください"
+
+#, fuzzy
 msgid "Please provide a path that is relative both on Linux and Windows."
 msgstr "有効な名前を入力してください"
 
@@ -47158,6 +47324,10 @@ msgstr "0〜100の数字を選択してください"
 
 msgid "Please select a service."
 msgstr "サービスを選択してください。"
+
+#, fuzzy
+msgid "Please select an element"
+msgstr "少なくとも1つの要素を選択してください"
 
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
@@ -48107,6 +48277,14 @@ msgstr "プロセス"
 msgid "Processes performance data"
 msgstr "プロセスパフォーマンスデータ"
 
+#, fuzzy
+msgid "Processing"
+msgstr "プロセスマッチング"
+
+#, fuzzy, python-format
+msgid "Processing (%s)"
+msgstr "最初のサイト %s を処理中"
+
 #, python-format
 msgid "Processing first site %s"
 msgstr "最初のサイト %s を処理中"
@@ -48705,6 +48883,10 @@ msgstr "使用されるRAM"
 #, fuzzy
 msgid "RAM used (averaged)"
 msgstr "平均的なexeファイルを読む"
+
+#, fuzzy
+msgid "RCC Remote server address"
+msgstr "カスタムURLサーバーアドレス"
 
 #, fuzzy
 msgid "RCC profile configuration"
@@ -50015,6 +50197,10 @@ msgstr "一致する消失したサービスのみを削除する"
 
 msgid "Remove package"
 msgstr "パッケージの取り外し"
+
+#, fuzzy
+msgid "Remove pattern"
+msgstr "フィルタを取り外します"
 
 #, fuzzy
 msgid "Remove scheduled downtimes?"
@@ -56455,6 +56641,11 @@ msgid "Specifies whether password authentication is allowed"
 msgstr "パスワード認証を許可するかどうかを指定します"
 
 msgid ""
+"Specifies whether to send a notification or to cancel all previous "
+"notifications for the same method"
+msgstr ""
+
+msgid ""
 "Specifiy time ranges during which no motion is expected. Outside these "
 "times, the motion detector will always be in state OK"
 msgstr ""
@@ -57154,6 +57345,10 @@ msgstr "Sprocレイテンシ"
 
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet送信タイムアウト"
+
+#, fuzzy
+msgid "Stack"
+msgstr "スタック"
 
 msgid "Stacked"
 msgstr "積み上げ"
@@ -60929,6 +61124,18 @@ msgstr ""
 "変更される可能性があります。プラグインを新しいAPIに移行してください。詳細は"
 "<a href='%s'>ユーザーガイド</a>をご覧ください。"
 
+#, fuzzy, python-format
+msgid ""
+"The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
+"in this folder are ignored. Please migrate the plug-ins to the new API. More "
+"information can be found in <a href='%s'>Werk #%d</a> and our <a "
+"href='%s'>User Guide</a>."
+msgstr ""
+"<tt>%s</tt>のプラグイン用チェック・プラグイン API は廃止予定です。このフォル"
+"ダ内のプラグインファイルはまだ考慮されますが、使用するAPIは予告なしにいつでも"
+"変更される可能性があります。プラグインを新しいAPIに移行してください。詳細は"
+"<a href='%s'>ユーザーガイド</a>をご覧ください。"
+
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
@@ -61266,6 +61473,12 @@ msgstr "現在のライブステータスの使用量は %.2f%% です"
 
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr "現在の監視状態(確認応答とダウンタイムを含む)"
+
+#, python-format
+msgid ""
+"The current plan configuration is incompatible with the following rules "
+"which reference this robot: %s"
+msgstr ""
 
 #, python-format
 msgid "The custom logo %s has been deleted."
@@ -62468,6 +62681,11 @@ msgid ""
 msgstr ""
 "最大のCPUパフォーマンスは、イベントログの監視とパフォーマンスカウンターによっ"
 "て必要とされます。"
+
+#, fuzzy, python-format
+msgid ""
+"The name '%s' is already in use. The names of managed robots must be unique."
+msgstr "この名前はすでに使用されています。別のものを選択してください。"
 
 msgid ""
 "The name is the individual part of the used service description. Choose a "
@@ -64464,7 +64682,7 @@ msgid "There is no backup job configured"
 msgstr "構成されたバックアップジョブはありません"
 
 #, fuzzy, python-format
-msgid "There is no graph graph_plugin with the id '%s'"
+msgid "There is no graph plug-in with the id '%s'"
 msgstr "idが \"%s\" のグラフテンプレートはありません"
 
 msgid "There is no manpage for this check."
@@ -65550,10 +65768,6 @@ msgstr "このグループは存在しません。"
 msgid "This host does not exist."
 msgstr "このホストは存在しません。"
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr "このホストはホストタグ条件 '%s'に失敗しました(タグ%sがあります)"
-
 msgid "This host has a baked agent"
 msgstr "このホストにはベイクされたエージェントがあります"
 
@@ -65572,11 +65786,6 @@ msgstr "このホストは無効になっています"
 
 msgid "This host is flapping"
 msgstr "このホストはフラッピングしています"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr "このホストには 1 つ以上のラベルがありません： %s(ラベル %s があります)"
 
 msgid "This host is stale"
 msgstr "このホストは古くなっています"
@@ -67331,6 +67540,12 @@ msgstr ""
 "ようなカウンタ・ベースのチェックでは特に重要です。またデータのフェッチ間隔よ"
 "り短いチェック間隔では、誤解を招く出力 (例: 大きすぎるインターフェイスのス"
 "ループット) が発生する可能性があります。"
+
+#, fuzzy
+msgid ""
+"This rule cannot be moved above rules that are defined as part of a Quick "
+"setup."
+msgstr "まだ使用中のロール (%s)は削除できません！"
 
 msgid "This rule configures bulk notifications."
 msgstr "このルールは、一括通知を構成します。"
@@ -76647,6 +76862,14 @@ msgid "Version 3 and TLS"
 msgstr "バージョン3とTLS"
 
 #, fuzzy
+msgid "Version label"
+msgstr "バージョン1"
+
+#, fuzzy
+msgid "Version number"
+msgstr "シリアルナンバー"
+
+#, fuzzy
 msgid "Version of PKI appliance"
 msgstr "PKI アプライアンスのバージョン"
 
@@ -77108,6 +77331,10 @@ msgid "Wait until the other has finished"
 msgstr "もう一方が終了するまで待ちます"
 
 msgid "Waiting"
+msgstr "待っています"
+
+#, fuzzy, python-format
+msgid "Waiting (%s)"
 msgstr "待っています"
 
 msgid "Waiting connections"
@@ -82749,6 +82976,10 @@ msgstr "プロセス数"
 msgid "objects"
 msgstr "オブジェクト"
 
+#, fuzzy
+msgid "of"
+msgstr "オフ"
+
 msgid "of Service"
 msgstr "サービスの"
 
@@ -82968,6 +83199,10 @@ msgstr "正規表現、部分文字列の一致"
 
 msgid "relative URI under which Jolokia is visible"
 msgstr "Jolokiaが表示される相対URI"
+
+#, fuzzy
+msgid "reload"
+msgstr "リロード"
 
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
@@ -83522,6 +83757,9 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid "Key from password store"
+#~ msgstr "パスワードストアからのキー"
 
 #, fuzzy
 #~ msgid "Configure host and authority"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-10-18 05:00+0000\n"
+"PO-Revision-Date: 2024-10-24 05:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -384,6 +384,10 @@ msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d chaotische Zustandsänderungen von %s bis %s (%s)"
 
 #, python-format
+msgid "%d check plug-ins trying to use the removed API: %s"
+msgstr "%d Check-Plugins, die versuchen, die entfernte API zu verwenden: %s"
+
+#, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
 msgstr "%d Check-Plugins, welche die veraltete API verwenden: %s"
 
@@ -642,22 +646,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s fehlt möglicherweise - darf nicht leer sein, wenn gesetzt."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s ist nicht in den ausgewählten Setup-Ordnern."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s ist in der aktivierten Monitoring-Konfiguration nicht bekannt"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s nicht in der expliziten Liste von Host-Namen aufgelistet."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr "%s wird durch keine der explizit ausgewählten Instanzen überwacht."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s Benachrichtigungsregeln stimmen überein"
 
@@ -676,10 +664,6 @@ msgstr "%s von %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s von %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s auf der Ausschlussliste."
 
 #, python-format
 msgid "%s other service"
@@ -825,14 +809,14 @@ msgstr ""
 "oder die Verfolgung der Git-Konfiguration im Setup deaktiviert werden."
 
 #, python-format
-msgid "(%s more entries)"
-msgstr "(%s weitere Einträge)"
+msgid "(%s more items)"
+msgstr "(%s weitere Items)"
 
 msgid "(0 is current period)"
 msgstr "(0 entspricht aktuelle Periode)"
 
-msgid "(1 more entry)"
-msgstr "(1 weiterer Eintrag)"
+msgid "(1 more item)"
+msgstr "(1 weiteres Item)"
 
 msgid "(Edit presets)"
 msgstr "(Voreinstellungen bearbeiten)"
@@ -933,12 +917,18 @@ msgstr "(durch syslog gesetzt)"
 msgid "(syslog)"
 msgstr "(Syslog)"
 
+msgid "(unknown)"
+msgstr "(unbekannt)"
+
 #, python-format
 msgid "(unknown: %d)"
 msgstr "(unbekannt: %d)"
 
 msgid "(unset)"
 msgstr "(nicht gesetzt)"
+
+msgid "(untitled ruleset)"
+msgstr "(unbenannter Regelsatz)"
 
 msgid ", "
 msgstr ", "
@@ -971,6 +961,9 @@ msgstr ", innerhalb der letzten %.1f Checkperioden wurde keine Daten empfangen"
 # vermutlich weniger tragisch als andere Fälle.
 msgid ", the first match skips this rule pack"
 msgstr ", der erste Treffer überspringt das Regelpaket"
+
+msgid "-"
+msgstr ""
 
 msgid "-.-- %"
 msgstr "-.-- %"
@@ -2927,6 +2920,9 @@ msgstr "Gesamtzahl von inaktiven Verbindungen"
 msgid "Absolute number of incoming connections"
 msgstr "Gesamtzahl von eingehenden Verbindungen"
 
+msgid "Absolute path to catalog ZIP file"
+msgstr "Absoluter Pfad zur Katalog-ZIP-Datei"
+
 msgid "Absolute time of alert"
 msgstr "Absolute Zeit des Alerts"
 
@@ -3259,7 +3255,7 @@ msgid "Actions when cancelling"
 msgstr "Aktionen beim Aufheben"
 
 msgid "Activate (off: consider all alerts)"
-msgstr "Aktivieren (aus: berücksichtige alle Alarme)"
+msgstr "Aktivieren (aus: berücksichtige alle Alerts)"
 
 msgid "Activate Changes Scheduler"
 msgstr "Planer zum Aktivieren von Änderungen"
@@ -3388,6 +3384,10 @@ msgstr "Aktiviere"
 msgid "Activation"
 msgstr "Aktivierung"
 
+#, fuzzy, python-format
+msgid "Activation (%s)"
+msgstr "Aktivierung"
+
 #, python-format
 msgid ""
 "Activation blocked.<br>%s is currently activating changes on this site."
@@ -3487,7 +3487,7 @@ msgid "Active VPN web sessions"
 msgstr "Aktive VPN-Web-Sitzungen"
 
 msgid "Active alerted flows"
-msgstr "Aktive benachrichtigte 'flows'"
+msgstr "Aktive, alarmierende 'flows'"
 
 msgid "Active and inactive memory"
 msgstr "Aktiver und inaktiver Speicher"
@@ -3692,7 +3692,7 @@ msgid "Add aggregation"
 msgstr "Aggregation hinzufügen"
 
 msgid "Add alert handler rule"
-msgstr "Ereignisbehandlungsregel hinzufügen"
+msgstr "Alert Handler-Regel hinzufügen"
 
 msgid "Add all >>"
 msgstr "Alle hinzufügen >>"
@@ -4943,8 +4943,8 @@ msgid "Agent updates are currently disabled"
 msgstr "Agentenupdates sind aktuell deaktiviert"
 
 #, python-format
-msgid "Agent updates are disabled for host name %s because it is"
-msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert, weil er"
+msgid "Agent updates are disabled for host name %s:"
+msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert:"
 
 msgid "Agent updates are enabled"
 msgstr "Agentenupdates sind eingeschaltet"
@@ -5136,14 +5136,14 @@ msgid "Alert handler stopped"
 msgstr "Alert Handler gestoppt"
 
 msgid "Alert handler with parameters"
-msgstr "Alert-Handler mit Parametern"
+msgstr "Alert Handler mit Parametern"
 
 #, python-format
 msgid "Alert handler: %s"
 msgstr "Alert Handler: %s"
 
 msgid "Alert handler: Don't handle all check executions"
-msgstr "Alert-Handler: Check-Ausführungen nicht behandeln"
+msgstr "Alert Handler: nicht alle Check-Ausführungen behandeln"
 
 msgid "Alert handlers"
 msgstr "Alert Handler"
@@ -5164,22 +5164,22 @@ msgid "Alert on excessive CPU utilization"
 msgstr "Alert bei übermäßiger CPU-Auslastung"
 
 msgid "Alert on too high CPU utilization"
-msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+msgstr "Alert bei zu hoher CPU-Auslastung"
 
 msgid "Alert on too high FPGA utilization"
-msgstr "Alarm bei zu hoher FPGA-Auslastung"
+msgstr "Alert bei zu hoher FPGA-Auslastung"
 
 msgid "Alert on too high PCI IO utilization"
-msgstr "Alarmiere bei zu hoher PCI IO Auslastung"
+msgstr "Alert bei zu hoher PCI E/A-Auslastung"
 
 msgid "Alert on too high memory utilization"
-msgstr "Alarmiere bei zu hoher Speicher-Auslastung"
+msgstr "Alert bei zu hoher Speicher-Auslastung"
 
 msgid "Alert on too high overall utilization"
-msgstr "Alarmiere bei zu hoher Gesamtauslastung"
+msgstr "Alert bei zu hoher Gesamtauslastung"
 
 msgid "Alert on too high power consumption"
-msgstr "Alarmiere bei zu hohem Energieverbrauch"
+msgstr "Alert bei zu hohem Energieverbrauch"
 
 msgid "Alert overview"
 msgstr "Alert-Übersicht"
@@ -5189,7 +5189,7 @@ msgid "Alert overview - %s"
 msgstr "Alert-Übersicht - %s"
 
 msgid "Alert rule names"
-msgstr "Namen der Warnregeln"
+msgstr "Namen der Alert-Regeln"
 
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
@@ -5197,22 +5197,22 @@ msgstr ""
 "ignoriert."
 
 msgid "Alert statistics"
-msgstr "Alarmstatistik"
+msgstr "Alert-Statistik"
 
 msgid "Alert statistics: Number of critical alerts"
-msgstr "Alarmstatistik: Anzahl von kritischen Alarmen"
+msgstr "Alert-Statistik: Anzahl von kritischen Alerts"
 
 msgid "Alert statistics: Number of problem alerts"
-msgstr "Alarmstatistik: Anzahl von Problemalarmen"
+msgstr "Alert-Statistik: Anzahl von Problem-Alerts"
 
 msgid "Alert statistics: Number of recoveries"
-msgstr "Alarmstatistik: Anzahl von Erholungen"
+msgstr "Alert-Statistik: Anzahl von Erholungen"
 
 msgid "Alert statistics: Number of unknown alerts"
-msgstr "Alarmstatistik: Anzahl von unbekannten Alarmen"
+msgstr "Alert-Statistik: Anzahl von unbekannten Alerts"
 
 msgid "Alert statistics: Number of warnings"
-msgstr "Alarmstatistik: Anzahl von Warnungen"
+msgstr "Alert-Statistik: Anzahl von Warnungen"
 
 msgid "Alert when a major version release is available"
 msgstr "Alert, wenn eine neue Hauptversion verfügbar ist"
@@ -5236,7 +5236,7 @@ msgid "Alertmanager rule states (Summary)"
 msgstr "Alert Manager Regelzustände (Zusammenfassung)"
 
 msgid "Alerts"
-msgstr "Alarme"
+msgstr "Alerts"
 
 msgid "Algorithm"
 msgstr "Algorithmus"
@@ -5254,7 +5254,7 @@ msgid "All"
 msgstr "Alle"
 
 msgid "All Alerted"
-msgstr "Alle Alarmierten"
+msgstr "Alle alarmierten"
 
 msgid "All CRIT services of a given site."
 msgstr "Alle Services, mit Status CRIT, einer bestimmten Instanz."
@@ -5302,7 +5302,7 @@ msgid "All aggregations the given host is part of"
 msgstr "Alle Aggregationen, in denen ein bestimmter Host enthalten ist"
 
 msgid "All alert handler executions."
-msgstr "Alle Alert Hhandler-Ausführungen."
+msgstr "Alle Alert Handler-Ausführungen."
 
 msgid "All applications"
 msgstr "Alle Anwendungen"
@@ -5401,7 +5401,7 @@ msgstr ""
 
 msgid "All historic events of hosts or services (alerts, downtimes, etc.)"
 msgstr ""
-"Alle historischen Ereignisse von Hosts oder Services (Alarme, "
+"Alle historischen Ereignisse von Hosts oder Services (Alerts, "
 "Wartungszeiten, etc.)"
 
 msgid "All historic scheduled downtimes of a certain host"
@@ -6149,6 +6149,9 @@ msgstr "Es ist eine Ausnahme aufgetreten: %s"
 
 msgid "An exception occurred"
 msgstr "Eine Ausnahme ist aufgetreten"
+
+msgid "An fatal error occured:"
+msgstr "Ein schwerwiegender Fehler ist aufgetreten:"
 
 msgid ""
 "An identifier must only consist of letters, digits, dash and underscore and "
@@ -8615,6 +8618,14 @@ msgstr "BasicAuth Einstellungen (optional)"
 msgid "Batch Requests/sec"
 msgstr "Batchanfragen/sec"
 
+#, fuzzy
+msgid "Batch num"
+msgstr "Switchnummer"
+
+#, fuzzy
+msgid "Batches"
+msgstr "Übereinstimmungen"
+
 msgid "Battery Levels"
 msgstr "Batterie-Level"
 
@@ -8669,8 +8680,8 @@ msgstr "Leitfaden für Einsteiger: Host-Ordner Strukturen"
 msgid ""
 "Below the specified value alert rules will be monitored as asingle service."
 msgstr ""
-"Unterhalb des angegebenen Wertes werden die Warnregeln als einzelner Dienst "
-"überwacht."
+"Unterhalb des angegebenen Wertes werden die Alert-Regeln als einzelner "
+"Dienst überwacht."
 
 msgid "Below this folder"
 msgstr "Unter diesem Ordner"
@@ -9023,6 +9034,10 @@ msgstr "Sammelbenachrichtigung"
 
 msgid "Bulk notifications"
 msgstr "Sammelbenachrichtigungen"
+
+#, fuzzy
+msgid "Bulk outside of the timeperiod"
+msgstr "Zusätzliches Bulken außerhalb der Zeitperiode"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "Massenentfernung von expliziten Attributen"
@@ -11838,7 +11853,7 @@ msgid ""
 "only, specify <tt><b>Check_MK$</b></tt> in the list of services."
 msgstr ""
 "Checkmk verwendet normalerweise ein Intervall von einer Minute für die "
-"aktive Checkmk-Prüfung und für ältere Prüfungen. Hier können Sie ein "
+"aktive Checkmk-Prüfung und für Legacy-Prüfungen. Hier können Sie ein "
 "größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
 "für aktive Checks gilt (solche mit dem Knopf \"Neu ansetzen\"). Wenn Sie nur "
 "das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
@@ -12632,6 +12647,9 @@ msgstr "Klonen Sie diese Verbindung, um eine neue Verbindung zu erstellen"
 msgid "Clone this element"
 msgstr "Dieses Element klonen"
 
+msgid "Clone this entry"
+msgstr "Diesen Eintrag klonen"
+
 msgid "Clone this managed robot"
 msgstr "Diesen verwalteten Roboter klonen"
 
@@ -13422,7 +13440,7 @@ msgid "Configure agents"
 msgstr "Konfiguriere Agenten"
 
 msgid "Configure alerting on connection loss"
-msgstr "Alarmierung bei Verbindungsproblemen konfigurieren"
+msgstr "Alerting bei Verbindungsverlust konfigurieren"
 
 msgid ""
 "Configure an alternative URL for the connection from host to remote Agent "
@@ -13456,9 +13474,8 @@ msgstr "Fallback-E-Mail-Adresse konfigurieren"
 msgid "Configure grouping of interfaces"
 msgstr "Konfiguriere die Gruppierung von Schnittstellen"
 
-#, fuzzy
 msgid "Configure host"
-msgstr "Konfiguriere"
+msgstr "Konfiguriere Host"
 
 msgid "Configure host and regions"
 msgstr "Host und Regionen konfigurieren"
@@ -14044,6 +14061,10 @@ msgstr "Verbindungen pro Sekunde"
 msgid "Connectivity"
 msgstr "Konnektivität"
 
+#, fuzzy
+msgid "Connector Id"
+msgstr "Verbindungs-ID"
+
 msgid "Connector outlets"
 msgstr "Ausgänge"
 
@@ -14058,7 +14079,7 @@ msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "Vermittler: Sammlung der Piggyback-Hosts auf der Instanz \"%s\""
 
 msgid "Consider alerts for Prism Central only"
-msgstr "Nur Warnungen für Prism Central berücksichtigen"
+msgstr "Nur Alerts für Prism Central berücksichtigen"
 
 msgid "Consider history of"
 msgstr "Berücksichtige die Historie von"
@@ -14087,9 +14108,8 @@ msgstr "Konsolidierungsfunktion für die Spalte [graphing#rrds|RRD]"
 msgid "Consolidation functions"
 msgstr "Konsolidierungsfunktionen"
 
-#, fuzzy
 msgid "Constant"
-msgstr "Instanz"
+msgstr "Konstant"
 
 #, python-format
 msgid "Constant value %.2f"
@@ -14530,11 +14550,10 @@ msgstr ""
 "Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
 "Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
 
-#, fuzzy
 msgid "Could not access your Azure account. Please check your credentials."
 msgstr ""
-"Der Zugriff auf Ihr AWS-Konto war nicht möglich. Bitte überprüfen Sie Ihren "
-"Zugangs- und Geheimschlüssel und versuchen Sie es erneut."
+"Der Zugriff auf Ihr Azure-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
+"Zugangsdaten."
 
 #, python-format
 msgid ""
@@ -14645,6 +14664,10 @@ msgstr "Identitäts-Token konnte nicht gefunden werden. (%s)"
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Kann Änderungen nicht speichern: %s"
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+"Formular konnte nicht validiert werden, Fehler werden im Formular angezeigt"
 
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
@@ -14889,7 +14912,7 @@ msgid "Create a summary over all physical disks"
 msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
 
 msgid "Create a summary service for all alert rules"
-msgstr "Erstellen Sie einen zusammenfassenden Service für alle Warnregeln"
+msgstr "Erstellen Sie einen zusammenfassenden Service für alle Alert-Regeln"
 
 msgid ""
 "Create a workflow 'Post to a channel when a webhook request is received' for "
@@ -15003,7 +15026,7 @@ msgid "Create notification with the following parameters"
 msgstr "Benachrichtigung mit den folgenden Parametern erstellen"
 
 msgid "Create one service per alert rule"
-msgstr "Einen Service pro Alarmregel erstellen"
+msgstr "Einen Service pro Alert-Regel erstellen"
 
 msgid "Create package"
 msgstr "Paket erzeugen"
@@ -15053,7 +15076,7 @@ msgid "Create service labels that get discovered by this rule."
 msgstr "Erstelle Service-Label, die von dieser Regel erkannt werden."
 
 msgid "Create services for alert rule groups"
-msgstr "Services für Gruppen von Alarmregeln erstellen"
+msgstr "Services für Gruppen von Alert-Regeln erstellen"
 
 msgid "Create status and (if configured) health services"
 msgstr "Erzeuge Status und (falls konfiguriert) Health Services"
@@ -15595,7 +15618,7 @@ msgid "Custom action"
 msgstr "Benutzerdefinierte Aktion"
 
 msgid "Custom actions that will be available for the alert."
-msgstr "Benutzerdefinierte Aktionen, die für den Alarm zur Verfügung stehen."
+msgstr "Benutzerdefinierte Aktionen, die für den Alert zur Verfügung stehen."
 
 msgid "Custom address"
 msgstr "Benutzerdefinierte Adresse"
@@ -15655,7 +15678,7 @@ msgid "Custom incident summary for host alerts"
 msgstr "Benutzerdefinierte Ereigniszusammenfassung für Host-Alerts"
 
 msgid "Custom incident summary for service alerts"
-msgstr "Benutzerdefinierte Ereigniszusammenfassung für Service-Warnungen"
+msgstr "Benutzerdefinierte Ereigniszusammenfassung für Service-Alerts"
 
 msgid "Custom input state mapping"
 msgstr "Benutzerdefinierte Zuordnung der Eingangszustände"
@@ -15932,6 +15955,10 @@ msgstr "DCD Manager: Holen von Piggyback-Hosts von der Instanz \"%s\""
 
 msgid "DCD status"
 msgstr "DCD-Status"
+
+#, fuzzy
+msgid "DCD work state"
+msgstr "schlechtester Zustand"
 
 msgid "DD.MM.YYYY"
 msgstr "TT.MM.JJJJ"
@@ -16931,9 +16958,10 @@ msgstr ""
 "Definieren Sie die Untergrenzen für die Zeit, seit welcher der systemd-"
 "Service aktiv ist."
 
+#, fuzzy
 msgid ""
-"Define the maximum session duration. If reached, the user has to re-"
-"authenticate."
+"Define the maximum allowed session duration. If reached, the user has to re-"
+"authenticate. Sessions are not set to persist on browser termination."
 msgstr ""
 "Legen Sie die maximale Sitzungsdauer fest. Wird sie erreicht, muss sich der "
 "Benutzer erneut authentifizieren."
@@ -17010,7 +17038,7 @@ msgstr ""
 "Definiert, welche Informationen abgerufen werden sollen. Sie können zwischen "
 "Lizenz Status und Nutzung, Splunk System Meldungen und Splunk Jobs, wie sie "
 "im Splunk Job Menü angezeigt werden, wählen. Weiterhin können Sie den "
-"Komponenten Status und ausgelöste Alarme abrufen."
+"Komponenten Status und ausgelöste Alerts abrufen."
 
 msgid "Degraded Objects"
 msgstr "Degradierte Objekte"
@@ -17888,8 +17916,11 @@ msgstr "Veraltet"
 msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Veraltete Plugins der HW-/SW-Inventur"
 
-msgid "Deprecated check plug-ins"
-msgstr "Veraltete Check-Plugins"
+msgid "Deprecated check plug-ins (legacy)"
+msgstr "Veraltete Check-Plugins (Legacy)"
+
+msgid "Deprecated check plug-ins (v1)"
+msgstr "Veraltete Check-Plugins (v1)"
 
 msgid "Deprecated choice, please re-select"
 msgstr "Veraltete Auswahl, bitte neu auswählen"
@@ -18175,7 +18206,7 @@ msgid "Digests"
 msgstr "Hashwerte"
 
 msgid "Digits"
-msgstr ""
+msgstr "Ziffern"
 
 msgid "Direct I/O"
 msgstr "Direkte I/O"
@@ -18381,7 +18412,7 @@ msgid "Disabled active checks"
 msgstr "Deaktivierte aktive Checks"
 
 msgid "Disabled alerts"
-msgstr "Deaktivierte Warnmeldungen"
+msgstr "Deaktivierte Alerts"
 
 msgid "Disabled checks"
 msgstr "Deaktivierte Checks"
@@ -18480,7 +18511,15 @@ msgstr "Erkannter Prozessname"
 msgid "Discovered service labels"
 msgstr "Erkannte Service-Labels"
 
+#, fuzzy
+msgid "Discovering"
+msgstr "Finden Sie"
+
 msgid "Discovery"
+msgstr "Erkennung"
+
+#, fuzzy, python-format
+msgid "Discovery (%s)"
 msgstr "Erkennung"
 
 msgid "Discovery Output"
@@ -18671,7 +18710,7 @@ msgstr ""
 "Zeige Warnung in der Weboberfläche, wenn Benachrichtigungen fehlschlagen"
 
 msgid "Display Ntop engaged, past and flow alerts"
-msgstr "Zeige aktive, vergangene und Flow Warnungen aus Ntop an"
+msgstr "Zeige aktive, vergangene und Flow Alerts aus Ntop an"
 
 msgid "Display Ntop flow information"
 msgstr "Ntop-Flow Informationen anzeigen"
@@ -19383,7 +19422,7 @@ msgid "Do not impose levels, always be OK"
 msgstr "Keine Level anwenden, immer OK"
 
 msgid "Do not include in monitoring hosts to be discovered"
-msgstr ""
+msgstr "Nicht in die zu entdeckenden Monitoring-Hosts einbeziehen"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "Die automatische Registrierung von Controllern nicht verwalten"
@@ -19392,7 +19431,7 @@ msgid "Do not map roles"
 msgstr "Rollen nicht zuordnen"
 
 msgid "Do not match Event Console alerts"
-msgstr "Keinen Abgleich mit Event Console Alarmen durchführen"
+msgstr "Keinen Abgleich mit Event Console Alerts durchführen"
 
 msgid "Do not merge consecutive phases with equal state"
 msgstr "Phasen gleichen Zustands nicht zusammenfassen"
@@ -19685,6 +19724,9 @@ msgstr "Download"
 #, python-format
 msgid "Download %s package of agent for %s"
 msgstr "%s-Paket des Agenten für %s herunterladen"
+
+msgid "Download (internet connection)"
+msgstr "Download (Internetverbindung)"
 
 #, python-format
 msgid "Download Checkmk Agent for host %s"
@@ -20047,6 +20089,8 @@ msgstr "Log der Dynamischen Konfiguration"
 
 msgid "Dynamic configuration site activate changes delay"
 msgstr ""
+"Verzögerung der Aktivierung von Änderungen bei dynamischer Instanz-"
+"Konfiguration"
 
 msgid "Dynamic configuration site update interval"
 msgstr "Dynamische Konfiguration des Intervals für Instanz-Updates"
@@ -20513,6 +20557,9 @@ msgstr "Modell editieren"
 
 msgid "Edit my view"
 msgstr "Meine Tabellenansicht bearbeiten"
+
+msgid "Edit notification parameter"
+msgstr "Benachrichtigungsparameter bearbeiten"
 
 #, python-format
 msgid "Edit notification rule %d"
@@ -21009,6 +21056,9 @@ msgstr "Aktivierung von SNMPv2c für Management-Boards"
 msgid "Enable TLS"
 msgstr "TLS einschalten"
 
+msgid "Enable TLS certificate validation"
+msgstr "TLS-Zertifikatsüberprüfung aktivieren"
+
 msgid "Enable active checks"
 msgstr "Aktive Checks ein"
 
@@ -21426,7 +21476,7 @@ msgid "Enforced services"
 msgstr "Erzwungene Services"
 
 msgid "Engaged Alerts"
-msgstr "Aktive Alarme"
+msgstr "Aktive Alerts"
 
 msgid "Engine CPU utilization"
 msgstr "CPU-Auslastung der Maschine"
@@ -21668,6 +21718,9 @@ msgstr "Umgebungsvariablen"
 msgid "Environment build timeout"
 msgstr "Timeout bei Umgebungsaufbau"
 
+msgid "Environment dependency handling"
+msgstr ""
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episode 1: Installation von Checkmk und Monitoring Ihres ersten Hosts"
 
@@ -21720,6 +21773,8 @@ msgstr "Fehler Log Einträge"
 #, python-format
 msgid "Error on creating FormSpec from old ValueSpec for method %s: %s"
 msgstr ""
+"Fehler bei der Erstellung von FormSpec aus dem alten ValueSpec für die "
+"Methode %s: %s"
 
 msgid "Error rate"
 msgstr "Fehlerrate"
@@ -21862,7 +21917,7 @@ msgstr ""
 "Historie der Event Console bereinigt."
 
 msgid "Event Console alerts"
-msgstr "Alarme der Event Console"
+msgstr "Alerts der Event Console"
 
 msgid "Event Console comment"
 msgstr "Event Consolen Kommentar"
@@ -22922,6 +22977,10 @@ msgstr "Fehlgeschlagene Dateianfragen"
 msgid "Failed get locations requests"
 msgstr "Fehlgeschlagene Standortanfragen"
 
+#, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr "Fehlgeschlagene Host-Merkmalbedingung '%s' (er hat die Tags %s)"
+
 msgid "Failed index operations"
 msgstr "Fehlgeschlagene Indexoperationen"
 
@@ -23310,6 +23369,9 @@ msgstr "Hole alle"
 
 msgid "Fetch failed"
 msgstr "Anfrage fehlgeschlagen"
+
+msgid "Fetch from RCC remote server"
+msgstr "Abruf vom RCC-Remote-Server"
 
 msgid "Fetch had bad headers"
 msgstr "Der Fetch hatte schlechte Header"
@@ -23713,6 +23775,10 @@ msgstr "Fingerprint: %s"
 msgid "Finished"
 msgstr "Fertiggestellt"
 
+#, fuzzy, python-format
+msgid "Finished %s"
+msgstr "Fertiggestellt"
+
 msgid "Finished."
 msgstr "Erledigt."
 
@@ -23767,9 +23833,8 @@ msgstr "Erste Seite"
 msgid "First time the downtime starts"
 msgstr "Erster Startzeitpunkt der Wartungszeit"
 
-#, fuzzy
 msgid "First with unit"
-msgstr "Erster Eintrag mit Einheit"
+msgstr "Erster mit Einheit"
 
 msgid "First work day of last month"
 msgstr "Erster Arbeitstag des letzten Monats"
@@ -24457,6 +24522,12 @@ msgstr "Es wurde keine passende Alternative gefunden."
 
 msgid "Found no matching entry."
 msgstr "Es wurde kein passender Eintrag gefunden."
+
+#, fuzzy
+msgid "Found no matching parameters. Please try another search term."
+msgstr ""
+"Keine passenden Datensätze gefunden. Bitte geben Sie einen anderen "
+"Suchausdruck an."
 
 msgid "Found no matching rows. Please try another search term."
 msgstr ""
@@ -25210,9 +25281,8 @@ msgstr "Die Graphensammlung '%s' existiert nicht"
 msgid "Graph collections"
 msgstr "Graphensammlung"
 
-#, fuzzy
 msgid "Graph designer"
-msgstr "GUI-Design"
+msgstr "Graphdesigner"
 
 msgid "Graph is disabled"
 msgstr "Graph ist deaktiviert"
@@ -25223,15 +25293,12 @@ msgstr "Graph ist sichtbar"
 msgid "Graph layout"
 msgstr "Graphenlayout"
 
-#, fuzzy
 msgid "Graph lines"
-msgstr "Graphoptionen"
+msgstr "Graphlinien"
 
-#, fuzzy
 msgid "Graph metrics with zero values"
-msgstr "Metriken, die überall den Wert 0 haben"
+msgstr "Graph-Metriken mit Null-Werten"
 
-#, fuzzy
 msgid "Graph options"
 msgstr "Graphoptionen"
 
@@ -25302,7 +25369,7 @@ msgid "Graylog JVM"
 msgstr "Graylog JVM"
 
 msgid "Graylog alerts"
-msgstr "Graylog-Alarme"
+msgstr "Graylog-Alerts"
 
 msgid "Graylog cluster elasticsearch statistics"
 msgstr "Elasticsearch-Statistiken des Graylog Cluster"
@@ -26440,7 +26507,7 @@ msgid ""
 "character. That regular expression must match the <i>beginning</i> of the "
 "host names in question."
 msgstr ""
-"Hier können Sie eine explizite Liste von Host-Namen angeben, für welche die "
+"Hier können Sie eine Liste von expliziten Host-Namen angeben, für welche die "
 "Regel greifen oder nicht greifen soll. Lassen Sie diese Option deaktiviert, "
 "wenn Sie möchten, dass die Regel für alle durch die angegebenen Tags "
 "spezifizierten Hosts gilt. Die Namen, die Sie hier angeben, werden unter "
@@ -26654,9 +26721,9 @@ msgid ""
 "missing (might be powered off). The access point can be specified by the AP "
 "name or the AP model"
 msgstr ""
-"Hier können Sie einstellen, welcher Status gesetzt werden soll, wenn der "
-"Accesspoint fehlt (oder ausgeschaltet ist). Der Accesspoint kann über seinen "
-"Namen oder sein Modell bestimmt werden"
+"Hier können Sie einstellen, welcher Alert-Status gesetzt werden soll, wenn "
+"der Access Point fehlt (oder ausgeschaltet ist). Der Access Point kann über "
+"seinen Namen oder sein Modell bestimmt werden"
 
 #, python-format
 msgid ""
@@ -26927,7 +26994,7 @@ msgid "High (with escalation)"
 msgstr "Hoch (mit Eskalation)"
 
 msgid "High alerts"
-msgstr "Hohe Warnmeldungen"
+msgstr "Hohe Alerts"
 
 msgid "High utilization at "
 msgstr "Hohe Auslastung bei "
@@ -26936,7 +27003,8 @@ msgid "High watermark"
 msgstr "Hohe Wassermarke"
 
 msgid "High: Push notification alerts bypass quiet hours"
-msgstr "Hoch: Benachrichtigungen umgehen die definierten Ruhezeiten"
+msgstr ""
+"Hoch: Alerts von Push-Benachrichtigungen umgehen die definierten Ruhezeiten"
 
 msgid "Historic Event Console Event"
 msgstr "Historisches Ereignis der Event Console"
@@ -28436,7 +28504,7 @@ msgid "Host successfully created"
 msgstr "Host erfolgreich erstellt"
 
 msgid "Host system sensor alerts"
-msgstr "Alarme von Host-System-Sensoren"
+msgstr "Alerts von Host-System-Sensoren"
 
 msgid "Host tag"
 msgstr "Host-Tag"
@@ -30321,10 +30389,10 @@ msgid ""
 "timeframe, use this option to set the timeframe. The check will output the "
 "total number of alerts received in this given timeframe."
 msgstr ""
-"Wenn Sie die Gesamtzahl der Warnungen in einem bestimmten Zeitrahmen "
-"abfragen möchten, verwenden Sie diese Option, um den Zeitrahmen festzulegen. "
-"Die Prüfung gibt die Gesamtzahl der in diesem Zeitrahmen eingegangenen "
-"Warnmeldungen aus."
+"Wenn Sie die Gesamtzahl der Alerts in einem bestimmten Zeitrahmen abfragen "
+"möchten, verwenden Sie diese Option, um den Zeitrahmen festzulegen. Die "
+"Prüfung gibt die Gesamtzahl der in diesem Zeitrahmen eingegangenen Alerts "
+"aus."
 
 msgid ""
 "If you choose to query for the total number of events in a specific "
@@ -31254,6 +31322,10 @@ msgstr ""
 msgid "In Progress"
 msgstr "In Bearbeitung"
 
+#, fuzzy, python-format
+msgid "In Progress %s"
+msgstr "In Bearbeitung"
+
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -31656,7 +31728,7 @@ msgid ""
 "configured here."
 msgstr ""
 "In der Historie-Datei werden alle Ereignisse wie Benachrichtigungen und "
-"Alarme gespeichert. Diese Datei wird in regelmäßigen Abständen umbenannt und "
+"Alerts gespeichert. Diese Datei wird in regelmäßigen Abständen umbenannt und "
 "neu gestartet, was hier konfiguriert werden kann."
 
 msgid ""
@@ -32130,6 +32202,10 @@ msgstr "Grundeinstellung für Aggregationen"
 
 msgid "Initial scheduling"
 msgstr "Erstmalige Planung"
+
+#, fuzzy
+msgid "Initialized"
+msgstr "Initialisierung"
 
 msgid "Initialized GIT for Checkmk"
 msgstr "GIT für Checkmk eingerichtet"
@@ -32701,6 +32777,9 @@ msgstr "Es gibt kein Seitenelement vom Typ '%s'"
 
 msgid "Invalid float number"
 msgstr "Ungültige Gleitkommazahl"
+
+msgid "Invalid folder"
+msgstr "Ungültiger Ordner"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -33655,9 +33734,6 @@ msgstr "Schlüssel-ID"
 msgid "Key Type and Length"
 msgstr "Typ und Länge des Schlüssels"
 
-msgid "Key from password store"
-msgstr "Schlüssel aus dem Passwortspeicher"
-
 msgid "Key pair will be generated when you save."
 msgstr "Schlüsselpaar wird beim Speichern generiert."
 
@@ -34252,7 +34328,7 @@ msgid ""
 "notification bulking or choose another notification plug-in which allows "
 "bulking."
 msgstr ""
-"Ältere ASCII-E-Mails unterstützen kein Bulking. Sie können entweder das "
+"Legacy-ASCII-E-Mails unterstützen kein Bulking. Sie können entweder das "
 "Bulking von Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das Bulking erlaubt."
 
@@ -34260,16 +34336,16 @@ msgid "Legacy GUI extensions (deprecated)"
 msgstr "Legacy GUI-Erweiterungen (veraltet)"
 
 msgid "Legacy agent management"
-msgstr "Verwaltung veralteter Agenten"
+msgstr "Verwaltung von Legacy-Agenten"
 
 msgid "Legacy check plug-ins (deprecated)"
-msgstr "Veraltete Check-Plugins (veraltet)"
+msgstr "Legacy-Check-Plugins (veraltet)"
 
 msgid "Legacy inventory plug-ins (deprecated)"
-msgstr "Veraltete Inventurplugins (veraltet)"
+msgstr "Legacy-Inventurplugins (veraltet)"
 
 msgid "Legacy run"
-msgstr "Veralteter Lauf"
+msgstr "Legacy-Lauf"
 
 msgid "Legal"
 msgstr "Legal"
@@ -35595,6 +35671,9 @@ msgstr "Load Balancer"
 msgid "Load balancers target groups"
 msgstr "Zielgruppen von Load Balancern"
 
+msgid "Load from ZIP file"
+msgstr "Aus ZIP-Datei laden"
+
 msgid "Load in a new window / tab"
 msgstr "In einem neuen Fenster/Tab laden"
 
@@ -35610,6 +35689,9 @@ msgstr "Citrix Serverlast"
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Laden von \"%s/%s\" fehlgeschlagen: %s"
+
+msgid "Loading ..."
+msgstr "Lädt..."
 
 msgid "Loading maps..."
 msgstr "Karten laden..."
@@ -36975,6 +37057,13 @@ msgstr "Verwaltete Objekte"
 msgid "Managed robot deleted."
 msgstr "Verwalteter Roboter wurde gelöscht."
 
+msgid ""
+"Managed robot names are restricted to the following characters: a-z, A-Z, "
+"0-9, `-`, `_`, `.`"
+msgstr ""
+"Die Namen für verwaltete Roboter sind auf die folgenden Zeichen beschränkt: "
+"a-z, A-Z, 0-9, `-`, `_`, `.`"
+
 msgid "Managed robot not found while attempting to delete it."
 msgstr ""
 "Beim Versuch, ihn zu löschen, wurde der verwaltete Roboter nicht gefunden."
@@ -37305,7 +37394,7 @@ msgid "Match notification comment"
 msgstr "Benachrichtigungskommentar abgleichen"
 
 msgid "Match only Event Console alerts"
-msgstr "Nur Alarme der Event Console abgleichen"
+msgstr "Nur Alerts der Event Console abgleichen"
 
 msgid "Match only during time period"
 msgstr "Nur während Zeitperiode abgleichen"
@@ -37532,7 +37621,7 @@ msgid "Maximal number of daemon threads"
 msgstr "Maximale Anzahl von Daemon Threads"
 
 msgid "Maximal number of hosts per bulk discovery REST API call"
-msgstr ""
+msgstr "Maximale Anzahl an Hosts pro REST-API-Aufruf zur Bulk-Erkennung"
 
 msgid "Maximal number of log files to backup"
 msgstr "Maximale Anzahl der zu sichernden Logdateien"
@@ -38267,10 +38356,10 @@ msgid "Message expiration"
 msgstr "Erlöschen der Benachrichtigung"
 
 msgid "Message for host alerts"
-msgstr "Nachricht für Hostvorfälle"
+msgstr "Nachricht für Host Alerts"
 
 msgid "Message for service alerts"
-msgstr "Nachricht für Servicevorfälle"
+msgstr "Nachricht für Service Alerts"
 
 msgid "Message processing"
 msgstr "Benachrichtigungsverarbeitung"
@@ -38502,7 +38591,7 @@ msgstr "Minimal erlaubte Laufzeit"
 
 msgid "Minimum amount of alert rules in a group to create a group service"
 msgstr ""
-"Mindestanzahl von Warnregeln in einer Gruppe, um einen Gruppen-Service zu "
+"Mindestanzahl von Alert-Regeln in einer Gruppe, um einen Gruppen-Service zu "
 "erstellen"
 
 msgid "Minimum connections per second"
@@ -38598,6 +38687,9 @@ msgstr "Die vertikale Achse spiegeln"
 msgid "Mirror views"
 msgstr "Gespiegelte Ansichten"
 
+msgid "Mirrored"
+msgstr "Gespiegelt"
+
 msgid "Mirrored Area"
 msgstr "gespiegelte Fläche"
 
@@ -38672,6 +38764,10 @@ msgstr "Der Parameter custom_graph fehlt."
 
 msgid "Missing needed host parameter."
 msgstr "Der Parameter host ist nicht gesetzt."
+
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr "Es fehlen ein oder mehrere der Labels: %s (hat die Labels %s)"
 
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'"
@@ -38781,7 +38877,7 @@ msgid "Model name"
 msgstr "Modellname"
 
 msgid "Model name - LEGACY, don't use"
-msgstr "Modellname - VERALTET, nicht verwenden"
+msgstr "Modellname - LEGACY, nicht verwenden"
 
 msgid "Model parameters"
 msgstr "Modellparameter"
@@ -39811,7 +39907,7 @@ msgid "Name / IP address"
 msgstr "Name / IP-Adresse"
 
 msgid "Name of Alert rules/Alert rule groups"
-msgstr "Name der Warnegeln/Warnregelgruppen"
+msgstr "Name der Alert-Regeln/Alert-Regelgruppen"
 
 msgid "Name of Certificate"
 msgstr "Name des Zertifikats"
@@ -40037,7 +40133,7 @@ msgid "Name your %s for easy recognition."
 msgstr "Benennen Sie Ihr %s zur einfachen Wiedererkennung."
 
 msgid "Name your host and define the folder"
-msgstr ""
+msgstr "Benennen Sie Ihren Host und definieren Sie den Ordner"
 
 msgid ""
 "Name your host, define the path and select the regions you would like to "
@@ -40426,6 +40522,9 @@ msgstr "Neuer verwalteter Roboter"
 msgid "New name"
 msgstr "Neuer Name"
 
+msgid "New notification parameter"
+msgstr "Neuer Benachrichtigungsparameter"
+
 #, python-format
 msgid "New notification rule #%d successfully created!"
 msgstr "Die neue Benachrichtigungsregel #%d wurde erfolgreich erstellt!"
@@ -40541,7 +40640,7 @@ msgstr "Kein Quick Setup für die Konfiguration von %s verfügbar"
 
 #, python-format
 msgid "No Dictionary ValueSpec within Migrate: %s"
-msgstr ""
+msgstr "Kein Wörterbuch ValueSpec innerhalb von Migrate: %s"
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -40603,6 +40702,9 @@ msgstr "Es wurden keine defekten Erweiterungen gefunden."
 
 msgid "No certificate"
 msgstr "Kein Zertifikat"
+
+msgid "No check plug-ins trying to use the removed API"
+msgstr "Keine Check-Plugins, die versuchen, die entfernte API zu verwenden"
 
 msgid "No check plug-ins using the deprecated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
@@ -40678,6 +40780,9 @@ msgstr ""
 
 msgid "No elements available"
 msgstr "Keine Elemente verfügbar"
+
+msgid "No elements available, create one"
+msgstr "Keine Elemente verfügbar, erstellen Sie eines"
 
 msgid "No elements selected"
 msgstr "Keine Elemente ausgewählt"
@@ -40900,6 +41005,12 @@ msgstr "Keine Suche"
 
 msgid "No search, specify list of arguments"
 msgstr "Keine Suche, Liste der Argumente angeben"
+
+msgid "No selected graph line"
+msgstr "Keine ausgewählte Graphlinie"
+
+msgid "No selected graph lines"
+msgstr "Keine ausgewählten Graphlinien"
 
 msgid "No smarthosts"
 msgstr "Keine Smarthosts"
@@ -41158,14 +41269,15 @@ msgstr ""
 "automatisch ungültig und der Benutzer muss sich vom aktuellen oder einem "
 "anderen Gerät aus erneut anmelden."
 
+#, fuzzy
 msgid ""
-"Normally a user login session is valid until the password is changed or the "
-"user is locked. By enabling this option, you can apply a time limit to login "
-"sessions which is applied when the user stops interacting with the GUI for a "
-"given amount of time. When a user is exceeding the configured maximum idle "
-"time, the user will be logged out and redirected to the login screen to "
-"renew the login session. This setting can be overridden in each individual "
-"user's profile."
+"Normally a user login session is valid until the password is changed, the "
+"browser is closed or the user is locked. By enabling this option, you can "
+"apply a time limit to login sessions which is applied when the user stops "
+"interacting with the GUI for a given amount of time. When a user exceeds the "
+"configured maximum idle time, the user will be logged out and redirected to "
+"the login screen to renew the login session. This setting can be overridden "
+"in each individual user's profile."
 msgstr ""
 "Normalerweise ist eine Login-Sitzung eines Benutzers so lange gültig, bis "
 "das Passwort geändert oder der Benutzer gesperrt wird. Wenn Sie diese Option "
@@ -41306,11 +41418,23 @@ msgstr "Nicht aktiviert"
 msgid "Not found"
 msgstr "Nicht gefunden"
 
+msgid "Not in the selected Setup folders."
+msgstr "Befindet sich nicht in den ausgewählten Setup-Ordnern."
+
+msgid "Not known in the activated monitoring configuration"
+msgstr "In der aktivierten Monitoring-Konfiguration nicht bekannt"
+
+msgid "Not listed in the explicit list of host names."
+msgstr "Nicht in der expliziten Liste von Host-Namen aufgelistet."
+
 msgid "Not locked"
 msgstr "Nicht gesperrt"
 
 msgid "Not logged in."
 msgstr "Nicht angemeldet."
+
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr "Wird nicht durch eine der explizit ausgewählten Instanzen überwacht."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr ""
@@ -41560,15 +41684,14 @@ msgid ""
 "Notification priority (This will override the priority configured in the "
 "alert source)"
 msgstr ""
-"Benachrichtigungspriorität (Damit wird die in der Alarmquelle konfigurierte "
+"Benachrichtigungspriorität (Damit wird die in der Alert-Quelle konfigurierte "
 "Priorität außer Kraft gesetzt)"
 
 msgid "Notification rule"
 msgstr "Benachrichtigungsregel"
 
-#, fuzzy
 msgid "Notification rule does not exist."
-msgstr "Benachrichtigungsmethode '%s' existiert nicht"
+msgstr "Diese Benachrichtigungsregel existiert nicht."
 
 #, python-format
 msgid "Notification rule number #%d successfully edited!"
@@ -41711,7 +41834,7 @@ msgid "Ntop top peers"
 msgstr "Ntop Top Peers"
 
 msgid "Ntop: Alerts"
-msgstr "Ntop: Warnungen"
+msgstr "Ntop: Alerts"
 
 msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng (gebührenpflichtige Erweiterung)"
@@ -41901,7 +42024,7 @@ msgid "Number of context lines before messages"
 msgstr "Anzahl der Kontextzeilen vor Meldungen"
 
 msgid "Number of critical alerts"
-msgstr "Anzahl von kritischen Alarmen"
+msgstr "Anzahl von kritischen Alerts"
 
 msgid "Number of current LSNAT bindings"
 msgstr "Anzahl von aktuellen LSNAT-Bindungen"
@@ -42140,7 +42263,7 @@ msgid "Number of probes per hop"
 msgstr "Anzahl von Tests pro Hop"
 
 msgid "Number of problem alerts"
-msgstr "Anzahl von Problemalarmen"
+msgstr "Anzahl von Problem-Alerts"
 
 msgid "Number of problematic hosts"
 msgstr "Anzahl der problematischen Hosts"
@@ -42347,7 +42470,7 @@ msgid "Number of unique outside MAC addresses"
 msgstr "Anzahl eindeutiger MAC Adressen Aussenbereich"
 
 msgid "Number of unknown alerts"
-msgstr "Anzahl von unbekannten Alarmen"
+msgstr "Anzahl von unbekannten Alerts"
 
 msgid "Number of unopen paths"
 msgstr "Anzahl von nicht geöffneten Pfaden"
@@ -42422,7 +42545,7 @@ msgid "Nutanix Prism"
 msgstr "Nutanix Prism"
 
 msgid "Nutanix Prism Alerts"
-msgstr "Nutanix Prism-Alarme"
+msgstr "Nutanix Prism-Alerts"
 
 msgid "Nutanix Prism MetroAvail Sync State"
 msgstr "Nutanix Prism MetroAvail Sync Status"
@@ -42449,7 +42572,7 @@ msgid "Nutanix: Containers"
 msgstr "Nutanix: Container"
 
 msgid "Nutanix: Prism Alerts"
-msgstr "Nutanix: Prism-Alarme"
+msgstr "Nutanix: Prism-Alerts"
 
 msgid "Nutanix: Prism Cluster"
 msgstr "Nutanix: Prism-Cluster"
@@ -42506,7 +42629,7 @@ msgid "OK"
 msgstr "OK"
 
 msgid "OK - do not alert, just display"
-msgstr "OK - keine Alarmierung, nur Anzeige"
+msgstr "OK - kein Alert, nur Anzeige"
 
 msgid "OK Pattern"
 msgstr "OK-Muster"
@@ -42727,6 +42850,9 @@ msgstr "Auf allen Instanzen"
 msgid "On down host"
 msgstr "Bei Host DOWN"
 
+msgid "On host name exclusion list."
+msgstr "Auf der Host-Namen-Ausschlussliste."
+
 msgid "On recovery (OK/UP)"
 msgstr "Beim Recovery (OK/UP)"
 
@@ -42908,6 +43034,15 @@ msgstr ""
 "als eigenständigen Service-Namen verwenden möchten. Bitte beachten Sie, dass "
 "dies zu einem nicht-eindeutigen Service-Namen führen kann, was dazu führt, "
 "dass einige Services nicht angezeigt werden!"
+
+msgid "Only applies if `Periodic notifications` are enabled"
+msgstr "Gilt nur, wenn `Periodische Benachrichtigungen`aktiviert sind"
+
+msgid ""
+"Only applies to notifications triggered by the command `Custom notifications`"
+msgstr ""
+"Gilt nur für Benachrichtigungen, die durch den Befehl `Benutzerdefinierte "
+"Benachrichtigungen` ausgelöst werden"
 
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
@@ -43107,6 +43242,13 @@ msgstr "Es sind nur Großbuchstaben erlaubt"
 msgid "Only use device's levels, ignore yours"
 msgstr "Nur die Level des Geräts verwenden, die eigenen ignorieren"
 
+msgid ""
+"Only users who are in all the following contact groups will receive the "
+"notification"
+msgstr ""
+"Nur Benutzer, die in allen folgenden Kontaktgruppen sind, erhalten die "
+"Benachrichtigung"
+
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "Nur wenn das aufgehobene Ereignis in der Phase OFFEN ist"
 
@@ -43246,9 +43388,8 @@ msgstr "Operationen"
 msgid "Operations States"
 msgstr "Betriebszustände"
 
-#, fuzzy
 msgid "Operations on selected graph lines"
-msgstr "Operation auf den gewählten Metriken"
+msgstr "Operationen an den gewählten Graphlinien"
 
 msgid "Operations per second"
 msgstr "Operationen pro Sekunde"
@@ -45502,7 +45643,7 @@ msgid ""
 "when you have a installation with more than several hosts. Don't enable the "
 "\"check execution\" option when you have more than ~10 hosts in a site."
 msgstr ""
-"Standardmäßig sorgen nur Zustandswechsel (Alarme) dafür, dass Aktionen "
+"Standardmäßig sorgen nur Zustandswechsel (Alerts) dafür, dass Aktionen "
 "getriggert werden. Sie können zusätzlich auch bei allen Checkausführungen "
 "Aktionen triggern. <b>ACHTUNG:</b> Dies kann dazu führen, dass die CPU- und "
 "Speicherauslastung durch den Monitoring-Kern stark steigt sobald die "
@@ -46523,6 +46664,11 @@ msgstr "Bitte stellen Sie eine '.xml'-Datei zur Verfügung"
 msgid "Please provide a hostname to test with."
 msgstr "Bitte geben Sie einen Host-Namen an, mit dem Sie testen möchten."
 
+msgid "Please provide a path that is absolute on either Linux or Windows."
+msgstr ""
+"Bitte geben Sie einen Pfad an, der entweder unter Linux oder unter Windows "
+"absolut ist."
+
 msgid "Please provide a path that is relative both on Linux and Windows."
 msgstr ""
 "Bitte geben Sie einen Pfad an, der sowohl unter Linux als auch unter Windows "
@@ -46580,6 +46726,9 @@ msgstr "Bitte eine Numer zwischen 0 und 100 auswählen"
 
 msgid "Please select a service."
 msgstr "Bitte wählen Sie einen Service."
+
+msgid "Please select an element"
+msgstr "Bitte wählen Sie ein Element aus"
 
 msgid "Please select at least one element"
 msgstr "Bitte wählen Sie mindestens ein Element aus"
@@ -47418,7 +47567,7 @@ msgid "Problem aggregations"
 msgstr "Problem-Aggregationen"
 
 msgid "Problem alerts"
-msgstr "Problem-Alarme"
+msgstr "Problem-Alerts"
 
 msgid "Problem dashboard"
 msgstr "Problem-Dashboard"
@@ -47520,6 +47669,14 @@ msgstr "Prozesse"
 
 msgid "Processes performance data"
 msgstr "Prozess Leistungsdaten"
+
+#, fuzzy
+msgid "Processing"
+msgstr "Passende Prozesse"
+
+#, fuzzy, python-format
+msgid "Processing (%s)"
+msgstr "Bearbeitung der ersten Instanz %s"
 
 #, python-format
 msgid "Processing first site %s"
@@ -47993,7 +48150,7 @@ msgid "Queued"
 msgstr "In Warteschlange"
 
 msgid "Queued alerts"
-msgstr "Alarme in Warteschlange"
+msgstr "Alerts in Warteschlange"
 
 msgid "Queued for update"
 msgstr "Warteschlange für Update"
@@ -48096,6 +48253,9 @@ msgstr "benutzter RAM"
 
 msgid "RAM used (averaged)"
 msgstr "benutzter RAM (gemittelt)"
+
+msgid "RCC Remote server address"
+msgstr "Adresse des RCC Remote-Servers"
 
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
@@ -48251,7 +48411,7 @@ msgid "RX"
 msgstr "RX"
 
 msgid "RX Light alert"
-msgstr "RX Alarm"
+msgstr "RX Light Alert"
 
 msgid "RX Signal Power"
 msgstr "RX Signalstärke"
@@ -49126,7 +49286,7 @@ msgid "Relative path to test suite file or folder"
 msgstr "Relativer Pfad zu Test-Suite-Datei oder -Ordner"
 
 msgid "Relative time of alert"
-msgstr "Relativer Zeitpunkt des Alarms"
+msgstr "Relativer Zeitpunkt des Alerts"
 
 msgid "Relay log size"
 msgstr "Relay Logdateigröße"
@@ -49196,7 +49356,7 @@ msgid "Remaining validity time"
 msgstr "Verbleibende Gültigkeitsdauer"
 
 msgid "Remap alert rule states"
-msgstr "Zustände der Warnregel neu zuordnen"
+msgstr "Zustände der Alert-Regel neu zuordnen"
 
 msgid "Remap states"
 msgstr "Zustände umschreiben"
@@ -49220,7 +49380,7 @@ msgid "Remote alert handler to run"
 msgstr "Remote-Alert Handler, der ausgeführt werden soll"
 
 msgid "Remote alert handlers (Linux)"
-msgstr "Remote-Alert Handler (Linux)"
+msgstr "Remote Alert Handler (Linux)"
 
 #, python-format
 msgid "Remote automation tried to sync pending changes but failed: %s"
@@ -49349,6 +49509,10 @@ msgstr "Nur übereinstimmende verschwundene Services entfernen"
 
 msgid "Remove package"
 msgstr "Paket entfernen"
+
+#, fuzzy
+msgid "Remove pattern"
+msgstr "Filter entfernen"
 
 msgid "Remove scheduled downtimes?"
 msgstr "Geplante Wartungszeiten entfernen?"
@@ -50832,8 +50996,7 @@ msgstr ""
 "Wurzel."
 
 msgid "Rules for automatic execution of scripts upon alerts"
-msgstr ""
-"Regeln für die automatische Ausführung von Skripten im Falle von Vorfällen"
+msgstr "Regeln für die automatische Ausführung von Skripten bei Alerts"
 
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr ""
@@ -51566,7 +51729,7 @@ msgid "Sansymphony pool allocation"
 msgstr "Sansymphony-Pool-Belegung"
 
 msgid "Sansymphony unacknowlegded alerts"
-msgstr "Sansymphony unbestätigte Alarme"
+msgstr "Sansymphony unbestätigte Alerts"
 
 msgid "Saturday"
 msgstr "Samstag"
@@ -51630,7 +51793,7 @@ msgid "Saved space"
 msgstr "Gesparter Platz"
 
 msgid "Scalar"
-msgstr ""
+msgstr "Skalar"
 
 msgid "Scale to width of page"
 msgstr "Auf Papierbreite skalieren"
@@ -52714,7 +52877,7 @@ msgid "Serial number"
 msgstr "Seriennummer"
 
 msgid "Serial number - LEGACY, don't use"
-msgstr "Seriennummer - VERALTET, nicht verwenden"
+msgstr "Seriennummer - LEGACY, nicht verwenden"
 
 msgid "Server"
 msgstr "Server"
@@ -53632,8 +53795,8 @@ msgstr ""
 "erkannt. Hinweis: Die Spiegelungsinformationen werden nur auf dem Server, "
 "der die Hauptdatenbank hostet, als Dienst angezeigt. Sie werden NICHT auf "
 "den Servern angezeigt, auf denen sich die Spiegeldatenbanken befinden. "
-"Dadurch werden doppelte Service-Status und Warnungen vermieden. Wir "
-"empfehlen daher, diese Dienste zu clustern."
+"Dadurch werden doppelte Service-Status und Alerts vermieden. Wir empfehlen "
+"daher, diese Dienste zu clustern."
 
 msgid ""
 "Set the default temperature unit used for graphs and perfometers. The option "
@@ -54536,7 +54699,7 @@ msgstr ""
 "von Hosts."
 
 msgid "Shows number of alerts grouped for each service."
-msgstr "Zeigt die Anzahl der Alarme gruppiert nach Services."
+msgstr "Zeigt die Anzahl der Alerts gruppiert nach Services."
 
 msgid "Shows the Checkmk logo."
 msgstr "Zeigt das Checkmk Logo an."
@@ -55617,7 +55780,9 @@ msgstr "Quellenzuordnung geändert"
 msgid ""
 "Source field of the alert. Default value is IP address of the incoming "
 "request."
-msgstr "Quellfeld des Alerts. Default ist die IP des eingehenden Requests."
+msgstr ""
+"Quellfeld des Alerts. Standardwert ist die IP-Adresse der eingehenden "
+"Anfrage."
 
 msgid "Source name"
 msgstr "Name der Quelle"
@@ -55688,6 +55853,13 @@ msgstr "Gibt den Standard-Linienstil an"
 
 msgid "Specifies whether password authentication is allowed"
 msgstr "Gibt an, ob die Passwortauthentifizierung erlaubt ist"
+
+msgid ""
+"Specifies whether to send a notification or to cancel all previous "
+"notifications for the same method"
+msgstr ""
+"Gibt an, ob eine Benachrichtigung gesendet oder alle vorherigen "
+"Benachrichtigungen für dieselbe Methode aufgehoben werden sollen"
 
 msgid ""
 "Specifiy time ranges during which no motion is expected. Outside these "
@@ -55971,7 +56143,8 @@ msgstr ""
 "laufen soll."
 
 msgid "Specify queue names that the rule should apply to"
-msgstr "Geben Sie die Namen der Schlangen an, auf die diese Regel greifen soll"
+msgstr ""
+"Geben Sie die Namen der Warteschlangen an, auf die diese Regel greifen soll"
 
 msgid "Specify roles of a control plane node"
 msgstr "Festlegen der Rollen eines Steuerebenen-Knotens"
@@ -56090,6 +56263,8 @@ msgid ""
 "Specify the location where the host will be created. If left empty, the host "
 "will be created in the root folder."
 msgstr ""
+"Geben Sie den Ort an, an dem der Host erstellt werden soll. Wenn Sie nichts "
+"angeben, wird der Host im root-Ordner erstellt."
 
 msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
@@ -56435,6 +56610,9 @@ msgstr "Verarbeitungsdauer"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Sendetimeout"
 
+msgid "Stack"
+msgstr "Stapel"
+
 msgid "Stacked"
 msgstr "gestapelt"
 
@@ -56474,9 +56652,8 @@ msgstr "Differenz der Standardabweichung"
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standardabweichung der Paketumlaufzeit in Millisekunden"
 
-#, fuzzy
 msgid "Standard scientific"
-msgstr "Standardthemen"
+msgstr ""
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -58464,7 +58641,7 @@ msgid "TX"
 msgstr "TX"
 
 msgid "TX Light alert"
-msgstr "TX Licht Alarm"
+msgstr "TX Licht Alert"
 
 msgid "TX Signal Power"
 msgstr "TX Signalstärke"
@@ -58739,9 +58916,9 @@ msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
 msgstr ""
-"Teamnamen, die für den Alert verantwortlich sind. Wenn der API-Schlüssel zu "
-"einer Teamintegration gehört, wird dieses Feld mit dem Besitzerteam "
-"überschrieben."
+"Namen der Teams, die für den Alert verantwortlich sind. Wenn der API-"
+"Schlüssel zu einer Teamintegration gehört, wird dieses Feld mit dem "
+"Besitzerteam überschrieben."
 
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
@@ -58762,7 +58939,7 @@ msgid "Temperature"
 msgstr "Temperatur"
 
 msgid "Temperature Alert"
-msgstr "Temperatur-Alarm"
+msgstr "Temperatur-Alert"
 
 msgid "Temperature Lane 1"
 msgstr "Temperatur Lane 1"
@@ -60189,6 +60366,18 @@ msgstr ""
 "Sie die Plugins auf die neue API um. Weitere Informationen finden Sie im <a "
 "href='%s'>Handbuch</a>."
 
+#, python-format
+msgid ""
+"The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
+"in this folder are ignored. Please migrate the plug-ins to the new API. More "
+"information can be found in <a href='%s'>Werk #%d</a> and our <a "
+"href='%s'>User Guide</a>."
+msgstr ""
+"Die Check-Plugin-API für Plugins in <tt>%s</tt> wurde entfernt. Plugin-"
+"Dateien in diesem Ordner werden ignoriert. Bitte stellen Sie die Plugins auf "
+"die neue API um. Weitere Informationen finden Sie im <a href='%s'>Werk #%d</"
+"a> und in unserem <a href='%s'>Handbuch</a>."
+
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
@@ -60548,6 +60737,14 @@ msgstr "Die aktuelle Auslastung von Livestatus ist %.2f%%"
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 "Der aktuelle Monitoring-Zustand (inklusive Quittierungen und Wartungszeiten)"
+
+#, python-format
+msgid ""
+"The current plan configuration is incompatible with the following rules "
+"which reference this robot: %s"
+msgstr ""
+"Die aktuelle Plankonfiguration ist mit den folgenden Regeln, die sich auf "
+"diesen Roboter beziehen, nicht kompatibel: %s"
 
 #, python-format
 msgid "The custom logo %s has been deleted."
@@ -61252,7 +61449,7 @@ msgid ""
 "specific rules as well as entire rule groups. Matching rules will be "
 "filtered out on the alertmanager agent side."
 msgstr ""
-"Die Ignorieren-Option kann auf verschiedenen Ebenen auf Alarmregeln "
+"Die Ignorieren-Option kann auf verschiedenen Ebenen auf Alert-Regeln "
 "abzielen, sowohl auf bestimmte Regeln als auch auf ganze Regelgruppen. "
 "Übereinstimmende Regeln werden auf der Seite des Alert Manager-Agenten "
 "herausgefiltert."
@@ -61533,7 +61730,7 @@ msgid "The log level for the handling of Livestatus queries"
 msgstr "Der Log-Level für die Behandlung von Livestatus-Abfragen"
 
 msgid "The log level for the handling of alerts within the Checkmk Micro Core"
-msgstr "Der Loglevel für die Behandlung von Alarmen im Checkmk Micro Core"
+msgstr "Der Log-Level für die Behandlung von Alerts im Checkmk Micro Core"
 
 msgid ""
 "The log level for the handling of notifications within the Checkmk Micro Core"
@@ -61821,6 +62018,13 @@ msgid ""
 msgstr ""
 "Die meiste CPU-Leistung wird vom Eventlog-Monitoring und den "
 "Leistungszählern benötigt."
+
+#, python-format
+msgid ""
+"The name '%s' is already in use. The names of managed robots must be unique."
+msgstr ""
+"Der Name '%s' wird bereits verwendet. Die Namen verwalteter Roboter müssen "
+"eindeutig sein."
 
 msgid ""
 "The name is the individual part of the used service description. Choose a "
@@ -63870,8 +64074,8 @@ msgstr "Es gibt keine Setup-Sicherung, die wiederhergestellt werden könnte."
 msgid "There is no backup job configured"
 msgstr "Es ist kein Sicherungs-Job konfiguriert"
 
-#, python-format
-msgid "There is no graph graph_plugin with the id '%s'"
+#, fuzzy, python-format
+msgid "There is no graph plug-in with the id '%s'"
 msgstr "Es gibt keinen Graph graph_plugin mit der Id '%s'"
 
 msgid "There is no manpage for this check."
@@ -64367,9 +64571,9 @@ msgstr ""
 "Verbindungen werden nicht mehr funktionieren.<br>Es gibt nur 2 Gründe, dies "
 "zu tun:<ul><li>Sie vertrauen diesem Host nicht mehr und wollen keine Daten "
 "mehr empfangen oder abrufen.</li><li>Sie wollen die Kommunikation auf den "
-"veralteten und unverschlüsselten Modus zurücksetzen (in diesem Fall müssen "
-"Sie auch den Agent Controller auf dem überwachten Host zurücksetzen (siehe "
-"`cmk-agent-ctl help`).</li></ul>"
+"Legacy- und unverschlüsselten Modus zurücksetzen (in diesem Fall müssen Sie "
+"auch den Agent Controller auf dem überwachten Host zurücksetzen (siehe `cmk-"
+"agent-ctl help`).</li></ul>"
 
 msgid "This action will affect all pending changes you have made."
 msgstr ""
@@ -64454,7 +64658,7 @@ msgstr ""
 "Wrapper erlaubt nur die Ausführung von ganz bestimmten vorkonfigurierten "
 "Skripten und verhindert so das Einschleusen von Befehlen durch einen "
 "möglichen Angreifer. Bitte verwenden Sie zum korrekten Aufsetzen den "
-"Regelsatz <a href='%s'>Remote-Alert Handler installieren (Linux)</a> in der "
+"Regelsatz <a href='%s'>Remote Alert Handler installieren (Linux)</a> in der "
 "Agentenbäckerei."
 
 #, python-format
@@ -65003,11 +65207,6 @@ msgstr "Diese Gruppe existiert nicht."
 msgid "This host does not exist."
 msgstr "Dieser Host existiert nicht."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Dieser Host erfüllt nicht die Hosttag-Bedingung '%s' (er hat die Tags %s)"
-
 msgid "This host has a baked agent"
 msgstr "Dieser Host verwendet einen gebackenen Agenten"
 
@@ -65026,12 +65225,6 @@ msgstr "Dieser Host ist deaktiviert"
 
 msgid "This host is flapping"
 msgstr "Der Zustand dieses Hosts oszilliert"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
-"Diesem Host fehlen ein oder mehrere der Labels: %s (er hat das Label %s)"
 
 msgid "This host is stale"
 msgstr "Dieser Hostzustand ist veraltet"
@@ -65262,7 +65455,7 @@ msgid ""
 msgstr ""
 "Diese Liste zeigt die in %s verfügbaren Handler. Wenn Sie ohne "
 "Agentenbäckerei arbeiten kann diese Liste leer sein. Geben Sie dann den "
-"Namen des Remote-Alert Handlers manuell an."
+"Namen des Remote Alert Handlers manuell an."
 
 msgid ""
 "This list shows you the first 10 rows from your CSV file in the way the "
@@ -66572,8 +66765,8 @@ msgstr ""
 
 msgid "This rule allows to override alert levels for the given sensor names."
 msgstr ""
-"Dieser Regelsatz erlaubt das Überschreiben von Alert-Leveln für die "
-"angegebenen Sensornamen."
+"Diese Regel erlaubt das Überschreiben von Alert-Leveln für die angegebenen "
+"Sensornamen."
 
 msgid ""
 "This rule allows to select a Couchbase server to monitor as well as "
@@ -66824,7 +67017,7 @@ msgid ""
 "description as service name."
 msgstr ""
 "Dieser Regelsatz steuert die Service-Erkennung von Brocade-Ports. Sie können "
-"die Portzustände für das Inventory und die Verwendung der Beschreibung als "
+"die Portzustände für die Inventur und die Verwendung der Beschreibung als "
 "Service-Name konfigurieren."
 
 msgid ""
@@ -66852,6 +67045,13 @@ msgstr ""
 "Schnittstellenchecks. Ein Prüfintervall, das kürzer ist als das Intervall "
 "zum Abholen der Daten, kann in solchen Fällen zu irreführenden Ausgaben "
 "führen (z. B. viel zu große Schnittstellendurchsätze)."
+
+msgid ""
+"This rule cannot be moved above rules that are defined as part of a Quick "
+"setup."
+msgstr ""
+"Diese Regel kann nicht über Regeln verschoben werden, die als Teil eines "
+"Quick Setups definiert sind."
 
 msgid "This rule configures bulk notifications."
 msgstr "Diese Regel konfiguriert Sammelbenachrichtigungen."
@@ -66933,8 +67133,8 @@ msgid ""
 "This rule controls whether the UUID or the alias is used in the service name "
 "during discovery of Multipath devices on Linux."
 msgstr ""
-"Dieser Regelsatz steuert, ob die UUID oder der Alias während der Erkennung "
-"von Multipath-Geräten unter Linux im Service-Namen verwendet wird."
+"Diese Regel steuert, ob die UUID oder der Alias während der Erkennung von "
+"Multipath-Geräten unter Linux im Service-Namen verwendet wird."
 
 msgid ""
 "This rule controls which and how many checks will be created for monitoring "
@@ -67805,11 +68005,15 @@ msgid ""
 "This setting decides how late your changes will be activated. Default is 10 "
 "minutes"
 msgstr ""
+"Diese Einstellung legt fest, wie spät Ihre Änderungen aktiviert werden. "
+"Standard ist 10 Minuten."
 
 msgid ""
 "This setting decides how many hosts will be discovered in one Api call. "
 "Default is 20"
 msgstr ""
+"Diese Einstellung bestimmt, wie viele Hosts in einem Api-Aufruf gefunden "
+"werden sollen. Standard ist 20."
 
 msgid ""
 "This setting decides how often the dynamic configuration daemon will get "
@@ -67834,15 +68038,16 @@ msgstr ""
 
 msgid "This setting decides whether we prevent false alarms. Default is True"
 msgstr ""
+"Diese Einstellung legt fest, ob wir Fehlalarme verhindern. Standard ist True."
 
 msgid ""
 "This setting decides which types of messages to log into the daemon log of "
 "the Checkmk Micro Core. The object history (service alerts, events, etc.) is "
 "<b>not</b> affected by this setting."
 msgstr ""
-"Diese Einstellung legt fest, welche Arten von Meldungen in das Daemon Log "
+"Diese Einstellung legt fest, welche Arten von Meldungen in das Daemon-Log "
 "des Checkmk Micro Core geschrieben werden. Die Objekthistorie (Service-"
-"Alarme, Ereignisse, etc.) wird davon <b>nicht</b> beeinflusst."
+"Alerts, Ereignisse, etc.) wird davon <b>nicht</b> beeinflusst."
 
 #, python-format
 msgid ""
@@ -68912,13 +69117,13 @@ msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Zeit bis zum Alert, wenn die Bedingung REPLICAFAILURE erfüllt ist"
 
 msgid "Time until alert, if latest CronJob job is in pending state"
-msgstr "Zeit bis zum Alert, wenn der letzte CronJob-Job PENDING ist"
+msgstr "Zeit bis zum Alert, wenn der letzte Cronjob-Job PENDING ist"
 
 msgid ""
 "Time until alert, if the latest CronJob job has been running for longer than "
 "set time"
 msgstr ""
-"Zeit bis zum Alert, wenn der letzte CronJob-Job länger als die eingestellte "
+"Zeit bis zum Alert, wenn der letzte Cronjob-Job länger als die eingestellte "
 "Zeit gelaufen ist"
 
 msgid "Time until credentials expiration"
@@ -69247,11 +69452,12 @@ msgid ""
 "representation of a compatible Python data structure."
 msgstr ""
 "Um den Wert einer Verbindung über die REST-API festzulegen, müssen Sie das "
-"Feld <tt>value_raw</tt> festlegen. Der Wert dieses Feldes ist für jedes "
-"Regelset individuell. Damit Sie verstehen, welche Art von Datenstruktur Sie "
-"bereitstellen müssen, zeigt Ihnen dieser Regelexportmechanismus den Wert, "
-"den Sie für eine gegebene Verbindung festlegen müssen. Der Wert muss in "
-"einer String-Darstellung einer kompatiblen Python-Datenstruktur sein."
+"Feld <tt>value_raw</tt> festlegen. Der Wert dieses Feldes ist für jeden "
+"Verbindungssatz individuell. Damit Sie verstehen, welche Art von "
+"Datenstruktur Sie bereitstellen müssen, zeigt Ihnen dieser "
+"Verbindungsexportmechanismus den Wert, den Sie für eine gegebene Verbindung "
+"festlegen müssen. Der Wert muss in einer String-Darstellung einer "
+"kompatiblen Python-Datenstruktur vorliegen."
 
 msgid ""
 "To set the value of a rule using the REST API, you need to set the "
@@ -69262,11 +69468,11 @@ msgid ""
 "compatible Python data structure."
 msgstr ""
 "Um den Wert einer Regel über die REST-API festzulegen, müssen Sie das Feld "
-"<tt>value_raw</tt> festlegen. Der Wert dieses Feldes ist für jedes Regelset "
+"<tt>value_raw</tt> festlegen. Der Wert dieses Feldes ist für jeden Regelsatz "
 "individuell. Damit Sie verstehen, welche Art von Datenstruktur Sie "
 "bereitstellen müssen, zeigt Ihnen dieser Regelexportmechanismus den Wert, "
 "den Sie für eine gegebene Regel festlegen müssen. Der Wert muss in einer "
-"String-Darstellung einer kompatiblen Python-Datenstruktur sein."
+"String-Darstellung einer kompatiblen Python-Datenstruktur vorliegen."
 
 msgid "To:"
 msgstr "An:"
@@ -71397,9 +71603,8 @@ msgstr "Übertragen: %d neue, %d geänderte und %d verschwundene Dateien"
 msgid "Transform status output"
 msgstr "Status-Ausgabe umschreiben"
 
-#, fuzzy
 msgid "Transformation"
-msgstr "Thermische Informationen"
+msgstr "Transformation"
 
 msgid "Transformation on selected metric"
 msgstr "Transformation auf ausgewählte Metriken"
@@ -71634,7 +71839,7 @@ msgid "Type of Check"
 msgstr "Check-Typ"
 
 msgid "Type of alerts of hosts and services"
-msgstr "Alarm-Typ (Hosts und Services)"
+msgstr "Alert-Typ von Hosts und Services"
 
 msgid "Type of check"
 msgstr "Check-Typ"
@@ -72279,8 +72484,8 @@ msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
 msgstr ""
-"Deinstallieren Sie den veralteten (vor 1.6) Agenten nach der Installation "
-"des neuen Windows Agenten"
+"Deinstallieren Sie den Legacy-Agenten (vor 1.6) nach der Installation des "
+"neuen Windows-Agenten"
 
 msgid "Unique"
 msgstr "Eindeutig"
@@ -73091,7 +73296,7 @@ msgid "Upper levels for number of OSDs which are out"
 msgstr "Obergrenzen für die Anzahl der OSDs die außen sind"
 
 msgid "Upper levels for number of alerts"
-msgstr "Obergrenzen für die Anzahl der Vorfälle"
+msgstr "Obergrenzen für die Anzahl der Alerts"
 
 msgid "Upper levels for number of requests"
 msgstr "Obergrenzen für die Anzahl der Anfragen"
@@ -74538,7 +74743,7 @@ msgid "User that performed action (regex)"
 msgstr "Benutzer, der Aktion ausführte (regex)"
 
 msgid "User to run handler as"
-msgstr "Benutzer, unter dem der Alert Handler läuft"
+msgstr "Benutzer, unter dem der Handler läuft"
 
 msgid "User who performed action"
 msgstr "Benutzer der Aktion ausführt"
@@ -75559,6 +75764,12 @@ msgstr "Version 3"
 msgid "Version 3 and TLS"
 msgstr "Version 3 und TLS"
 
+msgid "Version label"
+msgstr "Versionslabel"
+
+msgid "Version number"
+msgstr "Versionsnummer"
+
 msgid "Version of PKI appliance"
 msgstr "Version der PKI-Appliance"
 
@@ -75594,9 +75805,8 @@ msgstr "Breite der vertikalen Achse"
 msgid "Vertical padding"
 msgstr "Vertikaler Innenabstand"
 
-#, fuzzy
 msgid "Vertical range"
-msgstr "Vertikaler Innenabstand"
+msgstr "Vertikalbereich"
 
 msgid "Vertical rules"
 msgstr "Vertikale Linien"
@@ -76004,6 +76214,10 @@ msgid "Wait until the other has finished"
 msgstr "Warten bis anderer Vorgang beendet ist"
 
 msgid "Waiting"
+msgstr "Wartend"
+
+#, fuzzy, python-format
+msgid "Waiting (%s)"
 msgstr "Wartend"
 
 msgid "Waiting connections"
@@ -77108,10 +77322,10 @@ msgid ""
 "notification settings and rules, so make sure that you know what you do. "
 "Moreover you can specify a time range where no notifications are generated."
 msgstr ""
-"Wenn diese Option aktiviert ist, werden Sie <b>keinerlei</b> Alarmierungen "
-"oder andere Benachrichtigungen via E-Mail, SMS o.ä. erhalten. Dies setzt "
-"alle anderen Benachrichtigungseinstellungen und -regeln außer Kraft! "
-"Außerdem können Sie einen Zeitraum konfigurieren, in dem garantiert keine "
+"Wenn diese Option aktiviert ist, werden Sie <b>keinerlei</b> Alerts oder "
+"andere Benachrichtigungen via E-Mail, SMS o.ä. erhalten. Dies setzt alle "
+"anderen Benachrichtigungseinstellungen und -regeln außer Kraft! Außerdem "
+"können Sie einen Zeitraum konfigurieren, in dem garantiert keine "
 "Benachrichtigungen erzeugt werden."
 
 msgid ""
@@ -77952,12 +78166,11 @@ msgid ""
 "that you configure the fallback email address to which all alerts that don't "
 "match a notification rule are sent."
 msgstr ""
-"Ohne eine Fallback-E-Mail-Adresse verpassen Sie möglicherweise "
-"Benachrichtigungen, die nicht von einer Benachrichtigungsregel abgedeckt "
-"werden. Um eine vollständige Benachrichtigungsabdeckung zu gewährleisten, "
-"empfehlen wir Ihnen, eine Fallback-E-Mail-Adresse zu konfigurieren, an die "
-"alle Benachrichtigungen gesendet werden, die nicht mit einer "
-"Benachrichtigungsregel übereinstimmen."
+"Ohne eine Fallback-E-Mail-Adresse verpassen Sie möglicherweise Alerts, die "
+"nicht von einer Benachrichtigungsregel abgedeckt werden. Um eine "
+"vollständige Benachrichtigungsabdeckung zu gewährleisten, empfehlen wir "
+"Ihnen, eine Fallback-E-Mail-Adresse zu konfigurieren, an die alle Alerts "
+"gesendet werden, die nicht mit einer Benachrichtigungsregel übereinstimmen."
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -78617,8 +78830,8 @@ msgid ""
 "%s</tt>"
 msgstr ""
 "Sie können den Alert Handler-Mechanismus konfigurieren, mehr Details über "
-"die Ereignisse im Alertlog abzulegen. Diese Informationen landen in der "
-"Datei <tt>%s</tt>"
+"die Ereignisse in Alert Log-Datei abzulegen. Diese Informationen landen in "
+"der Datei <tt>%s</tt>"
 
 #, python-format
 msgid ""
@@ -79137,7 +79350,7 @@ msgid ""
 msgstr ""
 "Sie können einen eigenen Monitoring-Zustand für jede mögliche Kombination "
 "der Servicezustände festlegen. Wenn Sie diesen Parameter nicht benutzen, "
-"dann werden nur die Werte online/veraltet als OK betrachtet."
+"dann werden nur die Werte online/legacy_run als OK betrachtet."
 
 #, python-format
 msgid "You can specify at most %d entries"
@@ -80544,7 +80757,7 @@ msgid "alert handler rule"
 msgstr "Alert Handler-Regel"
 
 msgid "alerts"
-msgstr "Alarme"
+msgstr "Alerts"
 
 msgid "all agents"
 msgstr "alle Agenten"
@@ -81293,7 +81506,7 @@ msgid "iCalendar File"
 msgstr "iCalendar-Datei"
 
 msgid "iLert alert source API key"
-msgstr "API-Schlüssel der iLert-Alarmquelle"
+msgstr "API-Schlüssel der iLert-Alert-Quelle"
 
 msgid "iOS version regular expression"
 msgstr "iOS-Version regulärer Ausdruck"
@@ -81495,7 +81708,7 @@ msgid "left"
 msgstr "links"
 
 msgid "legacy run"
-msgstr "veralteter Lauf"
+msgstr "Legacy-Lauf"
 
 msgid "license details"
 msgstr "Lizenzdetails"
@@ -81809,6 +82022,10 @@ msgstr "Anzahl der Prozesse"
 msgid "objects"
 msgstr "Objekte"
 
+#, fuzzy
+msgid "of"
+msgstr "aus"
+
 msgid "of Service"
 msgstr "des Service"
 
@@ -82029,6 +82246,9 @@ msgstr "Regulärer Ausdruck, Substring-Übereinstimmung"
 
 msgid "relative URI under which Jolokia is visible"
 msgstr "relative URL, unter der Jolokia sichtbar ist"
+
+msgid "reload"
+msgstr "Erneut laden"
 
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
@@ -82574,6 +82794,9 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Key from password store"
+#~ msgstr "Schlüssel aus dem Passwortspeicher"
 
 #~ msgid "Configure host and authority"
 #~ msgstr "Host und Einrichtung konfigurieren"

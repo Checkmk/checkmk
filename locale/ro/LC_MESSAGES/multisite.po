@@ -381,6 +381,10 @@ msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d schimbări de stare haotică de la %s până la %s (%s)"
 
 #, fuzzy, python-format
+msgid "%d check plug-ins trying to use the removed API: %s"
+msgstr "%d verificați plugin-urile care utilizează API-ul depreciat: %s."
+
+#, fuzzy, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
 msgstr "%d verificați plugin-urile care utilizează API-ul depreciat: %s."
 
@@ -640,24 +644,6 @@ msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s ar putea să lipsească, dacă nu trebuie să fie gol dacă este setat."
 
 #, python-format
-msgid "%s not in the selected Setup folders."
-msgstr "%s nu se află în dosarele de configurare selectate."
-
-#, python-format
-msgid "%s not known in the activated monitoring configuration"
-msgstr "%s nu este cunoscut în configurația de monitorizare activată"
-
-#, python-format
-msgid "%s not listed in the explicit list of host names."
-msgstr "%s care nu figurează în lista explicită de nume de gazdă."
-
-#, python-format
-msgid "%s not monitored by one of the explicitly selected sites."
-msgstr ""
-"%s care nu este monitorizat de unul dintre site-urile selectate în mod "
-"explicit."
-
-#, python-format
 msgid "%s notification rules are matching"
 msgstr "%s regulile de notificare se potrivesc"
 
@@ -676,10 +662,6 @@ msgstr "%s din %s"
 #, python-format
 msgid "%s of %s%%"
 msgstr "%s de %s%%"
-
-#, python-format
-msgid "%s on the exclusion list."
-msgstr "%s pe lista de excludere."
 
 #, fuzzy, python-format
 msgid "%s other service"
@@ -826,14 +808,14 @@ msgstr ""
 "urmărirea configurației git în WATO."
 
 #, fuzzy, python-format
-msgid "(%s more entries)"
+msgid "(%s more items)"
 msgstr "Intrări eliminate"
 
 msgid "(0 is current period)"
 msgstr "(0 reprezintă perioada curentă)"
 
 #, fuzzy
-msgid "(1 more entry)"
+msgid "(1 more item)"
 msgstr "(nici o intrare)"
 
 msgid "(Edit presets)"
@@ -936,12 +918,20 @@ msgstr "(setat de câtre syslog)"
 msgid "(syslog)"
 msgstr "(syslog)"
 
+#, fuzzy
+msgid "(unknown)"
+msgstr "necunoscut"
+
 #, python-format
 msgid "(unknown: %d)"
 msgstr "(necunoscut: %d)"
 
 msgid "(unset)"
 msgstr "(neconfigurat)"
+
+#, fuzzy
+msgid "(untitled ruleset)"
+msgstr "(Modul fără titlu)"
 
 msgid ", "
 msgstr ""
@@ -970,6 +960,9 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 
 msgid ", the first match skips this rule pack"
 msgstr ", prima potrivire sare peste acest pachet de reguli"
+
+msgid "-"
+msgstr ""
 
 msgid "-.-- %"
 msgstr "-.-- %"
@@ -2974,6 +2967,10 @@ msgid "Absolute number of incoming connections"
 msgstr "Numărul absolut de conexiuni primite"
 
 #, fuzzy
+msgid "Absolute path to catalog ZIP file"
+msgstr "O cale absolută către un certificat CA"
+
+#, fuzzy
 msgid "Absolute time of alert"
 msgstr "Timpul Exact al Alertei"
 
@@ -3449,6 +3446,10 @@ msgid "Activating"
 msgstr "Activarea"
 
 msgid "Activation"
+msgstr "Activare"
+
+#, fuzzy, python-format
+msgid "Activation (%s)"
 msgstr "Activare"
 
 #, python-format
@@ -5065,7 +5066,7 @@ msgid "Agent updates are currently disabled"
 msgstr "Actualizările agentului sunt în prezent dezactivate"
 
 #, fuzzy, python-format
-msgid "Agent updates are disabled for host name %s because it is"
+msgid "Agent updates are disabled for host name %s:"
 msgstr ""
 "Actualizările agentului sunt dezactivate pentru numele de gazdă %s, deoarece "
 "acesta este"
@@ -6305,6 +6306,10 @@ msgstr "S-a produs o excepție: %s"
 #, fuzzy
 msgid "An exception occurred"
 msgstr "S-a produs o excepție"
+
+#, fuzzy
+msgid "An fatal error occured:"
+msgstr "%d au apărut erori:"
 
 msgid ""
 "An identifier must only consist of letters, digits, dash and underscore and "
@@ -8951,6 +8956,14 @@ msgstr "Setări BasicAuth (opțional)"
 msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
 
+#, fuzzy
+msgid "Batch num"
+msgstr "Numărul de comutator"
+
+#, fuzzy
+msgid "Batches"
+msgstr "Potriviri"
+
 msgid "Battery Levels"
 msgstr "Nivelurile bateriei"
 
@@ -9375,6 +9388,10 @@ msgstr "Deschideți notificări în masă"
 #, fuzzy
 msgid "Bulk notifications"
 msgstr "Deschideți notificări în masă"
+
+#, fuzzy
+msgid "Bulk outside of the timeperiod"
+msgstr "De asemenea, vrac în afara perioadei de timp"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "Eliminarea în bloc a atributelor explicite"
@@ -13085,6 +13102,10 @@ msgid "Clone this element"
 msgstr "Clonarea acestui element"
 
 #, fuzzy
+msgid "Clone this entry"
+msgstr "Clonați această metrică"
+
+#, fuzzy
 msgid "Clone this managed robot"
 msgstr "Obiecte gestionate"
 
@@ -14528,6 +14549,10 @@ msgstr "Conexiuni pe secundă"
 msgid "Connectivity"
 msgstr "Conectivitate"
 
+#, fuzzy
+msgid "Connector Id"
+msgstr "ID-ul conexiunii"
+
 msgid "Connector outlets"
 msgstr "Prizele de conectare"
 
@@ -15141,6 +15166,9 @@ msgstr "Nu s-a putut prelua simbolul de identitate. (%s)"
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Nu s-a putut salva modificările: %s"
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
 
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
@@ -16466,6 +16494,10 @@ msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 msgid "DCD status"
 msgstr "Starea DCD"
 
+#, fuzzy
+msgid "DCD work state"
+msgstr "cea mai rea stare"
+
 msgid "DD.MM.YYYY"
 msgstr "DD.MM.AAAA"
 
@@ -17501,9 +17533,10 @@ msgid ""
 msgstr ""
 "Definirea nivelurilor inferioare pentru numărul de containere terminate"
 
+#, fuzzy
 msgid ""
-"Define the maximum session duration. If reached, the user has to re-"
-"authenticate."
+"Define the maximum allowed session duration. If reached, the user has to re-"
+"authenticate. Sessions are not set to persist on browser termination."
 msgstr ""
 "Definiți durata maximă a sesiunii. Dacă este atinsă, utilizatorul trebuie să "
 "se autentifice din nou."
@@ -18545,7 +18578,11 @@ msgid "Deprecated HW/SW Inventory plug-ins"
 msgstr "Plugin-uri de inventar HW/SW depășite"
 
 #, fuzzy
-msgid "Deprecated check plug-ins"
+msgid "Deprecated check plug-ins (legacy)"
+msgstr "Plugin-uri de verificare depreciate"
+
+#, fuzzy
+msgid "Deprecated check plug-ins (v1)"
 msgstr "Plugin-uri de verificare depreciate"
 
 msgid "Deprecated choice, please re-select"
@@ -19143,7 +19180,15 @@ msgstr "Numele procesului descoperit"
 msgid "Discovered service labels"
 msgstr "Etichete de serviciu descoperite"
 
+#, fuzzy
+msgid "Discovering"
+msgstr "Descoperiți"
+
 msgid "Discovery"
+msgstr "Descoperire"
+
+#, fuzzy, python-format
+msgid "Discovery (%s)"
 msgstr "Descoperire"
 
 msgid "Discovery Output"
@@ -20452,6 +20497,10 @@ msgstr "Descarca"
 msgid "Download %s package of agent for %s"
 msgstr "Descărcați pachetul %s de agent pentru %s."
 
+#, fuzzy
+msgid "Download (internet connection)"
+msgstr "Conexiuni client"
+
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "Descărcați Checkmk Agent pentru gazda %s"
@@ -21278,6 +21327,10 @@ msgstr "Editați modelul"
 msgid "Edit my view"
 msgstr "Editați-mi punctul de vedere"
 
+#, fuzzy
+msgid "Edit notification parameter"
+msgstr "Editați această regulă de notificare"
+
 #, python-format
 msgid "Edit notification rule %d"
 msgstr "Editarea regulii de notificare %d"
@@ -21782,6 +21835,10 @@ msgstr "Activați SNMPv2c și mersul în masă pentru plăcile de management"
 
 msgid "Enable TLS"
 msgstr "Activați TLS"
+
+#, fuzzy
+msgid "Enable TLS certificate validation"
+msgstr "Dezactivați validarea certificatului SSL"
 
 msgid "Enable active checks"
 msgstr "Activarea verificărilor active"
@@ -22448,6 +22505,9 @@ msgstr "Variabile de mediu"
 
 msgid "Environment build timeout"
 msgstr "Timeout de construire a mediului"
+
+msgid "Environment dependency handling"
+msgstr ""
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episodul 1: Instalarea Checkmk și monitorizarea primei gazde"
@@ -23753,6 +23813,12 @@ msgstr "Solicitări de fișiere eșuate"
 msgid "Failed get locations requests"
 msgstr "Solicitări eșuate de obținere a locațiilor"
 
+#, fuzzy, python-format
+msgid "Failed host tag condition '%s' (Has the tags %s)"
+msgstr ""
+"Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
+"%s)"
+
 msgid "Failed index operations"
 msgstr "Operațiuni de indexare eșuate"
 
@@ -24148,6 +24214,9 @@ msgstr "Aduceți fiecare"
 
 msgid "Fetch failed"
 msgstr "Fetch a eșuat"
+
+msgid "Fetch from RCC remote server"
+msgstr ""
 
 msgid "Fetch had bad headers"
 msgstr "Fetch a avut anteturi proaste"
@@ -24556,6 +24625,10 @@ msgid "Fingerprint: %s"
 msgstr "Amprenta digitală: %s."
 
 msgid "Finished"
+msgstr "Finalizat"
+
+#, fuzzy, python-format
+msgid "Finished %s"
 msgstr "Finalizat"
 
 msgid "Finished."
@@ -25315,6 +25388,12 @@ msgstr "Nu s-a găsit nicio alternativă corespunzătoare."
 
 msgid "Found no matching entry."
 msgstr "Nu s-a găsit nicio intrare corespunzătoare."
+
+#, fuzzy
+msgid "Found no matching parameters. Please try another search term."
+msgstr ""
+"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
+"de căutare."
 
 msgid "Found no matching rows. Please try another search term."
 msgstr ""
@@ -32542,6 +32621,10 @@ msgstr ""
 msgid "In Progress"
 msgstr "În curs de desfășurare"
 
+#, fuzzy, python-format
+msgid "In Progress %s"
+msgstr "În curs de desfășurare"
+
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -33436,6 +33519,10 @@ msgstr "Extinderea inițială a agregatelor"
 msgid "Initial scheduling"
 msgstr "Programarea inițială"
 
+#, fuzzy
+msgid "Initialized"
+msgstr "Inițializarea"
+
 msgid "Initialized GIT for Checkmk"
 msgstr "GIT inițializat pentru Checkmk"
 
@@ -34031,6 +34118,10 @@ msgstr "Tip de element fixel nevalabil '%s'"
 #, fuzzy
 msgid "Invalid float number"
 msgstr "Nume de fișier invalid"
+
+#, fuzzy
+msgid "Invalid folder"
+msgstr "Identificator invalid"
 
 msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
@@ -35039,9 +35130,6 @@ msgstr "ID cheie"
 
 msgid "Key Type and Length"
 msgstr ""
-
-msgid "Key from password store"
-msgstr "Cheia din magazinul de parole"
 
 msgid "Key pair will be generated when you save."
 msgstr "Perechea de chei va fi generată atunci când salvați."
@@ -37036,6 +37124,10 @@ msgstr "Balansatoare de sarcină"
 msgid "Load balancers target groups"
 msgstr "Balansatoare de sarcină Grupuri țintă"
 
+#, fuzzy
+msgid "Load from ZIP file"
+msgstr "Încărcați fișierul MIB"
+
 msgid "Load in a new window / tab"
 msgstr "Încărcați într-o fereastră / filă nouă"
 
@@ -37051,6 +37143,10 @@ msgstr "Încărcarea serverului Citrix"
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Încărcarea \"%s/%s\" a eșuat: %s."
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Încărcare..."
 
 msgid "Loading maps..."
 msgstr "Încărcarea hărților..."
@@ -38456,6 +38552,11 @@ msgstr "Obiecte gestionate"
 #, fuzzy
 msgid "Managed robot deleted."
 msgstr "Obiecte gestionate"
+
+msgid ""
+"Managed robot names are restricted to the following characters: a-z, A-Z, "
+"0-9, `-`, `_`, `.`"
+msgstr ""
 
 msgid "Managed robot not found while attempting to delete it."
 msgstr ""
@@ -40128,6 +40229,10 @@ msgstr "Oglindirea axei verticale"
 msgid "Mirror views"
 msgstr "Vederi în oglindă"
 
+#, fuzzy
+msgid "Mirrored"
+msgstr "Zona oglinzată"
+
 msgid "Mirrored Area"
 msgstr "Zona oglinzată"
 
@@ -40204,6 +40309,10 @@ msgstr "Lipsește parametrul necesar custom_graph."
 
 msgid "Missing needed host parameter."
 msgstr "Lipsește un parametru gazdă necesar."
+
+#, python-format
+msgid "Missing one or more of the labels: %s (Has the labels %s)"
+msgstr ""
 
 msgid "Missing or invalid mode. Allowed are 'agent' and 'status'"
 msgstr "Mod lipsă sau invalid. Permise sunt 'agent' și 'status'"
@@ -42062,6 +42171,10 @@ msgstr "Obiecte gestionate"
 msgid "New name"
 msgstr "Nume nou"
 
+#, fuzzy
+msgid "New notification parameter"
+msgstr "Faza de notificare"
+
 #, fuzzy, python-format
 msgid "New notification rule #%d successfully created!"
 msgstr "Gazdă creată cu succes"
@@ -42251,6 +42364,10 @@ msgid "No certificate"
 msgstr "Fără certificat"
 
 #, fuzzy
+msgid "No check plug-ins trying to use the removed API"
+msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
 msgid "No check plug-ins using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
@@ -42322,6 +42439,10 @@ msgstr ""
 
 #, fuzzy
 msgid "No elements available"
+msgstr "nu este disponibil"
+
+#, fuzzy
+msgid "No elements available, create one"
 msgstr "nu este disponibil"
 
 #, fuzzy
@@ -42552,6 +42673,14 @@ msgstr "Fără căutare"
 
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
+
+#, fuzzy
+msgid "No selected graph line"
+msgstr "Operațiunea privind metricele selectate"
+
+#, fuzzy
+msgid "No selected graph lines"
+msgstr "Operațiunea privind metricele selectate"
 
 #, fuzzy
 msgid "No smarthosts"
@@ -42825,13 +42954,13 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Normally a user login session is valid until the password is changed or the "
-"user is locked. By enabling this option, you can apply a time limit to login "
-"sessions which is applied when the user stops interacting with the GUI for a "
-"given amount of time. When a user is exceeding the configured maximum idle "
-"time, the user will be logged out and redirected to the login screen to "
-"renew the login session. This setting can be overridden in each individual "
-"user's profile."
+"Normally a user login session is valid until the password is changed, the "
+"browser is closed or the user is locked. By enabling this option, you can "
+"apply a time limit to login sessions which is applied when the user stops "
+"interacting with the GUI for a given amount of time. When a user exceeds the "
+"configured maximum idle time, the user will be logged out and redirected to "
+"the login screen to renew the login session. This setting can be overridden "
+"in each individual user's profile."
 msgstr ""
 "În mod normal, o sesiune de conectare a unui utilizator este valabilă până "
 "când parola este schimbată sau până când utilizatorul este blocat. Prin "
@@ -42970,11 +43099,29 @@ msgstr "Neactivat"
 msgid "Not found"
 msgstr "Nu a fost găsit"
 
+#, fuzzy
+msgid "Not in the selected Setup folders."
+msgstr "%s nu se află în dosarele de configurare selectate."
+
+#, fuzzy
+msgid "Not known in the activated monitoring configuration"
+msgstr "%s nu este cunoscut în configurația de monitorizare activată"
+
+#, fuzzy
+msgid "Not listed in the explicit list of host names."
+msgstr "%s care nu figurează în lista explicită de nume de gazdă."
+
 msgid "Not locked"
 msgstr "Nu este blocat"
 
 msgid "Not logged in."
 msgstr "Nu sunteți conectat."
+
+#, fuzzy
+msgid "Not monitored by one of the explicitly selected sites."
+msgstr ""
+"%s care nu este monitorizat de unul dintre site-urile selectate în mod "
+"explicit."
 
 msgid "Not permitted to change the password. Change can not be enforced."
 msgstr "Nu este permisă schimbarea parolei. Schimbarea nu poate fi impusă."
@@ -44437,6 +44584,10 @@ msgstr "Pe toate site-urile"
 msgid "On down host"
 msgstr "Pe jos gazdă"
 
+#, fuzzy
+msgid "On host name exclusion list."
+msgstr "%s pe lista de excludere."
+
 msgid "On recovery (OK/UP)"
 msgstr "La recuperare (OK/UP)"
 
@@ -44624,6 +44775,15 @@ msgstr ""
 "singur. Vă rugăm să rețineți că acest lucru poate duce la o descriere a "
 "serviciului care nu este unică, ceea ce duce la unele servicii, care nu sunt "
 "afișate!"
+
+#, fuzzy
+msgid "Only applies if `Periodic notifications` are enabled"
+msgstr "Activați notificările periodice"
+
+#, fuzzy
+msgid ""
+"Only applies to notifications triggered by the command `Custom notifications`"
+msgstr "Ordinea de sortare a notificărilor pentru notificările în masă"
 
 #, fuzzy
 msgid ""
@@ -44825,6 +44985,11 @@ msgstr "Sunt permise doar literele majuscule"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "Folosiți numai nivelurile dispozitivului, ignorați-le pe ale dvs."
+
+msgid ""
+"Only users who are in all the following contact groups will receive the "
+"notification"
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "Numai atunci când evenimentul anulat se află în faza OPEN"
@@ -48531,6 +48696,10 @@ msgid "Please provide a hostname to test with."
 msgstr "Vă rugăm să furnizați un nume de gazdă cu care să testați."
 
 #, fuzzy
+msgid "Please provide a path that is absolute on either Linux or Windows."
+msgstr "Vă rugăm să furnizați o cale relativă Windows"
+
+#, fuzzy
 msgid "Please provide a path that is relative both on Linux and Windows."
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
 
@@ -48591,6 +48760,10 @@ msgstr "Vă rugăm să selectați un număr între 0 și 100"
 #, fuzzy
 msgid "Please select a service."
 msgstr "Vă rugăm să selectați un serviciu"
+
+#, fuzzy
+msgid "Please select an element"
+msgstr "Vă rugăm să selectați cel puțin un element"
 
 msgid "Please select at least one element"
 msgstr "Vă rugăm să selectați cel puțin un element"
@@ -49570,6 +49743,14 @@ msgstr "Procese"
 msgid "Processes performance data"
 msgstr "Procesează datele de performanță"
 
+#, fuzzy
+msgid "Processing"
+msgstr "Potrivirea proceselor"
+
+#, fuzzy, python-format
+msgid "Processing (%s)"
+msgstr "Prelucrarea primului site %s"
+
 #, python-format
 msgid "Processing first site %s"
 msgstr "Prelucrarea primului site %s"
@@ -50164,6 +50345,10 @@ msgstr "RAM utilizat"
 
 msgid "RAM used (averaged)"
 msgstr "RAM utilizată (medie)"
+
+#, fuzzy
+msgid "RCC Remote server address"
+msgstr "Adresa serverului URL personalizat"
 
 msgid "RCC profile configuration"
 msgstr "Configurația profilului RCC"
@@ -51475,6 +51660,10 @@ msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
 
 msgid "Remove package"
 msgstr "Îndepărtați pachetul"
+
+#, fuzzy
+msgid "Remove pattern"
+msgstr "Eliminați filtrul"
 
 msgid "Remove scheduled downtimes?"
 msgstr "Eliminați perioadele de întrerupere programate?"
@@ -58047,6 +58236,11 @@ msgid "Specifies whether password authentication is allowed"
 msgstr "Specifică dacă este permisă autentificarea cu parolă"
 
 msgid ""
+"Specifies whether to send a notification or to cancel all previous "
+"notifications for the same method"
+msgstr ""
+
+msgid ""
 "Specifiy time ranges during which no motion is expected. Outside these "
 "times, the motion detector will always be in state OK"
 msgstr ""
@@ -58807,6 +59001,10 @@ msgstr "Latență Sproc"
 
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Send timeout"
+
+#, fuzzy
+msgid "Stack"
+msgstr "Stive"
 
 msgid "Stacked"
 msgstr "Stivuite"
@@ -62693,6 +62891,19 @@ msgstr ""
 "moment fără notificare. Vă rugăm să migrați pluginurile la noul API. Mai "
 "multe informații pot fi găsite în Ghidul utilizatorului <a href='%s'></a> ."
 
+#, fuzzy, python-format
+msgid ""
+"The check plug-in API for plug-ins in <tt>%s</tt> is removed. Plug-in files "
+"in this folder are ignored. Please migrate the plug-ins to the new API. More "
+"information can be found in <a href='%s'>Werk #%d</a> and our <a "
+"href='%s'>User Guide</a>."
+msgstr ""
+"API-ul de verificare a plugin-urilor pentru plugin-uri din <tt>%s</tt> este "
+"depreciat. Fișierele de pluginuri din acest dosar sunt în continuare luate "
+"în considerare, dar API-ul pe care îl folosesc se poate schimba în orice "
+"moment fără notificare. Vă rugăm să migrați pluginurile la noul API. Mai "
+"multe informații pot fi găsite în Ghidul utilizatorului <a href='%s'></a> ."
+
 msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
@@ -63046,6 +63257,12 @@ msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 "Starea curentă de monitorizare (inclusiv confirmările și timpii de "
 "întrerupere)"
+
+#, python-format
+msgid ""
+"The current plan configuration is incompatible with the following rules "
+"which reference this robot: %s"
+msgstr ""
 
 #, python-format
 msgid "The custom logo %s has been deleted."
@@ -64320,6 +64537,11 @@ msgid ""
 msgstr ""
 "Cea mai mare performanță a procesorului este necesară pentru monitorizarea "
 "Eventlog și pentru contoarele de performanță."
+
+#, fuzzy, python-format
+msgid ""
+"The name '%s' is already in use. The names of managed robots must be unique."
+msgstr "Acest nume este deja utilizat. Vă rugăm să alegeți un alt nume."
 
 msgid ""
 "The name is the individual part of the used service description. Choose a "
@@ -66358,7 +66580,7 @@ msgid "There is no backup job configured"
 msgstr "Nu este configurată nicio sarcină de backup"
 
 #, fuzzy, python-format
-msgid "There is no graph graph_plugin with the id '%s'"
+msgid "There is no graph plug-in with the id '%s'"
 msgstr "Nu există niciun șablon de grafic cu id '%s'"
 
 msgid "There is no manpage for this check."
@@ -67495,12 +67717,6 @@ msgstr "Acest grup nu există."
 msgid "This host does not exist."
 msgstr "Această gazdă nu există."
 
-#, python-format
-msgid "This host failed host tag condition '%s' (it has the tags %s)"
-msgstr ""
-"Această gazdă a eșuat condiția de etichetare a gazdei '%s' (are etichetele "
-"%s)"
-
 msgid "This host has a baked agent"
 msgstr "Această gazdă are un agent copt"
 
@@ -67519,11 +67735,6 @@ msgstr "Această gazdă este dezactivată"
 
 msgid "This host is flapping"
 msgstr "Gazda asta se agită"
-
-#, python-format
-msgid ""
-"This host is missing one or more of the labels: %s (it has the labels %s)"
-msgstr ""
 
 msgid "This host is stale"
 msgstr "Această gazdă este veche"
@@ -69393,6 +69604,12 @@ msgstr ""
 "decât intervalul de preluare a datelor ar putea avea ca rezultat o ieșire "
 "înșelătoare (de exemplu, debite mult prea mari ale interfeței) în astfel de "
 "cazuri."
+
+#, fuzzy
+msgid ""
+"This rule cannot be moved above rules that are defined as part of a Quick "
+"setup."
+msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
 
 msgid "This rule configures bulk notifications."
 msgstr "Această regulă configurează notificările în masă."
@@ -78839,6 +79056,14 @@ msgid "Version 3 and TLS"
 msgstr "Versiunea 3 și TLS"
 
 #, fuzzy
+msgid "Version label"
+msgstr "Versiunea 1"
+
+#, fuzzy
+msgid "Version number"
+msgstr "Numărul de serie"
+
+#, fuzzy
 msgid "Version of PKI appliance"
 msgstr "Versiunea dispozitivului PKI"
 
@@ -79301,6 +79526,10 @@ msgid "Wait until the other has finished"
 msgstr "Așteptați până când celălalt a terminat"
 
 msgid "Waiting"
+msgstr "Așteptare"
+
+#, fuzzy, python-format
+msgid "Waiting (%s)"
 msgstr "Așteptare"
 
 msgid "Waiting connections"
@@ -85114,6 +85343,10 @@ msgstr "Numărul de procese"
 msgid "objects"
 msgstr "obiecte"
 
+#, fuzzy
+msgid "of"
+msgstr "off"
+
 msgid "of Service"
 msgstr "de serviciu"
 
@@ -85334,6 +85567,10 @@ msgstr "expresie regulată, potrivire de subșiruri"
 
 msgid "relative URI under which Jolokia is visible"
 msgstr "URI relativ sub care este vizibil Jolokia"
+
+#, fuzzy
+msgid "reload"
+msgstr "Reîncărcare"
 
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
@@ -85893,6 +86130,9 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Key from password store"
+#~ msgstr "Cheia din magazinul de parole"
 
 #, fuzzy
 #~ msgid "Configure host and authority"

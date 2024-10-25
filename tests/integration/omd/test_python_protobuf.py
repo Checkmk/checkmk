@@ -24,7 +24,7 @@ def test_protobuf_api_implementation_is_cpp(site: Site) -> None:
 def fixture_test_dir(site: Site) -> Iterator[Path]:
     site.makedirs("protobuf")
     try:
-        yield Path(site.path("protobuf"))
+        yield site.path("protobuf")
     finally:
         site.delete_dir("protobuf")
 
@@ -72,7 +72,7 @@ def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> 
             "protoc",
             "-I=%s" % test_dir,
             "--python_out",
-            target_dir,
+            target_dir.as_posix(),
             str(proto_source_file),
         ]
     )

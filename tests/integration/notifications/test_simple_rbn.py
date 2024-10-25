@@ -24,7 +24,7 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
         "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
     )
     try:
-        site.run(["chmod", "0775", site.path("local/bin/sendmail")])
+        site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
         yield
     finally:
         site.delete_file("local/bin/sendmail")

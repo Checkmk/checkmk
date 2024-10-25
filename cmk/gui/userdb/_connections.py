@@ -42,13 +42,13 @@ class LDAPConnectionConfigDiscover(TypedDict):
     connect_to: tuple[Literal["discover"], Discover]
 
 
-class SyncAttribute(TypedDict, total=False):
-    attr: str
+class SyncAttribute(TypedDict, total=True):
+    attr: NotRequired[str]
 
 
-class GroupsToContactGroups(TypedDict, total=False):
-    nested: Literal[True]
-    other_connections: list[str]
+class GroupsToContactGroups(TypedDict, total=True):
+    nested: NotRequired[Literal[True]]
+    other_connections: NotRequired[list[str]]
 
 
 DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]
@@ -84,29 +84,29 @@ class GroupsToSync(TypedDict):
     attribute: ATTRIBUTE
 
 
-class GroupsToAttributes(TypedDict, total=False):
-    nested: Literal[True]
-    other_connections: list[str]
+class GroupsToAttributes(TypedDict, total=True):
+    nested: NotRequired[Literal[True]]
+    other_connections: NotRequired[list[str]]
     groups: list[GroupsToSync]
 
 
-class ActivePlugins(TypedDict, total=False):
-    alias: SyncAttribute
-    auth_expire: SyncAttribute
-    groups_to_roles: dict[str, list[tuple[str, str | None]]]
-    groups_to_contactgroups: GroupsToContactGroups
-    groups_to_attributes: GroupsToAttributes
-    disable_notifications: SyncAttribute
-    email: SyncAttribute
-    icons_per_item: SyncAttribute
-    nav_hide_icons_title: SyncAttribute
-    pager: SyncAttribute
-    show_mode: SyncAttribute
-    ui_sidebar_position: SyncAttribute
-    start_url: SyncAttribute
-    temperature_unit: SyncAttribute
-    ui_theme: SyncAttribute
-    force_authuser: SyncAttribute
+class ActivePlugins(TypedDict, total=True):
+    alias: NotRequired[SyncAttribute]
+    auth_expire: NotRequired[SyncAttribute]
+    groups_to_roles: NotRequired[dict[str, list[tuple[str, str | None]]]]
+    groups_to_contactgroups: NotRequired[GroupsToContactGroups]
+    groups_to_attributes: NotRequired[GroupsToAttributes]
+    disable_notifications: NotRequired[SyncAttribute]
+    email: NotRequired[SyncAttribute]
+    icons_per_item: NotRequired[SyncAttribute]
+    nav_hide_icons_title: NotRequired[SyncAttribute]
+    pager: NotRequired[SyncAttribute]
+    show_mode: NotRequired[SyncAttribute]
+    ui_sidebar_position: NotRequired[SyncAttribute]
+    start_url: NotRequired[SyncAttribute]
+    temperature_unit: NotRequired[SyncAttribute]
+    ui_theme: NotRequired[SyncAttribute]
+    force_authuser: NotRequired[SyncAttribute]
 
 
 DIR_SERVER_389 = tuple[Literal["389directoryserver"], LDAPConnectionConfigFixed]

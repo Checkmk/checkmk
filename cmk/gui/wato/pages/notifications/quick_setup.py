@@ -615,7 +615,9 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Contact group"),
                                 name="contact_group",
-                                parameter_form=_contact_group_choice(),
+                                parameter_form=ListOfStrings(
+                                    string_spec=_contact_group_choice(),
+                                ),
                             ),
                             CascadingSingleChoiceElement(
                                 title=Title("Explicit email addresses"),
@@ -669,16 +671,19 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Specific users"),
                                 name="specific_users",
-                                parameter_form=SingleChoiceExtended(
-                                    prefill=InputHint(Title("Select user")),
-                                    type=str,
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            name=ident,
-                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
-                                        )
-                                        for ident, title in _get_sorted_users()
-                                    ],
+                                parameter_form=ListOfStrings(
+                                    layout=ListOfStringsLayout.vertical,
+                                    string_spec=SingleChoiceExtended(
+                                        prefill=InputHint(Title("Select user")),
+                                        type=str,
+                                        elements=[
+                                            SingleChoiceElementExtended(
+                                                name=ident,
+                                                title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                            )
+                                            for ident, title in _get_sorted_users()
+                                        ],
+                                    ),
                                 ),
                             ),
                             CascadingSingleChoiceElement(

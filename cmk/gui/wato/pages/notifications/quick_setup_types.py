@@ -77,10 +77,13 @@ class NotificationMethod(TypedDict):
 
 AllContactsAffected = tuple[Literal["all_contacts_affected"], None]
 AllEmailUsers = tuple[Literal["all_email_users"], None]
-ContactGroup = tuple[Literal["contact_group"], str]
+ContactGroup = tuple[Literal["contact_group"], list[str]]
 ExplicitEmail = tuple[Literal["explicit_email_addresses"], list[str]]
 CustomMacro = tuple[Literal["custom_macro"], list[tuple[str, str]]]
-RestrictPrevious = tuple[Literal["restrict_previous"], ContactGroup | CustomMacro]
+RestrictPrevious = tuple[
+    Literal["restrict_previous"],
+    ContactGroup | CustomMacro,
+]
 SpecificUsers = tuple[Literal["specific_users"], list[str]]
 AllUsers = tuple[Literal["all_users"], None]
 

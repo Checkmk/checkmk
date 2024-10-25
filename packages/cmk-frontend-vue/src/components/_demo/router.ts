@@ -14,6 +14,8 @@ import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
+import DemoCmkSwitch from './DemoCmkSwitch.vue'
+import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +59,16 @@ const router = createRouter({
       path: '/FormSingleChoiceEditable',
       name: 'FormSingleChoiceEditable',
       component: DemoFormSingleChoiceEditable
+    },
+    {
+      path: '/cmk_switch',
+      name: 'CmkSwitch',
+      component: DemoCmkSwitch
+    },
+    {
+      path: '/cmk_color_picker',
+      name: 'CmkColorPicker',
+      component: DemoCmkColorPicker
     }
   ]
 })

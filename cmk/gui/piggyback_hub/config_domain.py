@@ -7,6 +7,7 @@
 import subprocess
 import traceback
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
@@ -32,9 +33,14 @@ class ConfigDomainDistributedPiggyback(ABCConfigDomain):
         return PIGGYBACK_HUB_CONFIG_DIR
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
+        config = self.load_full_config(
+            site_specific=Path(self.config_file(site_specific=True)).exists()
+        )
+        operation = "start" if config.get("piggyback_hub_enabled", True) else "stop"
+
         try:
             completed_process = subprocess.run(
-                ["omd", "restart", "piggyback-hub"],
+                ["omd", operation, "piggyback-hub"],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,

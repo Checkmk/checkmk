@@ -192,6 +192,11 @@ impl<'a> ClientBuilder<'a> {
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
                 config.authentication(match connection.credentials {
                     Credentials::SqlServer { user, password } => {
+                        log::trace!(
+                            "Remote connection to {} with user {}",
+                            config.get_addr(),
+                            user
+                        );
                         AuthMethod::sql_server(user, password)
                     }
                     #[cfg(windows)]
@@ -208,6 +213,7 @@ impl<'a> ClientBuilder<'a> {
                 let port = connection.browser_port.as_ref().map(|p| p.value());
                 config.host(connection.host.clone());
                 config.port(port.unwrap_or(defaults::SQL_BROWSER_PORT));
+                log::trace!("Named connection to {}", config.get_addr());
                 config.authentication(AuthMethod::Integrated);
                 if let Some(db) = &self.database {
                     config.database(db);
@@ -218,6 +224,7 @@ impl<'a> ClientBuilder<'a> {
             Some(ClientConnection::Local(connection)) => {
                 let port = connection.port.as_ref().map(|p| p.value());
                 config.host(connection.host.clone());
+                log::trace!("Local connection to {}", config.get_addr());
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
                 config.authentication(AuthMethod::Integrated);
             }
@@ -427,8 +434,11 @@ async fn connect_via_tcp(config: Config) -> Result<UniClient> {
     let result = StdClient::connect(config, tcp.compat_write())
         .await
         .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e));
-    log::info!("Connection success {}", result.is_ok());
-
+    if result.is_ok() {
+        log::info!("Connection success");
+    } else {
+        log::warn!("Connection success failed");
+    }
     result.map(UniClient::Std)
 }
 

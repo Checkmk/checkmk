@@ -178,8 +178,35 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
         return notify_method
 
     def _get_recipients() -> list[Recipient]:
-        # TODO: add migration logic
-        recipients: list[Recipient] = [("all_contacts_affected", None)]
+        recipients: list[Recipient] = []
+        if "contact_object" in event_rule:
+            recipients.append(("all_contacts_affected", None))
+
+        if "contact_all_with_email" in event_rule:
+            recipients.append(("all_email_users", None))
+
+        if "contact_groups" in event_rule:
+            recipients.append(("contact_group", event_rule["contact_groups"]))
+
+        if "contact_emails" in event_rule:
+            recipients.append(("explicit_email_addresses", event_rule["contact_emails"]))
+
+        if "contact_match_groups" in event_rule:
+            recipients.append(
+                ("restrict_previous", ("contact_group", event_rule["contact_match_groups"]))
+            )
+
+        if "contact_match_macros" in event_rule:
+            recipients.append(
+                ("restrict_previous", ("custom_macro", event_rule["contact_match_macros"]))
+            )
+
+        if "contact_users" in event_rule:
+            recipients.append(("specific_users", event_rule["contact_users"]))
+
+        if "contact_all" in event_rule:
+            recipients.append(("all_users", None))
+
         return recipients
 
     def _get_sending_conditions() -> SendingConditions:
@@ -349,9 +376,34 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
         # event_rule["notify_plugin"] = notification["notification_method"]["method"]
 
     def _set_recipients(event_rule: EventRule) -> None:
-        for _recipient in notification["recipient"]:
-            # TODO: implement migration logic
-            ...
+        for recipient in notification["recipient"]:
+            match recipient:
+                case ("all_contacts_affected", None):
+                    event_rule["contact_object"] = True
+
+                case ("all_email_users", None):
+                    event_rule["contact_all_with_email"] = True
+
+                case ("contact_group", list() as contact_groups):
+                    event_rule["contact_groups"] = contact_groups
+
+                case ("explicit_email_addresses", list() as emails):
+                    event_rule["contact_emails"] = emails
+
+                case ("restrict_previous", ("contact_group", list() as r_contact_groups)):
+                    event_rule["contact_match_groups"] = r_contact_groups
+
+                case ("restrict_previous", ("custom_macro", list() as custom_macros)):
+                    event_rule["contact_match_macros"] = custom_macros
+
+                case ("specific_users", list() as users):
+                    event_rule["contact_users"] = users
+
+                case ("all_users", None):
+                    event_rule["contact_all"] = True
+
+                case _:
+                    raise ValueError(f"Invalid recipient: {recipient}")
 
     def _set_sending_conditions(event_rule: EventRule) -> None:
         frequency_and_timing = notification["sending_conditions"]["frequency_and_timing"]

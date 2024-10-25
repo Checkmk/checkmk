@@ -174,13 +174,13 @@ async fn test_obtain_all_instances_from_registry_local_exclude() {
     const SOURCE: &str = r#"
     discovery:
       detect: true
-      exclude: [SQLEXPRESS_OLD, SQLEXPRESS_AW, SQLEXPRESS_WOW]
+      exclude: [SQLEXPRESS_OLD, SQLBAD, SQLEXPRESS_AW, SQLEXPRESS_WOW]
     "#;
     let endpoint = make_default_endpoint();
     let discovery = Discovery::from_yaml(&YamlLoader::load_from_str(SOURCE).unwrap()[0])
         .unwrap()
         .unwrap();
-    assert_eq!(discovery.exclude().len(), 3usize, "Discovery is wrong");
+    assert_eq!(discovery.exclude().len(), 4usize, "Discovery is wrong");
     let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
         .await
         .unwrap();

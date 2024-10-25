@@ -147,6 +147,9 @@ def test_list_activate_changes_star_etag(
     cleanup_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
+    )
     with reset_registries([activate_changes.activation_features_registry]):
         orig_features = activate_changes.activation_features_registry[str(edition(paths.omd_root))]
         activate_changes.activation_features_registry.register(
@@ -156,7 +159,9 @@ def test_list_activate_changes_star_etag(
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 broker_certificate_sync=orig_features.broker_certificate_sync,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=mocker.MagicMock(),
+                distribute_piggyback_hub_configs=(
+                    distribute_piggyback_config := mocker.MagicMock()
+                ),
             ),
         )
 
@@ -164,6 +169,8 @@ def test_list_activate_changes_star_etag(
             clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
+    distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()
 
 
 def test_list_activate_changes_valid_etag(
@@ -180,6 +187,9 @@ def test_list_activate_changes_valid_etag(
     cleanup_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
+    )
     with reset_registries([activate_changes.activation_features_registry]):
         orig_features = activate_changes.activation_features_registry[str(edition(paths.omd_root))]
         activate_changes.activation_features_registry.register(
@@ -189,10 +199,14 @@ def test_list_activate_changes_valid_etag(
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 broker_certificate_sync=orig_features.broker_certificate_sync,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
-                distribute_piggyback_hub_configs=mocker.MagicMock(),
+                distribute_piggyback_hub_configs=(
+                    distribute_piggyback_config := mocker.MagicMock()
+                ),
             ),
         )
         with mock_livestatus(expect_status_query=True):
             clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
+    distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()

@@ -1283,7 +1283,8 @@ class Site:
             )
 
     def result_dir(self) -> Path:
-        return Path(os.environ.get("RESULT_PATH") or repo_path() / "results" / self.id)
+        base_dir = Path(os.environ.get("RESULT_PATH") or (repo_path() / "results"))
+        return base_dir / self.id
 
     @property
     def crash_report_dir(self) -> Path:

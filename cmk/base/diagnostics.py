@@ -59,11 +59,10 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.usage import deserialize_dump
-from cmk.utils.local_secrets import AutomationUserSecret
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree, serialize_tree
-from cmk.utils.user import UserId
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -71,8 +70,8 @@ if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CCE,
     cmk_version.Edition.CSE,
 ]:
-    from cmk.base.cee.diagnostics import (  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
-        cmc_specific_attrs,
+    from cmk.base.cee.diagnostics import (
+        cmc_specific_attrs,  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
     )
 else:
 
@@ -823,7 +822,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
         if not (
             node := tree.get_tree(
-                (SDNodeName("software"), SDNodeName("applications"), SDNodeName("check_mk"))
+                (
+                    SDNodeName("software"),
+                    SDNodeName("applications"),
+                    SDNodeName("check_mk"),
+                )
             )
         ):
             raise DiagnosticsElementError(
@@ -1021,7 +1024,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         if "<html>" in response.text.lower():
             raise DiagnosticsElementError("Login failed - Invalid automation user or secret")
-
         # Verify if it's a PDF document: The header must begin with
         # "%PDF-" (hex: "25 50 44 46 2d")
         if response.content[:5].hex() != "255044462d":
@@ -1036,8 +1038,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     def _get_response(
         self, checkmk_server_name: str, omd_config: site.OMDConfig
     ) -> requests.Response:
-        automation_secret = AutomationUserSecret(UserId("automation")).read()
-
+        internal_secret = "InternalToken %s" % (SiteInternalSecret().secret.b64_str)
         url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
@@ -1051,7 +1052,9 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         return requests.post(  # nosec B113 # BNS:773085
             url,
-            auth=("automation", automation_secret),
+            headers={
+                "Authorization": internal_secret,
+            },
         )
 
 

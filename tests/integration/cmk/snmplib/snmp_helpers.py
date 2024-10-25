@@ -72,7 +72,7 @@ def get_single_oid(
                         oid,
                         backend_type.serialize(),
                         config.serialize(),
-                        site.path("cmk-walk"),
+                        site.path("cmk-walk").as_posix(),
                     )
                 )
             )

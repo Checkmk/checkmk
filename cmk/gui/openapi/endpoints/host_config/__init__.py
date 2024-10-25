@@ -632,9 +632,9 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             title="Pending changes are present",
             detail="Please activate all pending changes before executing a host rename process",
         )
-    host_name = params["host_name"]
+    host_name = HostName(params["host_name"])
     host: Host = Host.load_host(host_name)
-    new_name = params["body"]["new_name"]
+    new_name = HostName(params["body"]["new_name"])
 
     if is_locked_by_quick_setup(host.locked_by()):
         return problem(
@@ -646,7 +646,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     try:
         background_job = RenameHostBackgroundJob(host)
         background_job.start(
-            partial(rename_hosts_background_job, [(host.folder(), host_name, new_name)]),
+            partial(rename_hosts_background_job, [(host.folder().path(), host_name, new_name)]),
             InitialStatusArgs(
                 title="Renaming of %s -> %s" % (host_name, new_name),
                 lock_wato=True,

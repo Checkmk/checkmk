@@ -17,10 +17,10 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping[str, str | int]
 

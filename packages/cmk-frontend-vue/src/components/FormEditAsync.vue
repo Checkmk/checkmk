@@ -3,39 +3,46 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T, D">
+<script setup lang="ts" generic="ObjectIdent, Result">
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import Button from '@/components/IconButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 
-export type SetDataResult<T> =
-  | { type: 'success'; objectId: T }
+export type Payload = Record<string, unknown>
+
+export type SetDataResult<Result> =
+  | { type: 'success'; entity: Result }
   | { type: 'error'; validationMessages: Array<ValidationMessage> }
 
-export type API<T, D> = {
+export type API<ObjectIdent, Result> = {
   getSchema: () => Promise<FormSpec>
-  getData: (objectId: T | null) => Promise<D>
-  setData: (objectId: T | null, data: D) => Promise<SetDataResult<T>>
+  getData: (objectId: ObjectIdent | null) => Promise<Payload>
+  setData: (objectId: ObjectIdent | null, data: Payload) => Promise<SetDataResult<Result>>
 }
 
-export interface FormEditAsyncProps<T, D> {
-  objectId: T | null
-  api: API<T, D>
+export interface FormEditAsyncProps<ObjectIdent, Result> {
+  objectId: ObjectIdent | null
+  api: API<ObjectIdent, Result>
   i18n: {
     save_button: string
     cancel_button: string
     create_button: string
     loading: string
     fatal_error: string
+    validation_error: string
   }
 }
 
-const props = defineProps<FormEditAsyncProps<T, D>>()
+const props = defineProps<FormEditAsyncProps<ObjectIdent, Result>>()
+
 const schema = ref<FormSpec>()
-const data = ref<D>()
+const data = ref<Payload>()
+
 const error = ref<string>()
 const backendValidation = ref<Array<ValidationMessage>>([])
 
@@ -46,7 +53,7 @@ async function save() {
   backendValidation.value = []
 
   error.value = ''
-  let result
+  let result: SetDataResult<Result>
   try {
     result = await props.api.setData(props.objectId, toRaw(data.value))
   } catch (apiError: unknown) {
@@ -55,7 +62,7 @@ async function save() {
   }
 
   if (result.type === 'success') {
-    emit('submitted', result.objectId)
+    emit('submitted', result.entity)
   } else if (result.type === 'error') {
     backendValidation.value = result.validationMessages
   } else {
@@ -69,13 +76,19 @@ function cancel() {
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'submitted', objectId: T): void
+  (e: 'submitted', result: Result): void
 }>()
 
-async function reload(api: API<T, D>) {
+async function reloadAll({
+  api,
+  objectId
+}: {
+  api: API<ObjectIdent, Result>
+  objectId: ObjectIdent | null
+}) {
   error.value = ''
   try {
-    const [apiData, apiSchema] = await Promise.all([api.getData(props.objectId), api.getSchema()])
+    const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])
     data.value = apiData
     schema.value = apiSchema
   } catch (apiError: unknown) {
@@ -83,41 +96,36 @@ async function reload(api: API<T, D>) {
   }
 }
 
-immediateWatch(
-  () => props.api,
-  async (api) => {
-    reload(api)
-  }
-)
+immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 </script>
 
 <template>
   <div v-if="!error" class="edit-object__buttons">
-    <Button
-      :label="objectId === undefined ? props.i18n.create_button : props.i18n.save_button"
-      variant="custom"
-      icon-name="save"
-      class="edit-object__save-button"
-      @click="save"
-    />
-    <Button :label="props.i18n.cancel_button" variant="custom" icon-name="cancel" @click="cancel" />
+    <CmkButtonSubmit @click="save">
+      {{
+        objectId === undefined ? props.i18n.create_button : props.i18n.save_button
+      }}</CmkButtonSubmit
+    >
+    <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
+    <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
+    <AlertBox v-if="backendValidation.length !== 0" variant="error">
+      {{ i18n.validation_error }}
+    </AlertBox>
   </div>
   <AlertBox v-if="error" variant="error">
     {{ i18n.fatal_error }}
     {{ error }}
-    <button @click="reload(api)">reload</button>
+    <button @click="() => reloadAll({ api: props.api, objectId: props.objectId })">reload</button>
   </AlertBox>
-  <div v-if="schema !== undefined && !error">
+  <div v-if="schema !== undefined && !error && data !== undefined">
     <FormEdit v-model:data="data" :spec="schema" :backend-validation="backendValidation" />
   </div>
-  <div v-if="schema === undefined && !error">{{ i18n.loading }}</div>
+  <div v-if="schema === undefined && !error">
+    <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+  </div>
 </template>
 
 <style scoped>
-.edit-object__save-button {
-  border: 1px solid var(--default-submit-button-border-color);
-  /* TODO: this should be a variant/prop of the button CMK-19365 */
-}
 .edit-object__buttons {
   margin-bottom: 1em;
 }

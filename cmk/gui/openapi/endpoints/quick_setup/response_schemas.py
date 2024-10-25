@@ -147,8 +147,19 @@ class QuickSetupResponse(OneOfSchema):
         raise Exception("Unknown object type: %s" % repr(obj))
 
 
-class QuickSetupSaveResponse(BaseSchema):
+class QuickSetupCompleteResponse(BaseSchema):
     redirect_url = fields.String(
         example="http://save/url",
         description="The url to redirect to after saving the quicksetup",
+    )
+
+    all_stage_errors = fields.List(
+        fields.Nested(
+            Errors,
+            example={},
+            description="Formspec errors and general stage errors",
+            allow_none=True,
+        ),
+        description="A list of stage errors",
+        example=[],
     )

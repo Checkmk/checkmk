@@ -787,6 +787,10 @@ msgstr "\"Toestand"
 msgid "'Critical' state"
 msgstr "Status 'kritisch'"
 
+#, fuzzy
+msgid "'Custom notifications' by comment"
+msgstr "Opmerking bij kennisgeving wedstrijd"
+
 msgid "'Info' state"
 msgstr "Status 'info'"
 
@@ -813,8 +817,16 @@ msgid ""
 "configuration tracking in setup."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "(%s more entries)"
+msgstr "Verwijderde items"
+
 msgid "(0 is current period)"
 msgstr "(0 is huidige periode)"
+
+#, fuzzy
+msgid "(1 more entry)"
+msgstr "(geen invoer)"
 
 #, fuzzy
 msgid "(Edit presets)"
@@ -1200,6 +1212,31 @@ msgstr "95ste percentiel"
 
 msgid "99th percentile"
 msgstr "99e percentiel"
+
+#, fuzzy
+msgid "< Remove"
+msgstr "Verwijder"
+
+#, fuzzy
+msgid "<< Remove all"
+msgstr "Verwijder alle"
+
+#, fuzzy
+msgid ""
+"<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
+"translations</a> are performed before the piggyback connector creates hosts. "
+"Use this, for example, in a setup with multiple Docker nodes to prefix "
+"containers with the name of the corresponding Docker node. Otherwise, name "
+"collisions can occur if containers with the same name exist on more than one "
+"Docker Node."
+msgstr ""
+"<a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggybacktranslations</"
+"a>worden uitgevoerd voordat de piggyback connector hosts aanmaakt. Gebruik "
+"dit bijvoorbeeld in een setup met meerdere Docker nodes om containers te "
+"prefixen met de naam van de corresponderende Docker node. Anders kunnen "
+"naambotsingen optreden als containers met dezelfde naam op meer dan één "
+"Docker Node bestaan."
 
 msgid ""
 "<a href='wato.py?"
@@ -1956,7 +1993,7 @@ msgid ""
 "<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
 "relative to the base directory of Robot Framework projects. This file also "
 "references the <tt>conda.yaml</tt> file which lists all environment "
-"dependencies. "
+"dependencies."
 msgstr ""
 
 #, python-format
@@ -2062,6 +2099,15 @@ msgstr ""
 "Een dashboard kan een optionele context hebben. Het kan bijvoorbeeld worden "
 "beperkt om alleen informatie weer te geven van een enkele host of voor een "
 "set van diensten die voldoen aan een reguliere expressie."
+
+msgid ""
+"A delay can be configured here so that multiple changes can be activated in "
+"one go. This avoids frequent activation of changes in situations with "
+"frequent services changes."
+msgstr ""
+"Hier kan een vertraging worden geconfigureerd, zodat meerdere wijzigingen in "
+"één keer kunnen worden geactiveerd. Dit vermijdt frequente activering van "
+"wijzigingen in situaties met frequente wijzigingen van diensten."
 
 msgid ""
 "A delay can be configured here so that multiple discoveries can be activated "
@@ -2562,9 +2608,6 @@ msgstr "API-sleutel"
 msgid "API key for iLert alert server"
 msgstr "API-sleutel voor iLert waarschuwingsserver"
 
-msgid "API key from password store"
-msgstr "API sleutel van wachtwoord opslag"
-
 #, fuzzy
 msgid "API key header"
 msgstr "API-sleutel"
@@ -2639,6 +2682,10 @@ msgstr "AWS S3 emmer"
 
 msgid "AWS Tags"
 msgstr "AWS Tags"
+
+#, fuzzy
+msgid "AWS services found!"
+msgstr "Geen hosts/services gevonden."
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Kosten en gebruik van AWS/CE"
@@ -3317,6 +3364,10 @@ msgstr "Activeer wijzigingen van andere gebruikers"
 msgid "Activate configuration"
 msgstr "Configuratie activeren"
 
+#, fuzzy
+msgid "Activate exit on failure"
+msgstr "Authenticatie mislukkingen"
+
 msgid "Activate foreign changes"
 msgstr "Buitenlandse wijzigingen activeren"
 
@@ -3617,6 +3668,10 @@ msgstr "Toevoegen & hosts verwijderen"
 msgid "Add (sub) path to the URI, i.e. [proto]://[host]:[port]/[path]."
 msgstr ""
 
+#, fuzzy
+msgid "Add >"
+msgstr "Toevoegen %s"
+
 msgid "Add Aggregation"
 msgstr "Aggregatie toevoegen"
 
@@ -3698,6 +3753,9 @@ msgstr "Toevoegen aggregatie"
 
 msgid "Add alert handler rule"
 msgstr "Waarschuwings afhandeling regel toevoegen"
+
+msgid "Add all >>"
+msgstr ""
 
 msgid "Add all detected but not yet monitored services to the monitoring."
 msgstr ""
@@ -3800,6 +3858,10 @@ msgstr "Voeg element toe: %s"
 
 msgid "Add elements to your sidebar"
 msgstr "Voeg elementen toe aan uw zijbalk"
+
+#, fuzzy
+msgid "Add event"
+msgstr "Element toevoegen"
 
 msgid "Add exception"
 msgstr "Uitzondering toevoegen"
@@ -3991,6 +4053,10 @@ msgstr "Voeg tag voorwaarde toe"
 msgid "Add new pattern"
 msgstr "Nieuw patroon toevoegen"
 
+#, fuzzy
+msgid "Add new plan"
+msgstr "Nieuw patroon toevoegen"
+
 msgid "Add new project"
 msgstr "Nieuw project toevoegen"
 
@@ -4005,6 +4071,10 @@ msgstr "Nieuwe regel toevoegen"
 
 msgid "Add new scalar"
 msgstr "Nieuwe scalair toevoegen"
+
+#, fuzzy
+msgid "Add new sequence"
+msgstr "Nieuwe dienst toevoegen"
 
 #, fuzzy
 msgid "Add new service"
@@ -4084,6 +4154,10 @@ msgstr "Voeg pre of postfix toe aan TNSALIASes %s"
 
 msgid "Add random hosts"
 msgstr "Voeg willekeurige hosts toe"
+
+#, fuzzy
+msgid "Add recipient"
+msgstr "Ontvanger"
 
 msgid "Add remote instance"
 msgstr "Externe instantie toevoegen"
@@ -4468,7 +4542,7 @@ msgid "Admin states to discover"
 msgstr "Admin staten te ontdekken"
 
 #, fuzzy
-msgid "Administrate managed robots"
+msgid "Administrate robots"
 msgstr "Administratieve staten"
 
 msgid "Administrative port states to discover"
@@ -5152,6 +5226,10 @@ msgstr "Alert handler zijn geconfigureerd om alle controles uit te voeren."
 msgid "Alert handler configuration"
 msgstr "Configuratie van de alarm-handler"
 
+#, fuzzy
+msgid "Alert handler execution"
+msgstr "Uitvoering van waarschuwingshandlers"
+
 msgid "Alert handler execution, failed"
 msgstr "Waarschuwings handler uitvoering, mislukt"
 
@@ -5381,6 +5459,10 @@ msgstr "Alle collecties"
 
 msgid "All components"
 msgstr "Alle onderdelen"
+
+#, fuzzy
+msgid "All contacts of the affected object"
+msgstr "Alle contacten van het aangemelde object"
 
 msgid "All contacts of the notified object"
 msgstr "Alle contacten van het aangemelde object"
@@ -5808,6 +5890,10 @@ msgstr "Toestaan om het icoon %s te zien in de host en service views"
 
 msgid "Allow unencrypted legacy communication"
 msgstr "Sta onversleutelde legacy communicatie toe"
+
+#, fuzzy
+msgid "Allow users to deactivate this notification"
+msgstr "gebruikers in staat stellen deze melding te deactiveren"
 
 msgid "Allowed Ciphers"
 msgstr "Toegestane cijfers"
@@ -6286,6 +6372,20 @@ msgstr ""
 "(die relatief zijn ten opzichte van <tt>check_mk/</tt>) gebruiken."
 
 #, fuzzy
+msgid ""
+"An optional URL pointing to documentation or any other page. This will be "
+"displayed as an icon and open a new page when clicked. You can use either "
+"global URLs (beginning with <tt>http://</tt>), absolute local urls "
+"(beginning with <tt>/</tt>) or relative URLs (that are relative to "
+"<tt>check_mk/</tt>)."
+msgstr ""
+"Een optionele URL die wijst naar documentatie of een andere pagina. Deze zal "
+"worden weergegeven als een pictogram %s en een nieuwe pagina openen wanneer "
+"erop geklikt wordt. U kunt zowel globale URL's (beginnend met <tt>http://</"
+"tt>), absolute lokale URL's (beginnend met <tt>/</tt>) of relatieve URL's "
+"(die relatief zijn ten opzichte van <tt>check_mk/</tt>) gebruiken."
+
+#, fuzzy
 msgid "An optional alias name for your MySQL socket"
 msgstr "Een optionele aliasnaam voor uw mysql socket"
 
@@ -6417,6 +6517,10 @@ msgstr "Een andere gebruikerssynchronisatie is al bezig: %s"
 
 msgid "AntiVirus last update age"
 msgstr "AntiVirus laatste update leeftijd"
+
+#, fuzzy
+msgid "Any"
+msgstr "elke"
 
 msgid ""
 "Any certificate should expire at some point. Usual values are within 90 and "
@@ -6907,6 +7011,11 @@ msgid ""
 "(not email)."
 msgstr ""
 
+msgid ""
+"Assign permissions to the app: Grant necessary access rights, assigning the "
+"\"Reader\" role."
+msgstr ""
+
 #, fuzzy
 msgid "Assign plan/test result to piggyback host"
 msgstr "Hostname vertaling voor piggybacked hosts"
@@ -7033,6 +7142,10 @@ msgstr ""
 "Tenminste één van deze strings wordt verwacht in de eerste (status) regel "
 "van het server antwoord (standaard: <tt>HTTP/1.</tt>). Indien gespecificeerd "
 "slaat alle andere statusregel logica over (ex: 3xx, 4xx, 5xx verwerking)"
+
+#, fuzzy
+msgid "At least one selection is missing."
+msgstr "Staat wanneer bestand ontbreekt"
 
 #, fuzzy
 msgid ""
@@ -7351,10 +7464,10 @@ msgstr "Auto-uitbreidbaar"
 msgid "Automated environment setup (via RCC)"
 msgstr ""
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Automated environment setup (via RCC, %s because Robotmk Core MKP has been "
-"installed)"
+"Automated environment setup (via RCC, ⚠ <b>not available</b> because Robotmk "
+"Core MKP has been installed)"
 msgstr "Gebruik SSL voor de verbinding."
 
 msgid "Automatic"
@@ -8718,6 +8831,10 @@ msgstr "Gebakken agenten"
 msgid "Baked host specific agent"
 msgstr "Gebakken gastheer-specifiek middel"
 
+#, fuzzy
+msgid "Bakery rules"
+msgstr "Ontdekking regels"
+
 msgid "Baking Agents..."
 msgstr "Bakmiddelen..."
 
@@ -9229,6 +9346,10 @@ msgstr "Bulkontdekking"
 msgid "Bulk ID"
 msgstr "Bulk ID"
 
+#, fuzzy
+msgid "Bulk Notification"
+msgstr "Open bulk meldingen"
+
 msgid "Bulk discovery"
 msgstr "Bulkontdekking"
 
@@ -9257,6 +9378,10 @@ msgstr "Bulk host import"
 
 msgid "Bulk move"
 msgstr "Bulk verplaatsing"
+
+#, fuzzy
+msgid "Bulk notification"
+msgstr "Open bulk meldingen"
 
 #, fuzzy
 msgid "Bulk notifications"
@@ -9811,14 +9936,14 @@ msgid ""
 "option is active, Robot Framework will <b>immediately stop</b> the suite "
 "execution if a test fails. <br>The results of subsequent tests (which would "
 "have failed) will then not be passed to Checkmk; depending on the discovery "
-"settings,their results will either be <b>missing</b> (if within a suite "
-"result) or the services generated for them will <b>go stale</b>.<br> <br>  "
-"<b>Important note</b>: this is where Robotmk deviates from Robot Framework "
-"behavior. The HTML log will still contain the omitted tests and show them as "
-"<tt>FAIL</tt> (even though they were not executed).<br>See also \"<a href="
-"\"http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#stopping-when-first-test-case-fails\" target=\"_blank\">How to stop a "
-"suite when the first test fails</a>\". "
+"settings, their results will either be <b>missing</b> (if within a suite "
+"result) or the services generated for them will <b>go stale</b>."
+"<br><br><b>Important note</b>: this is where Robotmk deviates from Robot "
+"Framework behavior. The HTML log will still contain the omitted tests and "
+"show them as <tt>FAIL</tt> (even though they were not executed).<br>See also "
+"\"<a href=\"http://robotframework.org/robotframework/latest/"
+"RobotFrameworkUserGuide.html#stopping-when-first-test-case-fails\" target="
+"\"_blank\">How to stop a suite when the first test fails</a>\". "
 msgstr ""
 
 msgid ""
@@ -9827,7 +9952,7 @@ msgid ""
 "run tests on Windows GUI applications, you can specify the name of a user "
 "who is permanently logged on to a desktop session. The prerequisites for "
 "this are security-related and must be fulfilled by you (auto-login, screen "
-"saver, session lock, ...)"
+"saver, session lock, ...)."
 msgstr ""
 
 msgid ""
@@ -10060,6 +10185,10 @@ msgid "By number of Robotmk executions"
 msgstr "Aantal bezette uitvoerders"
 
 #, fuzzy
+msgid "By plugin output"
+msgstr "Plugin uitgang"
+
+#, fuzzy
 msgid "By service group"
 msgstr "Per dienstengroep"
 
@@ -10096,7 +10225,7 @@ msgstr "Alle grafieken voor een bepaalde host."
 
 msgid ""
 "Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
-"adresses which should not be accessed through the given proxy. <br>The proxy "
+"adresses which should not be accessed through the given proxy.<br>The proxy "
 "setting is used for access to the internet, where RCC needs to download the "
 "installation files from. (In order to access a page through a proxy inside "
 "of the test suite, use the libraries capabilities)"
@@ -11366,11 +11495,11 @@ msgid "Changed host selection has been saved."
 msgstr "De gewijzigde hostselectie is opgeslagen."
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %d"
+msgid "Changed notification parameter #%s"
 msgstr "Gewijzigde meldingsregel %d"
 
 #, fuzzy, python-format
-msgid "Changed notification parameter %s"
+msgid "Changed notification parameter %d"
 msgstr "Gewijzigde meldingsregel %d"
 
 #, python-format
@@ -12907,6 +13036,10 @@ msgstr "Kloon gastheer"
 msgid "Clone hosts"
 msgstr "Kloon hosts"
 
+#, fuzzy, python-format
+msgid "Clone managed robot %s"
+msgstr "Beheerde objecten"
+
 #, python-format
 msgid "Clone report schedule entry %s"
 msgstr "Kloon rapport schema %s"
@@ -12931,6 +13064,10 @@ msgstr "Kloon deze verbinding om een nieuwe te maken"
 
 msgid "Clone this element"
 msgstr "Kloon dit element"
+
+#, fuzzy
+msgid "Clone this managed robot"
+msgstr "Beheerde objecten"
 
 msgid "Clone this metric"
 msgstr "Kloon deze metriek"
@@ -13228,6 +13365,10 @@ msgstr "Bijpassende kolommen"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/totaal"
+
+#, fuzzy
+msgid "Combine within last"
+msgstr "kennisgevingen binnen de laatste"
 
 msgid "Combined graph"
 msgstr "Gecombineerde grafiek"
@@ -13711,6 +13852,10 @@ msgstr "Configureer"
 msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
+#, fuzzy
+msgid "Configure Microsoft Azure monitoring in Checkmk"
+msgstr "Toezicht op Amazon Web Services (AWS)"
+
 msgid "Configure SNMP related settings using rulesets"
 msgstr "SNMP gerelateerde instellingen configureren met regelsets"
 
@@ -13775,6 +13920,10 @@ msgstr "Uitwijkmailadres voor crashmeldingen"
 
 msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
+
+#, fuzzy
+msgid "Configure host"
+msgstr "Configureer"
 
 #, fuzzy
 msgid "Configure host and regions"
@@ -14414,6 +14563,10 @@ msgstr "Consolidatiefunctie voor de [grafiek#rrds|RRD] gegevenskolom"
 msgid "Consolidation functions"
 msgstr "Consolidatiefuncties"
 
+#, fuzzy
+msgid "Constant"
+msgstr "Instantie"
+
 #, python-format
 msgid "Constant value %.2f"
 msgstr "Constante waarde %.2f"
@@ -14441,6 +14594,10 @@ msgstr "Neem contact op met"
 
 msgid "Contact Name"
 msgstr "Naam contactpersoon"
+
+#, fuzzy
+msgid "Contact group"
+msgstr "Contactgroepen"
 
 msgid "Contact group (effective)"
 msgstr "Contactgroep (effectief)"
@@ -14580,6 +14737,10 @@ msgstr "Inhoud van verslag %s"
 
 msgid "Content-Type"
 msgstr "Inhoudstype"
+
+#, fuzzy
+msgid "Content-based filtering"
+msgstr "Hostnaam matching"
 
 msgid "Contents"
 msgstr "Inhoud"
@@ -14869,6 +15030,12 @@ msgid ""
 "Could not access your AWS account. Please check your Access and Secret key "
 "and try again."
 msgstr ""
+
+#, fuzzy
+msgid "Could not access your Azure account. Please check your credentials."
+msgstr ""
+"Geen gebruikersobject gevonden voor synchronisatie. Controleer uw "
+"filterinstellingen."
 
 #, fuzzy, python-format
 msgid ""
@@ -15241,6 +15408,11 @@ msgstr "Maak een extra dienst voor IO Stats Verzoeken"
 msgid "Create additional service for system wait"
 msgstr "Creëer extra dienst voor Systeem Wacht"
 
+msgid ""
+"Create an Azure app for Checkmk: Register the app in Azure Active Directory "
+"and note down the Application ID."
+msgstr ""
+
 msgid "Create an annotation for this period"
 msgstr "Maak een annotatie voor deze periode"
 
@@ -15350,6 +15522,10 @@ msgstr ""
 
 msgid "Create regular time-schedule for this report"
 msgstr "Maak een tijdschema voor dit rapport"
+
+#, fuzzy
+msgid "Create robot"
+msgstr "Maak hosts"
 
 msgid "Create separate notification bulks based on"
 msgstr "Maak aparte notificatie bulken gebaseerd op"
@@ -16012,6 +16188,14 @@ msgstr "Aangepaste lokalisaties"
 
 msgid "Custom logos"
 msgstr "Aangepaste logo's"
+
+#, fuzzy
+msgid "Custom macro"
+msgstr "Macro's voor klanten"
+
+#, fuzzy
+msgid "Custom macros"
+msgstr "Macro's voor klanten"
 
 #, python-format
 msgid "Custom notification table for user %s"
@@ -17229,6 +17413,9 @@ msgstr ""
 "controle toestanden, d.w.z. naar het resultaat van de controle. Dit "
 "overschrijft de standaard mapping die door de controle wordt gebruikt."
 
+msgid "Define any events you want to be notified about."
+msgstr ""
+
 #, fuzzy
 msgid "Define host assignment"
 msgstr "Host toewijzing definiëren"
@@ -17586,6 +17773,10 @@ msgstr "Job verwijderen #%d"
 msgid "Delete last alert handler rule"
 msgstr "Verwijder de laatste alert handler regel"
 
+#, fuzzy
+msgid "Delete managed robot"
+msgstr "Beheerde objecten"
+
 #, fuzzy, python-format
 msgid "Delete notification parameter #%d"
 msgstr "Kennisgevingsregel verwijderen #%d"
@@ -17741,6 +17932,10 @@ msgstr "Verwijder deze toets"
 
 msgid "Delete this logo"
 msgstr "Dit logo verwijderen"
+
+#, fuzzy
+msgid "Delete this managed robot"
+msgstr "Verwijder deze tag groep"
 
 msgid "Delete this metric"
 msgstr "Verwijder deze metriek"
@@ -18615,6 +18810,9 @@ msgstr "Digest (MD5)"
 msgid "Digests"
 msgstr "Digests"
 
+msgid "Digits"
+msgstr ""
+
 msgid "Direct I/O"
 msgstr "Directe I/O"
 
@@ -18784,6 +18982,10 @@ msgstr "Uitschakelen proxy behandeling"
 
 msgid "Disable remote configuration"
 msgstr "Externe configuratie uitschakelen"
+
+#, fuzzy
+msgid "Disable rule"
+msgstr "Alles uitschakelen"
 
 msgid "Disable service notifications"
 msgstr "Dienst meldingen uitschakelen"
@@ -19901,6 +20103,10 @@ msgstr "Geen niveaus opleggen"
 msgid "Do not impose levels, always be OK"
 msgstr "Geen niveaus opleggen, altijd OK zijn"
 
+#, fuzzy
+msgid "Do not include in monitoring hosts to be discovered"
+msgstr "Geen hosts ontdekt"
+
 msgid "Do not manage the controllers auto-registration"
 msgstr "De automatische registratie van de controllers niet beheren"
 
@@ -20068,6 +20274,10 @@ msgstr "Aantal documenten delta"
 
 msgid "Document count growth per minute"
 msgstr "Aantal documenten groeit per minuut"
+
+#, fuzzy
+msgid "Documentation"
+msgstr "Documentatie URL"
 
 msgid "Documentation URL"
 msgstr "Documentatie URL"
@@ -20541,6 +20751,10 @@ msgstr ""
 msgid "During this time period no monitoring data is available"
 msgstr "Gedurende deze periode zijn geen monitoringgegevens beschikbaar"
 
+#, fuzzy
+msgid "During time period"
+msgstr "Bulk gedurende de periode"
+
 msgid "Dw"
 msgstr "Dw"
 
@@ -20559,6 +20773,10 @@ msgid "Dynamic configuration bulk discovery timeout"
 msgstr "Loggen van dynamische configuratie"
 
 msgid "Dynamic configuration logging"
+msgstr "Loggen van dynamische configuratie"
+
+#, fuzzy
+msgid "Dynamic configuration site activate changes delay"
 msgstr "Loggen van dynamische configuratie"
 
 #, fuzzy
@@ -20853,7 +21071,7 @@ msgid "Edit %s"
 msgstr "Bewerk %s"
 
 #, fuzzy, python-format
-msgid "Edit %s notification parameter %s"
+msgid "Edit %s notification parameter #%s"
 msgstr "Wijzig notificatie regel %d"
 
 #, python-format
@@ -21005,6 +21223,14 @@ msgstr "Lay-out bewerken"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Wijzig lay-out alleen beschikbaar als koptekst is ingeschakeld"
+
+#, fuzzy, python-format
+msgid "Edit managed robot %s"
+msgstr "Beheerde objecten"
+
+#, fuzzy
+msgid "Edit managed robots"
+msgstr "Beheerde objecten"
 
 #, fuzzy, python-format
 msgid "Edit message broker connection %s"
@@ -21162,6 +21388,10 @@ msgstr "Dit element bewerken"
 
 msgid "Edit this host"
 msgstr "Bewerk deze host"
+
+#, fuzzy
+msgid "Edit this managed robot"
+msgstr "Administratieve staten"
 
 #, fuzzy
 msgid "Edit this notification parameter"
@@ -21954,6 +22184,9 @@ msgstr "Motor CPU-gebruik"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "Engine ID's (alleen nodig voor SNMPv3)"
 
+msgid "Engineering scientific"
+msgstr ""
+
 msgid "English"
 msgstr "Engels"
 
@@ -22223,6 +22456,10 @@ msgstr "Foutafhandeling"
 
 msgid "Error information log entries"
 msgstr "Foutinformatie logboekvermeldingen"
+
+#, python-format
+msgid "Error on creating FormSpec from old ValueSpec for method %s: %s"
+msgstr ""
 
 msgid "Error rate"
 msgstr "Foutenpercentage"
@@ -23773,6 +24010,10 @@ msgstr ""
 "gegevens te verzenden, de resultaten van alle extra nodes zullen op zijn "
 "minst een WARNING status triggeren."
 
+#, fuzzy
+msgid "Failure"
+msgstr "mislukkingen"
+
 msgid "Failures of the join launcher service"
 msgstr "Storingen van de join launcher service"
 
@@ -24070,10 +24311,6 @@ msgstr "Bestandsgrootte hieronder"
 msgid "File size levels"
 msgstr "Niveaus bestandsgrootte"
 
-#, fuzzy
-msgid "File upload"
-msgstr "Geüploade bytes"
-
 #, python-format
 msgid "File upload test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -24330,6 +24567,10 @@ msgstr "Eerste pagina"
 
 msgid "First time the downtime starts"
 msgstr "De eerste keer dat de uitval begint"
+
+#, fuzzy
+msgid "First with unit"
+msgstr "Fetch met lengte"
 
 #, fuzzy
 msgid "First work day of last month"
@@ -24878,6 +25119,9 @@ msgstr "Netwerken"
 
 msgid "Form factor"
 msgstr "Vormfactor"
+
+msgid "FormSpec and internal data structure mismatch"
+msgstr ""
 
 msgid "Format"
 msgstr "Formaat"
@@ -25514,6 +25758,11 @@ msgstr "Genereer"
 msgid "Generate REST API specification"
 msgstr "SLA-specificatie"
 
+msgid ""
+"Generate a key for the app: Create a Secret key in the app settings and note "
+"it down."
+msgstr ""
+
 #, fuzzy
 msgid "Generate backup codes"
 msgstr "Back-upcodes opnieuw genereren"
@@ -25799,6 +26048,10 @@ msgstr "Grafiekverzameling '%s' bestaat niet"
 msgid "Graph collections"
 msgstr "Grafiek collecties"
 
+#, fuzzy
+msgid "Graph designer"
+msgstr "GUI-ontwerp"
+
 msgid "Graph is disabled"
 msgstr "Grafiek is uitgeschakeld"
 
@@ -25807,6 +26060,18 @@ msgstr "Grafiek is zichtbaar"
 
 msgid "Graph layout"
 msgstr "Grafiek lay-out"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "Grafiek Opties"
+
+#, fuzzy
+msgid "Graph metrics with zero values"
+msgstr "Metriek met alle nulwaarden"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "Grafiek Opties"
 
 msgid "Graph rendering options"
 msgstr "Grafiek rendering opties"
@@ -25941,6 +26206,9 @@ msgstr ""
 
 msgid "Group"
 msgstr "Groep"
+
+msgid "Group \"Activate changes\""
+msgstr "Groep \"Wijzigingen activeren\""
 
 msgid "Group Base-DN"
 msgstr "Groep Base-DN"
@@ -28758,10 +29026,6 @@ msgstr "IPv4-adres van de gastheer"
 #, python-format
 msgid "Host Name %s"
 msgstr "Hostnaam %s"
-
-#, fuzzy
-msgid "Host Path"
-msgstr "Gastheer alarm"
 
 msgid "Host Problems (unhandled)"
 msgstr "Host Problemen (niet afgehandeld)"
@@ -32925,6 +33189,14 @@ msgstr "Indexen om te doorzoeken, standaard '*', wat betekent alle indexen."
 msgid "Indexspace wasted"
 msgstr "Verspilde indexruimte"
 
+#, fuzzy
+msgid ""
+"Indicates that host is waiting for bulk discovery. It is set to True once it "
+"in queue.Removed after discovery is ended."
+msgstr ""
+"Of de laatste bulk ontdekking al dan niet mislukt is. Het wordt op True "
+"gezet als het mislukt en op Unset als een latere ontdekking slaagt."
+
 msgid "Indices"
 msgstr "Indexen"
 
@@ -33591,6 +33863,10 @@ msgstr "Ongeldig certificaat"
 #, python-format
 msgid "Invalid certificate file: %s"
 msgstr "Ongeldig certificaatbestand: %s"
+
+#, fuzzy, python-format
+msgid "Invalid characters in %s"
+msgstr "Ongeldige parameter %r: %s"
 
 msgid "Invalid check parameter"
 msgstr "Ongeldige controleparameter"
@@ -36190,6 +36466,10 @@ msgstr "Beperk inloggen tot één sessie per keer"
 msgid "Limit maximum number used CPUs"
 msgstr "Beperk maximum aantal gebruikte cpus"
 
+#, fuzzy
+msgid "Limit notifications by count to"
+msgstr "laatste mededeling"
+
 msgid "Limit number of processed search results"
 msgstr "Beperk het aantal verwerkte zoekresultaten"
 
@@ -37616,6 +37896,15 @@ msgstr ""
 msgid "MQTT broker statistics"
 msgstr "MQTT makelaar statistieken"
 
+msgid "MQTTv31"
+msgstr ""
+
+msgid "MQTTv311"
+msgstr ""
+
+msgid "MQTTv5"
+msgstr ""
+
 msgid "MS Exchange DAG CopyQueue"
 msgstr "MS Exchange DAG CopyQueue"
 
@@ -38107,11 +38396,18 @@ msgid "Managed Robot"
 msgstr "Beheerde objecten"
 
 #, fuzzy
-msgid "Managed Robots"
+msgid "Managed objects"
 msgstr "Beheerde objecten"
 
 #, fuzzy
-msgid "Managed objects"
+msgid "Managed robot deleted."
+msgstr "Beheerde objecten"
+
+msgid "Managed robot not found while attempting to delete it."
+msgstr ""
+
+#, fuzzy
+msgid "Managed robots"
 msgstr "Beheerde objecten"
 
 msgid "Management board"
@@ -38608,6 +38904,10 @@ msgstr "Max. Tel"
 msgid "Max. duration after downtime starts: "
 msgstr "De eerste keer dat de uitval begint"
 
+#, fuzzy
+msgid "Max. notifications per bulk"
+msgstr "kennisgevingsregel"
+
 msgid "Max. number of SSL connections"
 msgstr "Max. aantal SSL-verbindingen"
 
@@ -38677,6 +38977,9 @@ msgstr "Maximale grootte logbestand"
 
 msgid "Maximal number of daemon threads"
 msgstr "Maximaal aantal daemon-threads"
+
+msgid "Maximal number of hosts per bulk discovery REST API call"
+msgstr ""
 
 msgid "Maximal number of log files to backup"
 msgstr "Maximal aantal logbestanden om te back-uppen"
@@ -38856,8 +39159,16 @@ msgid "Maximum latency of successful query requests"
 msgstr "Maximale latentie van succesvolle zoekopdrachten"
 
 #, fuzzy
+msgid "Maximum levels for current"
+msgstr "Maximumniveaus voor spanning"
+
+#, fuzzy
 msgid "Maximum levels for load in percent"
 msgstr "Maximale niveaus voor belasting in procenten"
+
+#, fuzzy
+msgid "Maximum levels for power"
+msgstr "Maximumniveaus voor spanning"
 
 #, fuzzy
 msgid "Maximum levels for voltage"
@@ -39682,12 +39993,20 @@ msgid "Minimum error count"
 msgstr "Minimaal aantal fouten"
 
 #, fuzzy
-msgid "Minimum levels for Voltage"
+msgid "Minimum levels for current"
 msgstr "Minimum Spanningsniveaus"
 
 #, fuzzy
 msgid "Minimum levels for load in percent"
 msgstr "Minimumniveaus voor belasting in procenten"
+
+#, fuzzy
+msgid "Minimum levels for power"
+msgstr "Minimum Spanningsniveaus"
+
+#, fuzzy
+msgid "Minimum levels for voltage"
+msgstr "Minimum Spanningsniveaus"
 
 msgid "Minimum levels if using magic factor"
 msgstr "Minimum niveaus bij gebruik van magische factor"
@@ -39796,6 +40115,10 @@ msgstr "Misplande duur (alleen DaemonSet)"
 
 msgid "Misscheduled replicas"
 msgstr "Verkeerd geplande replica's"
+
+#, fuzzy
+msgid "Missing catalog topic."
+msgstr "Ontbrekende variabele siteid"
 
 #, python-format
 msgid "Missing config file for agent %s%s"
@@ -41280,6 +41603,9 @@ msgstr "Naam resolutie"
 msgid "Name your %s for easy recognition."
 msgstr "Geef uw %s een naam voor gemakkelijke herkenning."
 
+msgid "Name your host and define the folder"
+msgstr ""
+
 msgid ""
 "Name your host, define the path and select the regions you would like to "
 "monitor"
@@ -41660,8 +41986,24 @@ msgid_plural "New host labels: "
 msgstr[0] "Nieuw host label: "
 msgstr[1] "Nieuwe host labels: "
 
+#, fuzzy
+msgid "New managed robot"
+msgstr "Beheerde objecten"
+
 msgid "New name"
 msgstr "Nieuwe naam"
+
+#, fuzzy, python-format
+msgid "New notification rule #%d successfully created!"
+msgstr "Host succesvol aangemaakt"
+
+#, fuzzy
+msgid "New notification rule successfully created!"
+msgstr "Host succesvol aangemaakt"
+
+#, fuzzy
+msgid "New notification setup"
+msgstr "Volgende kennisgeving"
 
 #, fuzzy
 msgid "New password"
@@ -41762,6 +42104,10 @@ msgstr "Nee (Fout: %s, Code: %d, Diepte: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "Geen API-integraties, geen Checkmk-agent"
 
+#, fuzzy
+msgid "No AWS services found."
+msgstr "Geen hosts/services gevonden."
+
 msgid "No CSRF token received"
 msgstr "Geen CSRF-token ontvangen"
 
@@ -41771,6 +42117,10 @@ msgstr "Geen voorwaarden"
 #, fuzzy, python-format
 msgid "No Configuration Quick setup for %s available"
 msgstr "Configuratie variabele:"
+
+#, python-format
+msgid "No Dictionary ValueSpec within Migrate: %s"
+msgstr ""
 
 msgid "No IP"
 msgstr "Geen IP"
@@ -41904,6 +42254,14 @@ msgstr ""
 #, python-format
 msgid "No edit configuration bundle implemented for bundle group type '%s'."
 msgstr ""
+
+#, fuzzy
+msgid "No elements available"
+msgstr "niet beschikbaar"
+
+#, fuzzy
+msgid "No elements selected"
+msgstr "Niet geselecteerd"
 
 msgid "No entries"
 msgstr "Geen inzendingen"
@@ -42758,8 +43116,16 @@ msgstr "Kennisgeving Commentaar"
 msgid "Notification delivery rate"
 msgstr "Kennisgevingssysteem"
 
+#, fuzzy
+msgid "Notification effect"
+msgstr "Kennisgevingsmethode"
+
 msgid "Notification events of hosts."
 msgstr "Meldingsgebeurtenissen van hosts."
+
+#, fuzzy
+msgid "Notification frequency and timing"
+msgstr "kennisgevingsregel"
 
 msgid "Notification log level"
 msgstr "Niveau meldingslogboek"
@@ -42812,6 +43178,14 @@ msgstr ""
 
 msgid "Notification rule"
 msgstr "Regel inzake kennisgeving"
+
+#, fuzzy
+msgid "Notification rule does not exist."
+msgstr "Grafiekverzameling '%s' bestaat niet"
+
+#, fuzzy, python-format
+msgid "Notification rule number #%d successfully edited!"
+msgstr "Meldingsregels van gebruiker %s"
 
 #, python-format
 msgid "Notification rule of user '%s'"
@@ -44532,6 +44906,10 @@ msgstr "Operaties"
 msgid "Operations States"
 msgstr "Operatie Staten"
 
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "Werking op geselecteerde metriek"
+
 msgid "Operations per second"
 msgstr "Bewerkingen per seconde"
 
@@ -45987,7 +46365,7 @@ msgid "Override check state based on last build result"
 msgstr "Overschrijven controle status gebaseerd op laatste build resultaat"
 
 #, fuzzy
-msgid "Override current plan settings"
+msgid "Override managed plan settings"
 msgstr "Overbruggingseenheid van sensor"
 
 msgid "Override unit of sensor"
@@ -47693,10 +48071,6 @@ msgstr "Ping het normale IP adres"
 msgid "Ping timeout"
 msgstr "Ping timeout"
 
-#, fuzzy
-msgid "Placeholder"
-msgstr "Plaatsvervangende VM's"
-
 msgid "Placeholder VMs"
 msgstr "Plaatsvervangende VM's"
 
@@ -47749,8 +48123,12 @@ msgstr ""
 "Combinaties van operationele en administratieve status in kaart brengen"
 
 #, fuzzy
-msgid "Plan settings"
+msgid "Plan Settings"
 msgstr "Globale instellingen"
+
+#, fuzzy
+msgid "Plan configuration"
+msgstr "configuratie"
 
 msgid "Plans"
 msgstr ""
@@ -47778,6 +48156,10 @@ msgstr "Voeg ten minste één kolom toe aan je uitzicht."
 #, fuzzy
 msgid "Please add at least one endpoint to monitor"
 msgstr "Voeg ten minste één kolom toe aan je uitzicht."
+
+#, fuzzy
+msgid "Please add at least one recipient"
+msgstr "Voeg ten minste één kindknooppunt toe."
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -48088,6 +48470,10 @@ msgstr "Zorg voor een '.xml' bestand"
 #, fuzzy
 msgid "Please provide a hostname to test with."
 msgstr "Geef een geldige host en poort"
+
+#, fuzzy
+msgid "Please provide a path that is relative both on Linux and Windows."
+msgstr "Geef een geldige naam"
 
 #, fuzzy
 msgid "Please provide a relative Windows path"
@@ -48819,6 +49205,10 @@ msgstr "Voorvoegsel tekst"
 msgid "Prepare AWS for Checkmk"
 msgstr "Geïnitialiseerde GIT voor Checkmk"
 
+#, fuzzy
+msgid "Prepare Azure for Checkmk"
+msgstr "Geïnitialiseerde GIT voor Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prepend namespace prefix voor hosts"
 
@@ -49477,11 +49867,10 @@ msgstr "Python agent plugin uitvoering (UNIX)"
 msgid ""
 "Python or YAML file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#variable-files\" target=\"_blank\">About variable files</a>) Possible "
+"html#variable-files\" target=\"_blank\">About variable files</a>). Possible "
 "arguments to the variable file can be given after the file path using a "
-"colon or a semicolon as a separator. Examples:\n"
-"<tt>path/vars.yaml</tt>\n"
-"<tt>set_environment.py:testing</tt>"
+"colon or a semicolon as a separator. Examples:<br><tt>path/vars.yaml</"
+"tt><br><tt>set_environment.py:testing</tt>"
 msgstr ""
 
 #, fuzzy
@@ -49716,14 +50105,15 @@ msgstr "Lees gemiddelde exe"
 msgid "RCC profile configuration"
 msgstr "Configuratie op afstand"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"RCC profile configuration (%s because Robotmk Core MKP has been installed)"
+"RCC profile configuration (⚠ <b>not available</b> because Robotmk Core MKP "
+"has been installed)"
 msgstr "Gebruik SSL voor de verbinding."
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
-"specific RCC environment, for example Proxy settings. <br>"
+"specific RCC environment, for example proxy settings."
 msgstr ""
 
 msgid "RCU"
@@ -50330,6 +50720,10 @@ msgstr "Ontvanger"
 #, fuzzy
 msgid "Recipient email address"
 msgstr "Emailadres van de ontvanger"
+
+#, fuzzy
+msgid "Recipients"
+msgstr "Ontvanger"
 
 #, python-format
 msgid "Recipients: %s"
@@ -51647,6 +52041,10 @@ msgstr "Vereiste poort"
 msgid "Required context filters"
 msgstr "Vereiste context filters"
 
+#, fuzzy
+msgid "Required field missing"
+msgstr "Site ontbreekt"
+
 msgid "Required match (regular expression)"
 msgstr "Vereiste overeenkomst (reguliere expressie)"
 
@@ -51963,8 +52361,16 @@ msgstr "Interface-items beperken"
 msgid "Restrict monitoring services by one of these AWS tags"
 msgstr "Beperk bewakingsdiensten door één van deze AWS tags"
 
+#, fuzzy
+msgid "Restrict notifications to a time period"
+msgstr "Kennisgevingsperiode voor de dienst"
+
 msgid "Restrict number of processed messages per cycle"
 msgstr "Beperking van het aantal verwerkte berichten per cyclus"
+
+#, fuzzy
+msgid "Restrict previous options to"
+msgstr "Beperk de ernst tot in het ergste geval"
 
 msgid "Restrict runtime of logfile parsing"
 msgstr "Beperk runtime van logfile parsing"
@@ -52105,6 +52511,11 @@ msgid ""
 "Retrieve process information using WMI (Windows Management Instrumentation)"
 msgstr "Procesinformatie opvragen met WMI (Windows Management Instrumentation)"
 
+msgid ""
+"Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, "
+"and the Client secret from Azure."
+msgstr ""
+
 msgid "Retry"
 msgstr "Opnieuw proberen"
 
@@ -52155,6 +52566,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Return to Checkmk: Define a unique Azure account name, and use the  "
+"Subscription ID, Tenant ID, Client ID, and the Client secret below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 
@@ -52175,12 +52591,16 @@ msgid "Review and run preview service discovery"
 msgstr "Save & run service discovery"
 
 #, fuzzy
+msgid "Review and test configuration"
+msgstr "Configuratie op afstand"
+
+#, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Save & run service discovery"
 
 msgid ""
 "Review your notification rule before applying it. They will take effect "
-"right away without 'Activate changes'."
+"right away without \"Activate changes\"."
 msgstr ""
 
 msgid "Revolutions per minute"
@@ -52234,10 +52654,6 @@ msgstr "Robot Framework: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "Robot Framework: Laatste logboek"
-
-#, fuzzy
-msgid "Robot package"
-msgstr "Pakket verwijderen"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -53347,6 +53763,11 @@ msgstr "Reactie opslaan"
 msgid "Save this host and go to"
 msgstr "Sla deze host op en ga naar"
 
+msgid ""
+"Save your progress and go to the Activate Changes page to enable it. EC2 "
+"instances may take a few minutes to show up."
+msgstr ""
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Opgeslagen controleconfiguratie van host '%s' met %d diensten"
@@ -53356,6 +53777,9 @@ msgstr "Opgeslagen alleen-lezen instellingen"
 
 msgid "Saved space"
 msgstr "Gereserveerde ruimte"
+
+msgid "Scalar"
+msgstr ""
 
 msgid "Scale to width of page"
 msgstr "Schaal naar breedte van pagina"
@@ -53946,6 +54370,15 @@ msgid "Select and configure AWS services you would like to monitor"
 msgstr "Te controleren Azure diensten"
 
 #, fuzzy
+msgid ""
+"Select and configure the Microsoft Azure services you would like to monitor"
+msgstr "Te controleren Azure diensten"
+
+#, fuzzy
+msgid "Select contact group"
+msgstr "Regel contactgroepen"
+
+#, fuzzy
 msgid "Select datasource"
 msgstr "Selecteer gegevensbron"
 
@@ -54141,8 +54574,16 @@ msgid "Select the type of fixed page element"
 msgstr "Selecteer het type vast pagina-element"
 
 #, fuzzy
+msgid "Select time period"
+msgstr "Selecteer een periode"
+
+#, fuzzy
 msgid "Select type from list"
 msgstr "Selecteer individuele bestanden uit de lijst"
+
+#, fuzzy
+msgid "Select user"
+msgstr "Gebruikers verwijderen"
 
 msgid "Select view"
 msgstr "Weergave kiezen"
@@ -54180,6 +54621,10 @@ msgstr "De geselecteerde %s zijn verwijderd."
 #, fuzzy
 msgid "Selected credential has been deleted"
 msgstr "Credential is verwijderd"
+
+#, fuzzy
+msgid "Selected options"
+msgstr "Afgewezen verbindingen"
 
 msgid "Selected sections will not be executed by the agent."
 msgstr "Geselecteerde secties zullen niet worden uitgevoerd door de agent."
@@ -54398,6 +54843,10 @@ msgstr "Verzonden vs ontvangen verkeer Breakdown"
 
 msgid "Sentinel"
 msgstr "Sentinel"
+
+#, fuzzy
+msgid "Separate bulk notifications for"
+msgstr "Open bulk meldingen"
 
 msgid "Separate check"
 msgstr "Afzonderlijke controle"
@@ -54653,6 +55102,10 @@ msgstr "Ontdekking van de dienst: Beschrijving van de dienst"
 
 msgid "Service discovery: State"
 msgstr "Dienst ontdekking: Toestand"
+
+#, fuzzy
+msgid "Service events"
+msgstr "Dienstverleningsniveau"
 
 msgid "Service goes into critical state"
 msgstr "Dienst gaat in kritieke toestand"
@@ -56506,6 +56959,11 @@ msgstr ""
 "opheffen door hier een node te specificeren."
 
 msgid ""
+"Since managed robots are used in bakery rules, you need the permission to "
+"edit these rules to access this page."
+msgstr ""
+
+msgid ""
 "Since the sensor description is a user defined text, multiple sensors may "
 "have the same description. To ensure that items are unique, they are "
 "prefixed with X-Y where X is the device number and Y the index of the sensor."
@@ -57427,6 +57885,10 @@ msgstr "Specifieke objecten"
 msgid "Specific sites"
 msgstr "Specifieke sites"
 
+#, fuzzy
+msgid "Specific users"
+msgstr "Specifieke sites"
+
 msgid "Specific version"
 msgstr "Specifieke versie"
 
@@ -57617,8 +58079,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Specify here whether the working directory of Robotmk (`C:\\ProgramData"
-"\\checkmk\\agent\\robotmk_output\\working\\suites`) on the target host "
+"Specify here whether the working directory of Robotmk on the target host "
 "should be cleaned up either after a certain time or after a certain number "
 "of test executions."
 msgstr ""
@@ -57840,6 +58301,11 @@ msgstr ""
 "demand tabellen. Daarom kan voor deze tabellen geen gemiddeld gebruik worden "
 "berekend als deze waarde niet wordt opgegeven."
 
+msgid ""
+"Specify the location where the host will be created. If left empty, the host "
+"will be created in the root folder."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Specify the logical name, e.g. the host name, of the PLC. This name is used "
@@ -57870,6 +58336,11 @@ msgstr "Geef de naam van de VM op, bijvoorbeeld z4065012."
 msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
 msgstr ""
 "Specificeer de naam van de bestemmingshost, d.w.z. <tt>checkmk.com</tt>"
+
+msgid ""
+"Specify the name of your host where all the services will be located. The "
+"host name must be unique."
+msgstr ""
 
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr ""
@@ -58229,6 +58700,10 @@ msgstr "Standaardafwijking van de rondreistijd in ms"
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standaardafwijking van de rondreistijd in ms"
 
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Standaard onderwerpen"
+
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
 "individual settings of an endpoint."
@@ -58292,6 +58767,10 @@ msgstr "Begin volgend jaar"
 
 msgid "Start or end of a scheduled downtime"
 msgstr "Begin of einde van een geplande downtime"
+
+#, fuzzy
+msgid "Start or end of downtime"
+msgstr "Begin van uitvaltijd"
 
 msgid "Start or end of flapping state"
 msgstr "Begin of einde van de slagtoestand"
@@ -58520,6 +58999,10 @@ msgstr "Staat voor verwachte string mismatch"
 #, fuzzy
 msgid "State for unexpected number of interfaces"
 msgstr "Waarschuwing voor onverwachte actieve interface"
+
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "In afwachting van dienstontdekking"
 
 msgid "State if 'maintenance' services are found"
 msgstr "Vermeld of \"onderhouds\"-diensten zijn gevonden"
@@ -59549,6 +60032,10 @@ msgid "Subject for bulk notifications"
 msgstr "Onderwerp voor bulkmeldingen"
 
 #, fuzzy
+msgid "Subject line"
+msgstr "Naam van de sectie"
+
+#, fuzzy
 msgid "Subject line for host notifications"
 msgstr "Onderwerp voor hostmeldingen"
 
@@ -59950,6 +60437,10 @@ msgstr "Synchroon"
 #, fuzzy
 msgid "Syncing"
 msgstr "Synchroniseren"
+
+#, fuzzy
+msgid "Syncing broker certificates"
+msgstr "SAP-routercertificaat"
 
 msgid "Synology Updates"
 msgstr "Synology Updates"
@@ -60720,6 +61211,10 @@ msgid "Test authentication"
 msgstr "Token authenticatie"
 
 #, fuzzy
+msgid "Test configuration"
+msgstr "Host configuratie"
+
+#, fuzzy
 msgid "Test connection"
 msgstr "Deze verbinding"
 
@@ -60752,6 +61247,9 @@ msgstr "laatste mededeling"
 #, fuzzy
 msgid "Test runtime"
 msgstr "Procesruntime"
+
+msgid "Test the AWS connection based on your configuration settings"
+msgstr ""
 
 #, fuzzy
 msgid "Test verification"
@@ -62296,6 +62794,11 @@ msgstr ""
 "De verbinding creëert hosts in deze specifieke map. Eenmaal aangemaakt, kunt "
 "u ervoor kiezen de host naar een andere map te verplaatsen."
 
+msgid ""
+"The connection to AWS was successful, but no services were found. If this is "
+"unintentional, please verify your configuration."
+msgstr ""
+
 msgid "The connection to this site has been disabled."
 msgstr "De verbinding met deze site is verbroken."
 
@@ -63408,6 +63911,15 @@ msgstr "Het logbestand bestaat niet op de site."
 
 msgid "The login is currently locked"
 msgstr "De login is momenteel vergrendeld"
+
+#, fuzzy, python-format
+msgid ""
+"The managed robot with ID %s that you attempted to clone does not exist."
+msgstr "Het schema dat u probeert te klonen bestaat niet."
+
+#, fuzzy, python-format
+msgid "The managed robot with ID %s that you attempted to edit does not exist."
+msgstr "De gebruiker die u probeert te bewerken bestaat niet."
 
 msgid "The mandatory group name is missing"
 msgstr "De verplichte groepsnaam ontbreekt"
@@ -65845,7 +66357,7 @@ msgstr "Deze knooppunten zitten alleen in de bevroren aggregatie"
 msgid ""
 "These options allow specifying the most common command line parameters for "
 "the Robot Framework. In order to use other parameters, you can use the "
-"option \"Arguments file\""
+"option \"Arguments file\"."
 msgstr ""
 
 msgid ""
@@ -67659,11 +68171,6 @@ msgstr "Deze pagina biedt geen inline help."
 msgid "This page does not support cluster hosts."
 msgstr "Deze pagina ondersteunt geen cluster hosts."
 
-msgid ""
-"This page is currently not implemented, needs FormSpec migration of "
-"NotificationParameter."
-msgstr ""
-
 msgid "This page was not found. Sorry."
 msgstr "Deze pagina werd niet gevonden. Sorry."
 
@@ -67763,8 +68270,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This permission allows users to administrate (add, delete, modify) managed "
-"robots."
+"This permission allows users to edit (add, delete, modify) managed robots."
 msgstr ""
 "Met deze toestemming kunnen gebruikers andere gebruikers naar een andere "
 "verbinding migreren"
@@ -69615,6 +70121,18 @@ msgstr ""
 "overeenkomt met het standaard controle-interval."
 
 msgid ""
+"This setting decides how late your changes will be activated. Default is 10 "
+"minutes"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This setting decides how many hosts will be discovered in one Api call. "
+"Default is 20"
+msgstr ""
+"Deze instelling bepaalt hoe poorten worden ingeschakeld in Windows Firewall."
+
+msgid ""
 "This setting decides how often the dynamic configuration daemon will get "
 "updates from the the site. Default is 5 minutes"
 msgstr ""
@@ -69627,6 +70145,9 @@ msgstr ""
 msgid ""
 "This setting decides when the bulk discovery operation will be timed out. "
 "Default is 2 minutes"
+msgstr ""
+
+msgid "This setting decides whether we prevent false alarms. Default is True"
 msgstr ""
 
 msgid ""
@@ -70320,6 +70841,10 @@ msgstr "Afgedwongen verzoeken"
 
 msgid "Throttles"
 msgstr "Gashendels"
+
+#, fuzzy
+msgid "Throttling of 'Periodic notifications'"
+msgstr "Periodieke meldingen"
 
 msgid "Throughput"
 msgstr "Doorvoer"
@@ -73741,6 +74266,10 @@ msgstr "Overdracht: %d nieuwe, %d gewijzigde en %d verdwenen bestanden"
 msgid "Transform status output"
 msgstr "Transformeer status uitgang"
 
+#, fuzzy
+msgid "Transformation"
+msgstr "Thermische informatie"
+
 msgid "Transformation on selected metric"
 msgstr "Transformatie op geselecteerde metriek"
 
@@ -77025,6 +77554,10 @@ msgstr "Gebruikers in de Active Directory"
 msgid "Users listed here are still allowed to modify things."
 msgstr "Gebruikers die hier staan, mogen nog steeds dingen wijzigen."
 
+#, fuzzy
+msgid "Users of contact groups"
+msgstr "Leden van contactgroepen"
+
 msgid "Users using a cifs share"
 msgstr "Gebruikers die een cifs share gebruiken"
 
@@ -78163,6 +78696,10 @@ msgstr "Verticale as breedte"
 msgid "Vertical padding"
 msgstr "Verticale opvulling"
 
+#, fuzzy
+msgid "Vertical range"
+msgstr "Verticale opvulling"
+
 msgid "Vertical rules"
 msgstr "Verticale regels"
 
@@ -78600,6 +79137,10 @@ msgstr "Wachtende verbindingen"
 
 msgid "Waiting containers"
 msgstr "Wachtende containers"
+
+#, fuzzy
+msgid "Waiting for discovery"
+msgstr "Netapp poort ontdekking"
 
 msgid ""
 "Waiting for first status update from the job. In case this message is shown "
@@ -80222,7 +80763,7 @@ msgstr ""
 
 msgid ""
 "With the help of the <a href=\"https://github.com/robocorp/rcc\" target="
-"\"_blank\">RCC</a> binary, the robotmk scheduler can generate the Python "
+"\"_blank\">RCC</a> binary, the Robotmk scheduler can generate the Python "
 "environments required for the execution of Robot Framework suites. This "
 "eliminates the need to install and configure Python and all of its library "
 "packages on the target hosts. RCC environments are created right after the "
@@ -81487,6 +82028,14 @@ msgstr "U kunt de verbinding met de lokale site niet verwijderen."
 msgid "You can not delete this %s because it is <a href=\"%s\">in use</a>."
 msgstr ""
 "U kunt deze %s niet verwijderen omdat hij <a href=\"%s\">in gebruik</a> is."
+
+#, fuzzy, python-format
+msgid ""
+"You can not delete this managed robot because it is in use in the following "
+"rules:%s"
+msgstr ""
+"U kunt dit doel niet verwijderen omdat het door deze back-uptaken wordt "
+"gebruikt: %s"
 
 #, python-format
 msgid ""
@@ -83145,6 +83694,10 @@ msgstr "de uitvoering van commando's en acties via TCP mogelijk te maken"
 msgid "allow users to deactivate this notification"
 msgstr "gebruikers in staat stellen deze melding te deactiveren"
 
+#, fuzzy
+msgid "and"
+msgstr "Band"
+
 msgid "any"
 msgstr "elke"
 
@@ -83237,6 +83790,9 @@ msgstr "onder voorspelde waarde"
 
 msgid "best state"
 msgstr "beste staat"
+
+msgid "between"
+msgstr ""
 
 msgid "bindings"
 msgstr "bindingen"
@@ -84730,6 +85286,10 @@ msgstr "secs"
 msgid "security token"
 msgstr "Veiligheidsnaam"
 
+#, fuzzy
+msgid "send every"
+msgstr "stuur alleen elke"
+
 msgid "send notifications of contactgroup:"
 msgstr "meldingen van contactgroep verzenden:"
 
@@ -84815,6 +85375,10 @@ msgstr ""
 
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"
+
+#, fuzzy
+msgid "starting with notification number"
+msgstr "Beperken tot kennisgevingsnummer"
 
 msgid "status entries"
 msgstr "statusvermeldingen"
@@ -85160,6 +85724,45 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#, fuzzy
+msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
+msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Configure host and authority"
+#~ msgstr "Configuratie"
+
+#, fuzzy, python-format
+#~ msgid "No FormSpec implementation for method '%s' found."
+#~ msgstr "Gewijzigde meldingsregel %d"
+
+#, fuzzy
+#~ msgid "Event console alerts"
+#~ msgstr "Event Console waarschuwingen"
+
+#, fuzzy
+#~ msgid "File upload"
+#~ msgstr "Geüploade bytes"
+
+#, fuzzy
+#~ msgid "Placeholder"
+#~ msgstr "Plaatsvervangende VM's"
+
+#, fuzzy
+#~ msgid "Robot package"
+#~ msgstr "Pakket verwijderen"
+
+#, fuzzy
+#~ msgid "Managed Robots"
+#~ msgstr "Beheerde objecten"
+
+#~ msgid "API key from password store"
+#~ msgstr "API sleutel van wachtwoord opslag"
+
+#, fuzzy
+#~ msgid "Host Path"
+#~ msgstr "Gastheer alarm"
+
 #, fuzzy, python-format
 #~ msgid "Failed to save broker certificates: %s"
 #~ msgstr "Kan peer-certificaat niet ophalen (%s)"
@@ -85212,10 +85815,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Graphs are shown among each other"
 #~ msgstr "Grafieken worden onder elkaar getoond"
-
-#, fuzzy
-#~ msgid "Syncing broker certificates"
-#~ msgstr "SAP-routercertificaat"
 
 #~ msgid ""
 #~ "The email address and visible name used in the From header of "
@@ -85278,18 +85877,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 #~ msgid "Schedule downtime?"
 #~ msgstr "Uitvaltijden plannen"
-
-#~ msgid ""
-#~ "A delay can be configured here so that multiple changes can be activated "
-#~ "in one go. This avoids frequent activation of changes in situations with "
-#~ "frequent services changes."
-#~ msgstr ""
-#~ "Hier kan een vertraging worden geconfigureerd, zodat meerdere wijzigingen "
-#~ "in één keer kunnen worden geactiveerd. Dit vermijdt frequente activering "
-#~ "van wijzigingen in situaties met frequente wijzigingen van diensten."
-
-#~ msgid "Group \"Activate changes\""
-#~ msgstr "Groep \"Wijzigingen activeren\""
 
 #, fuzzy
 #~ msgid "OVS bonding interface status"

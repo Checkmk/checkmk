@@ -15,13 +15,15 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
-from . import command, graph, icon, inventory, perfometer
+from . import command, graph, icon, perfometer
+from ._join_service_rows import join_service_row_post_processor
 from ._permissions import PermissionSectionViews
 from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
 from .datasource_selection import page_select_datasource
 from .host_tag_plugins import register_tag_plugins
 from .icon.page_ajax_popup_action_menu import ajax_popup_action_menu
+from .inventory import registration as inventory_registration
 from .layout import layout_registry, register_layouts
 from .page_ajax_filters import AjaxInitialViewFilters
 from .page_ajax_reschedule import PageRescheduleCheck
@@ -29,6 +31,7 @@ from .page_create_view import page_create_view
 from .page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
 from .page_edit_views import page_edit_views
 from .page_show_view import page_show_view
+from .row_post_processing import RowPostProcessorRegistry
 from .sorter import register_sorters, sorter_registry
 from .visual_type import VisualTypeViews
 
@@ -40,6 +43,7 @@ def register(
     visual_type_registry: VisualTypeRegistry,
     register_post_config_load_hook: Callable[[Callable[[], None]], None],
     multisite_builtin_views: dict[ViewName, ViewSpec],
+    row_post_processor_registry: RowPostProcessorRegistry,
 ) -> None:
     register_post_config_load_hook(register_tag_plugins)
 
@@ -77,11 +81,13 @@ def register(
         permission_section_registry,
         register_post_config_load_hook,
     )
-    inventory.register(
+    inventory_registration.register(
         page_registry,
         data_source_registry,
         painter_registry,
         painter_option_registry,
         multisite_builtin_views,
+        row_post_processor_registry,
     )
     graph.register(painter_option_registry, multisite_builtin_views)
+    row_post_processor_registry.register(join_service_row_post_processor)

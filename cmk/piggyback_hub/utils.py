@@ -7,8 +7,11 @@ import logging
 import multiprocessing
 import signal
 import sys
+import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Generic, TypeVar
+from ssl import SSLCertVerificationError
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -34,6 +37,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         omd_root: Path,
         model: type[_ModelT],
         callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
+        crash_report_callback: Callable[[], str],
         queue: QueueName,
         message_ttl: int | None,
     ) -> None:
@@ -42,6 +46,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.omd_root = omd_root
         self.model = model
         self.callback = callback
+        self.crash_report_callback = crash_report_callback
         self.queue = queue
         self.message_ttl = message_ttl
         self.task_name = f"receiving on queue '{self.queue.value}'"
@@ -50,18 +55,47 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.logger.info("Starting: %s", self.task_name)
         signal.signal(
             signal.SIGTERM,
-            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
+            make_log_and_exit(self.logger.info, f"Terminating: {self.task_name}"),
         )
         try:
-            with Connection(APP_NAME, self.omd_root) as conn:
-                channel: Channel[_ModelT] = conn.channel(self.model)
-                channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
+            while True:
+                with make_connection(self.omd_root, self.logger, self.task_name) as conn:
+                    try:
+                        channel: Channel[_ModelT] = conn.channel(self.model)
+                        channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
 
-                self.logger.debug("Consuming: %s", self.task_name)
-                channel.consume(self.queue, self.callback)
-
+                        self.logger.debug("Consuming: %s", self.task_name)
+                        channel.consume(self.queue, self.callback)
+                    except CMKConnectionError as exc:
+                        self.logger.info(
+                            "Interrupted by failed connection: %s: %s", self.task_name, exc
+                        )
         except CMKConnectionError as exc:
-            self.logger.error("Stopping: %s: %s", self.task_name, exc)
+            self.logger.error("Reconnecting failed: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
+            crash_report_msg = self.crash_report_callback()
+            self.logger.error(crash_report_msg)
             raise
+
+
+def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:
+    attempts = 120  # 10
+    interval = 5  # 3
+
+    for attempt in range(1, attempts):
+        try:
+            # Note: We re-read the certificates here.
+            return Connection(APP_NAME, omd_root)
+        except (
+            # Certs could have changed
+            SSLCertVerificationError,
+            # and/or broker is restarting
+            CMKConnectionError,
+        ) as exc:
+            logger.info("Connection failed (will retry): %s: %s", task_name, exc)
+            # Retry.
+            time.sleep(interval)
+            logger.info("Reconnection attempt %s: %s: %s", attempt, task_name, exc)
+
+    return Connection(APP_NAME, omd_root)

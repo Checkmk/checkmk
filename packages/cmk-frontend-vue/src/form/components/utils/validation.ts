@@ -45,20 +45,20 @@ export function validateValue(newValue: unknown, validators: Validator[]): strin
       const checkValue = newValue as Array<unknown>
       const minValue = validator.min_value
       const maxValue = validator.max_value
-      if (minValue !== null && minValue !== undefined && checkValue.length < minValue) {
+      if (minValue !== null && checkValue.length < minValue) {
         errors.push(validator.error_message!)
       }
-      if (maxValue !== null && maxValue !== undefined && checkValue.length > maxValue) {
+      if (maxValue !== null && checkValue.length > maxValue) {
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'number_in_range') {
       const checkValue = newValue as number
       const minValue = validator.min_value
       const maxValue = validator.max_value
-      if (minValue !== null && minValue !== undefined && checkValue < minValue) {
+      if (minValue !== null && checkValue < minValue) {
         errors.push(validator.error_message!)
       }
-      if (maxValue !== null && maxValue !== undefined && checkValue > maxValue) {
+      if (maxValue !== null && checkValue > maxValue) {
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'is_integer') {
@@ -87,7 +87,7 @@ export function isFloat(value: string): boolean {
 export function requiresSomeInput(validators: Validator[]): boolean {
   return validators.some((validator) => {
     if (validator.type === 'length_in_range') {
-      if (validator.min_value === undefined) {
+      if (validator.min_value === null) {
         return false
       }
       return validator.min_value > 0

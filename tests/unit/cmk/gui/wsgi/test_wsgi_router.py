@@ -19,8 +19,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils.user import UserId
 
-from cmk.gui import cron
-
 
 def search_up(search_path: str, start_path: str) -> str:
     current_path = start_path
@@ -156,15 +154,6 @@ def test_openapi_app_exception(
     assert "crash_report_url" in resp.json["ext"]["details"]
     assert "check_mk" in resp.json["ext"]["details"]["crash_report_url"]["href"]
     assert "id" in resp.json["ext"]
-
-
-def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    orig_multisite_cronjobs = cron.multisite_cronjobs[:]
-    try:
-        cron.multisite_cronjobs.clear()
-        wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
-    finally:
-        cron.multisite_cronjobs = orig_multisite_cronjobs
 
 
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:

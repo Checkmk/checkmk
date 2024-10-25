@@ -16,7 +16,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 class UpdateUserAttributes(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        users = load_users(lock=True, skip_validation=True)
+        users = load_users(lock=True)
         save_users(
             _update_user_attributes(logger, users),
             datetime.now(),

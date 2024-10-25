@@ -9,10 +9,12 @@
 import time
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181

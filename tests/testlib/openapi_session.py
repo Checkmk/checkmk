@@ -184,10 +184,10 @@ class CMKOpenApiSession(requests.Session):
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-        timeout: int = 60,
+        timeout: int = 120,
     ) -> bool:
-        logger.info("Activate changes and wait for completion...")
-        with self._wait_for_completion(timeout, "get"):
+        logger.info("Activate changes and wait %ds for completion...", timeout)
+        with self._wait_for_completion(timeout, "get", "activate_changes"):
             if activation_started := self.activate_changes(sites, force_foreign_changes):
                 pending_changes = self.pending_changes()
                 assert (
@@ -400,7 +400,7 @@ class CMKOpenApiSession(requests.Session):
         timeout: int = 60,
     ) -> None:
         logger.info("Rename host %s to %s and wait for completion...", hostname_old, hostname_new)
-        with self._wait_for_completion(timeout, "get"):
+        with self._wait_for_completion(timeout, "get", "rename_host"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
             assert (
                 self.get_host(hostname_new) is not None
@@ -529,7 +529,7 @@ class CMKOpenApiSession(requests.Session):
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:
-        with self._wait_for_completion(timeout, "get"):
+        with self._wait_for_completion(timeout, "get", "discover_services"):
             self.discover_services(hostname, mode)
             discovery_status = self.get_discovery_status(hostname)
             assert (
@@ -541,6 +541,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         timeout: int,
         http_method_for_redirection: HTTPMethod,
+        operation: str,
     ) -> Iterator[None]:
         start = time.time()
         try:
@@ -551,22 +552,31 @@ class CMKOpenApiSession(requests.Session):
             else:
                 redirect_url = redirect.redirect_url
 
+            response = None
             while redirect_url:
-                if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion timed out")
+                if (running_time := time.time() - start) > timeout:
+                    msg = f"Wait for completion timed out after {running_time}s for {operation}; URL={redirect_url}!"
+                    if response and response.content:
+                        msg += f"; Last response: {response.status_code}; {response.content}"
+                    raise TimeoutError(msg)
                 logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
                 response = self.request(
                     method=http_method_for_redirection,
                     url=redirect_url,
                     allow_redirects=False,
                 )
-                if response.status_code == 204 and not response.content:  # job has finished
+                if response.status_code == 204 and not response.content:
+                    logger.info(
+                        "Wait for completion finished after %ss for %s", running_time, operation
+                    )
                     break
 
                 if not 300 <= response.status_code < 400:
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)
+        else:
+            logger.info("Wait for completion finished instantly for %s", operation)
 
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None

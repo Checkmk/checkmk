@@ -1417,10 +1417,7 @@ class HTMLGenerator(HTMLWriter):
 
         if popup_group:
             onmouseenter: str | None = (
-                "cmk.popup_menu.switch_popup_menu_group(this, {}, {})".format(
-                    json.dumps(popup_group),
-                    json.dumps(hover_switch_delay),
-                )
+                f"cmk.popup_menu.switch_popup_menu_group(this, {json.dumps(popup_group)}, {json.dumps(hover_switch_delay)})"
             )
             onmouseleave: str | None = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:

@@ -12,6 +12,7 @@ import {
   DialogPortal,
   DialogRoot
 } from 'radix-vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import { Label } from '@/components/ui/label'
 
 export interface SlideInProps {
@@ -38,7 +39,7 @@ const emit = defineEmits(['close'])
         <DialogTitle v-if="header" class="slide-in__title">
           <Label variant="title">{{ header.title }}</Label>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-            <div class="slide-in__icon-close" />
+            <CmkIcon name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
         <slot />
@@ -54,9 +55,10 @@ const emit = defineEmits(['close'])
   position: fixed;
   top: 0;
   right: 0;
-  height: 100%;
+  bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
-  background: var(--default-background-color);
+  background: var(--default-bg-color);
+  overflow: auto;
 
   &[data-state='open'] {
     animation: slide-in__content-show 0.2s ease-in-out;
@@ -121,13 +123,6 @@ const emit = defineEmits(['close'])
   border: none;
   margin: 0;
   padding: 0;
-}
-
-div.slide-in__icon-close {
-  width: 10px;
-  height: 10px;
-  background-size: 10px;
-  background-image: var(--icon-close);
 }
 
 button {

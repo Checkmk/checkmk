@@ -185,7 +185,7 @@ class DiscoveryResult(NamedTuple):
         )
 
     @classmethod
-    def deserialize(cls, raw: str) -> "DiscoveryResult":
+    def deserialize(cls, raw: str) -> DiscoveryResult:
         (
             job_status,
             check_table_created,

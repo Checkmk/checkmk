@@ -10,6 +10,8 @@
   --success-dimmed: rgb(17 188 122);
   --white: rgb(255, 255, 255);
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
+  --form-readonly-error-bg-color: rgb(252, 85, 85);
+  --tag-added-color-light: rgb(6, 103, 193);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -32,7 +34,7 @@
   --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
   --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
   --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
-  --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
+  --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.svg');
   --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
   --icon-alert-warn: url('~cmk-frontend/src/themes/facelift/images/icon_alert_warn.png');
   --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
@@ -41,8 +43,8 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
-
-  --image-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
+  --icon-help: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
+  --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 }
 
 @layer theme {
@@ -51,15 +53,27 @@
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
     --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/src/themes/facelift/images/icon_folder_blue.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
-    --default-background-color: rgb(249, 249, 255);
+    --default-bg-color: rgb(249, 249, 255);
     --default-table-th-color: rgb(232 232 238);
-    --default-select-background-color: rgb(224, 224, 228);
+    --default-form-element-bg-color: rgb(224, 224, 228);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(233, 233, 233);
+    --default-tooltip-background-color: rgb(233, 233, 233);
+    --default-tooltip-text-color: rgb(17, 24, 29);
+    --custom-scroll-bar-thumb-border-color: rgb(234, 234, 234);
+    --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
+    --custom-scroll-bar-backgroud-color: rgb(249, 249, 255);
+    --default-text-color: rgb(39, 39, 39);
+    --default-component-bg-color: rgb(240, 240, 240);
+    --default-help-icon-bg-color: rgb(12, 129, 238);
+    --help-text-bg-color: rgb(235, 235, 241); /* $ux-theme-3 */
+    --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
   }
 
   body[data-theme='modern-dark'] {
@@ -67,14 +81,26 @@
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
     --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
+    --icon-folder-blue: url('~cmk-frontend/src/themes/modern-dark/images/icon_folder_blue.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
-    --default-background-color: rgb(28, 34, 40);
+    --default-bg-color: rgb(28, 34, 40);
     --default-table-th-color: rgb(32, 39, 46);
-    --default-select-background-color: rgb(48, 57, 70);
+    --default-form-element-bg-color: rgb(48, 57, 70);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(83, 83, 83);
+    --default-tooltip-background-color: rgb(17, 24, 29);
+    --default-tooltip-text-color: var(--white);
+    --custom-scroll-bar-thumb-border-color: rgb(48, 57, 70);
+    --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
+    --custom-scroll-bar-backgroud-color: rgb(48, 57, 70);
+    --default-text-color: rgb(255, 255, 255);
+    --default-component-bg-color: rgb(46, 44, 44);
+    --default-help-icon-bg-color: rgb(6, 103, 193);
+    --help-text-bg-color: rgb(38, 47, 56); /* $ux-theme-3 */
+    --help-text-font-color: var(--white);
   }
 }

@@ -6,13 +6,15 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>

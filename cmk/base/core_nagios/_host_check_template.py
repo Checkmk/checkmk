@@ -18,14 +18,14 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.checkengine.submitters import get_submitter
 
 import cmk.base.utils
-from cmk.base import check_api, config
+from cmk.base import config
 from cmk.base.api.agent_based.register import register_plugin_by_type
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
 from cmk.discover_plugins import PluginLocation
 
-# This will be replaced by the config genreration, when the template is instanciated.
+# This will be replaced by the config generation, when the template is instanciated.
 CONFIG = HostCheckConfig(
     delay_precompile=False,
     src="",
@@ -91,7 +91,7 @@ def main() -> int:
     if debug:
         cmk.ccc.debug.enable()
 
-    config.load_checks(check_api.get_check_api_context, CONFIG.checks_to_load)
+    config.load_checks(CONFIG.checks_to_load)
 
     config.load_packed_config(LATEST_CONFIG)
 

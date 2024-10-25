@@ -10,8 +10,9 @@
 # sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_ucs_c_rack_server_health(string_table):

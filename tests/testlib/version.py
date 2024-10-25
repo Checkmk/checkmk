@@ -8,6 +8,7 @@ import hashlib
 import logging
 import operator
 import os
+import re
 import subprocess
 import time
 from collections.abc import Callable
@@ -101,7 +102,8 @@ class CMKVersion:
         branch_version: str = current_branch_version(),
     ) -> None:
         self.version_spec: Final = version_spec
-        self.version: Final = self._version(version_spec, branch, branch_version)
+        self.version_rc_aware: Final = self._version(version_spec, branch, branch_version)
+        self.version: Final = re.sub(r"-rc(\d+)", "", self.version_rc_aware)
         self.edition: Final = edition
         self.branch: Final = branch
         self.branch_version: Final = branch_version
@@ -150,11 +152,14 @@ class CMKVersion:
     def is_saas_edition(self) -> bool:
         return self.edition is Edition.CSE
 
+    def is_release_candidate(self) -> bool:
+        return self.version != self.version_rc_aware
+
     def version_directory(self) -> str:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return f"{self.version.split('-rc')[0]}.{self.edition.short}"
+        return f"{self.version}.{self.edition.short}"
 
     def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()
@@ -213,12 +218,16 @@ class CMKVersion:
         Uses `packaging.version.Version` to wrap Checkmk version.
         """
         _timestamp = None
+
         # treat `patch-version` as `micro-version`.
         _version = version.replace("0p", "")
+
         # detect daily builds
-        if "-" in version:
-            _timestamp = time.strptime(version.split("-")[-1], CMKVersion.TIMESTAMP_FORMAT)
-            _version = version.split("-")[0]
+        if match := re.search(
+            r"([1-9]?\d\.[1-9]?\d\.[1-9]?\d)-([1-9]\d{3}\.[0-1]\d\.[0-3]\d)", _version
+        ):
+            _version = match.groups()[0]
+            _timestamp = time.strptime(match.groups()[1], CMKVersion.TIMESTAMP_FORMAT)
         return Version(_version), _timestamp
 
     @staticmethod

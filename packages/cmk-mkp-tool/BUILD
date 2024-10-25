@@ -2,6 +2,11 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
+exports_files([
+    "pyproject.toml",
+    "requirements.txt",
+])
+
 py_library(
     name = "cmk-mkp-tool",
     srcs = [

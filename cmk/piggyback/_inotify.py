@@ -15,7 +15,7 @@ As this is currently only needed for the piggyback hub, we put it here.
 
 import enum
 import os
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from ctypes import c_int, CDLL, get_errno
 from ctypes.util import find_library
 from dataclasses import dataclass
@@ -26,7 +26,6 @@ from pathlib import Path
 from select import poll
 from struct import calcsize, unpack_from
 from termios import FIONREAD
-from typing import Iterator
 
 
 class Masks(enum.IntFlag):

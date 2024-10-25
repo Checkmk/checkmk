@@ -25,7 +25,7 @@ const componentId = useId()
 </script>
 
 <template>
-  <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+  <label v-if="spec.label" :for="componentId">{{ spec.label }}</label>
   <input
     :id="componentId"
     v-model="value"
@@ -34,7 +34,7 @@ const componentId = useId()
     step="any"
     type="number"
   />
-  <span v-if="props.spec.unit" class="vs_floating_text">{{ props.spec.unit }}</span>
+  <span v-if="spec.unit" class="vs_floating_text">{{ spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 

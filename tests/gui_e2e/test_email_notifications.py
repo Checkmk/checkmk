@@ -7,7 +7,6 @@ from collections.abc import Iterator
 
 import pytest
 from faker import Faker
-from playwright.sync_api import expect
 
 from tests.testlib.emails import EmailManager
 from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
@@ -108,8 +107,7 @@ def test_filesystem_email_notifications(
     try:
         service_search_page = ServiceSearchPage(dashboard_page.page)
         logger.info("Reschedule the 'Check_MK' service to trigger the notification")
-        service_search_page.apply_filters_button.click()
-        expect(service_search_page.services_table).to_be_visible()
+        service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
         service_search_page.reschedule_check("Check_MK")
         service_summary = service_search_page.service_summary(service_name).inner_text()
 

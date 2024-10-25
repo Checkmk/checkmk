@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from cmk.ccc.i18n import _
 
@@ -13,7 +12,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
-from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -21,11 +19,22 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_with_defaults_from_form_data,
     complete,
     recaps,
+    utils,
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupActionMode,
+    QuickSetupStage,
+)
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ParsedFormData,
+    QuickSetupId,
+    ServiceInterest,
+    StageIndex,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -165,14 +174,11 @@ def _configure() -> Sequence[Widget]:
             title="Other options",
             items=[
                 FormSpecWrapper(
-                    id=FormSpecId("aws_tags"),
+                    id=FormSpecId("aws_other_options"),
                     form_spec=DictionaryExtended(
                         elements={
-                            "overall_tags": DictElement(
-                                parameter_form=ruleset_helper.formspec_aws_tags(
-                                    Title("Restrict monitoring services by one of these AWS tags")
-                                ),
-                            ),
+                            **aws.formspec_aws_overall_tags(),
+                            **aws.formspec_aws_proxy_details(),
                         },
                         layout=DictionaryLayout.two_columns,
                     ),
@@ -191,46 +197,73 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label="Review & run preview service discovery",
+        button_label=_("Review and test configuration"),
     )
 
 
-def _create_time_delay_warning(*args: Any) -> Sequence[Widget]:
+def recap_found_services(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    parsed_data: ParsedFormData,
+) -> Sequence[Widget]:
+    service_discovery_result = utils.get_service_discovery_preview(
+        rulespec_name=RuleGroup.SpecialAgents("aws"),
+        all_stages_form_data=parsed_data,
+        parameter_form=quick_setup_aws_form_spec(),
+        collect_params=aws_collect_params_with_defaults,
+    )
+    aws_service_interest = ServiceInterest(r"(?i).*aws.*", "services")
+    filtered_groups_of_services, _other_services = utils.group_services_by_interest(
+        services_of_interest=[aws_service_interest],
+        service_discovery_result=service_discovery_result,
+    )
+    if len(filtered_groups_of_services[aws_service_interest]):
+        return [
+            Text(text=_("AWS services found!")),
+            Text(
+                text=_(
+                    "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
+                )
+            ),
+        ]
     return [
+        Text(text=_("No AWS services found.")),
         Text(
             text=_(
-                "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
+                "The connection to AWS was successful, but no services were found. If this is unintentional, please verify your configuration."
             )
-        )
+        ),
     ]
 
 
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Review and run preview service discovery"),
-        sub_title=_("Review your configuration and run preview service discovery"),
+        title=_("Review and test configuration"),
+        sub_title=_("Test the AWS connection based on your configuration settings"),
         configure_components=[],
         custom_validators=[],
         recap=[
-            recaps.recap_service_discovery_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                services_of_interest=[ServiceInterest(".*", "services")],
-                custom_collect_params=aws_collect_params,
-            ),
-            _create_time_delay_warning,
+            recap_found_services,
         ],
-        button_label="Run preview service discovery",
+        button_label=_("Test configuration"),
     )
 
 
-def save_action(all_stages_form_data: ParsedFormData) -> str:
-    return complete.create_and_save_special_agent_bundle_custom_collect_params(
-        special_agent_name="aws",
-        parameter_form=quick_setup_aws_form_spec(),
-        all_stages_form_data=all_stages_form_data,
-        custom_collect_params=aws_collect_params,
-    )
+def action(
+    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+) -> str:
+    match mode:
+        case QuickSetupActionMode.SAVE:
+            return complete.create_and_save_special_agent_bundle_custom_collect_params(
+                special_agent_name="aws",
+                parameter_form=quick_setup_aws_form_spec(),
+                all_stages_form_data=all_stages_form_data,
+                custom_collect_params=aws_collect_params,
+            )
+        case QuickSetupActionMode.EDIT:
+            raise ValueError("Edit mode not supported")
+        case _:
+            raise ValueError(f"Unknown mode {mode}")
 
 
 def aws_collect_params(
@@ -258,6 +291,8 @@ def _migrate_aws_service(service: str) -> object:
     # Regional
     if service == "wafv2":
         return {"selection": "all", "limits": True, "cloudfront": None}
+    if service == "cloudwatch_alarms":
+        return {"alarms": "all", "limits": True}
     return {"selection": "all", "limits": True}
 
 
@@ -296,11 +331,11 @@ quick_setup_aws = QuickSetup(
         configure_services_to_monitor,
         review_and_run_preview_service_discovery,
     ],
-    save_actions=[
-        QuickSetupSaveAction(
+    actions=[
+        QuickSetupAction(
             id="activate_changes",
             label=_("Save & go to Activate changes"),
-            action=save_action,
+            action=action,
         ),
     ],
 )

@@ -16,6 +16,7 @@ from cmk.ccc.i18n import _
 
 import cmk.utils.paths
 import cmk.utils.tags
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 from cmk.gui import hooks
@@ -484,14 +485,11 @@ def _change_host_tags_in_rule(  # pylint: disable=too-many-branches
         # In case it needs to be replaced with a new value, do it now
         if new_tag:
             was_negated = isinstance(current_value, dict) and "$ne" in current_value
-            new_value = {"$ne": new_tag} if was_negated else new_tag
+            new_value: TagCondition = {"$ne": new_tag} if was_negated else new_tag
             rule.update_conditions(
                 RuleConditions(
                     host_folder=rule.conditions.host_folder,
-                    host_tags={
-                        **rule.conditions.host_tags,
-                        operation.tag_group_id: new_value,
-                    },
+                    host_tags={**rule.conditions.host_tags, operation.tag_group_id: new_value},
                     host_label_groups=rule.conditions.host_label_groups,
                     host_name=rule.conditions.host_name,
                     service_description=rule.conditions.service_description,
@@ -558,11 +556,11 @@ def _export_hosttags_to_php(cfg: TagConfigSpec) -> None:
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    content = """<?php
+    content = f"""<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
-$mk_hosttags = {};
-$mk_auxtags = {};
+$mk_hosttags = {format_php(hosttags_dict)};
+$mk_auxtags = {format_php(auxtags_dict)};
 
 function taggroup_title($group_id) {{
     global $mk_hosttags;
@@ -604,9 +602,6 @@ function all_taggroup_choices($object_tags) {{
 }}
 
 ?>
-""".format(
-        format_php(hosttags_dict),
-        format_php(auxtags_dict),
-    )
+"""
 
     store.save_text_to_file(path, content)

@@ -488,6 +488,7 @@ class BaseApiClient(abc.ABC):
             {
                 "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
+                "ClientType": "monitoring-custom-client-type",
             }
         )
 
@@ -736,6 +737,13 @@ class MgmtApiClient(BaseApiClient):
             url.format(group, nic_name, ip_conf_name), params={"api-version": "2022-01-01"}
         )
 
+    def nic_vmss_ip_conf_view(self, group, vmss, virtual_machine_index, nic_name, ip_conf_name):
+        return self._get(
+            f"resourceGroups/{group}/providers/microsoft.Compute/virtualMachineScaleSets/"
+            f"{vmss}/virtualMachines/{virtual_machine_index}/networkInterfaces/{nic_name}/ipConfigurations/{ip_conf_name}",
+            params={"api-version": "2024-07-01"},
+        )
+
     def public_ip_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/publicIPAddresses/{}"
         return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -795,7 +803,10 @@ class MgmtApiClient(BaseApiClient):
         return self._query(
             "/providers/Microsoft.CostManagement/query",
             body=body,
-            params={"api-version": "2021-10-01", "$top": "100"},
+            # here 10000 might be too high,
+            # but I haven't found any useful documentation.
+            # No "$top" means 1000
+            params={"api-version": "2021-10-01", "$top": "10000"},
         )
 
     def metrics(self, region, resource_ids, params):
@@ -1211,6 +1222,21 @@ def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Map
     return mgmt_client.nic_ip_conf_view(group, nic_name, ip_conf_name)
 
 
+def get_vmss_network_interface_config(
+    mgmt_client: MgmtApiClient, nic_id: str
+) -> Mapping[str, Mapping]:
+    _, group, vmss, vm_index, nic_name, ip_conf_name = get_params_from_azure_id(
+        nic_id,
+        resource_types=[
+            "virtualMachineScaleSets",
+            "virtualMachines",
+            "networkInterfaces",
+            "ipConfigurations",
+        ],
+    )
+    return mgmt_client.nic_vmss_ip_conf_view(group, vmss, vm_index, nic_name, ip_conf_name)
+
+
 def get_inbound_nat_rules(
     mgmt_client: MgmtApiClient, load_balancer: Mapping
 ) -> list[dict[str, object]]:
@@ -1252,7 +1278,10 @@ def get_backend_address_pools(
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
-                nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+                if "virtualMachineScaleSets" in ip_config_id:
+                    nic_config = get_vmss_network_interface_config(mgmt_client, ip_config_id)
+                else:
+                    nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
                 if "name" in nic_config and "properties" in nic_config:
                     backend_address_data = {
@@ -1435,7 +1464,7 @@ class MetricCache(DataCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = "metric not found: {} ({})".format(metric_name, aggregation)
+                    msg = f"metric not found: {metric_name} ({aggregation})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 

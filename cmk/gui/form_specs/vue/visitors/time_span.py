@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.validators import IsFloat
 from cmk.gui.form_specs.vue import shared_type_defs

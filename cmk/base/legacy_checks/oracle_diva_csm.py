@@ -34,10 +34,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -202,11 +202,7 @@ def check_oracle_diva_csm_objects(item, params, info):
     if len(info) > 4 and len(info[4]) > 0:
         object_count, remaining_size, total_size = map(int, info[4][0])
 
-        infotext = "managed objects: {}, remaining size: {} GB of {} GB".format(
-            object_count,
-            remaining_size,
-            total_size,
-        )
+        infotext = f"managed objects: {object_count}, remaining size: {remaining_size} GB of {total_size} GB"
 
         return (
             0,

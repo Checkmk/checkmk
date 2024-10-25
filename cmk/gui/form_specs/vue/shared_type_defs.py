@@ -5,6 +5,8 @@
 #
 # This file is auto-generated via the cmk-shared-typing package.
 # Do not edit manually.
+#
+# fmt: off
 
 
 from __future__ import annotations
@@ -16,33 +18,40 @@ from typing import Any, Optional, Union
 
 @dataclass(kw_only=True)
 class IsInteger:
+    error_message: str
     type: str = "is_integer"
-    error_message: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class IsFloat:
+    error_message: str
     type: str = "is_float"
-    error_message: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class LengthInRange:
+    min_value: Optional[int]
+    max_value: Optional[int]
+    error_message: str
     type: str = "length_in_range"
-    min_value: Optional[int] = None
-    max_value: Optional[int] = None
-    error_message: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class NumberInRange:
+    min_value: Optional[float]
+    max_value: Optional[float]
+    error_message: str
     type: str = "number_in_range"
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
+
+
+@dataclass(kw_only=True)
+class MatchRegex:
+    type: str = "match_regex"
+    regex: Optional[str] = None
     error_message: Optional[str] = None
 
 
-Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
+Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange, MatchRegex]
 
 
 class StringFieldSize(str, Enum):
@@ -67,9 +76,9 @@ class I18nPassword:
 
 @dataclass(kw_only=True)
 class DictionaryGroup:
-    key: str
-    title: str
-    help: Optional[str] = None
+    key: Optional[str]
+    title: Optional[str]
+    help: Optional[str]
 
 
 class DictionaryLayout(str, Enum):
@@ -79,7 +88,7 @@ class DictionaryLayout(str, Enum):
 
 @dataclass(kw_only=True)
 class SingleChoiceElement:
-    name: Any
+    name: str
     title: str
 
 
@@ -102,9 +111,10 @@ class DualListChoiceI18n:
     no_elements_selected: str
 
 
-class CascadingChoiceLayout(str, Enum):
+class CascadingSingleChoiceLayout(str, Enum):
     vertical = "vertical"
     horizontal = "horizontal"
+    button_group = "button_group"
 
 
 @dataclass(kw_only=True)
@@ -138,8 +148,25 @@ class TupleLayout(str, Enum):
 
 @dataclass(kw_only=True)
 class I18nOptionalChoice:
-    label: Optional[str] = None
-    none_label: Optional[str] = None
+    label: str
+    none_label: str
+
+
+@dataclass(kw_only=True)
+class SingleChoiceEditableI18n:
+    slidein_save_button: str
+    slidein_cancel_button: str
+    slidein_create_button: str
+    slidein_new_title: str
+    slidein_edit_title: str
+    edit: str
+    create: str
+    loading: str
+    no_objects: str
+    no_selection: str
+    validation_error: str
+    fatal_error: str
+    fatal_error_reload: str
 
 
 @dataclass(kw_only=True)
@@ -161,39 +188,6 @@ class ValidationMessage:
 
 
 @dataclass(kw_only=True)
-class FallbackWarningI18n:
-    title: str
-    message: str
-    setup_link_title: str
-    do_not_show_again_title: str
-
-
-@dataclass(kw_only=True)
-class NotificationStatsI18n:
-    sent_notifications: str
-    failed_notifications: str
-    sent_notifications_link_title: str
-    failed_notifications_link_title: str
-
-
-@dataclass(kw_only=True)
-class CoreStatsI18n:
-    title: str
-    sites_column_title: str
-    status_column_title: str
-    ok_msg: str
-    warning_msg: str
-    disabled_msg: str
-
-
-@dataclass(kw_only=True)
-class Rule:
-    i18n: str
-    count: str
-    link: str
-
-
-@dataclass(kw_only=True)
 class FormSpec:
     type: str
     title: str
@@ -203,35 +197,34 @@ class FormSpec:
 
 @dataclass(kw_only=True)
 class Integer(FormSpec):
+    label: Optional[str]
+    unit: Optional[str]
+    input_hint: Optional[str]
     type: str = "integer"
-    label: Optional[str] = None
-    unit: Optional[str] = None
-    input_hint: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class Float(FormSpec):
+    label: Optional[str]
+    unit: Optional[str]
+    input_hint: Optional[str]
     type: str = "float"
-    label: Optional[str] = None
-    unit: Optional[str] = None
-    input_hint: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class LegacyValuespec(FormSpec):
+    input_html: str
+    readonly_html: str
     varprefix: str
     type: str = "legacy_valuespec"
-    input_html: Optional[str] = None
-    readonly_html: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class String(FormSpec):
+    input_hint: Optional[str]
+    field_size: StringFieldSize
+    autocompleter: Optional[Autocompleter]
     type: str = "string"
-    placeholder: Optional[str] = None
-    input_hint: Optional[str] = None
-    field_size: Optional[StringFieldSize] = None
-    autocompleter: Optional[Autocompleter] = None
 
 
 @dataclass(kw_only=True)
@@ -256,29 +249,29 @@ class List(FormSpec):
 class DictionaryElement:
     ident: str
     required: bool
+    group: Optional[DictionaryGroup]
     default_value: Any
     parameter_form: FormSpec
-    group: Optional[DictionaryGroup] = None
 
 
 @dataclass(kw_only=True)
 class Dictionary(FormSpec):
     groups: list[DictionaryGroup]
+    no_elements_text: str
+    additional_static_elements: Optional[dict[str, Any]]
     type: str = "dictionary"
     elements: list[DictionaryElement] = field(default_factory=lambda: [])
-    no_elements_text: Optional[str] = None
-    additional_static_elements: Optional[dict[str, Any]] = None
     layout: DictionaryLayout = DictionaryLayout.one_column
 
 
 @dataclass(kw_only=True)
 class SingleChoice(FormSpec):
+    no_elements_text: Optional[str]
     frozen: bool
-    input_hint: Any
+    label: Optional[str]
+    input_hint: Optional[str]
     type: str = "single_choice"
     elements: list[SingleChoiceElement] = field(default_factory=lambda: [])
-    no_elements_text: Optional[str] = None
-    label: Optional[str] = None
 
 
 @dataclass(kw_only=True)
@@ -305,35 +298,34 @@ class CascadingSingleChoiceElement:
 
 @dataclass(kw_only=True)
 class CascadingSingleChoice(FormSpec):
+    label: Optional[str]
     input_hint: Any
     type: str = "cascading_single_choice"
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
-    no_elements_text: Optional[str] = None
-    label: Optional[str] = None
-    layout: CascadingChoiceLayout = CascadingChoiceLayout.vertical
+    layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
 
 
 @dataclass(kw_only=True)
 class FixedValue(FormSpec):
+    label: Optional[str]
     value: Any
     type: str = "fixed_value"
-    label: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class BooleanChoice(FormSpec):
+    label: Optional[str]
     text_on: str
     text_off: str
     type: str = "boolean_choice"
-    label: Optional[str] = None
 
 
 @dataclass(kw_only=True)
 class MultilineText(FormSpec):
-    label: Optional[str] = None
-    macro_support: Optional[bool] = None
-    monospaced: Optional[bool] = None
-    input_hint: Optional[str] = None
+    label: Optional[str]
+    macro_support: bool
+    monospaced: bool
+    input_hint: Optional[str]
     type: str = "multiline_text"
 
 
@@ -346,10 +338,10 @@ class CommentTextArea(MultilineText):
 
 @dataclass(kw_only=True)
 class DataSize(FormSpec):
+    label: Optional[str]
     displayed_magnitudes: list[str]
+    input_hint: Optional[str]
     type: str = "data_size"
-    label: Optional[str] = None
-    input_hint: Optional[str] = None
 
 
 @dataclass(kw_only=True)
@@ -366,19 +358,19 @@ class Catalog(FormSpec):
 
 @dataclass(kw_only=True)
 class TimeSpan(FormSpec):
+    label: Optional[str]
     i18n: TimeSpanI18n
     displayed_magnitudes: list[TimeSpanTimeMagnitude]
+    input_hint: Optional[float]
     type: str = "time_span"
-    label: Optional[str] = None
-    input_hint: Optional[float] = None
 
 
 @dataclass(kw_only=True)
 class Tuple(FormSpec):
     elements: list[FormSpec]
+    show_titles: bool
     type: str = "tuple"
     layout: TupleLayout = TupleLayout.vertical
-    show_titles: Optional[bool] = True
 
 
 @dataclass(kw_only=True)
@@ -395,11 +387,26 @@ class SimplePassword(FormSpec):
 
 
 @dataclass(kw_only=True)
+class SingleChoiceEditable(FormSpec):
+    config_entity_type: str
+    config_entity_type_specifier: str
+    elements: list[SingleChoiceElement]
+    i18n: SingleChoiceEditableI18n
+    type: str = "single_choice_editable"
+
+
+@dataclass(kw_only=True)
 class ListOfStrings(FormSpec):
     string_spec: FormSpec
     type: str = "list_of_strings"
     string_default_value: Optional[str] = ""
     layout: Optional[ListOfStringsLayout] = ListOfStringsLayout.horizontal
+
+
+@dataclass(kw_only=True)
+class Folder(FormSpec):
+    type: str = "folder"
+    input_hint: Optional[str] = None
 
 
 Components = Union[
@@ -421,64 +428,16 @@ Components = Union[
     DualListChoice,
     CheckboxListChoice,
     TimeSpan,
+    SingleChoiceEditable,
     Tuple,
     OptionalChoice,
     SimplePassword,
     ListOfStrings,
+    Folder,
 ]
-
-
-@dataclass(kw_only=True)
-class FallbackWarning:
-    i18n: FallbackWarningI18n
-    user_id: str
-    setup_link: str
-    do_not_show_again_link: str
-
-
-@dataclass(kw_only=True)
-class NotificationStats:
-    num_sent_notifications: int
-    num_failed_notifications: int
-    sent_notification_link: str
-    failed_notification_link: str
-    i18n: NotificationStatsI18n
-
-
-@dataclass(kw_only=True)
-class CoreStats:
-    sites: list[str]
-    i18n: CoreStatsI18n
-
-
-@dataclass(kw_only=True)
-class RuleTopic:
-    rules: list[Rule]
-    i18n: Optional[str] = None
-
-
-@dataclass(kw_only=True)
-class RuleSection:
-    i18n: str
-    topics: list[RuleTopic]
-
-
-@dataclass(kw_only=True)
-class Notifications:
-    notification_stats: NotificationStats
-    core_stats: CoreStats
-    rule_sections: list[RuleSection]
-    fallback_warning: Optional[FallbackWarning] = None
-
-
-@dataclass(kw_only=True)
-class NotificationParametersOverview:
-    parameters: list[RuleSection]
 
 
 @dataclass(kw_only=True)
 class VueFormspecComponents:
     components: Optional[Components] = None
     validation_message: Optional[ValidationMessage] = None
-    notifications: Optional[Notifications] = None
-    notifications_parameters_overview: Optional[NotificationParametersOverview] = None

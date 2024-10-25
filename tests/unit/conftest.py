@@ -32,7 +32,6 @@ from cmk.ccc.site import omd_site
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.utils import redis, tty
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -269,18 +268,13 @@ class FixRegister:
     def __init__(self) -> None:
         # Local import to have faster pytest initialization
         from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            check_api,
             config,
         )
         from cmk.base.api.agent_based import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
             register,
         )
 
-        config._initialize_data_structures()
-        assert not config.check_info
-
         errors = config.load_all_plugins(
-            check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
             checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )
@@ -311,18 +305,16 @@ class FixRegister:
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
-    def __init__(self, fixed_register: FixRegister) -> None:
+    def __init__(self) -> None:
         from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
             config,
         )
 
-        assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
-
-        self.check_info = {
-            k: v
-            for k, v in config.check_info.items()
-            if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
-        }
+        result = config.discover_legacy_checks(
+            config.plugin_pathnames_in_directory(str(repo_path() / "cmk/base/legacy_checks")),
+        )
+        assert not result.ignored_plugins_errors
+        self.check_info = {p.name: p for p in result.sane_check_info}
 
 
 @pytest.fixture(scope="session", name="fix_register")
@@ -331,8 +323,8 @@ def fix_register_fixture() -> Iterator[FixRegister]:
 
 
 @pytest.fixture(scope="session")
-def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
-    yield FixPluginLegacy(fix_register)
+def fix_plugin_legacy() -> Iterator[FixPluginLegacy]:
+    yield FixPluginLegacy()
 
 
 @pytest.fixture(autouse=True, scope="module")

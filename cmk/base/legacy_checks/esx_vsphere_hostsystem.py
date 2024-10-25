@@ -8,8 +8,9 @@
 
 from dataclasses import dataclass
 
-from cmk.base.check_api import LegacyCheckDefinition, state_markers
-from cmk.base.config import check_info
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition, STATE_MARKERS
+
+check_info = {}
 
 # .
 #   .--State---------------------------------------------------------------.
@@ -173,7 +174,7 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
         if state_item:
             state_item.count += 1
             state = max(state_item.alert_state, state)
-            path_info += state_markers[state_item.alert_state]
+            path_info += STATE_MARKERS[state_item.alert_state]
         path_names.append(path_info)
 
     # Check warn, critical

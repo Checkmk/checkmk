@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -14,10 +13,12 @@ from cmk.base.check_legacy_includes.azure import (
     iter_resource_attributes,
     parse_resources,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
+check_info = {}
 
 
 def check_azure_storageaccounts(item, params, section):

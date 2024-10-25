@@ -9,14 +9,15 @@
 #include <chrono>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 
+#include "livestatus/HostServiceState.h"
 #include "livestatus/Table.h"
 
 class Column;
 class ColumnOffsets;
 class Filter;
-class HostServiceState;
 class ICore;
 class LogCache;
 class LogEntry;
@@ -47,9 +48,28 @@ private:
 
     void answerQueryInternal(Query &query, const User &user, const ICore &core,
                              const LogFiles &log_files);
+
+    void handle_state_entry(
+        Query &query, const User &user, const ICore &core,
+        std::chrono::system_clock::duration query_timeframe,
+        const LogEntry *entry, bool only_update,
+        const std::map<std::string, int> &notification_periods,
+        bool is_host_entry,
+        std::map<HostServiceKey, HostServiceState *> &state_info,
+        std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
+        std::chrono::system_clock::time_point since);
+
+    void handle_timeperiod_transition(
+        Query &query, const User &user, const ICore &core,
+        std::chrono::system_clock::duration query_timeframe,
+        const LogEntry *entry, bool only_update,
+        std::map<std::string, int> &notification_periods,
+        const std::map<HostServiceKey, HostServiceState *> &state_info);
+
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hss);
+
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
         std::chrono::system_clock::duration query_timeframe,

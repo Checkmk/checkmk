@@ -9,11 +9,11 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
 from cmk.plugins.lib.detection import DETECT_NEVER
+
+check_info = {}
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0

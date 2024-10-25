@@ -8,9 +8,12 @@ import hashlib
 import secrets
 from pathlib import Path
 
+from cmk.ccc import store
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
+from cmk.crypto.password import Password
 from cmk.crypto.secrets import LocalSecret, Secret
 
 
@@ -101,3 +104,37 @@ class AutomationUserSecret:
     def check(self, other: str) -> bool:
         """Check if a given secret is the same as this one in a timing attack safe manner"""
         return secrets.compare_digest(self.read().encode("utf-8"), other.encode("utf-8"))
+
+
+class DistributedSetupSecret:
+    """The secret used by the central site to sync the config"""
+
+    def __init__(self) -> None:
+        self.password = (
+            Password(pw)
+            if (pw := store.load_object_from_file(self.path, default=None)) is not None
+            else None
+        )
+
+    @property
+    def path(self) -> Path:
+        return Path(paths.var_dir) / "wato" / "automation_secret.mk"
+
+    def read_or_create(self) -> Password:
+        if self.password is None:
+            self.regenerate()
+        assert self.password is not None
+        return self.password
+
+    def regenerate(self) -> None:
+        """Generate a new secret and write it to disk.
+
+        If the file already exists, it will be overwritten.
+        """
+        self.password = Password(secrets.token_urlsafe(32))
+        store.save_object_to_file(self.path, self.password.raw)
+
+    def compare(self, other: Password) -> bool:
+        if self.password is None:
+            return False
+        return self.password == other

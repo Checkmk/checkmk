@@ -1,0 +1,39 @@
+title: HDD Health Statistics Using S.M.A.R.T Via ATA
+agents: linux
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors health statistics of hard disk drives using the
+ information reported by S.M.A.R.T.
+
+ During discovery the current value of the following counters is stored as a
+ service parameter.
+
+ - Reallocated sectors
+
+ - Spin retries
+
+ - End-To-End errors
+
+ - Command Timeout Counter
+
+ - Reallocated events
+
+ - Pending sectors
+
+ - (UDMA) CRC errors
+
+ If any of these counters increase, the check goes {CRIT}.
+ It will become {OK} again if the service is rediscovered.
+ Additionally, the check compares the reallocated events to the corresponding
+ tresholds reported via smartctl.
+
+ The check requires enabling agent plugin {smart_posix}.
+ Moreover, the monitored device needs support the ATA protocol.
+
+item:
+ Block device name, e.g., /dev/da0
+
+discovery:
+ One service is created if the device uses the ATA protocol.

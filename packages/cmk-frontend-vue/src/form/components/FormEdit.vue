@@ -8,6 +8,7 @@ import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
+import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import type { FormSpec, Components } from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
@@ -30,6 +31,7 @@ import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
 import FormCommentTextArea from './forms/FormCommentTextArea.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
 import FormCheckboxListChoice from './forms/FormCheckboxListChoice.vue'
+import FormFolder from './forms/FormFolder.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -45,6 +47,7 @@ const components: Record<Components['type'], unknown> = {
   string: FormString,
   float: FormFloat,
   single_choice: FormSingleChoice,
+  single_choice_editable: FormSingleChoiceEditable,
   cascading_single_choice: FormCascadingSingleChoice,
   list: FormList,
   legacy_valuespec: FormLegacyValueSpec,
@@ -61,7 +64,8 @@ const components: Record<Components['type'], unknown> = {
   tuple: FormTuple,
   optional_choice: FormOptionalChoice,
   simple_password: FormSimplePassword,
-  list_of_strings: FormListOfStrings
+  list_of_strings: FormListOfStrings,
+  folder: FormFolder
 }
 
 function getComponent(): IComponent {

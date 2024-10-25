@@ -9,7 +9,15 @@ def main() {
     ) {
         stage('run test-unit-all') {
             dir("${checkout_dir}") {
-                sh("make -C tests test-unit-all");
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'bazel-caching-credentials',
+                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                        usernameVariable: 'BAZEL_CACHE_USER'),
+                ]) {
+                    sh("make -C tests test-unit-all");
+                }
             }
         }
     }

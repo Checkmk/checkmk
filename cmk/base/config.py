@@ -63,7 +63,6 @@ from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import BuiltinHostLabelsStore, Labels, LabelSources
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
@@ -134,6 +133,7 @@ from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
     CheckPlugin,
+    LegacyPluginLocation,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -142,17 +142,22 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.server_side_calls import (
+from cmk.base.sources import SNMPFetcherConfig
+
+from cmk import piggyback, trace
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls import v1 as server_side_calls_api
+from cmk.server_side_calls_backend import (
+    ActiveCheck,
+    ActiveServiceData,
     ExecutableFinder,
+    load_active_checks,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
     SSCRules,
 )
-from cmk.base.sources import SNMPFetcherConfig
-
-from cmk import piggyback, trace
-from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
 cme_labels: ModuleType | None
@@ -1369,18 +1374,9 @@ ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
 
 
-# BE AWARE: sync these global data structures with
+# BE AWARE: sync this global data structure with
 #           _initialize_data_structures()
-# The following data structures will be filled by the checks
-# all known checks
-check_info: dict[
-    object, object
-] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
-# for nagios config: keep track which plug-in lives where
-legacy_check_plugin_files: dict[str, str] = {}
-# Lookup for legacy names
-legacy_check_plugin_names: dict[CheckPluginName, str] = {}
-# definitions of special agents
+# The following data structure will be filled by the checks
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
@@ -1402,7 +1398,6 @@ service_rule_groups = {"temperature"}
 
 
 def load_all_plugins(
-    get_check_api_context: GetCheckApiContext,
     *,
     local_checks_dir: Path,
     checks_dir: str,
@@ -1415,16 +1410,13 @@ def load_all_plugins(
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
-        errors.extend(load_checks(get_check_api_context, filelist))
+        errors.extend(load_checks(filelist))
 
     return errors
 
 
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
-    check_info.clear()
-    legacy_check_plugin_files.clear()
-    legacy_check_plugin_names.clear()
     special_agent_info.clear()
 
 
@@ -1440,12 +1432,40 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # especially in tests.
 @tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
-    get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
+    discovered_legacy_checks = discover_legacy_checks(filelist)
+
+    section_errors, sections = _make_agent_and_snmp_sections(
+        discovered_legacy_checks.sane_check_info, discovered_legacy_checks.plugin_files
+    )
+    check_errors, checks = _make_check_plugins(
+        discovered_legacy_checks.sane_check_info,
+        discovered_legacy_checks.plugin_files,
+        validate_creation_kwargs=discovered_legacy_checks.did_compile,
+    )
+
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
+
+    return [*discovered_legacy_checks.ignored_plugins_errors, *section_errors, *check_errors]
+
+
+@dataclasses.dataclass
+class _DiscoveredLegacyChecks:
+    ignored_plugins_errors: Sequence[str]
+    sane_check_info: Sequence[LegacyCheckDefinition]
+    plugin_files: Mapping[str, str]
+    did_compile: bool
+
+
+def discover_legacy_checks(
+    filelist: list[str],
+) -> _DiscoveredLegacyChecks:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
-    sane_check_info = {}
+    sane_check_info = []
+    legacy_check_plugin_files: dict[str, str] = {}
 
     did_compile = False
     for f in filelist:
@@ -1457,14 +1477,14 @@ def load_checks(
             continue  # skip already loaded files (e.g. from local)
 
         try:
-            check_context = new_check_context(get_check_api_context)
-
-            # Make a copy of known plug-in names, we need to track them for nagios config generation
-            known_checks = {str(k) for k in check_info}
+            check_context = new_check_context()
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
             loaded_files.add(file_name)
+
+            if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
+                raise TypeError(defined_checks)
 
         except MKTerminate:
             raise
@@ -1477,12 +1497,10 @@ def load_checks(
                 raise
             continue
 
-        defined_checks = ((str(n), p) for n, p in check_info.items() if n not in known_checks)
-        for plugin_name, plugin in defined_checks:
+        for plugin in defined_checks.values():
             if isinstance(plugin, LegacyCheckDefinition):
-                sane_check_info[plugin_name] = plugin
-                legacy_check_plugin_names[CheckPluginName(plugin.name)] = plugin_name
-                legacy_check_plugin_files[plugin_name] = f
+                sane_check_info.append(plugin)
+                legacy_check_plugin_files[plugin.name] = f
             else:
                 # Now just drop everything we don't like; this is not a supported API anymore.
                 # Users affected by this will see a CRIT in their "Analyse Configuration" page.
@@ -1491,28 +1509,16 @@ def load_checks(
                     " -- this API is deprecated!"
                 )
 
-    section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
-    check_errors, checks = _make_check_plugins(
-        sane_check_info, validate_creation_kwargs=did_compile
+    return _DiscoveredLegacyChecks(
+        ignored_plugins_errors, sane_check_info, legacy_check_plugin_files, did_compile
     )
 
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
 
-    return [*ignored_plugins_errors, *section_errors, *check_errors]
-
-
-# Constructs a new check context dictionary. It contains the whole check API.
-def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext:
+def new_check_context() -> CheckContext:
     # Add the data structures where the checks register with Checkmk
-    context = {
-        "check_info": check_info,
+    return {
         "special_agent_info": special_agent_info,
     }
-    # NOTE: For better separation it would be better to copy the values, but
-    # this might consume too much memory, so we simply reference them.
-    context |= get_check_api_context()
-    return context
 
 
 def plugin_pathnames_in_directory(path: str) -> list[str]:
@@ -1614,7 +1620,7 @@ def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectio
 
 
 def _make_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition],
+    legacy_checks: Iterable[LegacyCheckDefinition], tracked_files: Mapping[str, str]
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1624,16 +1630,18 @@ def _make_agent_and_snmp_sections(
     errors = []
     sections = []
 
-    for section_name, check_info_element in legacy_checks.items():
+    for check_info_element in legacy_checks:
         if (parse_function := check_info_element.parse_function) is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             sections.append(
                 create_section_plugin_from_legacy(
-                    name=section_name,
+                    name=check_info_element.name,
                     parse_function=parse_function,
                     fetch=check_info_element.fetch,
                     detect=check_info_element.detect,
+                    location=LegacyPluginLocation(file),
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
@@ -1642,7 +1650,7 @@ def _make_agent_and_snmp_sections(
             #       passed un-parsed data unexpectedly.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", file))
 
     return errors, sections
 
@@ -1651,8 +1659,8 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
     for check in checks:
         present_plugin = agent_based_register.get_check_plugin(check.name)
 
-        if present_plugin is not None and present_plugin.location is not None:
-            # module is not None => it's a new plug-in
+        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
+            # location is PluginLocation => it's a new plug-in
             # (allow loading multiple times, e.g. update-config)
             # implemented here instead of the agent based register so that new API code does not
             # need to include any handling of legacy cases
@@ -1664,23 +1672,28 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
 
 
 def _make_check_plugins(
-    legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
+    legacy_checks: Iterable[LegacyCheckDefinition],
+    tracked_files: Mapping[str, str],
+    *,
+    validate_creation_kwargs: bool,
 ) -> tuple[list[str], Sequence[CheckPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
-    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    For the new check-API we use the accumulated information
     in check_info to create API compliant check plug-ins.
     """
     errors = []
     checks = []
-    for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
+    for check_info_element in legacy_checks:
         # skip pure section declarations:
         if check_info_element.service_name is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             checks.append(
                 create_check_plugin_from_legacy(
                     check_info_element,
+                    location=LegacyPluginLocation(file),
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
@@ -1689,7 +1702,7 @@ def _make_check_plugins(
             #       will be silently droppend on most (all?) occasions.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", file))
 
     return errors, checks
 
@@ -1948,6 +1961,7 @@ class ConfigCache:
             ],
         ] = {}
         self.__is_piggyback_host: dict[HostName, bool] = {}
+        self.__is_waiting_for_discovery_host: dict[HostName, bool] = {}
         self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
         self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
@@ -2530,6 +2544,14 @@ class ConfigCache:
 
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
+    def _is_waiting_for_discovery_host(self, host_name: HostName) -> bool:
+        with contextlib.suppress(KeyError):
+            return self.__is_waiting_for_discovery_host[host_name]
+
+        return self.__is_waiting_for_discovery_host.setdefault(
+            host_name, ConfigCache.is_waiting_for_discovery(host_name)
+        )
+
     def is_ping_host(self, host_name: HostName) -> bool:
         cds = self.computed_datasources(host_name)
         return not (
@@ -2554,7 +2576,7 @@ class ConfigCache:
         return not self.is_online(host_name)
 
     def is_online(self, host_name: HostName) -> bool:
-        return self._is_only_host(host_name)
+        return self._is_only_host(host_name) and not self._is_waiting_for_discovery_host(host_name)
 
     def is_active(self, host_name: HostName) -> bool:
         """Return True if host is active, else False."""
@@ -2665,6 +2687,67 @@ class ConfigCache:
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
 
+    def active_check_services(
+        self,
+        host_name: HostName,
+        host_attrs: ObjectAttributes,
+        ip_address_of: IPLookup,
+        passwords: Mapping[str, str],
+        password_store_file: Path,
+        single_plugin: str | None = None,
+    ) -> Iterator[ActiveServiceData]:
+        additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
+            host_name
+        )
+        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+        resource_macros = get_resource_macros()
+        macros = {**host_macros, **resource_macros}
+        active_check_config = ActiveCheck(
+            load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
+            host_name,
+            get_ssc_host_config(
+                host_name,
+                self.alias(host_name),
+                self.default_address_family(host_name),
+                self.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
+            http_proxies,
+            lambda x: get_final_service_description(
+                x, get_service_translations(self.ruleset_matcher, host_name)
+            ),
+            passwords,
+            password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+            ),
+            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
+        )
+
+        plugin_configs = (
+            self.active_checks(host_name)
+            if single_plugin is None
+            else [
+                (single_plugin, plugin_params)
+                for plugin_name, plugin_params in self.active_checks(host_name)
+                if plugin_name == single_plugin
+            ]
+        )
+
+        for plugin_name, plugin_params in plugin_configs:
+            try:
+                yield from active_check_config.get_active_service_data(plugin_name, plugin_params)
+            except Exception as e:
+                if cmk.ccc.debug.enabled():
+                    raise
+                config_warnings.warn(
+                    f"Config creation for active check {plugin_name} failed on {host_name}: {e}"
+                )
+                continue
+
     def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
@@ -2735,7 +2818,7 @@ class ConfigCache:
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         host_attrs = self.get_host_attributes(host_name, ip_address_of)
         special_agent = SpecialAgent(
-            load_special_agents()[1],
+            load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
             special_agent_info,
             host_name,
             ip_address,
@@ -2774,41 +2857,36 @@ class ConfigCache:
 
     def collect_passwords(self) -> Mapping[str, str]:
         # consider making the hosts an argument. Sometimes we only need one.
-        all_active_hosts = {
-            hn
-            for hn in itertools.chain(self.hosts_config.hosts, self.hosts_config.clusters)
-            if self.is_active(hn) and self.is_online(hn)
-        }
 
         def _filter_newstyle_ssc_rule(
             unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
         ) -> Sequence[Mapping[str, object]]:
+            """Filter out all configuration sets that we know to come from a legacy ruleset
+
+            They don't contain passwords that we're looking for.
+            """
             return [
                 r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
             ]
 
         def _compose_filtered_ssc_rules(
-            rules: MixedSSCRules,
+            ssc_config: Mapping[str, Sequence[RuleSpec[object]]]
+            | Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
-            return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
-
-        def _gather_secrets_from(
-            rules_function: Callable[[HostName], MixedSSCRules],
-        ) -> Mapping[str, str]:
-            return {
-                id_: secret
-                for host in all_active_hosts
-                for id_, secret in (
-                    PreprocessingResult.from_config(
-                        _compose_filtered_ssc_rules(rules_function(host))
-                    )
-                ).ad_hoc_secrets.items()
-            }
+            """Get _all_ configured rulesets (not only the ones matching any host)"""
+            return [
+                (name, _filter_newstyle_ssc_rule([r["value"] for r in ruleset]))
+                for name, ruleset in ssc_config.items()
+            ]
 
         return {
             **password_store.load(password_store.password_store_path()),
-            **_gather_secrets_from(self.active_checks),
-            **_gather_secrets_from(self.special_agents),
+            **PreprocessingResult.from_config(
+                _compose_filtered_ssc_rules(active_checks)
+            ).ad_hoc_secrets,
+            **PreprocessingResult.from_config(
+                _compose_filtered_ssc_rules(special_agents)
+            ).ad_hoc_secrets,
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
@@ -3251,6 +3329,12 @@ class ConfigCache:
             host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
             host_attributes.get(hostname, {}).get("additional_ipv6addresses", []),
         )
+
+    @staticmethod
+    def is_waiting_for_discovery(hostname: HostName) -> bool:
+        """Check custom attribute set by WATO to signal
+        the host may be not discovered and should be ignore"""
+        return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
     def check_mk_check_interval(self, hostname: HostName) -> float:
         if hostname not in self._check_mk_check_interval:

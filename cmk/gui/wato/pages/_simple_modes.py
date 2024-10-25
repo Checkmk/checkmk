@@ -68,7 +68,7 @@ from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import DictElement, FormSpec
+from cmk.rulesets.v1.form_specs import DictElement, FieldSize, FormSpec
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
@@ -107,7 +107,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
@@ -539,6 +539,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                     ),
                     prefill=form_specs.DefaultValue(self._default_id()),
                     custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                    field_size=FieldSize.LARGE,
                 ),
             )
         else:
@@ -554,12 +555,23 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 ),
             )
 
+        if "locked_by" in self._entry:
+            shown_info = ", ".join(f"{x}: {y}" for x, y in self._entry["locked_by"].items())
+            elements["locked_by"] = form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.FixedValue(
+                    title=Title("Locked by"),
+                    value=shown_info,
+                ),
+            )
+
         elements["title"] = form_specs.DictElement(
             parameter_form=form_specs.String(
                 title=Title("Title"),
                 help_text=Help("Name your %s for easy recognition.")
                 % self._mode_type.name_singular(),
                 custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                field_size=FieldSize.LARGE,
             ),
         )
         elements["comment"] = form_specs.DictElement(
@@ -592,6 +604,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                     "<tt>check_mk/</tt>)."
                 ),  # % str(html.render_icon("url")),
                 custom_validate=(_validate_documentation_url,),
+                field_size=FieldSize.LARGE,
             ),
         )
 
@@ -789,7 +802,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
         # The ident is not part of the saved config
         # So, the entry is not longer a type _T
-        cloned_entry: Any = self._clone_entry(self._entry)
+        cloned_entry: Any = copy.deepcopy(self._entry)
         cloned_entry["ident"] = self._ident
         catalog_config = catalog_converter.convert_flat_to_catalog_config(cloned_entry)
         return catalog_config, DataOrigin.DISK, True

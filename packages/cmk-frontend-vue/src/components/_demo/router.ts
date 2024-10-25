@@ -8,10 +8,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import DemoEmpty from './DemoEmpty.vue'
 import DemoAlertBox from './DemoAlertBox.vue'
-import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
-import DemoLoadingIcon from './DemoLoadingIcon.vue'
+import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
+import DemoCmkButton from './DemoCmkButton.vue'
+import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
+import DemoCmkSwitch from './DemoCmkSwitch.vue'
+import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,11 +31,6 @@ const router = createRouter({
       component: DemoAlertBox
     },
     {
-      path: '/iconbutton',
-      name: 'IconButton',
-      component: DemoIconButton
-    },
-    {
       path: '/slidein',
       name: 'SlideIn',
       component: DemoSlideIn
@@ -42,9 +41,34 @@ const router = createRouter({
       component: DemoFormEditAsync
     },
     {
-      path: '/loadingicon',
-      name: 'LoadingIcon',
-      component: DemoLoadingIcon
+      path: '/cmkicon',
+      name: 'CmkIcon',
+      component: DemoCmkIcon
+    },
+    {
+      path: '/togglebuttongroup',
+      name: 'ToggleButtonGroup',
+      component: DemoToggleButtonGroup
+    },
+    {
+      path: '/button',
+      name: 'CmkButton',
+      component: DemoCmkButton
+    },
+    {
+      path: '/FormSingleChoiceEditable',
+      name: 'FormSingleChoiceEditable',
+      component: DemoFormSingleChoiceEditable
+    },
+    {
+      path: '/cmk_switch',
+      name: 'CmkSwitch',
+      component: DemoCmkSwitch
+    },
+    {
+      path: '/cmk_color_picker',
+      name: 'CmkColorPicker',
+      component: DemoCmkColorPicker
     }
   ]
 })

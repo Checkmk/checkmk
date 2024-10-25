@@ -50,6 +50,7 @@ def _parameter_valuespec_plugs() -> Dictionary:
                     choices=[
                         ("on", _("Plug is ON")),
                         ("off", _("Plug is OFF")),
+                        (None, _("State found during service discovery")),
                     ],
                     default_value="on",
                 ),

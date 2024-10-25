@@ -33,7 +33,6 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
 )
@@ -61,9 +60,9 @@ from cmk.rulesets.v1.form_specs import Dictionary
 
 
 class DCDHook:
-    create_dcd_connections: Callable[[BundleId, SiteId, Folder], list[CreateDCDConnection]] = (
-        lambda *_args: []
-    )
+    create_dcd_connections: Callable[
+        [BundleId, SiteId, HostName, Folder], list[CreateDCDConnection]
+    ] = lambda *_args: []
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -129,7 +128,11 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
     return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path, title=sanitized_folder_path, attributes={}
+        name=sanitized_folder_path,
+        title=sanitized_folder_path.split("/")[-1]
+        if "/" in sanitized_folder_path
+        else sanitized_folder_path,
+        attributes={},
     )
 
 
@@ -266,11 +269,7 @@ def _create_and_save_special_agent_bundle(
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
-    hosts = [
-        create_special_agent_host_from_form_data(
-            host_name=HostName(host_name), folder=folder, site_id=site_id
-        )
-    ]
+    validated_host_name = HostName(host_name)
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -280,7 +279,11 @@ def _create_and_save_special_agent_bundle(
             program_id=PROGRAM_ID_QUICK_SETUP,
         ),
         entities=CreateBundleEntities(
-            hosts=hosts,
+            hosts=[
+                create_special_agent_host_from_form_data(
+                    host_name=validated_host_name, folder=folder, site_id=site_id
+                )
+            ],
             passwords=create_passwords(
                 passwords=passwords,
                 rulespec_name=rulespec_name,
@@ -289,15 +292,16 @@ def _create_and_save_special_agent_bundle(
             rules=[
                 create_rule(
                     params=params,
-                    host_name=create_host["name"],
-                    host_path=create_host["folder"].path(),
+                    host_name=validated_host_name,
+                    host_path=folder.path(),
                     rulespec_name=rulespec_name,
                     bundle_id=bundle_id,
                     site_id=site_id,
                 )
-                for create_host in hosts
             ],
-            dcd_connections=DCDHook.create_dcd_connections(bundle_id, site_id, folder),
+            dcd_connections=DCDHook.create_dcd_connections(
+                bundle_id, site_id, validated_host_name, folder
+            ),
         ),
     )
     try:
@@ -326,7 +330,7 @@ def _create_and_save_special_agent_bundle(
     return makeuri_contextless(
         request,
         [
-            ("mode", ModeActivateChanges.name()),
+            ("mode", "changelog"),
             ("origin", "quick_setup"),
             ("special_agent_name", special_agent_name),
         ],

@@ -6,10 +6,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def hex2ip(hexstr):
@@ -45,10 +45,7 @@ def check_keepalived(item, params, info):
         hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is {}. IP Address: {}".format(
-                map_state[str(entry[1])],
-                hex2ip(hexaddr),
-            )
+            infotext = f"This node is {map_state[str(entry[1])]}. IP Address: {hex2ip(hexaddr)}"
     yield status, infotext
 
 

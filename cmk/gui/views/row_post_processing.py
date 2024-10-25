@@ -5,11 +5,11 @@
 
 from collections.abc import Callable, Sequence
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter
-
-_ROW_POST_PROCESSORS: list[Callable[[View, Sequence[Filter], Rows], None]] = []
 
 
 def post_process_rows(
@@ -26,9 +26,16 @@ def post_process_rows(
     if not rows:
         return
 
-    for func in _ROW_POST_PROCESSORS:
+    for func in row_post_processor_registry.values():
         func(view, all_active_filters, rows)
 
 
-def register_row_post_processor(func: Callable[[View, Sequence[Filter], Rows], None]) -> None:
-    _ROW_POST_PROCESSORS.append(func)
+RowPostProcessor = Callable[[View, Sequence[Filter], Rows], None]
+
+
+class RowPostProcessorRegistry(Registry[RowPostProcessor]):
+    def plugin_name(self, instance: RowPostProcessor) -> str:
+        return f"{instance.__module__}.{instance.__name__}"
+
+
+row_post_processor_registry = RowPostProcessorRegistry()

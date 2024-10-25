@@ -5,6 +5,7 @@
  */
 
 import $ from "jquery";
+import Swal, {type SweetAlertOptions} from "sweetalert2";
 
 import {add_class, copy_to_clipboard, has_class, remove_class} from "./utils";
 
@@ -397,4 +398,64 @@ function toggle_test_notification_submit(hide_options: boolean) {
             submit_button.setAttribute("name", "_test_service_notifications");
         }
     }
+}
+
+type MessageType = "crit" | "warn" | "info" | "success";
+
+export function message(
+    message_text: string,
+    message_type: MessageType,
+    del_var: string
+) {
+    const iconFilenames = {
+        crit: "icon_alert.crit.svg",
+        warn: "icon_problem.svg",
+        info: "icon_message.svg",
+        success: "icon_checkmark.svg",
+    };
+
+    const filename = iconFilenames[message_type] ?? iconFilenames["info"];
+
+    const args: SweetAlertOptions = {
+        // https://sweetalert2.github.io/#configuration
+        target: "#page_menu_popups",
+        text: message_text,
+        animation: false,
+        position: "top-start",
+        grow: "row",
+        allowOutsideClick: false,
+        backdrop: false,
+        buttonsStyling: false,
+        showConfirmButton: false,
+        showCloseButton: true,
+        iconHtml: `<img src="themes/lala/images/${filename}">`,
+        didOpen: () => {
+            // Remove focus on CloseButton
+            const closeButton = document.querySelector(
+                ".swal2-close"
+            ) as HTMLButtonElement;
+            if (closeButton) {
+                closeButton.blur();
+            }
+        },
+        customClass: {
+            container: "message_container",
+            popup: "message_popup",
+            htmlContainer: "message_content",
+            icon: `confirm_icon message_${message_type}`,
+            closeButton: "message_close",
+        },
+    };
+
+    Swal.fire(args);
+
+    // Remove the var to not get the message twice on reload
+    const params = new URLSearchParams(window.location.search);
+    params.delete(del_var);
+    // And update the URL without reloading the page
+    window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + "?" + params.toString()
+    );
 }

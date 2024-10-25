@@ -24,9 +24,11 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
+    LegacyValueSpec,
     ListExtended,
     ListOfStrings,
     MonitoredHostExtended,
+    SingleChoiceExtended,
 )
 from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
@@ -307,7 +309,9 @@ def _convert_to_legacy_rulespec_group(
             legacy_main_group, topic_to_convert, localizer
         )
     if isinstance(topic_to_convert, ruleset_api_v1.rule_specs.CustomTopic):
-        return _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
+        return _custom_to_builtin_legacy_group(
+            legacy_main_group, topic_to_convert
+        ) or _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
     raise ValueError(topic_to_convert)
 
 
@@ -659,6 +663,18 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
     raise NotImplementedError(topic_to_convert)
 
 
+def _custom_to_builtin_legacy_group(
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    custom_topic_to_convert: ruleset_api_v1.rule_specs.CustomTopic,
+) -> type[legacy_rulespecs.RulespecBaseGroup] | None:
+    if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
+        ruleset_api_v1.Title("Generic Options")
+    ):
+        if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
+            return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
+    return None
+
+
 def _convert_to_custom_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     title: ruleset_api_v1.Title,
@@ -730,7 +746,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Dictionary() | DictionaryExtended():
             return _convert_to_legacy_dictionary(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.SingleChoice():
+        case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.CascadingSingleChoice():
@@ -786,6 +802,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.form_specs.TimePeriod():
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
+
+        case LegacyValueSpec():
+            return to_convert.valuespec
 
         case other:
             raise NotImplementedError(other)
@@ -1066,7 +1085,8 @@ def _convert_to_legacy_regular_expression(
 
 
 def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
-    return repr(dict_group).replace(" ", "")
+    """Strip dict group down to html-id friendly string."""
+    return "".join(filter(str.isalnum, repr(dict_group)))
 
 
 def _get_group_keys(
@@ -1382,7 +1402,8 @@ def _convert_to_legacy_host_state(
 
 
 def _convert_to_legacy_dropdown_choice(
-    to_convert: ruleset_api_v1.form_specs.SingleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.SingleChoice | SingleChoiceExtended,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (

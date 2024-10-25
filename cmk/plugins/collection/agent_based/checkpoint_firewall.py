@@ -29,13 +29,7 @@ def check_checkpoint_firewall(section: StringTable) -> CheckResult:
         if state.lower() == "installed":
             yield Result(
                 state=State.OK,
-                summary="{} (v{}.{}), filter: {} (since {})".format(
-                    state,
-                    major,
-                    minor,
-                    filter_name,
-                    filter_date,
-                ),
+                summary=f"{state} (v{major}.{minor}), filter: {filter_name} (since {filter_date})",
             )
             return
         yield Result(state=State.CRIT, summary="not installed, state: %s" % state)

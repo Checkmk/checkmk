@@ -933,10 +933,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # When using AD, the groups can be filtered by the DN attribute. With
             # e.g. OpenLDAP this is not possible. In that case, change the DN.
             if self._is_active_directory():
-                filt = "(&{}(distinguishedName={}))".format(
-                    filt,
-                    ldap.filter.escape_filter_chars(_escape_dn(specific_dn)),
-                )
+                filt = f"(&{filt}(distinguishedName={ldap.filter.escape_filter_chars(_escape_dn(specific_dn))}))"
             else:
                 dn = specific_dn
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from typing import Mapping
+from collections.abc import Mapping
 
 from cmk.ccc.i18n import _
 
@@ -115,6 +115,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 title=title,
                 help=help_text,
                 elements=elements_keyspec,
+                no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
                 layout=self.form_spec.layout,
             ),

@@ -15,10 +15,6 @@ import pytest
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.base.server_side_calls import SpecialAgent
-from cmk.base.server_side_calls._commons import InfoFunc
-from cmk.base.server_side_calls._special_agents import SpecialAgentCommandLine
-
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -28,6 +24,9 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
+from cmk.server_side_calls_backend import SpecialAgent
+from cmk.server_side_calls_backend._commons import InfoFunc
+from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
 
 HOST_ATTRS = {
     "alias": "my_host_alias",

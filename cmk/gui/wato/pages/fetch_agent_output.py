@@ -135,10 +135,8 @@ class AgentOutputPage(Page, abc.ABC):
 
     @staticmethod
     def file_name(api_request: FetchAgentOutputRequest) -> str:
-        return "{}-{}-{}.txt".format(
-            api_request.host.site_id(),
-            api_request.host.name(),
-            api_request.agent_type,
+        return (
+            f"{api_request.host.site_id()}-{api_request.host.name()}-{api_request.agent_type}.txt"
         )
 
 
@@ -292,12 +290,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         self._request = api_request
 
         host = self._request.host
-        job_id = "{}{}-{}-{}".format(
-            self.job_prefix,
-            host.site_id(),
-            host.name(),
-            self._request.agent_type,
-        )
+        job_id = f"{self.job_prefix}{host.site_id()}-{host.name()}-{self._request.agent_type}"
         super().__init__(job_id)
 
     def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:

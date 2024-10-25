@@ -6,12 +6,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 
 def fireeye_counter_generic(value, what, average):

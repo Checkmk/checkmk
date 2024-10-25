@@ -400,23 +400,6 @@ def _allow_for_cmk_update_config(
     )
 
 
-def _is_allowed_for_agent_based_api_exposure_under_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,  # pylint: disable=unused-argument
-) -> bool:
-    return any(
-        (
-            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
-            _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
-            _in_component(
-                imported=imported,
-                component=Component("cmk.base.plugins.agent_based.agent_based_api"),
-            ),
-        )
-    )
-
-
 def _is_allowed_for_plugins(
     *,
     imported: ModuleName,
@@ -464,28 +447,16 @@ def _is_allowed_for_robotmk_rulesets_cee_plugins(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _in_component(
-        imported=imported,
-        component=Component("cmk.cee.robotmk.checking.rulesets"),
-    )
-
-
-def _is_allowed_for_agent_based_plugin(
-    *,
-    imported: ModuleName,
-    component: Component,  # pylint: disable=unused-argument
-) -> bool:
     return any(
         (
             _in_component(
                 imported=imported,
-                component=Component("cmk.base.plugins.agent_based.agent_based_api"),
+                component=Component("cmk.cee.robotmk.checking.rulesets"),
             ),
             _in_component(
                 imported=imported,
-                component=Component("cmk.base.plugins.agent_based.utils"),
+                component=Component("cmk.cee.robotmk.bakery.rulesets"),
             ),
-            _in_component(imported=imported, component=Component("cmk.plugins")),
         )
     )
 
@@ -496,7 +467,7 @@ def _allow_default_plus_component_under_test(
     component: Component,
 ) -> bool:
     if component.startswith("tests.unit.checks"):
-        component_under_test = Component("cmk.base.plugins.agent_based")
+        component_under_test = Component("cmk.plugins")
     elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
         component_under_test = Component(".".join(component.split(".")[2:]))
     else:
@@ -521,7 +492,9 @@ def _is_allowed_for_legacy_checks(
             _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
             _in_component(imported=imported, component=Component("cmk.plugins")),
             _in_component(imported=imported, component=Component("cmk.base.config")),
-            _in_component(imported=imported, component=Component("cmk.base.check_api")),
+            _in_component(
+                imported=imported, component=Component("cmk.agent_based.v0_unstable_legacy")
+            ),
             _in_component(
                 imported=imported,
                 component=Component("cmk.base.plugins.agent_based"),
@@ -541,7 +514,7 @@ def _is_allowed_for_legacy_check_tests(
             _allow_default_plus_component_under_test(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.base.legacy_checks")),
             _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
-            _in_component(imported=imported, component=Component("cmk.base.server_side_calls")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
             _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.snmplib")),
@@ -638,7 +611,6 @@ _COMPONENTS = (
         Component("tests.integration.cmk.cee.robotmk"),
         _allow_default_plus_component_under_test,
     ),
-    (Component("cmk.agent_based"), _in_component),  # wants to be a package someday
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
@@ -646,11 +618,6 @@ _COMPONENTS = (
     (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.base.check_legacy_includes"), _is_allowed_for_legacy_checks),
     (Component("cmk.base.legacy_checks"), _is_allowed_for_legacy_checks),
-    (
-        Component("cmk.base.plugins.agent_based.agent_based_api"),
-        _is_allowed_for_agent_based_api_exposure_under_plugins,
-    ),
-    (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allowed_for_base_cee),
@@ -674,7 +641,6 @@ _COMPONENTS = (
     (Component("cmk.gui.cse"), _allow_for_gui_cse),
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
-    (Component("cmk.messaging"), _allow_for_gui),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.piggyback_hub"), _allow_for_cmk_piggyback_hub),
     (
@@ -690,10 +656,10 @@ _COMPONENTS = (
         _is_allowed_for_robotmk_rulesets_cee_plugins,
     ),
     (Component("cmk.plugins"), _is_allowed_for_plugins),
+    (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_for_cmk_update_config),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
-    (Component("cmk.mkp_tool"), _in_component),  # wants to grow up to be a package one day
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),
@@ -714,6 +680,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
+    ModulePath("bin/cmk-trigger-ui-jobs"): Component("cmk.gui"),
     ModulePath("bin/cmk-wait-for-background-jobs"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),

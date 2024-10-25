@@ -155,10 +155,7 @@ def local_test(
 
         assert (
             expected == actual or re.match(expected, actual) is not None
-        ), "\nExpected '{!r}'\nActual   '{!r}'".format(
-            expected,
-            actual,
-        )
+        ), f"\nExpected '{expected!r}'\nActual   '{actual!r}'"
     try:
         assert len(actual_output_from_agent) >= len(expected_output_from_agent), (
             "actual output is shorter than expected:\n"

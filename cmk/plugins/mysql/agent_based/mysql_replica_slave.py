@@ -32,7 +32,7 @@ class Error(NamedTuple):
     message: str
 
 
-Section = Error | dict[str, int | None | bool | Literal["NULL"]]
+Section = Error | Mapping[str, int | None | bool | Literal["NULL"]]
 
 
 def _parse_mysql_replica_slave(

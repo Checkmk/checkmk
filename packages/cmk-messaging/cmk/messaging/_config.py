@@ -157,3 +157,7 @@ def _make_ssl_context(omd_root: Path) -> ssl.SSLContext:
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(site_cert_file(omd_root), site_key_file(omd_root))
     return context
+
+
+def clear_brokers_certs_cache() -> None:
+    subprocess.check_output(["rabbitmqctl", "eval", "ssl:clear_pem_cache()."])

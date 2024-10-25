@@ -95,6 +95,7 @@ setup_env_variables() {
     print_green "Setup env variables ..."
     DISTRO_NAME=$(lsb_release -is)
     VERSION_NUMBER=$(lsb_release -sr)
+    DISTRO_CODENAME=$(lsb_release -cs)
     BRANCH_NAME=$(get_version "$SCRIPT_DIR" BRANCH_NAME)
     BRANCH_VERSION=$(get_version "$SCRIPT_DIR" BRANCH_VERSION)
     CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
@@ -110,8 +111,10 @@ setup_env_variables() {
     export VIRTUALENV_VERSION
     export DISTRO_NAME
     export VERSION_NUMBER
+    export DISTRO_CODENAME
     print_debug "DISTRO                = ${DISTRO}"
     print_debug "DISTRO_NAME           = ${DISTRO_NAME}"
+    print_debug "DISTRO_CODENAME       = ${DISTRO_CODENAME}"
     print_debug "VERSION_NUMBER        = ${VERSION_NUMBER}"
     print_debug "NEXUS_ARCHIVES_URL    = ${NEXUS_ARCHIVES_URL}"
     print_debug "BRANCH_NAME           = ${BRANCH_NAME}"
@@ -380,10 +383,32 @@ install_for_bazel() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-bazel.sh
 
-    install_packages golang-go
+    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
+    # find the right repository name for the distro and version
+    # using "add-apt-repository" would require the installation of "software-properties-common"
+    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
+    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
+        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
+            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
+        fi
+    else
+        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
+    fi
+
+    local PACKAGES_TO_INSTALL=(
+        "golang-go"
+        "g++-13"
+        # required by packages/glib and therfore transitive by python unit tests
+        # this might not be installed if only bazel is installed
+        "libglib2.0-dev"
+    )
+    install_packages "${PACKAGES_TO_INSTALL[@]}"
 
     # install_packages golang-go
     "${SCRIPT_DIR}"/install-buildifier.sh
+
+    # buildifier is installed to /opt/bin by default
+    IMPORTANT_MESSAGES+=("Don't forget to call: export PATH=/opt/bin:\$PATH")
 
     print_green "Installation of Bazel/Bazelisk done"
 }
@@ -454,6 +479,7 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_RUST=1
             INSTALL_FOR_FRONTEND=1
             INSTALL_FOR_LOCALIZE=1
+            INSTALL_FOR_BAZEL=1
             ((STRIP_LATER += 5))
             ;;
         python)

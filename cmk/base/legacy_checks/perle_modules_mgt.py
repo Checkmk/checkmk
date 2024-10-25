@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.perle import DETECT_PERLE
+
+check_info = {}
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrMgtSlotIndex.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.3.1.1 MCR-MGT --> PERLE-MCR-MGT-MIB::mcrMgtModelName.1.1

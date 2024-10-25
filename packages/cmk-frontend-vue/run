@@ -16,11 +16,12 @@ usage() {
     echo
     echo "  -c, --clean                remove artifacts first"
     echo "  -b, --build                build"
+    echo "  -d, --build-dev            build in dev mode"
     echo "  -t, --tests                run tests"
     echo "  -F, --check-format         check for correct formatting"
     echo "  -T, --tsc                  run tsc"
     echo "  -E, --eslint               run eslint"
-    echo "  -a, --all                  shortcut for -b -t -F -T -E"
+    echo "  -a, --all                  shortcut for -b -t -F -T -E -d"
     echo "  -f, --format               format sources"
     echo "  -h, --help                 show this help"
 }
@@ -29,13 +30,14 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_CLEAN=no
     RUN_BUILD=no
+    RUN_BUILD_DEV=no
     RUN_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_TSC=no
     RUN_ESLINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'ecbtFTEafh' --long 'setup-environment,clean,build,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecbtdFTEafh' --long 'setup-environment,clean,build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -51,6 +53,11 @@ parse_options() {
                 ;;
             '-b' | '--build')
                 RUN_BUILD=yes
+                shift
+                continue
+                ;;
+            '-d' | '--build-dev')
+                RUN_BUILD_DEV=yes
                 shift
                 continue
                 ;;
@@ -76,6 +83,7 @@ parse_options() {
                 ;;
             '-a' | '--all')
                 RUN_BUILD=yes
+                RUN_BUILD_DEV=yes
                 RUN_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_TSC=yes
@@ -135,6 +143,11 @@ run_build() {
     npm run build
 }
 
+run_build_dev() {
+    setup_npm
+    NODE_ENV=dev npm run build
+}
+
 run_check_format() {
     setup_npm
     npm run test-prettier
@@ -173,6 +186,7 @@ main() {
     test ${RUN_TSC} = yes && run_tsc
     test ${RUN_ESLINT} = yes && run_eslint
     test ${RUN_FORMAT} = yes && run_format
+    test ${RUN_BUILD_DEV} = yes && run_build_dev
     true
 }
 

@@ -6,14 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_jolokia_jvm_memory(string_table):

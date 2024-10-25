@@ -7,15 +7,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     Result,
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-
 from cmk.plugins.azure.agent_based.azure_virtual_machine import (
     _MAP_STATES,
     check_azure_virtual_machine,

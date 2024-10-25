@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -56,11 +56,9 @@ def check_innovaphone_priports_l2(item, params, info):
                 state = 2
                 mode_label = "(!!)"
 
-            return state, "State: {}{}, Mode: {}{}".format(
-                states[l2state],
-                state_label,
-                modes[l2mode],
-                mode_label,
+            return (
+                state,
+                f"State: {states[l2state]}{state_label}, Mode: {modes[l2mode]}{mode_label}",
             )
     return 3, "Output not found"
 

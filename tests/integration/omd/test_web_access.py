@@ -115,11 +115,6 @@ def test_cmk_deploy_agent(site: Site) -> None:
     assert response.json()["result"].startswith("Missing")
 
 
-def test_cmk_run_cron(site: Site) -> None:
-    web = CMKWebSession(site)
-    web.get("/%s/check_mk/run_cron.py" % site.id)
-
-
 def test_cmk_pnp_template_removed(site: Site) -> None:
     web = CMKWebSession(site)
     web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=404)

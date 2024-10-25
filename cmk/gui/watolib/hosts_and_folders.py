@@ -17,6 +17,7 @@ import time
 import uuid
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
@@ -27,7 +28,9 @@ from livestatus import SiteId
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import edition
 
 import cmk.utils.paths
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
@@ -927,7 +930,7 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
 
 
 def _generate_domain_settings(
-    ident: ConfigDomainName, hostnames: Iterable[HostName]
+    ident: ConfigDomainName, hostnames: Sequence[HostName]
 ) -> SerializedSettings:
     return {ident: generate_hosts_to_update_settings(hostnames)}
 
@@ -1125,15 +1128,6 @@ def disk_or_search_base_folder_from_request(
 class Folder(FolderProtocol):
     """This class represents a Setup folder that contains other folders and hosts."""
 
-    validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
-    validate_create_hosts: Callable[
-        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
-    ]
-    validate_create_subfolder: Callable[[Folder, HostAttributes], None]
-    validate_edit_folder: Callable[[Folder, HostAttributes], None]
-    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder], None]
-    validate_move_subfolder_to: Callable[[Folder, Folder], None]
-
     @classmethod
     def new(
         cls,
@@ -1148,6 +1142,7 @@ class Folder(FolderProtocol):
             tree=tree,
             name=name,
             parent_folder=parent_folder,
+            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
             folder_id=uuid.uuid4().hex,
             folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
             title=title or _fallback_title(folder_path),
@@ -1175,6 +1170,7 @@ class Folder(FolderProtocol):
             tree=tree,
             name=name,
             parent_folder=parent_folder,
+            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
             # Cleanup this compatibility code by adding a cmk-update-config action
             folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
             folder_path=folder_path,
@@ -1198,6 +1194,7 @@ class Folder(FolderProtocol):
         folder_id: str,
         folder_path: str,
         parent_folder: Folder | None,
+        validators: FolderValidators,
         title: str,
         attributes: HostAttributes,
         locked: bool,
@@ -1208,6 +1205,7 @@ class Folder(FolderProtocol):
         super().__init__()
         self.effective_attributes = EffectiveAttributes(self._compute_effective_attributes)
         self.permissions = PermissionChecker(self._user_needs_permission)
+        self.validators = validators
         self.tree = tree
         self._name = name
         self._id = folder_id
@@ -2161,6 +2159,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
+        self.validators.validate_create_subfolder(self, attributes)
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         attributes = update_metadata(attributes, created_by=user.id)
@@ -2217,6 +2216,7 @@ class Folder(FolderProtocol):
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write")  # Inheritance is changed
+        self.validators.validate_move_subfolder_to(subfolder, target_folder)
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -2282,6 +2282,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
         self.need_unlocked()
+        self.validators.validate_edit_folder(self, new_attributes)
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -2353,6 +2354,7 @@ class Folder(FolderProtocol):
         """
         # 1. Check preconditions
         self.prepare_create_hosts()
+        self.validators.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
             [
@@ -2528,6 +2530,7 @@ class Folder(FolderProtocol):
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
+        self.validators.validate_move_hosts(self, host_names, target_folder)
 
         # 2. Actual modification
         for host_name in host_names:
@@ -3214,6 +3217,9 @@ class Host:
     def discovery_failed(self) -> bool:
         return self.attributes.get("inventory_failed", False)
 
+    def is_waiting_for_discovery(self) -> bool:
+        return self.attributes.get("waiting_for_discovery", False)
+
     def validation_errors(self) -> list[str]:
         if hooks.registered("validate-host"):
             errors = []
@@ -3332,7 +3338,8 @@ class Host:
         self.permissions.need_permission("write")
         self.need_unlocked()
 
-        Folder.validate_edit_host(self.folder().site_id(), self.name(), attributes)
+        folder = self.folder()
+        folder.validators.validate_edit_host(folder.site_id(), self.name(), attributes)
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
@@ -3345,7 +3352,7 @@ class Host:
         self.attributes = attributes
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        self.folder().save_hosts()
+        folder.save_hosts()
 
         add_change(
             "edit-host",
@@ -3817,3 +3824,24 @@ def find_usages_of_contact_group_in_hosts_and_folders(
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
+
+
+@dataclass(frozen=True)
+class FolderValidators:
+    ident: str
+    validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
+    validate_create_hosts: Callable[
+        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
+    ]
+    validate_create_subfolder: Callable[[Folder, HostAttributes], None]
+    validate_edit_folder: Callable[[Folder, HostAttributes], None]
+    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder], None]
+    validate_move_subfolder_to: Callable[[Folder, Folder], None]
+
+
+class FolderValidatorsRegistry(Registry[FolderValidators]):
+    def plugin_name(self, instance: FolderValidators) -> str:
+        return instance.ident
+
+
+folder_validators_registry = FolderValidatorsRegistry()

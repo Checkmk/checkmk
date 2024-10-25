@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -12,10 +11,12 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_elbv2_network(string_table):

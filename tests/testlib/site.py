@@ -83,6 +83,7 @@ class Site:
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
         self._apache_port: int | None = None  # internal cache for the port
+        self._message_broker_port: int | None = None
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
@@ -119,6 +120,10 @@ class Site:
     def internal_url_mobile(self) -> str:
         return self.internal_url + "mobile.py"
 
+    @property
+    def licensing_dir(self) -> Path:
+        return Path(self.root) / "var" / "check_mk" / "licensing"
+
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
     # or internal_url.
@@ -139,6 +144,12 @@ class Site:
         )
         live.set_timeout(2)
         return live
+
+    @property
+    def message_broker_port(self) -> int:
+        if self._message_broker_port is None:
+            self._message_broker_port = int(self.get_config("RABBITMQ_PORT", "5672"))
+        return self._message_broker_port
 
     def url_for_path(self, path: str) -> str:
         """
@@ -494,14 +505,19 @@ class Site:
     def run(
         self,
         args: list[str],
+        capture_output: bool = True,
+        check: bool = True,
+        encoding: str | None = "utf-8",
         input: str | None = None,  # pylint: disable=redefined-builtin
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> subprocess.CompletedProcess:
         return run(
             args=args,
+            capture_output=capture_output,
+            check=check,
             input=input,
-            encoding="utf-8",
+            encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
             substitute_user=self.id,
@@ -552,16 +568,17 @@ class Site:
         return output
 
     @contextmanager
-    def copy_file(self, name: str, target: str | Path) -> Iterator[None]:
+    def copy_file(self, name: str | Path, target: str | Path) -> Iterator[None]:
         """Copies a file from the same directory as the caller to the site"""
         caller_file = Path(inspect.stack()[2].filename)
-        source = caller_file.parent / name
-        self.makedirs(Path(target).parent)
-        self.write_text_file(target, source.read_text())
+        source_path = caller_file.parent / name
+        target_path = Path(target)
+        self.makedirs(target_path.parent)
+        self.write_text_file(target_path, source_path.read_text())
         try:
             yield
         finally:
-            self.delete_file(target)
+            self.delete_file(target_path)
 
     def python_helper(self, name: str) -> PythonHelper:
         caller_file = Path(inspect.stack()[1].filename)
@@ -569,22 +586,32 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "omd", mode, self.id] + list(args)
+        cmd = ["omd", mode] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = subprocess.run(
+        completed_process = self.run(
             cmd,
+            capture_output=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            encoding="utf-8",
             check=False,
         )
-
         log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
         logger.log(log_level, "Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
             logger.log(log_level, "Output:")
         for line in completed_process.stdout.strip().split("\n"):
             logger.log(log_level, "> %s", line)
+
+        if mode == "status":
+            logger.info(
+                "OMD status: %d (%s)",
+                completed_process.returncode,
+                {
+                    0: "fully running",
+                    1: "fully stopped",
+                    2: "partially running",
+                }.get(completed_process.returncode, "unknown meaning"),
+            )
 
         return completed_process.returncode
 
@@ -1031,31 +1058,13 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return self._omd_status() == 0
+        return self.omd("status") == 0
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return self._omd_status() == 1
-
-    def _omd_status(self) -> int:
-        def _fmt_output(msg: str) -> str:
-            return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
-
-        try:
-            self.run(["omd", "status", "--bare"])
-            logger.info("Exit code was: 0 (fully running)")
-            return 0
-        except subprocess.CalledProcessError as e:
-            status_text = {
-                0: "fully running",
-                1: "fully stopped",
-                2: "partially running",
-            }.get(e.returncode, "unknown meaning")
-            logger.info("Exit code was: %d (%s)", e.returncode, status_text)
-            logger.debug(str(e))
-            return e.returncode
+        return self.omd("status") == 1
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -1274,7 +1283,8 @@ class Site:
             )
 
     def result_dir(self) -> Path:
-        return Path(os.environ.get("RESULT_PATH") or repo_path() / "results" / self.id)
+        base_dir = Path(os.environ.get("RESULT_PATH") or (repo_path() / "results"))
+        return base_dir / self.id
 
     @property
     def crash_report_dir(self) -> Path:
@@ -1404,15 +1414,7 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(
-        self,
-        name: str,
-        start: bool = True,
-        init_livestatus: bool = True,
-        prepare_for_tests: bool = True,
-        activate_changes: bool = True,
-        auto_restart_httpd: bool = False,
-    ) -> Site:
+    def get_site(self, name: str) -> Site:
         site = self._site_obj(name)
 
         if self.version.is_saas_edition():
@@ -1421,7 +1423,18 @@ class SiteFactory:
             # before the site is created.
             create_cse_initial_config()
         site.create()
+        return site
 
+    def initialize_site(
+        self,
+        site: Site,
+        *,
+        start: bool = True,
+        init_livestatus: bool = True,
+        prepare_for_tests: bool = True,
+        activate_changes: bool = True,
+        auto_restart_httpd: bool = False,
+    ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
 
@@ -1715,34 +1728,36 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(
-                name,
+            site = self.get_site(name)
+
+        try:
+            self.initialize_site(
+                site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
             )
-        site.start()
-        if auto_restart_httpd:
-            restart_httpd()
-        logger.info(
-            'Site "%s" is ready!%s',
-            site.id,
-            f" [{description}]" if description else "",
-        )
-        with (
-            cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-            if self.version.is_saas_edition()
-            else nullcontext()
-        ):
-            try:
+            site.start()
+            if auto_restart_httpd:
+                restart_httpd()
+            logger.info(
+                'Site "%s" is ready!%s',
+                site.id,
+                f" [{description}]" if description else "",
+            )
+            with (
+                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
+                if self.version.is_saas_edition()
+                else nullcontext()
+            ):
                 yield site
-            finally:
-                if save_results:
-                    site.save_results()
-                if report_crashes:
-                    site.report_crashes()
-                if auto_cleanup and cleanup_site:
-                    logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
-                    site.rm()
+        finally:
+            if save_results:
+                site.save_results()
+            if report_crashes:
+                site.report_crashes()
+            if auto_cleanup and cleanup_site:
+                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
@@ -1843,7 +1858,11 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self, input: str | None = None, encoding: str = "utf-8") -> str:  # pylint: disable=redefined-builtin
+    def check_output(
+        self,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        encoding: str = "utf-8",
+    ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
                 ["python3", str(self.site_path)],

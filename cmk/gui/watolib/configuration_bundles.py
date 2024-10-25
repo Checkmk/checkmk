@@ -3,20 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     get_args,
-    Iterable,
     Literal,
-    Mapping,
     NewType,
     NotRequired,
-    Sequence,
     TypedDict,
     TypeVar,
 )
@@ -43,9 +40,13 @@ BundleId = NewType("BundleId", str)
 IdentFinder = Callable[[GlobalIdent | None], BundleId | None]
 Entity = Literal["host", "rule", "password", "dcd"]
 Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
+CreateFunction = Callable[[], None]
 
 # TODO: deduplicate with cmk/gui/cee/dcd/_store.py
-DCDConnectionSpec = dict[str, Any]
+# NOTE: mypy does not allow DCDConnectionSpec to be Mapping here (see TODO for solution)
+# TODO: a cee specific configuration bundle should be implemented as the raw edition does not
+#  have dcd connections
+DCDConnectionSpec = Any
 DCDConnectionDict = dict[str, DCDConnectionSpec]
 
 
@@ -110,10 +111,10 @@ class CreateBundleEntities:
         the password untouched.
     """
 
-    hosts: Iterable[CreateHost] | None = None
-    passwords: Iterable[CreatePassword] | None = None
-    rules: Iterable[CreateRule] | None = None
-    dcd_connections: Iterable[CreateDCDConnection] | None = None
+    hosts: Collection[CreateHost] | None = None
+    passwords: Collection[CreatePassword] | None = None
+    rules: Collection[CreateRule] | None = None
+    dcd_connections: Collection[CreateDCDConnection] | None = None
 
 
 def _dcd_unsupported(*_args: Any, **_kwargs: Any) -> None:
@@ -138,7 +139,7 @@ class BundleReferences:
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
-    password_conditions = bundle.passwords is not None and len(bundle.passwords) == 1
+    password_conditions = bundle.passwords is None or len(bundle.passwords) == 1
     if not host_conditions or not rule_conditions or not password_conditions:
         return False
     return True
@@ -216,6 +217,27 @@ def edit_config_bundle_configuration(bundle_id: BundleId, bundle: "ConfigBundle"
     store.save(all_bundles)
 
 
+def _validate_and_prepare_create_calls(
+    bundle_ident: GlobalIdent, entities: CreateBundleEntities
+) -> list[CreateFunction]:
+    create_functions = []
+    if entities.passwords:
+        create_functions.append(
+            _prepare_create_passwords(bundle_ident, entities.passwords, load_passwords())
+        )
+    if entities.hosts:
+        create_functions.append(_prepare_create_hosts(bundle_ident, entities.hosts))
+    if entities.rules:
+        create_functions.append(_prepare_create_rules(bundle_ident, entities.rules))
+    if entities.dcd_connections:
+        create_functions.append(
+            _prepare_create_dcd_connections(
+                bundle_ident, entities.dcd_connections, DCDConnectionHook.load_dcd_connections()
+            )
+        )
+    return create_functions
+
+
 def create_config_bundle(
     bundle_id: BundleId, bundle: "ConfigBundle", entities: CreateBundleEntities
 ) -> None:
@@ -226,23 +248,22 @@ def create_config_bundle(
     all_bundles = store.load_for_modification()
     if bundle_id in all_bundles:
         raise MKGeneralException(f'Configuration bundle "{bundle_id}" already exists.')
-    all_bundles[bundle_id] = bundle
-    store.save(all_bundles)
 
     try:
-        if entities.passwords:
-            _create_passwords(bundle_ident, entities.passwords)
-        if entities.hosts:
-            _create_hosts(bundle_ident, entities.hosts)
-        if entities.rules:
-            _create_rules(bundle_ident, entities.rules)
-        if entities.dcd_connections:
-            _create_dcd_connections(bundle_ident, entities.dcd_connections)
+        create_functions = _validate_and_prepare_create_calls(bundle_ident, entities)
     except Exception as e:
-        # TODO: CMK-18626 (validate and create function for each config object should be separate)
-        #  and everything should be validated first before we commit to any save actions
+        raise MKGeneralException(
+            f'Configuration bundle "{bundle_id}" failed validation: {e}'
+        ) from e
+
+    all_bundles[bundle_id] = bundle
+    store.save(all_bundles)
+    try:
+        for create_function in create_functions:
+            create_function()
+    except Exception as e:
         delete_config_bundle(bundle_id)
-        raise MKGeneralException(f"Failed to create configuration bundle {bundle_id}") from e
+        raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
 
 
 def delete_config_bundle(bundle_id: BundleId) -> None:
@@ -292,7 +313,7 @@ def _get_host_attributes(bundle_ident: GlobalIdent, params: CreateHost) -> HostA
     return attributes
 
 
-def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> None:
+def _prepare_create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> CreateFunction:
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
     folder_and_valid_hosts = []
@@ -314,8 +335,11 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
 
         folder_and_valid_hosts.append((folder, valid_hosts))
 
-    for folder, valid_hosts in folder_and_valid_hosts:
-        folder.create_validated_hosts(valid_hosts)
+    def create() -> None:
+        for f, validated_hosts in folder_and_valid_hosts:
+            f.create_validated_hosts(validated_hosts)
+
+    return create
 
 
 def _delete_hosts(hosts: Iterable[Host]) -> None:
@@ -339,11 +363,22 @@ def _collect_passwords(
             yield bundle_id, (password_id, password)
 
 
-def _create_passwords(bundle_ident: GlobalIdent, passwords: Iterable[CreatePassword]) -> None:
-    for password in passwords:
-        spec = password["spec"]
-        spec["locked_by"] = bundle_ident
-        save_password(password["id"], spec, new_password=True)
+def _prepare_create_passwords(
+    bundle_ident: GlobalIdent,
+    create_passwords: Collection[CreatePassword],
+    all_passwords: Mapping[str, Password],
+) -> CreateFunction:
+    for password in create_passwords:
+        if password["id"] in all_passwords:
+            raise MKGeneralException(f'Password with id "{password["id"]}" already exists.')
+
+    def create() -> None:
+        for pw in create_passwords:
+            spec = pw["spec"]
+            spec["locked_by"] = bundle_ident
+            save_password(pw["id"], spec, new_password=True)
+
+    return create
 
 
 def _delete_passwords(passwords: Iterable[tuple[str, Password]]) -> None:
@@ -373,21 +408,38 @@ def _collect_rules(
             yield bundle_id, rule
 
 
-def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> None:
+def _prepare_create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> CreateFunction:
+    validated_data = []
     # sort by folder, then ruleset
     sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
     for folder_name, rule_iter_outer in groupby(sorted_rules, key=itemgetter("folder")):  # type: str, Iterable[CreateRule]
         folder = folder_tree().folder(folder_name)
-        rulesets = FolderRulesets.load_folder_rulesets(folder)
+        folder_rulesets = FolderRulesets.load_folder_rulesets(folder)
+        folder_rules = []
 
         for ruleset_name, rule_iter_inner in groupby(rule_iter_outer, key=itemgetter("ruleset")):  # type: str, Iterable[CreateRule]
-            ruleset = rulesets.get(ruleset_name)
+            ruleset = folder_rulesets.get(ruleset_name)
+            existing_ids = {rule.id for _, _, rule in ruleset.get_rules()}
             for create_rule in rule_iter_inner:
+                if create_rule["spec"]["id"] in existing_ids:
+                    raise MKGeneralException(
+                        f'Rule with id "{create_rule["spec"]["id"]}" already exists.'
+                    )
+
                 rule = Rule.from_config(folder, ruleset, create_rule["spec"])
                 rule.locked_by = bundle_ident
-                ruleset.append_rule(folder, rule)
+                folder_rules.append(rule)
 
-        rulesets.save_folder()
+        validated_data.append((folder, folder_rulesets, folder_rules))
+
+    def create() -> None:
+        for f, rulesets, new_rules in validated_data:
+            for rule in new_rules:
+                rule.ruleset.append_rule(f, rule)
+
+            rulesets.save_folder()
+
+    return create
 
 
 def _delete_rules(rules: Iterable[Rule]) -> None:
@@ -412,13 +464,23 @@ def _collect_dcd_connections(
             yield bundle_id, (connection_id, connection)
 
 
-def _create_dcd_connections(
-    bundle_ident: GlobalIdent, dcd_connections: Iterable[CreateDCDConnection]
-) -> None:
-    for dcd_connection in dcd_connections:
-        spec = dcd_connection["spec"]
-        spec["locked_by"] = bundle_ident
-        DCDConnectionHook.create_dcd_connection(dcd_connection["id"], spec)
+def _prepare_create_dcd_connections(
+    bundle_ident: GlobalIdent,
+    new_connections: Collection[CreateDCDConnection],
+    current_connections: DCDConnectionDict,
+) -> CreateFunction:
+    for connection in new_connections:
+        if connection["id"] in current_connections:
+            raise MKGeneralException(f'DCD Connection with id "{connection["id"]}" already exists.')
+
+    def create() -> None:
+        for dcd_connection in new_connections:
+            spec = dcd_connection["spec"]
+            DCDConnectionHook.create_dcd_connection(
+                dcd_connection["id"], {**spec, "locked_by": bundle_ident}
+            )
+
+    return create
 
 
 def _delete_dcd_connections(dcd_connections: Iterable[tuple[str, DCDConnectionSpec]]) -> None:

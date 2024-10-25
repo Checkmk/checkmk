@@ -13,7 +13,6 @@ from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
-from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
@@ -303,13 +302,13 @@ def vs_idle_timeout_duration() -> Age:
         display=["minutes", "hours", "days"],
         minvalue=60,
         help=_(
-            "Normally a user login session is valid until the password is changed or "
-            "the user is locked. By enabling this option, you can apply a time limit "
-            "to login sessions which is applied when the user stops interacting with "
-            "the GUI for a given amount of time. When a user is exceeding the configured "
-            "maximum idle time, the user will be logged out and redirected to the login "
-            "screen to renew the login session. This setting can be overridden in each "
-            "individual user's profile."
+            "Normally a user login session is valid until the password is changed, the "
+            "browser is closed or the user is locked. By enabling this option, you "
+            "can apply a time limit to login sessions which is applied when the user "
+            "stops interacting with the GUI for a given amount of time. When a user "
+            "exceeds the configured maximum idle time, the user will be logged "
+            "out and redirected to the login screen to renew the login session. "
+            "This setting can be overridden in each individual user's profile.",
         ),
         default_value=5400,
     )
@@ -352,19 +351,15 @@ def verify_password_policy(password: Password, varname: str = "password") -> Non
         )
 
 
-class UsersConfigFile(WatoSingleConfigFile[dict]):
+class UsersConfigFile(WatoSingleConfigFile[Users]):
     """Handles reading and writing users.mk file"""
 
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(multisite_dir()) / "users.mk",
             config_variable="multisite_users",
-            spec_class=dict,
+            spec_class=Users,
         )
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_users(cfg)
 
 
 class ContactsConfigFile(WatoSingleConfigFile[dict]):

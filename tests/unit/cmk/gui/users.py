@@ -112,7 +112,7 @@ def create_and_destroy_user(
         yield user_id, password
     finally:
         with SuperUserContext():
-            users = load_users(skip_validation=True)
+            users = load_users()
             if user_id in users:
                 del users[user_id]
                 save_users(profiles=users, now=datetime.now(), skip_validation=True)

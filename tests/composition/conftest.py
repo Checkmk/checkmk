@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.agent import agent_controller_daemon, install_agent_package
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import is_containerized, run
 
@@ -20,36 +19,29 @@ site_factory = get_site_factory(prefix="comp_")
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    with exit_pytest_on_exceptions(
-        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
-    ):
-        yield from site_factory.get_test_site(
-            "central", description=request.node.name, auto_restart_httpd=True
-        )
+    yield from site_factory.get_test_site(
+        "central", description=request.node.name, auto_restart_httpd=True
+    )
 
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
-    with exit_pytest_on_exceptions(
-        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
-    ):
-        remote_site_generator = site_factory.get_test_site(
-            "remote", description=request.node.name, auto_restart_httpd=True
-        )
-        try:  # make pylint happy
-            remote_site = next(remote_site_generator)
-        except StopIteration as excp:
-            excp.add_note("I should have received a remote site...")
+    remote_site_generator = site_factory.get_test_site(
+        "remote", description=request.node.name, auto_restart_httpd=True
+    )
+    try:  # make pylint happy
+        remote_site = next(remote_site_generator)
+    except StopIteration as excp:
+        excp.add_note("I should have received a remote site...")
 
+    try:
         _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
-
-        try:
-            yield remote_site
-        finally:
-            # Teardown of remote site. We first stop the central site to avoid crashes due to
-            # interruptions in the remote-central communication caused by the teardown.
-            central_site.stop()
-            yield from remote_site_generator
+        yield remote_site
+    finally:
+        # Teardown of remote site. We first stop the central site to avoid crashes due to
+        # interruptions in the remote-central communication caused by the teardown.
+        central_site.stop()
+        yield from remote_site_generator
 
 
 def _add_remote_site_to_central_site(
@@ -89,6 +81,7 @@ def _add_remote_site_to_central_site(
                 "user_sync": {"sync_with_ldap_connections": "all"},
                 "replicate_event_console": True,
                 "replicate_extensions": True,
+                "message_broker_port": remote_site.message_broker_port,
             },
         }
     )

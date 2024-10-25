@@ -43,6 +43,38 @@ def _parameter_valuespec_apc_ats_output():
                     migrate=migrate_to_integer_simple_levels,
                 )
             ),
+            "output_current_max": DictElement(
+                parameter_form=SimpleLevels(
+                    level_direction=LevelDirection.UPPER,
+                    title=Title("Maximum levels for current"),
+                    form_spec_template=Integer(unit_symbol="A"),
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                )
+            ),
+            "output_current_min": DictElement(
+                parameter_form=SimpleLevels(
+                    level_direction=LevelDirection.LOWER,
+                    title=Title("Minimum levels for current"),
+                    form_spec_template=Integer(unit_symbol="A"),
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                )
+            ),
+            "output_power_max": DictElement(
+                parameter_form=SimpleLevels(
+                    level_direction=LevelDirection.UPPER,
+                    title=Title("Maximum levels for power"),
+                    form_spec_template=Integer(unit_symbol="W"),
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                )
+            ),
+            "output_power_min": DictElement(
+                parameter_form=SimpleLevels(
+                    level_direction=LevelDirection.LOWER,
+                    title=Title("Minimum levels for power"),
+                    form_spec_template=Integer(unit_symbol="W"),
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                )
+            ),
             "load_perc_max": DictElement(
                 parameter_form=SimpleLevels(
                     level_direction=LevelDirection.UPPER,

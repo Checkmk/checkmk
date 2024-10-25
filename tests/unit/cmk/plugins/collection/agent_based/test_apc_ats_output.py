@@ -101,12 +101,14 @@ def test_parse_snmp_section(
             "1",
             {},
             [
-                Result(state=State.OK, summary="Voltage: 230.0 V"),
+                Result(state=State.OK, summary="Voltage: 230.00 V"),
                 Metric("volt", 230.0),
                 Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
                 Result(state=State.OK, summary="Current: 1.00 A"),
-                Result(state=State.OK, summary="Load: -1.00%"),
-                Metric("load_perc", -1.0),
+                Metric("current", 1.0),
+                Result(state=State.OK, summary="Load: 1.00%"),
+                Metric("load_perc", 1.0),
             ],
             id="No param",
         ),
@@ -114,12 +116,16 @@ def test_parse_snmp_section(
             "1",
             {"output_voltage_max": ("fixed", (120, 240))},
             [
-                Result(state=State.WARN, summary="Voltage: 230.0 V (warn/crit at 120 V/240 V)"),
+                Result(
+                    state=State.WARN, summary="Voltage: 230.00 V (warn/crit at 120.00 V/240.00 V)"
+                ),
                 Metric("volt", 230.0, levels=(120, 240)),
                 Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
                 Result(state=State.OK, summary="Current: 1.00 A"),
-                Result(state=State.OK, summary="Load: -1.00%"),
-                Metric("load_perc", -1.0),
+                Metric("current", 1.0),
+                Result(state=State.OK, summary="Load: 1.00%"),
+                Metric("load_perc", 1.0),
             ],
             id="Upper level for voltage",
         ),
@@ -130,27 +136,82 @@ def test_parse_snmp_section(
                 "output_voltage_min": ("fixed", (10, 20)),
             },
             [
-                Result(state=State.WARN, summary="Voltage: 230.0 V (warn/crit at 120 V/240 V)"),
+                Result(
+                    state=State.WARN, summary="Voltage: 230.00 V (warn/crit at 120.00 V/240.00 V)"
+                ),
                 Metric("volt", 230.0, levels=(120, 240)),
                 Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
                 Result(state=State.OK, summary="Current: 1.00 A"),
-                Result(state=State.OK, summary="Load: -1.00%"),
-                Metric("load_perc", -1.0),
+                Metric("current", 1.0),
+                Result(state=State.OK, summary="Load: 1.00%"),
+                Metric("load_perc", 1.0),
             ],
             id="Upper level for voltage",
         ),
         pytest.param(
             "1",
-            {"load_perc_min": ("fixed", (10.0, 12.0))},
+            {
+                "output_current_max": ("fixed", (1, 3)),
+            },
             [
-                Result(state=State.OK, summary="Voltage: 230.0 V"),
+                Result(state=State.OK, summary="Voltage: 230.00 V"),
                 Metric("volt", 230.0),
                 Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
+                Result(state=State.WARN, summary="Current: 1.00 A (warn/crit at 1.00 A/3.00 A)"),
+                Metric("current", 1.0, levels=(1, 3)),
+                Result(state=State.OK, summary="Load: 1.00%"),
+                Metric("load_perc", 1.0),
+            ],
+            id="Upper level for current",
+        ),
+        pytest.param(
+            "1",
+            {
+                "output_power_max": ("fixed", (230, 300)),
+            },
+            [
+                Result(state=State.OK, summary="Voltage: 230.00 V"),
+                Metric("volt", 230.0),
+                Result(
+                    state=State.WARN, summary="Power: 230.00 W (warn/crit at 230.00 W/300.00 W)"
+                ),
+                Metric("watt", 230.0, levels=(230, 300)),
                 Result(state=State.OK, summary="Current: 1.00 A"),
-                Result(state=State.CRIT, summary="Load: -1.00% (warn/crit below 10.00%/12.00%)"),
-                Metric("load_perc", -1.0),
+                Metric("current", 1.0),
+                Result(state=State.OK, summary="Load: 1.00%"),
+                Metric("load_perc", 1.0),
+            ],
+            id="Upper level for power",
+        ),
+        pytest.param(
+            "1",
+            {"load_perc_min": ("fixed", (10.0, 12.0))},
+            [
+                Result(state=State.OK, summary="Voltage: 230.00 V"),
+                Metric("volt", 230.0),
+                Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
+                Result(state=State.OK, summary="Current: 1.00 A"),
+                Metric("current", 1.0),
+                Result(state=State.CRIT, summary="Load: 1.00% (warn/crit below 10.00%/12.00%)"),
+                Metric("load_perc", 1.0),
             ],
             id="Lower level for load",
+        ),
+        pytest.param(
+            "2",
+            {},
+            [
+                Result(state=State.OK, summary="Voltage: 230.00 V"),
+                Metric("volt", 230.0),
+                Result(state=State.OK, summary="Power: 230.00 W"),
+                Metric("watt", 230.0),
+                Result(state=State.OK, summary="Current: 1.00 A"),
+                Metric("current", 1.0),
+            ],
+            id="Load not supported",
         ),
     ],
 )
@@ -159,6 +220,12 @@ def test_check_dom_not_ok_sensors(
 ) -> None:
     section: Section = {
         "1": {
+            "voltage": 230.0,
+            "current": 1.0,
+            "perc_load": 1.0,
+            "power": 230.0,
+        },
+        "2": {
             "voltage": 230.0,
             "current": 1.0,
             "perc_load": -1.0,

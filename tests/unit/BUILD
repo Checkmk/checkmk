@@ -1,6 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_py//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = [":__subpackages__"])
 
@@ -48,7 +48,6 @@ py_test(
     ],
     data = ["@//:pyproject.toml"],
     main = ":__test__.py",
-    package_collisions = "ignore",  # "warning"
     deps = [
         ":__test__",
         ":conftest",
@@ -91,7 +90,6 @@ py_test(
         exclude = ["**/*.py"],
     ),
     main = ":__test__.py",
-    package_collisions = "ignore",  # "warning"
     deps = [
         ":__test__",
         requirement("astroid"),

@@ -2384,11 +2384,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix: str) -> None:
-        onclick: str = "cmk.valuespecs.listof_add({}, {}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(self._magic),
-            json.dumps(self._style.value),
-        )
+        onclick: str = f"cmk.valuespecs.listof_add({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._style.value)})"
         if self._add_icon:
             html.open_a(
                 id_=varprefix + "_add",
@@ -2639,10 +2635,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
-        js = "cmk.valuespecs.listofmultiple_del({}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(ident),
-        )
+        js = f"cmk.valuespecs.listofmultiple_del({json.dumps(varprefix)}, {json.dumps(ident)})"
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
@@ -4224,10 +4217,7 @@ class DualListChoice(ListChoice):
         ]:
             onchange_func = select_func if self._instant_add else ""
             if self._enlarge_active:
-                onchange_func = "cmk.valuespecs.duallist_enlarge({}, {});".format(
-                    json.dumps(suffix),
-                    json.dumps(varprefix),
-                )
+                onchange_func = f"cmk.valuespecs.duallist_enlarge({json.dumps(suffix)}, {json.dumps(varprefix)});"
 
             html.open_td()
             html.dropdown(

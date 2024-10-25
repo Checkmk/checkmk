@@ -5,10 +5,8 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-from livestatus import MultiSiteConnection
-
 from cmk.ccc.crash_reporting import crash_report_registry
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
@@ -19,13 +17,10 @@ from cmk.gui import (
     autocompleters,
     crash_handler,
     crash_reporting,
-    cron,
-    customer,
     default_permissions,
     graphing,
     gui_background_job,
     help_menu,
-    hooks,
     inventory,
     login,
     logwatch,
@@ -37,7 +32,6 @@ from cmk.gui import (
     painter_options,
     piggyback_hub,
     prediction,
-    sites,
     user_message,
     valuespec,
     weblib,
@@ -45,16 +39,12 @@ from cmk.gui import (
 )
 from cmk.gui.background_job import job_registry
 from cmk.gui.background_job import registration as background_job_registration
-from cmk.gui.backup.registration import backup_register
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.mkeventd import registration as mkeventd_registration
-from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
@@ -73,16 +63,13 @@ from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
-from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
-from cmk.gui.views.row_post_processing import register_row_post_processor
+from cmk.gui.views.row_post_processing import row_post_processor_registry
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
@@ -98,20 +85,17 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     sample_config_generator_registry,
 )
+from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
+from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
-
-
-def register_sites_options() -> None:
-    if edition(paths.omd_root) is not Edition.CME:
-        hooks.register_builtin("mkeventd-activate-changes", save_active_config)
 
 
 def register() -> None:
@@ -128,6 +112,7 @@ def register() -> None:
         visual_type_registry,
         register_post_config_load_hook,
         multisite_builtin_views,
+        row_post_processor_registry,
     )
     inventory.register(
         page_registry,
@@ -154,6 +139,7 @@ def register() -> None:
         config_variable_registry,
     )
     watolib_registration.register(
+        edition(paths.omd_root),
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
@@ -166,48 +152,14 @@ def register() -> None:
         config_variable_group_registry,
         autocompleter_registry,
         match_item_generator_registry,
+        replication_path_registry,
+        folder_validators_registry,
     )
     piggyback_hub.register(
         config_domain_registry,
         config_variable_group_registry,
         config_variable_registry,
     )
-
-    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
-        backup_register(
-            page_registry,
-            mode_registry,
-            main_module_registry,
-        )
-        mkeventd_registration.register(
-            permission_section_registry,
-            permission_registry,
-            data_source_registry,
-            painter_registry,
-            command_registry,
-            sorter_registry,
-            icon_and_action_registry,
-            config_domain_registry,
-            sample_config_generator_registry,
-            mode_registry,
-            main_module_registry,
-            config_variable_group_registry,
-            config_variable_registry,
-            rulespec_group_registry,
-            rulespec_registry,
-            autocompleter_registry,
-            filter_registry,
-            notification_parameter_registry,
-            snapin_registry,
-            contact_group_usage_finder_registry,
-            timeperiod_usage_finder_registry,
-            endpoint_registry,
-        )
-        custom_icons_register(
-            mode_registry,
-            main_module_registry,
-            permission_registry,
-        )
 
     mobile.register(layout_registry)
     userdb_registration.register(
@@ -218,9 +170,6 @@ def register() -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
     )
-
-    if edition(paths.omd_root) is Edition.CSE:
-        userdb_registration.saas_register(user_attribute_registry)
 
     bi_registration.register(
         data_source_registry,
@@ -240,7 +189,6 @@ def register() -> None:
         command_registry,
         command_group_registry,
     )
-    cron.register(page_registry)
     nodevis.register(page_registry, filter_registry, icon_and_action_registry)
     notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)
@@ -253,9 +201,6 @@ def register() -> None:
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    register_sites_options()
-    register_row_post_processor(inventory_row_post_processor)
-    register_row_post_processor(join_service_row_post_processor)
     quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
     gui_background_job.register(permission_section_registry, permission_registry)
@@ -263,8 +208,6 @@ def register() -> None:
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(endpoint_registry, job_registry)
-    sites.ConnectionClass = MultiSiteConnection
-    customer.CustomerAPIClass = customer.CustomerAPIStub
 
     register_userroles(config_file_registry)
     groups_io.register(config_file_registry)

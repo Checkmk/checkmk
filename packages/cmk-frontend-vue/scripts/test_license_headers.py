@@ -5,6 +5,7 @@
 
 import re
 import sys
+from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
 
@@ -18,10 +19,20 @@ HEADER = [
     ),
 ]
 
+HEADER_CEE = [
+    re.compile(r"Copyright \(C\) 20\d{2} Checkmk GmbH - License: Checkmk Enterprise License$"),
+    re.compile(
+        r"This file is part of Checkmk \(https://checkmk.com\)\. It is subject to the terms and$"
+    ),
+    re.compile(
+        r"conditions defined in the file COPYING, which is part of this source code package\.$"
+    ),
+]
+
 FILES_IGNORED = set(
     [
         Path(".editorconfig"),
-        Path(".eslintrc.cjs"),
+        Path("eslint.config.js"),
         Path(".f12"),
         Path(".gitignore"),
         Path(".prettierignore"),
@@ -30,7 +41,7 @@ FILES_IGNORED = set(
         Path("index.html"),
         Path("src/components/_demo/index.html"),
         Path("env.d.ts"),
-        Path("src/form/components/vue_formspec_components.ts"),  # auto generated
+        Path("src/components/_demo/public/mockServiceWorker.js"),  # auto generated
     ]
 )
 
@@ -80,7 +91,7 @@ class Checker:
         except StopIteration:
             return []
 
-    def check(self, path: Path) -> bool:
+    def check(self, path: Path, header: Sequence[re.Pattern]) -> bool:
         result = []
         lines = self._read(path)
         if not lines:
@@ -88,8 +99,8 @@ class Checker:
         for line in self.previous_lines:
             result.append(lines.pop(0) == line)
         for line in self.next_lines:
-            result.append(lines.pop(len(HEADER)) == line)
-        return all(chain(result, (regex.match(line) for regex, line in zip(HEADER, lines))))
+            result.append(lines.pop(len(header)) == line)
+        return all(chain(result, (regex.match(line) for regex, line in zip(header, lines))))
 
 
 CHECKER = {
@@ -104,7 +115,10 @@ CHECKER = {
 
 def check(suffix: str, path: Path) -> bool:
     try:
-        return CHECKER[suffix].check(path)
+        return CHECKER[suffix].check(
+            path,
+            HEADER_CEE if path.is_relative_to(Path("src/graph-designer")) else HEADER,
+        )
     except Exception as e:
         raise RuntimeError(f"Could not find Checker for {path}") from e
 

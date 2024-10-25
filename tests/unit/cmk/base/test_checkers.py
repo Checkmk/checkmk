@@ -21,7 +21,6 @@ from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 from cmk.base import checkers, config
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -29,6 +28,7 @@ from cmk.agent_based.prediction_backend import (
     PredictionParameters,
 )
 from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v2 import CheckResult
 
 
 def make_timespecific_params_list(

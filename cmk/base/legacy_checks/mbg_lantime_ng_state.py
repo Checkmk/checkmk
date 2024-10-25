@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 
 def inventory_mbg_lantime_ng_state(info):
@@ -32,9 +33,11 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
     # make sure, we don't try to parse "n/a" but pass 0 instead, because check_mbg_lantime_state_common()
     # also tries to parse it as float
     refclock_offset = (
-        refclock_offset_str if refclock_offset_str == "n/a" else float(refclock_offset_str) * 1000
+        refclock_offset_str
+        if refclock_offset_str == "n/a"
+        else float(refclock_offset_str.lstrip("=")) * 1000
     )
-    newinfo = [[ntp_state, stratum, refclock_name, refclock_offset]]
+    newinfo = [[ntp_state, stratum, refclock_name.lstrip("="), refclock_offset]]
     return check_mbg_lantime_state_common(states, _no_item, params, newinfo)
 
 

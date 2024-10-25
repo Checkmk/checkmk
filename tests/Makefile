@@ -39,7 +39,7 @@ SYSTEM_TESTS := \
     test-xss-crawl \
     test-gui-e2e \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -252,21 +252,20 @@ test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cee:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee
 
 test-update-cce:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
+	EDITION=cce $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce
 
 test-update-cse:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO \
-	--disable-interactive-mode
+	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode
 
 test-update-cross-edition-cce: # from CEE to CCE
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode
 
 test-update-cross-edition-cme: # from CEE to CME
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode
 
 test-schemathesis-openapi:
@@ -278,7 +277,7 @@ test-plugins:
 
 test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	plugins_integration/test_plugin_piggyback.py --log-cli-level=INFO
+	plugins_integration/test_plugin_piggyback.py
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
@@ -413,7 +412,11 @@ test-unit: prepare-protobuf-files test-unit-doctests
 	    tests/unit/test_pylint_checker_forbidden_objects.py
 
 test-unit-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit
+	../scripts/run-in-docker.sh '\
+	    make --quiet test-unit ;\
+	    x=$$? ;\
+	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
+	    exit $$x'
 
 test-unit-all: prepare-protobuf-files
 	cd .. && \
@@ -482,8 +485,8 @@ test-unit-neb:
 test-unit-cmc:
 	cd ../packages/cmc/test && ./.f12
 
-test-find-dirty-files-in-git:
-	scripts/find_dirty_files_in_git
+test-find-modified-lock-files:
+	scripts/find_modified_lock_files
 
 test-flake8: ../.flake8
 	cd ..; $(PIPENV) run flake8 --jobs=6 $$($(FIND_PYTHON_FILES))

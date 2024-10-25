@@ -8,10 +8,10 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, startswith
+
+check_info = {}
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.

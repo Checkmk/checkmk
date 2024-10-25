@@ -6,7 +6,6 @@
 
 import './assets/main.css'
 import '@/assets/variables.css'
-import '~cmk-frontend/src/themes/facelift/theme.scss'
 
 import { createApp } from 'vue'
 import DemoApp from './DemoApp.vue'

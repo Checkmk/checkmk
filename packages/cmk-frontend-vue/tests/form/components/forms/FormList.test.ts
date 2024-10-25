@@ -22,7 +22,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'barTitle',
   help: 'barHelp',
   validators: stringValidators,
-  input_hint: ''
+  input_hint: '',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
@@ -120,6 +122,8 @@ const dictSpec: FormSpec.Dictionary = {
   layout: 'one_column',
   validators: [],
   groups: [],
+  no_elements_text: 'no_text',
+  additional_static_elements: null,
   elements: [
     {
       ident: 'bar',

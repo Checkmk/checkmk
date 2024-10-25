@@ -40,7 +40,6 @@
         <table
             width="100%"
             style="
-                background-color: #f7f7f7;
                 border-collapse: collapse;
             "
         >
@@ -148,8 +147,11 @@
                                     </div>
                                 {% endif %}
 
-                                {% include 'summary.html' %}
-
+                                {% if data.NOTIFICATIONTYPE in ["PROBLEM", "RECOVERY"] %}
+                                    {% include 'summary.html' %}
+                                {% else %}
+                                    {% include 'summary_commands.html' %}
+                                {% endif %}
 
                                 {% include 'event_overview.html' %}
 
@@ -183,6 +185,8 @@
                                 {% endif %}
                             <td>
                         </tr>
+                        {{ macros.margin_tr() }}
+                        {{ macros.margin_tr() }}
                     </table>
                 </td>
             </tr>
@@ -197,7 +201,11 @@
                         text-align: center;
                     "
                 >
-                    <p style="color: #23496D">
+                    <p style="
+                        margin: 0;
+                        color: #23496D;
+                       "
+                    >
                         Checkmk GmbH<br>Kellerstraße 27, München, Bayern 81667, Germany<br>+49 89 998209700
                     </p>
                 </td>

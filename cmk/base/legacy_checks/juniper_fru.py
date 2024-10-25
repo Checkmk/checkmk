@@ -52,11 +52,11 @@
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.1.0.0 6 --> JUNIPER-MIB::jnxFruState.9.1.0.0
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.2.0.0 6 --> JUNIPER-MIB::jnxFruState.9.2.0.0
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
+
+check_info = {}
 
 #   .--psu-----------------------------------------------------------------.
 #   |                                                                      |

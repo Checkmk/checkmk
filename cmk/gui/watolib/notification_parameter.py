@@ -2,8 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import NamedTuple, Sequence
+from typing import NamedTuple
 
 from cmk.ccc.i18n import _
 
@@ -26,6 +27,12 @@ from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
 
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
+
+
+@dataclass(frozen=True, kw_only=True)
+class NotificationParameterDescription:
+    ident: NotificationParameterID
+    description: str
 
 
 def _to_param_item(data: object) -> NotificationParameterItem:
@@ -54,7 +61,7 @@ def save_notification_parameter(
     parameter_method: NotificationParameterMethod,
     data: object,
     object_id: NotificationParameterID | None = None,
-) -> NotificationParameterID | Sequence[shared_type_defs.ValidationMessage]:
+) -> NotificationParameterDescription | Sequence[shared_type_defs.ValidationMessage]:
     form_spec = registry.form_spec(parameter_method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
 
@@ -79,7 +86,9 @@ def save_notification_parameter(
     notification_parameter.setdefault(parameter_method, {})[parameter_id] = item
     config_file.save(notification_parameter)
 
-    return parameter_id
+    return NotificationParameterDescription(
+        ident=parameter_id, description=item["general"]["description"]
+    )
 
 
 class NotificationParameterSchema(NamedTuple):
@@ -96,12 +105,6 @@ def get_notification_parameter_schema(
     return NotificationParameterSchema(schema=schema, default_values=default_values)
 
 
-@dataclass(frozen=True, kw_only=True)
-class NotificationParameterDescription:
-    ident: NotificationParameterID
-    description: str
-
-
 def get_list_of_notification_parameter(
     parameter_method: NotificationParameterMethod,
 ) -> Sequence[NotificationParameterDescription]:
@@ -113,8 +116,21 @@ def get_list_of_notification_parameter(
 
 
 def get_notification_parameter(
-    parameter_method: NotificationParameterMethod,
+    registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
 ) -> NotificationParameterItem:
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
-    return notification_parameter[parameter_method][parameter_id]
+    method, item = next(
+        (
+            (method, item.get(parameter_id))
+            for method, item in notification_parameter.items()
+            if parameter_id in item
+        ),
+        (None, None),
+    )
+    if item is None or method is None:
+        raise KeyError(parameter_id)
+    form_spec = registry.form_spec(method)
+    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
+    _, values = visitor.to_vue(item)
+    return values

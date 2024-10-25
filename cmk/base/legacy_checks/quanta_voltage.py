@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.quanta import parse_quanta
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.quanta import DETECT_QUANTA
+
+check_info = {}
 
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.14 14
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.15 15

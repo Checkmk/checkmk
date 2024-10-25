@@ -77,11 +77,7 @@ class SectionsParser(Generic[_TSeq]):
         self.error_handling: Final = error_handling
 
     def __repr__(self) -> str:
-        return "{}(host_sections={!r}, host_name={!r})".format(
-            type(self).__name__,
-            self._host_sections,
-            self._host_name,
-        )
+        return f"{type(self).__name__}(host_sections={self._host_sections!r}, host_name={self._host_name!r})"
 
     def parse(
         self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]

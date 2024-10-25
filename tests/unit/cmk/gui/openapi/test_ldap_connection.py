@@ -372,7 +372,7 @@ def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
                     "type": "active_directory_manual",
                     "ldap_server": "10.200.3.32",
                 },
-                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_2"},
             },
         }
     )
@@ -384,7 +384,7 @@ def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
                     "type": "active_directory_manual",
                     "ldap_server": "10.200.3.33",
                 },
-                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_2"},
             },
         },
         expect_ok=False,

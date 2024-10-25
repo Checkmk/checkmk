@@ -940,6 +940,19 @@ def test_openapi_host_with_inventory_failed(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["attributes"]["inventory_failed"] is True
 
 
+@managedtest
+def test_openapi_host_with_waiting_for_discovery(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        host_name="example.com",
+        folder="/",
+        attributes={
+            "ipaddress": "192.168.0.123",
+            "waiting_for_discovery": True,
+        },
+    )
+    assert resp.json["extensions"]["attributes"]["waiting_for_discovery"] is True
+
+
 def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     clients.HostConfig.create(
         folder="/",
@@ -1476,6 +1489,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
         != {
             "additional_ipv4addresses": [],
@@ -1521,6 +1535,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "tag_agent": "cmk-agent",
             "tag_piggyback": "auto-piggyback",
             "tag_snmp_ds": "no-snmp",
+            "waiting_for_discovery": False,
         }
     )
 

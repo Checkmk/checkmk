@@ -79,8 +79,10 @@ def main() {
     stage("Prepare workspace") {
         inside_container() {
             dir("${checkout_dir}") {
-                sh("make buildclean");
-                sh("find . -name *.pth -delete");
+                sh("""
+                    make buildclean
+                    find . -name *.pth -delete
+                """);
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
 
@@ -94,7 +96,6 @@ def main() {
             }
 
             stage("Fetch agent binaries") {
-                // shout("Fetch agent binaries");
 
                 upstream_build(
                     relative_job_name: "builders/build-linux-agent-updater",
@@ -181,9 +182,8 @@ def main() {
         }
     }
 
-    stage("Prepare environment") {
-        shout("Prepare environment");
-        lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
+    stage("(lock resources)") {
+        lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
             inside_container(
                 image: docker.image("${distro}:${docker_tag}"),
                 args: [
@@ -192,32 +192,29 @@ def main() {
                     " --hostname ${distro}",
                 ],
             ) {
-                sh("""
-                    cd ${checkout_dir}
-                    make .venv
-                """);
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'nexus',
-                        passwordVariable: 'NEXUS_PASSWORD',
-                        usernameVariable: 'NEXUS_USERNAME'),
-                    usernamePassword(
-                        credentialsId: 'bazel-caching-credentials',
-                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
-                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                        usernameVariable: 'BAZEL_CACHE_USER'),
-                ]) {
-                    versioning.print_image_tag();
-                    // Don't use withEnv, see
-                    // https://issues.jenkins.io/browse/JENKINS-43632
-                    stage("Build package") {
-                        sh("""
-                            cd ${checkout_dir}/omd
-                            ${omd_env_vars.join(' ')} \
-                            make ${distro_package_type(distro)}
-                        """);
-
-                        bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix)
+                stage("Prepare environment") {
+                    dir("${checkout_dir}") {
+                        versioning.print_image_tag();
+                        sh("make .venv");
+                    }
+                }
+                stage("Build package") {
+                    dir("${checkout_dir}") {
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'nexus',
+                                passwordVariable: 'NEXUS_PASSWORD',
+                                usernameVariable: 'NEXUS_USERNAME'),
+                            usernamePassword(
+                                credentialsId: 'bazel-caching-credentials',
+                                /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                                passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                                usernameVariable: 'BAZEL_CACHE_USER'),
+                        ]) {
+                            /// Don't use withEnv, see
+                            /// https://issues.jenkins.io/browse/JENKINS-43632
+                            sh("${omd_env_vars.join(' ')} make -C omd ${distro_package_type(distro)}");
+                        }
                     }
                 }
             }
@@ -225,6 +222,7 @@ def main() {
     }
 
     stage("Plot cache hits") {
+        bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
         bazel_logs.try_plot_cache_hits(bazel_log_prefix, [distro]);
     }
 

@@ -10,6 +10,7 @@ import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import { immediateWatch } from '@/form/components/utils/watch'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   id: string
@@ -69,22 +70,24 @@ function toggleActiveMode() {
       ></FormReadonly>
     </div>
 
+    <HelpText :help="spec.help" />
     <div v-if="activeMode === 'edit' || activeMode === 'both'">
       <table class="nform">
-        <tr>
-          <td>
-            <FormEdit
-              v-model:data="dataRef"
-              :v-if="renderMode === 'edit' || renderMode === 'both'"
-              :backend-validation="backendValidation"
-              :spec="spec"
-            />
-          </td>
-        </tr>
-        <!-- This input field contains the computed json value which is sent when the form is submitted -->
-        <input v-model="valueAsJSON" :name="id" type="hidden" />
+        <tbody>
+          <tr>
+            <td>
+              <FormEdit
+                v-model:data="dataRef"
+                :v-if="renderMode === 'edit' || renderMode === 'both'"
+                :backend-validation="backendValidation"
+                :spec="spec"
+              />
+              <!-- This input field contains the computed json value which is sent when the form is submitted -->
+              <input v-model="valueAsJSON" :name="id" type="hidden" />
+            </td>
+          </tr>
+        </tbody>
       </table>
-      <pre>{{ dataRef }}</pre>
     </div>
   </div>
 </template>

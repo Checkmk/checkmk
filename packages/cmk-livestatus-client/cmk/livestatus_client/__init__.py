@@ -21,7 +21,7 @@ import socket
 import ssl
 import threading
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
@@ -976,7 +976,12 @@ ConnectedSites = list[ConnectedSite]
 
 class MultiSiteConnection(Helpers):
     def __init__(  # pylint: disable=too-many-branches
-        self, sites: SiteConfigurations, disabled_sites: SiteConfigurations | None = None
+        self,
+        sites: SiteConfigurations,
+        disabled_sites: SiteConfigurations | None = None,
+        only_sites_postprocess: Callable[
+            [Sequence[SiteId] | None], list[SiteId] | None
+        ] = lambda x: list(x) if x else None,
     ) -> None:
         if disabled_sites is None:
             disabled_sites = SiteConfigurations({})
@@ -988,6 +993,7 @@ class MultiSiteConnection(Helpers):
         self.only_sites: OnlySites = None
         self.limit: int | None = None
         self.parallelize = True
+        self._only_sites_postprocess = only_sites_postprocess
 
         # Status host: A status host helps to prevent trying to connect
         # to a remote site which is unreachable. This is done by looking
@@ -1156,7 +1162,7 @@ class MultiSiteConnection(Helpers):
         Provide a list of site IDs to not contact all configured sites, but only the listed
         site IDs. In case None is given, the limitation is removed.
         """
-        self.only_sites = sites
+        self.only_sites = self._only_sites_postprocess(sites)
 
     def set_limit(self, limit: int | None = None) -> None:
         """Impose Limit on number of returned datasets (distributed among sites)"""

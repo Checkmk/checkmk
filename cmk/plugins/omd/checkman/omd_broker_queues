@@ -1,0 +1,16 @@
+title: Checkmk: Site Broker Queues
+agents: linux
+catalog: app/cmk
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of messages in broker queues for each site application.
+
+ The service name contains the site, application name.
+ The check status is always {OK}.
+
+item:
+ Site and application name.
+
+discovery:
+ One service is created for each site application.

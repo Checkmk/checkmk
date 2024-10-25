@@ -67,6 +67,11 @@ HACK_AGENTS = {
     "vsphere": True,
     "jolokia": True,
     "random": False,  # needs no secret
+    "mqtt": True,
+    "splunk": True,
+    "vnx_quotas": True,
+    "ucs_bladecenter": True,
+    "smb_share": True,
 }
 
 

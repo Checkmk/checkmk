@@ -759,13 +759,7 @@ def command_custom_notification_action(
         comment = request.get_str_input_mandatory("_cusnot_comment")
         broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
         forced = 2 if html.get_checkbox("_cusnot_forced") else 0
-        cmd = "SEND_CUSTOM_{}_NOTIFICATION;{};{};{};{}".format(
-            cmdtag,
-            spec,
-            broadcast + forced,
-            user.id,
-            livestatus.lqencode(comment),
-        )
+        cmd = f"SEND_CUSTOM_{cmdtag}_NOTIFICATION;{spec};{broadcast + forced};{user.id};{livestatus.lqencode(comment)}"
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 

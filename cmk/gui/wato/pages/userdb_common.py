@@ -206,7 +206,7 @@ def render_connections_page(
 
 
 def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
-    _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
+    _changes.add_change(action_name, text, domains=[ConfigDomainGUI()], sites=sites)
 
 
 def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:

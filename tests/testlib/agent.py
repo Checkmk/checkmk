@@ -301,17 +301,19 @@ def _remove_omd_status_cache() -> None:
 
 
 def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:
-    stdout = site.read_file(OMD_STATUS_CACHE)
-    assert f"[{site.id}]" in stdout
-    assert "OVERALL" in stdout
+    omd_status_cache_content = site.read_file(OMD_STATUS_CACHE)
+    assert (
+        f"[{site.id}]" in omd_status_cache_content
+    ), f'Site "{site.id}" not found in "{OMD_STATUS_CACHE}"!'
+    assert "OVERALL" in omd_status_cache_content
 
     # extract text between '[<site.id>]' and 'OVERALL'
-    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", stdout)
+    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", omd_status_cache_content)
     sub_stdout = match_extraction[0] if match_extraction else ""
 
     # find all occurrences of one or more digits in the extracted stdout
     match_assertion = re.findall(r"\d+", sub_stdout)
-    return all(int(match) == 0 for match in match_assertion), stdout
+    return all(int(match) == 0 for match in match_assertion), omd_status_cache_content
 
 
 def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_time: int = 5) -> None:

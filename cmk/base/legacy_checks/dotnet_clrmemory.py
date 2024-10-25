@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     parse_wmi_table,
     wmi_filter_global_only,
     wmi_yield_raw_fraction,
 )
-from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 dotnet_clrmemory_defaultlevels = {
     "upper": (10.0, 15.0)  # 10.0 percent specified by customer,

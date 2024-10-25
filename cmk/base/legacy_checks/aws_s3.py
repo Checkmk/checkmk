@@ -6,11 +6,12 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping[str, Mapping]
 
@@ -132,10 +133,7 @@ def check_aws_s3_summary(item, params, parsed):
     if largest_bucket:
         yield (
             0,
-            "Largest bucket: {} ({})".format(
-                largest_bucket,
-                render.bytes(largest_bucket_size),
-            ),
+            f"Largest bucket: {largest_bucket} ({render.bytes(largest_bucket_size)})",
             [("aws_largest_bucket_size", largest_bucket_size)],
         )
 

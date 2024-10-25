@@ -95,9 +95,5 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             if return_state:
                 yield (
                     return_state,
-                    "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
-                        disk_state,
-                        warn,
-                        crit,
-                    ),
+                    f"Too many {disk_state} disks (warn/crit at {warn:.1f}%/{crit:.1f}%)",
                 )

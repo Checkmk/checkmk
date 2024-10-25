@@ -206,12 +206,12 @@ _VOLUME_MODELS = [
     [
         pytest.param(
             "svm_name:volume_name",
-            16,
+            15,
             id="volume with counters",
         ),
         pytest.param(
             "svm_name:volume_name1",
-            14,
+            13,
             id="volume without counters",
         ),
     ],

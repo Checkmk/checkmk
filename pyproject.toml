@@ -4,7 +4,7 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "C90", "PL"]
+select = ["E", "F", "I", "W", "C90", "PL", "UP"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
@@ -26,6 +26,26 @@ ignore = [
   "PLR2044", # Line with empty comment
   "PLW0603", # Using the global statement to update `FOO` is discouraged
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
+  # Basically a TODO list...
+  "UP004", # Class `_MockHttpResponse` inherits from `object`
+  "UP006", # Use `collections.defaultdict` instead of `DefaultDict` for type annotation
+  "UP007", # Use `X | Y` for type annotations
+  "UP009", # UTF-8 encoding declaration is unnecessary
+  "UP010", # Unnecessary `__future__` import `with_statement` for target Python version
+  "UP012", # Unnecessary call to `encode` as UTF-8
+  "UP015", # Unnecessary open mode parameters
+  "UP017", # Use `datetime.UTC` alias
+  "UP024", # Replace aliased errors with `OSError`
+  "UP025", # Remove unicode literals from strings
+  "UP026", # `mock` is deprecated, use `unittest.mock`
+  "UP028", # Replace `yield` over `for` loop with `yield from`
+  "UP031", # Use format specifiers instead of percent format
+  "UP032", # Use f-string instead of `format` call
+  "UP035", # Import from `FOO` instead: `BAR`
+  "UP036", # Version block is outdated for minimum Python version
+  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+  "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
+  "UP041", # Replace aliased errors with `TimeoutError`
 ]
 
 [tool.ruff.lint.mccabe]
@@ -200,7 +220,7 @@ addopts = [
   # successful, etc. etc. We might reconsinder lowering the live log level when we
   # have cleaned up things...
   "--log-cli-level=CRITICAL",
-  "--log-cli-format=\"%(asctime)s %(levelname)s %(message)s\"",
+  "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
   # Show summary of skipped tests
   "-rs",
   # Show N slowest setup/test durations

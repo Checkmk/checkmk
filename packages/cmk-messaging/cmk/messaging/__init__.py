@@ -10,6 +10,7 @@ from ._config import (
     BrokerCertificates,
     ca_key_file,
     cacert_file,
+    clear_brokers_certs_cache,
     get_local_port,
     multisite_ca_key_file,
     multisite_cacert_file,
@@ -33,6 +34,7 @@ from ._connection import (
     QueueName,
     RoutingKey,
 )
+from ._logging import set_logging_level
 
 __all__ = [
     "all_cme_cacert_files",
@@ -43,6 +45,7 @@ __all__ = [
     "ca_key_file",
     "Channel",
     "check_remote_connection",
+    "clear_brokers_certs_cache",
     "CMKConnectionError",
     "Connection",
     "ConnectionFailed",
@@ -56,6 +59,7 @@ __all__ = [
     "QueueName",
     "rabbitmq",
     "RoutingKey",
+    "set_logging_level",
     "site_cert_file",
     "site_key_file",
     "TLS_PATH_CUSTOMERS",

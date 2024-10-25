@@ -11,11 +11,12 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 import collections
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 Section = Mapping
 

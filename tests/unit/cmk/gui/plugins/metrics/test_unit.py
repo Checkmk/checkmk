@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import ContextManager
+from typing import ContextManager, Literal
 
 import pytest
 
@@ -42,7 +42,7 @@ def test_temperature_unit_global_setting(request_context: None) -> None:
 )
 def test_temperature_unit_user_celsius(
     run_as_user: Callable[[UserId], ContextManager[None]],
-    user_setting_temperature_unit: str,
+    user_setting_temperature_unit: Literal["celsius", "fahrenheit"],
     expected_temperature_unit_title: str,
     request_context: None,
 ) -> None:

@@ -6,6 +6,8 @@
 set -e
 
 JOBS=6
+readonly ALL_LINTERS=clippy
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -16,18 +18,18 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment             setup environment"
-    echo "  -c, --clean                         remove artifacts first"
-    echo "  -b, --build                         build executable"
-    echo "  -u, --unit-tests                    run unit tests"
-    echo "  -F, --check-format                  check for correct formatting"
-    echo "  -C, --clippy                        run clippy linter"
-    echo "  -I F1,F2,..., --features=F1,F2,...  list of features to activate"
-    echo "  -a, --all                           shortcut for -b -u -F -C"
-    echo "  -f, --format                        format sources"
-    echo "  -D, --documentation                 generate documentation"
-    echo "  -j N, --jobs=N                      allow N jobs at once, default is ${JOBS}"
-    echo "  -h, --help                          show this help"
+    echo "  -e, --setup-environment     setup environment"
+    echo "  -c, --clean                 remove artifacts first"
+    echo "  -b, --build                 build executable"
+    echo "  -u, --unit-tests            run unit tests"
+    echo "  -F, --check-format          check for correct formatting"
+    echo "  -l L,..., --lint=L,...      run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -I F,..., --features=F,...  list of features to activate"
+    echo "  -a, --all                   shortcut for -b -u -F -l all"
+    echo "  -f, --format                format sources"
+    echo "  -D, --documentation         generate documentation"
+    echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
+    echo "  -h, --help                  show this help"
 }
 
 parse_options() {
@@ -42,7 +44,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecbuFCIaAfDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,clippy,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecbuFl:I:afDj:h' --long 'setup-environment,clean,build,unit-tests,check-format,lint:,features:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -54,37 +56,39 @@ parse_options() {
             '-e' | '--setup-environment')
                 RUN_SETUP_ENVIRONMENT=yes
                 shift
-                continue
                 ;;
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
-                continue
                 ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
-                continue
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
                 shift
-                continue
                 ;;
             '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
-                continue
                 ;;
-            '-C' | '--clippy')
-                RUN_CLIPPY=yes
-                shift
-                continue
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
                 ;;
             '-I' | '--features')
                 FEATURES="$2"
                 shift 2
-                continue
                 ;;
             '-a' | '--all')
                 RUN_BUILD=yes
@@ -92,22 +96,18 @@ parse_options() {
                 RUN_CHECK_FORMAT=yes
                 RUN_CLIPPY=yes
                 shift
-                continue
                 ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
-                continue
                 ;;
             '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
-                continue
                 ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
-                continue
                 ;;
             '-h' | '--help')
                 usage
@@ -168,8 +168,7 @@ main() {
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
-    # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build //packages/cmk-agent-ctl
     test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings

@@ -9,7 +9,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(() => {
   return {
     plugins: [vue()],
     clearScreen: false,
@@ -18,6 +18,13 @@ export default defineConfig(({ command }) => {
       strictPort: true,
       fs: {
         allow: ['.', '../../../../cmk-frontend/']
+      },
+      proxy: {
+        '/site-api': {
+          target: 'http://localhost/',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/site-api/, '')
+        }
       }
     },
     resolve: {

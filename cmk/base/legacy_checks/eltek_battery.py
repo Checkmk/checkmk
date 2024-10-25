@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.eltek import DETECT_ELTEK
+
+check_info = {}
 
 # .1.3.6.1.4.1.12148.9.3.1.0 --> ELTEK-DISTRIBUTED-MIB::batteryName.0
 # .1.3.6.1.4.1.12148.9.3.2.0 5485 --> ELTEK-DISTRIBUTED-MIB::batteryVoltage.0

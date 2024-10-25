@@ -10,10 +10,10 @@
 
 # mypy: disable-error-code="arg-type,list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def inventory_appdynamics_memory(info):
@@ -85,12 +85,7 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
                 perfdata = [("mem_%s" % mem_type, used, warn, crit, 0, max_available)]
                 yield (
                     state,
-                    "Used: {} of {} ({:.2f}%){}".format(
-                        render.bytes(used),
-                        render.bytes(max_available),
-                        used_percent,
-                        levels_label,
-                    ),
+                    f"Used: {render.bytes(used)} of {render.bytes(max_available)} ({used_percent:.2f}%){levels_label}",
                     perfdata,
                 )
             else:

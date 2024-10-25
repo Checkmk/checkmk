@@ -12,6 +12,7 @@ import {
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: ListOfStrings
@@ -99,6 +100,7 @@ function onPaste(e: ClipboardEvent, index: number) {
           :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
         >
           <td class="vlof_content">
+            <HelpText :help="spec.help" />
             <FormEdit
               v-model:data="backendData[index]"
               :spec="spec.string_spec"

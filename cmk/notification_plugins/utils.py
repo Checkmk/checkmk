@@ -88,6 +88,23 @@ def service_url_from_context(context: PluginNotificationContext) -> str:
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
+def graph_url_from_context(context: PluginNotificationContext) -> str:
+    base = _base_url(context)
+    view_url = base + "/check_mk/view.py?"
+    if context["WHAT"] == "HOST":
+        return (
+            view_url + f'siteopt={context["OMD_SITE"]}&'
+            f'view_name=host_graphs&'
+            f'host={context["HOSTNAME"]}'
+        )
+    return (
+        view_url + f'siteopt={context["OMD_SITE"]}&'
+        f'view_name=service_graphs&'
+        f'host={context["HOSTNAME"]}&'
+        f'service={context["SERVICEDESC"]}'
+    )
+
+
 def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",
@@ -140,9 +157,8 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
     elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += f"{varname}={value}\n"
-        html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
-            varname,
-            escape(value),
+        html_output += (
+            f"<tr><td class=varname>{varname}</td><td class=value>{escape(value)}</td></tr>\n"
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)

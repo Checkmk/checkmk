@@ -588,10 +588,7 @@ def event_match_folder(
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires folder '{}', but the host is in '{}'".format(
-                            mustfolder,
-                            hasfolder,
-                        )
+                        return f"The rule requires folder '{mustfolder}', but the host is in '{hasfolder}'"
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 

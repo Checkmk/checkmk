@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { VNode } from 'vue'
-import { type ButtonVariants } from '@/components/IconButton.vue'
+import type { Ref, VNode } from 'vue'
 import type { WizardMode } from './useWizard'
 
 export interface QuickSetupProps {
@@ -21,7 +20,7 @@ export interface QuickSetupProps {
   saveStage?: QuickSetupSaveStageSpec | null
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
-  mode?: WizardMode
+  mode: Ref<WizardMode>
 }
 
 /**
@@ -84,8 +83,8 @@ export interface StageButtonSpec {
   /** @property {string} label - Button's caption */
   label: string
 
-  /** @property {ButtonVariants['variant']} variant - type of button */
-  variant: ButtonVariants['variant']
+  /** @property {'prev' | 'next' | 'save'} variant - type of button */
+  variant: 'prev' | 'next' | 'save'
 
   /** @property { () => void } action - Callback to be called on click */
   action: () => void

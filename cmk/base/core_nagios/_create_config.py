@@ -14,6 +14,7 @@ from contextlib import suppress
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
+import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -32,7 +33,7 @@ from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
-from cmk.base import config, core_config, server_side_calls
+from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -41,6 +42,8 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     get_tags_with_groups_from_attributes,
 )
+
+from cmk.server_side_calls_backend import ActiveServiceData
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -70,8 +73,6 @@ class NagiosCore(core_config.MonitoringCore):
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
         self._precompile_hostchecks(
             config_path,
-            config.legacy_check_plugin_names,
-            config.legacy_check_plugin_files,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -116,8 +117,6 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
-        legacy_check_plugin_names: Mapping[CheckPluginName, str],
-        legacy_check_plugin_files: Mapping[str, str],
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -126,8 +125,6 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
-            legacy_check_plugin_names,
-            legacy_check_plugin_files,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):
@@ -365,9 +362,7 @@ def create_nagios_host_spec(  # pylint: disable=too-many-branches
     return host_spec
 
 
-def transform_active_service_command(
-    cfg: NagiosConfig, service_data: server_side_calls.ActiveServiceData
-) -> str:
+def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServiceData) -> str:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
@@ -494,40 +489,13 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # legacy checks via active_checks
     active_services = []
-
-    translations = config.get_service_translations(config_cache.ruleset_matcher, hostname)
-    host_macros = ConfigCache.get_host_macros_from_attributes(hostname, host_attrs)
-    resource_macros = config.get_resource_macros()
-    macros = {**host_macros, **resource_macros}
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        hostname
-    )
-    active_check_config = server_side_calls.ActiveCheck(
-        server_side_calls.load_active_checks()[1],
+    for service_data in config_cache.active_check_services(
         hostname,
-        config.get_ssc_host_config(
-            hostname,
-            config_cache.alias(hostname),
-            config_cache.default_address_family(hostname),
-            config_cache.ip_stack_config(hostname),
-            additional_addresses_ipv4,
-            additional_addresses_ipv6,
-            macros,
-            ip_address_of,
-        ),
-        config.http_proxies,
-        lambda x: config.get_final_service_description(x, translations),
+        host_attrs,
+        ip_address_of,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        server_side_calls.ExecutableFinder(
-            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-        ),
-        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-    )
-
-    active_checks = config_cache.active_checks(hostname)
-    actchecks = [name for name, params in active_checks if params]
-    for service_data in active_check_config.get_active_service_data(active_checks):
+    ):
         if do_omit_service(hostname, service_data.description):
             continue
 
@@ -563,7 +531,11 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
-    if actchecks:
+    active_checks_rules_exist = any(params for name, params in config_cache.active_checks(hostname))
+    # Note: ^- This is not the same as `active_checks_present = bool(active_services)`
+    # Services can be omitted, or rules can result in zero services (theoretically).
+    # I am not sure if this is intentional.
+    if active_checks_rules_exist:
         cfg.write("\n\n# Active checks\n")
 
         for service_spec in active_services:
@@ -702,7 +674,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             )
 
     # No check_mk service, no legacy service -> create PING service
-    if not have_at_least_one_service and not actchecks and not custchecks:
+    if not have_at_least_one_service and not active_checks_rules_exist and not custchecks:
         _add_ping_service(
             cfg,
             config_cache,

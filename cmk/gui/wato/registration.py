@@ -30,6 +30,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
 )
+from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
@@ -93,6 +94,7 @@ def register(
     ac_test_registry: ACTestRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
+    replication_path_registry: ReplicationPathRegistry,
     user_menu_topics: Callable[[], list[TopicMenuTopic]],
     edition_supports_ldap: bool,
     edition_supports_managing_roles: bool,
@@ -139,7 +141,11 @@ def register(
         contact_group_usage_finder_registry,
     )
     _ac_tests.register(ac_test_registry)
-    _omd_configuration.register(config_domain_registry, config_variable_registry)
+    _omd_configuration.register(
+        config_domain_registry,
+        config_variable_registry,
+        replication_path_registry,
+    )
     _tracing.register(config_variable_registry)
     if edition_supports_nagvis(version.edition(paths.omd_root)):
         _nagvis_auth.register(permission_section_registry, permission_registry)

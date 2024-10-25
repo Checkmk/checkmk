@@ -13,11 +13,13 @@ function getFixedValue(withLabel = false): FormSpec.FixedValue {
     title: 'fooTitle',
     help: 'fooHelp',
     validators: [],
-    value: '42'
+    value: '42',
+    label: null
   }
   if (withLabel) {
     spec['label'] = 'fooLabel'
   }
+
   return spec
 }
 

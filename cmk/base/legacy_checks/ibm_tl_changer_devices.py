@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.1 Logical_Library: 1 --> SNIA-SML-MIB::changerDevice-ElementName.1
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.2 Logical_Library: LTO6 --> SNIA-SML-MIB::changerDevice-ElementName.2

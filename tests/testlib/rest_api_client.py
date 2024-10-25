@@ -20,9 +20,11 @@ from cmk.ccc import version
 from cmk.utils import paths
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.openapi.endpoints.configuration_entity import _to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
+from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
 if TYPE_CHECKING:
     from cmk.gui.openapi.endpoints.downtime import FindByType
@@ -33,6 +35,7 @@ IF_MATCH_HEADER_OPTIONS = Literal["valid_etag", "invalid_etag", "star"] | None
 
 
 API_DOMAIN = Literal[
+    "configuration_entity",
     "licensing",
     "activation_run",
     "user_config",
@@ -68,6 +71,7 @@ API_DOMAIN = Literal[
     "parent_scan",
     "quick_setup",
     "managed_robots",
+    "notification_parameter",
 ]
 
 
@@ -3005,12 +3009,13 @@ class QuickSetupClient(RestApiClient):
         self,
         quick_setup_id: str,
         mode: Literal["overview", "guided"] | None = "guided",
+        object_id: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/objects/{self.domain}/{quick_setup_id}",
-            query_params=_only_set_keys({"mode": mode}),
+            query_params=_only_set_keys({"mode": mode, "object_id": object_id}),
             expect_ok=expect_ok,
         )
 
@@ -3018,16 +3023,18 @@ class QuickSetupClient(RestApiClient):
         self,
         quick_setup_id: str,
         stages: list[dict[str, Any]],
+        object_id: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             body={"quick_setup_id": quick_setup_id, "stages": stages},
+            query_params=_only_set_keys({"object_id": object_id}),
             expect_ok=expect_ok,
         )
 
-    def complete_quick_setup(
+    def save_quick_setup(
         self,
         quick_setup_id: str,
         payload: dict[str, Any],
@@ -3037,6 +3044,85 @@ class QuickSetupClient(RestApiClient):
             "post",
             url=f"/objects/{self.domain}/{quick_setup_id}/actions/save/invoke",
             body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def edit_quick_setup(
+        self,
+        quick_setup_id: str,
+        payload: dict[str, Any],
+        object_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{quick_setup_id}/actions/edit/invoke",
+            body=payload,
+            query_params={"object_id": object_id},
+            expect_ok=expect_ok,
+        )
+
+
+class ConfigurationEntityClient(RestApiClient):
+    domain: API_DOMAIN = "configuration_entity"
+
+    def create_configuration_entity(
+        self,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def update_configuration_entity(
+        self,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/edit-single-entity/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def list_configuration_entities(
+        self,
+        entity_type: ConfigEntityType,
+        entity_type_specifier: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{_to_domain_type(entity_type)}/collections/{entity_type_specifier}",
+            expect_ok=expect_ok,
+        )
+
+    def get_configuration_entity(
+        self,
+        entity_type: ConfigEntityType,
+        entity_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{_to_domain_type(entity_type)}/{entity_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_configuration_entity_schema(
+        self,
+        entity_type: ConfigEntityType,
+        entity_type_specifier: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/form_spec/collections/{_to_domain_type(entity_type)}?entity_type_specifier={entity_type_specifier}",
             expect_ok=expect_ok,
         )
 
@@ -3079,6 +3165,7 @@ class ClientRegistry:
 
     """
 
+    ConfigurationEntity: ConfigurationEntityClient
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
@@ -3118,6 +3205,7 @@ class ClientRegistry:
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
     return ClientRegistry(
+        ConfigurationEntity=ConfigurationEntityClient(request_handler, url_prefix),
         Licensing=LicensingClient(request_handler, url_prefix),
         ActivateChanges=ActivateChangesClient(request_handler, url_prefix),
         User=UserClient(request_handler, url_prefix),

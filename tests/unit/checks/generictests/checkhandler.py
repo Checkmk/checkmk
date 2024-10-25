@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 
 
 class CheckHandler:

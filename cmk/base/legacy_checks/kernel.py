@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
 import cmk.plugins.collection.agent_based.kernel
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |

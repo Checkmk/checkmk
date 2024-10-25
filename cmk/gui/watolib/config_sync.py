@@ -21,6 +21,7 @@ from livestatus import SiteConfiguration, SiteGlobals, SiteId
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 
 import cmk.utils.paths
 
@@ -62,6 +63,14 @@ class ReplicationPath(_BaseReplicationPath):
             site_path=cleaned_path,
             excludes=final_excludes,
         )
+
+
+class ReplicationPathRegistry(Registry[ReplicationPath]):
+    def plugin_name(self, instance: ReplicationPath) -> str:
+        return instance.ident
+
+
+replication_path_registry = ReplicationPathRegistry()
 
 
 class SnapshotSettings(NamedTuple):
@@ -341,6 +350,8 @@ class SnapshotCreationBase:
 
 
 class SnapshotCreator(SnapshotCreationBase):
+    """Packe the snapshots into snapshot archives"""
+
     def __init__(
         self, activation_work_dir: str, all_generic_components: list[ReplicationPath]
     ) -> None:

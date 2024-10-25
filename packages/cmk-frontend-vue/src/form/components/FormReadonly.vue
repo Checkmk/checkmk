@@ -12,6 +12,7 @@ import type {
   List,
   TimeSpan,
   SingleChoice,
+  SingleChoiceElement,
   CascadingSingleChoice,
   LegacyValuespec,
   FixedValue,
@@ -22,7 +23,8 @@ import type {
   OptionalChoice,
   ListOfStrings,
   DualListChoice,
-  CheckboxListChoice
+  CheckboxListChoice,
+  Folder
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -30,8 +32,6 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
-
-const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
 
 function renderForm(
   formSpec: FormSpec,
@@ -47,6 +47,7 @@ function renderForm(
     case 'integer':
     case 'float':
       return renderSimpleValue(formSpec, value as string, backendValidation)
+    case 'single_choice_editable':
     case 'single_choice':
       return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
@@ -84,6 +85,8 @@ function renderForm(
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
     case 'simple_password':
       return renderSimplePassword()
+    case 'folder':
+      return renderFolder(formSpec as Folder, value as string, backendValidation)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -155,7 +158,7 @@ function renderMultipleChoice(
   formSpec: DualListChoice | CheckboxListChoice,
   value: string[]
 ): VNode {
-  let nameToTitle: Record<string, string> = {}
+  const nameToTitle: Record<string, string> = {}
   for (const element of formSpec.elements) {
     nameToTitle[element.name] = element.title
   }
@@ -164,7 +167,7 @@ function renderMultipleChoice(
   const textSpans: VNode[] = []
 
   // WIP: no i18n...
-  for (let [index, entry] of value.entries()) {
+  for (const [index, entry] of value.entries()) {
     if (index >= maxEntries) {
       break
     }
@@ -231,10 +234,7 @@ function renderDict(
       return
     }
     dictElements.push(
-      h('tr', [
-        h('th', `${element.parameter_form.title}: `),
-        h('td', { style: 'align: left' }, [elementForm])
-      ])
+      h('tr', [h('th', `${element.parameter_form.title}: `), h('td', [elementForm])])
     )
   })
   return h(
@@ -259,12 +259,9 @@ function renderSimpleValue(
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
-  return h(
-    'div',
-    isError ? { style: ERROR_BACKGROUND_COLOR } : {},
-    isError ? [`${usedValue} - ${errorMessage}`] : [usedValue]
-  )
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const cssClasses = ['form-readonly__simple-value', isError ? 'form-readonly__error' : '']
+  return h('div', { class: cssClasses }, isError ? [`${usedValue} - ${errorMessage}`] : [usedValue])
 }
 
 function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
@@ -295,7 +292,7 @@ function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
 }
 
 function renderSingleChoice(
-  formSpec: SingleChoice,
+  formSpec: { elements: SingleChoiceElement[] },
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {
@@ -306,18 +303,14 @@ function renderSingleChoice(
   }
 
   // Value not found in valid values. Try to show error
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   if (isError) {
-    return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-      `${usedValue} - ${errorMessage}`
-    ])
+    return h('div', { class: 'form-readonly__error' }, [`${usedValue} - ${errorMessage}`])
   }
 
   // In case no validation message is present, we still want to show raw_value
   // (This should not happen in production, but is useful for debugging)
-  return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-    `${usedValue} - Invalid value`
-  ])
+  return h('div', { class: 'form-readonly__error' }, [`${usedValue} - Invalid value`])
 }
 
 function renderList(
@@ -414,6 +407,14 @@ function renderLegacyValuespec(
   ])
 }
 
+function renderFolder(
+  formSpec: Folder,
+  value: string,
+  backendValidation: ValidationMessages
+): VNode {
+  return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
+}
+
 export default defineComponent({
   props: {
     spec: { type: Object as PropType<FormSpec>, required: true },
@@ -427,6 +428,22 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.form-readonly__error {
+  background-color: var(--form-readonly-error-bg-color);
+}
+
+.form-readonly__simple-value {
+  display: inline-block;
+}
+
+.form-readonly__dictionary {
+  display: inline-table;
+
+  > tr > th {
+    padding-right: var(--spacing-half);
+  }
+}
+
 .form-readonly__dictionary--two_columns > tr {
   line-height: 18px;
 
@@ -436,7 +453,7 @@ export default defineComponent({
     font-weight: var(--font-weight-bold);
   }
 
-  .form-readonly__multiple-choice span {
+  > td > .form-readonly__multiple-choice span {
     display: block;
 
     &:before {

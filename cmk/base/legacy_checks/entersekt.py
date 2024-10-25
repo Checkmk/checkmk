@@ -16,10 +16,10 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_entersekt(info):
@@ -252,15 +252,11 @@ def check_entersekt_certexpiry(item, params, info):
     infotext = "Item not found in SNMP output"
     if int(info[0][4]) < warn:
         status = 1
-        infotext = "Number of days until expiration is {} which is less than {}".format(
-            int(info[0][4]),
-            warn,
-        )
+        infotext = f"Number of days until expiration is {int(info[0][4])} which is less than {warn}"
         if int(info[0][4]) < crit:
             status = 2
-            infotext = "Number of days until expiration is {} which is less than {}".format(
-                int(info[0][4]),
-                crit,
+            infotext = (
+                f"Number of days until expiration is {int(info[0][4])} which is less than {crit}"
             )
     else:
         status = 0

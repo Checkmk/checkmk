@@ -1,11 +1,15 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 exports_files([
     "Pipfile",
     "Pipfile.lock",
     "pyproject.toml",
+    "requirements.txt",
     "requirements_lock.txt",
 ])
 
@@ -67,7 +71,73 @@ refresh_compile_commands(
     },
 )
 
-alias(
-    name = "requirements.update",
-    actual = "//cmk:requirements.update",
+genrule(
+    name = "_append_dependencies_from_pipfile",
+    srcs = [
+        ":requirements.txt",
+        "//cmk:requirements.txt",
+    ],
+    outs = ["requirements_cmk.txt"],
+    cmd = "cat $(location :requirements.txt) $(location //cmk:requirements.txt) > $@",
+)
+
+compile_pip_requirements(
+    name = "requirements",
+    timeout = "moderate",
+    data = [
+        "//packages/cmk-agent-based:requirements.txt",
+        "//packages/cmk-agent-receiver:requirements.txt",
+        "//packages/cmk-crypto:requirements.txt",
+        "//packages/cmk-graphing:requirements.txt",
+        "//packages/cmk-livestatus-client:requirements.txt",
+        "//packages/cmk-messaging:requirements.txt",
+        "//packages/cmk-mkp-tool:requirements.txt",
+        "//packages/cmk-rulesets:requirements.txt",
+        "//packages/cmk-server-side-calls:requirements.txt",
+        "//packages/cmk-shared-typing:requirements.txt",
+        "//packages/cmk-trace:requirements.txt",
+        "//packages/cmk-werks:requirements.txt",
+    ],
+    env = {
+        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
+    },
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
+    requirements_in = ":requirements_cmk.txt",
+    requirements_txt = "@//:requirements_lock.txt",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+copy_file(
+    name = "_cmc_config_proto",
+    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/config/v1/types.proto",
+    out = "cmc_proto/config/v1/types.proto",
+)
+
+copy_file(
+    name = "_cmc_cycletime_proto",
+    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/cycletime/v1/types.proto",
+    out = "cmc_proto/cycletime/v1/types.proto",
+)
+
+proto_library(
+    name = "cycletime_proto",
+    srcs = ["cmc_proto/cycletime/v1/types.proto"],
+    strip_import_prefix = "cmc_proto",
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
+    name = "config_proto",
+    srcs = ["cmc_proto/config/v1/types.proto"],
+    strip_import_prefix = "cmc_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cycletime_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
 )

@@ -12,6 +12,7 @@ from .data_size import DataSizeVisitor
 from .dictionary import DictionaryVisitor
 from .fixed_value import FixedValueVisitor
 from .float import FloatVisitor
+from .folder import FolderVisitor
 from .integer import IntegerVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
 from .list import ListVisitor
@@ -22,6 +23,7 @@ from .optional_choice import OptionalChoiceVisitor
 from .password import PasswordVisitor
 from .simple_password import SimplePasswordVisitor
 from .single_choice import SingleChoiceVisitor
+from .single_choice_editable import SingleChoiceEditableVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
 from .transform import TransformVisitor
@@ -40,6 +42,7 @@ __all__ = [
     "DictionaryVisitor",
     "FixedValueVisitor",
     "FloatVisitor",
+    "FolderVisitor",
     "IntegerVisitor",
     "LegacyValuespecVisitor",
     "ListVisitor",
@@ -51,6 +54,7 @@ __all__ = [
     "SimplePasswordVisitor",
     "CommentTextAreaVisitor",
     "SingleChoiceVisitor",
+    "SingleChoiceEditableVisitor",
     "StringVisitor",
     "TimeSpanVisitor",
     "TransformVisitor",

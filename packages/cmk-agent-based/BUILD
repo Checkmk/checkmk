@@ -1,27 +1,20 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
-load("@cmk_agent_based//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-load(":linters.bzl", "ruff_test")
 
-exports_files(["pyproject.toml"])
-
-compile_pip_requirements(
-    name = "requirements",
-    extra_args = [
-        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
-        "--quiet",
-    ],
-    requirements_in = "pyproject.toml",
-    requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
-)
+exports_files([
+    "pyproject.toml",
+    "requirements.txt",
+    "ruff.toml",
+])
 
 py_library(
     name = "cmk-agent-based",
     srcs = [
         "cmk/agent_based/prediction_backend.py",
+        "cmk/agent_based/v0_unstable_legacy.py",
         "cmk/agent_based/v1/__init__.py",
         "cmk/agent_based/v1/_check_levels.py",
         "cmk/agent_based/v1/_checking_classes.py",
@@ -46,15 +39,6 @@ py_library(
     visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("pydantic"),
-    ],
-)
-
-ruff_test(
-    name = "ruff_lint",
-    size = "small",
-    srcs = [
-        ":cmk-agent-based",
-        ":unit",
     ],
 )
 

@@ -10,10 +10,10 @@
 # BBSA-WIFI-LSN-Hald-F2-1|24|Cleared|True|57 Days, 3 Hrs 24 Mins 22 Secs
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 TOKEN_MULTIPLIER = (1, 60, 3600, 86400, 31536000)
 

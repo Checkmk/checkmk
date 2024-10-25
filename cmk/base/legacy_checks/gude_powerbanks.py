@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.

@@ -27,9 +27,9 @@ function sleep(ms: number) {
 // demo stuff end
 
 type ObjectId = string
-type ObjectData = Record<string, string>
+type ObjectData = Record<string, unknown>
 
-const api: API<ObjectId, ObjectData> = {
+const api: API<ObjectId, ObjectId> = {
   getData: async (objectId: ObjectId | null): Promise<ObjectData> => {
     console.log('getData', objectId)
     await sleep(apiDelay.value)
@@ -50,11 +50,10 @@ const api: API<ObjectId, ObjectData> = {
     if (backendValidation.value.length) {
       return { type: 'error', validationMessages: toRaw(backendValidation.value) }
     } else {
-      return { type: 'success', objectId: 'smth' }
+      return { type: 'success', entity: 'smth' }
     }
   },
   getSchema: async (): Promise<FormSpec> => {
-    console.log('getSchema')
     await sleep(apiDelay.value)
     if (apiError.value) {
       throw Error('another error for getSchema')
@@ -64,9 +63,13 @@ const api: API<ObjectId, ObjectData> = {
       title: 'dict title',
       validators: [],
       help: 'dict help',
+      layout: 'one_column',
+      no_elements_text: 'no_text',
+      additional_static_elements: null,
       elements: [
         {
           ident: 'element_ident',
+          group: null,
           required: false,
           default_value: '',
           parameter_form: {
@@ -77,7 +80,6 @@ const api: API<ObjectId, ObjectData> = {
           }
         }
       ],
-      layout: 'one_column',
       groups: []
     }
     return dict as FormSpec
@@ -132,7 +134,8 @@ const api: API<ObjectId, ObjectData> = {
       cancel_button: 'cancel',
       create_button: 'create',
       loading: 'loading data i18n',
-      fatal_error: 'unrecoverable error:'
+      fatal_error: 'unrecoverable error:',
+      validation_error: 'i18n validation_error'
     }"
     @cancel="console.log('cancel')"
     @submitted="(event: unknown) => console.log(event)"
@@ -141,8 +144,6 @@ const api: API<ObjectId, ObjectData> = {
 
 <style scoped>
 .demo-control {
-  background-color: #ccc;
-  margin: -1em;
   margin-bottom: 1em;
   padding: 1em;
   display: flex;

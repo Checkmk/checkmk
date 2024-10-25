@@ -16,7 +16,7 @@ import pika
 import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
-from pika.exceptions import AMQPConnectionError
+from pika.exceptions import AMQPConnectionError, StreamLostError
 from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
@@ -262,7 +262,7 @@ class Channel(Generic[_ModelT]):
         )
         try:
             self._pchannel.start_consuming()
-        except AMQPConnectionError as e:
+        except (AMQPConnectionError, StreamLostError) as e:
             raise CMKConnectionError from e
 
         raise RuntimeError("start_consuming() should never return")
@@ -296,7 +296,7 @@ class Connection:
 
     ```python
 
-    with Connection(AbbName("myapp"), Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
         channel = conn.channel(MyMessageModel)
         channel.queue_declare(QueueName("default"))  # includes default binding
         channel.consume(my_message_handler_callback)
@@ -313,7 +313,8 @@ class Connection:
                 make_connection_params(omd_root, "localhost", get_local_port())
             )
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def channel(self, model: type[_ModelT]) -> Channel[_ModelT]:
         return Channel(self.app, self._pconnection.channel(), model)
@@ -331,7 +332,12 @@ class Connection:
         try:
             return self._pconnection.__exit__(exc_type, value, traceback)
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
+        finally:
+            # the pika connections __exit__ will swallow these :-(
+            if isinstance(value, SystemExit):
+                raise value
 
 
 def check_remote_connection(

@@ -143,7 +143,11 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
 
     # Show outcome of previous page (that redirected to this one)
     for message in get_flashed_messages(with_categories=True):
-        html.show_message_by_msg_type(message.msg, message.msg_type)
+        html.show_message_by_msg_type(
+            msg=message.msg,
+            msg_type=message.msg_type,
+            flashed=True,
+        )
 
     # Show content
     mode.handle_page()

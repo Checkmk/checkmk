@@ -6,12 +6,13 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
+
+check_info = {}
 
 
 def discover_aws_dynamodb_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:

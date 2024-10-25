@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty

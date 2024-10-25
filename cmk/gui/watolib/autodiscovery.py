@@ -10,6 +10,7 @@ from pathlib import Path
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
+from cmk.utils.auto_queue import AutoQueue
 
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
@@ -99,6 +100,14 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
 
 
 def execute_autodiscovery() -> None:
+    # Only execute the job in case there is some work to do. The directory was so far internal to
+    # "autodiscovery" automation which is implemented in cmk.base.automations.checkm_mk. But since
+    # this condition saves us a lot of overhead and this function is part of the feature, it seems
+    # to be acceptable to do this.
+    if len(AutoQueue(cmk.utils.paths.autodiscovery_dir)) == 0:
+        logger.debug("No hosts to be discovered")
+        return
+
     job = AutodiscoveryBackgroundJob()
     if job.is_active():
         logger.debug("Another 'autodiscovery' job is already running: Skipping this time.")

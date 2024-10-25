@@ -83,7 +83,7 @@ def agent_azure_arguments(
     if params.subscription:
         args += ["--subscription", params.subscription]
     if params.piggyback_vms:
-        args += ["--piggyback-vms", params.piggyback_vms]
+        args += ["--piggyback_vms", params.piggyback_vms]
 
     if params.proxy:
         match params.proxy:

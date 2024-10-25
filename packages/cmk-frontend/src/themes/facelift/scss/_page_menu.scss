@@ -460,7 +460,8 @@ div#top_heading {
 }
 div#page_menu_popups {
   margin-right: $spacing;
-  .confirm_container {
+  .confirm_container,
+  .message_container {
     position: static;
     padding: 0;
     .confirm_popup {
@@ -510,7 +511,8 @@ div#page_menu_popups {
       }
     }
   }
-  .confirm_icon {
+  .confirm_icon,
+  .message_icon {
     position: absolute;
     width: 25px;
     height: 100%;
@@ -530,11 +532,23 @@ div#page_menu_popups {
       background-color: $color-state-2-background;
       border-color: $color-state-2-background;
     }
-    &.confirm_success {
+    &.confirm_success,
+    &.message_success {
       background-color: $success;
       border-color: $success;
     }
   }
+  .message_content {
+    text-align: left;
+    padding-left: 15px;
+  }
+
+  .message_close {
+    position: absolute;
+    top: 25%;
+    font-size: 20px;
+  }
+
   .confirm_title,
   .confirm_content {
     color: $font-color;
@@ -554,7 +568,8 @@ div#page_menu_popups {
     margin: 0 25px 0px;
     font-weight: $font-weight-bold;
   }
-  .confirm_content {
+  .confirm_content,
+  .message_content {
     margin: 5px 25px 0px;
     div.confirm_info,
     div.confirm_block {

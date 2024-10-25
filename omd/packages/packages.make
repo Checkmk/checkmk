@@ -18,10 +18,6 @@ TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 
-# Bazel paths
-BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
-BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
-
 # Intermediate Install Target
 # intermediate_install used to be necessary to link external dependecies with each other.
 # This is now done inside of Bazel
@@ -37,7 +33,7 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
 	$(BAZEL_CMD) build \
-	    $(if $(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp5 sles15sp6),--define git-ssl-no-verify=true) \
+	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    //omd:intermediate_install
 	tar -C $(BUILD_BASE_DIR) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
 

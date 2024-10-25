@@ -5,8 +5,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
-
+from cmk.agent_based.v2 import Metric, Result
 from cmk.plugins.lib import dhcp_pools
 
 # new params format

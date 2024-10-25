@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import datetime
 from collections.abc import Generator
 
@@ -16,7 +17,7 @@ from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def reset_hooks() -> Generator[None, None, None]:
     old_hooks = hooks.hooks
     try:
@@ -26,7 +27,7 @@ def reset_hooks() -> Generator[None, None, None]:
         hooks.hooks = old_hooks
 
 
-@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
     @hooks.request_memoize()
     def cached_function():
@@ -48,7 +49,7 @@ def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
     assert prev != cached_function()
 
 
-@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_request_memoize() -> None:
     @hooks.request_memoize()
     def blah(a=[]):  # pylint: disable=dangerous-default-value
@@ -63,7 +64,7 @@ def test_request_memoize() -> None:
     assert blah() == [1, 1]
 
 
-@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.usefixtures("patch_theme", "reset_hooks")
 def test_request_memoize_request_integration(
     logged_in_wsgi_app: WebTestAppForCMK, mocker: MockerFixture
 ) -> None:
@@ -99,6 +100,7 @@ def test_request_memoize_request_integration(
     page_registry.unregister("my_page")
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_request_memoize_unregister() -> None:
     # Make sure request-start hooks are still called, after plug-in hooks are
     # unregistered. In previous versions unregister_plugin_hooks also
@@ -123,6 +125,7 @@ def test_request_memoize_unregister() -> None:
     assert blah() == [1, 1, 1]
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_hook_registration() -> None:
     assert hooks.hooks == {}
 
@@ -144,6 +147,7 @@ def test_hook_registration() -> None:
     assert len(hooks.get("bli")) == 0
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_call(mocker: MockerFixture) -> None:
     hook1_mock = mocker.Mock()
     hook2_mock = mocker.Mock()
@@ -159,6 +163,7 @@ def test_call(mocker: MockerFixture) -> None:
     hook2_mock.assert_called_once()
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_call_exception_handling_for_plugin_register(mocker: MockerFixture) -> None:
     hooks.register_from_plugin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
@@ -168,6 +173,7 @@ def test_call_exception_handling_for_plugin_register(mocker: MockerFixture) -> N
     hook3_mock.assert_not_called()
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_call_exception_handling_for_builtin_register(mocker: MockerFixture) -> None:
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
@@ -177,6 +183,7 @@ def test_call_exception_handling_for_builtin_register(mocker: MockerFixture) -> 
     hook3_mock.assert_not_called()
 
 
+@pytest.mark.usefixtures("reset_hooks")
 def test_builtin_vs_plugin_hooks() -> None:
     hooks.register_builtin("bla", lambda: True)
     assert hooks.registered("bla") is True

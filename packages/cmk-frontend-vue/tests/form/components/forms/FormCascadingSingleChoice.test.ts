@@ -22,7 +22,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'nestedStringTitle',
   help: 'nestedStringHelp',
   validators: stringValidators,
-  input_hint: ''
+  input_hint: 'nestedStringInputHint',
+  field_size: 'SMALL',
+  autocompleter: null
 }
 
 const integerFormSpec: FormSpec.Integer = {
@@ -31,7 +33,8 @@ const integerFormSpec: FormSpec.Integer = {
   label: 'nestedIntegerLabel',
   help: 'nestedIntegerHelp',
   validators: [],
-  input_hint: ''
+  input_hint: null,
+  unit: null
 }
 
 const spec: FormSpec.CascadingSingleChoice = {

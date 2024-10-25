@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, DiscoveryResult, Service, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_hp_procurve_cpu(string_table: StringTable) -> DiscoveryResult:

@@ -70,14 +70,7 @@ def check_datapower_pdrive(item: str, section: StringTable) -> CheckResult:
                 progress_txt = " - Progress: %s%%" % progress
             else:
                 progress_txt = ""
-            infotext = "{}{}, Position: {}, Logical Drive: {}, Product: {} {}".format(
-                state_txt,
-                progress_txt,
-                position_txt,
-                member_of_ldrive,
-                vendor,
-                product,
-            )
+            infotext = f"{state_txt}{progress_txt}, Position: {position_txt}, Logical Drive: {member_of_ldrive}, Product: {vendor} {product}"
             yield Result(state=state, summary=infotext)
 
             if fail:

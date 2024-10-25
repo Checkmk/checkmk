@@ -20,10 +20,18 @@ def execute_test(Map config = [:]) {
             if (defaultDict.output_file) {
                 cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
-            sh("""
-                set -o pipefail
-                ${cmd}
-            """);
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'bazel-caching-credentials',
+                    /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                    passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                    usernameVariable: 'BAZEL_CACHE_USER'),
+            ]) {
+                sh("""
+                    set -o pipefail
+                    ${cmd}
+                """);
+            }
         }
     }
 }
@@ -314,6 +322,12 @@ def registry_credentials_id(edition) {
             return "nexus";
         default:
             throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
+    }
+}
+
+def assert_fips_testing(use_case, node_labels) {
+    if (use_case == "fips" && !node_labels.contains("fips")) {
+        throw new Exception("FIPS testing requested but we're not running on a fips node.");
     }
 }
 

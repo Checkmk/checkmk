@@ -2,7 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.utils.ms_teams_constants import (
     ms_teams_tmpl_host_details,

@@ -31,7 +31,7 @@ def main() {
     def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
 
     /// NOTE: this way ALL parameter are being passed through..
-    def job_parameters = [
+    def job_parameters_common = [
         [$class: 'StringParameterValue', name: 'EDITION', value: edition],
 
         // TODO perhaps use `params` + [EDITION]?
@@ -48,12 +48,22 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
         [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
         [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF],
-        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
         [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
-        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
+
+    job_parameters_use_case = [
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE],
+    ];
+
+    job_parameters_fips = [
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: 'fips'],
+        [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: "fips"],
+    ];
+
+    job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
@@ -62,6 +72,7 @@ def main() {
     def build_image = edition != "managed";
 
     def run_int_tests = true;
+    def run_fips_tests = edition == "enterprise";
     def run_comp_tests = !(edition in ["saas", "managed"]);
     def run_image_tests = !(edition in ["saas", "managed"]);
     def run_update_tests = (edition in ["enterprise", "cloud", "saas"]);
@@ -74,6 +85,7 @@ def main() {
         |build_image:........... │${build_image}│
         |run_comp_tests:........ │${run_comp_tests}│
         |run_int_tests:..........│${run_int_tests}│
+        |run_fips_tests:.........│${run_fips_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
         |use_case:.............. │${use_case}│
@@ -108,6 +120,15 @@ def main() {
                     condition: run_comp_tests,
                     raiseOnError: false,) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
+            }
+        },
+        "System Tests for FIPS compliance": {
+            success &= smart_stage(
+                name: "System Tests for FIPS compliance",
+                condition: run_fips_tests,
+                raiseOnError: false,) {
+                build(job: "${base_folder}/test-integration-fips", parameters: job_parameters_common + job_parameters_fips);
+                build(job: "${base_folder}/test-composition-fips", parameters: job_parameters_common + job_parameters_fips);
             }
         },
     ]);

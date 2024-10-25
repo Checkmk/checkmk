@@ -6,11 +6,11 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca
 # .1.3.6.1.4.1.9148.3.9.1.10.1.5.65.1 Jul 25 00:33:17 2003 GMT
@@ -46,9 +46,8 @@ def check_acme_certificates(item, params, info):
                 elif time_diff < warn:
                     state = 1
                 if state:
-                    infotext += " (warn/crit below {}/{})".format(
-                        render.timespan(warn),
-                        render.timespan(crit),
+                    infotext += (
+                        f" (warn/crit below {render.timespan(warn)}/{render.timespan(crit)})"
                     )
             else:
                 state = 2

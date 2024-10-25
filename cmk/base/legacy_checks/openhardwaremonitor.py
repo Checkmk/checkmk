@@ -5,15 +5,17 @@
 
 
 import collections
+import re
 from collections.abc import Mapping
 from typing import NotRequired, TypedDict
 
-from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -100,7 +102,7 @@ def parse_openhardwaremonitor(string_table):
 
 def _create_openhardwaremonitor_full_name(parent, name):
     def dict_replace(input_, replacements):
-        pattern = regex(r"\b(" + "|".join(replacements) + r")\b")
+        pattern = re.compile(r"\b(" + "|".join(replacements) + r")\b")
         return pattern.sub(lambda x: replacements[x.group()], input_)
 
     parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})

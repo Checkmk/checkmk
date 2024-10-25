@@ -7,8 +7,8 @@ import dataclasses
 import enum
 import math
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
-from typing import Any, Literal, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, Literal
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (

@@ -7,12 +7,13 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -358,10 +359,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         value_check = perc_value
         warn_abs: int | None = int((warn / 100.0) * total)
         crit_abs: int | None = int((crit / 100.0) * total)
-        level_msg = " (warn/crit at {}/{})".format(
-            render.percent(warn),
-            render.percent(crit),
-        )
+        level_msg = f" (warn/crit at {render.percent(warn)}/{render.percent(crit)})"
     else:
         value_check = value
         warn_abs = warn
@@ -374,12 +372,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         (warn, crit),
     )
 
-    infotext = "{}: {} of {}, {}".format(
-        info_text,
-        value,
-        total,
-        render.percent(perc_value),
-    )
+    infotext = f"{info_text}: {value} of {total}, {render.percent(perc_value)}"
 
     if state:
         infotext += level_msg

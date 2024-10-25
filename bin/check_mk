@@ -38,7 +38,7 @@ import cmk.utils.paths
 from cmk.utils.log import console
 
 import cmk.base.utils
-from cmk.base import check_api, config, profiling
+from cmk.base import config, profiling
 from cmk.base.modes import modes
 
 from cmk import trace
@@ -120,7 +120,6 @@ try:
     # the configuration may refer to check config variable names.
     if mode_name not in modes.non_checks_options():
         errors = config.load_all_plugins(
-            check_api.get_check_api_context,
             local_checks_dir=cmk.utils.paths.local_checks_dir,
             checks_dir=cmk.utils.paths.checks_dir,
         )

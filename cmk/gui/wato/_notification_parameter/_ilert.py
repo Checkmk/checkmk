@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-import cmk.utils.password_store as password_store
+from cmk.utils import password_store
 
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary

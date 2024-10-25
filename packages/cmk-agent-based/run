@@ -7,6 +7,7 @@ set -e
 
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+readonly ALL_LINTERS=mypy,ruff,bandit
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -20,10 +21,8 @@ usage() {
     echo "  -c, --clean             remove artifacts first"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -m, --mypy              run mypy"
-    echo "  -r, --ruff              run ruff linter"
-    echo "  -B, --bandit            run bandit"
-    echo "  -a, --all               shortcut for -u -F -m -p -B -C"
+    echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -a, --all               shortcut for -u -F -l all"
     echo "  -f, --format            format sources"
     echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -41,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cuFmrBafDj:h' --long 'clean,unit-tests,check-format,mypy,ruff,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cuFl:afDj:h' --long 'clean,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -53,32 +52,27 @@ parse_options() {
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
-                continue
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
                 shift
-                continue
                 ;;
             '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
-                continue
                 ;;
-            '-m' | '--mypy')
-                RUN_MYPY=yes
-                shift
-                continue
-                ;;
-            '-r' | '--ruff')
-                RUN_RUFF=yes
-                shift
-                continue
-                ;;
-            '-B' | '--bandit')
-                RUN_BANDIT=yes
-                shift
-                continue
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
                 ;;
             '-a' | '--all')
                 RUN_UNIT_TESTS=yes
@@ -87,22 +81,18 @@ parse_options() {
                 RUN_RUFF=yes
                 RUN_BANDIT=yes
                 shift
-                continue
                 ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
-                continue
                 ;;
             '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
-                continue
                 ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
-                continue
                 ;;
             '-h' | '--help')
                 usage
@@ -154,8 +144,7 @@ run_unit_tests() {
 
 run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
-    setup_venv
-    ruff check --select I --diff cmk tests
+    "${BAZEL_CMD}" lint --aspect:interactive=false --aspect:config=../../.aspect/cli/config_isort.yaml --diff --machine :all
     "${BAZEL_CMD}" run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
@@ -178,8 +167,7 @@ run_bandit() {
 
 run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
-    setup_venv
-    ruff check --select I --fix cmk tests
+    "${BAZEL_CMD}" lint --aspect:interactive=false --aspect:config=../../.aspect/cli/config_isort.yaml --fix :all
     "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"
 }
 

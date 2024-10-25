@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 

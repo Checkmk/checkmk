@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 
-from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>
@@ -130,11 +132,12 @@ check_info["netscaler_health.temp"] = LegacyCheckDefinition(
 #   |                          |_|                                         |
 #   +----------------------------------------------------------------------+
 
+PSU_STATE_PATTERN = re.compile(r"PowerSupply([\d])(Failure|)Status")
+
 
 def inventory_netscaler_health_psu(info):
     for name, state in info:
-        r = regex(r"PowerSupply([\d])(Failure|)Status")
-        m = r.match(name)
+        m = PSU_STATE_PATTERN.match(name)
         if m:
             if int(state) > 0:
                 yield m.group(1), None

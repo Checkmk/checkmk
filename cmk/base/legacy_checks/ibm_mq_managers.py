@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
-from cmk.base.config import check_info
+
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<ibm_mq_managers:sep(10)>>>
 # QMNAME(QMIMIQ11) STATUS(RUNNING) DEFAULT(NO) STANDBY(PERMITTED) INSTNAME(Installation1) INSTPATH(/usr/mqm) INSTVER(8.0.0.5)
@@ -88,20 +90,12 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
         if len(instances) == 2:
             yield (
                 0,
-                "Multi-Instance: {}={} and {}={}".format(
-                    instances[0][0],
-                    instances[0][1],
-                    instances[1][0],
-                    instances[1][1],
-                ),
+                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and {instances[1][0]}={instances[1][1]}",
             )
         elif len(instances) == 1:
             yield (
                 2,
-                "Multi-Instance: {}={} and missing partner".format(
-                    instances[0][0],
-                    instances[0][1],
-                ),
+                f"Multi-Instance: {instances[0][0]}={instances[0][1]} and missing partner",
             )
         else:
             yield 2, "Multi-Instance: unknown instances (%s)" % instances

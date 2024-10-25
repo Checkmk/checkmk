@@ -273,12 +273,12 @@ Pipfile.lock:
 			if [ "${CI}" == "true" ]; then \
 				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
 				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
-				echo "pipenv lock"; \
+				echo "make Pipfile.lock"; \
 				exit 1; \
 			fi; \
 			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
 			|| ( $(RM) -r .venv ; exit 1 ) \
-			&& ( bazel run //cmk:requirements.update ) \
+			&& ( bazel run //:requirements.update ) \
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH)
 

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from math import ceil
-from typing import Callable
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -105,15 +104,7 @@ class WMITable:
 
         headers = [name for name, index in sorted(iter(self.__headers.items()), key=lambda x: x[1])]
 
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
-            self.__class__.__name__,
-            self.__name,
-            headers,
-            key_field,
-            self.__timestamp,
-            self.__frequency,
-            self.__rows,
-        )
+        return f"{self.__class__.__name__}({self.__name!r}, {headers!r}, {key_field!r}, {self.__timestamp!r}, {self.__frequency!r}, {self.__rows!r})"
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):

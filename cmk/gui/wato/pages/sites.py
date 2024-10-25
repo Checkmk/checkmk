@@ -944,7 +944,7 @@ class ModeDistributedMonitoring(WatoMode):
         _changes.add_change(
             "edit-sites",
             _("Updated broker connection for site %s") % delete_id,
-            domains=[ConfigDomainGUI],
+            domains=[ConfigDomainGUI()],
             sites=related_sites,
         )
         return result
@@ -991,7 +991,7 @@ class ModeDistributedMonitoring(WatoMode):
         _changes.add_change(
             "edit-site",
             _("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
-            domains=[ConfigDomainGUI],
+            domains=[ConfigDomainGUI()],
             sites=[omd_site()],
         )
         flash(_("Logged out."))
@@ -1616,7 +1616,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
-            domains=[config_variable.domain()],
+            domains=[config_variable.domain()()],
             need_restart=config_variable.need_restart(),
         )
 
@@ -1791,7 +1791,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
-            domains=[config_variable.domain()],
+            domains=[config_variable.domain()()],
             need_restart=config_variable.need_restart(),
         )
         save_global_settings(

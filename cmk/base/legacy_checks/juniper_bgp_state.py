@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDBytes, SNMPTree
 from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
+
+check_info = {}
 
 
 def juniper_bgp_state_create_item(peering_entry):
@@ -64,10 +64,7 @@ def check_juniper_bgp_state(item, _no_params, parsed):
     # if we're halted, being un-established is fine
     yield (
         status if operational_state == "running" else 0,
-        "Status with peer {} is {}".format(
-            item,
-            state,
-        ),
+        f"Status with peer {item} is {state}",
     )
 
     op_status = {

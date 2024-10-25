@@ -3,13 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, FixedValue, TextInput
-from cmk.gui.wato import HTTPProxyReference
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.http import request
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.password_store import passwordstore_choices
 
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    DictElement,
+    FixedValue,
+    migrate_to_proxy,
+    Proxy,
+    String,
+)
+from cmk.rulesets.v1.form_specs._composed import CascadingSingleChoiceElement
+
 from ._base import NotificationParameter
-from ._helpers import get_url_prefix_specs, local_site_url
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterPagerDuty(NotificationParameter):
@@ -18,47 +31,73 @@ class NotificationParameterPagerDuty(NotificationParameter):
         return "pagerduty"
 
     @property
-    def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
-            hidden_keys=["webhook_url"],
-            elements=[
-                (
-                    "routing_key",
-                    CascadingDropdown(
-                        title=_("PagerDuty Service Integration Key"),
-                        help=_(
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return recompose(self._form_spec()).valuespec  # type: ignore[return-value]  # expects Valuespec[Any]
+
+    def _form_spec(self) -> DictionaryExtended:
+        # TODO register CSE specific version
+        return DictionaryExtended(
+            title=Title("Create notification with the following parameters"),
+            # optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
+            # hidden_keys=["webhook_url"],
+            elements={
+                "routing_key": DictElement(
+                    parameter_form=CascadingSingleChoice(
+                        title=Title("PagerDuty Service Integration Key"),
+                        help_text=Help(
                             "After setting up a new service in PagerDuty you will receive an "
                             "Integration key associated with that service. Copy that value here."
                         ),
-                        choices=[
-                            ("routing_key", _("Integration Key"), TextInput(size=32)),
-                            (
-                                "store",
-                                _("Key from password store"),
-                                DropdownChoice(sorted=True, choices=passwordstore_choices),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="routing_key",
+                                title=Title("Integration Key"),
+                                parameter_form=String(),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("URL from password store"),
+                                name="store",
+                                parameter_form=SingleChoiceExtended(
+                                    no_elements_text=Message(
+                                        "There are no elements defined for this selection yet."
+                                    ),
+                                    elements=[
+                                        SingleChoiceElementExtended(
+                                            title=Title("%s") % title, name=ident
+                                        )
+                                        for ident, title in passwordstore_choices()
+                                        if ident is not None
+                                    ],
+                                    type=str,
+                                ),
                             ),
                         ],
                     ),
                 ),
-                (
-                    "webhook_url",
-                    FixedValue(
+                "webhook_url": DictElement(
+                    parameter_form=FixedValue(
+                        title=Title("API endpoint from PagerDuty V2"),
                         value="https://events.pagerduty.com/v2/enqueue",
-                        title=_("API endpoint from PagerDuty V2"),
+                    )
+                ),
+                "ignore_ssl": DictElement(
+                    parameter_form=FixedValue(
+                        title=Title("Disable SSL certificate verification"),
+                        label=Label("Disable SSL certificate verification"),
+                        value="https://events.pagerduty.com/v2/enqueue",
+                        help_text=Help(
+                            "Ignore unverified HTTPS request warnings. Use with caution."
+                        ),
+                    )
+                ),
+                "proxy_url": DictElement(
+                    parameter_form=Proxy(
+                        migrate=migrate_to_proxy,
                     ),
                 ),
-                (
-                    "ignore_ssl",
-                    FixedValue(
-                        value=True,
-                        title=_("Disable SSL certificate verification"),
-                        totext=_("Disable SSL certificate verification"),
-                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
-                    ),
+                "url_prefix": _get_url_prefix_setting(
+                    default_value="automatic_https" if request.is_ssl_request else "automatic_http",
                 ),
-                ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", get_url_prefix_specs(local_site_url)),
-            ],
+            },
         )

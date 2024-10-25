@@ -2,16 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Managing configuration activation of Checkmk
 
-The major elements here are:
-
-ActivateChangesManager   - Coordinates a single activation of Checkmk config changes for all
-                           affected sites.
-SnapshotManager          - Coordinates the collection and packing of snapshots
-ABCSnapshotDataCollector - Copying or generating files to be put into snapshots
-SnapshotCreator          - Packing the snapshots into snapshot archives
-"""
+"""Manag configuration activation of Checkmk"""
 
 from __future__ import annotations
 
@@ -28,7 +20,15 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from itertools import filterfalse
@@ -43,9 +43,11 @@ from livestatus import BrokerConnections, SiteConfiguration, SiteId
 
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
+from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
@@ -82,11 +84,12 @@ from cmk.gui.site_config import (
     enabled_sites,
     get_site_config,
     is_single_local_site,
+    is_wato_slave_site,
     site_is_local,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import Users
+from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import load_users, user_sync_default_config
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
@@ -98,9 +101,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.broker_certificates import (
-    create_all_broker_certificates as create_all_broker_certificates,  # might be replcaed by the CME version
-)
+from cmk.gui.watolib.broker_certificates import BrokerCertificateSync
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -110,14 +111,13 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.config_sync import (
-    ABCSnapshotDataCollector,
-    create_distributed_wato_files,
     create_rabbitmq_definitions_file,
-    get_site_globals,
+    replication_path_registry,
     ReplicationPath,
+    ReplicationPathRegistry,
     SnapshotSettings,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_site_global_settings
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_preserving_link,
@@ -125,16 +125,16 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.piggyback_hub import (
-    distribute_piggyback_hub_configs as distribute_piggyback_hub_configs,  # might be replcaed by the CME version
-)
 from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
+from cmk.gui.watolib.snapshots import SnapshotManager
 
 from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
+from cmk.messaging.rabbitmq import DEFINITIONS_PATH as RABBITMQ_DEFINITIONS_PATH
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -162,13 +162,12 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
 
+RABBITMQ_DEFS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_defs_hash"
+
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 
 GENERAL_DIR_EXCLUDE = "__pycache__"
-
-# Directories and files to synchronize during replication
-_replication_paths: list[ReplicationPath] = []
 
 ConfigWarnings = dict[ConfigDomainName, list[str]]
 ActivationId = str
@@ -205,24 +204,8 @@ def get_free_message(format_html: bool = False) -> str:
     return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
-# TODO: find a way to make this more obvious/transparent in code
-def add_replication_paths(repl_paths: list[ReplicationPath]) -> None:
-    """Addition of any edition-specific replication paths (i.e. config files) that need
-    to be synchronised in a distributed set-up.
-
-    This addition is done dynamically by the various edition plugins.
-    {enterprise,managed}/cmk/gui/{cee,cme}/plugins/wato
-    """
-    _replication_paths.extend(repl_paths)
-
-
-def get_replication_paths() -> list[ReplicationPath]:
-    """A list of replication paths common to all editions.
-
-    NOTE: This list is enriched further by edition plugins. See
-    'add_replication_paths'.
-    """
-    repl_paths: list[ReplicationPath] = [
+def register(replication_path_registry_: ReplicationPathRegistry) -> None:
+    for repl_path in [
         ReplicationPath(
             "dir",
             "check_mk",
@@ -306,7 +289,7 @@ def get_replication_paths() -> list[ReplicationPath]:
         ReplicationPath(
             ty="dir",
             ident="rabbitmq",
-            site_path="etc/rabbitmq/definitions.d",
+            site_path=RABBITMQ_DEFINITIONS_PATH,
             excludes=["00-default.json"],
         ),
         ReplicationPath(
@@ -333,18 +316,8 @@ def get_replication_paths() -> list[ReplicationPath]:
             site_path="etc/check_mk/piggyback_hub.d/wato",
             excludes=[],
         ),
-    ]
-
-    # Include rule configuration into backup/restore/replication. Current
-    # status is not backed up.
-    if active_config.mkeventd_enabled:
-        _rule_pack_dir = str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        repl_paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
-
-        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        repl_paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
-
-    return repl_paths + _replication_paths
+    ]:
+        replication_path_registry.register(repl_path)
 
 
 # If the site is not up-to-date, synchronize it first.
@@ -1275,7 +1248,8 @@ def _add_peer_to_peer_connections(
                     site_id=destination_site,
                     site_server=urlparse(
                         replicated_sites_configs[destination_site]["multisiteurl"]
-                    ).netloc,
+                    ).hostname
+                    or "",
                     rabbitmq_port=replicated_sites_configs[destination_site].get(
                         "message_broker_port", 5672
                     ),
@@ -1295,7 +1269,7 @@ def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
     }
 
 
-def get_rabbitmq_definitions(
+def default_rabbitmq_definitions(
     peer_to_peer_connections: BrokerConnections,
 ) -> Mapping[str, rabbitmq.Definitions]:
     replicated_sites_configs = get_all_replicated_sites()
@@ -1304,7 +1278,7 @@ def get_rabbitmq_definitions(
         rabbitmq.Connection(
             connectee=rabbitmq.Connectee(
                 site_id=site_id,
-                site_server=urlparse(site_config["multisiteurl"]).netloc,
+                site_server=urlparse(site_config["multisiteurl"]).hostname or "",
                 rabbitmq_port=site_config.get("message_broker_port", 5672),
             ),
             connecter=rabbitmq.Connecter(
@@ -1318,6 +1292,20 @@ def get_rabbitmq_definitions(
         replicated_sites_configs, connection_info, peer_to_peer_connections
     )
     return rabbitmq.compute_distributed_definitions(connection_info)
+
+
+def create_and_activate_central_rabbitmq_changes(
+    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
+) -> None:
+    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
+    create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
+    new_definitions_hash = _create_folder_content_hash(
+        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
+    )
+
+    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+
+    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
 class ActivateChangesManager(ActivateChanges):
@@ -1351,6 +1339,7 @@ class ActivateChangesManager(ActivateChanges):
         self._comment: str | None = None
         self._activate_foreign = False
         self._activation_id: str | None = None
+        self._time_started = 0.0
         self._prevent_activate = False
         self._persisted_changes: list[dict[str, Any]] = []
 
@@ -1448,7 +1437,8 @@ class ActivateChangesManager(ActivateChanges):
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
-        rabbitmq_definitions = get_rabbitmq_definitions(
+        activation_features = activation_features_registry[str(version.edition(paths.omd_root))]
+        rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
             BrokerConnectionsConfigFile().load_for_reading()
         )
 
@@ -1471,15 +1461,17 @@ class ActivateChangesManager(ActivateChanges):
         execute_activation_cleanup_background_job(maximum_age=60)
 
         self._pre_activate_changes()
-        self._create_snapshots()
+        self._create_snapshots(activation_features.snapshot_manager_factory)
         self._save_activation()
 
         self._start_activation()
-        create_all_broker_certificates(omd_site(), self.dirty_sites())
+
+        create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             logger.debug("Starting piggyback hub config distribution")
-            distribute_piggyback_hub_configs(
+
+            activation_features.distribute_piggyback_hub_configs(
                 load_configuration_settings(),
                 configured_sites(),
                 {site_id for site_id, _site_config in self.dirty_sites()},
@@ -1491,8 +1483,6 @@ class ActivateChangesManager(ActivateChanges):
                     .items()
                 },
             )
-
-        create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id
 
     def _verify_valid_host_config(self):
@@ -1609,11 +1599,7 @@ class ActivateChangesManager(ActivateChanges):
             yield activation_id, self._load_activation_info(activation_id)
 
     def _site_snapshot_file(self, site_id: SiteId) -> str:
-        return "{}/{}/site_{}_sync.tar.gz".format(
-            ACTIVATION_TMP_BASE_DIR,
-            self._activation_id,
-            site_id,
-        )
+        return f"{ACTIVATION_TMP_BASE_DIR}/{self._activation_id}/site_{site_id}_sync.tar.gz"
 
     def _load_activation_info(self, activation_id: str) -> dict[str, Any]:
         info_path = self._info_path(activation_id)
@@ -1650,7 +1636,7 @@ class ActivateChangesManager(ActivateChanges):
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
-    def _pre_activate_changes(self):
+    def _pre_activate_changes(self) -> None:
         try:
             if hooks.registered("pre-distribute-changes"):
                 hooks.call("pre-distribute-changes", collect_all_hosts())
@@ -1661,7 +1647,10 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
     @tracer.start_as_current_span("create_snapshots")
-    def _create_snapshots(self):
+    def _create_snapshots(
+        self,
+        snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
+    ) -> None:
         """Creates the needed SyncSnapshots for each applicable site.
 
         Some conflict prevention is being done. This function checks for the presence of
@@ -1709,9 +1698,7 @@ class ActivateChangesManager(ActivateChanges):
             except KeyError:
                 pass
 
-            snapshot_manager = SnapshotManager.factory(
-                work_dir, site_snapshot_settings, version.edition(paths.omd_root)
-            )
+            snapshot_manager = snapshot_manager_factory(work_dir, site_snapshot_settings)
             snapshot_manager.generate_snapshots()
             logger.debug("Config sync snapshot creation took %.4f", time.time() - start)
 
@@ -1782,7 +1769,10 @@ class ActivateChangesManager(ActivateChanges):
         self._log_activation()
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(
-            self._activation_id, self._site_snapshot_settings, self._prevent_activate, self._source
+            self._activation_id,
+            self._site_snapshot_settings,
+            self._prevent_activate,
+            self._source,
         )
         job.start(
             job.schedule_sites,
@@ -1829,223 +1819,6 @@ class ActivateChangesManager(ActivateChanges):
     @staticmethod
     def site_filename(site_id):
         return "site_%s.mk" % site_id
-
-
-def make_cre_snapshot_manager(
-    work_dir: str,
-    site_snapshot_settings: dict[SiteId, SnapshotSettings],
-    edition: version.Edition,
-) -> SnapshotManager:
-    return SnapshotManager(
-        work_dir,
-        site_snapshot_settings,
-        CRESnapshotDataCollector(site_snapshot_settings),
-        reuse_identical_snapshots=True,
-        generate_in_subprocess=False,
-    )
-
-
-class SnapshotManager:
-    factory: Callable[[str, dict[SiteId, SnapshotSettings], version.Edition], SnapshotManager] = (
-        make_cre_snapshot_manager
-    )
-
-    def __init__(
-        self,
-        activation_work_dir: str,
-        site_snapshot_settings: dict[SiteId, SnapshotSettings],
-        data_collector: ABCSnapshotDataCollector,
-        reuse_identical_snapshots: bool,
-        generate_in_subprocess: bool,
-    ) -> None:
-        super().__init__()
-        self._activation_work_dir = activation_work_dir
-        self._site_snapshot_settings = site_snapshot_settings
-        self._data_collector = data_collector
-        self._reuse_identical_snapshots = reuse_identical_snapshots
-        self._generate_in_subproces = generate_in_subprocess
-
-        # Stores site and folder specific information to speed-up the snapshot generation
-        self._logger = logger.getChild(self.__class__.__name__)
-
-    def generate_snapshots(self) -> None:
-        if not self._site_snapshot_settings:
-            return  # Nothing to do
-
-        # 1. Collect files to "var/check_mk/site_configs" directory
-        with tracer.start_as_current_span("prepare_snapshot_files"):
-            self._data_collector.prepare_snapshot_files()
-
-        # 2. Allow hooks to further modify the reference data for the remote site
-        hooks.call("post-snapshot-creation", self._site_snapshot_settings)
-
-
-def _clone_site_config_directory(
-    site_logger: logging.Logger,
-    site_id: str,
-    snapshot_settings: SnapshotSettings,
-    origin_site_work_dir: str,
-) -> None:
-    site_logger.debug("Processing site %s", site_id)
-
-    if os.path.exists(snapshot_settings.work_dir):
-        shutil.rmtree(snapshot_settings.work_dir)
-
-    completed_process = subprocess.run(
-        ["cp", "-al", origin_site_work_dir, snapshot_settings.work_dir],
-        shell=False,
-        close_fds=True,
-        check=False,
-    )
-
-    assert completed_process.returncode == 0
-    site_logger.debug("Finished site")
-
-
-class CRESnapshotDataCollector(ABCSnapshotDataCollector):
-    def prepare_snapshot_files(self) -> None:
-        """Collect the files to be synchronized for all sites
-
-        This is done by copying the things declared by the generic components together to a single
-        site_config for one site. This will result in a directory containing only hard links to
-        the original files.
-
-        This directory is then cloned recursively for all sites, again with the result of having
-        a single directory per site containing a lot of hard links to the original files.
-
-        As last step the site individual files will be added.
-        """
-        # Choose one site to create the first site config for
-        site_ids = list(self._site_snapshot_settings.keys())
-        first_site = site_ids.pop(0)
-
-        # Create first directory and clone it once for each destination site
-        with tracer.start_as_current_span("prepare_first_site"):
-            self._prepare_site_config_directory(first_site)
-            self._clone_site_config_directories(first_site, site_ids)
-
-        for site_id, snapshot_settings in sorted(
-            self._site_snapshot_settings.items(), key=lambda x: x[0]
-        ):
-            with tracer.start_as_current_span(f"prepare_site_{site_id}"):
-                save_site_global_settings(
-                    get_site_globals(site_id, snapshot_settings.site_config),
-                    custom_site_path=snapshot_settings.work_dir,
-                )
-                create_distributed_wato_files(
-                    Path(snapshot_settings.work_dir), site_id, is_remote=True
-                )
-                create_rabbitmq_definitions_file(
-                    Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
-                )
-
-    def _prepare_site_config_directory(self, site_id: SiteId) -> None:
-        """
-        Gather files to be synchronized to remote sites from etc hierarchy
-
-        - Iterate all files declared by snapshot components
-        - Synchronize site hierarchy with site_config directory
-          - Remove files that do not exist anymore
-          - Add hard links
-        """
-        self._logger.debug("Processing first site %s", site_id)
-        snapshot_settings = self._site_snapshot_settings[site_id]
-
-        # Currently we don't have an incremental sync on disk. The performance of some mkdir/link
-        # calls should be good enough
-        if os.path.exists(snapshot_settings.work_dir):
-            shutil.rmtree(snapshot_settings.work_dir)
-
-        for component in self.get_generic_components():
-            # Generic components (i.e. any component that does not have "ident"
-            # = "sitespecific") are collected to be snapshotted. Site-specific
-            # components as well as distributed wato components are done later on
-            # in the process.
-
-            # Note that at this stage, components that have been deselected
-            # from site synchronisation by the user must not be pre-filtered,
-            # otherwise these settings would cascade randomly from the first site
-            # to the other sites.
-
-            # These components are deselected in the snapshot settings of the
-            # site, which is the basis of the actual synchronisation.
-
-            # Examples of components that can be excluded:
-            # - event console ("mkeventd", "mkeventd_mkp")
-            # - MKPs ("local", "mkps")
-
-            source_path = cmk.utils.paths.omd_root / component.site_path
-            target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
-
-            store.makedirs(target_path.parent)
-
-            if not source_path.exists():
-                # Not existing files things can simply be skipped, not existing files could also be
-                # skipped, but we create them here to be 1:1 compatible with the pre 1.7 sync.
-                if component.ty == "dir":
-                    store.makedirs(target_path)
-
-                continue
-
-            # Recursively hard link files (rsync --link-dest or cp -al)
-            # With Python 3 we could use "shutil.copytree(src, dst, copy_function=os.link)", but
-            # please have a look at the performance before switching over...
-            # shutil.copytree(source_path, str(target_path.parent) + "/", copy_function=os.link)
-
-            completed_process = subprocess.run(
-                ["cp", "-al", str(source_path), str(target_path.parent) + "/"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                stdin=subprocess.DEVNULL,
-                shell=False,
-                close_fds=True,
-                check=False,
-            )
-            if completed_process.returncode:
-                self._logger.error(
-                    "Failed to clone files from %s to %s: %s",
-                    source_path,
-                    str(target_path),
-                    completed_process.stdout,
-                )
-                raise MKGeneralException("Failed to create site config directory")
-
-        self._logger.debug("Finished site")
-
-    def _clone_site_config_directories(
-        self, origin_site_id: SiteId, site_ids: list[SiteId]
-    ) -> None:
-        clone_args = [
-            (
-                self._logger.getChild(f"site[{site_id}]"),
-                site_id,
-                self._site_snapshot_settings[site_id],
-                self._site_snapshot_settings[origin_site_id].work_dir,
-            )
-            for site_id in site_ids
-        ]
-
-        num_threads = 5  # based on rudimentary tests, performance improvement drops off after
-        with multiprocessing.pool.ThreadPool(processes=num_threads) as copy_pool:
-            copy_pool.starmap(_clone_site_config_directory, clone_args)
-
-    def get_generic_components(self) -> list[ReplicationPath]:
-        return get_replication_paths()
-
-    def get_site_components(
-        self, snapshot_settings: SnapshotSettings
-    ) -> tuple[list[ReplicationPath], list[ReplicationPath]]:
-        generic_site_components = []
-        custom_site_components = []
-
-        for component in snapshot_settings.snapshot_components:
-            if component.ident == "sitespecific":
-                # Only the site specific global files are individually handled in the non CME snapshot
-                custom_site_components.append(component)
-            else:
-                generic_site_components.append(component)
-
-        return generic_site_components, custom_site_components
 
 
 class ActivationCleanupBackgroundJob(BackgroundJob):
@@ -2297,7 +2070,7 @@ def _prepare_for_activation_tasks(
     source: ActivationSource,
 ) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
     config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
-        get_replication_paths()
+        list(replication_path_registry.values())
     )
     central_file_infos_per_site = {}
     site_activation_states_per_site = {}
@@ -2403,6 +2176,16 @@ def sync_and_activate(
 
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
 
+        site_activation_states = _create_broker_certificates_for_remote_sites(
+            omd_site(),
+            site_activation_states,
+            site_snapshot_settings,
+            task_pool,
+            activation_features_registry[
+                str(version.edition(paths.omd_root))
+            ].broker_certificate_sync,
+        )
+
         active_tasks = ActiveTasks(
             fetch_sync_state={},
             calc_sync_delta={},
@@ -2463,6 +2246,82 @@ def sync_and_activate(
     finally:
         for activation_site_id in site_activation_states:
             _cleanup_activation(activation_site_id, activation_id, source)
+
+
+def create_broker_certificates(
+    broker_cert_sync: BrokerCertificateSync,
+    central_ca: CertificateWithPrivateKey,
+    customer_ca: CertificateWithPrivateKey | None,
+    settings: SiteConfiguration,
+    site_activation_state: SiteActivationState,
+    origin_span: trace.Span,
+) -> SiteActivationState | None:
+    site_id = site_activation_state["_site_id"]
+    site_logger = logger.getChild(f"site[{site_id}]")
+
+    with tracer.start_as_current_span(
+        f"create_broker_certificates[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        sync_start = time.time()
+        try:
+            _set_sync_state(site_activation_state, _("Syncing broker certificates"))
+            broker_cert_sync.create_broker_certificates(site_id, settings, central_ca, customer_ca)
+            return site_activation_state
+        except Exception as e:
+            duration = time.time() - sync_start
+            update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
+
+
+def _create_broker_certificates_for_remote_sites(
+    myself: SiteId,
+    site_activation_states: Mapping[SiteId, SiteActivationState],
+    site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
+    task_pool: ThreadPool,
+    broker_sync: BrokerCertificateSync,
+) -> Mapping[SiteId, SiteActivationState]:
+    site_activation_states_certs_synced = dict(site_activation_states)
+
+    if not (
+        required_sites := broker_sync.get_site_to_sync(
+            myself,
+            [
+                (site_id, settings.site_config)
+                for site_id, settings in site_snapshot_settings.items()
+            ],
+        )
+    ):
+        return site_activation_states_certs_synced
+
+    central_ca = broker_sync.load_central_ca()
+    map_args = []
+    for customer, sites in required_sites.items():
+        customer_ca = broker_sync.load_or_create_customer_ca(customer)  # pylint: disable=assignment-from-none
+        for site_id, settings in sites:
+            map_args.append(
+                (
+                    broker_sync,
+                    central_ca,
+                    customer_ca,
+                    settings,
+                    site_activation_states[site_id],
+                    trace.get_current_span(),
+                )
+            )
+            site_activation_states_certs_synced.pop(site_id)
+
+    for result in task_pool.starmap(
+        copy_request_context(func=create_broker_certificates),
+        map_args,
+    ):
+        if result is None:
+            continue
+        site_activation_states_certs_synced[result["_site_id"]] = result
+
+    broker_sync.update_trusted_cas()
+    return site_activation_states_certs_synced
 
 
 def _cleanup_activation(
@@ -2560,7 +2419,6 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 10
-    file_filter_func: Callable[[str], bool] | None = None
 
     @classmethod
     def gui_title(cls):
@@ -2593,7 +2451,9 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             sync_and_activate(
                 self._activation_id,
                 self._site_snapshot_settings,
-                ActivateChangesSchedulerBackgroundJob.file_filter_func,
+                activation_features_registry[
+                    str(version.edition(paths.omd_root))
+                ].sync_file_filter_func,
                 self._source,
                 self._prevent_activate,
             )
@@ -2606,10 +2466,7 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
     html_code += "<ul>"
     for domain, warnings in sorted(configuration_warnings.items()):
         for warning in warnings:
-            html_code += "<li>{}: {}</li>".format(
-                escaping.escape_attribute(domain),
-                escaping.escape_attribute(warning),
-            )
+            html_code += f"<li>{escaping.escape_attribute(domain)}: {escaping.escape_attribute(warning)}</li>"
     html_code += "</ul>"
     html_code += "</div>"
     return html_code
@@ -2633,13 +2490,48 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        warnings = get_config_domain(domain_request.name)().activate(domain_request.settings)
+        warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
         results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()
     _update_links_for_agent_receiver()
+    # Only the remote sites are dealt with here, since the central site is dealt with separately.
+    # The rabbitmq definition of the central site has to be updated anytime the definition of a
+    # remote site is activated, not only when the central site is activated.
+    if is_wato_slave_site():
+        _activate_local_rabbitmq_changes()
 
     return results
+
+
+def _create_folder_content_hash(folder_path: str) -> str:
+    sha256_hash = hashlib.sha256()
+    for root, _dir, files in sorted(os.walk(folder_path)):
+        for filename in sorted(files):
+            file_path = os.path.join(root, filename)
+            with open(file_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256_hash.update(chunk)
+
+    return sha256_hash.hexdigest()
+
+
+def _restart_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
+    if old_definitions_hash != new_definitions_hash:
+        # make sure stdout and stderr is available in local variables (crash report!)
+        process = subprocess.run(["omd", "restart", "rabbitmq"], capture_output=True, check=False)
+        process.check_returncode()
+
+
+def _activate_local_rabbitmq_changes():
+    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
+    new_definitions_hash = _create_folder_content_hash(
+        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
+    )
+
+    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+
+    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
 def _add_extensions_for_license_usage():
@@ -2884,7 +2776,7 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
         particular site.
 
     """
-    repl_paths = get_replication_paths()[:]
+    repl_paths = list(replication_path_registry.values())
 
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)
@@ -3535,3 +3427,29 @@ def activate_changes_wait(
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()
     return None
+
+
+@dataclass(frozen=True)
+class ActivationFeatures:
+    edition: version.Edition
+    sync_file_filter_func: Callable[[str], bool] | None
+    snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
+    broker_certificate_sync: BrokerCertificateSync
+    get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
+    distribute_piggyback_hub_configs: Callable[
+        [
+            GlobalSettings,
+            Mapping[SiteId, SiteConfiguration],
+            Collection[SiteId],
+            Mapping[HostName, SiteId],
+        ],
+        None,
+    ]
+
+
+class ActivationFeaturesRegistry(Registry[ActivationFeatures]):
+    def plugin_name(self, instance: ActivationFeatures) -> str:
+        return str(instance.edition)
+
+
+activation_features_registry = ActivationFeaturesRegistry()

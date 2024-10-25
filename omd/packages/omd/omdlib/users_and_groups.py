@@ -81,13 +81,7 @@ def useradd(
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
 
-    cmd = "useradd {} -r -d '{}' -c 'OMD site {}' -g {} -G omd {} -s /bin/bash".format(
-        useradd_options,
-        site.dir,
-        site.name,
-        site.name,
-        site.name,
-    )
+    cmd = f"useradd {useradd_options} -r -d '{site.dir}' -c 'OMD site {site.name}' -g {site.name} -G omd {site.name} -s /bin/bash"
     if subprocess.call(shlex.split(cmd)) != 0:
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")

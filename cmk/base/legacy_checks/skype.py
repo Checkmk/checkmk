@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     inventory_wmi_table_total,
@@ -16,10 +15,12 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.wmi import WMISection
+
+check_info = {}
 
 
 def parse_skype(string_table: StringTable) -> WMISection:

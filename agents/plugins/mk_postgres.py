@@ -171,7 +171,10 @@ class PostgresBase:
         self.pg_passfile = instance.get("pg_passfile", "")
         self.pg_version = instance.get("pg_version")
         self.my_env = os.environ.copy()
-        self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
+        pg_passfile = instance.get("pg_passfile")
+        if pg_passfile:
+            self.my_env["PGPASSFILE"] = pg_passfile
+        self.sep = os.sep
         self.psql_binary_name = "psql"
         if pg_binary_path is None:
             self.psql_binary_path = self.get_psql_binary_path()
@@ -766,15 +769,15 @@ class PostgresWin(PostgresBase):
                 "BY totalwastedbytes DESC LIMIT 10;"
             )
 
-        query = "\\pset footer off \\\\"
-
         cur_rows_only = False
+        output = ""
         for idx, database in enumerate(databases):
-            query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
+            query = "\\pset footer off \\\\ \\c %s \\\\ %s" % (database, bloat_query)
             if idx == 0:
                 query = "%s \\pset tuples_only on" % query
-
-        return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
+            output += self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
+            cur_rows_only = True
+        return output
 
 
 class PostgresLinux(PostgresBase):

@@ -111,7 +111,7 @@ def _get_url_prefix_setting(
 ) -> DictElement[Any]:
     return DictElement(
         group=DictGroup(
-            title=Title("%s") % group_title if group_title else None,
+            title=Title(group_title) if group_title else None,  # pylint: disable=localization-of-non-literal-string
         ),
         parameter_form=CascadingSingleChoice(
             title=Title("URL prefix for links to Checkmk"),

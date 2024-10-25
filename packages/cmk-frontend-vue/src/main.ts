@@ -15,6 +15,7 @@ import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
+import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
 function setupVue() {
   document
@@ -48,7 +49,12 @@ function setupVue() {
           break
         }
         case 'quick_setup': {
-          app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
+          app = createApp(QuickSetup, {
+            quick_setup_id: appData.quick_setup_id,
+            mode: appData.mode,
+            toggleEnabled: appData.toggle_enabled,
+            objectId: appData.object_id || null
+          })
           break
         }
         case 'notification_overview': {
@@ -62,7 +68,16 @@ function setupVue() {
         }
         case 'notification_parameters_overview': {
           app = createApp(NotificationParametersOverviewApp, {
-            parameters: appData.parameters
+            parameters: appData.parameters,
+            i18n: appData.i18n
+          })
+          break
+        }
+        case 'graph_designer': {
+          app = createApp(GraphDesignerApp, {
+            graph_lines: appData.graph_lines,
+            graph_options: appData.graph_options,
+            i18n: appData.i18n
           })
           break
         }
@@ -77,6 +92,3 @@ function setupVue() {
 addEventListener('load', () => {
   setupVue()
 })
-
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-export const cmk_export = {}

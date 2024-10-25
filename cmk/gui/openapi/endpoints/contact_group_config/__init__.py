@@ -20,8 +20,8 @@ A contact group object can have the following relations present in `links`:
 
 """
 
-from collections.abc import Mapping
-from typing import Any, cast, Iterable, Literal
+from collections.abc import Iterable, Mapping
+from typing import Any, cast, Literal
 
 from cmk.ccc import version
 

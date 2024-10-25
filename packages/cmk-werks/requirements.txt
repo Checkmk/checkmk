@@ -1,0 +1,5 @@
+GitPython
+lxml
+markdown
+pydantic
+pytest

@@ -5,27 +5,26 @@
 
 import argparse
 import logging
-import os
 import signal
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
+from multiprocessing import Event as make_event
 from pathlib import Path
-from threading import Event
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.messaging import QueueName
-from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
-from cmk.piggyback_hub.payload import (
+from cmk.messaging import QueueName, set_logging_level
+
+from .config import CONFIG_QUEUE, PiggybackHubConfig, save_config_on_message
+from .payload import (
     PiggybackPayload,
     save_payload_on_message,
     SendingPayloadProcess,
 )
-
-from .config import CONFIG_QUEUE
 from .utils import APP_NAME, ReceivingProcess
 
 VERBOSITY_MAP = {
@@ -77,37 +76,43 @@ def _parse_arguments(argv: list[str]) -> Arguments:
 
 
 def _setup_logging(args: Arguments) -> logging.Logger:
-    logger = getLogger("cmk.piggyback_hub")
+    logger = getLogger(__name__)
     handler: logging.StreamHandler | WatchedFileHandler = (
         logging.StreamHandler(stream=sys.stderr)
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
+    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(process)d] %(message)s"))
     logger.addHandler(handler)
 
-    logger.setLevel(VERBOSITY_MAP[max(args.verbosity, 2)])
+    level = VERBOSITY_MAP[min(args.verbosity, 2)]
+    logger.setLevel(level)
+    set_logging_level(level)
 
     return logger
 
 
-def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
-    reload_config = Event()
+def run_piggyback_hub(
+    logger: logging.Logger, omd_root: Path, crash_report_callback: Callable[[], str]
+) -> int:
+    reload_config = make_event()
     processes = (
         ReceivingProcess(
             logger,
             omd_root,
             PiggybackPayload,
             save_payload_on_message(logger, omd_root),
+            crash_report_callback,
             QueueName("payload"),
             message_ttl=600,
         ),
-        SendingPayloadProcess(logger, omd_root, reload_config),
+        SendingPayloadProcess(logger, omd_root, reload_config, crash_report_callback),
         ReceivingProcess(
             logger,
             omd_root,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
+            crash_report_callback,
             CONFIG_QUEUE,
             message_ttl=None,
         ),
@@ -116,41 +121,54 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     for p in processes:
         p.start()
 
-    def terminate_all_processes() -> int:
-        logger.info("Stopping: %s", APP_NAME)
+    def terminate_all_processes(reason: str) -> int:
+        logger.info("Stopping: %s (%s)", APP_NAME.value, reason)
         for p in processes:
             p.terminate()
         return 0
 
-    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes()))
+    signal.signal(
+        signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes("received SIGTERM"))
+    )
 
     # All processes should run forever. Die if either finishes.
     for proc in cycle(processes):
         proc.join(timeout=5)
         if not proc.is_alive():
-            return terminate_all_processes()
+            assert isinstance(proc, (ReceivingProcess, SendingPayloadProcess))  # mypy :-/
+            return terminate_all_processes(f"{proc.task_name} died")
 
     raise RuntimeError("Unreachable code reached")
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(crash_report_callback: Callable[[], str], argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv
 
+    if crash_report_callback is None:
+
+        def dummy_crash_report():
+            return "No crash report created"
+
+        crash_report_callback = dummy_crash_report
+
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
+    omd_root = Path(args.omd_root)
 
-    logger.info("Starting: %s", APP_NAME)
+    logger.info("Starting: %s", APP_NAME.value)
 
     if not args.foreground:
         daemonize()
-        logger.info("Daemonized with PID %d.", os.getpid())
+        logger.info("Daemonized.")
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            return run_piggyback_hub(logger, Path(args.omd_root))
+            return run_piggyback_hub(logger, omd_root, crash_report_callback)
     except Exception as exc:
         if args.debug:
             raise
-        logger.exception("Exception: %s: %s", APP_NAME, exc)
+        logger.exception("Exception: %s: %s", APP_NAME.value, exc)
+        crash_report_msg = crash_report_callback()
+        logger.error(crash_report_msg)
         return 1

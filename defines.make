@@ -117,6 +117,10 @@ NPM_VERSION := 10
 EXTERNAL_PYPI_MIRROR := https://pypi.org/simple
 INTERNAL_PYPI_MIRROR := $(shell sed -n 's|^INTERNAL_PYPI_MIRROR = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/static_variables.bzl)
 
+# Bazel paths
+BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
+BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
+
 ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
 PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
 else

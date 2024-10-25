@@ -9,7 +9,7 @@ import type {
   CoreStats,
   RuleSection,
   FallbackWarning
-} from '@/form/components/vue_formspec_components'
+} from '@/notification/type_defs'
 import NotificationStatsComponent from '@/notification/components/NotificationStats.vue'
 import CoreStatistics from '@/notification/components/CoreStats.vue'
 import NotificationRules from '@/notification/components/NotificationRules.vue'

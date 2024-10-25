@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
@@ -78,33 +79,17 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
 
             ctime = int(ctime)
 
-            if ctime >= crit:
+            if not crit and not warn:
+                infotext += f"locktime {render.time_offset(ctime)} Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
+            elif ctime >= crit:
                 state = 2
                 lockcount += 1
-                infotext += "locktime {} (!!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
-                    render.time_offset(ctime),
-                    sidnr,
-                    serial,
-                    process,
-                    machine,
-                    osuser,
-                    object_owner,
-                    object_name,
-                )
+                infotext += f"locktime {render.time_offset(ctime)} (!!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
             elif ctime >= warn:
                 state = max(1, state)
                 lockcount += 1
-                infotext += "locktime {} (!) Session (sid,serial, proc) {},{},{} machine {} osuser {} object: {}.{} ; ".format(
-                    render.time_offset(ctime),
-                    sidnr,
-                    serial,
-                    process,
-                    machine,
-                    osuser,
-                    object_owner,
-                    object_name,
-                )
+                infotext += f"locktime {render.time_offset(ctime)} (!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
         if line[0] == item and line[1] == "":
             state = max(0, state)

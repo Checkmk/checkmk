@@ -15,13 +15,21 @@ from tests.testlib.site import Site
 
 import cmk.utils.paths
 
-from cmk.gui import http
+from cmk.gui import http, main_modules
+from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.utils.theme import Theme, theme
 
 
+@pytest.fixture(name="load_plugins", scope="session")
+def fixture_load_plugins() -> None:
+    main_modules.load_plugins()
+    if errors := get_failed_plugins():
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
+
+
 @pytest.fixture(name="request_context")
-def request_context() -> Iterator[None]:
+def request_context(load_plugins: None) -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     flask_app = session_wsgi_app(testing=True)
 

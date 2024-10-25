@@ -76,6 +76,7 @@ class ConfigurationConnection(TypedDict, total=False):
     user_sync: dict
     replicate_event_console: bool
     replicate_extensions: bool
+    message_broker_port: int
 
 
 class SiteConfig(TypedDict):

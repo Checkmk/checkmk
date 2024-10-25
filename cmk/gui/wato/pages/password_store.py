@@ -64,8 +64,8 @@ class PasswordStoreModeType(SimpleModeType[Password]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
-        return [ConfigDomainCore]
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
 
 
 class ModePasswords(SimpleListMode[Password]):

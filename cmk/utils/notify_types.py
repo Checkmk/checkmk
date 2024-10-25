@@ -156,46 +156,51 @@ GroupbyType = Literal[
     "ec_contact",
     "ec_comment",
 ]
-HostEventType = Literal[
-    "rd",
-    "ru",
-    "dr",
-    "du",
-    "ud",
-    "ur",
-    "?r",
-    "?d",
-    "?u",
-    "f",
-    "s",
-    "x",
-    "as",
-    "af",
-]
-ServiceEventType = Literal[
-    "rw",
-    "rr",
-    "rc",
-    "ru",
-    "wr",
-    "wc",
-    "wu",
-    "cr",
-    "cw",
-    "cu",
-    "ur",
-    "uw",
-    "uc",
-    "?r",
-    "?w",
-    "?c",
-    "?u",
-    "f",
-    "s",
-    "x",
-    "as",
-    "af",
-]
+
+NonStatusChangeEventType = Literal["f", "s", "x", "as", "af"]
+
+
+def is_non_status_change_event_type(value: str) -> TypeGuard[NonStatusChangeEventType]:
+    return value in get_args(NonStatusChangeEventType)
+
+
+HostEventType = (
+    Literal[
+        "rd",
+        "ru",
+        "dr",
+        "du",
+        "ud",
+        "ur",
+        "?r",
+        "?d",
+        "?u",
+    ]
+    | NonStatusChangeEventType
+)
+
+ServiceEventType = (
+    Literal[
+        "rw",
+        "rr",
+        "rc",
+        "ru",
+        "wr",
+        "wc",
+        "wu",
+        "cr",
+        "cw",
+        "cu",
+        "ur",
+        "uw",
+        "uc",
+        "?r",
+        "?w",
+        "?c",
+        "?u",
+    ]
+    | NonStatusChangeEventType
+)
 SysLogFacilityIntType = Literal[
     0,
     1,

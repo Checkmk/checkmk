@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (

@@ -52,6 +52,10 @@ onMounted(() => {
     childList: true,
     subtree: true
   })
+
+  // Always collect data on mount. Sometimes the observer is not triggered, when the
+  // legacyDOM does not contain input/select elements - like the FixedValue Valuespec
+  collectData()
 })
 
 onBeforeUnmount(() => {
@@ -61,7 +65,7 @@ onBeforeUnmount(() => {
 })
 
 function collectData() {
-  let result = Object.fromEntries(new FormData(legacyDOM.value))
+  const result = Object.fromEntries(new FormData(legacyDOM.value))
   data.value = {
     input_context: result,
     varprefix: props.spec.varprefix

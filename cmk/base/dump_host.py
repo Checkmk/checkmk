@@ -308,10 +308,7 @@ def _evaluate_params(params: TimespecificParameters) -> str:
     return (
         repr(params.evaluate(timeperiod_active))
         if params.is_constant()
-        else "Timespecific parameters at {}: {!r}".format(
-            cmk.utils.render.date_and_time(time.time()),
-            params.evaluate(timeperiod_active),
-        )
+        else f"Timespecific parameters at {cmk.utils.render.date_and_time(time.time())}: {params.evaluate(timeperiod_active)!r}"
     )
 
 

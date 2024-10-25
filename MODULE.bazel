@@ -1,4 +1,5 @@
 repo_license = use_repo_rule("//omd/packages/rules:repo_license.bzl", "detect_repo_license")
+
 repo_license(name = "repo_license")
 
 # Hedron's Compile Commands Extractor for Bazel
@@ -13,16 +14,7 @@ git_override(
 
 bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "rules_rust", version = "0.49.3")
-
-# TODO: Switch back to upstream rules_python as soon as https://github.com/bazelbuild/rules_python/pull/2238 is merged
-# We need this work-around to get the RECORD file from the wheel deployed...
-git_override(
-    module_name = "rules_python",
-    commit = "41b8921f6cd1ec34d77db9d97e9ea0c22839ebb7",
-    remote = "https://github.com/TimotheusBachinger/rules_python",
-)
-
-bazel_dep(name = "rules_python", version = "0.1.0")
+bazel_dep(name = "rules_python", version = "0.37.0")
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
 PYTHON_VERSION = "3.12.3"
@@ -39,33 +31,37 @@ bazel_dep(name = "aspect_rules_lint", version = "1.0.2")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
-    hub_name = "cmk_agent_based",
-    python_version = PYTHON_VERSION,
-    requirements_by_platform = {
-        "//packages/cmk-agent-based:requirements_lock.txt": "linux_*",
+    environment = {
+        # Hack for building extensions from source.
+        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
+        "CC": "gcc-13",
     },
-)
-use_repo(pip, "cmk_agent_based")
-pip.parse(
-    hub_name = "cmk_werks",
-    python_version = PYTHON_VERSION,
-    requirements_by_platform = {
-        "//packages/cmk-werks:requirements_lock.txt": "linux_*",
-    },
-)
-use_repo(pip, "cmk_werks")
-pip.parse(
-    hub_name = "cmk_py",
+    hub_name = "cmk_requirements",
     python_version = PYTHON_VERSION,
     requirements_by_platform = {
         "@//:requirements_lock.txt": "linux_*",
     },
-    environment = {
-        # Hack for building extensions from source.
-        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
-        "CC": "gcc-13"
-    },
 )
-use_repo(pip, "cmk_py")
+use_repo(pip, "cmk_requirements")
 
-bazel_dep(name = "protobuf", version = "28.2", repo_name = "com_google_protobuf")
+# Keep in synch with Pipfile---will work automatically when we drop pipenv
+bazel_dep(name = "protobuf", version = "24.4", repo_name = "com_google_protobuf")
+
+fork_cc_toolchain_config = use_repo_rule("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
+
+fork_cc_toolchain_config(
+    name = "forked_cc_toolchain_config",
+)
+
+register_toolchains("//omd/packages/toolchain:linux_gcc13")
+
+# bazel_skylib: Required for setting up rules_foreign_cc
+bazel_dep(name = "bazel_skylib", version = "1.6.1")
+
+single_version_override(
+    module_name = "rules_foreign_cc",
+    patch_strip = 1,
+    patches = ["//omd/packages/foreign_cc:symlink.patch"],
+)
+
+bazel_dep(name = "rules_foreign_cc", version = "0.11.1")

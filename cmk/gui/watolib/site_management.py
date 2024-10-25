@@ -454,6 +454,7 @@ class ConfigurationConnection:
     user_sync: UserSync
     replicate_event_console: bool
     replicate_extensions: bool
+    message_broker_port: int
 
     @classmethod
     def from_internal(
@@ -472,6 +473,7 @@ class ConfigurationConnection:
             ),
             replicate_event_console=internal_config["replicate_ec"],
             replicate_extensions=internal_config.get("replicate_mkps", False),
+            message_broker_port=internal_config.get("message_broker_port", 5672),
         )
 
     @classmethod
@@ -497,6 +499,7 @@ class ConfigurationConnection:
             "user_sync": self.user_sync.to_internal(),
             "replicate_ec": self.replicate_event_console,
             "replicate_mkps": self.replicate_extensions,
+            "message_broker_port": self.message_broker_port,
         }
         return configconnection
 
@@ -606,7 +609,7 @@ def add_changes_after_editing_broker_connection(
         need_sync=True,
         need_restart=True,
         sites=[omd_site()] + sites,
-        domains=[ConfigDomainGUI],
+        domains=[ConfigDomainGUI()],
     )
 
     return change_message
@@ -641,6 +644,6 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI])
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
 
     return change_message

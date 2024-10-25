@@ -360,6 +360,11 @@ class ConfigurationConnectionAttributes(BaseSchema):
         description="If you enable the replication of MKPs then during each Activate Changes MKPs that are installed on your central site and all other files below the ~/local/ directory will be also transferred to the remote site. Note: all other MKPs and files below ~/local/ on the remote site will be removed.",
         example=True,
     )
+    message_broker_port = fields.Integer(
+        required=True,
+        description="The port used by the message broker to exchange messages.",
+        example=5672,
+    )
 
 
 class SiteLoginRequest(BaseSchema):

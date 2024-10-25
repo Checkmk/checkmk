@@ -13,23 +13,28 @@ from typing import Any, Literal, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
     AdaptiveMultipleChoice,
+    CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
     DictionaryExtended,
+    Folder,
     LegacyValueSpec,
     ListExtended,
     ListOfStrings,
     OptionalChoice,
+    SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.recomposers import (
+    recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
     recompose_list,
@@ -84,6 +89,7 @@ from .visitors import (
     DictionaryVisitor,
     FixedValueVisitor,
     FloatVisitor,
+    FolderVisitor,
     get_visitor,
     IntegerVisitor,
     LegacyValuespecVisitor,
@@ -95,6 +101,7 @@ from .visitors import (
     PasswordVisitor,
     register_visitor_class,
     SimplePasswordVisitor,
+    SingleChoiceEditableVisitor,
     SingleChoiceVisitor,
     StringVisitor,
     TimeSpanVisitor,
@@ -123,8 +130,9 @@ def register_form_specs():
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
     register_visitor_class(Password, PasswordVisitor)
-    register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
+    register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
@@ -144,6 +152,7 @@ def register_form_specs():
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
     register_visitor_class(MultipleChoice, MultipleChoiceVisitor, recompose_multiple_choice)
+    register_visitor_class(Folder, FolderVisitor)
 
     # Recomposed
     register_visitor_class(String, StringVisitor, recompose_string)
@@ -154,6 +163,9 @@ def register_form_specs():
     register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
     register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
     register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
+    register_visitor_class(
+        CascadingSingleChoice, CascadingSingleChoiceVisitor, recompose_cascading_single_choice
+    )
 
 
 def register_validators():
@@ -211,9 +223,10 @@ def render_form_spec(
     vue_app_config = serialize_data_for_frontend(
         form_spec, field_id, origin, do_validate, value, display_mode
     )
-    logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
-    logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
-    logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+    if active_config.experimental_features.get("load_frontend_vue", "static_files") == "inject":
+        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
+        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 
 

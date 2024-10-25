@@ -27,6 +27,7 @@ def main() {
     def edition = params.EDITION;
 
     def make_target = "test-integration-docker";
+    def download_dir = "package_download";
 
     currentBuild.description += (
         """
@@ -72,6 +73,9 @@ def main() {
                 // runs somehow affecting the current run.
                 sh("rm -rf ${WORKSPACE}/test-results");
 
+                /// remove downloaded packages since they consume dozens of MiB
+                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
+
                 // Initialize our virtual environment before parallelization
                 sh("make .venv");
 
@@ -88,7 +92,7 @@ def main() {
                         build_params_no_check: [
                             CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                         ],
-                        dest: "package_download",
+                        dest: download_dir,
                     );
                 }
                 try {

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib import ucs_bladecenter
+
+check_info = {}
 
 # <<<ucs_bladecenter_psu:sep(9)>>>
 # equipmentPsuInputStats  Dn sys/switch-A/psu-2/input-stats       Current 0.656250        PowerAvg 153.335938     Voltage 231.500000

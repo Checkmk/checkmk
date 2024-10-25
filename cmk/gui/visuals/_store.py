@@ -97,22 +97,21 @@ def load(
 
 def _fix_lazy_strings(obj: TVisual) -> TVisual:
     """
-    Recursively evaluate all LazyStrings in the object to fixed strings by running them through
-    str()
+    Recursively evaluate all LazyStrings in the object to fixed strings by running them through str()
     """
 
-    match obj:
-        case dict():
-            # cast is needed for the TypedDicts
-            return cast(TVisual, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
-        case list():
-            return list(map(_fix_lazy_strings, obj))
-        case tuple():
-            return tuple(map(_fix_lazy_strings, obj))
-        case LazyString():
-            return str(obj)
+    def _fix(value: object) -> object:
+        if isinstance(value, dict):
+            return {attr: _fix(element) for attr, element in value.items()}
+        if isinstance(value, list):
+            return [_fix(element) for element in value]
+        if isinstance(value, tuple):
+            return tuple(_fix(element) for element in value)
+        if isinstance(value, LazyString):
+            return str(value)
+        return value
 
-    return obj
+    return cast(TVisual, {attr: _fix(value) for attr, value in obj.items()})
 
 
 class _CombinedVisualsCache(Generic[TVisual]):

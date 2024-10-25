@@ -30,6 +30,12 @@ from cmk.gui.watolib.rulesets import (
 )
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
 
+LIST_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.rulesets"),
+        permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+    ]
+)
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
 
@@ -39,7 +45,7 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
     method="get",
     query_params=[RulesetSearchOptions, field_include_links(), field_include_extensions()],
     response_schema=RulesetCollection,
-    permissions_required=PERMISSIONS,
+    permissions_required=LIST_PERMISSIONS,
 )
 def list_rulesets(param):
     """Search rule sets"""

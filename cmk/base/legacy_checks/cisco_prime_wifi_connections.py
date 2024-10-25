@@ -12,11 +12,12 @@ see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/Clien
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 Section = Mapping
 

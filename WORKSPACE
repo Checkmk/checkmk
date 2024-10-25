@@ -2,31 +2,6 @@ workspace(name = "omd_packages")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
-load("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
-
-fork_cc_toolchain_config(
-    name = "forked_cc_toolchain_config",
-)
-
-register_toolchains("//omd/packages/toolchain:linux_gcc13")
-
-RULES_FOREIGN_CC_VERSION = "0.11.1"
-
-http_archive(
-    name = "rules_foreign_cc",
-    patch_args = ["-p1"],
-    patches = ["//omd/packages/foreign_cc:symlink.patch"],
-    sha256 = "4b33d62cf109bcccf286b30ed7121129cc34cf4f4ed9d8a11f38d9108f40ba74",
-    strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
-    urls = [
-        "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-    ],
-)
-
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
 
 RULES_PKG_VERSION = "0.9.1"
 
@@ -242,6 +217,8 @@ create_python_requirements(
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
+    # TODO: Use the already existing requirements_lock.txt generated from _generate_requirements_in
+    pipfile_lock = "//:Pipfile.lock",
     requirements = "//:Pipfile",
 )
 

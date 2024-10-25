@@ -227,10 +227,6 @@ unset_locale() {
     export LC_ALL
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 read_python_version() {
     if inpath "${1}"; then
         version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -246,7 +242,7 @@ read_python_version() {
     return 1
 }
 
-preamble_2() {
+detect_python() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
@@ -269,6 +265,10 @@ preamble_2() {
         WRONG_PYTHON_COMMAND=true
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 # encryption not available for aix
 optionally_encrypt() { cat; }
@@ -1008,7 +1008,7 @@ main_setup() {
     set_variable_defaults
     unset_locale
     preamble_1
-    preamble_2
+    detect_python
 
     set_up_profiling
 }

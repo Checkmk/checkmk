@@ -12,8 +12,8 @@ import socket
 import sys
 import time
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Any
 from xml.dom import minidom
 
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
@@ -1146,7 +1146,7 @@ class ESXConnection:
 
         response = self._session.postsoap(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
-            element = get_pattern("<{entry}.*>(.*)</{entry}>".format(entry=entry), response.text)
+            element = get_pattern(f"<{entry}.*>(.*)</{entry}>", response.text)
             if element:
                 system_info[entry] = element[0]
 

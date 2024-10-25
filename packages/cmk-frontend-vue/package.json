@@ -8,21 +8,21 @@
     "dev": "vite",
     "preview": "vite preview",
     "test": "vitest run",
-    "test-eslint": "eslint . --max-warnings 0 --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
+    "test-eslint": "eslint --max-warnings 0 .",
     "test-tsc": "vue-tsc --build --force",
     "test-prettier": "prettier  --check tests/ src/ *.json *.ts *.html",
     "prettier": "prettier --write tests/ src/ *.json *.ts *.html"
   },
   "dependencies": {
-    "axios": "^1.7.4",
+    "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "core-js": "^3.38.0",
-    "lucide-vue-next": "^0.427.0",
+    "core-js": "^3.38.1",
+    "lucide-vue-next": "^0.452.0",
     "radix-vue": "^1.9.7",
-    "tailwind-merge": "^2.5.2",
+    "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
-    "vue": "^3.5.5",
+    "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {
@@ -31,21 +31,27 @@
     "@testing-library/vue": "^8.1.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.14.2",
-    "@vitejs/plugin-vue": "^5.1.2",
-    "@vue/eslint-config-prettier": "^9.0.0",
-    "@vue/eslint-config-typescript": "^13.0.0",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/eslint-config-prettier": "^10.0.0",
+    "@vue/eslint-config-typescript": "^14.0.1",
     "@vue/tsconfig": "^0.5.1",
     "chai": "^5.1.1",
-    "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.27.0",
-    "jsdom": "^24.1.1",
-    "npm-run-all2": "^6.2.2",
+    "eslint": "^9.12.0",
+    "eslint-plugin-vue": "^9.29.0",
+    "jsdom": "^25.0.1",
+    "msw": "^2.4.9",
+    "npm-run-all2": "^6.2.3",
     "prettier": "^3.3.3",
-    "sass-embedded": "^1.79.4",
-    "typescript": "~5.5.4",
-    "vite": "^5.4.0",
-    "vitest": "^1.6.0",
+    "sass-embedded": "^1.79.5",
+    "typescript": "<5.6.0",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2",
     "vitest-fail-on-console": "^0.7.1",
-    "vue-tsc": "^2.0.29"
+    "vue-tsc": "^2.1.6"
+  },
+  "msw": {
+    "workerDirectory": [
+      "src/components/_demo/public/"
+    ]
   }
 }

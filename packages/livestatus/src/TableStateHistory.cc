@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <optional>
 #include <ratio>
-#include <set>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -19,7 +18,6 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
-#include "livestatus/HostServiceState.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
@@ -194,12 +192,10 @@ const Logfile::map_type *getEntries(Logfile *logfile,
     return logfile->getEntriesFor({
         .max_lines_per_log_file = max_lines_per_log_file,
         .log_entry_classes =
-            std::bitset<32>{}
+            LogEntryClasses{}
                 .set(static_cast<int>(LogEntry::Class::alert))
                 .set(static_cast<int>(LogEntry::Class::program))
                 .set(static_cast<int>(LogEntry::Class::state)),
-        .since = {},  // TODO(sp)
-        .until = {},  // TODO(sp)
     });
 }
 
@@ -281,11 +277,42 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 void TableStateHistory::answerQuery(Query &query, const User &user,
                                     const ICore &core) {
     log_cache_->apply(
-        [this, &query, &user, &core](const LogFiles &log_cache,
+        [this, &query, &user, &core](const LogFiles &log_files,
                                      size_t /*num_cached_log_messages*/) {
-            answerQueryInternal(query, user, core, log_cache);
+            answerQueryInternal(query, user, core, log_files);
         });
 }
+
+namespace {
+// Set still unknown hosts / services to unmonitored
+void set_unknown_to_unmonitored(
+    bool in_nagios_initial_states,
+    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    if (in_nagios_initial_states) {
+        for (const auto &[key, hst] : state_info) {
+            if (hst->_may_no_longer_exist) {
+                hst->_has_vanished = true;
+            }
+        }
+    }
+}
+
+void handle_log_initial_states(
+    const LogEntry *entry,
+    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    // This feature is only available if log_initial_states is set to 1. If
+    // log_initial_states is set, each nagios startup logs the initial states of
+    // all known hosts and services. Therefore we can detect if a host is no
+    // longer available after a nagios startup. If it still exists an INITIAL
+    // HOST/SERVICE state entry will follow up shortly.
+    for (const auto &[key, hst] : state_info) {
+        if (!hst->_has_vanished) {
+            hst->_last_known_time = entry->time();
+            hst->_may_no_longer_exist = true;
+        }
+    }
+}
+}  // namespace
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
@@ -394,23 +421,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             only_update = false;
         }
 
-        if (in_nagios_initial_states &&
-            entry->kind() != LogEntryKind::state_service_initial &&
-            entry->kind() != LogEntryKind::state_host_initial) {
-            // Set still unknown hosts / services to unmonitored
-            for (const auto &[key, hst] : state_info) {
-                if (hst->_may_no_longer_exist) {
-                    hst->_has_vanished = true;
-                }
-            }
-            in_nagios_initial_states = false;
-        }
-
-        HostServiceKey key = nullptr;
-        bool is_service = false;
-        const auto *entry_host = core.find_host(entry->host_name());
-        const auto *entry_service =
-            core.find_service(entry->host_name(), entry->service_description());
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -418,192 +428,60 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::log_version:
             case LogEntryKind::acknowledge_alert_host:
             case LogEntryKind::acknowledge_alert_service:
+                set_unknown_to_unmonitored(in_nagios_initial_states,
+                                           state_info);
+                in_nagios_initial_states = false;
+                break;
+            case LogEntryKind::state_service_initial:
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, false,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
-            case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                key = entry_service != nullptr
-                          ? entry_service->handleForStateHistory()
-                          : nullptr;
-                is_service = true;
-            // fall-through
+                set_unknown_to_unmonitored(in_nagios_initial_states,
+                                           state_info);
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, false,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
+                in_nagios_initial_states = false;
+                break;
+            case LogEntryKind::state_host_initial:
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, true,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
+                break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
-            case LogEntryKind::state_host_initial:
             case LogEntryKind::downtime_alert_host:
-            case LogEntryKind::flapping_host: {
-                if (!is_service) {
-                    key = entry_host == nullptr
-                              ? nullptr
-                              : entry_host->handleForStateHistory();
-                }
-
-                if (key == nullptr) {
-                    continue;
-                }
-
-                if (object_blacklist.contains(key)) {
-                    // Host/Service is not needed for this query and has already
-                    // been filtered out.
-                    continue;
-                }
-
-                // Find state object for this host/service
-                HostServiceState *state = nullptr;
-                auto it_hst = state_info.find(key);
-                if (it_hst == state_info.end()) {
-                    // Create state object that we also need for filtering right
-                    // now
-                    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-                    state = new HostServiceState();
-                    state->_is_host = entry->service_description().empty();
-                    state->_host = entry_host;
-                    state->_service = entry_service;
-                    state->_host_name = entry->host_name();
-                    state->_service_description = entry->service_description();
-
-                    // No state found. Now check if this host/services is
-                    // filtered out.  Note: we currently do not filter out hosts
-                    // since they might be needed for service states
-                    if (!entry->service_description().empty()) {
-                        if (!object_filter->accepts(Row{state}, user,
-                                                    query.timezoneOffset())) {
-                            object_blacklist.insert(key);
-                            delete state;  // NOLINT(cppcoreguidelines-owning-memory)
-                            continue;
-                        }
-                    }
-
-                    // Host/Service relations
-                    if (state->_is_host) {
-                        for (const auto &[key, hst] : state_info) {
-                            if (hst->_host != nullptr &&
-                                hst->_host->handleForStateHistory() ==
-                                    state->_host->handleForStateHistory()) {
-                                state->_services.push_back(hst);
-                            }
-                        }
-                    } else {
-                        auto it_inh = state_info.find(
-                            state->_host->handleForStateHistory());
-                        if (it_inh != state_info.end()) {
-                            it_inh->second->_services.push_back(state);
-                        }
-                    }
-                    // Store this state object for tracking state transitions
-                    state_info.emplace(key, state);
-                    state->_from = since;
-
-                    // Get notification period of host/service
-                    // If this host/service is no longer available in nagios ->
-                    // set to ""
-                    state->_notification_period =
-                        state->_service != nullptr
-                            ? state->_service->notificationPeriodName()
-                        : state->_host != nullptr
-                            ? state->_host->notificationPeriodName()
-                            : "";
-
-                    // Same for service period.
-                    state->_service_period =
-                        state->_service != nullptr
-                            ? state->_service->servicePeriodName()
-                        : state->_host != nullptr
-                            ? state->_host->servicePeriodName()
-                            : "";
-
-                    // Determine initial in_notification_period status
-                    auto tmp_period =
-                        notification_periods.find(state->_notification_period);
-                    if (tmp_period != notification_periods.end()) {
-                        state->_in_notification_period = tmp_period->second;
-                    } else {
-                        state->_in_notification_period = 1;
-                    }
-
-                    // Same for service period
-                    tmp_period =
-                        notification_periods.find(state->_service_period);
-                    if (tmp_period != notification_periods.end()) {
-                        state->_in_service_period = tmp_period->second;
-                    } else {
-                        state->_in_service_period = 1;
-                    }
-
-                    // If this key is a service try to find its host and apply
-                    // its _in_host_downtime and _host_down parameters
-                    if (!state->_is_host) {
-                        auto my_host = state_info.find(
-                            state->_host->handleForStateHistory());
-                        if (my_host != state_info.end()) {
-                            state->_in_host_downtime =
-                                my_host->second->_in_host_downtime;
-                            state->_host_down = my_host->second->_host_down;
-                        }
-                    }
-
-                    // Log UNMONITORED state if this host or service just
-                    // appeared within the query timeframe
-                    // It gets a grace period of ten minutes (nagios startup)
-                    if (!only_update && entry->time() - since > 10min) {
-                        state->_debug_info = "UNMONITORED ";
-                        state->_state = -1;
-                    }
-                } else {
-                    state = it_hst->second;
-                }
-
-                auto state_changed = updateHostServiceState(
-                    query, user, core, query_timeframe, entry, state,
-                    only_update, notification_periods);
-                // Host downtime or state changes also affect its services
-                if (entry->kind() == LogEntryKind::alert_host ||
-                    entry->kind() == LogEntryKind::state_host ||
-                    entry->kind() == LogEntryKind::downtime_alert_host) {
-                    if (state_changed == ModificationStatus::changed) {
-                        for (auto &svc : state->_services) {
-                            updateHostServiceState(
-                                query, user, core, query_timeframe, entry, svc,
-                                only_update, notification_periods);
-                        }
-                    }
-                }
+            case LogEntryKind::flapping_host:
+                set_unknown_to_unmonitored(in_nagios_initial_states,
+                                           state_info);
+                handle_state_entry(query, user, core, query_timeframe, entry,
+                                   only_update, notification_periods, true,
+                                   state_info, object_blacklist, *object_filter,
+                                   since);
+                in_nagios_initial_states = false;
                 break;
-            }
-            case LogEntryKind::timeperiod_transition: {
-                try {
-                    const TimeperiodTransition tpt(entry->options());
-                    notification_periods[tpt.name()] = tpt.to();
-                    for (const auto &[key, hst] : state_info) {
-                        updateHostServiceState(
-                            query, user, core, query_timeframe, entry, hst,
-                            only_update, notification_periods);
-                    }
-                } catch (const std::logic_error &e) {
-                    Warning(core.loggerLivestatus())
-                        << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                        << entry->message();
-                }
+            case LogEntryKind::timeperiod_transition:
+                set_unknown_to_unmonitored(in_nagios_initial_states,
+                                           state_info);
+                handle_timeperiod_transition(query, user, core, query_timeframe,
+                                             entry, only_update,
+                                             notification_periods, state_info);
+                in_nagios_initial_states = false;
                 break;
-            }
-            case LogEntryKind::log_initial_states: {
-                // This feature is only available if log_initial_states is set
-                // to 1. If log_initial_states is set, each nagios startup logs
-                // the initial states of all known hosts and services. Therefore
-                // we can detect if a host is no longer available after a nagios
-                // startup. If it still exists an INITIAL HOST/SERVICE state
-                // entry will follow up shortly.
-                for (const auto &[key, hst] : state_info) {
-                    if (!hst->_has_vanished) {
-                        hst->_last_known_time = entry->time();
-                        hst->_may_no_longer_exist = true;
-                    }
-                }
+            case LogEntryKind::log_initial_states:
+                set_unknown_to_unmonitored(in_nagios_initial_states,
+                                           state_info);
+                handle_log_initial_states(entry, state_info);
                 in_nagios_initial_states = true;
                 break;
-            }
         }
     }
 
@@ -634,6 +512,170 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
     for (auto &[key, hst] : state_info) {
         delete hst;  // NOLINT(cppcoreguidelines-owning-memory)
+    }
+}
+
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+void TableStateHistory::handle_state_entry(
+    Query &query, const User &user, const ICore &core,
+    std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
+    bool only_update, const std::map<std::string, int> &notification_periods,
+    bool is_host_entry,
+    std::map<HostServiceKey, HostServiceState *> &state_info,
+    std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
+    std::chrono::system_clock::time_point since) {
+    const auto *entry_host = core.find_host(entry->host_name());
+    const auto *entry_service =
+        core.find_service(entry->host_name(), entry->service_description());
+
+    HostServiceKey key =
+        is_host_entry
+            ? (entry_host == nullptr ? nullptr
+                                     : entry_host->handleForStateHistory())
+            : (entry_service == nullptr
+                   ? nullptr
+                   : entry_service->handleForStateHistory());
+    if (key == nullptr) {
+        return;
+    }
+
+    if (object_blacklist.contains(key)) {
+        // Host/Service is not needed for this query and has already been
+        // filtered out.
+        return;
+    }
+
+    // Find state object for this host/service
+    HostServiceState *state = nullptr;
+    auto it_hst = state_info.find(key);
+    if (it_hst == state_info.end()) {
+        // Create state object that we also need for filtering right now
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        state = new HostServiceState();
+        state->_is_host = entry->service_description().empty();
+        state->_host = entry_host;
+        state->_service = entry_service;
+        state->_host_name = entry->host_name();
+        state->_service_description = entry->service_description();
+
+        // No state found. Now check if this host/services is filtered out.
+        // Note: we currently do not filter out hosts since they might be needed
+        // for service states
+        if (!entry->service_description().empty()) {
+            if (!object_filter.accepts(Row{state}, user,
+                                       query.timezoneOffset())) {
+                object_blacklist.insert(key);
+                delete state;  // NOLINT(cppcoreguidelines-owning-memory)
+                return;
+            }
+        }
+
+        // Host/Service relations
+        if (state->_is_host) {
+            for (const auto &[key, hst] : state_info) {
+                if (hst->_host != nullptr &&
+                    hst->_host->handleForStateHistory() ==
+                        state->_host->handleForStateHistory()) {
+                    state->_services.push_back(hst);
+                }
+            }
+        } else {
+            auto it_inh =
+                state_info.find(state->_host->handleForStateHistory());
+            if (it_inh != state_info.end()) {
+                it_inh->second->_services.push_back(state);
+            }
+        }
+        // Store this state object for tracking state transitions
+        state_info.emplace(key, state);
+        state->_from = since;
+
+        // Get notification period of host/service. If this host/service is no
+        // longer available in nagios -> set to ""
+        state->_notification_period =
+            state->_service != nullptr
+                ? state->_service->notificationPeriodName()
+            : state->_host != nullptr ? state->_host->notificationPeriodName()
+                                      : "";
+
+        // Same for service period.
+        state->_service_period =
+            state->_service != nullptr ? state->_service->servicePeriodName()
+            : state->_host != nullptr  ? state->_host->servicePeriodName()
+                                       : "";
+
+        // Determine initial in_notification_period status
+        auto tmp_period =
+            notification_periods.find(state->_notification_period);
+        if (tmp_period != notification_periods.end()) {
+            state->_in_notification_period = tmp_period->second;
+        } else {
+            state->_in_notification_period = 1;
+        }
+
+        // Same for service period
+        tmp_period = notification_periods.find(state->_service_period);
+        if (tmp_period != notification_periods.end()) {
+            state->_in_service_period = tmp_period->second;
+        } else {
+            state->_in_service_period = 1;
+        }
+
+        // If this key is a service try to find its host and apply its
+        // _in_host_downtime and _host_down parameters
+        if (!state->_is_host) {
+            auto my_host =
+                state_info.find(state->_host->handleForStateHistory());
+            if (my_host != state_info.end()) {
+                state->_in_host_downtime = my_host->second->_in_host_downtime;
+                state->_host_down = my_host->second->_host_down;
+            }
+        }
+
+        // Log UNMONITORED state if this host or service just appeared within
+        // the query timeframe. It gets a grace period of ten minutes (nagios
+        // startup)
+        if (!only_update && entry->time() - since > 10min) {
+            state->_debug_info = "UNMONITORED ";
+            state->_state = -1;
+        }
+    } else {
+        state = it_hst->second;
+    }
+
+    auto state_changed =
+        updateHostServiceState(query, user, core, query_timeframe, entry, state,
+                               only_update, notification_periods);
+    // Host downtime or state changes also affect its services
+    if (entry->kind() == LogEntryKind::alert_host ||
+        entry->kind() == LogEntryKind::state_host ||
+        entry->kind() == LogEntryKind::downtime_alert_host) {
+        if (state_changed == ModificationStatus::changed) {
+            for (auto &svc : state->_services) {
+                updateHostServiceState(query, user, core, query_timeframe,
+                                       entry, svc, only_update,
+                                       notification_periods);
+            }
+        }
+    }
+}
+
+void TableStateHistory::handle_timeperiod_transition(
+    Query &query, const User &user, const ICore &core,
+    std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
+    bool only_update, std::map<std::string, int> &notification_periods,
+    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    try {
+        const TimeperiodTransition tpt(entry->options());
+        notification_periods[tpt.name()] = tpt.to();
+        for (const auto &[key, hst] : state_info) {
+            updateHostServiceState(query, user, core, query_timeframe, entry,
+                                   hst, only_update, notification_periods);
+        }
+    } catch (const std::logic_error &e) {
+        Warning(core.loggerLivestatus())
+            << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+            << entry->message();
     }
 }
 

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.1.1 11960 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.1.1
 # .1.3.6.1.4.1.1916.1.1.1.38.1.3.1.2 0 --> EXTREME-SYSTEM-MIB::extremePowerSupplyOutputVoltage.1.2

@@ -7,8 +7,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from itertools import chain
 from typing import Any
 
-from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
+
+from cmk.agent_based.v0_unstable_legacy import passwordstore_get_cmdline
 
 _DEFAULT_OPTIONS = {
     "quiet_cache": False,

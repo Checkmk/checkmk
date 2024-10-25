@@ -5,10 +5,9 @@
 
 import logging
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from multiprocessing.synchronize import Event
 from pathlib import Path
-from threading import Event
-from typing import Callable
 
 from pydantic import BaseModel
 
@@ -28,6 +27,18 @@ class PiggybackHubConfig(BaseModel):
     targets: Mapping[HostName, str] = {}
 
 
+class _PersistedPiggybackHubConfig(BaseModel):
+    targets: Mapping[HostName, str] = {}
+
+
+def _save_config(paths: PiggybackHubPaths, config: PiggybackHubConfig) -> None:
+    persisted = _PersistedPiggybackHubConfig(targets=config.targets)
+    paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
+    tmp_path.write_text(f"{persisted.model_dump_json()}\n")
+    tmp_path.rename(paths.config)
+
+
 def save_config_on_message(
     logger: logging.Logger, omd_root: Path, reload_config: Event
 ) -> Callable[[Channel[PiggybackHubConfig], DeliveryTag, PiggybackHubConfig], None]:
@@ -38,7 +49,7 @@ def save_config_on_message(
     ) -> None:
         logger.debug("New configuration received")
 
-        save_config(create_paths(omd_root), received)
+        _save_config(create_paths(omd_root), received)
 
         reload_config.set()
 
@@ -47,18 +58,12 @@ def save_config_on_message(
     return _on_message
 
 
-def save_config(paths: PiggybackHubPaths, config: PiggybackHubConfig) -> None:
-    paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
-    tmp_path.write_text(f"{config.model_dump_json()}\n")
-    tmp_path.rename(paths.config)
-
-
 def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
     try:
-        return PiggybackHubConfig.model_validate_json(paths.config.read_text())
+        persisted = _PersistedPiggybackHubConfig.model_validate_json(paths.config.read_text())
     except FileNotFoundError:
         return PiggybackHubConfig()
+    return PiggybackHubConfig(targets=persisted.targets)
 
 
 def distribute_config(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:

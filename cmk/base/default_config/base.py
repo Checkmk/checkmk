@@ -25,7 +25,7 @@ from cmk.fetchers import IPMICredentials
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
-from cmk.base.server_side_calls import ConfigSet as SSCConfigSet
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration

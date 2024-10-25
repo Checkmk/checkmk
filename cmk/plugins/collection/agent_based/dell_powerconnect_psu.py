@@ -98,10 +98,7 @@ def check_dell_powerconnect_psu(item: str, section: Sequence[StringTable]) -> Ch
 
             yield Result(
                 state=status,
-                summary="Condition is {}, with source {}".format(
-                    dell_powerconnect_status,
-                    dell_powerconnect_psu_supply_map[supply],
-                ),
+                summary=f"Condition is {dell_powerconnect_status}, with source {dell_powerconnect_psu_supply_map[supply]}",
             )
             return
 

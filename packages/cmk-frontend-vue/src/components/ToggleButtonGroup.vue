@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import SimpleButton from './SimpleButton.vue'
+import CmkButton from './CmkButton.vue'
 
 export type ToggleButtonOption = {
   label: string
@@ -16,26 +16,26 @@ export interface ToggleButtonGroupProps {
   value?: string | null
 }
 
-const props = withDefaults(defineProps<ToggleButtonGroupProps>(), {
-  value: null
-})
+defineProps<ToggleButtonGroupProps>()
+const model = defineModel<string>({ required: true })
 
-defineEmits(['change'])
-
-const isSelected = (value: string) => value === props.value
+const isSelected = (value: string) => value === model.value
+function setSelectedOption(value: string) {
+  model.value = value
+}
 </script>
 
 <template>
   <div class="toggle_buttons_container">
-    <SimpleButton
+    <CmkButton
       v-for="option in options"
       :key="option.value"
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
-      :label="option.label"
       :aria-label="`Toggle ${option.label}`"
-      @click="$emit('change', option.value)"
-    />
+      @click.prevent="setSelectedOption(option.value)"
+      >{{ option.label }}</CmkButton
+    >
   </div>
 </template>
 
@@ -56,6 +56,6 @@ const isSelected = (value: string) => value === props.value
 }
 
 .selected {
-  background-color: var(--default-select-background-color);
+  background-color: var(--default-form-element-bg-color);
 }
 </style>

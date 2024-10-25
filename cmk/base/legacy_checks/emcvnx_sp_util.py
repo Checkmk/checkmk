@@ -14,10 +14,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
+
+check_info = {}
 
 
 def parse_emcvnx_sp_util(string_table):

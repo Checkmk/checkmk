@@ -5,7 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-checkname = "mem"
+checkname = "mem_linux"
 
 parsed = {
     "MemTotal": 8588865536,
@@ -24,10 +24,10 @@ parsed = {
     "Writeback": 5,
 }
 
-discovery = {"win": [], "used": [], "vmalloc": [], "linux": [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    "linux": [
+    "": [
         (
             None,
             {

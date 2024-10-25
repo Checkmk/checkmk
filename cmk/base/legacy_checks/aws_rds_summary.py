@@ -7,11 +7,12 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.plugins.aws.lib import aws_rds_service_item
+
+check_info = {}
 
 Section = Mapping[str, Any]
 

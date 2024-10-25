@@ -10,14 +10,15 @@ from dataclasses import replace
 
 from pytest import MonkeyPatch
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register import check_plugins_legacy
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
 
 
@@ -208,7 +209,9 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
 
 
 def test_create_check_plugin_from_legacy_wo_params() -> None:
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(MINIMAL_CHECK_INFO)
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
+        MINIMAL_CHECK_INFO, LegacyPluginLocation("blah/norris.py")
+    )
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
@@ -229,7 +232,9 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
         check_default_parameters={"levels": (23, 42)},
     )
 
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(check_info_element)
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
+        check_info_element, LegacyPluginLocation("blah/norris.py")
+    )
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]

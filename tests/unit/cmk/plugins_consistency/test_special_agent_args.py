@@ -12,8 +12,6 @@ import pytest
 
 from cmk.utils import password_store
 
-from cmk.base.server_side_calls import load_special_agents
-
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
@@ -21,6 +19,7 @@ from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.prometheus.special_agents import agent_prometheus
+from cmk.server_side_calls_backend import load_special_agents
 from cmk.special_agents import (
     agent_activemq,
     agent_allnet_ip_sensoric,
@@ -108,13 +107,8 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 UNMIGRATED = {
     "ipmi_sensors",
     "jira",
-    "mqtt",
     "ruckus_spot",
     "salesforce",
-    "smb_share",
-    "splunk",
-    "ucs_bladecenter",
-    "vnx_quotas",
 }
 
 
@@ -229,7 +223,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
 
 
 def test_all_agents_tested() -> None:
-    _errors, agents = load_special_agents()
+    agents = load_special_agents(raise_errors=True)
     migrated = {agent.name for agent in agents.values()}
     assert not migrated & UNMIGRATED
     assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)

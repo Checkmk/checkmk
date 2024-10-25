@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -39,20 +39,27 @@ def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) ->
 def distribute_piggyback_hub_configs(
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
-    dirty_sites: Container[SiteId],  # only needed in CME case.
+    dirty_sites: Collection[SiteId],  # only needed in CME case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
-    site_configs = filter_for_enabled_piggyback_hub(global_settings, configured_sites)
+    distribute_config(compute_new_config(global_settings, configured_sites, hosts_sites), omd_root)
 
-    new_config = PiggybackHubConfig(
-        targets={
-            host_name: site_id
-            for host_name, site_id in hosts_sites.items()
-            if site_id in site_configs
+
+def compute_new_config(
+    global_settings: GlobalSettings,
+    configured_sites: Mapping[SiteId, SiteConfiguration],
+    hosts_sites: Mapping[HostName, SiteId],
+) -> Mapping[str, PiggybackHubConfig]:
+    sites_to_update = _filter_for_enabled_piggyback_hub(global_settings, configured_sites)
+
+    def _make_targets(for_site: SiteId) -> Mapping[HostName, SiteId]:
+        return {
+            host_name: target_site
+            for host_name, target_site in hosts_sites.items()
+            if target_site != for_site and target_site in sites_to_update
         }
-    )
 
-    distribute_config({site: new_config for site in site_configs}, omd_root)
+    return {site: PiggybackHubConfig(targets=_make_targets(site)) for site in sites_to_update}
 
 
 def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:
@@ -61,7 +68,7 @@ def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: Glob
     return global_settings.get("piggyback_hub_enabled", True)
 
 
-def filter_for_enabled_piggyback_hub(
+def _filter_for_enabled_piggyback_hub(
     global_settings: GlobalSettings, configured_sites: Mapping[SiteId, SiteConfiguration]
 ) -> Mapping[SiteId, SiteConfiguration]:
     return {

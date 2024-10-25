@@ -154,7 +154,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
-from cmk.base import check_api, config, core_config, notify, server_side_calls, sources
+from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
@@ -179,18 +179,17 @@ from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
-from cmk.base.server_side_calls import (
-    ExecutableFinder,
-    load_active_checks,
-    load_special_agents,
-    SpecialAgent,
-    SpecialAgentCommandLine,
-)
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.server_side_calls_backend import (
+    ExecutableFinder,
+    load_special_agents,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+)
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -544,11 +543,7 @@ def _active_check_preview_rows(
     host_name: HostName,
     ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
-    active_check_rules = config_cache.active_checks(host_name)
-    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     ignored_services = config.IgnoredServices(config_cache, host_name)
-    ruleset_matcher = config_cache.ruleset_matcher
-    translations = config.get_service_translations(ruleset_matcher, host_name)
 
     def make_check_source(desc: str) -> str:
         return "ignored_active" if desc in ignored_services else "active"
@@ -557,38 +552,7 @@ def _active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    def make_final_service_name(sn: ServiceName) -> ServiceName:
-        return config.get_final_service_description(sn, translations)
-
-    host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-    resource_macros = config.get_resource_macros()
-    macros = {**host_macros, **resource_macros}
     password_store_file = cmk.utils.password_store.pending_password_store_path()
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        host_name
-    )
-    active_check_config = server_side_calls.ActiveCheck(
-        load_active_checks()[1],
-        host_name,
-        config.get_ssc_host_config(
-            host_name,
-            config_cache.alias(host_name),
-            config_cache.default_address_family(host_name),
-            config_cache.ip_stack_config(host_name),
-            additional_addresses_ipv4,
-            additional_addresses_ipv6,
-            macros,
-            ip_address_of,
-        ),
-        config.http_proxies,
-        make_final_service_name,
-        cmk.utils.password_store.load(password_store_file),
-        password_store_file,
-        ExecutableFinder(
-            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-        ),
-        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-    )
 
     return [
         CheckPreviewEntry(
@@ -608,7 +572,13 @@ def _active_check_preview_rows(
             new_labels={},
             found_on_nodes=[host_name],
         )
-        for active_service in active_check_config.get_active_service_data(active_check_rules)
+        for active_service in config_cache.active_check_services(
+            host_name,
+            config_cache.get_host_attributes(host_name, ip_address_of),
+            ip_address_of,
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
+        )
     ]
 
 
@@ -995,7 +965,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # (See autochecks.set_autochecks_of_cluster())
         if hostname in config_cache.hosts_config.clusters:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )
@@ -1354,15 +1323,12 @@ class AutomationRenameHosts(Automation):
         # Logfiles and history files of CMC and Nagios. Problem
         # here: the exact place of the hostname varies between the
         # various log entry lines
-        sed_commands = r"""
-s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: {old};/\1 \2 STATE: {new};/
-s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: {old};/\1 \2ALERT: {new};/
-s/PASSIVE (HOST|SERVICE) CHECK: {old};/PASSIVE \1 CHECK: {new};/
-s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{old};/\1 NOTIFICATION: \2;{new};/
-""".format(
-            old=oldregex,
-            new=newname,
-        )
+        sed_commands = rf"""
+s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: {oldregex};/\1 \2 STATE: {newname};/
+s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: {oldregex};/\1 \2ALERT: {newname};/
+s/PASSIVE (HOST|SERVICE) CHECK: {oldregex};/PASSIVE \1 CHECK: {newname};/
+s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname};/
+"""
 
         handled_files: list[str] = []
 
@@ -1511,40 +1477,15 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
-        host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
-        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = config.get_resource_macros()
-        macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
-        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-            host_name
-        )
-        active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+
+        for active_service in config_cache.active_check_services(
             host_name,
-            config.get_ssc_host_config(
-                host_name,
-                config_cache.alias(host_name),
-                config_cache.default_address_family(host_name),
-                config_cache.ip_stack_config(host_name),
-                additional_addresses_ipv4,
-                additional_addresses_ipv6,
-                macros,
-                ip_address_of,
-            ),
-            config.http_proxies,
-            lambda x: config.get_final_service_description(x, translations),
+            config_cache.get_host_attributes(host_name, ip_address_of),
+            ip_address_of,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
-            ExecutableFinder(
-                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-            ),
-            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-        )
-
-        active_checks = config_cache.active_checks(host_name)
-        for active_service in active_check_config.get_active_service_data(active_checks):
+        ):
             if active_service.description == servicedesc:
                 return {
                     "origin": "active",
@@ -1887,7 +1828,6 @@ class AutomationGetConfiguration(Automation):
 
         if missing_variables:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )
@@ -2046,7 +1986,7 @@ def get_special_agent_commandline(
     http_proxies: Mapping[str, Mapping[str, str]],
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
-        load_special_agents()[1],
+        load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
         {},
         host_config.host_name,
         host_config.ip_address,
@@ -2595,39 +2535,15 @@ class AutomationActiveCheck(Automation):
             # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
-        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = config.get_resource_macros()
-        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
-        macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
-        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-            host_name
-        )
-        active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+        for service_data in config_cache.active_check_services(
             host_name,
-            config.get_ssc_host_config(
-                host_name,
-                config_cache.alias(host_name),
-                config_cache.default_address_family(host_name),
-                config_cache.ip_stack_config(host_name),
-                additional_addresses_ipv4,
-                additional_addresses_ipv6,
-                macros,
-                ip_address_of,
-            ),
-            config.http_proxies,
-            lambda x: config.get_final_service_description(x, translations),
+            host_attrs,
+            ip_address_of,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
-            ExecutableFinder(
-                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-            ),
-            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-        )
-
-        active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
-        for service_data in active_check_config.get_active_service_data([(plugin, active_check)]):
+            single_plugin=plugin,
+        ):
             if service_data.description != item:
                 continue
 

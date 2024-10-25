@@ -16,8 +16,8 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<string>('data', { required: true })
-const [validation, value] = useValidation<string>(
+const data = defineModel<string | null>('data', { required: true })
+const [validation, value] = useValidation<string | null>(
   data,
   props.spec.validators,
   () => props.backendValidation
@@ -41,7 +41,7 @@ const options = computed(() => {
     <DropDown
       v-model:selected-option="value"
       :options="options"
-      :input_hint="spec.input_hint"
+      :input_hint="spec.input_hint || ''"
       :disabled="spec.frozen"
       :component-id="componentId"
     />

@@ -6,10 +6,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_ibm_storage_ts(info):
@@ -111,11 +111,7 @@ def check_ibm_storage_ts_library(item, _no_params, info):
             fault_status = ibm_storage_ts_fault_nagios_map[severity]
             # I have the suspicion that these status are dependent in the device anyway
             # but who knows?
-            infotext = "Device {}, Status: {}, Drives: {}".format(
-                serial,
-                ibm_storage_ts_status_name_map[status],
-                count,
-            )
+            infotext = f"Device {serial}, Status: {ibm_storage_ts_status_name_map[status]}, Drives: {count}"
             if fault != "0":
                 infotext += f", Fault: {descr} ({fault})"
             return worst_status(dev_status, fault_status), infotext

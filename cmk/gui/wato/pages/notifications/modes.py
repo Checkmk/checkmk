@@ -6,6 +6,7 @@
 
 import abc
 import json
+import re
 import time
 from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
@@ -42,19 +43,6 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import Catalog
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
-from cmk.gui.form_specs.vue.shared_type_defs import (
-    CoreStats,
-    CoreStatsI18n,
-    FallbackWarning,
-    FallbackWarningI18n,
-    NotificationParametersOverview,
-    Notifications,
-    NotificationStats,
-    NotificationStatsI18n,
-    Rule,
-    RuleSection,
-    RuleTopic,
-)
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -145,6 +133,19 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.notification_types import (
+    CoreStats,
+    CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
+    NotificationParametersOverview,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     NotificationParameterConfigFile,
@@ -633,6 +634,17 @@ class ModeNotifications(ABCNotificationsMode):
                         PageMenuTopic(
                             title=_("Add new"),
                             entries=[
+                                PageMenuEntry(
+                                    title=_("New notification setup"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
                                 PageMenuEntry(
                                     title=_("Add notification rule"),
                                     icon_name="new",
@@ -1517,6 +1529,18 @@ class ModeTestNotifications(ModeNotifications):
         return redirect(self.mode_url())
 
     def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if message := request.var("result"):
+            # TODO Add notification rule number
+            html.javascript(
+                "cmk.wato.message(%s, %s, %s)"
+                % (
+                    json.dumps(message),
+                    json.dumps("success"),
+                    json.dumps("result"),
+                )
+            )
+
         self._render_test_notifications()
         context, analyse = self._result_from_request()
         self._show_notification_test_overview(context, analyse)
@@ -2784,6 +2808,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(log_what, self._log_text(self._edit_nr))
+        flash(
+            _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
+            if self._new
+            else _("Notification rule number #%d successfully edited!") % self._edit_nr,
+        )
 
         if back_mode := request.var("back_mode"):
             return redirect(mode_url(back_mode))
@@ -3006,10 +3035,17 @@ class ModeNotificationParametersOverview(WatoMode):
         self,
         all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
+        search_term = request.get_str_input("search", "")
+        search_term = search_term.lower() if search_term else ""
+        match_regex = re.compile(search_term, re.IGNORECASE)
         for script_name, title in notification_script_choices():
-            # TODO remove this if all NotificationParameters are converted to FormSpecs
-            if script_name not in ["mail", "ilert"]:
+            # Not all notification scripts have parameters
+            if script_name not in notification_parameter_registry:
                 continue
+
+            if not match_regex.search(title):
+                continue
+
             method_parameters: dict[NotificationParameterID, NotificationParameterItem] | None = (
                 all_parameters.get(script_name)
             )
@@ -3028,18 +3064,21 @@ class ModeNotificationParametersOverview(WatoMode):
 
     def _get_notification_parameters_data(self) -> NotificationParametersOverview:
         all_parameters = NotificationParameterConfigFile().load_for_reading()
+        filtered_parameters = list(self._get_parameter_rulesets(all_parameters))
         return NotificationParametersOverview(
             parameters=[
                 RuleSection(
                     i18n=_("Parameters for"),
-                    topics=[
-                        RuleTopic(
-                            i18n=None,
-                            rules=list(self._get_parameter_rulesets(all_parameters)),
-                        )
-                    ],
+                    topics=[RuleTopic(i18n=None, rules=filtered_parameters)],
                 )
             ]
+            if filtered_parameters
+            else [],
+            i18n={
+                "no_parameter_match": _(
+                    "Found no matching parameters. Please try another search term."
+                )
+            },
         )
 
 
@@ -3076,7 +3115,7 @@ class ABCNotificationParameterMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
-        self._edit_nr = request.get_integer_input_mandatory("edit_nr", -1)
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._edit_parameter = request.get_str_input_mandatory("parameter", "")
         clone_id = request.get_str_input_mandatory("clone", "")
         self._clone_id = NotificationParameterID(clone_id)
@@ -3180,6 +3219,14 @@ class ABCNotificationParameterMode(WatoMode):
     def _method(self) -> str:
         return request.get_str_input_mandatory("method")
 
+    def _method_name(self) -> str:
+        try:
+            return [
+                entry[1] for entry in notification_script_choices() if entry[0] == self._method()
+            ][0]
+        except IndexError:
+            return self._method()
+
 
 class ModeNotificationParameters(ABCNotificationParameterMode):
     """Show notification parameter for a specific method"""
@@ -3197,7 +3244,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         return self.mode_url(method=self._method())
 
     def title(self) -> str:
-        return _("Parameters for %s") % request.var("method")
+        return _("Parameters for %s") % self._method_name()
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
@@ -3254,6 +3301,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         parameters,
     ):
         notification_parameter = self._notification_parameter()
+        method_name = self._method_name()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
@@ -3269,7 +3317,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 html.element_dragger_url("tr", base_url=links.drag)
                 html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
 
-                table.cell(_("Method"), self._method())
+                table.cell(_("Method"), method_name)
 
                 table.cell(_("Description"))
                 url = parameter.get("docu_url")
@@ -3377,13 +3425,13 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     def title(self) -> str:
         if self._new:
-            return _("Add %s notification parameter") % self._method()
-        return _("Edit %s notification parameter %s") % (self._method(), self._edit_nr)
+            return _("Add %s notification parameter") % self._method_name()
+        return _("Edit %s notification parameter #%s") % (self._method_name(), self._edit_nr)
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
-        return _("Changed notification parameter %s") % edit_nr
+        return _("Changed notification parameter #%s") % edit_nr
 
     def _form_spec(self) -> Catalog:
         return notification_parameter_registry.form_spec(self._method())
@@ -3421,6 +3469,9 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         return self._back_mode()
 
+    def _validate_form_spec(self, origin: DataOrigin) -> bool:
+        return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
+
     def page(self) -> None:
         value, origin = self._get_parameter_value_and_origin()
 
@@ -3430,7 +3481,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
                 self._vue_field_id(),
                 value,
                 origin,
-                True,
+                self._validate_form_spec(origin),
             )
 
             forms.end()
@@ -3449,6 +3500,12 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
     def _from_vars(self) -> None:
         self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._new = self._edit_nr < 0
+        notifications_rules = list(NotificationRuleConfigFile().load_for_reading())
+        if self._edit_nr >= len(notifications_rules):
+            raise MKUserError(None, _("Notification rule does not exist."))
+        self._object_id: str | None = (
+            None if self._new else notifications_rules[self._edit_nr]["rule_id"]
+        )
         quick_setup = quick_setup_registry["notification_rule"]
         self._quick_setup_id = quick_setup.id
 
@@ -3474,9 +3531,24 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
         )
 
     def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if message := request.var("result"):
+            # TODO Add notification rule number
+            html.javascript(
+                "cmk.wato.message(%s, %s, %s)"
+                % (
+                    json.dumps(message),
+                    json.dumps("success"),
+                    json.dumps("result"),
+                )
+            )
+
         html.vue_app(
             app_name="quick_setup",
             data={
                 "quick_setup_id": self._quick_setup_id,
+                "mode": "guided" if self._new else "overview",
+                "toggle_enabled": True,
+                "object_id": self._object_id,
             },
         )

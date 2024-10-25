@@ -1,11 +1,14 @@
 [project]
 name = "cmk-mkp-tool"
 version = "0.2.0"
-dependencies = ["pydantic"]
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.package-data]
 "cmk.mkp_tool" = ["py.typed"]

@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_veeam_client(string_table):
@@ -110,17 +110,11 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: {}/{})".format(
-                render.timespan(warn),
-                render.timespan(crit),
-            )
+            levels = f" (Warn/Crit: {render.timespan(warn)}/{render.timespan(crit)})"
         infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
 
     # Check duration only if currently not running

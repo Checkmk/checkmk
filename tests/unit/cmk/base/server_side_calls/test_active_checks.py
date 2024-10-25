@@ -13,8 +13,6 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import ActiveCheck, ActiveServiceData
-
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
@@ -24,6 +22,7 @@ from cmk.server_side_calls.v1 import (
     IPv4Config,
     IPv6Config,
 )
+from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData
 
 HOST_CONFIG = HostConfig(
     name="hostname",
@@ -97,7 +96,7 @@ def test_get_active_service_data_respects_finalizer(
         ip_lookup_failed=False,
     )
 
-    service = next(active_check.get_active_service_data([("my_active_check", [{}])]))
+    (service,) = active_check.get_active_service_data("my_active_check", [{}])
     assert service.description == "MY SERVICE"
 
 
@@ -106,12 +105,10 @@ def argument_function_with_exception(*args, **kwargs):
 
 
 @pytest.mark.parametrize(
-    "active_check_rules, active_check_plugins, hostname, host_config, stored_passwords, expected_result",
+    "active_check_rule, active_check_plugins, hostname, host_config, stored_passwords, expected_result",
     [
         pytest.param(
-            [
-                ("http", [{"name": "myHTTPName on my_host_alias"}]),
-            ],
+            ("http", [{"name": "myHTTPName on my_host_alias"}]),
             {
                 PluginLocation(f"{__name__}", "httpv1"): ActiveCheckConfig(
                     name="http",
@@ -146,9 +143,7 @@ def argument_function_with_exception(*args, **kwargs):
             id="http_active_service_plugin",
         ),
         pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
+            ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             {
                 PluginLocation(
                     # this is not what we'd expect here, but we need a module that we know to be importable.
@@ -193,9 +188,7 @@ def argument_function_with_exception(*args, **kwargs):
             id="multiple_services",
         ),
         pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
+            ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             {},
             HostName("myhost"),
             HOST_CONFIG,
@@ -204,21 +197,19 @@ def argument_function_with_exception(*args, **kwargs):
             id="unimplemented_check_plugin",
         ),
         pytest.param(
-            [
-                (
-                    "my_active_check",
-                    [
-                        {
-                            "description": "My active check",
-                            "password": (
-                                "cmk_postprocessed",
-                                "stored_password",
-                                ("stored_password", ""),
-                            ),
-                        }
-                    ],
-                ),
-            ],
+            (
+                "my_active_check",
+                [
+                    {
+                        "description": "My active check",
+                        "password": (
+                            "cmk_postprocessed",
+                            "stored_password",
+                            ("stored_password", ""),
+                        ),
+                    }
+                ],
+            ),
             {
                 PluginLocation(
                     # this is not what we'd expect here, but we need a module that we know to be importable.
@@ -268,7 +259,7 @@ def argument_function_with_exception(*args, **kwargs):
 )
 def test_get_active_service_data(
     monkeypatch: pytest.MonkeyPatch,
-    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_config: HostConfig,
@@ -288,7 +279,7 @@ def test_get_active_service_data(
         ip_lookup_failed=False,
     )
 
-    services = list(active_check.get_active_service_data(active_check_rules))
+    services = active_check.get_active_service_data(*active_check_rule)
     assert services == expected_result
 
 
@@ -332,24 +323,18 @@ def test_get_active_service_data_password_with_hack(
         ip_lookup_failed=False,
     )
 
-    assert list(
-        active_check.get_active_service_data(
-            [
-                (
-                    "test_check",
-                    [
-                        {
-                            "description": "My active check",
-                            "password": (
-                                "cmk_postprocessed",
-                                "explicit_password",
-                                ("uuid1234", "p4ssw0rd!"),
-                            ),
-                        }
-                    ],
-                )
-            ]
-        )
+    assert active_check.get_active_service_data(
+        "test_check",
+        [
+            {
+                "description": "My active check",
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid1234", "p4ssw0rd!"),
+                ),
+            }
+        ],
     ) == [
         ActiveServiceData(
             plugin_name="test_check",
@@ -371,9 +356,7 @@ def test_get_active_service_data_password_with_hack(
     ]
 
 
-def test_get_active_service_data_password_without_hack(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_get_active_service_data_password_without_hack() -> None:
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         host_name=HostName("myhost"),
@@ -386,24 +369,18 @@ def test_get_active_service_data_password_without_hack(
         ip_lookup_failed=False,
     )
 
-    assert list(
-        active_check.get_active_service_data(
-            [
-                (
-                    "test_check",
-                    [
-                        {
-                            "description": "My active check",
-                            "password": (
-                                "cmk_postprocessed",
-                                "explicit_password",
-                                ("uuid1234", "p4ssw0rd!"),
-                            ),
-                        }
-                    ],
-                )
-            ]
-        )
+    assert active_check.get_active_service_data(
+        "test_check",
+        [
+            {
+                "description": "My active check",
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid1234", "p4ssw0rd!"),
+                ),
+            }
+        ],
     ) == [
         ActiveServiceData(
             plugin_name="test_check",
@@ -425,65 +402,10 @@ def test_get_active_service_data_password_without_hack(
 
 
 @pytest.mark.parametrize(
-    "active_check_rules, active_check_plugins",
+    "active_check_rule, active_check_plugins",
     [
         pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
-            {
-                PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
-                ): ActiveCheckConfig(
-                    name="my_active_check",
-                    parameter_parser=lambda p: p,
-                    commands_function=argument_function_with_exception,
-                )
-            },
-            id="active check",
-        ),
-    ],
-)
-def test_test_get_active_service_data_crash(
-    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: False,
-    )
-
-    active_check = ActiveCheck(
-        active_check_plugins,
-        HostName("test_host"),
-        HOST_CONFIG,
-        http_proxies={},
-        service_name_finalizer=lambda x: x,
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-        finder=lambda executable, module: f"/path/to/{executable}",
-        ip_lookup_failed=False,
-    )
-
-    list(active_check.get_active_service_data(active_check_rules))
-
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == "\nWARNING: Config creation for active check my_active_check failed on test_host: Can't create argument list\n"
-    )
-
-
-@pytest.mark.parametrize(
-    "active_check_rules, active_check_plugins",
-    [
-        pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
+            ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             {
                 PluginLocation(
                     "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
@@ -498,7 +420,7 @@ def test_test_get_active_service_data_crash(
     ],
 )
 def test_test_get_active_service_data_crash_with_debug(
-    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -524,16 +446,14 @@ def test_test_get_active_service_data_crash_with_debug(
         Exception,
         match="Can't create argument list",
     ):
-        list(active_check.get_active_service_data(active_check_rules))
+        active_check.get_active_service_data(*active_check_rule)
 
 
 @pytest.mark.parametrize(
-    "active_check_rules, active_check_plugins, hostname, expected_result, expected_warning",
+    "active_check_rule, active_check_plugins, hostname, expected_result, expected_warning",
     [
         pytest.param(
-            [
-                ("my_active_check", [{}]),
-            ],
+            ("my_active_check", [{}]),
             {
                 PluginLocation(
                     # this is not what we'd expect here, but we need a module that we know to be importable.
@@ -558,21 +478,19 @@ def test_test_get_active_service_data_crash_with_debug(
             id="empty_description",
         ),
         pytest.param(
-            [
-                (
-                    "my_active_check",
-                    [
-                        {
-                            "description": "My active check",
-                            "password": (
-                                "cmk_postprocessed",
-                                "stored_password",
-                                ("stored_password", ""),
-                            ),
-                        }
-                    ],
-                ),
-            ],
+            (
+                "my_active_check",
+                [
+                    {
+                        "description": "My active check",
+                        "password": (
+                            "cmk_postprocessed",
+                            "stored_password",
+                            ("stored_password", ""),
+                        ),
+                    }
+                ],
+            ),
             {
                 PluginLocation(
                     # this is not what we'd expect here, but we need a module that we know to be importable.
@@ -623,7 +541,7 @@ def test_test_get_active_service_data_crash_with_debug(
 )
 def test_get_active_service_data_warnings(
     monkeypatch: pytest.MonkeyPatch,
-    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     expected_result: Sequence[ActiveServiceData],
@@ -643,7 +561,7 @@ def test_get_active_service_data_warnings(
         ip_lookup_failed=False,
     )
 
-    services = list(active_check_config.get_active_service_data(active_check_rules))
+    services = active_check_config.get_active_service_data(*active_check_rule)
     assert services == expected_result
 
     captured = capsys.readouterr()

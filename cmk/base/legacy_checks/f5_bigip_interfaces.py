@@ -8,9 +8,7 @@ import dataclasses
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
     equals,
@@ -20,6 +18,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate

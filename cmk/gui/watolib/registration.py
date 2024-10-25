@@ -21,6 +21,7 @@ from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 from . import (
     _host_attributes,
     _sync_remote_sites,
+    activate_changes,
     auth_php,
     autodiscovery,
     automatic_host_removal,
@@ -50,12 +51,12 @@ from .automations import (
 from .broker_certificates import AutomationStoreBrokerCertificates
 from .bulk_discovery import BulkDiscoveryBackgroundJob
 from .config_domain_name import (
-    ABCConfigDomain,
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
     SampleConfigGeneratorRegistry,
 )
 from .config_hostname import config_hostname_autocompleter
+from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
@@ -67,7 +68,8 @@ from .host_rename import (
 from .hosts_and_folders import (
     collect_all_hosts,
     find_usages_of_contact_group_in_hosts_and_folders,
-    Folder,
+    FolderValidators,
+    FolderValidatorsRegistry,
     MatchItemGeneratorHosts,
     rebuild_folder_lookup_cache,
 )
@@ -99,6 +101,7 @@ from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
 
 def register(
+    edition: version.Edition,
     rulespec_group_registry: RulespecGroupRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
@@ -111,6 +114,8 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     autocompleter_registry: AutocompleterRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
+    replication_path_registry: ReplicationPathRegistry,
+    folder_validators_registry: FolderValidatorsRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -118,10 +123,21 @@ def register(
         _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
+    activate_changes.register(replication_path_registry)
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs()
-    _register_folder_stub_validators()
+    folder_validators_registry.register(
+        FolderValidators(
+            str(edition),
+            validate_edit_host=lambda s, n, a: None,
+            validate_create_hosts=lambda e, s: None,
+            validate_create_subfolder=lambda f, a: None,
+            validate_edit_folder=lambda f, a: None,
+            validate_move_hosts=lambda f, n, t: None,
+            validate_move_subfolder_to=lambda f, t: None,
+        )
+    )
     _sync_remote_sites.register(automation_command_registry, job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
@@ -192,15 +208,11 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
 
 
 def _register_config_domains(config_domain_registry: ConfigDomainRegistry) -> None:
-    clss: Sequence[type[ABCConfigDomain]] = (
-        config_domains.ConfigDomainCore,
-        config_domains.ConfigDomainGUI,
-        config_domains.ConfigDomainLiveproxy,
-        config_domains.ConfigDomainCACertificates,
-        config_domains.ConfigDomainOMD,
-    )
-    for cls in clss:
-        config_domain_registry.register(cls)
+    config_domain_registry.register(config_domains.ConfigDomainCore())
+    config_domain_registry.register(config_domains.ConfigDomainGUI())
+    config_domain_registry.register(config_domains.ConfigDomainLiveproxy())
+    config_domain_registry.register(config_domains.ConfigDomainCACertificates())
+    config_domain_registry.register(config_domains.ConfigDomainOMD())
 
 
 def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> None:
@@ -223,6 +235,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeLockedAttributes,
         builtin_attributes.HostAttributeMetaData,
         builtin_attributes.HostAttributeDiscoveryFailed,
+        builtin_attributes.HostAttributeWaitingForDiscovery,
         builtin_attributes.HostAttributeLabels,
         groups.HostAttributeContactGroups,
     ]
@@ -249,12 +262,3 @@ def _register_cronjobs() -> None:
     register_job(rebuild_folder_lookup_cache)
     register_job(automatic_host_removal.execute_host_removal_background_job)
     register_job(autodiscovery.execute_autodiscovery)
-
-
-def _register_folder_stub_validators() -> None:
-    Folder.validate_edit_host = lambda s, n, a: None
-    Folder.validate_create_hosts = lambda e, s: None
-    Folder.validate_create_subfolder = lambda f, a: None
-    Folder.validate_edit_folder = lambda f, a: None
-    Folder.validate_move_hosts = lambda f, n, t: None
-    Folder.validate_move_subfolder_to = lambda f, t: None

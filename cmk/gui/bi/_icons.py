@@ -104,10 +104,7 @@ class AggregationIcon(Icon):
             aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
             aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 
-            url = "{}/check_mk/view.py?view_name=aggr_single&aggr_name={}".format(
-                base_url,
-                urlencode(aggr_name),
-            )
+            url = f"{base_url}/check_mk/view.py?view_name=aggr_single&aggr_name={urlencode(aggr_name)}"
 
             return "aggr", _("Open this Aggregation"), url
         return None

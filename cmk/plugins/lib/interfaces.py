@@ -1822,10 +1822,7 @@ def _interface_name(  # pylint: disable=too-many-branches
 
     if attributes.node is not None:
         if info_interface:
-            info_interface = "{} on {}".format(
-                info_interface,
-                attributes.node,
-            )
+            info_interface = f"{info_interface} on {attributes.node}"
         else:
             info_interface = "On %s" % attributes.node
 

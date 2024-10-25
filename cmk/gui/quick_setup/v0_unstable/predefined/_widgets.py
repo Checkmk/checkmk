@@ -6,7 +6,9 @@
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private.folder import Folder
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -17,7 +19,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.rulesets.v1 import Message, Title
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String, validators
 from cmk.rulesets.v1.form_specs._base import DefaultValue
 
@@ -37,7 +39,8 @@ def unique_id_formspec_wrapper(
                         custom_validate=(
                             validators.LengthInRange(
                                 min_value=1,
-                                error_msg=Message("%s cannot be empty") % str(title),
+                                error_msg=Message("%s cannot be empty")
+                                % title.localize(translate_to_current_language),
                             ),
                         ),
                         prefill=DefaultValue(
@@ -59,6 +62,7 @@ def _host_name_dict_element(
     title: Title = Title("Host name"),
     prefill_template: str = "qs_host",
 ) -> DictElement:
+    title_str: str = title.localize(translate_to_current_language)
     return DictElement(
         parameter_form=String(
             title=title,
@@ -66,9 +70,12 @@ def _host_name_dict_element(
             custom_validate=(
                 validators.LengthInRange(
                     min_value=1,
-                    error_msg=Message("%s cannot be empty") % str(title),
+                    error_msg=Message("%s cannot be empty") % title_str,
                 ),
-                validators.MatchRegex(HOST_NAME_REGEXP),
+                validators.MatchRegex(
+                    regex=HOST_NAME_REGEXP,
+                    error_msg=Message("Invalid characters in %s") % title_str,
+                ),
             ),
             prefill=DefaultValue(
                 unique_default_name_suggestion(
@@ -76,22 +83,23 @@ def _host_name_dict_element(
                     used_names=set(folder_tree().root_folder().all_hosts_recursively()),
                 )
             ),
+            help_text=Help(
+                "Specify the name of your host where all the services will be located. "
+                "The host name must be unique."
+            ),
         ),
         required=True,
     )
 
 
-FOLDER_PATTERN = (
-    r"^(?:[~\\\/]?[-_ a-zA-Z0-9.]{1,32}(?:[~\\\/][-_ a-zA-Z0-9.]{1,32})*[~\\\/]?|[~\\\/]?)$"
-)
-
-
 def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
-        parameter_form=String(
+        parameter_form=Folder(
             title=title,
-            field_size=FieldSize.MEDIUM,
-            custom_validate=(validators.MatchRegex(FOLDER_PATTERN),),
+            help_text=Help(
+                "Specify the location where the host will be created. If left empty, "
+                "the host will be created in the root folder."
+            ),
         ),
         required=True,
     )

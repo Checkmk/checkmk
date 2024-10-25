@@ -7,7 +7,7 @@ from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeNam
 
 from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
-from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
+from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 
 
 def test_row_post_processor() -> None:

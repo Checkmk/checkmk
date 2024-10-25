@@ -13,11 +13,11 @@ import json
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
 from cmk.plugins.lib.mongodb import parse_date
+
+check_info = {}
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 
@@ -276,10 +276,7 @@ def check_mongodb_primary_election(_item, _params, status_dict):
     else:
         yield (
             0,
-            "Primary '{}' elected {}".format(
-                primary_name,
-                render.datetime(primary_election_time),
-            ),
+            f"Primary '{primary_name}' elected {render.datetime(primary_election_time)}",
         )
 
     # update primary information

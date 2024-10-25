@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
+from cmk.server_side_calls_backend import SpecialAgentInfoFunctionResult
 
 from .checktestlib import SpecialAgent
 

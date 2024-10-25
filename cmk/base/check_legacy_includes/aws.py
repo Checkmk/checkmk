@@ -6,11 +6,10 @@
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-
 import cmk.plugins.aws.constants as agent_aws_types
 import cmk.plugins.aws.lib as aws  # pylint: disable=cmk-module-layer-violation
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckResult
+from cmk.agent_based.v2 import IgnoreResultsError, render
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
 
@@ -86,11 +85,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         else:
             limit_ref = p_limit
 
-        infotext = "{}: {} (of max. {})".format(
-            resource_title,
-            human_readable_func(amount),
-            human_readable_func(limit_ref),
-        )
+        infotext = f"{resource_title}: {human_readable_func(amount)} (of max. {human_readable_func(limit_ref)})"
         perfvar = f"aws_{aws_service}_{resource_key}"
         if aws.is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))
@@ -189,7 +184,7 @@ def check_aws_http_errors(
 
 def check_aws_metrics(
     metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]],
-) -> CheckResult:
+) -> LegacyCheckResult:
     go_stale = True
 
     for metric_info in metric_infos:

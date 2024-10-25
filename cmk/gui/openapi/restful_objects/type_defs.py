@@ -21,11 +21,13 @@ DomainType = Literal[
     "bi_pack",
     "bi_rule",
     "comment",
+    "configuration_entity",
     "contact_group_config",
     "dcd",
     "discovery_run",
     "downtime",
     "event_console",
+    "form_spec",
     "folder_config",
     "host",
     "host_config",
@@ -40,6 +42,7 @@ DomainType = Literal[
     "license_request",
     "metric",
     "notification_rule",
+    "notification_parameter",
     "password",
     "parent_scan",
     "rule",
@@ -136,7 +139,8 @@ CmkEndpointName = Literal[
     "cmk/verify",
     "cmk/register",
     "cmk/quick_setup",
-    "cmk/complete_quick_setup",
+    "cmk/save_quick_setup",
+    "cmk/edit_quick_setup",
 ]
 
 RestfulEndpointName = Literal[

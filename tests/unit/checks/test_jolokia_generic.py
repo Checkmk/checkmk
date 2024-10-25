@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 from .checktestlib import assertDiscoveryResultsEqual, Check, DiscoveryResult
 
@@ -23,7 +23,7 @@ info = [
     "check,lines,expected_result",
     [
         ("jolokia_generic", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
-        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
+        ("jolokia_generic_rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
     ],
 )
 def test_jolokia_generic_discovery(

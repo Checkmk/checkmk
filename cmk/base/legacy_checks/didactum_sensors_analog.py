@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.didactum import (
     check_didactum_sensors_humidity,
     check_didactum_sensors_temp,
@@ -11,10 +10,12 @@ from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.didactum import DETECT_DIDACTUM
+
+check_info = {}
 
 # .1.3.6.1.4.1.46501.5.2.1.5.201001 Onboard Temperature --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201001
 # .1.3.6.1.4.1.46501.5.2.1.5.201002 Analog-1 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsAnalogName.201002

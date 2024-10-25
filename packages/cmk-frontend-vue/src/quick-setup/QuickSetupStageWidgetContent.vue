@@ -10,7 +10,7 @@ import type { StageData } from '@/quick-setup/components/quick-setup/widgets/wid
 
 const props = defineProps<QuickSetupStageWidgetContentProps>()
 const emit = defineEmits(['update'])
-let internalUserInput: StageData = (props.userInput as StageData) || {}
+const internalUserInput: StageData = (props.userInput as StageData) || {}
 
 const updateData = (id: string, value: object) => {
   internalUserInput[id] = value

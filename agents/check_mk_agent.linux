@@ -241,10 +241,6 @@ unset_locale() {
     export LC_ALL
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 read_python_version() {
     if inpath "${1}"; then
         version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -283,6 +279,10 @@ detect_python() {
         WRONG_PYTHON_COMMAND=true
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 detect_container_environment() {
     if [ -f /.dockerenv ]; then
@@ -1246,6 +1246,36 @@ section_omd() {
             echo "${site};${used_version};${autostart}"
         done
     fi
+
+    #
+    # This currently way to slow. Disable this to see if it stabilizes our CI.
+    #
+    # sites_rabbitmq_diagnostics() {
+    #     su - "${1}" -c "/omd/sites/${1}/lib/rabbitmq/sbin/rabbitmq-diagnostics \
+    #     --node 'rabbit-${1}@localhost' \
+    #     '${2}' \
+    #     --formatter json \
+    #     --erlang-cookie '$(cat /omd/sites/"${1}"/.erlang.cookie)'"
+    # }
+
+    # echo '<<<omd_broker_status:sep(0)>>>'
+    # for sitedir in /omd/sites/*; do
+    #     site=${sitedir#/omd/sites/}
+    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" status | tr -d '\n')"
+    # done
+
+    # echo '<<<omd_broker_queues:sep(0)>>>'
+    # for sitedir in /omd/sites/*; do
+    #     site=${sitedir#/omd/sites/}
+    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" list_queues | tr -d '\n')"
+    # done
+
+    # echo '<<<omd_broker_shovels:sep(0)>>>'
+    # for sitedir in /omd/sites/*; do
+    #     site=${sitedir#/omd/sites/}
+    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" shovel_status | tr -d '\n')"
+    # done
+
 }
 
 section_zpool() {

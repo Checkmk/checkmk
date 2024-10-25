@@ -11,6 +11,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import { ref } from 'vue'
 import { immediateWatch } from '../utils/watch'
 import { useId } from '@/form/utils'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice
@@ -54,6 +55,7 @@ const componentId = useId()
   <label :for="`${componentId}_input`">
     {{ spec.i18n.label }}
   </label>
+  <HelpText :help="spec.help" />
   <div v-if="value !== null" class="embedded">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}

@@ -5,9 +5,10 @@
 
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pprint import pformat
-from typing import cast, Iterator
+from typing import cast
 
 from opsgenie_sdk import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
@@ -27,6 +28,7 @@ from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[impo
 
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify_types import PluginNotificationContext
+from cmk.utils.paths import trusted_ca_file
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
@@ -47,14 +49,15 @@ def _handle_api_exceptions(api_call_name: str) -> Iterator[None]:
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
 class Connector:
     def __init__(self, api_key: str, host_url: str | None, proxy_url: str | None) -> None:
-        conf: "Configuration" = Configuration()
+        conf = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
             conf.proxy = proxy_url
+            conf.ssl_ca_cert = trusted_ca_file
 
-        api_client: "ApiClient" = ApiClient(configuration=conf)
+        api_client: ApiClient = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
 
     def get_existing_alert(self, alias: str) -> Alert | None:
@@ -199,7 +202,7 @@ def _requires_integration_team(notification_type: str, integration_team: str | N
 def _get_extra_properties(context: PluginNotificationContext) -> dict[str, str]:
     all_elements: dict[str, tuple[str, str]] = {
         "omdsite": ("Site ID", os.environ["OMD_SITE"]),
-        "hosttags": ("Tags of the Host", "\n".join((context.get("HOST_TAGS", "").split()))),
+        "hosttags": ("Tags of the Host", "\n".join(context.get("HOST_TAGS", "").split())),
         "address": ("IP address of host", context.get("HOSTADDRESS", "")),
         "abstime": ("Absolute time of alert", context.get("LONGDATETIME", "")),
         "reltime": ("Relative time of alert", context.get("LASTHOSTSTATECHANGE_REL", "")),

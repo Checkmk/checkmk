@@ -11,7 +11,6 @@ from cmk.utils.redis import disable_redis
 
 import cmk.base.config as base_config
 from cmk.base.api.agent_based import register as agent_based_register
-from cmk.base.check_api import get_check_api_context
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
@@ -671,7 +670,6 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
         base_config.load_all_plugins(
-            get_check_api_context,
             local_checks_dir=paths.local_checks_dir,
             checks_dir=paths.checks_dir,
         )

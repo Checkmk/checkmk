@@ -9,10 +9,10 @@
 import ast
 import re
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, state_markers
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -146,7 +146,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 
@@ -165,7 +165,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 

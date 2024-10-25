@@ -8,13 +8,14 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.318.1.1.1.2.1.1.0 2
 # .1.3.6.1.4.1.318.1.1.1.4.1.1.0 2
@@ -275,10 +276,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             perfdata = [("runtime", battery_time_remain / 60.0)]
 
         if state:
-            levelstxt = " (warn/crit below {}/{})".format(
-                render.timespan(battery_time_warn),
-                render.timespan(battery_time_crit),
-            )
+            levelstxt = f" (warn/crit below {render.timespan(battery_time_warn)}/{render.timespan(battery_time_crit)})"
 
         yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
 

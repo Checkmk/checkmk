@@ -9,10 +9,10 @@
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_crs_voting(info):

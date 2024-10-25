@@ -1017,10 +1017,7 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
     if start_date == end_date:
         title_label = str(cmk.utils.render.date(start_time))
     else:
-        title_label = "{} \u2014 {}".format(
-            str(cmk.utils.render.date(start_time)),
-            str(cmk.utils.render.date(end_time)),
-        )
+        title_label = f"{str(cmk.utils.render.date(start_time))} \u2014 {str(cmk.utils.render.date(end_time))}"
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:

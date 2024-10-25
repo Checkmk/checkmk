@@ -14,10 +14,10 @@
 # Power Supply 2 Power Supply 2 0: Power Supply AC lost - Assert;;0;power;0;;red;Red;Sensor is operating under critical conditions
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_esx_vsphere_sensors(info):

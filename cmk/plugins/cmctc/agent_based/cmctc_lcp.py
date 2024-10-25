@@ -180,11 +180,7 @@ def check_cmctc_lcp(item: str, params: Params, section: Section, sensortype: str
         if sensor.has_levels():
             if sensor.reading >= sensor.high or sensor.reading <= sensor.low:
                 extra_state = 2
-                extra_info += " (device lower/upper crit at {}/{}{})".format(
-                    sensor.low,
-                    sensor.high,
-                    unit,
-                )
+                extra_info += f" (device lower/upper crit at {sensor.low}/{sensor.high}{unit})"
 
     yield Result(state=State(extra_state), summary=extra_info)
 

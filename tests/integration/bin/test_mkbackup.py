@@ -15,6 +15,7 @@ import pytest
 from psutil import Process
 
 from tests.testlib.site import Site
+from tests.testlib.utils import run
 from tests.testlib.web_session import CMKWebSession
 
 from cmk.utils.paths import mkbackup_lock_dir
@@ -69,8 +70,8 @@ def backup_path_fixture(site: Site) -> Iterator[str]:
 @pytest.fixture(
     name="backup_lock_dir",
     params=[
-        {"exists": True},
-        {"exists": False},
+        pytest.param(True, id="lock dir exists"),
+        pytest.param(False, id="lock dir not existing"),
     ],
 )
 def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
@@ -82,16 +83,19 @@ def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
     # In the second case the "omd" command executed as root ensures that the directory is created.
     # This functionality has been added to the "omd" command, because it is the only command which
     # can reliably create the directory when started as root.
-    if not request.param["exists"]:
-        subprocess.check_call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
+    if not request.param:
+        run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
         assert not mkbackup_lock_dir.exists()
 
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        site.omd("status")
+        run(["omd", "status"], sudo=True)
 
     assert mkbackup_lock_dir.exists()
+    backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
+    assert backup_permission_mask == "0770"
+    assert mkbackup_lock_dir.group() == "omd"
 
 
 @pytest.fixture(name="test_cfg", scope="function")

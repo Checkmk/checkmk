@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.jenkins.agent_based.jenkins_jobs import (
     _check_jenkins_jobs,
     check_jenkins_jobs,

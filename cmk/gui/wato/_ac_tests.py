@@ -6,7 +6,7 @@
 import abc
 import multiprocessing
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import suppress
 from pathlib import Path
 
@@ -18,7 +18,7 @@ from livestatus import LocalConnection, SiteConfiguration, SiteId
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
-from cmk.utils.paths import local_checks_dir, local_inventory_dir
+from cmk.utils.paths import local_agent_based_plugins_dir, local_checks_dir, local_inventory_dir
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.user import UserId
 
@@ -38,7 +38,7 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, werk_reference_url, WerkReference
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACSingleResult,
@@ -1244,12 +1244,57 @@ class ACTestESXDatasources(ACTest):
             yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
 
 
+class ACTestDeprecatedV1CheckPlugins(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated check plug-ins (v1)")
+
+    def help(self) -> str:
+        return _(
+            "The check plug-in API for plug-ins in <tt>%s</tt> is removed."
+            " Plug-in files in this folder are ignored."
+            " Please migrate the plug-ins to the new API."
+            " More information can be found in"
+            " <a href='%s'>Werk #%d</a> and our"
+            " <a href='%s'>User Guide</a>."
+        ) % (
+            werk_reference_url(WerkReference.DECOMMISSION_V1_API),
+            WerkReference.DECOMMISSION_V1_API.ref(),
+            "/".join(local_agent_based_plugins_dir.parts[-4:]),
+            doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+        )
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_agent_based_plugins_dir.iterdir())
+        except FileNotFoundError:
+            return ()
+
+    def is_relevant(self) -> bool:
+        return bool(self._get_files())
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        if plugin_files := self._get_files():
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_("%d check plug-ins trying to use the removed API: %s")
+                % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
+            )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK, text=_("No check plug-ins trying to use the removed API")
+        )
+
+
 class ACTestDeprecatedCheckPlugins(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("Deprecated check plug-ins")
+        return _("Deprecated check plug-ins (legacy)")
 
     def help(self) -> str:
         return _(

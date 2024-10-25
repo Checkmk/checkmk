@@ -51,6 +51,7 @@
 # OutputBuffer:             0 Bytes
 
 from dataclasses import dataclass
+from ipaddress import ip_address, IPv6Address
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -230,7 +231,12 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
         remote_addresses: dict = {}
         for connection_name, connection in list(stats.connections.items()):
             if connection.type_ == "incoming":
-                remote_address_site = connection_name.split(":")[0]
+                # Connection names of the legacy "mknotifyd.connection" come as IPv6 or IPv4
+                # addresses. However, they have most likely been added as IPv4 address initially.
+                # So the best guess here is to map IPv6 dual stack addresses to their IPv4
+                # counterpart, leaving all other connection names untouched (including site names
+                # from "mknotifyd.connection_v2" services)
+                remote_address_site = _v6_to_v4(connection_name.rsplit(":", 1)[0])
                 remote_addresses.setdefault(remote_address_site, []).append(connection)
                 del stats.connections[connection_name]
 
@@ -242,6 +248,20 @@ def parse_mknotifyd(  # pylint: disable=too-many-branches
                     stats.connections[address + "/" + str(nr + 1)] = connection
 
     return MkNotifySection(timestamp=timestamp, sites=sites)
+
+
+def _v6_to_v4(address: str) -> str:
+    # Convert IPv6 address to IPv4 address in case of dual stack
+    # Strings that don't represent a IPv6 dual stack address will pass untouched.
+    try:
+        ip = ip_address(address)
+    except ValueError:
+        return address
+
+    if isinstance(ip, IPv6Address) and (v4 := ip.ipv4_mapped):
+        return str(v4)
+
+    return address
 
 
 agent_section_mknotifyd = AgentSection(name="mknotifyd", parse_function=parse_mknotifyd)
@@ -404,9 +424,12 @@ check_plugin_mknotifyd_connection = CheckPlugin(
 def discover_mknotifyd_connection_v2(section: MkNotifySection) -> DiscoveryResult:
     for site_name, site in section.sites.items():
         for connection_name in site.connections:
-            if "." in connection_name:
+            try:
+                ip_address(connection_name)
                 # item of old discovered "mknotifyd.connection"
                 continue
+            except ValueError:
+                pass
             yield Service(item=f"{site_name} Notification Spooler connection to {connection_name}")
 
 

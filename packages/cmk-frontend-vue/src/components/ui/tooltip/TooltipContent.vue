@@ -29,7 +29,7 @@ const props = withDefaults(
 const emits = defineEmits<TooltipContentEmits>()
 
 const delegatedProps = computed(() => {
-  let delegated = { ...props }
+  const delegated = { ...props }
   delete delegated.class
 
   return delegated

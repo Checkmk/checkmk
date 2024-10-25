@@ -22,7 +22,10 @@ const spec: FormSpec.MultilineText = {
   title: 'fooTitle',
   help: 'fooHelp',
   validators: validators,
-  input_hint: 'fooInputHint'
+  input_hint: 'fooInputHint',
+  label: 'fooLabel',
+  macro_support: false,
+  monospaced: false
 }
 
 test('FormMultilineText renders value', () => {

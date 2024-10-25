@@ -133,13 +133,7 @@ from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
-from cmk.messaging import (
-    ca_key_file,
-    cacert_file,
-    rabbitmq,
-    site_cert_file,
-    trusted_cas_file,
-)
+from cmk.messaging import rabbitmq
 from cmk.messaging.rabbitmq import DEFINITIONS_PATH as RABBITMQ_DEFINITIONS_PATH
 
 # TODO: Make private
@@ -169,7 +163,6 @@ ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
 
 RABBITMQ_DEFS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_defs_hash"
-RABBITMQ_CERTS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_certs_hash"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
@@ -1304,20 +1297,14 @@ def default_rabbitmq_definitions(
 def create_and_activate_central_rabbitmq_changes(
     rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
 ) -> None:
-    old_certs_hash = store.load_text_from_file(RABBITMQ_CERTS_HASH_PATH)
-    new_certs_hash = _create_broker_certs_hash()
-
     old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
     create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
     new_definitions_hash = _create_folder_content_hash(
         str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
     )
 
-    _restart_rabbitmq_when_changed(
-        old_certs_hash, new_certs_hash, old_definitions_hash, new_definitions_hash
-    )
+    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
 
-    store.save_text_to_file(RABBITMQ_CERTS_HASH_PATH, new_certs_hash)
     store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
@@ -2529,47 +2516,21 @@ def _create_folder_content_hash(folder_path: str) -> str:
     return sha256_hash.hexdigest()
 
 
-def _create_broker_certs_hash() -> str:
-    sha256_hash = hashlib.sha256()
-    cert_file_paths = (
-        trusted_cas_file(paths.omd_root),
-        cacert_file(paths.omd_root),
-        ca_key_file(paths.omd_root),
-        site_cert_file(paths.omd_root),
-    )
-    for file_path in cert_file_paths:
-        if not file_path.exists():
-            continue
-        with open(str(file_path), "rb") as f:
-            while chunk := f.read(8192):
-                sha256_hash.update(chunk)
-
-    return sha256_hash.hexdigest()
-
-
-def _restart_rabbitmq_when_changed(
-    old_certs_hash: str, new_certs_hash: str, old_definitions_hash: str, new_definitions_hash: str
-) -> None:
-    if old_certs_hash != new_certs_hash or old_definitions_hash != new_definitions_hash:
+def _restart_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
+    if old_definitions_hash != new_definitions_hash:
         # make sure stdout and stderr is available in local variables (crash report!)
         process = subprocess.run(["omd", "restart", "rabbitmq"], capture_output=True, check=False)
         process.check_returncode()
 
 
 def _activate_local_rabbitmq_changes():
-    old_certs_hash = store.load_text_from_file(RABBITMQ_CERTS_HASH_PATH)
-    new_certs_hash = _create_broker_certs_hash()
-
     old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
     new_definitions_hash = _create_folder_content_hash(
         str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
     )
 
-    _restart_rabbitmq_when_changed(
-        old_certs_hash, new_certs_hash, old_definitions_hash, new_definitions_hash
-    )
+    _restart_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
 
-    store.save_text_to_file(RABBITMQ_CERTS_HASH_PATH, new_certs_hash)
     store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 

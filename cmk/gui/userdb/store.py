@@ -13,7 +13,7 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import Any, cast, Literal, TypeVar
 
 from six import ensure_str
 
@@ -40,7 +40,14 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, UserDetails, Users, UserSpec
+from cmk.gui.type_defs import (
+    SessionInfo,
+    TwoFactorCredentials,
+    UserContactDetails,
+    UserDetails,
+    Users,
+    UserSpec,
+)
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
@@ -156,7 +163,9 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
     # far as possible.
     for uid, contact in contacts.items():
         if (uid := UserId(uid)) not in result:
-            result[uid] = contact
+            # making the use of cast since we are handling a legacy support case
+            user_profile: UserSpec = cast(UserSpec, contact)
+            result[uid] = user_profile
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
             result[uid]["password"] = password_hashing.PasswordHash("")
@@ -237,22 +246,33 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
     return result
 
 
-def _merge_users_and_contacts(users: dict[str, UserDetails], contacts: dict[str, Any]) -> Users:
+def _merge_users_and_contacts(
+    users: dict[str, UserDetails], contacts: dict[str, UserContactDetails]
+) -> Users:
     result: Users = {}
     for uid, user in users.items():
         # Transform user IDs which were stored with a wrong type
         uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
 
-        profile = contacts.get(uid, {})
+        profile: dict[str, object] = {}
+        if (contact := contacts.get(uid)) is not None:
+            profile.update(contact)
+
         profile.update(user)
-        result[UserId(uid)] = profile
 
         # Convert non unicode mail addresses
         if "email" in profile:
+            # TODO: according to UserDetails & UserContactDetails, email can only come from
+            #  UserContactDetails. We keep this just in case UserDetails is incomplete and perform
+            #  the cast to str. Once verified, the condition can be switched to
+            #  `if "email" in contact`.
+            email = cast(str, profile["email"])
             profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                profile["email"]
+                email
             )
 
+        # see TODO in UserSpec why the cast is currently necessary
+        result[UserId(uid)] = cast(UserSpec, profile)
     return result
 
 
@@ -682,7 +702,7 @@ def convert_idle_timeout(value: str) -> int | bool | None:
         return None  # Invalid value -> use global setting
 
 
-def load_contacts() -> dict[str, Any]:
+def load_contacts() -> dict[str, UserContactDetails]:
     return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 

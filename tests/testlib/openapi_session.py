@@ -59,6 +59,10 @@ class UnexpectedResponse(RestSessionException):
         self.status_code = status_code
 
 
+class NoActiveChanges(RestSessionException):
+    pass
+
+
 class AuthorizationFailed(RestSessionException):
     pass
 
@@ -147,12 +151,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-    ) -> bool:
-        """
-        Returns
-            True if changes are activated
-            False if there are no changes to be activated
-        """
+    ) -> None:
         response = self.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
             json={
@@ -166,9 +165,9 @@ class CMKOpenApiSession(requests.Session):
             allow_redirects=False,
         )
         if response.status_code == 200:
-            return True  # changes are activated
+            return  # changes are activated
         if response.status_code == 422:
-            return False  # no changes
+            raise NoActiveChanges  # there are no changes
         if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
@@ -186,14 +185,25 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 120,
     ) -> bool:
+        """Activate changes via REST API and wait for completion.
+
+        Returns:
+            * True if changes are activated
+            * False if there are no changes to be activated
+        """
         logger.info("Activate changes and wait %ds for completion...", timeout)
         with self._wait_for_completion(timeout, "get", "activate_changes"):
-            if activation_started := self.activate_changes(sites, force_foreign_changes):
-                pending_changes = self.pending_changes()
-                assert (
-                    len(pending_changes) == 0
-                ), f"There are pending changes that were not activated: {pending_changes}"
-            return activation_started
+            try:
+                self.activate_changes(sites, force_foreign_changes)
+            except NoActiveChanges:
+                return False
+
+        pending_changes = self.pending_changes()
+        assert (
+            not pending_changes
+        ), f"There are pending changes that were not activated: {pending_changes}"
+
+        return True
 
     def create_user(
         self,

@@ -7,7 +7,6 @@ set -e
 
 JOBS=6
 readonly ALL_LINTERS=clippy
-readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -168,7 +167,8 @@ main() {
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
-    test ${RUN_BUILD} = yes && "${BAZEL_CMD}" build //packages/cmk-agent-ctl
+    # TODO: Re-evaluate usage of --all-targets below
+    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings

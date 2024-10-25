@@ -85,7 +85,7 @@ def _load_pipfile_data() -> dict:
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:
-    assert os.path.exists(site.root + f"/bin/python{_get_python_version_from_defines_make().major}")
+    assert os.path.exists(site.root / f"/bin/python{_get_python_version_from_defines_make().major}")
 
 
 def test_02_python_interpreter_path(site: Site) -> None:
@@ -114,19 +114,19 @@ def test_03_python_path(site: Site) -> None:
 
     ordered_path_elements = [
         # there may be more, but these have to occur in this order:
-        site.root + f"/local/lib/python{python_version.major}",
-        site.root + f"/lib/python{python_version.major}/cloud",
-        site.root + f"/lib/python{python_version.major}.{python_version.minor}",
-        site.root + f"/lib/python{python_version.major}",
+        site.root.as_posix() + f"/local/lib/python{python_version.major}",
+        site.root.as_posix() + f"/lib/python{python_version.major}/cloud",
+        site.root.as_posix() + f"/lib/python{python_version.major}.{python_version.minor}",
+        site.root.as_posix() + f"/lib/python{python_version.major}",
     ]
     assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
 
     for path in sys_path[1:]:
-        assert path.startswith(site.root), f"Found non site path {path!r} in sys.path"
+        assert path.startswith(site.root.as_posix()), f"Found non site path {path!r} in sys.path"
 
 
 def test_01_pip_exists(site: Site) -> None:
-    assert os.path.exists(site.root + "/bin/pip3")
+    assert os.path.exists(site.root / "/bin/pip3")
 
 
 def test_02_pip_path(site: Site) -> None:

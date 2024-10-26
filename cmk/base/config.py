@@ -39,7 +39,7 @@ from typing import (
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.ccc.site import omd_site
 
 import cmk.utils
@@ -1483,9 +1483,6 @@ def discover_legacy_checks(
 
             if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
                 raise TypeError(defined_checks)
-
-        except MKTerminate:
-            raise
 
         except Exception as e:
             ignored_plugins_errors.append(

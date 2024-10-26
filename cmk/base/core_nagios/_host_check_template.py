@@ -9,7 +9,6 @@ from contextlib import suppress
 from importlib import import_module
 
 import cmk.ccc.debug
-from cmk.ccc.exceptions import MKTerminate
 
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
@@ -84,21 +83,19 @@ def main() -> int:
         if location.name is not None:
             register_plugin_by_type(location, getattr(module, location.name), validate=debug)
 
-    cmk.base.utils.register_sigint_handler()
     cmk.utils.log.setup_console_logging()
 
     cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
     if debug:
         cmk.ccc.debug.enable()
 
-    config.load_checks(CONFIG.checks_to_load)
-
-    config.load_packed_config(LATEST_CONFIG)
-
-    config.ipaddresses = CONFIG.ipaddresses
-    config.ipv6addresses = CONFIG.ipv6addresses
-
     try:
+        config.load_checks(CONFIG.checks_to_load)
+        config.load_packed_config(LATEST_CONFIG)
+
+        config.ipaddresses = CONFIG.ipaddresses
+        config.ipv6addresses = CONFIG.ipv6addresses
+
         return mode_check(
             get_submitter,
             {},
@@ -107,7 +104,7 @@ def main() -> int:
             keepalive=False,
             precompiled_host_check=True,
         )
-    except MKTerminate:
+    except KeyboardInterrupt:
         with suppress(IOError):
             print("<Interrupted>\n", end="", flush=True, file=sys.stderr)
         return 1

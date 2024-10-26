@@ -397,9 +397,14 @@ class CMKOpenApiSession(requests.Session):
         hostname_old: str,
         hostname_new: str,
         etag: str,
-        timeout: int = 60,
+        timeout: int = 120,
     ) -> None:
-        logger.info("Rename host %s to %s and wait for completion...", hostname_old, hostname_new)
+        logger.info(
+            "Rename host %s to %s and wait %ds for completion...",
+            hostname_old,
+            hostname_new,
+            timeout,
+        )
         with self._wait_for_completion(timeout, "get", "rename_host"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
             assert (

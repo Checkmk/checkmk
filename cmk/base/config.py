@@ -1405,7 +1405,7 @@ def load_all_plugins(
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
-        errors.extend(load_checks(filelist))
+        errors.extend(add_legacy_checks_to_register(filelist))
 
     return errors
 
@@ -1419,7 +1419,7 @@ def _initialize_data_structures() -> None:
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
 @tracer.start_as_current_span("load_legacy_checks")
-def load_checks(
+def add_legacy_checks_to_register(
     filelist: Iterable[str],
 ) -> list[str]:
     discovered_legacy_checks = discover_legacy_checks(

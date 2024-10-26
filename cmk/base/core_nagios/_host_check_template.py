@@ -90,7 +90,7 @@ def main() -> int:
         cmk.ccc.debug.enable()
 
     try:
-        config.load_checks(CONFIG.checks_to_load)
+        config.add_legacy_checks_to_register(CONFIG.checks_to_load)
         config.load_packed_config(LATEST_CONFIG)
 
         config.ipaddresses = CONFIG.ipaddresses

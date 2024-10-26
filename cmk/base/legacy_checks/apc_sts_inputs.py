@@ -8,7 +8,7 @@ from itertools import cycle
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
 
 check_info = {}

@@ -8,7 +8,7 @@
 
 from dataclasses import dataclass
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition, STATE_MARKERS
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
 
 check_info = {}
 

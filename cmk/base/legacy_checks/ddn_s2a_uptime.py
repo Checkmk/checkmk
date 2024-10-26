@@ -7,7 +7,7 @@
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

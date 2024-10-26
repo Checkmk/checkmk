@@ -8,7 +8,7 @@
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith
 
 check_info = {}

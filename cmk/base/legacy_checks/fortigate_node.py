@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
 
 check_info = {}

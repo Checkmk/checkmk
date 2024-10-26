@@ -9,7 +9,7 @@
 import ast
 import re
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition, STATE_MARKERS
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import render
 
 check_info = {}

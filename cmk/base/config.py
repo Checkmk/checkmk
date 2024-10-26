@@ -142,7 +142,7 @@ from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
 from cmk.agent_based.legacy import FileLoader, find_plugin_files
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (

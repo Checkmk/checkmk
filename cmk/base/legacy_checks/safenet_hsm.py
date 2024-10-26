@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, get_rate, get_value_store, SNMPTree, startswith
 
 check_info = {}

@@ -15,7 +15,7 @@
 # osVersion::6.5.8.1|ip::10.8.95.100|hostName::Host-9|lastUpdated::2017-11-07T22:50:20.425Z|activeClients::9|connected::True|serialId::12345678912345
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

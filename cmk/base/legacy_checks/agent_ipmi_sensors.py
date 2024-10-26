@@ -9,7 +9,7 @@ from typing import Any
 
 from cmk.base.config import special_agent_info
 
-from cmk.agent_based.v0_unstable_legacy import passwordstore_get_cmdline
+from cmk.agent_based.legacy.v0_unstable import passwordstore_get_cmdline
 
 _DEFAULT_OPTIONS = {
     "quiet_cache": False,

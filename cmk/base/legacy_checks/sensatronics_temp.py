@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree
 
 check_info = {}

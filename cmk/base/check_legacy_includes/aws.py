@@ -8,7 +8,7 @@ from typing import TypeVar
 
 import cmk.plugins.aws.constants as agent_aws_types
 import cmk.plugins.aws.lib as aws  # pylint: disable=cmk-module-layer-violation
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckResult
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import IgnoreResultsError, render
 
 AWSRegions = dict(agent_aws_types.AWSRegions)

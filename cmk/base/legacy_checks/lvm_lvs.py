@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 check_info = {}

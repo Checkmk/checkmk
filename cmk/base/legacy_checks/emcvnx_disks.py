@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition, STATE_MARKERS
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import get_rate, get_value_store, render
 
 check_info = {}

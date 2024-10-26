@@ -7,7 +7,7 @@
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib import ucs_bladecenter
 
 check_info = {}

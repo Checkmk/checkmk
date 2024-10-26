@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

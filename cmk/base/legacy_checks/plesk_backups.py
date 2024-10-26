@@ -7,7 +7,7 @@
 import time
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.agent_based.v0_unstable_legacy import (
+from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckDefinition,
     LegacyCheckResult,

@@ -6,7 +6,7 @@
 import time
 from datetime import timedelta
 
-from cmk.agent_based.v0_unstable_legacy import check_levels
+from cmk.agent_based.legacy.v0_unstable import check_levels
 
 # Example for params:
 # {

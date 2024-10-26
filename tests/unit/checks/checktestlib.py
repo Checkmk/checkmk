@@ -23,7 +23,7 @@ import cmk.utils.paths
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.agent_based.legacy import FileLoader, find_plugin_files
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 
 class MissingCheckInfoError(KeyError):

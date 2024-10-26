@@ -75,7 +75,7 @@
 # total_drive_raw_capacity:0
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}

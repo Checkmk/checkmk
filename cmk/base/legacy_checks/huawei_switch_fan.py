@@ -8,7 +8,7 @@ import collections
 
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 # mypy: disable-error-code="var-annotated"
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree

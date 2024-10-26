@@ -20,7 +20,7 @@
 
 import time
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, get_rate, get_value_store, SNMPTree, StringTable
 
 check_info = {}

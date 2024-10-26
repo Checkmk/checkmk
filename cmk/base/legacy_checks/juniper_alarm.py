@@ -6,7 +6,7 @@
 # .1.3.6.1.4.1.2636.3.1.10.1.8.3.1.1.0.0 1 --> JUNIPER-MIB::jnxLEDState.jnxContentsTable.1.1.0.0
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
 

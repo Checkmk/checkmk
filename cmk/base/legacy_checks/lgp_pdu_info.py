@@ -13,7 +13,7 @@
 # [['1', 'TEST-123-HOST', '1', '535055G103T2010JUN240295', '1']]
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
 

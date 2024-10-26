@@ -11,7 +11,7 @@ import time
 
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store
 
 check_info = {}

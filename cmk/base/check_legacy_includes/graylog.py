@@ -8,7 +8,7 @@ import calendar
 import json as json_module
 import time
 
-from cmk.agent_based.v0_unstable_legacy import check_levels
+from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
 from cmk.plugins.lib import graylog
 

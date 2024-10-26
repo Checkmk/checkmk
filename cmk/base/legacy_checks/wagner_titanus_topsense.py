@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, StringTable
 
 check_info = {}

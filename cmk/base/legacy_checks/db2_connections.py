@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 
 check_info = {}

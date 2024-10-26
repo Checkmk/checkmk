@@ -8,7 +8,7 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 check_info = {}
 

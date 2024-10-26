@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
 
 check_info = {}

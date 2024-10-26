@@ -14,7 +14,7 @@ from collections.abc import Iterable, Mapping
 
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}

@@ -15,7 +15,7 @@
 # .1.3.6.1.4.1.3652.3.2.3.1.2.10 3 --> SPEEDCARRIER-MIB::nmFanGroupStatus.10
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 

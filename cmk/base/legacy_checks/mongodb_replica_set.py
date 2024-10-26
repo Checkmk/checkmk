@@ -13,7 +13,7 @@ import json
 import time
 from collections.abc import Iterable, Mapping
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
 from cmk.plugins.lib.mongodb import parse_date
 

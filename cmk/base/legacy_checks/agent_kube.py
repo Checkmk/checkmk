@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 from cmk.base.config import get_http_proxy, special_agent_info
 
-from cmk.agent_based.v0_unstable_legacy import passwordstore_get_cmdline
+from cmk.agent_based.legacy.v0_unstable import passwordstore_get_cmdline
 
 
 def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:

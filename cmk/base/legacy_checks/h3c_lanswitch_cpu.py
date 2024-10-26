@@ -17,7 +17,7 @@
 # We prefer "Switch 1 CPU 1" over "65537"...
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
 
 check_info = {}

@@ -18,7 +18,7 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register import check_plugins_legacy
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v1 import Metric, Result, Service, State
 
 

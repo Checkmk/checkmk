@@ -9,7 +9,7 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, equals, not_exists, SNMPTree, StringTable
 
 check_info = {}

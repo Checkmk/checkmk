@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
 

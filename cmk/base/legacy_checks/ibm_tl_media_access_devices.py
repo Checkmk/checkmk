@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.ibm_tape_library import (
     ibm_tape_library_parse_device_name,
 )
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
 
 check_info = {}

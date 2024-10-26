@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDBytes, SNMPTree
 from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 from cmk.plugins.lib.juniper import DETECT_JUNIPER

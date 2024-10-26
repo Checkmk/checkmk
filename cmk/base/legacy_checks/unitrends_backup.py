@@ -11,7 +11,7 @@
 # owncloud-test|18762|Incremental|Successful
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}

@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v0_unstable_legacy import (
+from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckDefinition,
     LegacyCheckResult,

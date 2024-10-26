@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

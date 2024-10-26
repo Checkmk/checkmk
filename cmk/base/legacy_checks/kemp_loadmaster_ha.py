@@ -7,7 +7,7 @@
 # .1.3.6.1.4.1.12196.13.0.10.0 7.1-20b.20140926-1505
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringTable
 
 check_info = {}

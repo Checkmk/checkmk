@@ -17,7 +17,7 @@
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.5.1 30
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree
 
 check_info = {}

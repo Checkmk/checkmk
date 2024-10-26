@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.azure import (
 )
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 

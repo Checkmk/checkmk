@@ -10,7 +10,7 @@ import re
 
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 
 check_info = {}

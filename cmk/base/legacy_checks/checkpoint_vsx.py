@@ -9,7 +9,7 @@
 import time
 from collections.abc import Callable
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render, SNMPTree
 from cmk.plugins.lib.detection import DETECT_NEVER
 

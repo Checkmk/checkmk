@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import pulse_secure
 

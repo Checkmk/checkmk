@@ -8,7 +8,7 @@
 
 from cmk.base.check_legacy_includes.fan import check_fan
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, SNMPTree, startswith
 
 check_info = {}

@@ -21,7 +21,7 @@ from cmk.base.api.agent_based.register.check_plugins import (
     create_check_plugin,
 )
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, Service, State
 
 

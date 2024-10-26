@@ -12,7 +12,7 @@ from typing import Any
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 
-from cmk.agent_based.v0_unstable_legacy import (
+from cmk.agent_based.legacy.v0_unstable import (
     check_levels,
     LegacyCheckDefinition,
     LegacyCheckResult,

@@ -16,7 +16,7 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
 
 check_info = {}

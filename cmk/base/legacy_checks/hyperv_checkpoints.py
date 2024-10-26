@@ -9,7 +9,7 @@
 # c85ae17b-1a6c-4a34-949a-a1b9385ef67a 2040
 
 
-from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
 
 check_info = {}

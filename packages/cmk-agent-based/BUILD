@@ -15,8 +15,8 @@ py_library(
     srcs = [
         "cmk/agent_based/legacy/__init__.py",
         "cmk/agent_based/legacy/_loading.py",
+        "cmk/agent_based/legacy/v0_unstable.py",
         "cmk/agent_based/prediction_backend.py",
-        "cmk/agent_based/v0_unstable_legacy.py",
         "cmk/agent_based/v1/__init__.py",
         "cmk/agent_based/v1/_check_levels.py",
         "cmk/agent_based/v1/_checking_classes.py",

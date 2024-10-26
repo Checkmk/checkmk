@@ -8,7 +8,7 @@
 # .1.3.6.1.4.1.232.2.2.2.1.0  "GB8851CPPH
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, contains, exists, SNMPTree, StringTable
 
 check_info = {}

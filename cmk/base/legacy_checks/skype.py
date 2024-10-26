@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_persec,
 )
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.wmi import WMISection
 

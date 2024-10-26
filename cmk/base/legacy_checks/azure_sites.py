@@ -11,7 +11,7 @@ from cmk.base.check_legacy_includes.azure import (
     parse_resources,
 )
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 

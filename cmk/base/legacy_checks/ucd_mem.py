@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.mem import check_memory_dict
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

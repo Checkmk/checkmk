@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.aws import check_aws_http_errors, get_data_or_go_stale
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 check_info = {}

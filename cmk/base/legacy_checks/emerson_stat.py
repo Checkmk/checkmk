@@ -32,7 +32,7 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
 
 check_info = {}

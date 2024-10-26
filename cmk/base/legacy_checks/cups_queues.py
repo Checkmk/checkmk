@@ -30,7 +30,7 @@ import time
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
 

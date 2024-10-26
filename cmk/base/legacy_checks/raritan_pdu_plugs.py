@@ -6,7 +6,7 @@
 
 from cmk.base.check_legacy_includes.raritan import raritan_pdu_plug_state
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith
 
 check_info = {}

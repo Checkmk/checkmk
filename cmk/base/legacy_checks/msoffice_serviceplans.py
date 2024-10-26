@@ -15,7 +15,7 @@
 # msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}

@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.kentix import DETECT_KENTIX
 

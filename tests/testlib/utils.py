@@ -330,9 +330,8 @@ def daemon(
             if daemon_rc is None:
                 logger.info("Terminating %s daemon...", name_for_logging)
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
-            stdout, stderr = daemon_proc.communicate(timeout=5)
-            logger.info("Stdout from %s daemon:\n%s", name_for_logging, stdout)
-            logger.info("Stderr from %s daemon:\n%s", name_for_logging, stderr)
+            stdout, _stderr = daemon_proc.communicate(timeout=5)
+            logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
             assert (
                 daemon_rc is None
             ), f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
@@ -488,11 +487,14 @@ def get_services_with_status(
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
     start = time.time()
+    logger.info("Waiting for %r to finish for %ds", condition, timeout)
     while time.time() - start < timeout:
         if condition():
+            logger.info("Wait for %r finished after %ss", condition, time.time() - start)
             return  # Success. Stop waiting...
         time.sleep(interval)
 
+    logger.error("Timeout waiting for %r to finish (Timeout: %d sec)", condition, timeout)
     raise TimeoutError("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 

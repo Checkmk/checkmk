@@ -7,7 +7,7 @@ from logging import Logger
 
 from cmk.utils.paths import local_checks_dir
 
-from cmk.base.config import add_legacy_checks_to_register
+from cmk.base.config import load_and_convert_legacy_checks
 
 from cmk.gui.exceptions import MKUserError
 
@@ -20,8 +20,10 @@ class PreUpdateLegacyCheckPlugins(PreUpdateAction):
     """Load all legacy checks plugins before the real update happens"""
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        errors = "".join(add_legacy_checks_to_register(find_plugin_files(str(local_checks_dir))))
-        if errors:
+        err_list, _sections, _checks = load_and_convert_legacy_checks(
+            find_plugin_files(str(local_checks_dir))
+        )
+        if errors := "".join(err_list):
             logger.error(errors)
             if continue_per_users_choice(
                 conflict_mode,

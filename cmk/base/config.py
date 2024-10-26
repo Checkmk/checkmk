@@ -1415,13 +1415,10 @@ def _initialize_data_structures() -> None:
     special_agent_info.clear()
 
 
-# NOTE: The given file names should better be absolute, otherwise
-# we depend on the current working directory, which is a bad idea,
-# especially in tests.
-@tracer.start_as_current_span("load_legacy_checks")
-def add_legacy_checks_to_register(
+@tracer.start_as_current_span("load_and_convert_legacy_checks")
+def load_and_convert_legacy_checks(
     filelist: Iterable[str],
-) -> list[str]:
+) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin], Sequence[CheckPlugin]]:
     discovered_legacy_checks = discover_legacy_checks(
         filelist,
         FileLoader(
@@ -1445,10 +1442,21 @@ def add_legacy_checks_to_register(
         raise_errors=cmk.ccc.debug.enabled(),
     )
 
+    return (section_errors + check_errors, sections, checks)
+
+
+# NOTE: The given file names should better be absolute, otherwise
+# we depend on the current working directory, which is a bad idea,
+# especially in tests.
+def add_legacy_checks_to_register(
+    filelist: Iterable[str],
+) -> list[str]:
+    errors, sections, checks = load_and_convert_legacy_checks(filelist)
+
     _add_sections_to_register(sections)
     _add_checks_to_register(checks)
 
-    return [*discovered_legacy_checks.ignored_plugins_errors, *section_errors, *check_errors]
+    return errors
 
 
 def new_check_context() -> CheckContext:

@@ -44,7 +44,7 @@ from cmk.utils.livestatus_helpers.testing import (
 )
 
 import cmk.crypto.password_hashing
-from cmk.agent_based.legacy import FileLoader, find_plugin_files
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 
 logger = logging.getLogger(__name__)
 
@@ -307,19 +307,16 @@ class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
     def __init__(self) -> None:
-        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-
-        result = config.discover_legacy_checks(
+        result = discover_legacy_checks(
             find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
             FileLoader(
                 precomile_path=cmk.utils.paths.precompiled_checks_dir,
                 local_path="/not_relevant_for_test",
                 makedirs=store.makedirs,
             ),
+            dict,  # we don't beed the special agents here.
+            raise_errors=True,
         )
-        assert not result.ignored_plugins_errors
         self.check_info = {p.name: p for p in result.sane_check_info}
 
 

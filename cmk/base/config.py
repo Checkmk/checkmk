@@ -141,7 +141,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
-from cmk.agent_based.legacy import FileLoader, find_plugin_files
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
@@ -1431,6 +1431,8 @@ def load_checks(
             local_path=str(cmk.utils.paths.local_checks_dir),
             makedirs=store.makedirs,
         ),
+        new_check_context,
+        raise_errors=cmk.ccc.debug.enabled(),
     )
 
     section_errors, sections = _make_agent_and_snmp_sections(
@@ -1446,67 +1448,6 @@ def load_checks(
     _add_checks_to_register(checks)
 
     return [*discovered_legacy_checks.ignored_plugins_errors, *section_errors, *check_errors]
-
-
-@dataclasses.dataclass
-class _DiscoveredLegacyChecks:
-    ignored_plugins_errors: Sequence[str]
-    sane_check_info: Sequence[LegacyCheckDefinition]
-    plugin_files: Mapping[str, str]
-    did_compile: bool
-
-
-def discover_legacy_checks(
-    filelist: Iterable[str],
-    loader: FileLoader,
-) -> _DiscoveredLegacyChecks:
-    loaded_files: set[str] = set()
-    ignored_plugins_errors = []
-    sane_check_info = []
-    legacy_check_plugin_files: dict[str, str] = {}
-
-    did_compile = False
-    for f in filelist:
-        if f[0] == "." or f[-1] == "~":
-            continue  # ignore editor backup / temp files
-
-        file_name = os.path.basename(f)
-        if file_name in loaded_files:
-            continue  # skip already loaded files (e.g. from local)
-
-        try:
-            check_context = new_check_context()
-
-            did_compile |= loader.load_into(f, check_context)
-
-            loaded_files.add(file_name)
-
-            if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
-                raise TypeError(defined_checks)
-
-        except Exception as e:
-            ignored_plugins_errors.append(
-                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!"
-            )
-            if cmk.ccc.debug.enabled():
-                raise
-            continue
-
-        for plugin in defined_checks.values():
-            if isinstance(plugin, LegacyCheckDefinition):
-                sane_check_info.append(plugin)
-                legacy_check_plugin_files[plugin.name] = f
-            else:
-                # Now just drop everything we don't like; this is not a supported API anymore.
-                # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-                ignored_plugins_errors.append(
-                    f"Ignoring outdated plug-in in {f!r}: Format no longer supported"
-                    " -- this API is deprecated!"
-                )
-
-    return _DiscoveredLegacyChecks(
-        ignored_plugins_errors, sane_check_info, legacy_check_plugin_files, did_compile
-    )
 
 
 def new_check_context() -> CheckContext:

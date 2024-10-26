@@ -22,7 +22,7 @@ import cmk.utils.paths
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.agent_based.legacy import FileLoader, find_plugin_files
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 
@@ -44,20 +44,19 @@ class Check(BaseCheck):
     _LEGACY_CHECKS: dict[str, LegacyCheckDefinition] = {}
 
     def __init__(self, name: str) -> None:
-        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
         if not self._LEGACY_CHECKS:
-            for legacy_check in config.discover_legacy_checks(
+            for legacy_check in discover_legacy_checks(
                 find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
                 FileLoader(
                     precomile_path=cmk.utils.paths.precompiled_checks_dir,
                     local_path="/not_relevant_for_test",
                     makedirs=store.makedirs,
                 ),
+                dict,  # we don't beed the special agents here.
+                raise_errors=True,
             ).sane_check_info:
                 self._LEGACY_CHECKS[legacy_check.name] = legacy_check
 

@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+import dataclasses
 import marshal
 import os
 import py_compile
 import struct
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from importlib.util import MAGIC_NUMBER
 from pathlib import Path
 from types import CodeType
 from typing import Self
+
+from .v0_unstable import LegacyCheckDefinition
 
 
 def find_plugin_files(*dirs: str) -> tuple[str, ...]:
@@ -109,3 +113,70 @@ class FileLoader:
             "local" if is_local else "builtin",
             os.path.basename(path),
         )
+
+
+@dataclasses.dataclass
+class DiscoveredLegacyChecks:
+    ignored_plugins_errors: Sequence[str]
+    sane_check_info: Sequence[LegacyCheckDefinition]
+    plugin_files: Mapping[str, str]
+    did_compile: bool
+
+
+def discover_legacy_checks(
+    filelist: Iterable[str],
+    loader: FileLoader,
+    # this is only needed because we have to load the special agent info
+    # into the configs global data structure.
+    # As soon as the migration is finished, this can go.
+    new_check_context: Callable[[], dict[str, object]],
+    *,
+    raise_errors: bool,
+) -> DiscoveredLegacyChecks:
+    loaded_files: set[str] = set()
+    ignored_plugins_errors = []
+    sane_check_info = []
+    legacy_check_plugin_files: dict[str, str] = {}
+
+    did_compile = False
+    for f in filelist:
+        if f[0] == "." or f[-1] == "~":
+            continue  # ignore editor backup / temp files
+
+        file_name = os.path.basename(f)
+        if file_name in loaded_files:
+            continue  # skip already loaded files (e.g. from local)
+
+        try:
+            check_context = new_check_context()
+
+            did_compile |= loader.load_into(f, check_context)
+
+            loaded_files.add(file_name)
+
+            if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
+                raise TypeError(defined_checks)
+
+        except Exception as e:
+            if raise_errors:
+                raise
+            ignored_plugins_errors.append(
+                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!"
+            )
+            continue
+
+        for plugin in defined_checks.values():
+            if isinstance(plugin, LegacyCheckDefinition):  # type: ignore[misc]  # contains Any
+                sane_check_info.append(plugin)
+                legacy_check_plugin_files[plugin.name] = f
+            else:
+                # Now just drop everything we don't like; this is not a supported API anymore.
+                # Users affected by this will see a CRIT in their "Analyse Configuration" page.
+                ignored_plugins_errors.append(
+                    f"Ignoring outdated plug-in in {f!r}: Format no longer supported"
+                    " -- this API is deprecated!"
+                )
+
+    return DiscoveredLegacyChecks(
+        ignored_plugins_errors, sane_check_info, legacy_check_plugin_files, did_compile
+    )

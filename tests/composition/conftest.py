@@ -2,8 +2,11 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import logging
 from collections.abc import Iterator
 from pathlib import Path
+from shutil import which
 
 import pytest
 
@@ -16,16 +19,20 @@ from tests.composition.utils import bake_agent, get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(name="central_site", scope="session")
-def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
+def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     yield from site_factory.get_test_site(
         "central", description=request.node.name, auto_restart_httpd=True
     )
 
 
 @pytest.fixture(name="remote_site", scope="session")
-def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
+def _remote_site(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
     remote_site_generator = site_factory.get_test_site(
         "remote", description=request.node.name, auto_restart_httpd=True
     )
@@ -109,28 +116,23 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         yield installed_agent_ctl_in_unknown_state
 
 
-@pytest.fixture(scope="session", autouse=True)
-def _run_cron() -> Iterator[None]:
+@pytest.fixture(scope="session", name="ensure_cron")
+def _run_cron() -> None:
     """Run cron for background jobs"""
     if not is_containerized():
-        yield
         return
-    for cron_cmd in (
-        cron_cmds := (
-            "cron",  # Ubuntu, Debian, ...
-            "crond",  # RHEL (AlmaLinux)
-        )
-    ):
-        try:
-            run(
-                [cron_cmd],
-                # calling cron spawns a background process, which fails if cron is already running
-                check=False,
-                sudo=True,
-            )
-        except FileNotFoundError:
-            continue
-        break
-    else:
-        raise RuntimeError(f"No cron executable found (tried {','.join(cron_cmds)})")
-    yield
+
+    logger.info("Ensure system cron is running")
+
+    # cron  - Ubuntu, Debian, ...
+    # crond - RHEL (AlmaLinux)
+    cron_cmd = "crond" if Path("/etc/redhat-release").exists() else "cron"
+
+    if not which(cron_cmd):
+        raise RuntimeError(f"No cron executable found (tried {cron_cmd})")
+
+    if run(["pgrep", cron_cmd], check=False, capture_output=True).returncode == 0:
+        return
+
+    # Start cron daemon. It forks an will keep running in the background
+    run([cron_cmd], check=True, sudo=True)

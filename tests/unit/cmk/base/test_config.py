@@ -50,6 +50,8 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
+from cmk.base.api.agent_based.register.section_plugins_legacy import convert_legacy_sections
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
@@ -2997,6 +2999,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     duplicate_legacy_plugin = LegacyCheckDefinition(
         name="duplicate_plugin",
         service_name="blah",
+        check_function=lambda: [],
     )
 
     registered_plugin = CheckPluginAPI(
@@ -3019,19 +3022,15 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         "registered_check_plugins",
         {registered_plugin.name: registered_plugin},
     )
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
-    )
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(ValueError):
         config._add_checks_to_register(
-            config._make_check_plugins(
+            convert_legacy_check_plugins(
                 (duplicate_legacy_plugin,),
                 {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
                 validate_creation_kwargs=False,
+                raise_errors=True,
             )[1]
         )
 
@@ -3057,14 +3056,11 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         "registered_snmp_sections",
         {registered_section.name: registered_section},
     )
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
-    )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._add_sections_to_register(config._make_agent_and_snmp_sections(duplicate_plugin, {})[1])
+    config._add_sections_to_register(
+        convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1]
+    )
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

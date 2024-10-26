@@ -129,12 +129,11 @@ from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
     CheckPlugin,
-    LegacyPluginLocation,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
+from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_section_plugin_from_legacy,
+    convert_legacy_sections,
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
@@ -142,7 +141,6 @@ from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
@@ -1435,13 +1433,16 @@ def load_checks(
         raise_errors=cmk.ccc.debug.enabled(),
     )
 
-    section_errors, sections = _make_agent_and_snmp_sections(
-        discovered_legacy_checks.sane_check_info, discovered_legacy_checks.plugin_files
+    section_errors, sections = convert_legacy_sections(
+        discovered_legacy_checks.sane_check_info,
+        discovered_legacy_checks.plugin_files,
+        raise_errors=cmk.ccc.debug.enabled(),
     )
-    check_errors, checks = _make_check_plugins(
+    check_errors, checks = convert_legacy_check_plugins(
         discovered_legacy_checks.sane_check_info,
         discovered_legacy_checks.plugin_files,
         validate_creation_kwargs=discovered_legacy_checks.did_compile,
+        raise_errors=cmk.ccc.debug.enabled(),
     )
 
     _add_sections_to_register(sections)
@@ -1457,53 +1458,11 @@ def new_check_context() -> CheckContext:
     }
 
 
-AUTO_MIGRATION_ERR_MSG = (
-    "Failed to auto-migrate legacy plug-in to %s: %s\n"
-    "Please refer to Werk 10601 for more information."
-)
-
-
 def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectionPlugin]) -> None:
     for section in sections:
         if agent_based_register.is_registered_section_plugin(section.name):
             continue
         agent_based_register.add_section_plugin(section)
-
-
-def _make_agent_and_snmp_sections(
-    legacy_checks: Iterable[LegacyCheckDefinition], tracked_files: Mapping[str, str]
-) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
-    """Here comes the next layer of converting-to-"new"-api.
-
-    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info to create API compliant section plugins.
-    """
-    errors = []
-    sections = []
-
-    for check_info_element in legacy_checks:
-        if (parse_function := check_info_element.parse_function) is None:
-            continue
-        file = tracked_files[check_info_element.name]
-        try:
-            sections.append(
-                create_section_plugin_from_legacy(
-                    name=check_info_element.name,
-                    parse_function=parse_function,
-                    fetch=check_info_element.fetch,
-                    detect=check_info_element.detect,
-                    location=LegacyPluginLocation(file),
-                )
-            )
-        except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: missing section plug-ins may lead to missing data for a check plug-in
-            #       *or* to more obscure errors, when a check/inventory plug-in will be
-            #       passed un-parsed data unexpectedly.
-            if cmk.ccc.debug.enabled():
-                raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", file))
-
-    return errors, sections
 
 
 def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
@@ -1520,42 +1479,6 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
                 "Please remove legacy plug-in."
             )
         agent_based_register.add_check_plugin(check)
-
-
-def _make_check_plugins(
-    legacy_checks: Iterable[LegacyCheckDefinition],
-    tracked_files: Mapping[str, str],
-    *,
-    validate_creation_kwargs: bool,
-) -> tuple[list[str], Sequence[CheckPlugin]]:
-    """Here comes the next layer of converting-to-"new"-api.
-
-    For the new check-API we use the accumulated information
-    in check_info to create API compliant check plug-ins.
-    """
-    errors = []
-    checks = []
-    for check_info_element in legacy_checks:
-        # skip pure section declarations:
-        if check_info_element.service_name is None:
-            continue
-        file = tracked_files[check_info_element.name]
-        try:
-            checks.append(
-                create_check_plugin_from_legacy(
-                    check_info_element,
-                    location=LegacyPluginLocation(file),
-                    validate_creation_kwargs=validate_creation_kwargs,
-                )
-            )
-        except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
-            # NOTE: as a result of a missing check plug-in, the corresponding services
-            #       will be silently droppend on most (all?) occasions.
-            if cmk.ccc.debug.enabled():
-                raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", file))
-
-    return errors, checks
 
 
 # .

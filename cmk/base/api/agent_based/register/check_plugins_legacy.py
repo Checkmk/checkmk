@@ -10,7 +10,7 @@ import copy
 import functools
 import itertools
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import suppress
 from typing import Any
 
@@ -241,7 +241,7 @@ def _create_signature_check_function(
     return check_migration_wrapper
 
 
-def create_check_plugin_from_legacy(
+def _create_check_plugin_from_legacy(
     check_info_element: LegacyCheckDefinition,
     location: LegacyPluginLocation,
     *,
@@ -273,3 +273,35 @@ def create_check_plugin_from_legacy(
         location=location,
         validate_kwargs=validate_creation_kwargs,
     )
+
+
+def convert_legacy_check_plugins(
+    legacy_checks: Iterable[LegacyCheckDefinition],
+    tracked_files: Mapping[str, str],
+    *,
+    validate_creation_kwargs: bool,
+    raise_errors: bool,
+) -> tuple[list[str], Sequence[CheckPlugin]]:
+    errors = []
+    checks = []
+    for check_info_element in legacy_checks:
+        # skip pure section declarations:
+        if check_info_element.service_name is None:
+            continue
+        file = tracked_files[check_info_element.name]
+        try:
+            checks.append(
+                _create_check_plugin_from_legacy(
+                    check_info_element,
+                    location=LegacyPluginLocation(file),
+                    validate_creation_kwargs=validate_creation_kwargs,
+                )
+            )
+        except (NotImplementedError, KeyError, AssertionError, ValueError):
+            # NOTE: as a result of a missing check plug-in, the corresponding services
+            #       will be silently droppend on most (all?) occasions.
+            if raise_errors:
+                raise
+            errors.append("Failed to auto-migrate legacy plug-in to check plug-in: {file}\n")
+
+    return errors, checks

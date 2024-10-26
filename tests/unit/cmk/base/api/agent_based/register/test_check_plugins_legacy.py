@@ -208,9 +208,12 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
     ]
 
 
-def test_create_check_plugin_from_legacy_wo_params() -> None:
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        MINIMAL_CHECK_INFO, LegacyPluginLocation("blah/norris.py")
+def test_convert_legacy_check_plugins_wo_params() -> None:
+    _errors, (plugin,) = check_plugins_legacy.convert_legacy_check_plugins(
+        (MINIMAL_CHECK_INFO,),
+        {"norris": "blah/norris.py"},
+        validate_creation_kwargs=True,
+        raise_errors=True,
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -223,17 +226,21 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function is None
+    assert plugin.location == LegacyPluginLocation("blah/norris.py")
 
 
-def test_create_check_plugin_from_legacy_with_params() -> None:
-    check_info_element = replace(
-        MINIMAL_CHECK_INFO,
-        check_ruleset_name="norris_rule",
-        check_default_parameters={"levels": (23, 42)},
-    )
-
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        check_info_element, LegacyPluginLocation("blah/norris.py")
+def test_convert_legacy_check_plugins_with_params() -> None:
+    _errors, (plugin,) = check_plugins_legacy.convert_legacy_check_plugins(
+        (
+            replace(
+                MINIMAL_CHECK_INFO,
+                check_ruleset_name="norris_rule",
+                check_default_parameters={"levels": (23, 42)},
+            ),
+        ),
+        {"norris": "blah/norris.py"},
+        validate_creation_kwargs=True,
+        raise_errors=True,
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -248,3 +255,4 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
     assert plugin.cluster_check_function is None
+    assert plugin.location == LegacyPluginLocation("blah/norris.py")

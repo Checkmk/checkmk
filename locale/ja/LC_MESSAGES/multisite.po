@@ -4741,6 +4741,10 @@ msgstr "エージェントコントローラー接続"
 msgid "Agent controller deployment"
 msgstr "エージェントコントローラーデプロイ"
 
+#, fuzzy
+msgid "Agent controller user"
+msgstr "エージェントコントローラー"
+
 msgid "Agent deployment"
 msgstr "エージェントのデプロイ"
 
@@ -4850,6 +4854,10 @@ msgstr "ホスト名 %s のエージェント更新は無効になっていま�
 
 msgid "Agent updates are enabled"
 msgstr "エージェントの更新が有効になっている"
+
+#, fuzzy
+msgid "Agent user"
+msgstr "エージェントルール"
 
 msgid "Agent version"
 msgstr "エージェントバージョン"
@@ -7197,6 +7205,9 @@ msgstr "自動テイクオーバー"
 msgid "Automatic updates"
 msgstr "自動的にアップデート"
 
+msgid "Automatic: Use existing user, if available. Otherwise create new user."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "変更を自動的にアクティブ化する"
 
@@ -8592,6 +8603,10 @@ msgstr "基本設定"
 
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth設定(オプション)"
+
+#, fuzzy
+msgid "Batch ID"
+msgstr "パスID"
 
 msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
@@ -13139,6 +13154,9 @@ msgstr "条件"
 msgid "Condition type"
 msgstr "条件タイプ"
 
+msgid "Conditional: Always create new user. Fail if it already exists."
+msgstr ""
+
 msgid "Conditions"
 msgstr "条件"
 
@@ -13602,9 +13620,6 @@ msgstr "上位レベルの設定"
 
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
-
-msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
-msgstr "ここでモデムのURLを設定します(例 https://mymodem.mydomain.example)。"
 
 #, python-format
 msgid "Configure your preferred way of license usage submission in %s"
@@ -15250,6 +15265,10 @@ msgstr "Crontabの状態"
 msgid "Current"
 msgstr "電流"
 
+#, fuzzy
+msgid "Current DCD state."
+msgstr "現在の状態"
+
 msgid "Current O2 percentage"
 msgstr "現在のO2パーセンテージ"
 
@@ -15668,9 +15687,16 @@ msgstr "%s をカスタマイズして使用する"
 msgid "Customize GUI design"
 msgstr "GUIデザインをカスタマイズする"
 
+#, fuzzy
+msgid "Customize agent package (UNIX)"
+msgstr "エージェントパッケージの名前(Linux、UNIX)"
+
 #, python-format
 msgid "Customize and use %s"
 msgstr "%s をカスタマイズして使用する"
+
+msgid "Customize installation directories (required when customizing user)"
+msgstr ""
 
 msgid "Customize login screen"
 msgstr "ログイン画面をカスタマイズする"
@@ -15697,6 +15723,9 @@ msgstr "時間範囲をカスタマイズ"
 
 msgid "Customize title"
 msgstr "タイトルをカスタマイズする"
+
+msgid "Customize user, e.g., deploy as unprivileged user"
+msgstr ""
 
 msgid "Customized"
 msgstr "カスタマイズ"
@@ -15773,9 +15802,21 @@ msgstr "DB2メモリー使用量"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy
+msgid "DCD Batch"
+msgstr "DCDステータス"
+
+#, fuzzy
+msgid "DCD Batches"
+msgstr "一致"
+
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
+
+#, fuzzy
+msgid "DCD Work State"
+msgstr "最悪の状態"
 
 msgid "DCD status"
 msgstr "DCDステータス"
@@ -18064,6 +18105,10 @@ msgstr "<tt> EXE </tt>ファイルを検索するディレクトリ(Windows)"
 msgid "Directory (tenant) ID"
 msgstr "ディレクトリ(テナント)ID"
 
+#, fuzzy
+msgid "Directory for Checkmk agent"
+msgstr "Checkmkエージェントを介して監視する"
+
 msgid "Directory for binaries (executables)"
 msgstr "バイナリ(実行可能ファイル)のディレクトリ"
 
@@ -20136,7 +20181,7 @@ msgstr ""
 "るユーザーのグループによって所有されます。"
 
 #, fuzzy
-msgid "Each project must be unique and cannot be used multiple times"
+msgid "Each project must be unique and cannot be be used multiple times."
 msgstr "各タグは一意である必要があり、複数回使用することはできません"
 
 msgid "Each service monitors on Robot Framework tests.\n"
@@ -23641,10 +23686,6 @@ msgid "First time the downtime starts"
 msgstr "最初のダウンタイム開始"
 
 #, fuzzy
-msgid "First with unit"
-msgstr "長さでフェッチ"
-
-#, fuzzy
 msgid "First work day of last month"
 msgstr "先月の初日"
 
@@ -25112,7 +25153,7 @@ msgid "Graph lines"
 msgstr "グラフオプション"
 
 #, fuzzy
-msgid "Graph metrics with zero values"
+msgid "Graph metrics with all zero values"
 msgstr "すべてゼロの値を持つメトリック"
 
 #, fuzzy
@@ -32716,6 +32757,10 @@ msgstr "無効なDCDコマンド: %r"
 msgid "Invalid FixedValue"
 msgstr "無効なID"
 
+#, fuzzy
+msgid "Invalid IP address"
+msgstr "無効なIPv4アドレス:%s"
+
 #, python-format
 msgid "Invalid IPv4 address: %s"
 msgstr "無効なIPv4アドレス:%s"
@@ -39124,6 +39169,10 @@ msgstr "クリティカル状態につながるモデム状態"
 msgid "Modem URL"
 msgstr "モデムURL"
 
+#, fuzzy
+msgid "Modem URL cannot be empty"
+msgstr "アクセスキー"
+
 msgid "Modem type"
 msgstr "モデム タイプ"
 
@@ -41384,6 +41433,9 @@ msgstr ""
 "パッケージ化されていないファイルが見つかりません。新しい拡張パッケージを作成"
 "する場合は、Check_MKインスタンスのディレクトリ<tt>%s/local </tt>の下にファイ"
 "ルを作成する必要があります。"
+
+msgid "No user creation: Use existing user. Fail if it doesn't exist."
+msgstr ""
 
 msgid "No username entered. Please enter a username."
 msgstr "ユーザー名が入力されていません。ユーザー名を入力してください。"
@@ -45964,6 +46016,10 @@ msgstr "パスフレーズ"
 
 msgid "Password"
 msgstr "パスワード"
+
+#, fuzzy
+msgid "Password cannot be empty"
+msgstr "アクセスキー"
 
 #, python-format
 msgid "Password changed (sync failed: %s)"
@@ -51796,6 +51852,15 @@ msgstr "変更されたタグへの参照を含むルールを含むルールセ
 msgid "Run agent as non-root user (Linux)"
 msgstr "root以外のユーザーとしてエージェントを実行する(Linux)"
 
+#, fuzzy
+msgid "Run agent as non-root, set agent user"
+msgstr "root以外のユーザーとしてエージェントを実行する(Linux)"
+
+#, fuzzy
+msgid "Run agent as root, set agent controller user"
+msgstr ""
+"ローカルエージェントのデータアクセスをエージェントコントローラに制限する"
+
 msgid "Run as"
 msgstr "として実行"
 
@@ -51902,6 +51967,12 @@ msgstr "実行中のプロセス"
 
 msgid "Running sessions"
 msgstr "セッションの実行"
+
+msgid ""
+"Running the agent or agent controller under a custom user requires "
+"deployment under the new directory structure. Please enable the \"Customize "
+"installation directory\" option."
+msgstr ""
 
 msgid "Runtime"
 msgstr "ランタイム"
@@ -54296,6 +54367,14 @@ msgstr "接続タイムアウトを設定する"
 msgid "Set criticality host tag"
 msgstr "重要度のホストタグを設定する"
 
+#, fuzzy
+msgid "Set custom GID"
+msgstr "カスタムテーマを設定する"
+
+#, fuzzy
+msgid "Set custom UID"
+msgstr "カスタムテーマを設定する"
+
 msgid "Set custom show mode"
 msgstr "カスタム表示モードを設定する"
 
@@ -56084,9 +56163,6 @@ msgstr "Skype for Business XMPP"
 
 msgid "Slab (Various smaller caches)"
 msgstr "スラブ(さまざまな小さなキャッシュ)"
-
-msgid "Slack Webhooks must use HTTPS."
-msgstr ""
 
 msgid "Slave usage bytes across all pools"
 msgstr "すべてのプールにわたるスレーブ使用バイト"
@@ -62538,10 +62614,6 @@ msgstr ""
 
 msgid "The maximum number of messages per time interval"
 msgstr "時間間隔あたりのメッセージの最大数"
-
-#, fuzzy
-msgid "The maximum number of projects per resource is 50."
-msgstr "リソースあたりのタグの最大数は50。"
 
 msgid "The maximum number of tags per resource is 50."
 msgstr "リソースあたりのタグの最大数は50。"
@@ -75449,6 +75521,10 @@ msgstr ""
 "スはそれなりの量のメモリを必要とするので、 高負荷の状況ではシステムが扱えるだ"
 "けの数の apache プロセスを考えて設定する必要があります。"
 
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "イベント履歴エントリ"
+
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "検証されていないTLS暗号を使用し、プレーンテキストにフォールバックする"
 
@@ -75641,6 +75717,10 @@ msgstr "テスト認証"
 msgid "User certificate path"
 msgstr "証明書を確認する"
 
+#, fuzzy
+msgid "User creation options"
+msgstr "ピギーバック作成オプション"
+
 msgid "User for login"
 msgstr "ログイン用のユーザー"
 
@@ -75735,6 +75815,10 @@ msgstr "ユーザー名"
 #, fuzzy
 msgid "Username / Password"
 msgstr "ユーザー名/パスワード"
+
+#, fuzzy
+msgid "Username cannot be empty"
+msgstr "秘密鍵"
 
 msgid "Username for login"
 msgstr "ログイン用のユーザー名"
@@ -76901,10 +76985,6 @@ msgid "Vertical axis width"
 msgstr "縦軸幅"
 
 msgid "Vertical padding"
-msgstr "垂直パディング"
-
-#, fuzzy
-msgid "Vertical range"
 msgstr "垂直パディング"
 
 msgid "Vertical rules"
@@ -79258,6 +79338,9 @@ msgstr ""
 
 msgid "Words"
 msgstr "言葉"
+
+msgid "Work in progress - This ruleset is not yet active."
+msgstr ""
 
 msgid "Work request queue length"
 msgstr "作業要求キューの長さ"
@@ -82268,6 +82351,10 @@ msgid "filesystem"
 msgstr "ファイルシステム"
 
 #, fuzzy
+msgid "finished"
+msgstr "終了しました"
+
+#, fuzzy
 msgid "firing"
 msgstr "ストリング"
 
@@ -83757,6 +83844,23 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid ""
+#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+#~ msgstr ""
+#~ "ここでモデムのURLを設定します(例 https://mymodem.mydomain.example)。"
+
+#, fuzzy
+#~ msgid "First with unit"
+#~ msgstr "長さでフェッチ"
+
+#, fuzzy
+#~ msgid "The maximum number of projects per resource is 50."
+#~ msgstr "リソースあたりのタグの最大数は50。"
+
+#, fuzzy
+#~ msgid "Vertical range"
+#~ msgstr "垂直パディング"
 
 #~ msgid "Key from password store"
 #~ msgstr "パスワードストアからのキー"

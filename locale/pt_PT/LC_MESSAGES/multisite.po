@@ -4941,6 +4941,10 @@ msgstr "Ligações do controlador do agente"
 msgid "Agent controller deployment"
 msgstr "Implantação do controlador de agente"
 
+#, fuzzy
+msgid "Agent controller user"
+msgstr "Controlador de agentes"
+
 msgid "Agent deployment"
 msgstr "Implantação de agentes"
 
@@ -5061,6 +5065,10 @@ msgstr "Agent Updates são desativados para hostname %s porque é"
 
 msgid "Agent updates are enabled"
 msgstr "As actualizações dos agentes estão activadas"
+
+#, fuzzy
+msgid "Agent user"
+msgstr "Regras dos agentes"
 
 #, fuzzy
 msgid "Agent version"
@@ -7538,6 +7546,9 @@ msgstr "Aquisição automática"
 msgid "Automatic updates"
 msgstr "Atualizações automáticas"
 
+msgid "Automatic: Use existing user, if available. Otherwise create new user."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "Ativar mudanças automaticamente"
 
@@ -8969,6 +8980,10 @@ msgstr "Configurações básicas"
 
 msgid "BasicAuth settings (optional)"
 msgstr "Configurações do BasicAuth (opcional)"
+
+#, fuzzy
+msgid "Batch ID"
+msgstr "Identificação do caminho"
 
 msgid "Batch Requests/sec"
 msgstr "Pedidos de lote/segundo"
@@ -13725,6 +13740,9 @@ msgstr "Estado"
 msgid "Condition type"
 msgstr "Tipo de condição"
 
+msgid "Conditional: Always create new user. Fail if it already exists."
+msgstr ""
+
 msgid "Conditions"
 msgstr "Condições"
 
@@ -14220,12 +14238,6 @@ msgstr "Contentores níveis superiores"
 #, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configure o seu ServiceNow URL aqui (ex. https://myservicenow.com)."
-
-#, fuzzy
-msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
-msgstr ""
-"Configure o URL do seu modem aqui (por exemplo, https://mymodem.mydomain."
-"example)."
 
 #, python-format
 msgid "Configure your preferred way of license usage submission in %s"
@@ -15938,6 +15950,10 @@ msgstr "Estado do Crontab"
 msgid "Current"
 msgstr "Corrente"
 
+#, fuzzy
+msgid "Current DCD state."
+msgstr "Situação atual"
+
 msgid "Current O2 percentage"
 msgstr "Percentagem actual de O2"
 
@@ -16366,9 +16382,16 @@ msgstr "Personalizar %s e usá-las"
 msgid "Customize GUI design"
 msgstr "Personalizar o design da GUI"
 
+#, fuzzy
+msgid "Customize agent package (UNIX)"
+msgstr "Nome dos pacotes de agentes (Linux, UNIX)"
+
 #, python-format
 msgid "Customize and use %s"
 msgstr "Personalizar e utilizar %s"
+
+msgid "Customize installation directories (required when customizing user)"
+msgstr ""
 
 msgid "Customize login screen"
 msgstr "Personalize a tela de login"
@@ -16397,6 +16420,9 @@ msgstr "Personalizar a mudança de temporizador"
 
 msgid "Customize title"
 msgstr "Personalizar título"
+
+msgid "Customize user, e.g., deploy as unprivileged user"
+msgstr ""
 
 msgid "Customized"
 msgstr "Personalizado"
@@ -16475,9 +16501,21 @@ msgstr "Uso de memória DB2"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy
+msgid "DCD Batch"
+msgstr "Estado do DCD"
+
+#, fuzzy
+msgid "DCD Batches"
+msgstr "Jogo"
+
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Fase 1.1: Buscando no local \"%s"
+
+#, fuzzy
+msgid "DCD Work State"
+msgstr "pior estado"
 
 msgid "DCD status"
 msgstr "Estado do DCD"
@@ -18888,6 +18926,10 @@ msgstr "Directórios para procurar por ficheiros <tt>EXE</tt> (Windows)"
 msgid "Directory (tenant) ID"
 msgstr "ID do directório (inquilino)"
 
+#, fuzzy
+msgid "Directory for Checkmk agent"
+msgstr "Monitor via Checkmk Agent"
+
 msgid "Directory for binaries (executables)"
 msgstr "Directório para binários (executáveis)"
 
@@ -21071,7 +21113,7 @@ msgstr ""
 "capazes de editar, eliminar e utilizar condições pré-definidas existentes."
 
 #, fuzzy
-msgid "Each project must be unique and cannot be used multiple times"
+msgid "Each project must be unique and cannot be be used multiple times."
 msgstr "Cada etiqueta deve ser única e não pode ser usada várias vezes"
 
 msgid "Each service monitors on Robot Framework tests.\n"
@@ -24637,10 +24679,6 @@ msgid "First time the downtime starts"
 msgstr "A primeira vez que o tempo de paragem começa"
 
 #, fuzzy
-msgid "First with unit"
-msgstr "Buscar com comprimento"
-
-#, fuzzy
 msgid "First work day of last month"
 msgstr "Primeiro dia do mês passado"
 
@@ -26145,7 +26183,7 @@ msgid "Graph lines"
 msgstr "Opções Gráficas"
 
 #, fuzzy
-msgid "Graph metrics with zero values"
+msgid "Graph metrics with all zero values"
 msgstr "Métricas com todos os valores zero"
 
 #, fuzzy
@@ -33870,6 +33908,10 @@ msgstr "Comando DCD inválido: %r"
 msgid "Invalid FixedValue"
 msgstr "Ident inválido"
 
+#, fuzzy
+msgid "Invalid IP address"
+msgstr "Endereço IPv4 inválido: %s"
+
 #, python-format
 msgid "Invalid IPv4 address: %s"
 msgstr "Endereço IPv4 inválido: %s"
@@ -40389,6 +40431,10 @@ msgstr "Estados Modem que levam a um estado crítico"
 msgid "Modem URL"
 msgstr "URL do modem"
 
+#, fuzzy
+msgid "Modem URL cannot be empty"
+msgstr "Chave de acesso"
+
 msgid "Modem type"
 msgstr "Tipo de modem"
 
@@ -42651,6 +42697,9 @@ msgstr ""
 "Não foram encontrados ficheiros não desempacotados. Se você quer criar novos "
 "pacotes de extensão então você precisa criar arquivos abaixo do diretório "
 "<tt>%s/local</tt> da sua instância Check_MK."
+
+msgid "No user creation: Use existing user. Fail if it doesn't exist."
+msgstr ""
 
 msgid "No username entered. Please enter a username."
 msgstr ""
@@ -47288,6 +47337,10 @@ msgstr "Frase de passagem"
 
 msgid "Password"
 msgstr "Senha"
+
+#, fuzzy
+msgid "Password cannot be empty"
+msgstr "Chave de acesso"
 
 #, python-format
 msgid "Password changed (sync failed: %s)"
@@ -53199,6 +53252,14 @@ msgstr ""
 msgid "Run agent as non-root user (Linux)"
 msgstr "Executar agente como usuário não-root (Linux)"
 
+#, fuzzy
+msgid "Run agent as non-root, set agent user"
+msgstr "Executar agente como usuário não-root (Linux)"
+
+#, fuzzy
+msgid "Run agent as root, set agent controller user"
+msgstr "Limitar o acesso aos dados do agente local ao controlador do agente"
+
 msgid "Run as"
 msgstr "Funciona como"
 
@@ -53303,6 +53364,12 @@ msgstr "Processos de execução"
 
 msgid "Running sessions"
 msgstr "Sessões de execução"
+
+msgid ""
+"Running the agent or agent controller under a custom user requires "
+"deployment under the new directory structure. Please enable the \"Customize "
+"installation directory\" option."
+msgstr ""
 
 msgid "Runtime"
 msgstr "Tempo de execução"
@@ -55713,6 +55780,14 @@ msgstr "Definir o tempo limite de conexão"
 msgid "Set criticality host tag"
 msgstr "Definir a etiqueta de criticidade do anfitrião"
 
+#, fuzzy
+msgid "Set custom GID"
+msgstr "Definir tema personalizado"
+
+#, fuzzy
+msgid "Set custom UID"
+msgstr "Definir tema personalizado"
+
 msgid "Set custom show mode"
 msgstr "Definir modo de exibição personalizado"
 
@@ -57531,9 +57606,6 @@ msgstr "Skype para Empresas XMPP"
 
 msgid "Slab (Various smaller caches)"
 msgstr "Laje (Várias caches menores)"
-
-msgid "Slack Webhooks must use HTTPS."
-msgstr ""
 
 msgid "Slave usage bytes across all pools"
 msgstr "Bytes de utilização de escravos em todas as piscinas"
@@ -64214,10 +64286,6 @@ msgstr ""
 
 msgid "The maximum number of messages per time interval"
 msgstr "O número máximo de mensagens por intervalo de tempo"
-
-#, fuzzy
-msgid "The maximum number of projects per resource is 50."
-msgstr "O número máximo de tags por recurso é de 50."
 
 msgid "The maximum number of tags per resource is 50."
 msgstr "O número máximo de tags por recurso é de 50."
@@ -77395,6 +77463,10 @@ msgstr ""
 "configurar tantos processos apache quantos o seu sistema puder lidar em "
 "situações de alta carga."
 
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Registo do histórico de eventos"
+
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Utilizar encriptação TLS não verificada, recuar para texto simples"
 
@@ -77586,6 +77658,10 @@ msgstr "Testar a autenticação"
 msgid "User certificate path"
 msgstr "Verificar certificados"
 
+#, fuzzy
+msgid "User creation options"
+msgstr "Opções de criação de porquinhos"
+
 msgid "User for login"
 msgstr "Usuário para login"
 
@@ -77683,6 +77759,10 @@ msgstr "Nome de usuário"
 #, fuzzy
 msgid "Username / Password"
 msgstr "Nome de utilizador/Palavra-passe"
+
+#, fuzzy
+msgid "Username cannot be empty"
+msgstr "Chave secreta"
 
 msgid "Username for login"
 msgstr "Nome de usuário para login"
@@ -78858,10 +78938,6 @@ msgid "Vertical axis width"
 msgstr "Largura do eixo vertical"
 
 msgid "Vertical padding"
-msgstr "Forro vertical"
-
-#, fuzzy
-msgid "Vertical range"
 msgstr "Forro vertical"
 
 msgid "Vertical rules"
@@ -81292,6 +81368,9 @@ msgstr ""
 
 msgid "Words"
 msgstr "Palavras"
+
+msgid "Work in progress - This ruleset is not yet active."
+msgstr ""
 
 msgid "Work request queue length"
 msgstr "Comprimento da fila de solicitação de trabalho"
@@ -84369,6 +84448,10 @@ msgid "filesystem"
 msgstr "sistema de ficheiros"
 
 #, fuzzy
+msgid "finished"
+msgstr "Concluído"
+
+#, fuzzy
 msgid "firing"
 msgstr "Cordão"
 
@@ -85858,6 +85941,25 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+#~ msgstr ""
+#~ "Configure o URL do seu modem aqui (por exemplo, https://mymodem.mydomain."
+#~ "example)."
+
+#, fuzzy
+#~ msgid "First with unit"
+#~ msgstr "Buscar com comprimento"
+
+#, fuzzy
+#~ msgid "The maximum number of projects per resource is 50."
+#~ msgstr "O número máximo de tags por recurso é de 50."
+
+#, fuzzy
+#~ msgid "Vertical range"
+#~ msgstr "Forro vertical"
 
 #~ msgid "Key from password store"
 #~ msgstr "Chave da loja de senhas"

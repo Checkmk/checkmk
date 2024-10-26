@@ -4951,6 +4951,10 @@ msgstr "Conexiuni agent controler"
 msgid "Agent controller deployment"
 msgstr "Implementarea controlerului de agent"
 
+#, fuzzy
+msgid "Agent controller user"
+msgstr "Controlor agent"
+
 msgid "Agent deployment"
 msgstr "Implementarea agentului"
 
@@ -5073,6 +5077,10 @@ msgstr ""
 
 msgid "Agent updates are enabled"
 msgstr "Actualizările agentului sunt activate"
+
+#, fuzzy
+msgid "Agent user"
+msgstr "Reguli privind agenții"
 
 #, fuzzy
 msgid "Agent version"
@@ -7527,6 +7535,9 @@ msgstr "Preluare automată"
 msgid "Automatic updates"
 msgstr "Actualizări automate"
 
+msgid "Automatic: Use existing user, if available. Otherwise create new user."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "Activarea automată a modificărilor"
 
@@ -8952,6 +8963,10 @@ msgstr "Setări de bază"
 
 msgid "BasicAuth settings (optional)"
 msgstr "Setări BasicAuth (opțional)"
+
+#, fuzzy
+msgid "Batch ID"
+msgstr "ID-ul căii"
 
 msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
@@ -13737,6 +13752,9 @@ msgstr "Stare"
 msgid "Condition type"
 msgstr "Tipul de condiție"
 
+msgid "Conditional: Always create new user. Fail if it already exists."
+msgstr ""
+
 msgid "Conditions"
 msgstr "Condiții"
 
@@ -14233,12 +14251,6 @@ msgstr "Configurați nivelurile superioare"
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
 "Configurați aici URL-ul ServiceNow (de exemplu, https://myservicenow.com)."
-
-#, fuzzy
-msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
-msgstr ""
-"Configurați aici URL-ul modemului (de exemplu, https://mymodem.mydomain."
-"example)."
 
 #, python-format
 msgid "Configure your preferred way of license usage submission in %s"
@@ -15953,6 +15965,10 @@ msgstr "Crontab status"
 msgid "Current"
 msgstr "Curent"
 
+#, fuzzy
+msgid "Current DCD state."
+msgstr "Starea actuală"
+
 msgid "Current O2 percentage"
 msgstr "Procentul actual de O2"
 
@@ -16380,9 +16396,16 @@ msgstr "Personalizați %s și folosiți-le"
 msgid "Customize GUI design"
 msgstr "Personalizați designul GUI"
 
+#, fuzzy
+msgid "Customize agent package (UNIX)"
+msgstr "Numele pachetelor agentului (Linux, UNIX)"
+
 #, python-format
 msgid "Customize and use %s"
 msgstr "Personalizați și utilizați %s"
+
+msgid "Customize installation directories (required when customizing user)"
+msgstr ""
 
 msgid "Customize login screen"
 msgstr "Personalizați ecranul de conectare"
@@ -16410,6 +16433,9 @@ msgstr "Personalizați intervalul de timp"
 
 msgid "Customize title"
 msgstr "Personalizați titlul"
+
+msgid "Customize user, e.g., deploy as unprivileged user"
+msgstr ""
 
 msgid "Customized"
 msgstr "Personalizat"
@@ -16487,9 +16513,21 @@ msgstr "Utilizarea memoriei DB2"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy
+msgid "DCD Batch"
+msgstr "Starea DCD"
+
+#, fuzzy
+msgid "DCD Batches"
+msgstr "Potriviri"
+
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
+
+#, fuzzy
+msgid "DCD Work State"
+msgstr "cea mai rea stare"
 
 msgid "DCD status"
 msgstr "Starea DCD"
@@ -18916,6 +18954,10 @@ msgstr "Directoare în care se caută fișierele <tt>EXE</tt> (Windows)"
 msgid "Directory (tenant) ID"
 msgstr "ID de director (chiriaș)"
 
+#, fuzzy
+msgid "Directory for Checkmk agent"
+msgstr "Monitorizare prin intermediul agentului Checkmk"
+
 msgid "Directory for binaries (executables)"
 msgstr "Directorul pentru binare (executabile)"
 
@@ -21110,7 +21152,7 @@ msgstr ""
 "pot edita, șterge și utiliza condițiile predefinite existente."
 
 #, fuzzy
-msgid "Each project must be unique and cannot be used multiple times"
+msgid "Each project must be unique and cannot be be used multiple times."
 msgstr ""
 "Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
 "ori."
@@ -24686,10 +24728,6 @@ msgid "First time the downtime starts"
 msgstr "Prima dată când începe timpul de nefuncționare"
 
 #, fuzzy
-msgid "First with unit"
-msgstr "Preluare cu lungime"
-
-#, fuzzy
 msgid "First work day of last month"
 msgstr "Prima zi a ultimei luni"
 
@@ -26180,7 +26218,7 @@ msgid "Graph lines"
 msgstr "Opțiuni grafice"
 
 #, fuzzy
-msgid "Graph metrics with zero values"
+msgid "Graph metrics with all zero values"
 msgstr "Metrici cu toate valorile zero"
 
 #, fuzzy
@@ -33960,6 +33998,10 @@ msgstr "Comandă DCD invalidă: %r."
 msgid "Invalid FixedValue"
 msgstr "Identificator invalid"
 
+#, fuzzy
+msgid "Invalid IP address"
+msgstr "Adresa IPv4 invalidă: %s"
+
 #, python-format
 msgid "Invalid IPv4 address: %s"
 msgstr "Adresa IPv4 invalidă: %s"
@@ -40441,6 +40483,10 @@ msgstr "Stări ale modemului care conduc la o stare critică"
 msgid "Modem URL"
 msgstr "Modem URL"
 
+#, fuzzy
+msgid "Modem URL cannot be empty"
+msgstr "Cheie de acces"
+
 msgid "Modem type"
 msgstr "Tipul de modem"
 
@@ -42727,6 +42773,9 @@ msgstr ""
 "Nu s-au găsit fișiere neambalate. Dacă doriți să creați noi pachete de "
 "extensii, atunci trebuie să creați fișiere sub directorul <tt>%s/local</tt> "
 "al instanței Check_MK."
+
+msgid "No user creation: Use existing user. Fail if it doesn't exist."
+msgstr ""
 
 msgid "No username entered. Please enter a username."
 msgstr ""
@@ -47382,6 +47431,10 @@ msgstr "Fraza de acces"
 
 msgid "Password"
 msgstr "Parola"
+
+#, fuzzy
+msgid "Password cannot be empty"
+msgstr "Cheie de acces"
 
 #, python-format
 msgid "Password changed (sync failed: %s)"
@@ -53271,6 +53324,16 @@ msgstr ""
 msgid "Run agent as non-root user (Linux)"
 msgstr "Rulați agentul ca utilizator non-root (Linux)"
 
+#, fuzzy
+msgid "Run agent as non-root, set agent user"
+msgstr "Rulați agentul ca utilizator non-root (Linux)"
+
+#, fuzzy
+msgid "Run agent as root, set agent controller user"
+msgstr ""
+"Limitarea accesului agenților locali la datele agentului la controlerul "
+"agentului"
+
 msgid "Run as"
 msgstr "Rulați ca"
 
@@ -53377,6 +53440,12 @@ msgstr "Procese în desfășurare"
 
 msgid "Running sessions"
 msgstr "Sesiuni de alergare"
+
+msgid ""
+"Running the agent or agent controller under a custom user requires "
+"deployment under the new directory structure. Please enable the \"Customize "
+"installation directory\" option."
+msgstr ""
 
 msgid "Runtime"
 msgstr "Timp de execuție"
@@ -55823,6 +55892,14 @@ msgstr "Setați timeout-ul conexiunii"
 msgid "Set criticality host tag"
 msgstr "Setați eticheta de critică a gazdei"
 
+#, fuzzy
+msgid "Set custom GID"
+msgstr "Setați o temă personalizată"
+
+#, fuzzy
+msgid "Set custom UID"
+msgstr "Setați o temă personalizată"
+
 msgid "Set custom show mode"
 msgstr "Setați modul de spectacol personalizat"
 
@@ -57665,9 +57742,6 @@ msgstr "Skype pentru afaceri XMPP"
 
 msgid "Slab (Various smaller caches)"
 msgstr "Slab (Diverse ascunzători mai mici)"
-
-msgid "Slack Webhooks must use HTTPS."
-msgstr ""
 
 msgid "Slave usage bytes across all pools"
 msgstr "Octeți de utilizare a sclavilor în toate grupurile"
@@ -64388,10 +64462,6 @@ msgstr ""
 
 msgid "The maximum number of messages per time interval"
 msgstr "Numărul maxim de mesaje pe interval de timp"
-
-#, fuzzy
-msgid "The maximum number of projects per resource is 50."
-msgstr "Numărul maxim de etichete pentru fiecare resursă este de 50."
 
 msgid "The maximum number of tags per resource is 50."
 msgstr "Numărul maxim de etichete pentru fiecare resursă este de 50."
@@ -77624,6 +77694,10 @@ msgstr ""
 "memorie și ar trebui să configurați doar atâtea procese apache câte poate "
 "suporta sistemul dvs. în situații de încărcare mare."
 
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Intrarea în istoricul evenimentelor"
+
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Utilizați criptarea TLS neverificată, reveniți la textul simplu"
 
@@ -77816,6 +77890,10 @@ msgstr "Autentificare bazată pe utilizator"
 msgid "User certificate path"
 msgstr "Verificarea certificatelor"
 
+#, fuzzy
+msgid "User creation options"
+msgstr "Opțiuni de creare Piggyback"
+
 msgid "User for login"
 msgstr "Utilizator pentru autentificare"
 
@@ -77911,6 +77989,10 @@ msgstr "Nume utilizator"
 #, fuzzy
 msgid "Username / Password"
 msgstr "Nume de utilizator/parolă"
+
+#, fuzzy
+msgid "Username cannot be empty"
+msgstr "Cheia secretă"
 
 msgid "Username for login"
 msgstr "Nume de utilizator pentru autentificare"
@@ -79095,10 +79177,6 @@ msgid "Vertical axis width"
 msgstr "Lățimea axei verticale"
 
 msgid "Vertical padding"
-msgstr "Căptușeală verticală"
-
-#, fuzzy
-msgid "Vertical range"
 msgstr "Căptușeală verticală"
 
 msgid "Vertical rules"
@@ -81555,6 +81633,9 @@ msgstr ""
 
 msgid "Words"
 msgstr "Cuvinte"
+
+msgid "Work in progress - This ruleset is not yet active."
+msgstr ""
 
 msgid "Work request queue length"
 msgstr "Lungimea cozii de așteptare a cererilor de lucru"
@@ -84643,6 +84724,10 @@ msgstr "fișiere"
 msgid "filesystem"
 msgstr "sistem de fișiere"
 
+#, fuzzy
+msgid "finished"
+msgstr "Finalizat"
+
 msgid "firing"
 msgstr "ardere"
 
@@ -86130,6 +86215,25 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+#~ msgstr ""
+#~ "Configurați aici URL-ul modemului (de exemplu, https://mymodem.mydomain."
+#~ "example)."
+
+#, fuzzy
+#~ msgid "First with unit"
+#~ msgstr "Preluare cu lungime"
+
+#, fuzzy
+#~ msgid "The maximum number of projects per resource is 50."
+#~ msgstr "Numărul maxim de etichete pentru fiecare resursă este de 50."
+
+#, fuzzy
+#~ msgid "Vertical range"
+#~ msgstr "Căptușeală verticală"
 
 #~ msgid "Key from password store"
 #~ msgstr "Cheia din magazinul de parole"

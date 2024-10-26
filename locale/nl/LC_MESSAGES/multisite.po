@@ -4949,6 +4949,10 @@ msgstr "Agent controller verbindingen"
 msgid "Agent controller deployment"
 msgstr "Inzet van agent-controller"
 
+#, fuzzy
+msgid "Agent controller user"
+msgstr "Agent controller"
+
 msgid "Agent deployment"
 msgstr "Agent inzet"
 
@@ -5069,6 +5073,10 @@ msgstr "Agent Updates zijn uitgeschakeld voor hostnaam %s omdat het"
 
 msgid "Agent updates are enabled"
 msgstr "Agent updates zijn ingeschakeld"
+
+#, fuzzy
+msgid "Agent user"
+msgstr "Agent regels"
 
 #, fuzzy
 msgid "Agent version"
@@ -7531,6 +7539,9 @@ msgstr "Automatische overname"
 msgid "Automatic updates"
 msgstr "Automatische updates"
 
+msgid "Automatic: Use existing user, if available. Otherwise create new user."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "Automatisch wijzigingen activeren"
 
@@ -8960,6 +8971,10 @@ msgstr "Basisinstellingen"
 
 msgid "BasicAuth settings (optional)"
 msgstr "BasicAuth instellingen (optioneel)"
+
+#, fuzzy
+msgid "Batch ID"
+msgstr "Pad ID"
 
 msgid "Batch Requests/sec"
 msgstr "Batch verzoeken/sec"
@@ -13728,6 +13743,9 @@ msgstr "Voorwaarde"
 msgid "Condition type"
 msgstr "Toestand type"
 
+msgid "Conditional: Always create new user. Fail if it already exists."
+msgstr ""
+
 msgid "Conditions"
 msgstr "Voorwaarden"
 
@@ -14224,12 +14242,6 @@ msgstr "Containers bovenste niveaus"
 #, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
-
-#, fuzzy
-msgid "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
-msgstr ""
-"Configureer hier de URL van uw modem (bijv. https://mymodem.mydomain."
-"example)."
 
 #, python-format
 msgid "Configure your preferred way of license usage submission in %s"
@@ -15942,6 +15954,10 @@ msgstr "Crontab status"
 msgid "Current"
 msgstr "Huidige"
 
+#, fuzzy
+msgid "Current DCD state."
+msgstr "Huidige toestand"
+
 msgid "Current O2 percentage"
 msgstr "Huidig O2 percentage"
 
@@ -16371,9 +16387,16 @@ msgstr "Pas %s aan en gebruik ze"
 msgid "Customize GUI design"
 msgstr "GUI-ontwerp aanpassen"
 
+#, fuzzy
+msgid "Customize agent package (UNIX)"
+msgstr "Naam van agentpakketten (Linux, UNIX)"
+
 #, python-format
 msgid "Customize and use %s"
 msgstr "Aanpassen en gebruiken %s"
+
+msgid "Customize installation directories (required when customizing user)"
+msgstr ""
 
 msgid "Customize login screen"
 msgstr "Aanpassen inlogscherm"
@@ -16402,6 +16425,9 @@ msgstr "Timerbereik aanpassen"
 
 msgid "Customize title"
 msgstr "Titel aanpassen"
+
+msgid "Customize user, e.g., deploy as unprivileged user"
+msgstr ""
 
 msgid "Customized"
 msgstr "Aangepast"
@@ -16479,9 +16505,21 @@ msgstr "DB2 geheugengebruik"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy
+msgid "DCD Batch"
+msgstr "DCD-status"
+
+#, fuzzy
+msgid "DCD Batches"
+msgstr "Wedstrijd"
+
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Fase 1.1: Afhalen van site \"%s\""
+
+#, fuzzy
+msgid "DCD Work State"
+msgstr "ergste staat"
 
 msgid "DCD status"
 msgstr "DCD-status"
@@ -18896,6 +18934,10 @@ msgstr ""
 msgid "Directory (tenant) ID"
 msgstr "Directory (huurder) ID"
 
+#, fuzzy
+msgid "Directory for Checkmk agent"
+msgstr "Monitor via Checkmk Agent"
+
 msgid "Directory for binaries (executables)"
 msgstr "Directory voor binaries (uitvoerbare bestanden)"
 
@@ -21081,7 +21123,7 @@ msgstr ""
 "gebruiken."
 
 #, fuzzy
-msgid "Each project must be unique and cannot be used multiple times"
+msgid "Each project must be unique and cannot be be used multiple times."
 msgstr "Elke tag moet uniek zijn en kan niet meerdere keren worden gebruikt"
 
 msgid "Each service monitors on Robot Framework tests.\n"
@@ -24643,10 +24685,6 @@ msgid "First time the downtime starts"
 msgstr "De eerste keer dat de uitval begint"
 
 #, fuzzy
-msgid "First with unit"
-msgstr "Fetch met lengte"
-
-#, fuzzy
 msgid "First work day of last month"
 msgstr "Eerste dag van de laatste maand"
 
@@ -26144,7 +26182,7 @@ msgid "Graph lines"
 msgstr "Grafiek Opties"
 
 #, fuzzy
-msgid "Graph metrics with zero values"
+msgid "Graph metrics with all zero values"
 msgstr "Metriek met alle nulwaarden"
 
 #, fuzzy
@@ -33878,6 +33916,10 @@ msgstr "Ongeldig DCD commando: %r"
 msgid "Invalid FixedValue"
 msgstr "Ongeldige ident"
 
+#, fuzzy
+msgid "Invalid IP address"
+msgstr "Ongeldig IPv4 adres: %s"
+
 #, python-format
 msgid "Invalid IPv4 address: %s"
 msgstr "Ongeldig IPv4 adres: %s"
@@ -40397,6 +40439,10 @@ msgstr "Modem staten die leiden tot een kritieke toestand"
 msgid "Modem URL"
 msgstr "Modem URL"
 
+#, fuzzy
+msgid "Modem URL cannot be empty"
+msgstr "Toegangssleutel"
+
 msgid "Modem type"
 msgstr "Modem type"
 
@@ -42664,6 +42710,9 @@ msgstr ""
 "Geen uitgepakte bestanden gevonden. Als u nieuwe uitbreidingspakketten wilt "
 "aanmaken, moet u bestanden aanmaken onder de directory <tt>%s/local</tt> van "
 "uw Check_MK instantie."
+
+msgid "No user creation: Use existing user. Fail if it doesn't exist."
+msgstr ""
 
 #, fuzzy
 msgid "No username entered. Please enter a username."
@@ -47318,6 +47367,10 @@ msgstr "Passphrase"
 
 msgid "Password"
 msgstr "Wachtwoord"
+
+#, fuzzy
+msgid "Password cannot be empty"
+msgstr "Toegangssleutel"
 
 #, python-format
 msgid "Password changed (sync failed: %s)"
@@ -53203,6 +53256,14 @@ msgstr "Regelsets die regels bevatten met verwijzingen naar de gewijzigde tags"
 msgid "Run agent as non-root user (Linux)"
 msgstr "Agent uitvoeren als niet-root gebruiker (Linux)"
 
+#, fuzzy
+msgid "Run agent as non-root, set agent user"
+msgstr "Agent uitvoeren als niet-root gebruiker (Linux)"
+
+#, fuzzy
+msgid "Run agent as root, set agent controller user"
+msgstr "Beperk de toegang tot lokale agentgegevens tot de agentcontroller"
+
 msgid "Run as"
 msgstr "Uitvoeren als"
 
@@ -53307,6 +53368,12 @@ msgstr "Lopende processen"
 
 msgid "Running sessions"
 msgstr "Lopende sessies"
+
+msgid ""
+"Running the agent or agent controller under a custom user requires "
+"deployment under the new directory structure. Please enable the \"Customize "
+"installation directory\" option."
+msgstr ""
 
 msgid "Runtime"
 msgstr "Runtime"
@@ -55721,6 +55788,14 @@ msgstr "Time-out verbinding instellen"
 msgid "Set criticality host tag"
 msgstr "Host-tag kriticiteit instellen"
 
+#, fuzzy
+msgid "Set custom GID"
+msgstr "Aangepast thema instellen"
+
+#, fuzzy
+msgid "Set custom UID"
+msgstr "Aangepast thema instellen"
+
 msgid "Set custom show mode"
 msgstr "Aangepaste showmodus instellen"
 
@@ -57538,9 +57613,6 @@ msgstr "Skype voor bedrijven XMPP"
 
 msgid "Slab (Various smaller caches)"
 msgstr "Slab (diverse kleinere caches)"
-
-msgid "Slack Webhooks must use HTTPS."
-msgstr ""
 
 msgid "Slave usage bytes across all pools"
 msgstr "Slaafgebruik bytes over alle pools"
@@ -64234,10 +64306,6 @@ msgstr ""
 
 msgid "The maximum number of messages per time interval"
 msgstr "Het maximum aantal berichten per tijdsinterval"
-
-#, fuzzy
-msgid "The maximum number of projects per resource is 50."
-msgstr "Het maximum aantal tags per bron is 50."
 
 msgid "The maximum number of tags per resource is 50."
 msgstr "Het maximum aantal tags per bron is 50."
@@ -77450,6 +77518,10 @@ msgstr ""
 "nodig en je zou alleen zoveel apache processen moeten instellen als je "
 "systeem aan kan in situaties met hoge belasting."
 
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Invoer voorgeschiedenis"
+
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Gebruik ongeverifieerde TLS encryptie, val terug op platte tekst"
 
@@ -77642,6 +77714,10 @@ msgstr "Token authenticatie"
 msgid "User certificate path"
 msgstr "Certificaten verifiëren"
 
+#, fuzzy
+msgid "User creation options"
+msgstr "Piggyback creatie opties"
+
 msgid "User for login"
 msgstr "Gebruiker voor aanmelding"
 
@@ -77738,6 +77814,10 @@ msgstr "Gebruikersnaam"
 #, fuzzy
 msgid "Username / Password"
 msgstr "Gebruikersnaam/Wachtwoord"
+
+#, fuzzy
+msgid "Username cannot be empty"
+msgstr "Geheime sleutel"
 
 msgid "Username for login"
 msgstr "Gebruikersnaam voor inloggen"
@@ -78916,10 +78996,6 @@ msgid "Vertical axis width"
 msgstr "Verticale as breedte"
 
 msgid "Vertical padding"
-msgstr "Verticale opvulling"
-
-#, fuzzy
-msgid "Vertical range"
 msgstr "Verticale opvulling"
 
 msgid "Vertical rules"
@@ -81374,6 +81450,9 @@ msgstr ""
 
 msgid "Words"
 msgstr "Woorden"
+
+msgid "Work in progress - This ruleset is not yet active."
+msgstr ""
 
 msgid "Work request queue length"
 msgstr "Lengte wachtrij werkaanvragen"
@@ -84465,6 +84544,10 @@ msgid "filesystem"
 msgstr "bestandssysteem"
 
 #, fuzzy
+msgid "finished"
+msgstr "Afgewerkt"
+
+#, fuzzy
 msgid "firing"
 msgstr "String"
 
@@ -85961,6 +86044,25 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
+#~ msgstr ""
+#~ "Configureer hier de URL van uw modem (bijv. https://mymodem.mydomain."
+#~ "example)."
+
+#, fuzzy
+#~ msgid "First with unit"
+#~ msgstr "Fetch met lengte"
+
+#, fuzzy
+#~ msgid "The maximum number of projects per resource is 50."
+#~ msgstr "Het maximum aantal tags per bron is 50."
+
+#, fuzzy
+#~ msgid "Vertical range"
+#~ msgstr "Verticale opvulling"
 
 #~ msgid "Key from password store"
 #~ msgstr "Sleutel van wachtwoord opslag"

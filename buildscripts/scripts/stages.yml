@@ -96,6 +96,9 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep 'checkman/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_SEMGREP_RULE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/semgrep/rules' || true"
+
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
@@ -307,6 +310,16 @@ STAGES:
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
+
+    - NAME: "Python semgrep"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_SEMGREP_RULE_FILES
+      DIR: "tests"
+      ENV_VARS:
+          SEMGREP_OUTPUT_ARGS: "--junit-xml --junit-xml-output=${RESULTS}/semgrep_results.xml"
+      COMMAND: "make test-semgrep-docker"
+      TEXT_ON_SKIP: "No Python files changed"
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/semgrep_results.xml"
 
     - NAME: "Shell Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES

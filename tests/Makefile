@@ -13,6 +13,7 @@ PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
+SEMGREP := $(realpath semgrep)/run-semgrep
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -66,7 +67,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
-	test-unit-neb test-unit-core test-flake8
+	test-unit-neb test-unit-core test-flake8 \
+	test-semgrep test-semgrep-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -128,6 +130,8 @@ help:
 	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
+	@echo "test-semgrep                        - Run semgrep code quality tests"
+	@echo "test-semgrep-docker                 - Run semgrep code quality tests in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -174,6 +178,20 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	    -v "$(realpath ../agents):/agents" \
 	    $$IMAGE_HASH \
 	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
+
+test-semgrep:
+	$(SEMGREP) scan \
+	    $(SEMGREP_OUTPUT_ARGS) \
+	    --config "$(realpath semgrep/rules)" \
+	    --quiet \
+	    --oss-only \
+	    --use-git-ignore \
+	    --exclude=$(realpath ..)/packages \
+	    --disable-version-check \
+	    $(realpath ..)
+
+test-semgrep-docker:
+	../scripts/run-in-docker.sh TERM=xterm make test-semgrep
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,

@@ -138,6 +138,7 @@ docker run -a stdout -a stderr \
     -e USER \
     -e CI \
     -e BANDIT_OUTPUT_ARGS \
+    -e SEMGREP_OUTPUT_ARGS \
     -e GROOVYLINT_OUTPUT_ARGS \
     -e JUNIT_XML \
     -e PYLINT_ARGS \

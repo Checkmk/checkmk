@@ -480,16 +480,21 @@ class SiteManagement:
 
         domains = cls._affected_config_domains()
 
+        connected_sites = cls.get_connected_sites_to_update(
+            new_or_deleted_connection=True, modified_site=site_id, current_config=all_sites[site_id]
+        )
+
         del all_sites[site_id]
         sites_config_file.save(all_sites)
-        cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
+
         cmk.gui.watolib.changes.add_change(
             "edit-sites",
             _("Deleted site %s") % site_id,
             domains=domains,
-            sites=[omd_site()],
+            sites=list(connected_sites),
             need_restart=True,
         )
+        cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 
     @classmethod
     def _affected_config_domains(cls):

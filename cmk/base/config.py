@@ -1405,7 +1405,11 @@ def load_all_plugins(
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
-        errors.extend(add_legacy_checks_to_register(filelist))
+        legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
+
+    add_sections_to_register(sections)
+    add_checks_to_register(checks)
+    errors.extend(legacy_errors)
 
     return errors
 
@@ -1445,20 +1449,6 @@ def load_and_convert_legacy_checks(
     return (section_errors + check_errors, sections, checks)
 
 
-# NOTE: The given file names should better be absolute, otherwise
-# we depend on the current working directory, which is a bad idea,
-# especially in tests.
-def add_legacy_checks_to_register(
-    filelist: Iterable[str],
-) -> list[str]:
-    errors, sections, checks = load_and_convert_legacy_checks(filelist)
-
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
-
-    return errors
-
-
 def new_check_context() -> CheckContext:
     # Add the data structures where the checks register with Checkmk
     return {
@@ -1466,14 +1456,14 @@ def new_check_context() -> CheckContext:
     }
 
 
-def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectionPlugin]) -> None:
+def add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectionPlugin]) -> None:
     for section in sections:
         if agent_based_register.is_registered_section_plugin(section.name):
             continue
         agent_based_register.add_section_plugin(section)
 
 
-def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
+def add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
     for check in checks:
         present_plugin = agent_based_register.get_check_plugin(check.name)
 

@@ -85,7 +85,11 @@ def main() -> int:
 
     try:
         load_selected_plugins(CONFIG.locations, validate=debug)
-        config.add_legacy_checks_to_register(CONFIG.checks_to_load)
+
+        _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
+        config.add_sections_to_register(sections)
+        config.add_checks_to_register(checks)
+
         config.load_packed_config(LATEST_CONFIG)
 
         config.ipaddresses = CONFIG.ipaddresses

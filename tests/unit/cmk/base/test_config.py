@@ -3025,7 +3025,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(ValueError):
-        config._add_checks_to_register(
+        config.add_checks_to_register(
             convert_legacy_check_plugins(
                 (duplicate_legacy_plugin,),
                 {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
@@ -3058,7 +3058,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._add_sections_to_register(
+    config.add_sections_to_register(
         convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1]
     )
     assert (

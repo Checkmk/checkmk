@@ -141,7 +141,6 @@ from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
-from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
@@ -1399,19 +1398,19 @@ def load_all_plugins(
 ) -> list[str]:
     _initialize_data_structures()
 
-    errors = agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
-
     with tracer.start_as_current_span("load_legacy_check_plugins"):
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
 
-    add_sections_to_register(sections)
-    add_checks_to_register(checks)
-    errors.extend(legacy_errors)
+    errors = agent_based_register.load_all_plugins(
+        sections=sections,
+        checks=checks,
+        raise_errors=cmk.ccc.debug.enabled(),
+    )
 
-    return errors
+    return errors + legacy_errors
 
 
 def _initialize_data_structures() -> None:
@@ -1454,29 +1453,6 @@ def new_check_context() -> CheckContext:
     return {
         "special_agent_info": special_agent_info,
     }
-
-
-def add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectionPlugin]) -> None:
-    for section in sections:
-        if agent_based_register.is_registered_section_plugin(section.name):
-            continue
-        agent_based_register.add_section_plugin(section)
-
-
-def add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
-    for check in checks:
-        present_plugin = agent_based_register.get_check_plugin(check.name)
-
-        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
-            # location is PluginLocation => it's a new plug-in
-            # (allow loading multiple times, e.g. update-config)
-            # implemented here instead of the agent based register so that new API code does not
-            # need to include any handling of legacy cases
-            raise ValueError(
-                f"Legacy check plug-in still exists for check plug-in {check.name}. "
-                "Please remove legacy plug-in."
-            )
-        agent_based_register.add_check_plugin(check)
 
 
 # .

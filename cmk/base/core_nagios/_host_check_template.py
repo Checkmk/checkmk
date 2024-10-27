@@ -84,11 +84,8 @@ def main() -> int:
         cmk.ccc.debug.enable()
 
     try:
-        load_selected_plugins(CONFIG.locations, validate=debug)
-
         _errors, sections, checks = config.load_and_convert_legacy_checks(CONFIG.checks_to_load)
-        config.add_sections_to_register(sections)
-        config.add_checks_to_register(checks)
+        load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
         config.load_packed_config(LATEST_CONFIG)
 

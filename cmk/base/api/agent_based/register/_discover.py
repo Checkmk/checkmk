@@ -8,6 +8,16 @@ from collections.abc import Iterable
 from importlib import import_module
 from typing import assert_never
 
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin as BackendAgentSectionPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin as BackendCheckPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import (
+    SNMPSectionPlugin as BackendSNMPSectionPlugin,
+)
+
 from cmk import trace
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -42,7 +52,12 @@ tracer = trace.get_tracer()
 
 
 @tracer.start_as_current_span("load_all_plugins")
-def load_all_plugins(*, raise_errors: bool) -> list[str]:
+def load_all_plugins(
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    checks: Iterable[BackendCheckPlugin],
+    *,
+    raise_errors: bool,
+) -> list[str]:
     with tracer.start_as_current_span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
@@ -59,14 +74,24 @@ def load_all_plugins(*, raise_errors: bool) -> list[str]:
                     raise
                 errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
     return errors
 
 
-def load_selected_plugins(locations: Iterable[PluginLocation], *, validate: bool) -> None:
+def load_selected_plugins(
+    locations: Iterable[PluginLocation],
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    checks: Iterable[BackendCheckPlugin],
+    *,
+    validate: bool,
+) -> None:
     for location in locations:
         module = import_module(location.module)
         if location.name is not None:
             _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
 
 
 def _register_plugin_by_type(
@@ -189,3 +214,29 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
         raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
     add_inventory_plugin(plugin)
+
+
+def _add_sections_to_register(
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+) -> None:
+    for section in sections:
+        if is_registered_section_plugin(section.name):
+            continue
+        add_section_plugin(section)
+
+
+def _add_checks_to_register(
+    checks: Iterable[BackendCheckPlugin],
+) -> None:
+    for check in checks:
+        present_plugin = get_check_plugin(check.name)
+        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
+            # location is PluginLocation => it's a new plug-in
+            # (allow loading multiple times, e.g. update-config)
+            # implemented here instead of the agent based register so that new API code does not
+            # need to include any handling of legacy cases
+            raise ValueError(
+                f"Legacy check plug-in still exists for check plug-in {check.name}. "
+                "Please remove legacy plug-in."
+            )
+        add_check_plugin(check)

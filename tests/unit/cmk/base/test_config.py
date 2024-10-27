@@ -9,7 +9,7 @@ import itertools
 import re
 import shutil
 import socket
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final, Literal, NoReturn
 
@@ -44,20 +44,27 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.base.api.agent_based.register.section_plugins_legacy import convert_legacy_sections
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v1 import HostLabel
-from cmk.discover_plugins import PluginLocation
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    exists,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig
 
 
@@ -3002,69 +3009,72 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         check_function=lambda: [],
     )
 
-    registered_plugin = CheckPluginAPI(
-        name=CheckPluginName("duplicate_plugin"),
-        sections=[],
+    def _noop_disco(section: None) -> Iterable[Service]:
+        yield from ()
+
+    def _noop_check(section: None) -> Iterable[Result]:
+        yield from ()
+
+    new_style_plugin = CheckPlugin(
+        name="duplicate_plugin",
         service_name="Duplicate Plug-in",
-        discovery_function=lambda: [],
-        discovery_default_parameters=None,
-        discovery_ruleset_name=None,
-        discovery_ruleset_type="merged",
-        check_function=lambda: [],
-        cluster_check_function=None,
-        check_default_parameters=None,
-        check_ruleset_name=None,
-        location=PluginLocation(module="module", name="name"),
+        discovery_function=_noop_disco,
+        check_function=_noop_check,
     )
+
+    monkeypatch.setattr(agent_based_register._config, "registered_check_plugins", {})
 
     monkeypatch.setattr(
-        agent_based_register._config,
-        "registered_check_plugins",
-        {registered_plugin.name: registered_plugin},
+        agent_based_register._discover,
+        "discover_plugins",
+        lambda *a, **kw: DiscoveredPlugins(
+            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
+        ),
     )
-
-    assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
+    converted_legacy_checks = convert_legacy_check_plugins(
+        (duplicate_legacy_plugin,),
+        {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
+        validate_creation_kwargs=False,
+        raise_errors=True,
+    )[1]
+    assert converted_legacy_checks
     with pytest.raises(ValueError):
-        config.add_checks_to_register(
-            convert_legacy_check_plugins(
-                (duplicate_legacy_plugin,),
-                {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
-                validate_creation_kwargs=False,
-                raise_errors=True,
-            )[1]
+        agent_based_register.load_all_plugins(
+            sections=(),
+            checks=converted_legacy_checks,
+            raise_errors=False,  # we still expect the error to be raised
         )
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
-    registered_section = SNMPSectionPlugin(
-        SectionName("duplicate_plugin"),
-        ParsedSectionName("duplicate_plugin"),
-        lambda x: None,
-        lambda: (HostLabel(x, "bar") for x in ["foo"]),
-        None,
-        None,
-        "merged",
-        [],
-        [],
-        set(),
-        PluginLocation(module="module", name="name"),
+
+    def dummy_parse_function(string_table: StringTable) -> int:
+        return 42
+
+    new_style_section = SimpleSNMPSection(
+        name="duplicate_plugin",
+        detect=exists(".1.2.3"),
+        fetch=SNMPTree(base=".1.2.3", oids=[]),
+        parse_function=dummy_parse_function,
     )
+
+    monkeypatch.setattr(agent_based_register._config, "registered_snmp_sections", {})
 
     monkeypatch.setattr(
-        agent_based_register._config,
-        "registered_snmp_sections",
-        {registered_section.name: registered_section},
+        agent_based_register._discover,
+        "discover_plugins",
+        lambda *a, **kw: DiscoveredPlugins(
+            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
+        ),
     )
 
-    assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config.add_sections_to_register(
-        convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1]
+    agent_based_register.load_all_plugins(
+        sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
+        checks=(),
+        raise_errors=True,  # we don't expect any errors
     )
-    assert (
-        agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
-        == registered_section
-    )
+    assert agent_based_register.get_snmp_section_plugin(SectionName("duplicate_plugin")).detect_spec
 
 
 @pytest.mark.parametrize(

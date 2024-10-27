@@ -37,6 +37,7 @@ from cmk.gui.site_config import (
     is_replication_enabled,
     is_wato_slave_site,
     site_is_local,
+    wato_slave_sites,
 )
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
@@ -264,7 +265,6 @@ class SiteManagement:
 
     @classmethod
     def is_site_in_broker_connections(cls, site_id: SiteId) -> bool:
-        # make sure the site is not in a broker peer to peer connection
         connections = BrokerConnectionsConfigFile().load_for_modification()
         connections_ids = {
             site_id
@@ -273,6 +273,52 @@ class SiteManagement:
         }
 
         return site_id in connections_ids
+
+    @classmethod
+    def _change_affects_broker_connection(
+        cls, current_config: SiteConfiguration, old_config: SiteConfiguration
+    ) -> bool:
+        return (
+            is_replication_enabled(old_config) != is_replication_enabled(current_config)
+            or old_config["message_broker_port"] != current_config["message_broker_port"]
+            or old_config["multisiteurl"] != current_config["multisiteurl"]
+        )
+
+    @classmethod
+    def get_connected_sites_to_update(
+        cls,
+        new_or_deleted_connection: bool,
+        modified_site: SiteId,
+        current_config: SiteConfiguration,
+        old_config: SiteConfiguration | None = None,
+    ) -> set[SiteId]:
+        connected = {omd_site()}
+
+        if new_or_deleted_connection or (
+            old_config
+            and is_replication_enabled(old_config) != is_replication_enabled(current_config)
+        ):
+            connected |= set(wato_slave_sites().keys())
+            return connected
+
+        if old_config is None:
+            raise MKUserError(None, _("An old configuration is required for existing connections."))
+
+        if not cls._change_affects_broker_connection(current_config, old_config):
+            return set()
+
+        connections = BrokerConnectionsConfigFile().load_for_reading()
+        for connection in connections.values():
+            if modified_site in (
+                connection.connectee.site_id,
+                connection.connecter.site_id,
+            ):
+                connected |= {
+                    connection.connectee.site_id,
+                    connection.connecter.site_id,
+                }
+
+        return connected
 
     @classmethod
     def validate_configuration(  # pylint: disable=too-many-branches

@@ -182,7 +182,6 @@ class ModeEditSite(WatoMode):
         _clone_id_return = request.get_ascii_input("clone")
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
-        self._connected_sites: set[SiteId] = set()
 
         if is_free() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_free_message())
@@ -251,15 +250,6 @@ class ModeEditSite(WatoMode):
             )
         return menu
 
-    def _add_connected_sites_to_update(self) -> None:
-        # add connected sites to the sites to be updated
-        connections = BrokerConnectionsConfigFile().load_for_reading()
-        for connection in connections.values():
-            if connection.connecter.site_id == self._site_id:
-                self._connected_sites.add(SiteId(connection.connectee.site_id))
-            elif connection.connectee.site_id == self._site_id:
-                self._connected_sites.add(SiteId(connection.connecter.site_id))
-
     def _site_from_valuespec(self) -> SiteConfiguration:
         vs = self._valuespec()
         raw_site_spec = vs.from_html_vars("site")
@@ -290,28 +280,28 @@ class ModeEditSite(WatoMode):
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
+        sites_to_update = site_management_registry["site_management"].get_connected_sites_to_update(
+            self._new,
+            self._site_id,
+            site_spec,
+            self._site,
+        )
+
         self._site = configured_sites[self._site_id] = site_spec
-        self._add_connected_sites_to_update()
         self._site_mgmt.save_sites(configured_sites)
 
         msg = add_changes_after_editing_site_connection(
             site_id=self._site_id,
             is_new_connection=self._new,
             replication_enabled=is_replication_enabled(site_spec),
-            connected_sites=self._connected_sites,
+            connected_sites=sites_to_update,
         )
 
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def _update_related_sites(self, site_spec: SiteConfiguration) -> None:
-        if self._new:
-            # update all replicated sites
-            self._connected_sites = self._connected_sites | set(wato_slave_sites().keys())
-
     def action(self) -> ActionResult:
         site_spec = self._site_from_valuespec()
-        self._update_related_sites(site_spec)
         return self.save_site_changes(site_spec)
 
     def page(self) -> None:

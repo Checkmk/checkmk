@@ -590,6 +590,17 @@ class SitesApiMgr:
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)
 
+    def get_connected_sites_to_update(
+        self,
+        new_or_deleted_connection: bool,
+        modified_site: SiteId,
+        current_site_config: SiteConfiguration,
+        old_site_config: SiteConfiguration | None,
+    ) -> set[SiteId]:
+        return self.site_mgmt.get_connected_sites_to_update(
+            new_or_deleted_connection, modified_site, current_site_config, old_site_config
+        )
+
 
 def add_changes_after_editing_broker_connection(
     *,
@@ -630,7 +641,7 @@ def add_changes_after_editing_site_connection(
 
     # Don't know exactly what have been changed, so better issue a change
     # affecting all domains
-    sites_to_update = list(connected_sites | {site_id}) if connected_sites else [site_id]
+    sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
         "edit-sites",
         change_message,

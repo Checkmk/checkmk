@@ -6,7 +6,6 @@
 
 import sys
 from contextlib import suppress
-from importlib import import_module
 
 import cmk.ccc.debug
 
@@ -18,7 +17,7 @@ from cmk.checkengine.submitters import get_submitter
 
 import cmk.base.utils
 from cmk.base import config
-from cmk.base.api.agent_based.register import register_plugin_by_type
+from cmk.base.api.agent_based.register import load_selected_plugins
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
@@ -78,11 +77,6 @@ def main() -> int:
     if CONFIG.delay_precompile:
         _self_compile(CONFIG.src, CONFIG.dst)
 
-    for location in CONFIG.locations:
-        module = import_module(location.module)
-        if location.name is not None:
-            register_plugin_by_type(location, getattr(module, location.name), validate=debug)
-
     cmk.utils.log.setup_console_logging()
 
     cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
@@ -90,6 +84,7 @@ def main() -> int:
         cmk.ccc.debug.enable()
 
     try:
+        load_selected_plugins(CONFIG.locations, validate=debug)
         config.add_legacy_checks_to_register(CONFIG.checks_to_load)
         config.load_packed_config(LATEST_CONFIG)
 

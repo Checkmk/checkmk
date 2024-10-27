@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable
+from importlib import import_module
 from typing import assert_never
 
 from cmk import trace
@@ -51,7 +53,7 @@ def load_all_plugins(*, raise_errors: bool) -> list[str]:
     with tracer.start_as_current_span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():
             try:
-                register_plugin_by_type(location, plugin, validate=raise_errors)
+                _register_plugin_by_type(location, plugin, validate=raise_errors)
             except Exception as exc:
                 if raise_errors:
                     raise
@@ -60,7 +62,14 @@ def load_all_plugins(*, raise_errors: bool) -> list[str]:
     return errors
 
 
-def register_plugin_by_type(
+def load_selected_plugins(locations: Iterable[PluginLocation], *, validate: bool) -> None:
+    for location in locations:
+        module = import_module(location.module)
+        if location.name is not None:
+            _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
+
+
+def _register_plugin_by_type(
     location: PluginLocation,
     plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
     *,

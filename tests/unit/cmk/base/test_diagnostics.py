@@ -156,26 +156,87 @@ def test_diagnostics_element_hw_info() -> None:
     assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
 
 
-@pytest.mark.skip("CMK-19489")
 def test_diagnostics_element_hw_info_content(
     tmp_path: PurePath,
 ) -> None:
-    diagnostics_element = diagnostics.HWDiagnosticsElement()
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    proc_base_path = Path(tmp_path).joinpath("proc")
+    proc_base_path.mkdir(exist_ok=True)
 
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("hwinfo.json")
+    # Create three fake proc files
+    with open(proc_base_path / "meminfo", "w", encoding="utf-8") as f:
+        f.write("MemTotal:       32663516 kB")
+
+    with open(proc_base_path / "loadavg", "w", encoding="utf-8") as f:
+        f.write("1.19 1.58 1.75 2/1922 891074")
+
+    with open(proc_base_path / "cpuinfo", "w", encoding="utf-8") as f:
+        f.write("""processor : 0
+physical id : 0
+processor   : 1
+physical id : 0
+processor   : 2
+physical id : 0
+processor   : 3
+physical id : 0""")
+
+    diagnostics_element = diagnostics.collect_infos_hw(proc_base_path)
 
     info_keys = [
         "cpuinfo",
         "loadavg",
         "meminfo",
-        "vendorinfo",
     ]
-    content = json.loads(filepath.open().read())
 
-    assert sorted(content.keys()) == sorted(info_keys)
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert isinstance(diagnostics_element, dict)
+    assert diagnostics_element == {
+        "meminfo": {"MemTotal": "32663516 kB"},
+        "loadavg": {"loadavg_1": "1.19", "loadavg_5": "1.58", "loadavg_15": "1.75"},
+        "cpuinfo": {"physical_id": "0", "num_logical_processors": "4", "cpus": 1},
+    }
+
+
+def test_diagnostics_element_vendor_info() -> None:
+    diagnostics_element = diagnostics.VendorDiagnosticsElement()
+    assert diagnostics_element.ident == "vendorinfo"
+    assert diagnostics_element.title == "Vendor Information"
+    assert diagnostics_element.description == ("HW Vendor information of the Checkmk Server")
+
+
+def test_diagnostics_element_vendor_info_content(
+    tmp_path: PurePath,
+) -> None:
+    sys_path = Path(tmp_path).joinpath("sys/class/dmi/id")
+    sys_path.mkdir(parents=True, exist_ok=True)
+
+    # Create five fake sys files
+    with open(sys_path / "bios_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "bios_version", "w", encoding="utf-8") as f:
+        f.write("1.2.3")
+
+    with open(sys_path / "sys_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "product_name", "w", encoding="utf-8") as f:
+        f.write("Longitude 4")
+
+    with open(sys_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
+        f.write("")
+
+    diagnostics_element = diagnostics.collect_infos_vendor(sys_path)
+
+    info_keys = [
+        "bios_vendor",
+        "bios_version",
+        "sys_vendor",
+        "product_name",
+        "chassis_asset_tag",
+    ]
+
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert dict(diagnostics_element)["bios_vendor"] == "Dull Ink"
 
 
 def test_diagnostics_element_environment() -> None:
@@ -849,7 +910,7 @@ def test_diagnostics_element_crash_dumps_content(tmp_path):
 
     assert tarfile.is_tarfile(filepath)
     with tarfile.open(filepath, "r") as tar:
-        tar.extractall(path=tmp_path)
+        tar.extractall(path=tmp_path, filter="data")
         with Path(tmp_path.joinpath("info.json")).open("r", encoding="utf-8") as f:
             content = f.read()
 

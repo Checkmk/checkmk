@@ -41,7 +41,7 @@ class EmailManager:
         run([str(self.teardown_postfix_script), self._username], sudo=True)
         logger.info("Postfix is deleted")
 
-    def find_email_by_subject(self, email_subject: str) -> Path | None:
+    def find_email_by_subject(self, email_subject: str | None = None) -> Path | None:
         """Check all emails in the Maildir folder and return the file path of the email
         with the specified subject. Delete checked emails.
         """
@@ -50,7 +50,7 @@ class EmailManager:
             with open(file_path, "r") as file:
                 msg = email.message_from_file(file, policy=default)
                 logger.info("Email received, subject: '%s'", msg.get("Subject"))
-                if msg.get("Subject") == email_subject:
+                if email_subject is None or msg.get("Subject") == email_subject:
                     return file_path
                 file_path.unlink()
         return None

@@ -253,6 +253,7 @@ def test_log_audit_with_html_message() -> None:
     ]
 
 
+@pytest.mark.skip(reason="This test relies on an external translation file")
 @pytest.mark.usefixtures("request_context")
 def test_log_audit_with_lazystring() -> None:
     with application_and_request_context():

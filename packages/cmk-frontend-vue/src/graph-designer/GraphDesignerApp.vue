@@ -888,7 +888,15 @@ function dragging(event: DragEvent) {
             />
           </template>
           <template #metric_action>
-            <button @click="addMetric">{{ props.i18n.graph_lines.add }}</button>
+            <button @click="addMetric">
+              <img
+                :title="props.i18n.graph_lines.add"
+                src="themes/facelift/images/icon_new.svg"
+                class="icon iconbutton"
+                @click="addMetric"
+              />
+              {{ props.i18n.graph_lines.add }}
+            </button>
           </template>
         </MetricRowRenderer>
       </div>
@@ -907,7 +915,15 @@ function dragging(event: DragEvent) {
             />
           </template>
           <template #metric_action>
-            <button @click="addScalar">{{ props.i18n.graph_lines.add }}</button>
+            <button @click="addScalar">
+              <img
+                :title="props.i18n.graph_lines.add"
+                src="themes/facelift/images/icon_new.svg"
+                class="icon iconbutton"
+                @click="addMetric"
+              />
+              {{ props.i18n.graph_lines.add }}
+            </button>
           </template>
         </MetricRowRenderer>
       </div>
@@ -919,7 +935,15 @@ function dragging(event: DragEvent) {
           :spec="specConstant"
           :backend-validation="backendValidationConstant"
         />
-        <button @click="addConstant">{{ props.i18n.graph_lines.add }}</button>
+        <button @click="addConstant">
+          <img
+            :title="props.i18n.graph_lines.add"
+            src="themes/facelift/images/icon_new.svg"
+            class="icon iconbutton"
+            @click="addMetric"
+          />
+          {{ props.i18n.graph_lines.add }}
+        </button>
       </div>
     </template>
     <template #operations>

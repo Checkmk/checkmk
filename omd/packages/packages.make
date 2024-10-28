@@ -207,7 +207,7 @@ include \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
     packages/redfish_mkp/redfish_mkp.make \
-    packages/rabbitmq/rabbitmq.make \
+    packages/rabbitmq/rabbitmq.make
 
 ifeq ($(EDITION),enterprise)
 include \
@@ -222,7 +222,8 @@ endif
 ifeq ($(EDITION),cloud)
 include \
     packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make
+    packages/cloud/cloud.make \
+    ../non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),saas)
 include \

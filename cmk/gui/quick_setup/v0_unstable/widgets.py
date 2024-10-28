@@ -9,45 +9,45 @@ from typing import Literal, NewType
 FormSpecId = NewType("FormSpecId", str)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Widget: ...
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Text(Widget):
     widget_type: str = "text"
     text: str = ""
     tooltip: str | None = None
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class NoteText(Widget):
     widget_type: str = field(default="note_text", init=False)
     text: str = ""
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ListOfWidgets(Widget):
     widget_type: str = field(default="list_of_widgets", init=False)
     items: list[Widget] = field(default_factory=list)
     list_type: None | Literal["bullet", "ordered", "check"] = None
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class FormSpecWrapper(Widget):
     id: FormSpecId
     form_spec: object
     widget_type: str = field(default="form_spec")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class FormSpecRecap(Widget):
     id: FormSpecId
     widget_type: str = field(default="form_spec_recap", init=False)
     form_spec: object
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class Collapsible(Widget):
     widget_type: str = field(default="collapsible", init=False)
     title: str

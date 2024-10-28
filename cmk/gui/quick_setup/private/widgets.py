@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationStageWidget(Widget):
     """The conditional notification event stage widgets are a really specific solution to a really
     specific use case for the notification quick setup. Hence, we opted for a really specific
@@ -17,16 +17,16 @@ class ConditionalNotificationStageWidget(Widget):
     items: list[Widget] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationHostEventStageWidget(ConditionalNotificationStageWidget):
     widget_type: str = field(default="conditional_notification_host_event_stage_widget")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationServiceEventStageWidget(ConditionalNotificationStageWidget):
     widget_type: str = field(default="conditional_notification_service_event_stage_widget")
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationECAlertStageWidget(ConditionalNotificationStageWidget):
     widget_type: str = field(default="conditional_notification_ec_alert_stage_widget")

@@ -157,44 +157,86 @@ def test_diagnostics_element_hw_info() -> None:
 def test_diagnostics_element_hw_info_content(
     tmp_path: PurePath,
 ) -> None:
-    data_dict = {
-        "/proc/meminfo": "MemTotal:       32663516 kB",
-        "/proc/loadavg": "1.19 1.58 1.75 2/1922 891074",
-        "/proc/cpuinfo": """processor	: 0
-physical id	: 0
-processor	: 1
-physical id	: 0
-processor	: 2
-physical id	: 0
-processor	: 3
-physical id	: 0""",
-        "/sys/class/dmi/id/bios_vendor": "Dull Ink",
-        "/sys/class/dmi/id/bios_version": "1.2.3",
-        "/sys/class/dmi/id/sys_vendor": "Dull Ink",
-        "/sys/class/dmi/id/product_name": "Longitude 4",
-        "/sys/class/dmi/id/chassis_asset_tag": "",
+    proc_base_path = Path(tmp_path).joinpath("proc")
+    proc_base_path.mkdir(exist_ok=True)
+
+    # Create three fake proc files
+    with open(proc_base_path / "meminfo", "w", encoding="utf-8") as f:
+        f.write("MemTotal:       32663516 kB")
+
+    with open(proc_base_path / "loadavg", "w", encoding="utf-8") as f:
+        f.write("1.19 1.58 1.75 2/1922 891074")
+
+    with open(proc_base_path / "cpuinfo", "w", encoding="utf-8") as f:
+        f.write(
+            """processor : 0
+physical id : 0
+processor   : 1
+physical id : 0
+processor   : 2
+physical id : 0
+processor   : 3
+physical id : 0"""
+        )
+
+    diagnostics_element = diagnostics.collect_infos_hw(proc_base_path)
+
+    info_keys = [
+        "cpuinfo",
+        "loadavg",
+        "meminfo",
+    ]
+
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert isinstance(diagnostics_element, dict)
+    assert diagnostics_element == {
+        "meminfo": {"MemTotal": "32663516 kB"},
+        "loadavg": {"loadavg_1": "1.19", "loadavg_5": "1.58", "loadavg_15": "1.75"},
+        "cpuinfo": {"physical_id": "0", "num_logical_processors": "4", "cpus": 1},
     }
 
-    def open_side_effect(name):
-        return mock_open(read_data=data_dict.get(str(name)))()
 
-    with patch("builtins.open", side_effect=open_side_effect):
-        diagnostics_element = diagnostics.HWDiagnosticsElement()
-        tmppath = Path(tmp_path).joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+def test_diagnostics_element_vendor_info() -> None:
+    diagnostics_element = diagnostics.VendorDiagnosticsElement()
+    assert diagnostics_element.ident == "vendorinfo"
+    assert diagnostics_element.title == "Vendor Information"
+    assert diagnostics_element.description == ("HW Vendor information of the Checkmk Server")
 
-        assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("hwinfo.json")
 
-        info_keys = [
-            "cpuinfo",
-            "loadavg",
-            "meminfo",
-            "vendorinfo",
-        ]
-        content = json.loads(filepath.open().read())
+def test_diagnostics_element_vendor_info_content(
+    tmp_path: PurePath,
+) -> None:
+    sys_path = Path(tmp_path).joinpath("sys/class/dmi/id")
+    sys_path.mkdir(parents=True, exist_ok=True)
 
-        assert sorted(content.keys()) == sorted(info_keys)
+    # Create five fake sys files
+    with open(sys_path / "bios_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "bios_version", "w", encoding="utf-8") as f:
+        f.write("1.2.3")
+
+    with open(sys_path / "sys_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "product_name", "w", encoding="utf-8") as f:
+        f.write("Longitude 4")
+
+    with open(sys_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
+        f.write("")
+
+    diagnostics_element = diagnostics.collect_infos_vendor(sys_path)
+
+    info_keys = [
+        "bios_vendor",
+        "bios_version",
+        "sys_vendor",
+        "product_name",
+        "chassis_asset_tag",
+    ]
+
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert dict(diagnostics_element)["bios_vendor"] == "Dull Ink"
 
 
 def test_diagnostics_element_environment() -> None:

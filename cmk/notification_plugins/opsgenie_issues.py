@@ -21,7 +21,15 @@ from opsgenie_sdk.exceptions import (  # type: ignore[import-untyped]
     ApiException,
     AuthenticationException,
 )
+from requests.utils import get_environ_proxies
+from urllib3.util import parse_url
 
+from cmk.utils.http_proxy_config import (
+    deserialize_http_proxy_config,
+    EnvironmentProxyConfig,
+    ExplicitProxyConfig,
+    NoProxyConfig,
+)
 from cmk.utils.paths import trusted_ca_file
 
 from cmk.notification_plugins import utils
@@ -36,6 +44,7 @@ class Connector:
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
+            sys.stdout.write(f"Using proxy: {proxy_url}\n")
             conf.proxy = proxy_url
             conf.ssl_ca_cert = trusted_ca_file
 
@@ -143,6 +152,23 @@ class Connector:
         return 0
 
 
+def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
+    proxy = deserialize_http_proxy_config(proxy_setting)
+    if isinstance(proxy, EnvironmentProxyConfig):
+        parsed_url = parse_url(url or "https://api.opsgenie.com")
+        proxies = get_environ_proxies(parsed_url.url)
+        return proxies.get(parsed_url.scheme)
+
+    if isinstance(proxy, NoProxyConfig):
+        return None
+
+    if isinstance(proxy, ExplicitProxyConfig):
+        return proxy_setting
+
+    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")
+    sys.exit(2)
+
+
 def main() -> int:
     context = utils.collect_context()
 
@@ -158,7 +184,7 @@ def main() -> int:
     alert_source: str | None = context.get("PARAMETER_SOURCE")
     owner: str | None = context.get("PARAMETER_OWNER")
     host_url: str | None = context.get("PARAMETER_URL")
-    proxy_url: str | None = context.get("PARAMETER_PROXY_URL")
+    proxy_url: str | None = _get_proxy_url(context.get("PARAMETER_PROXY_URL"), host_url)
 
     tags_list: list[str] = []
     if context.get("PARAMETER_TAGSS"):

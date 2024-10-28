@@ -73,7 +73,7 @@ def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
 @pytest.fixture(autouse=True)
 def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
     try:
-        import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
+        import cmk.gui.cee.agent_bakery.bake_agents as agent_bakery
     except ImportError:
         return  # Don't do anything in case the bakery is not available
 

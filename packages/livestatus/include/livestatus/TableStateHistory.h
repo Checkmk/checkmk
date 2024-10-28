@@ -66,6 +66,12 @@ private:
         std::map<std::string, int> &notification_periods,
         const std::map<HostServiceKey, HostServiceState *> &state_info);
 
+    void final_reports(
+        Query &query, const User &user,
+        std::chrono::system_clock::duration query_timeframe,
+        const std::map<HostServiceKey, HostServiceState *> &state_info,
+        std::chrono::system_clock::time_point until);
+
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hss);

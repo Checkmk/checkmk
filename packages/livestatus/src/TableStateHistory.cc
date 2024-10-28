@@ -485,29 +485,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         }
     }
 
-    // Create final reports
     if (!abort_query_) {
-        for (const auto &[key, hst] : state_info) {
-            // No trace since the last two nagios startup -> host/service has
-            // vanished
-            if (hst->_may_no_longer_exist) {
-                // Log last known state up to nagios restart
-                hst->_time = hst->_last_known_time;
-                hst->_until = hst->_last_known_time;
-                process(query, user, query_timeframe, hst);
-
-                // Set absent state
-                hst->_state = -1;
-                hst->_debug_info = "UNMONITORED";
-                hst->_log_output = "";
-                hst->_long_log_output = "";
-            }
-
-            hst->_time = until - 1s;
-            hst->_until = hst->_time;
-
-            process(query, user, query_timeframe, hst);
-        }
+        final_reports(query, user, query_timeframe, state_info, until);
     }
 
     for (auto &[key, hst] : state_info) {
@@ -676,6 +655,34 @@ void TableStateHistory::handle_timeperiod_transition(
         Warning(core.loggerLivestatus())
             << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
             << entry->message();
+    }
+}
+
+void TableStateHistory::final_reports(
+    Query &query, const User &user,
+    std::chrono::system_clock::duration query_timeframe,
+    const std::map<HostServiceKey, HostServiceState *> &state_info,
+    std::chrono::system_clock::time_point until) {
+    for (const auto &[key, hst] : state_info) {
+        // No trace since the last two nagios startup -> host/service has
+        // vanished
+        if (hst->_may_no_longer_exist) {
+            // Log last known state up to nagios restart
+            hst->_time = hst->_last_known_time;
+            hst->_until = hst->_last_known_time;
+            process(query, user, query_timeframe, hst);
+
+            // Set absent state
+            hst->_state = -1;
+            hst->_debug_info = "UNMONITORED";
+            hst->_log_output = "";
+            hst->_long_log_output = "";
+        }
+
+        hst->_time = until - 1s;
+        hst->_until = hst->_time;
+
+        process(query, user, query_timeframe, hst);
     }
 }
 

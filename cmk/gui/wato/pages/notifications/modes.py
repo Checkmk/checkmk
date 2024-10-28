@@ -3342,7 +3342,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     if isinstance(spec, LegacyValueSpec):
                         spec = spec.valuespec  # type: ignore[assignment]  # expects ValueSpec[Any]
 
-                    assert isinstance(spec, Dictionary)
+                    assert hasattr(spec, "value_to_html")
                     html.write_text_permissive(
                         spec.value_to_html(parameter["parameter_properties"])
                     )

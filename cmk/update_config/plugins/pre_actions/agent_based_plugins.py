@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import traceback
+from collections.abc import Sequence
 from logging import Logger
 from pathlib import Path
 
-from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.paths import local_agent_based_plugins_dir
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.urls import werk_reference_url, WerkReference
@@ -26,14 +26,16 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Make sure no inactive agent based plug-ins are left over."""
 
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_agent_based_plugins_dir.rglob("*.py"))
+        except FileNotFoundError:
+            return ()
+
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         path_config = get_path_config()
         _installer, package_map = get_installer_and_package_map(path_config)
-        for _module_name, error in load_plugins("cmk.base.plugins.agent_based"):
-            path_s = traceback.extract_tb(error.__traceback__)[-1].filename
-            if "base/plugins/agent_based" not in path_s:
-                continue  # ignore errors from the plugin loader itself, if it finds nothing at all
-            path = Path(path_s)
+        for path in self._get_files():
             package_id = package_map.get(path.resolve())
             logger.error(_error_message_inactive_local_file(path, package_id))
 

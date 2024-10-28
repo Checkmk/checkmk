@@ -1268,7 +1268,7 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
 
     def _get_files(self) -> Sequence[Path]:
         try:
-            return list(local_agent_based_plugins_dir.iterdir())
+            return list(local_agent_based_plugins_dir.rglob("*.py"))
         except FileNotFoundError:
             return ()
 

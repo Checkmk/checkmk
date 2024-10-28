@@ -1,6 +1,7 @@
 cryptography
 fastapi
 gunicorn
+h11
 python-dateutil
 python-multipart
 requests

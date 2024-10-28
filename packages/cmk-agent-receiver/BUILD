@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
@@ -26,11 +27,31 @@ py_library(
     ],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
+    deps = [
+        requirement("cryptography"),
+        requirement("fastapi"),
+        requirement("gunicorn"),
+        requirement("h11"),
+        requirement("python-dateutil"),
+        requirement("python-multipart"),
+        requirement("requests"),
+        requirement("uvicorn"),
+    ],
 )
 
 py_wheel(
     name = "wheel",
     distribution = "cmk-agent-receiver",
+    requires = [
+        "cryptography",
+        "fastapi",
+        "gunicorn",
+        "h11",
+        "python-dateutil",
+        "python-multipart",
+        "requests",
+        "uvicorn",
+    ],
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",

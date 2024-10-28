@@ -11,61 +11,9 @@ from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.inventory_win_wmi_software import (
     inventory_win_wmi_software,
     parse_win_wmi_software,
-    parse_win_wmi_software_json,
 )
 
 _INSTALLED_DATE = 123
-
-
-def test_inventory_win_wmi_software_json(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
-    assert list(
-        inventory_win_wmi_software(
-            parse_win_wmi_software_json(
-                [
-                    [
-                        '{ "ProductName":"Product|Name", "Publisher":"rehsilbup", '
-                        '"VersionString":"14.0.1000.169", "InstallDate":"20180209",'
-                        ' "Language":"1033"}'
-                    ],
-                    [
-                        '{ "ProductName":"Microsoft .NET Framework 4.5.1 Multi-Targeting Pack",'
-                        ' "Publisher":"Microsoft Corporation", '
-                        '"VersionString":"4.5.50932", '
-                        '"InstallDate":"19170629", '
-                        '"Language":"1033"}'
-                    ],
-                ]
-            )
-        )
-    ) == [
-        TableRow(
-            path=["software", "packages"],
-            key_columns={
-                "name": "Product|Name",
-            },
-            inventory_columns={
-                "version": "14.0.1000.169",
-                "vendor": "rehsilbup",
-                "install_date": 123,
-                "language": "1033",
-                "package_type": "wmi",
-            },
-        ),
-        TableRow(
-            path=["software", "packages"],
-            key_columns={
-                "name": "Microsoft .NET Framework 4.5.1 Multi-Targeting Pack",
-            },
-            inventory_columns={
-                "version": "4.5.50932",
-                "vendor": "Microsoft Corporation",
-                "install_date": None,
-                "language": "1033",
-                "package_type": "wmi",
-            },
-        ),
-    ]
 
 
 @pytest.mark.parametrize(

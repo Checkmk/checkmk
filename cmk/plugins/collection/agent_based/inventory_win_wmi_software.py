@@ -12,52 +12,24 @@
 # VMware vSphere Client 4.1|VMware, Inc.|4.1.0.17435
 # Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
 
-import json
 import re
 import time
 from collections.abc import Sequence
-from dataclasses import dataclass
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 
-DATE_PATTERN = re.compile("^20......$")
 
-
-@dataclass(frozen=True)
-class Package:
+class Package(NamedTuple):
     name: str
-    vendor: str
     version: str
+    vendor: str
     install_date: int | None
     language: str
+    package_type: str
 
 
 Section = Sequence[Package]
-
-
-def parse_win_wmi_software_json(string_table: StringTable) -> Section:
-    return [
-        Package(
-            name=str(raw["ProductName"]),
-            vendor=str(raw["Publisher"]).replace("\x00", ""),  # Can happen, reason unclear
-            version=str(raw["VersionString"]),
-            install_date=(
-                int(time.mktime(time.strptime(raw_date, "%Y%m%d")))
-                if DATE_PATTERN.match(raw_date := raw["InstallDate"])
-                else None
-            ),
-            language=str(raw["Language"]),
-        )
-        for (word,) in string_table
-        if (raw := json.loads(word))
-    ]
-
-
-agent_section_win_wmi_software_json = AgentSection(
-    name="win_wmi_software_json",
-    parsed_section_name="win_wmi_software",
-    parse_function=parse_win_wmi_software_json,
-)
 
 
 def parse_win_wmi_software(string_table: StringTable) -> Section:
@@ -69,9 +41,9 @@ def parse_win_wmi_software(string_table: StringTable) -> Section:
         pacname, vendor, version = line[:3]
         dat = line[3] if len(line) > 3 else ""
 
-        install_date = (
-            int(time.mktime(time.strptime(dat, "%Y%m%d"))) if DATE_PATTERN.match(dat) else None
-        )
+        install_date = None
+        if len(dat) == 8 and re.match("^20", dat):
+            install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
 
         # contains language as well
         language = line[4] if len(line) == 5 else ""
@@ -83,6 +55,7 @@ def parse_win_wmi_software(string_table: StringTable) -> Section:
                 vendor=vendor.replace("\x00", ""),  # Can happen, reason unclear
                 install_date=install_date,
                 language=language,
+                package_type="wmi",
             )
         )
     return parsed_packages
@@ -106,7 +79,7 @@ def inventory_win_wmi_software(section: Section) -> InventoryResult:
                 "vendor": package.vendor,
                 "install_date": package.install_date,
                 "language": package.language,
-                "package_type": "wmi",
+                "package_type": package.package_type,
             },
             status_columns={},
         )

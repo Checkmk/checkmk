@@ -199,23 +199,6 @@ const Logfile::map_type *getEntries(Logfile *logfile,
     });
 }
 
-void getPreviousLogentry(const LogFiles &log_files,
-                         LogFiles::const_iterator &it_logs,
-                         const Logfile::map_type *&entries,
-                         Logfile::const_iterator &it_entries,
-                         size_t max_lines_per_log_file) {
-    while (it_entries == entries->begin()) {
-        // open previous logfile
-        if (it_logs == log_files.begin()) {
-            return;
-        }
-        --it_logs;
-        entries = getEntries(it_logs->second.get(), max_lines_per_log_file);
-        it_entries = entries->end();
-    }
-    --it_entries;
-}
-
 LogEntry *getNextLogentry(const LogFiles &log_files,
                           LogFiles::const_iterator &it_logs,
                           const Logfile::map_type *&entries,
@@ -392,7 +375,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         it_entries = entries->begin();
     }
 
-    // From now on use getPreviousLogentry() / getNextLogentry()
+    // From now on use getNextLogentry()
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
@@ -402,15 +385,10 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     while (LogEntry *entry =
                getNextLogentry(log_files, it_logs, entries, it_entries,
                                max_lines_per_log_file)) {
-        if (abort_query_) {
+        if (abort_query_ || entry->time() >= until) {
             break;
         }
 
-        if (entry->time() >= until) {
-            getPreviousLogentry(log_files, it_logs, entries, it_entries,
-                                max_lines_per_log_file);
-            break;
-        }
         if (only_update && entry->time() >= since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry

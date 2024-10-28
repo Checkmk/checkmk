@@ -270,7 +270,7 @@ namespace {
 // Set still unknown hosts / services to unmonitored
 void set_unknown_to_unmonitored(
     bool in_nagios_initial_states,
-    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    const TableStateHistory::state_info_t &state_info) {
     if (in_nagios_initial_states) {
         for (const auto &[key, hst] : state_info) {
             if (hst->_may_no_longer_exist) {
@@ -281,8 +281,7 @@ void set_unknown_to_unmonitored(
 }
 
 void handle_log_initial_states(
-    const LogEntry *entry,
-    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    const LogEntry *entry, const TableStateHistory::state_info_t &state_info) {
     // This feature is only available if log_initial_states is set to 1. If
     // log_initial_states is set, each nagios startup logs the initial states of
     // all known hosts and services. Therefore we can detect if a host is no
@@ -310,10 +309,10 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     abort_query_ = false;
 
     // Keep track of the historic state of services/hosts here
-    std::map<HostServiceKey, HostServiceState *> state_info;
+    state_info_t state_info;
 
     // Store hosts/services that we have filtered out here
-    std::set<HostServiceKey> object_blacklist;
+    object_blacklist_t object_blacklist;
 
     // Optimize time interval for the query. In log queries there should always
     // be a time range in form of one or two filter expressions over time. We
@@ -380,7 +379,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     bool in_nagios_initial_states = false;
 
     // Notification periods information, name: active(1)/inactive(0)
-    std::map<std::string, int> notification_periods;
+    notification_periods_t notification_periods;
 
     while (LogEntry *entry =
                getNextLogentry(log_files, it_logs, entries, it_entries,
@@ -476,10 +475,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
-    bool only_update, const std::map<std::string, int> &notification_periods,
-    bool is_host_entry,
-    std::map<HostServiceKey, HostServiceState *> &state_info,
-    std::set<HostServiceKey> &object_blacklist, const Filter &object_filter,
+    bool only_update, const notification_periods_t &notification_periods,
+    bool is_host_entry, state_info_t &state_info,
+    object_blacklist_t &object_blacklist, const Filter &object_filter,
     std::chrono::system_clock::time_point since) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
@@ -620,8 +618,8 @@ void TableStateHistory::handle_state_entry(
 void TableStateHistory::handle_timeperiod_transition(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
-    bool only_update, std::map<std::string, int> &notification_periods,
-    const std::map<HostServiceKey, HostServiceState *> &state_info) {
+    bool only_update, notification_periods_t &notification_periods,
+    const state_info_t &state_info) {
     try {
         const TimeperiodTransition tpt(entry->options());
         notification_periods[tpt.name()] = tpt.to();
@@ -639,7 +637,7 @@ void TableStateHistory::handle_timeperiod_transition(
 void TableStateHistory::final_reports(
     Query &query, const User &user,
     std::chrono::system_clock::duration query_timeframe,
-    const std::map<HostServiceKey, HostServiceState *> &state_info,
+    const state_info_t &state_info,
     std::chrono::system_clock::time_point until) {
     for (const auto &[key, hst] : state_info) {
         // No trace since the last two nagios startup -> host/service has
@@ -669,7 +667,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
     HostServiceState *hss, bool only_update,
-    const std::map<std::string, int> &notification_periods) {
+    const notification_periods_t &notification_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored

@@ -22,6 +22,7 @@ from typing import NamedTuple
 
 import requests
 import urllib3
+from pydantic import BaseModel, field_validator
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -838,3 +839,36 @@ def compatible_with_central_site(
         return licensing_compatibility
 
     return cmk_version.VersionsCompatible()
+
+
+class LastKnownCentralSiteVersion(BaseModel):
+    """information about the central site
+
+    this is currently only used to store the central site info. We need that info in order to
+    communicate to the central site e.g. with the updater-registration (CEE freature). There we
+    decide on the auth scheme based on that info.
+
+    As of now this can go with 2.5 since then it is certain the central site supports the new
+    scheme. In 2.4 we could encounter a 2.3 central site that does not support the new scheme."""
+
+    version_str: str
+
+    @property
+    def cmk_version(self) -> cmk_version.Version:
+        return cmk_version.Version.from_str(self.version_str)
+
+    @field_validator("version_str")
+    @classmethod
+    def _validate_version(cls, v: str) -> str:
+        # just check if it is parse able...
+        cmk_version.Version.from_str(v)
+        return v
+
+
+class LastKnownCentralSiteVersionStore(store.PydanticStore):
+    def __init__(self) -> None:
+        super().__init__(self.get_path(), model=LastKnownCentralSiteVersion)
+
+    @staticmethod
+    def get_path() -> Path:
+        return Path(paths.var_dir) / "last_known_site_version.json"

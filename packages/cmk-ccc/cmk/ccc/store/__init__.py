@@ -15,6 +15,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
+from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
@@ -39,8 +40,6 @@ from cmk.ccc.store._locks import (
     try_locked,
 )
 from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
-
-from cmk import trace
 
 __all__ = [
     "BytesSerializer",

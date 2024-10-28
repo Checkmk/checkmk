@@ -38,6 +38,8 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
+    LastKnownCentralSiteVersion,
+    LastKnownCentralSiteVersionStore,
     local_automation_failure,
     verify_request_compatibility,
 )
@@ -51,6 +53,23 @@ tracer = trace.get_tracer()
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("automation_login")(PageAutomationLogin)
     page_registry.register_page("noauth:automation")(PageAutomation)
+
+
+def _store_central_site_info() -> None:
+    central_version = request.headers.get("x-checkmk-version", request.get_ascii_input("_version"))
+
+    if central_version is None:
+        return
+
+    try:
+        LastKnownCentralSiteVersionStore().write_obj(
+            LastKnownCentralSiteVersion(version_str=central_version)
+        )
+    except ValueError:
+        # The call to _store_central_site_info is after the compatibility call, therefore we should
+        # be fine
+        logger.exception("Error writing central site info to disk")
+        raise
 
 
 class PageAutomationLogin(AjaxPage):
@@ -110,6 +129,7 @@ class PageAutomation(AjaxPage):
         verify_request_compatibility(
             ignore_license_compatibility=self._command == "distribute-verification-response"
         )
+        _store_central_site_info()
 
     @staticmethod
     def _authenticate() -> None:

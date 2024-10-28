@@ -25,8 +25,16 @@ from opsgenie_sdk import (  # type: ignore[import-untyped]
     UpdateAlertMessagePayload,
 )
 from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[import-untyped]
+from requests.utils import get_environ_proxies
 from tenacity import RetryError
+from urllib3.util import parse_url
 
+from cmk.utils.http_proxy_config import (
+    deserialize_http_proxy_config,
+    EnvironmentProxyConfig,
+    ExplicitProxyConfig,
+    NoProxyConfig,
+)
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify_types import PluginNotificationContext
 from cmk.utils.paths import trusted_ca_file
@@ -58,6 +66,7 @@ class Connector:
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
+            sys.stdout.write(f"Using proxy: {proxy_url}\n")
             conf.proxy = proxy_url
             conf.ssl_ca_cert = trusted_ca_file
 
@@ -166,6 +175,23 @@ class Connector:
         sys.stdout.write(f"Request id: {response.request_id}, successfully removed tags.\n")
 
 
+def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
+    proxy = deserialize_http_proxy_config(proxy_setting)
+    if isinstance(proxy, EnvironmentProxyConfig):
+        parsed_url = parse_url(url or "https://api.opsgenie.com")
+        proxies = get_environ_proxies(parsed_url.url)
+        return proxies.get(parsed_url.scheme)
+
+    if isinstance(proxy, NoProxyConfig):
+        return None
+
+    if isinstance(proxy, ExplicitProxyConfig):
+        return proxy_setting
+
+    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")
+    sys.exit(2)
+
+
 def _get_connector(context: PluginNotificationContext) -> Connector:
     if "PARAMETER_PASSWORD_1" not in context:
         sys.stderr.write("API key not set\n")
@@ -175,7 +201,8 @@ def _get_connector(context: PluginNotificationContext) -> Connector:
         key="PARAMETER_PASSWORD",
         context=context,
     )
-    return Connector(api_key, context.get("PARAMETER_URL"), context.get("PARAMETER_PROXY_URLLALA"))
+    url = context.get("PARAMETER_URL")
+    return Connector(api_key, url, _get_proxy_url(context.get("PARAMETER_PROXY_URL"), url))
 
 
 def _get_alias(context: PluginNotificationContext) -> str:

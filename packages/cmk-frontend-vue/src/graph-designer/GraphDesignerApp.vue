@@ -537,8 +537,8 @@ function operationIsApplicable() {
   return Object.keys(selectedGraphLines.value).length >= 2
 }
 
-function binaryOperationIsApplicable() {
-  return Object.keys(selectedGraphLines.value).length === 2
+function showSelectedIds(operator: string) {
+  return ` (${selectedGraphLines.value.map((l) => `#${l.id}`).join(` ${operator} `)})`
 }
 
 function transformationIsApplicable() {
@@ -745,6 +745,7 @@ function dragging(event: DragEvent) {
   <table ref="tableRef" class="data oddeven graph_designer_metrics">
     <tbody>
       <tr>
+        <th class="header_narrow nowrap">#</th>
         <th class="header_buttons"></th>
         <th class="header_buttons">{{ props.i18n.graph_lines.actions }}</th>
         <th class="header_narrow">{{ props.i18n.graph_lines.color }}</th>
@@ -760,6 +761,7 @@ function dragging(event: DragEvent) {
         class="data"
         :class="computeOddEven(index)"
       >
+        <td class="narrow nowrap">{{ graphLine.id }}</td>
         <td class="buttons">
           <input
             :id="graphLine.id.toString()"
@@ -924,11 +926,11 @@ function dragging(event: DragEvent) {
       <div v-if="operationIsApplicable()">
         <button @click="applySum">{{ props.i18n.graph_operations.sum }}</button>
         <button @click="applyProduct">{{ props.i18n.graph_operations.product }}</button>
-        <button v-if="binaryOperationIsApplicable()" @click="applyDifference">
-          {{ props.i18n.graph_operations.difference }}
+        <button @click="applyDifference">
+          {{ props.i18n.graph_operations.difference }} {{ showSelectedIds('-') }}
         </button>
-        <button v-if="binaryOperationIsApplicable()" @click="applyFraction">
-          {{ props.i18n.graph_operations.fraction }}
+        <button @click="applyFraction">
+          {{ props.i18n.graph_operations.fraction }} {{ showSelectedIds('/') }}
         </button>
         <button @click="applyAverage">{{ props.i18n.graph_operations.average }}</button>
         <button @click="applyMinimum">{{ props.i18n.graph_operations.minimum }}</button>

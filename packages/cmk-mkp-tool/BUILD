@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
@@ -22,8 +23,13 @@ py_library(
         "cmk/mkp_tool/_unsorted.py",
         "cmk/mkp_tool/cli.py",
     ],
+    data = [":pyproject.toml"],
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
+    deps = [
+        requirement("pydantic"),
+        requirement("toml"),
+    ],
 )
 
 py_wheel(

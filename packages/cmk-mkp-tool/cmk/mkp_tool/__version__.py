@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import importlib.metadata
+from pathlib import Path
 
-__version__ = importlib.metadata.version("cmk.mkp_tool")
+import toml
+
+# Using `importlib.metadata.version` would be nicer but assumes that we install
+# packages as wheels in the site, which we currently don't.
+__version__ = toml.load(Path(__file__).parent.parent.parent / "pyproject.toml")["project"][
+    "version"
+]

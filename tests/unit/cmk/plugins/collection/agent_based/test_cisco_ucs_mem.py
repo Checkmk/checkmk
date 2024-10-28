@@ -255,7 +255,7 @@ def test_discover_cisco_ucs_mem(section_cisco_ucs_mem: Mapping[str, MemoryModule
                 Result(state=State.OK, summary="Type: ddr4"),
                 Result(state=State.OK, summary="Size: 32768 MB, SN: 0357CDF9"),
                 Result(
-                    state=State.OK,
+                    state=State.CRIT,
                     notice="Fault: 185 - DDR4_P2_G2_ECC: DIMM 14 is inoperable : Check or replace DIMM",
                 ),
             ],

@@ -13,8 +13,8 @@ echo "Installing postfix..."
 debconf-set-selections <<<"postfix postfix/mailname string test.email.com"
 debconf-set-selections <<<"postfix postfix/main_mailer_type string 'Internet Site'"
 
-DEBIAN_FRONTEND=noninteractive apt update
-DEBIAN_FRONTEND=noninteractive apt install -y postfix
+DEBIAN_FRONTEND=noninteractive apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y postfix
 
 echo "Redirect email to current user..."
 username=$1

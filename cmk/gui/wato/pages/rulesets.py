@@ -2620,7 +2620,7 @@ class VSExplicitConditions(Transform):
             elements=[
                 ListOfStrings(
                     orientation="horizontal",
-                    valuespec=ConfigHostname(validate=self._validate_list_entry),  # type: ignore[arg-type]  # should be Valuespec[str]
+                    valuespec=ConfigHostname(validate=self._validate_explicit_host),  # type: ignore[arg-type]  # should be Valuespec[str]
                     help=_(
                         "Here you can enter a list of explicit host names that the rule should or should "
                         "not apply to. Leave this option disabled if you want the rule to "
@@ -2636,6 +2636,15 @@ class VSExplicitConditions(Transform):
                 ),
             ],
         )
+
+    def _validate_explicit_host(self, value: str, varprefix: str) -> None:
+        self._validate_list_entry(value, varprefix)
+        if value.startswith("~"):
+            return
+        try:
+            HostName.validate(value)
+        except ValueError as e:
+            raise MKUserError(varprefix, str(e))
 
     def _vs_explicit_services(self) -> Tuple:
         return Tuple(

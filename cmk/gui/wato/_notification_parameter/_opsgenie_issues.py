@@ -3,19 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    ListChoice,
-    ListOfStrings,
-    TextAreaUnicode,
-    TextInput,
-)
-from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
+from typing import cast
 
+from cmk.gui.form_specs.private import ListOfStrings
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FieldSize,
+    migrate_to_password,
+    migrate_to_proxy,
+    MultilineText,
+    MultipleChoice,
+    MultipleChoiceElement,
+    Password,
+    Proxy,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+)
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex
+
+from ...form_specs.vue.shared_type_defs import ListOfStringsLayout
 from ._base import NotificationParameter
-from ._helpers import notification_macro_help
+from ._helpers import notification_macro_help_fs
 
 
 class NotificationParameterOpsgenie(NotificationParameter):
@@ -24,220 +39,236 @@ class NotificationParameterOpsgenie(NotificationParameter):
         return "opsgenie_issues"
 
     @property
-    def spec(self):
+    def spec(self) -> ValueSpecDictionary:
+        # TODO needed because of mixed Form Spec and old style setup
+        return cast(ValueSpecDictionary, recompose(self._form_spec()).valuespec)
+
+    def _form_spec(self):
         return Dictionary(
-            title=_("Create notification with the following parameters"),
-            required_keys=[
-                "password",
-            ],
-            elements=[
-                (
-                    "password",
-                    IndividualOrStoredPassword(
-                        title=_(
+            title=Title("Create notification with the following parameters"),
+            elements={
+                "password": DictElement(
+                    required=True,
+                    parameter_form=Password(
+                        title=Title(
                             "API Key to use. Depending on your opsgenie "
                             "subscription you can use global or team integration API "
                             "keys."
                         ),
-                        allow_empty=False,
+                        migrate=migrate_to_password,
                     ),
                 ),
-                (
-                    "url",
-                    TextInput(
-                        title=_("Domain (only used for European accounts)"),
-                        help=_(
+                "url": DictElement(
+                    parameter_form=String(
+                        title=Title("Domain (only used for European accounts)"),
+                        help_text=Help(
                             "If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "
                             "https://api.eu.opsgenie.com."
                         ),
-                        regex="^https://.*",
-                        regex_error=_("The URL must begin with <tt>https</tt>."),
-                        size=64,
+                        custom_validate=[
+                            MatchRegex(
+                                regex="^https://.*",
+                                error_msg=Message("The URL must begin with https://"),
+                            )
+                        ],
                     ),
                 ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "integration_team",
-                    TextInput(
-                        title=_("Integration team"),
-                        help=_(
+                "proxy_url": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+                "integration_team": DictElement(
+                    parameter_form=String(
+                        title=Title("Integration team"),
+                        help_text=Help(
                             "The name of the team where the integration was created. "
                             "If this field is set, additional information can be added to alerts."
                         ),
-                        size=64,
-                        allow_empty=False,
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
                 ),
-                (
-                    "owner",
-                    TextInput(
-                        title=_("Owner"),
-                        help=_("Sets the user of the alert. Display name of the request owner."),
-                        size=100,
-                        allow_empty=False,
+                "owner": DictElement(
+                    parameter_form=String(
+                        title=Title("Owner"),
+                        help_text=Help(
+                            "Sets the user of the alert. Display name of the request owner."
+                        ),
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
                 ),
-                (
-                    "source",
-                    TextInput(
-                        title=_("Source"),
-                        help=_(
+                "source": DictElement(
+                    parameter_form=String(
+                        title=Title("Source"),
+                        help_text=Help(
                             "Source field of the alert. Default value is IP "
                             "address of the incoming request."
                         ),
-                        size=16,
                     ),
                 ),
-                (
-                    "priority",
-                    DropdownChoice(
-                        title=_("Priority"),
-                        choices=[
-                            ("P1", _("P1 - Critical")),
-                            ("P2", _("P2 - High")),
-                            ("P3", _("P3 - Moderate")),
-                            ("P4", _("P4 - Low")),
-                            ("P5", _("P5 - Informational")),
+                "priority": DictElement(
+                    parameter_form=SingleChoice(
+                        title=Title("Priority"),
+                        elements=[
+                            SingleChoiceElement(name="P1", title=Title("P1 - Critical")),
+                            SingleChoiceElement(name="P2", title=Title("P2 - High")),
+                            SingleChoiceElement(name="P3", title=Title("P3 - Moderate")),
+                            SingleChoiceElement(name="P4", title=Title("P4 - Low")),
+                            SingleChoiceElement(name="P5", title=Title("P5 - Informational")),
                         ],
-                        default_value="P3",
+                        prefill=DefaultValue("P3"),
                     ),
                 ),
-                (
-                    "note_created",
-                    TextInput(
-                        title=_("Note while creating"),
-                        help=_("Additional note that will be added while creating the alert."),
-                        default_value="Alert created by Check_MK",
+                "note_created": DictElement(
+                    parameter_form=String(
+                        title=Title("Note while creating"),
+                        help_text=Help(
+                            "Additional note that will be added while creating the alert."
+                        ),
+                        prefill=DefaultValue("Alert created by Check_MK"),
                     ),
                 ),
-                (
-                    "note_closed",
-                    TextInput(
-                        title=_("Note while closing"),
-                        help=_("Additional note that will be added while closing the alert."),
-                        default_value="Alert closed by Check_MK",
+                "note_closed": DictElement(
+                    parameter_form=String(
+                        title=Title("Note while closing"),
+                        help_text=Help(
+                            "Additional note that will be added while closing the alert."
+                        ),
+                        prefill=DefaultValue("Alert closed by Check_MK"),
                     ),
                 ),
-                (
-                    "host_msg",
-                    TextInput(
-                        title=_("Description for host alerts"),
-                        help=_(
+                "host_msg": DictElement(
+                    parameter_form=String(
+                        title=Title("Description for host alerts"),
+                        help_text=Help(
                             "Description field of host alert that is generally "
                             "used to provide a detailed information about the "
                             "alert."
                         ),
-                        default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
-                        size=64,
+                        prefill=DefaultValue("Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$"),
+                        field_size=FieldSize.LARGE,
                     ),
                 ),
-                (
-                    "svc_msg",
-                    TextInput(
-                        title=_("Description for service alerts"),
-                        help=_(
+                "svc_msg": DictElement(
+                    parameter_form=String(
+                        title=Title("Description for service alerts"),
+                        help_text=Help(
                             "Description field of service alert that is generally "
                             "used to provide a detailed information about the "
                             "alert."
                         ),
-                        default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
-                        size=68,
+                        prefill=DefaultValue(
+                            "Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$"
+                        ),
+                        field_size=FieldSize.LARGE,
                     ),
                 ),
-                (
-                    "host_desc",
-                    TextAreaUnicode(
-                        title=_("Message for host alerts"),
-                        rows=7,
-                        cols=58,
+                "host_desc": DictElement(
+                    parameter_form=MultilineText(
+                        title=Title("Message for host alerts"),
                         monospaced=True,
-                        default_value="""Host: $HOSTNAME$
+                        prefill=DefaultValue(
+                            """Host: $HOSTNAME$
 Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """,
+                        ),
                     ),
                 ),
-                (
-                    "svc_desc",
-                    TextAreaUnicode(
-                        title=_("Message for service alerts"),
-                        rows=11,
-                        cols=58,
+                "svc_desc": DictElement(
+                    parameter_form=MultilineText(
+                        title=Title("Message for service alerts"),
                         monospaced=True,
-                        default_value="""Host: $HOSTNAME$
+                        prefill=DefaultValue(
+                            """Host: $HOSTNAME$
 Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
+                        ),
                     ),
                 ),
-                (
-                    "teams",
-                    ListOfStrings(
-                        title=_("Responsible teams"),
-                        help=_(
+                "teams": DictElement(
+                    parameter_form=ListOfStrings(
+                        title=Title("Responsible teams"),
+                        help_text=Help(
                             "Team names which will be responsible for the alert. "
                             "If the API Key belongs to a team integration, "
                             "this field will be overwritten with the owner "
                             "team."
                         ),
-                        allow_empty=False,
-                        orientation="horizontal",
+                        string_spec=String(),
+                        custom_validate=[LengthInRange(min_value=1)],
+                        layout=ListOfStringsLayout.horizontal,
                     ),
                 ),
-                (
-                    "actions",
-                    ListOfStrings(
-                        title=_("Actions"),
-                        help=_("Custom actions that will be available for the alert."),
-                        allow_empty=False,
-                        orientation="horizontal",
+                "actions": DictElement(
+                    parameter_form=ListOfStrings(
+                        title=Title("Actions"),
+                        help_text=Help("Custom actions that will be available for the alert."),
+                        string_spec=String(),
+                        custom_validate=[LengthInRange(min_value=1)],
+                        layout=ListOfStringsLayout.horizontal,
                     ),
                 ),
-                (
-                    "tags",
-                    ListOfStrings(
-                        title=_("Tags"),
-                        help=_("Tags of the alert.<br><br>%s") % notification_macro_help(),
-                        allow_empty=False,
-                        orientation="horizontal",
+                "tags": DictElement(
+                    parameter_form=ListOfStrings(
+                        title=Title("Tags"),
+                        help_text=Help("Tags of the alert.<br><br>%s")
+                        % notification_macro_help_fs(),
+                        string_spec=String(),
+                        custom_validate=[LengthInRange(min_value=1)],
+                        layout=ListOfStringsLayout.horizontal,
                     ),
                 ),
-                (
-                    "entity",
-                    TextInput(
-                        title=_("Entity"),
-                        help=_("Is used to specify which domain the alert is related to."),
-                        allow_empty=False,
-                        size=68,
+                "entity": DictElement(
+                    parameter_form=String(
+                        title=Title("Entity"),
+                        help_text=Help("Is used to specify which domain the alert is related to."),
+                        custom_validate=[LengthInRange(min_value=1)],
                     ),
                 ),
-                (
-                    "elements",
-                    ListChoice(
-                        title=_("Extra properties"),
-                        choices=[
-                            ("omdsite", _("Site ID")),
-                            ("hosttags", _("Tags of the host")),
-                            ("address", _("IP address of host")),
-                            ("abstime", _("Absolute time of alert")),
-                            ("reltime", _("Relative time of alert")),
-                            ("longoutput", _("Additional plug-in output")),
-                            ("ack_author", _("Acknowledgement author")),
-                            ("ack_comment", _("Acknowledgement comment")),
-                            ("notification_author", _("Notification author")),
-                            ("notification_comment", _("Notification comment")),
-                            ("perfdata", _("Metrics")),
-                            ("notesurl", _("Custom host/service notes URL")),
-                            ("context", _("Complete variable list (for testing)")),
+                "elements": DictElement(
+                    parameter_form=MultipleChoice(
+                        title=Title("Extra properties"),
+                        elements=[
+                            MultipleChoiceElement(name="omdsite", title=Title("Site ID")),
+                            MultipleChoiceElement(name="hosttags", title=Title("Tags of the host")),
+                            MultipleChoiceElement(
+                                name="address", title=Title("IP address of host")
+                            ),
+                            MultipleChoiceElement(
+                                name="abstime", title=Title("Absolute time of alert")
+                            ),
+                            MultipleChoiceElement(
+                                name="reltime", title=Title("Relative time of alert")
+                            ),
+                            MultipleChoiceElement(
+                                name="longoutput", title=Title("Additional plug-in output")
+                            ),
+                            MultipleChoiceElement(
+                                name="ack_author", title=Title("Acknowledgement author")
+                            ),
+                            MultipleChoiceElement(
+                                name="ack_comment", title=Title("Acknowledgement comment")
+                            ),
+                            MultipleChoiceElement(
+                                name="notification_author", title=Title("Notification author")
+                            ),
+                            MultipleChoiceElement(
+                                name="notification_comment", title=Title("Notification comment")
+                            ),
+                            MultipleChoiceElement(name="perfdata", title=Title("Metrics")),
+                            MultipleChoiceElement(
+                                name="notesurl", title=Title("Custom host/service notes URL")
+                            ),
+                            MultipleChoiceElement(
+                                name="context", title=Title("Complete variable list (for testing)")
+                            ),
                         ],
-                        default_value=["abstime", "address", "longoutput"],
+                        prefill=DefaultValue(["abstime", "address", "longoutput"]),
                     ),
                 ),
-            ],
+            },
         )

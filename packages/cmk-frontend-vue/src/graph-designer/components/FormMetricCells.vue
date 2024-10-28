@@ -20,7 +20,7 @@ const data = defineModel<Metric>('data', {
   default: { hostName: '', serviceName: '', metricName: '' }
 })
 
-const specHostName = makeString('', 'host name', {
+const specHostName = makeString('', 'Host name', {
   fetch_method: 'ajax_vs_autocomplete',
   data: {
     ident: 'monitored_hostname',
@@ -30,7 +30,7 @@ const specHostName = makeString('', 'host name', {
 const backendValidationHostName: ValidationMessages = []
 
 const specServiceName = computed(() => {
-  return makeString('', 'service name', {
+  return makeString('', 'Service name', {
     fetch_method: 'ajax_vs_autocomplete',
     data: {
       ident: 'monitored_service_description',
@@ -44,7 +44,7 @@ const specServiceName = computed(() => {
 const backendValidationServiceName: ValidationMessages = []
 
 const specMetricName = computed(() => {
-  return makeString('', 'metric name', {
+  return makeString('', 'Metric name', {
     fetch_method: 'ajax_vs_autocomplete',
     data: {
       ident: 'monitored_metrics',

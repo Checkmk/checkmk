@@ -19,14 +19,16 @@ class ConditionalNotificationStageWidget(Widget):
 
 @dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationHostEventStageWidget(ConditionalNotificationStageWidget):
-    widget_type: str = field(default="conditional_notification_host_event_stage_widget")
+    widget_type: str = field(default="conditional_notification_host_event_stage_widget", init=False)
 
 
 @dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationServiceEventStageWidget(ConditionalNotificationStageWidget):
-    widget_type: str = field(default="conditional_notification_service_event_stage_widget")
+    widget_type: str = field(
+        default="conditional_notification_service_event_stage_widget", init=False
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class ConditionalNotificationECAlertStageWidget(ConditionalNotificationStageWidget):
-    widget_type: str = field(default="conditional_notification_ec_alert_stage_widget")
+    widget_type: str = field(default="conditional_notification_ec_alert_stage_widget", init=False)

@@ -15,7 +15,7 @@ class Widget: ...
 
 @dataclass(frozen=True, kw_only=True)
 class Text(Widget):
-    widget_type: str = "text"
+    widget_type: str = field(default="text", init=False)
     text: str = ""
     tooltip: str | None = None
 
@@ -37,7 +37,7 @@ class ListOfWidgets(Widget):
 class FormSpecWrapper(Widget):
     id: FormSpecId
     form_spec: object
-    widget_type: str = field(default="form_spec")
+    widget_type: str = field(default="form_spec", init=False)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, overload
 
 import pytest
 
@@ -484,16 +484,48 @@ class Site:
             **kwargs,
         )
 
+    @overload
     def check_output(
         self,
         cmd: list[str],
+        encoding: str = "utf-8",
         input: str | None = None,  # pylint: disable=redefined-builtin
-    ) -> str:
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> str: ...
+
+    @overload
+    def check_output(
+        self,
+        cmd: list[str],
+        encoding: None,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> bytes: ...
+
+    def check_output(
+        self,
+        cmd: list[str],
+        encoding: str | None = "utf-8",
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> str | bytes:
         """Mimics subprocess.check_output while running a process as the site user.
 
         Returns the stdout of the process.
         """
-        return check_output(cmd=cmd, input=input, sudo=True, substitute_user=self.id)
+        output = check_output(
+            cmd=cmd,
+            input=input,
+            encoding=encoding,
+            preserve_env=preserve_env,
+            sudo=True,
+            substitute_user=self.id,
+            **kwargs,
+        )
+        return output
 
     @contextmanager
     def copy_file(self, name: str | Path, target: str | Path) -> Iterator[None]:
@@ -1828,9 +1860,19 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self, input: str | None = None) -> str:  # pylint: disable=redefined-builtin
+    def check_output(
+        self,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        encoding: str = "utf-8",
+    ) -> str:
         with self.copy_helper():
-            return self.site.check_output(["python3", str(self.site_path)], input)
+            output = self.site.check_output(
+                ["python3", str(self.site_path)],
+                input=input,
+                encoding=encoding,
+                stderr=subprocess.PIPE,
+            )
+            return output
 
     @contextmanager
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]

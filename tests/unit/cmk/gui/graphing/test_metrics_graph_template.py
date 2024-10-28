@@ -241,7 +241,7 @@ def test_create_graph_recipe_from_template() -> None:
             "load15",
             "load1=0.38;40;80;0;8 load5=0.62;40;80;0;8 load15=0.68;40;80;0;8",
             "check_mk-cpu.loads",
-            "#1e1ec8",
+            "#1873cc",
         ),
         ("test", "test=5;5;10;0;20", "check_mk-local", "#cc00ff"),
     ],

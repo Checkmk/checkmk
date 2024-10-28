@@ -355,5 +355,17 @@ def check_remote_connection(
     try:
         with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
             return ConnectionOK()
-    except (RuntimeError, socket.gaierror, ssl.SSLError, AMQPConnectionError) as exc:
+    except AMQPConnectionError as exc:
+        return (
+            ConnectionFailed("Connection refused")
+            if "connection refused" in repr(exc).lower()
+            else ConnectionFailed(str(exc))
+        )
+    except ssl.SSLError as exc:
+        return (
+            ConnectionFailed("Invalid certificates")
+            if "certificate verify failed" in repr(exc).lower()
+            else ConnectionFailed(str(exc))
+        )
+    except (socket.gaierror, RuntimeError) as exc:
         return ConnectionFailed(str(exc))

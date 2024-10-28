@@ -1,6 +1,5 @@
 import email
 import logging
-import re
 import time
 from email.policy import default
 from getpass import getuser

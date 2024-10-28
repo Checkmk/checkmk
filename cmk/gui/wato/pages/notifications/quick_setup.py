@@ -520,6 +520,7 @@ def notification_method() -> QuickSetupStage:
                                     )
                                     for script_name, title in notification_script_choices()
                                 ],
+                                custom_validate=[_validate_parameter_choice],
                                 layout=CascadingSingleChoiceLayout.horizontal,
                             ),
                         ),
@@ -569,6 +570,13 @@ def notification_method() -> QuickSetupStage:
         recap=[],
         button_label=_("Next step: Recipient"),
     )
+
+
+def _validate_parameter_choice(p):
+    if p[1] is None:
+        raise ValidationError(
+            Message("Please choose a notification parameter or create one."),
+        )
 
 
 def _get_sorted_users() -> list[tuple[UserId, str]]:

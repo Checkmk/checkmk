@@ -59,12 +59,6 @@ perfometer_hop_1_pl_hop_1_rta = perfometers.Bidirectional(
     ),
 )
 
-graph_hop_1_packet_loss = graphs.Graph(
-    name="hop_1_packet_loss",
-    title=Title("Hop 1 packet loss"),
-    compound_lines=["hop_1_pl"],
-)
-
 graph_hop_1_round_trip_average = graphs.Graph(
     name="hop_1_round_trip_average",
     title=Title("Hop 1 round trip average"),
@@ -74,4 +68,9 @@ graph_hop_1_round_trip_average = graphs.Graph(
         "hop_1_rta",
         "hop_1_rtstddev",
     ],
+)
+graph_hop_1_packet_loss = graphs.Graph(
+    name="hop_1_packet_loss",
+    title=Title("Hop 1 packet loss"),
+    compound_lines=["hop_1_pl"],
 )

@@ -65,6 +65,33 @@ perfometer_execution_time = perfometers.Perfometer(
     segments=["execution_time"],
 )
 
+graph_used_cpu_time = graphs.Graph(
+    name="used_cpu_time",
+    title=Title("Used CPU Time"),
+    compound_lines=[
+        "user_time",
+        "children_user_time",
+        "system_time",
+        "children_system_time",
+    ],
+    simple_lines=[
+        metrics.Sum(
+            Title("Total"),
+            metrics.Color.DARK_BLUE,
+            [
+                "user_time",
+                "children_user_time",
+                "system_time",
+                "children_system_time",
+            ],
+        )
+    ],
+    conflicting=[
+        "cmk_time_agent",
+        "cmk_time_snmp",
+        "cmk_time_ds",
+    ],
+)
 graph_cmk_cpu_time_by_phase = graphs.Graph(
     name="cmk_cpu_time_by_phase",
     title=Title("Time usage by phase"),
@@ -114,31 +141,4 @@ graph_cpu_time = graphs.Graph(
         )
     ],
     conflicting=["children_user_time"],
-)
-graph_used_cpu_time = graphs.Graph(
-    name="used_cpu_time",
-    title=Title("Used CPU Time"),
-    compound_lines=[
-        "user_time",
-        "children_user_time",
-        "system_time",
-        "children_system_time",
-    ],
-    simple_lines=[
-        metrics.Sum(
-            Title("Total"),
-            metrics.Color.DARK_BLUE,
-            [
-                "user_time",
-                "children_user_time",
-                "system_time",
-                "children_system_time",
-            ],
-        )
-    ],
-    conflicting=[
-        "cmk_time_agent",
-        "cmk_time_snmp",
-        "cmk_time_ds",
-    ],
 )

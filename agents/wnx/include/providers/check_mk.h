@@ -35,7 +35,8 @@ private:
     static std::string makeOnlyFrom();
 };
 
-std::string GetTimezoneOffset();
+std::string GetTimezoneOffset(
+    std::chrono::time_point<std::chrono::system_clock> tp);
 
 std::string PrintIsoTime(
     std::chrono::time_point<std::chrono::system_clock> now);

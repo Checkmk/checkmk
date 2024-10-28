@@ -274,7 +274,6 @@ install_for_cpp_dev() {
     "${SCRIPT_DIR}"/install-cmake.sh
     "${SCRIPT_DIR}"/install-clang.sh
     "${SCRIPT_DIR}"/install-protobuf-cpp.sh
-    "${SCRIPT_DIR}"/install-freetds.sh
 
     if [[ $STRIP_LATER -eq 1 ]]; then
         print_blue "strip_binaries during CPP setup"
@@ -284,7 +283,6 @@ install_for_cpp_dev() {
         "${SCRIPT_DIR}"/install-cmake.sh link-only
         # no need to link aka install protobuf again
         # "${SCRIPT_DIR}"/install-protobuf-cpp.sh --link-only
-        "${SCRIPT_DIR}"/install-freetds.sh link-only
     fi
 
     "${SCRIPT_DIR}"/install-patchelf.sh
@@ -339,7 +337,6 @@ install_for_rust_dev() {
     print_green "Installing everything for Rust development ..."
 
     export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-freetds.sh
     "${SCRIPT_DIR}"/install-rust-cargo.sh
 
     if [[ $STRIP_LATER -eq 1 ]]; then
@@ -577,7 +574,6 @@ if [[ $STRIP_LATER -gt 1 ]]; then
         "${SCRIPT_DIR}"/install-cmake.sh link-only
         # no need to link aka install protobuf again
         # "${SCRIPT_DIR}"/install-protobuf-cpp.sh link-only
-        "${SCRIPT_DIR}"/install-freetds.sh link-only
     fi
 
     if [[ $INSTALL_FOR_PYTHON -eq 1 && $INSTALLED_BY_PYENV -eq 0 ]]; then

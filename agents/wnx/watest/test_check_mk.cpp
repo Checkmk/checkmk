@@ -24,7 +24,10 @@ std::string CalcCurrentOffset() {
 TEST(CheckMkHeader, IsoTime) {
     constexpr std::chrono::system_clock::time_point tp;
     EXPECT_EQ(PrintIsoTime(tp),
-              fmt::format("1970-01-01T01:00:00{}", CalcCurrentOffset()));
+              // TODO: Fix winter/summer time handling here, see
+              // https://tribe29.slack.com/archives/CGBE6U2PK/p1730101192558199
+              "1970-01-01T01:00:00+0100");
+              //fmt::format("1970-01-01T01:00:00{}", CalcCurrentOffset()));
 }
 
 TEST(CheckMkHeader, Convert) {

@@ -8,6 +8,7 @@ from typing import Final
 
 PG_STATES: Final[frozenset[str]] = frozenset(
     {
+        "activating+remapped",
         "activating+undersized",
         "activating+undersized+degraded",
         "active+clean",

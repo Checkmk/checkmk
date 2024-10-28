@@ -37,7 +37,7 @@ def test_automatic_host_removal(
             hostname=(unresolvable_host_remote := "not-dns-resovable-remote"),
             attributes={"site": remote_site.id},
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
         def _host_removal_done() -> bool:
             hostnames = {

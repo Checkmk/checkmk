@@ -158,6 +158,7 @@ class DiagnosticsDump:
             GeneralDiagnosticsElement(),
             PerfDataDiagnosticsElement(),
             HWDiagnosticsElement(),
+            VendorDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
             FilesSizeCSVDiagnosticsElement(),
             PipFreezeDiagnosticsElement(),
@@ -477,6 +478,103 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return performance_data
 
 
+def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
+    # Get the information from the proc files
+
+    hw_info: dict[str, dict[str, str]] = {}
+
+    for procfile, parser in [
+        ("meminfo", _meminfo_proc_parser),
+        ("loadavg", _load_avg_proc_parser),
+        ("cpuinfo", _cpuinfo_proc_parser),
+    ]:
+        filepath = proc_base_path.joinpath(procfile)
+        try:
+            content = _get_proc_content(filepath)
+        except FileNotFoundError:
+            continue
+
+        hw_info[procfile] = parser(content)
+
+    return hw_info
+
+
+def _get_proc_content(filepath: Path) -> list[str]:
+    with open(filepath) as f:
+        return f.read().splitlines()
+
+
+def _meminfo_proc_parser(content: list[str]) -> dict[str, str]:
+    info: dict[str, str] = {}
+
+    for line in content:
+        if line == "":
+            continue
+
+        key, value = (w.strip() for w in line.split(":", 1))
+        info[key.replace(" ", "_")] = value
+
+    return info
+
+
+def _cpuinfo_proc_parser(content: list[str]) -> dict[str, str]:
+    cpu_info: dict[str, Any] = {}
+    physical_ids: list[str] = []
+    num_processors = 0
+
+    # Example lines from /proc/cpuinfo output:
+    # >>> pprint.pprint(content)
+    # ['processor\t: 0',
+    #  'cpu family\t: 6',
+    #  'cpu MHz\t\t: 2837.021',
+    #  'core id\t\t: 0',
+    #  'power management:',
+    # ...
+    #  '',
+    #  'processor\t: 1',
+    #  'cpu family\t: 6',
+    #  'cpu MHz\t\t: 2100.000',
+    #  'core id\t\t: 1',
+    #  'power management:',
+    #  '',
+    # ...
+
+    # Keys that have different values for each processor
+    _KEYS_TO_IGNORE = [
+        "apicid",
+        "core_id",
+        "cpu_MHz",
+        "initial_apicid",
+        "processor",
+    ]
+
+    # Remove empty keys, empty values and ignore some keys
+    for line in content:
+        if line == "":
+            continue
+
+        key, value = (w.strip() for w in line.split(":", 1))
+        key = key.replace(" ", "_")
+
+        if key not in _KEYS_TO_IGNORE:
+            cpu_info[key] = value
+
+        if key == "processor":
+            num_processors += 1
+
+        if key == "physical_id" and value not in physical_ids:
+            physical_ids.append(value)
+
+    cpu_info["num_logical_processors"] = str(num_processors)
+    cpu_info["cpus"] = len(physical_ids)
+
+    return cpu_info
+
+
+def _load_avg_proc_parser(content: list[str]) -> dict[str, str]:
+    return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
+
+
 class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
@@ -491,122 +589,48 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return _("Hardware information of the Checkmk Server")
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        # Get the information from the proc files
+        return collect_infos_hw(Path("/proc"))
 
-        hw_info: dict[str, dict[str, str]] = {}
 
-        for procfile, parser in [
-            ("meminfo", self._meminfo_proc_parser),
-            ("loadavg", self._load_avg_proc_parser),
-            ("cpuinfo", self._cpuinfo_proc_parser),
-        ]:
-            filepath = Path("/proc").joinpath(procfile)
-            try:
-                content = self._get_proc_content(filepath)
-            except FileNotFoundError:
-                continue
+def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
+    _SYS_FILES = [
+        "bios_vendor",
+        "bios_version",
+        "sys_vendor",
+        "product_name",
+        "chassis_asset_tag",
+    ]
+    _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
+    vendor_info = {}
 
-            hw_info[procfile] = parser(content)
-
-        hw_info["vendorinfo"] = self._get_vendor_info()
-
-        return hw_info
-
-    def _get_proc_content(self, filepath: Path) -> list[str]:
-        with open(filepath) as f:
-            return f.read().splitlines()
-
-    def _meminfo_proc_parser(self, content: list[str]) -> dict[str, str]:
-        info: dict[str, str] = {}
-
-        for line in content:
-            if line == "":
-                continue
-
-            key, value = (w.strip() for w in line.split(":", 1))
-            info[key.replace(" ", "_")] = value
-
-        return info
-
-    def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
-        cpu_info: dict[str, Any] = {}
-        physical_ids: list[str] = []
-        num_processors = 0
-
-        # Example lines from /proc/cpuinfo output:
-        # >>> pprint.pprint(content)
-        # ['processor\t: 0',
-        #  'cpu family\t: 6',
-        #  'cpu MHz\t\t: 2837.021',
-        #  'core id\t\t: 0',
-        #  'power management:',
-        # ...
-        #  '',
-        #  'processor\t: 1',
-        #  'cpu family\t: 6',
-        #  'cpu MHz\t\t: 2100.000',
-        #  'core id\t\t: 1',
-        #  'power management:',
-        #  '',
-        # ...
-
-        # Keys that have different values for each processor
-        _KEYS_TO_IGNORE = [
-            "apicid",
-            "core_id",
-            "cpu_MHz",
-            "initial_apicid",
-            "processor",
-        ]
-
-        # Remove empty keys, empty values and ignore some keys
-        for line in content:
-            if line == "":
-                continue
-
-            key, value = (w.strip() for w in line.split(":", 1))
-            key = key.replace(" ", "_")
-
-            if key not in _KEYS_TO_IGNORE:
-                cpu_info[key] = value
-
-            if key == "processor":
-                num_processors += 1
-
-            if key == "physical_id" and value not in physical_ids:
-                physical_ids.append(value)
-
-        cpu_info["num_logical_processors"] = str(num_processors)
-        cpu_info["cpus"] = len(physical_ids)
-
-        return cpu_info
-
-    def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
-        return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
-
-    def _get_vendor_info(self) -> dict[str, str]:
-        _SYS_FILES = [
-            "bios_vendor",
-            "bios_version",
-            "sys_vendor",
-            "product_name",
-            "chassis_asset_tag",
-        ]
-        _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
-        sys_path = Path("/sys/class/dmi/id")
-        vendor_info = {}
-
-        for sys_file in _SYS_FILES:
-            file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
-            if sys_file == "chassis_asset_tag":
-                if file_content == _AZURE_TAG:
-                    vendor_info[sys_file] = "Azure"
-                else:
-                    vendor_info[sys_file] = "Other"
+    for sys_file in _SYS_FILES:
+        file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
+        if sys_file == "chassis_asset_tag":
+            if file_content == _AZURE_TAG:
+                vendor_info[sys_file] = "Azure"
             else:
-                vendor_info[sys_file] = file_content
+                vendor_info[sys_file] = "Other"
+        else:
+            vendor_info[sys_file] = file_content
 
-        return vendor_info
+    return vendor_info
+
+
+class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "vendorinfo"
+
+    @property
+    def title(self) -> str:
+        return _("Vendor Information")
+
+    @property
+    def description(self) -> str:
+        return _("HW Vendor information of the Checkmk Server")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return collect_infos_vendor(Path("/sys/class/dmi/id"))
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):

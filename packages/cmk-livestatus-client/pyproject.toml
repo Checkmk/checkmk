@@ -76,6 +76,6 @@ disable = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+consider_namespace_packages = true
 testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

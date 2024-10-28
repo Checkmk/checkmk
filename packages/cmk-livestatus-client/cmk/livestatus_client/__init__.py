@@ -501,7 +501,7 @@ def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, i
         >>> parse_socket_url('Hallo Welt!')
         Traceback (most recent call last):
         ...
-        livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
+        cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
 Must begin with 'tcp:', 'tcp6:' or 'unix:'
 
     """

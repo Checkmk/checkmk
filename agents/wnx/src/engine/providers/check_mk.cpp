@@ -20,9 +20,10 @@ using namespace std::string_literals;
 
 namespace cma::provider {
 
-std::string GetTimezoneOffset() {
-    const auto tm =
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+// tested manually changing time
+std::string GetTimezoneOffset(
+    std::chrono::time_point<std::chrono::system_clock> tp) {
+    const auto tm = std::chrono::system_clock::to_time_t(tp);
     const auto ret = std::put_time(std::localtime(&tm), "%z");
     std::stringstream sss;
     sss << ret;
@@ -134,7 +135,7 @@ std::string PrintIsoTime(
     auto lt = ToLocalTime(now);
     return fmt::format("{:4}-{:02}-{:02}T{:02}:{:02}:{:02}{}",
                        lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour,
-                       lt.tm_min, lt.tm_sec, GetTimezoneOffset());
+                       lt.tm_min, lt.tm_sec, GetTimezoneOffset(now));
 }
 
 std::string CheckMk::makeBody() {

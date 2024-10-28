@@ -109,11 +109,14 @@ def main() {
                 );
                 dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
                     sh("find .");
-                    sh("cp *.deb *.rpm ${checkout_dir}/agents/");
-                    sh("mkdir -p ${checkout_dir}/agents/linux");
-                    sh("cp cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/");
+                    sh("""
+                        cp *.deb *.rpm ${checkout_dir}/agents/
+                        mkdir -p ${checkout_dir}/agents/linux
+                        # artifact file flags are not being kept - building a tar would be better..
+                        install -m 755 cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/
+                    """);
                     if (edition != "raw") {
-                        sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
+                        sh("install -m 755 cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
                     }
                 }
 
@@ -134,9 +137,10 @@ def main() {
                 );
                 dir("${checkout_dir}/artifacts/winagt-build") {
                     sh("find .");
-                    sh("mkdir -p ${checkout_dir}/agents/windows");
                     // TODO: SPoT!!
-                    sh("""cp \
+                    sh("""
+                       mkdir -p ${checkout_dir}/agents/windows
+                       cp \
                         check_mk_agent-64.exe \
                         check_mk_agent.exe \
                         check_mk_agent.msi \

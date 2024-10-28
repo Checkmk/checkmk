@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._config import (
-    add_check_plugin,
     add_discovery_ruleset,
     add_host_label_ruleset,
-    add_inventory_plugin,
-    add_section_plugin,
     get_check_plugin,
     get_discovery_ruleset,
     get_host_label_ruleset,
@@ -37,11 +34,8 @@ from ._config import (
 from ._discover import load_all_plugins, load_selected_plugins
 
 __all__ = [
-    "add_check_plugin",
     "add_discovery_ruleset",
     "add_host_label_ruleset",
-    "add_inventory_plugin",
-    "add_section_plugin",
     "get_check_plugin",
     "get_discovery_ruleset",
     "get_host_label_ruleset",

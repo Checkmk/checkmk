@@ -17,6 +17,7 @@ from faker import Faker
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.testlib.emails import EmailManager
 from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.plugin import (
@@ -269,3 +270,14 @@ def fixture_linux_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
 def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     """Return the list of windows hosts created using agent dump."""
     return agent_dump_hosts["windows-2.3.0p10"]
+
+
+@pytest.fixture(name="email_manager", scope="session")
+def _email_manager() -> Iterator[EmailManager]:
+    """Create EmailManager instance.
+
+    EmailManager handles setting up and tearing down Postfix SMTP-server, which is configured
+    to redirect emails to a local Maildir. It also provides methods to check and wait for emails.
+    """
+    with EmailManager() as email_manager:
+        yield email_manager

@@ -21,17 +21,6 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="email_manager", scope="module")
-def create_email_manager() -> Iterator[EmailManager]:
-    """Create EmailManager instance.
-
-    EmailManager handles setting up and tearing down Postfix SMTP-server, which is configured
-    to redirect emails to a local Maildir. It also provides methods to check and wait for emails.
-    """
-    with EmailManager() as email_manager:
-        yield email_manager
-
-
 @pytest.fixture(name="notification_user", scope="module")
 def create_notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
     """Create a user for email notifications via API.

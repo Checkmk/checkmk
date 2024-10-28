@@ -62,24 +62,34 @@ def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
-        try:
-            run(["dpkg", "-i", package_path.as_posix()], sudo=True, capture_output=False)
-        except RuntimeError as e:
-            process_table = run(["ps", "aux"]).stdout
-            raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
-        assert installed_ctl_path.exists()
-        return installed_ctl_path
-    if package_type == "linux_rpm":
-        run(
-            ["rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()],
-            sudo=True,
-            capture_output=False,
+        agent_install_cmd = ["dpkg", "-i", package_path.as_posix()]
+    elif package_type == "linux_rpm":
+        agent_install_cmd = [
+            "rpm",
+            "-vU",
+            "--oldpackage",
+            "--replacepkgs",
+            package_path.as_posix(),
+        ]
+    else:
+        raise NotImplementedError(
+            f"Installation of package type {package_type} is not supported yet, please implement it"
         )
-        assert installed_ctl_path.exists()
+    logger.info("Installing Checkmk agent...")
+    try:
+        agent_installation = run(agent_install_cmd, sudo=True)
+        logger.info(
+            "Agent installation output: %s\n%s",
+            agent_installation.stdout,
+            agent_installation.stderr,
+        )
+        assert (
+            installed_ctl_path.exists()
+        ), f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
         return installed_ctl_path
-    raise NotImplementedError(
-        f"Installation of package type {package_type} is not supported yet, please implement it"
-    )
+    except RuntimeError as e:
+        process_table = run(["ps", "aux"]).stdout
+        raise RuntimeError(f"Agent installation failed. Process table:\n{process_table}") from e
 
 
 def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:

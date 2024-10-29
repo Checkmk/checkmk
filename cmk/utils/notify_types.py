@@ -6,7 +6,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from typing import (
-    Annotated,
     Any,
     get_args,
     Literal,
@@ -17,7 +16,10 @@ from typing import (
     TypeGuard,
 )
 
-from pydantic import PlainValidator, TypeAdapter, ValidationInfo
+from pydantic import (
+    TypeAdapter,
+    ValidationInfo,
+)
 
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
@@ -30,9 +32,7 @@ __all__ = [
     "ContactName",
     "HandlerName",
     "HandlerParameters",
-    "NotifyPluginParamsList",
     "NotifyPluginParamsDict",
-    "NotifyPluginParams",
     "NotifyBulkParameters",
     "NotificationContext",
     "PluginNotificationContext",
@@ -797,7 +797,6 @@ def is_known_plugin(notify_plugin: NotifyPlugin) -> TypeGuard[KnownPlugins]:
     return notify_plugin[0] in get_builtin_plugin_names()
 
 
-NotifyPluginParamsList = list[str]
 NotifyPluginParamsDict = (
     MailPluginModel
     | AsciiMailPluginModel
@@ -818,9 +817,6 @@ NotifyPluginParamsDict = (
     | dict[str, Any]
 )
 
-NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
-
-
 custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginType)
 known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPlugins)
 
@@ -838,6 +834,9 @@ def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
     return value
 
 
+NotificationParameterID = NewType("NotificationParameterID", str)
+
+
 class _EventRuleMandatory(TypedDict):
     rule_id: NotificationRuleID
     allow_disable: bool
@@ -846,7 +845,7 @@ class _EventRuleMandatory(TypedDict):
     contact_object: bool
     description: str
     disabled: bool
-    notify_plugin: Annotated[NotifyPlugin, PlainValidator(validate_plugin)]
+    notify_plugin: tuple[NotificationPluginNameStr, NotificationParameterID | None]
 
 
 class EventRule(_EventRuleMandatory, total=False):
@@ -899,7 +898,7 @@ class EventRule(_EventRuleMandatory, total=False):
 NotifyRuleInfo = tuple[str, EventRule, str]
 NotifyPluginName = str
 NotifyPluginInfo = tuple[
-    ContactName, NotificationPluginNameStr, NotifyPluginParams, NotifyBulkParameters | None
+    ContactName, NotificationPluginNameStr, NotifyPluginParamsDict, NotifyBulkParameters | None
 ]
 NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 
@@ -935,10 +934,9 @@ class NotificationParameterGeneralInfos(TypedDict):
 
 class NotificationParameterItem(TypedDict):
     general: NotificationParameterGeneralInfos
-    parameter_properties: dict[str, Any]
+    parameter_properties: NotifyPluginParamsDict
 
 
-NotificationParameterID = NewType("NotificationParameterID", str)
 NotificationParameterMethod = str
 NotificationParameterSpec = dict[NotificationParameterID, NotificationParameterItem]
 NotificationParameterSpecs = dict[NotificationParameterMethod, NotificationParameterSpec]

@@ -108,6 +108,7 @@ def test_update_configuration_entity(
 
     # THEN
     updated_entity = get_notification_parameter(registry, entity.ident).data
+    # Ignore is needed because every plugin model has different keys (and not "test_param"
     assert updated_entity["parameter_properties"]["test_param"] == "bar"
 
 

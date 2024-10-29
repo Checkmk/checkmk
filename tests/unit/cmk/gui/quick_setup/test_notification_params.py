@@ -5,7 +5,7 @@
 
 from pytest_mock import MockerFixture
 
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
 
 from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
@@ -59,7 +59,12 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
     "notification_method": {
         "notification_effect": (
             "send",
-            ("mail", Method(parameter_id="61736d07-326a-4fb9-affd-201e3bd2a637")),
+            (
+                "mail",
+                Method(
+                    parameter_id=NotificationParameterID("61736d07-326a-4fb9-affd-201e3bd2a637")
+                ),
+            ),
         ),
     },
     "recipient": [
@@ -98,7 +103,7 @@ EVENT_RULE_PARAMS: EventRule = EventRule(
     rule_id=NotificationRuleID("uuid4_rule_id"),
     match_host_event=["?r", "du", "f", "x", "af"],
     match_service_event=["?r", "wc", "ur", "s", "as"],
-    notify_plugin=("mail", "61736d07-326a-4fb9-affd-201e3bd2a637"),  # type: ignore[typeddict-item]
+    notify_plugin=("mail", NotificationParameterID("61736d07-326a-4fb9-affd-201e3bd2a637")),
     match_escalation=(2, 4),
     match_escalation_throttle=(3, 5),
     match_timeperiod="24X7",

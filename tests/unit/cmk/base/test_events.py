@@ -9,7 +9,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.notify import NotificationHostConfig
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -346,7 +346,7 @@ def test_update_enriched_context_from_host_file(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={TagGroupID("bla"): TagID("bli")},
             ),
             "The host's tags {'criticality': 'prod'} do not match the required tags {'bla': 'bli'}",
@@ -376,7 +376,7 @@ def test_update_enriched_context_from_host_file(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={
                     TagGroupID("criticality"): TagID("prod"),
                     TagGroupID("hurz"): TagID("blub"),
@@ -410,7 +410,7 @@ def test_update_enriched_context_from_host_file(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={
                     TagGroupID("criticality"): TagConditionNE({"$ne": TagID("prod")}),
                     TagGroupID("hurz"): TagID("blub"),

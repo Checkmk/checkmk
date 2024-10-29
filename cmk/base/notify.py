@@ -30,7 +30,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Any, cast, Literal, overload
+from typing import Any, cast, Literal
 
 import cmk.ccc.debug
 from cmk.ccc import store
@@ -51,14 +51,13 @@ from cmk.utils.notify_types import (
     is_always_bulk,
     is_timeperiod_bulk,
     NotificationContext,
+    NotificationParameterSpecs,
     NotificationPluginNameStr,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
     NotifyBulks,
     NotifyPluginInfo,
-    NotifyPluginParams,
     NotifyPluginParamsDict,
-    NotifyPluginParamsList,
     NotifyRuleInfo,
     PluginNotificationContext,
     ServiceEventType,
@@ -101,7 +100,7 @@ ConfigContacts = dict[ContactName, Contact]
 ContactNames = frozenset[ContactName]  # Must be hasable
 
 NotificationKey = tuple[ContactNames, NotificationPluginNameStr]
-NotificationValue = tuple[bool, NotifyPluginParams, NotifyBulkParameters | None]
+NotificationValue = tuple[bool, NotifyPluginParamsDict, NotifyBulkParameters | None]
 Notifications = dict[NotificationKey, NotificationValue]
 
 _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
@@ -210,6 +209,7 @@ def do_notify(
     args: list[str],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
@@ -260,6 +260,7 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
@@ -276,6 +277,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 bulk_interval=bulk_interval,
                 fallback_email=fallback_email,
@@ -298,6 +300,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
@@ -316,6 +319,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
@@ -333,6 +337,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
@@ -354,6 +359,7 @@ def do_notify(
                 get_http_proxy,
                 ensure_nagios,
                 rules=rules,
+                parameters=parameters,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
@@ -383,6 +389,7 @@ def notify_notify(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -449,6 +456,7 @@ def notify_notify(
             host_parameters_cb,
             get_http_proxy,
             rules=rules,
+            parameters=parameters,
             define_servicegroups=define_servicegroups,
             spooling=spooling,
             config_contacts=config_contacts,
@@ -468,6 +476,7 @@ def locally_deliver_raw_context(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
@@ -491,6 +500,7 @@ def locally_deliver_raw_context(
             fallback_format=fallback_format,
             plugin_timeout=plugin_timeout,
             rules=rules,
+            parameters=parameters,
             all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
@@ -511,6 +521,7 @@ def notification_replay_backlog(
     nr: int,
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -531,6 +542,7 @@ def notification_replay_backlog(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        parameters=parameters,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
@@ -550,6 +562,7 @@ def notification_analyse_backlog(
     nr: int,
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -570,6 +583,7 @@ def notification_analyse_backlog(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        parameters=parameters,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
@@ -590,6 +604,7 @@ def notification_test(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -616,6 +631,7 @@ def notification_test(
         get_http_proxy,
         ensure_nagios,
         rules=rules,
+        parameters=parameters,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
         fallback_email=fallback_email,
@@ -651,6 +667,7 @@ def notify_keepalive(
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     fallback_email: str,
     fallback_format: _FallbackFormat,
@@ -670,6 +687,7 @@ def notify_keepalive(
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
             rules=rules,
+            parameters=parameters,
             fallback_email=fallback_email,
             fallback_format=fallback_format,
             config_contacts=config_contacts,
@@ -708,6 +726,7 @@ def notify_rulebased(
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
@@ -755,6 +774,7 @@ def notify_rulebased(
             notifications, rule_info = _create_notifications(
                 enriched_context,
                 rule,
+                parameters,
                 notifications,
                 rule_info,
                 host_parameters_cb,
@@ -765,6 +785,7 @@ def notify_rulebased(
     plugin_info = _process_notifications(
         enriched_context,
         notifications,
+        parameters,
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
@@ -789,6 +810,7 @@ def _get_contact_info_text(rule: EventRule) -> str:
 def _create_notifications(
     enriched_context: EnrichedEventContext,
     rule: EventRule,
+    parameters: NotificationParameterSpecs,
     notifications: Notifications,
     rule_info: list[NotifyRuleInfo],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
@@ -804,12 +826,12 @@ def _create_notifications(
     )
     contactstxt = ", ".join(contacts)
 
-    plugin_name, plugin_parameters = rule["notify_plugin"]
+    plugin_name, plugin_parameter_id = rule["notify_plugin"]
 
     plugintxt = plugin_name
 
     key = contacts, plugin_name
-    if plugin_parameters is None:  # cancelling
+    if plugin_parameter_id is None:  # cancelling
         # FIXME: In Python 2, notifications.keys() already produces a
         # copy of the keys, while in Python 3 it is only a view of the
         # underlying dict (modifications would result in an exception).
@@ -823,7 +845,7 @@ def _create_notifications(
             if plugin_name != notify_plugin or not overlap:
                 continue
 
-            locked, plugin_parameters, bulk = notifications[notify_key]
+            locked, _plugin_parameters, bulk = notifications[notify_key]
 
             if locked and "contact" in rule:
                 logger.info(
@@ -861,7 +883,7 @@ def _create_notifications(
             HostName(enriched_context["HOSTNAME"]),
             plugin_name,
             host_parameters_cb,
-            plugin_parameters,
+            parameters[plugin_name][plugin_parameter_id]["parameter_properties"],
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -872,6 +894,7 @@ def _create_notifications(
 def _process_notifications(
     enriched_context: EnrichedEventContext,
     notifications: Notifications,
+    parameters: NotificationParameterSpecs,
     num_rule_matches: int,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
@@ -926,6 +949,9 @@ def _process_notifications(
             verb = "would notify" if analyse and not dispatch else "notifying"
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name
+            # Hack for "Call with the following..." find a better solution
+            if (called_parameter := params.get("params")) is not None:
+                params = called_parameter  # type: ignore[assignment]
             paramtxt = ", ".join(params) if params else "(no parameters)"
             bulktxt = "yes" if bulk else "no"
             logger.info(
@@ -1004,34 +1030,12 @@ def rbn_fallback_contacts(*, config_contacts: ConfigContacts, fallback_email: st
     return fallback_contacts
 
 
-@overload
-def rbn_finalize_plugin_parameters(
-    hostname: HostName,
-    plugin_name: NotificationPluginNameStr,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    rule_parameters: NotifyPluginParamsList,
-) -> NotifyPluginParamsList: ...
-
-
-@overload
 def rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     rule_parameters: NotifyPluginParamsDict,
-) -> NotifyPluginParamsDict: ...
-
-
-def rbn_finalize_plugin_parameters(
-    hostname: HostName,
-    plugin_name: NotificationPluginNameStr,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    rule_parameters: NotifyPluginParams,
-) -> NotifyPluginParams:
-    # Right now we are only able to finalize notification plugins with dict parameters..
-    if not isinstance(rule_parameters, dict):
-        return rule_parameters
-
+) -> NotifyPluginParamsDict:
     parameters = dict(host_parameters_cb(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
 
@@ -1702,7 +1706,7 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(
     enriched_context: EnrichedEventContext,
-    params: list | NotifyPluginParams,
+    params: NotifyPluginParamsDict,
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> NotificationContext:
     plugin_context = NotificationContext({})
@@ -1712,7 +1716,7 @@ def create_plugin_context(
 
 
 def create_bulk_parameter_context(
-    params: NotifyPluginParams,
+    params: NotifyPluginParamsDict,
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> list[str]:
     dict_context = create_plugin_context({}, params, get_http_proxy)
@@ -1881,6 +1885,7 @@ def handle_spoolfile(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     rules: Iterable[EventRule],
+    parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -1931,6 +1936,7 @@ def handle_spoolfile(
             host_parameters_cb,
             get_http_proxy,
             rules=rules,
+            parameters=parameters,
             define_servicegroups=define_servicegroups,
             config_contacts=config_contacts,
             plugin_timeout=plugin_timeout,
@@ -1970,7 +1976,7 @@ def handle_spoolfile(
 
 def do_bulk_notify(  # pylint: disable=too-many-branches
     plugin_name: NotificationPluginNameStr,
-    params: NotifyPluginParams,
+    params: NotifyPluginParamsDict,
     plugin_context: NotificationContext,
     bulk: NotifyBulkParameters,
 ) -> None:
@@ -2283,7 +2289,7 @@ def notify_bulk(
     # the directory after our work. It will be the starting point for
     # the next bulk with the same ID, which is completely OK.
     bulk_context = []
-    old_params: NotifyPluginParams | None = None
+    old_params: NotifyPluginParamsDict | None = None
     unhandled_uuids: UUIDs = []
     for mtime, notify_uuid in uuids:
         try:

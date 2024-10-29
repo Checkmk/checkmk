@@ -113,7 +113,7 @@ def get_default_notification_rule() -> EventRule:
         contact_object=True,
         description="Notify all contacts of a host/service via HTML email",
         disabled=False,
-        notify_plugin=("mail", MailPluginModel()),
+        notify_plugin=("mail", MailPluginModel()),  # type: ignore[typeddict-item]
     )
 
 

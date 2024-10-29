@@ -6,6 +6,8 @@ from collections.abc import Mapping
 from typing import Literal, NotRequired, TypedDict
 
 from cmk.utils.notify_types import (
+    NotificationParameterID,
+    NotificationPluginNameStr,
     SysLogFacilityIntType,
     SyslogPriorityIntType,
 )
@@ -107,12 +109,13 @@ BulkNotificatons = AlwaysBulkTuple | TimeperiodBulkTuple
 
 
 class Method(TypedDict):
-    parameter_id: str
+    parameter_id: NotificationParameterID
     bulk_notification: NotRequired[BulkNotificatons]
 
 
 NotificationEffect = (
-    tuple[Literal["send"], tuple[str, Method]] | tuple[Literal["suppress"], tuple[str, None]]
+    tuple[Literal["send"], tuple[NotificationPluginNameStr, Method]]
+    | tuple[Literal["suppress"], tuple[NotificationPluginNameStr, None]]
 )
 
 

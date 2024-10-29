@@ -91,7 +91,8 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
     assert isinstance(save_return, NotificationParameterDescription)
     param = NotificationParameterConfigFile().load_for_reading()["dummy_params"][save_return.ident]
     assert param["general"]["description"] == "foo"
-    assert param["parameter_properties"]["test_param"] == "bar"
+    # Ignore is needed because every plugin model has different keys (and not "test_param")
+    assert param["parameter_properties"]["test_param"] == "bar"  # type: ignore[typeddict-item]
 
 
 @pytest.mark.usefixtures("request_context")
@@ -193,6 +194,7 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
     # THEN
     assert param.description == "foo"
     assert param.data["general"]["description"] == "foo"
+    # Ignore is needed because every plugin model has different keys (and not "test_param")
     assert param.data["parameter_properties"]["test_param"] == "bar"
 
 
@@ -229,4 +231,5 @@ def test_get_notification_parameter_doesnt_just_return_from_disk(
     data = get_notification_parameter(registry, NotificationParameterID("some-id")).data
 
     # THEN
+    # Ignore is needed because every plugin model has different keys (and not "select_param")
     assert data["parameter_properties"]["select_param"] == SingleChoiceVisitor.option_id("name1")

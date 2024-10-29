@@ -607,7 +607,10 @@ class NotificationRule:
         return cls(
             rule_properties=RuleProperties.from_mk_file_format(config),
             notification_method=NotificationMethod.from_mk_file_format(
-                config["notify_plugin"], config.get("bulk")
+                # TODO adjust typing to new tuple[NotificationPluginNameStr, NotificationParameterID]
+                # CMK-20009
+                config["notify_plugin"],  # type: ignore[arg-type]
+                config.get("bulk"),
             ),
             contact_selection=ContactSelection.from_mk_file_format(config),
             conditions=Conditions.from_mk_file_format(config),

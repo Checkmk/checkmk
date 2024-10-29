@@ -14,6 +14,7 @@ from cmk.utils.notify_types import (
     HostEventType,
     is_non_status_change_event_type,
     NonStatusChangeEventType,
+    NotificationParameterID,
     NotificationRuleID,
     ServiceEventType,
     TimeperiodBulkParameters,
@@ -240,7 +241,7 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
     notify_method = NotificationMethod(
         notification_effect=(
             "send",
-            (notify_plugin[0], Method(parameter_id=notify_plugin[1])),  # type: ignore[typeddict-item]
+            (notify_plugin[0], Method(parameter_id=notify_plugin[1])),
         ),
     )
     if (bulk_notification := _bulk_type()) is not None and notify_method["notification_effect"][
@@ -525,14 +526,14 @@ def _set_notification_effect_parameters(
 
     notification_effect = notification["notification_method"]["notification_effect"]
     if notification_effect[0] == "suppress":
-        event_rule["notify_plugin"] = notification_effect[1]  # type: ignore[typeddict-item]
+        event_rule["notify_plugin"] = notification_effect[1]
         return
 
     if notification_effect[0] == "send":
         event_rule["notify_plugin"] = (
             notification_effect[1][0],
             notification_effect[1][1]["parameter_id"],
-        )  # type: ignore[typeddict-item]
+        )
 
     if (bulk_notification := notification_effect[1][1].get("bulk_notification")) is not None:
         if bulk_notification[0] == "always":
@@ -622,7 +623,7 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
         contact_object=False,
         description="foo",
         disabled=False,
-        notify_plugin=("mail", None),
+        notify_plugin=("mail", NotificationParameterID("parameter_id")),
     )
 
     _set_event_console_filters(event_rule, notification)

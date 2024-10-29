@@ -17,6 +17,7 @@ from cmk.utils.notify_types import (
     MKEventdPluginModel,
     NotificationParameterID,
     NotificationParameterSpecs,
+    NotificationPluginNameStr,
     OpsGenieIssuesPluginModel,
     SpectrumPluginModel,
 )
@@ -28,8 +29,8 @@ from cmk.gui.watolib.notifications import (
     NotificationRuleConfigFile,
 )
 
-from cmk.update_config.plugins.actions.migrate_notification_parameters import (
-    MigrateNotificationParameters,
+from cmk.update_config.plugins.actions.migrate_notifications import (
+    MigrateNotifications,
 )
 
 
@@ -55,7 +56,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    ["rule_config", "notification_parameter"],
+    ["rule_config", "notification_parameter", "expected_plugin"],
     [
         pytest.param(
             [
@@ -86,6 +87,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     }
                 }
             },
+            [("spectrum", "<uuid-1>")],
             id="Spectrum",
         ),
         pytest.param(
@@ -134,6 +136,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     }
                 }
             },
+            [("asciimail", "<uuid-1>")],
             id="ASCII Email",
         ),
         pytest.param(
@@ -167,6 +170,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     }
                 }
             },
+            [("cisco_webex_teams", "<uuid-1>")],
             id="Cisco Webex Teams",
         ),
         pytest.param(
@@ -193,6 +197,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     }
                 }
             },
+            [("mkeventd", "<uuid-1>")],
             id="Forward notification to Event Console",
         ),
         pytest.param(
@@ -249,6 +254,12 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         ),
                     ),
                 ),
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "mkeventd",
+                        None,
+                    ),
+                ),
             ],
             {
                 "opsgenie_issues": {
@@ -302,21 +313,32 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     }
                 },
             },
+            [
+                ("opsgenie_issues", "<uuid-1>"),
+                ("mail", "<uuid-2>"),
+                ("mail", "<uuid-3>"),
+                ("mkeventd", "<uuid-4>"),
+                ("mkeventd", "<uuid-4>"),
+                ("mkeventd", None),
+            ],
             id="Mixed notification rules",
         ),
     ],
 )
-def test_migrate_notification_parameters(
+def test_migrate_notifications(
     rule_config: list[EventRule],
     notification_parameter: NotificationParameterSpecs,
+    expected_plugin: list[tuple[NotificationPluginNameStr, NotificationParameterID]],
 ) -> None:
     with gui_context():
         NotificationRuleConfigFile().save(rule_config)
 
-        MigrateNotificationParameters(
+        MigrateNotifications(
             name="migrate_notification_parameters",
             title="Migrate notification parameters",
             sort_index=50,
         )(logging.getLogger())
 
     assert NotificationParameterConfigFile().load_for_reading() == notification_parameter
+    for nr, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
+        assert rule["notify_plugin"] == expected_plugin[nr]

@@ -24,17 +24,18 @@ import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import logger
-from cmk.utils.servicename import Item
-
-from cmk.checkengine.checking import CheckPluginName, ServiceID
 
 _PluginName = str
+_Item = str | None
 _UserKey = str
-_ValueStoreKey = tuple[HostName, _PluginName, Item, _UserKey]
+_ValueStoreKey = tuple[HostName, _PluginName, _Item, _UserKey]
 
 _TKey = TypeVar("_TKey", bound=Hashable)
 _TValue = TypeVar("_TValue")
 _TDefault = TypeVar("_TDefault")
+
+# In practice this will be Checkplugin/Item, but the value_store doesn't care, really.
+_ServiceID = tuple[object, _Item]
 
 
 class _DynamicDiskSyncedMapping(dict[_TKey, _TValue]):
@@ -233,7 +234,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
         self,
         *,
         data: MutableMapping[_ValueStoreKey, str],
-        service_id: tuple[CheckPluginName, Item],
+        service_id: _ServiceID,
         host_name: HostName,
     ) -> None:
         self._prefix = (host_name, str(service_id[0]), service_id[1])
@@ -301,7 +302,9 @@ class ValueStoreManager:
         self._host_name = host_name
 
     @contextmanager
-    def namespace(self, service_id: ServiceID, host_name: HostName | None = None) -> Iterator[None]:
+    def namespace(
+        self, service_id: _ServiceID, host_name: HostName | None = None
+    ) -> Iterator[None]:
         """Return a context manager
 
         In the corresponding context the value store for the given service is active

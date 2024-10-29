@@ -795,13 +795,13 @@ class Endpoint:
             data = response.data.decode("utf-8")
             try:
                 json.loads(data)
-            except ValidationError as exc:
+            except json.JSONDecodeError as exc:
                 raise RestAPIResponseException(
                     title="Server was about to send an invalid response.",
                     detail="This is an error of the implementation.",
                     ext=EXT(
                         {
-                            "errors": exc.messages,
+                            "error": str(exc),
                             "orig": data,
                         },
                     ),

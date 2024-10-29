@@ -1347,7 +1347,7 @@ class Site:
                         )
 
             changed = self.openapi.activate_changes_and_wait_for_completion(
-                sites=[site.id], force_foreign_changes=allow_foreign_changes
+                force_foreign_changes=allow_foreign_changes
             )
             if changed:
                 logger.info("Waiting for core reloads of: %s", site.id)

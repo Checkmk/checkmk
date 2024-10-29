@@ -6,6 +6,7 @@
 
 from . import rabbitmq
 from ._config import (
+    all_cert_files,
     all_cme_cacert_files,
     BrokerCertificates,
     ca_key_file,
@@ -17,7 +18,6 @@ from ._config import (
     multisite_cert_file,
     site_cert_file,
     site_key_file,
-    TLS_PATH_CUSTOMERS,
     trusted_cas_file,
 )
 from ._connection import (
@@ -37,6 +37,7 @@ from ._connection import (
 from ._logging import set_logging_level
 
 __all__ = [
+    "all_cert_files",
     "all_cme_cacert_files",
     "AppName",
     "BindingKey",
@@ -62,6 +63,5 @@ __all__ = [
     "set_logging_level",
     "site_cert_file",
     "site_key_file",
-    "TLS_PATH_CUSTOMERS",
     "trusted_cas_file",
 ]

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
@@ -28,6 +28,7 @@ from cmk.crypto.certificate import (
     PersistedCertificateWithPrivateKey,
 )
 from cmk.messaging import (
+    all_cert_files,
     BrokerCertificates,
     ca_key_file,
     cacert_file,
@@ -167,6 +168,16 @@ def sync_remote_broker_certs(
         [("certificates", broker_certificates.model_dump_json())],
         timeout=60,
     )
+
+
+def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
+    """
+    Remove broker certificates for sites that no longer exist.
+    """
+
+    for cert in all_cert_files(omd_root=paths.omd_root):
+        if SiteId(cert.name.removesuffix("_cert.pem")) not in alive_sites:
+            cert.unlink(missing_ok=True)
 
 
 class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):

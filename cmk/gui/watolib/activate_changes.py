@@ -101,7 +101,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.broker_certificates import BrokerCertificateSync
+from cmk.gui.watolib.broker_certificates import BrokerCertificateSync, clean_dead_sites_certs
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -2185,6 +2185,7 @@ def sync_and_activate(
                 str(version.edition(paths.omd_root))
             ].broker_certificate_sync,
         )
+        clean_dead_sites_certs(list(get_all_replicated_sites()))
 
         active_tasks = ActiveTasks(
             fetch_sync_state={},

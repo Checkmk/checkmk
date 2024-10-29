@@ -598,21 +598,8 @@ void TableStateHistory::handle_state_entry(
         state = it_hst->second;
     }
 
-    auto state_changed =
-        updateHostServiceState(query, user, core, query_timeframe, entry,
-                               *state, only_update, notification_periods);
-    // Host downtime or state changes also affect its services
-    if (entry->kind() == LogEntryKind::alert_host ||
-        entry->kind() == LogEntryKind::state_host ||
-        entry->kind() == LogEntryKind::downtime_alert_host) {
-        if (state_changed == ModificationStatus::changed) {
-            for (auto &svc : state->_services) {
-                updateHostServiceState(query, user, core, query_timeframe,
-                                       entry, *svc, only_update,
-                                       notification_periods);
-            }
-        }
-    }
+    update(query, user, core, query_timeframe, entry, *state, only_update,
+           notification_periods);
 }
 
 void TableStateHistory::handle_timeperiod_transition(
@@ -659,6 +646,28 @@ void TableStateHistory::final_reports(
         hst->_until = hst->_time;
 
         process(query, user, query_timeframe, *hst);
+    }
+}
+
+void TableStateHistory::update(
+    Query &query, const User &user, const ICore &core,
+    std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
+    HostServiceState &state, bool only_update,
+    const notification_periods_t &notification_periods) {
+    auto state_changed =
+        updateHostServiceState(query, user, core, query_timeframe, entry, state,
+                               only_update, notification_periods);
+    // Host downtime or state changes also affect its services
+    if (entry->kind() == LogEntryKind::alert_host ||
+        entry->kind() == LogEntryKind::state_host ||
+        entry->kind() == LogEntryKind::downtime_alert_host) {
+        if (state_changed == ModificationStatus::changed) {
+            for (auto &svc : state._services) {
+                updateHostServiceState(query, user, core, query_timeframe,
+                                       entry, *svc, only_update,
+                                       notification_periods);
+            }
+        }
     }
 }
 

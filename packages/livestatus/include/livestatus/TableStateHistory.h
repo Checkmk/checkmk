@@ -79,6 +79,12 @@ private:
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState &hss);
 
+    void update(Query &query, const User &user, const ICore &core,
+                std::chrono::system_clock::duration query_timeframe,
+                const LogEntry *entry, HostServiceState &state,
+                bool only_update,
+                const notification_periods_t &notification_periods);
+
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
         std::chrono::system_clock::duration query_timeframe,

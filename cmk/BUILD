@@ -1,8 +1,9 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:proto.bzl", "py_proto_library")
+load("//omd/packages/rules:doctest.bzl", "py_doc_test")
 
 genrule(
     name = "_generate_requirements_in",
@@ -182,6 +183,8 @@ py_library(
     ],
     deps = [
         "@rrdtool_native//:rrdtool_python_lib",
+        # `cmk.special_agent.agent_jolokia` imports `mk_jolokia`
+        "//agents/plugins:mk_jolokia",
     ] + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 
@@ -274,24 +277,13 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_doc_test(
     name = "doctest",
-    srcs = ["__test__.py"],
-    args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--doctest-modules",
-        "--override-ini=consider_namespace_packages=true",
-    ],
-    data = ["@//:pyproject.toml"],
-    imports = [".."],
-    main = ":__test__.py",
-    visibility = ["//tests:__subpackages__"],
-    deps = [
-        ":__test__",
-        "//agents/plugins:mk_jolokia",
+    srcs = [
         "//cmk:lib_cmk",
         "//cmk:lib_cmk_cre",
-        requirement("pytest"),
-        requirement("marshmallow"),
-    ] + CMK_PACKAGES,
+    ],
+    env = {
+        "PYTHONWARNINGS": "ignore",
+    },
 )

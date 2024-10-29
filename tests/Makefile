@@ -388,6 +388,8 @@ test-unit-omdlib:
 
 test-unit:
 	cd .. && \
+	    ./scripts/run-bazel.sh test //cmk:doctest
+	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \

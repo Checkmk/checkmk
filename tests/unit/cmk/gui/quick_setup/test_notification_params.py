@@ -38,8 +38,12 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
         "ec_alert_filters": {},
     },
     "notification_method": {
-        "method": ("mail", object),
-        "notification_effect": object,
+        "notification_effect": (
+            "send",
+            {
+                "method": ("mail", "PLACEHOLDER"),
+            },
+        ),
     },
     "recipient": [
         ("all_contacts_affected", None),

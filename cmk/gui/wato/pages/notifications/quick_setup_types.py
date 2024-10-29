@@ -69,10 +69,16 @@ TimeperiodBulkTuple = tuple[Literal["timeperiod"], tuple[str, TimeperiodBulk]]
 BulkNotificatons = AlwaysBulkTuple | TimeperiodBulkTuple
 
 
-class NotificationMethod(TypedDict):
-    notification_effect: object  # TODO: not implemented on the stage
-    method: tuple[str, object]  # TODO: update once slidein is implemented
+class Effect(TypedDict):
+    method: tuple[str, str]
     bulk_notification: NotRequired[BulkNotificatons]
+
+
+NotificationEffect = tuple[Literal["send", "suppress"], Effect]
+
+
+class NotificationMethod(TypedDict):
+    notification_effect: NotificationEffect
 
 
 AllContactsAffected = tuple[Literal["all_contacts_affected"], None]

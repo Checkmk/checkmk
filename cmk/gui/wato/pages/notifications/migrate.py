@@ -23,6 +23,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulkTuple,
     BulkingParameters,
     ContentBasedFiltering,
+    Effect,
     FilterForHostsAndServices,
     FrequencyAndTiming,
     GeneralProperties,
@@ -169,11 +170,18 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             return "timeperiod", (notifybulk[1]["timeperiod"], _get_timeperiod_bulk(notifybulk[1]))
 
         notify_method = NotificationMethod(
-            notification_effect=object,
-            method=(event_rule["notify_plugin"][0], object),
+            notification_effect=(
+                "send",
+                Effect(
+                    method=(
+                        event_rule["notify_plugin"][0],
+                        "PLACEHOLDER",
+                    ),  # TODO: replace PLACEHOLDER with actual uuid
+                ),
+            ),
         )
         if (bulk_notification := _bulk_type()) is not None:
-            notify_method["bulk_notification"] = bulk_notification
+            notify_method["notification_effect"][1]["bulk_notification"] = bulk_notification
 
         return notify_method
 
@@ -357,7 +365,9 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
             return time_period_bulk_params
 
         if (
-            bulk_notification := notification["notification_method"].get("bulk_notification")
+            bulk_notification := notification["notification_method"]["notification_effect"][1].get(
+                "bulk_notification"
+            )
         ) is not None:
             if bulk_notification[0] == "always":
                 event_rule["bulk"] = (

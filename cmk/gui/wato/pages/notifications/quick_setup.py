@@ -352,6 +352,41 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
 
 
 def notification_method() -> QuickSetupStage:
+    def bulk_notification_dict_element() -> DictElement:
+        return DictElement(
+            required=False,
+            parameter_form=CascadingSingleChoiceExtended(
+                title=Title("Bulk Notification"),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="always",
+                        title=Title("Always bulk"),
+                        parameter_form=bulk_notification(
+                            title="always",
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="timeperiod",
+                        title=Title("During time period"),
+                        parameter_form=CascadingSingleChoice(
+                            elements=[
+                                CascadingSingleChoiceElement(
+                                    name=timeperiod,
+                                    title=Title("%s") % (_("%s") % timeperiod),
+                                    parameter_form=bulk_notification(
+                                        title="timeperiod",
+                                    ),
+                                )
+                                for timeperiod in load_timeperiods()
+                                if timeperiod != "24X7"
+                            ],
+                        ),
+                    ),
+                ],
+                layout=CascadingSingleChoiceLayout.horizontal,
+            ),
+        )
+
     def bulk_notification(
         title: Literal["always", "timeperiod"],
     ) -> DictionaryExtended:
@@ -491,70 +526,75 @@ def notification_method() -> QuickSetupStage:
                 form_spec=DictionaryExtended(
                     layout=DictionaryLayout.two_columns,
                     elements={
-                        # TODO: Implement a toggle formspec “Toggle”. It should toggle between two fixed values
                         "notification_effect": DictElement(
                             required=True,
-                            parameter_form=String(
+                            parameter_form=CascadingSingleChoiceExtended(
+                                prefill=DefaultValue("send"),
+                                layout=CascadingSingleChoiceLayout.button_group,
                                 title=Title("Notification effect"),
                                 help_text=Help(
                                     "Specifies whether to send a notification or to cancel all previous notifications for the same method"
                                 ),
-                                field_size=FieldSize.MEDIUM,
-                                prefill=DefaultValue("<placeholder>"),
-                                custom_validate=(),
-                            ),
-                        ),
-                        "methods": DictElement(
-                            required=True,
-                            parameter_form=CascadingSingleChoiceExtended(
-                                title=Title("Method"),
                                 elements=[
                                     CascadingSingleChoiceElement(
-                                        title=Title("%s") % (_("%s") % title),
-                                        name=script_name,
-                                        parameter_form=SingleChoiceEditable(
-                                            title=Title("Notification method"),
-                                            entity_type=ConfigEntityType.notification_parameter,
-                                            entity_type_specifier=script_name,
-                                        ),
-                                    )
-                                    for script_name, title in notification_script_choices()
-                                ],
-                                custom_validate=[_validate_parameter_choice],
-                                layout=CascadingSingleChoiceLayout.horizontal,
-                            ),
-                        ),
-                        "bulk_notification": DictElement(
-                            required=False,
-                            parameter_form=CascadingSingleChoiceExtended(
-                                title=Title("Bulk Notification"),
-                                elements=[
-                                    CascadingSingleChoiceElement(
-                                        name="always",
-                                        title=Title("Always bulk"),
-                                        parameter_form=bulk_notification(
-                                            title="always",
-                                        ),
-                                    ),
-                                    CascadingSingleChoiceElement(
-                                        name="timeperiod",
-                                        title=Title("During time period"),
-                                        parameter_form=CascadingSingleChoice(
-                                            elements=[
-                                                CascadingSingleChoiceElement(
-                                                    name=timeperiod,
-                                                    title=Title("%s") % (_("%s") % timeperiod),
-                                                    parameter_form=bulk_notification(
-                                                        title="timeperiod",
+                                        name="send",
+                                        title=Title("Send notification"),
+                                        parameter_form=DictionaryExtended(
+                                            elements={
+                                                "method": DictElement(
+                                                    required=True,
+                                                    parameter_form=CascadingSingleChoiceExtended(
+                                                        title=Title("Method"),
+                                                        elements=[
+                                                            CascadingSingleChoiceElement(
+                                                                title=Title("%s")
+                                                                % (_("%s") % title),
+                                                                name=script_name,
+                                                                parameter_form=SingleChoiceEditable(
+                                                                    title=Title(
+                                                                        "Notification method"
+                                                                    ),
+                                                                    entity_type=ConfigEntityType.notification_parameter,
+                                                                    entity_type_specifier=script_name,
+                                                                ),
+                                                            )
+                                                            for script_name, title in notification_script_choices()
+                                                        ],
+                                                        custom_validate=[
+                                                            _validate_parameter_choice
+                                                        ],
+                                                        layout=CascadingSingleChoiceLayout.horizontal,
                                                     ),
-                                                )
-                                                for timeperiod in load_timeperiods()
-                                                if timeperiod != "24X7"
-                                            ],
+                                                ),
+                                                "bulk_notification": bulk_notification_dict_element(),
+                                            }
+                                        ),
+                                    ),
+                                    CascadingSingleChoiceElement(
+                                        name="suppress",
+                                        title=Title("Suppress all previous"),
+                                        parameter_form=DictionaryExtended(
+                                            elements={
+                                                "method": DictElement(
+                                                    required=True,
+                                                    parameter_form=SingleChoiceExtended(
+                                                        title=Title("Method"),
+                                                        elements=[
+                                                            SingleChoiceElementExtended(
+                                                                title=Title("%s")
+                                                                % (_("%s") % title),
+                                                                name=script_name,
+                                                            )
+                                                            for script_name, title in notification_script_choices()
+                                                        ],
+                                                        type=str,
+                                                    ),
+                                                ),
+                                                "bulk_notification": bulk_notification_dict_element(),
+                                            }
                                         ),
                                     ),
                                 ],
-                                layout=CascadingSingleChoiceLayout.horizontal,
                             ),
                         ),
                     },

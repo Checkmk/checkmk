@@ -74,16 +74,22 @@ def get_configuration_entity_schema(
             assert_never(other)
 
 
-def get_configuration_entity_data(
+class ConfigurationEntity(NamedTuple):
+    description: str
+    data: Mapping
+
+
+def get_configuration_entity(
     entity_type: ConfigEntityType,
     entity_id: EntityId,
-) -> Mapping:
+) -> ConfigurationEntity:
     match entity_type:
         case ConfigEntityType.notification_parameter:
-            return get_notification_parameter(
+            entity = get_notification_parameter(
                 notification_parameter_registry,
                 NotificationParameterID(entity_id),
-            ).data
+            )
+            return ConfigurationEntity(description=entity.description, data=entity.data)
         case other:
             assert_never(other)
 

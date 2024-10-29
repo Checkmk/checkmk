@@ -187,6 +187,7 @@ def test_get_configuration_entity(
     )
 
     # THEN
+    assert resp.json["title"] == "foo"
     assert resp.json["extensions"]["general"]["description"] == "foo"
     assert resp.json["extensions"]["parameter_properties"]["test_param"] == "some_value"
 

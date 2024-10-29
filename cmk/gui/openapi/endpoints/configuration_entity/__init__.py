@@ -28,7 +28,7 @@ from cmk.gui.openapi.utils import EXT, FIELDS, problem, serve_json
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     ConfigurationEntityDescription,
     EntityId,
-    get_configuration_entity_data,
+    get_configuration_entity,
     get_configuration_entity_schema,
     get_list_of_configuration_entities,
     save_configuration_entity,
@@ -111,7 +111,7 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
     request_schema=CreateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
-def create_configuration_entity(params: Mapping[str, Any]) -> Response:
+def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Create a configuration entity"""
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
@@ -135,7 +135,7 @@ def create_configuration_entity(params: Mapping[str, Any]) -> Response:
     request_schema=UpdateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
-def update_configuration_entity(params: Mapping[str, Any]) -> Response:
+def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Update an existing configuration entity"""
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
@@ -161,7 +161,7 @@ def update_configuration_entity(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.DomainObjectCollection,
 )
-def list_configuration_entities(params: Mapping[str, Any]) -> Response:
+def _list_configuration_entities(params: Mapping[str, Any]) -> Response:
     """List existing notification parameter"""
     entity_type_specifier = params["entity_type_specifier"]
 
@@ -197,18 +197,18 @@ def list_configuration_entities(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.DomainObject,
 )
-def get_configuration_entity(params: Mapping[str, Any]) -> Response:
+def _get_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Get a notification parameter"""
     entity_id = EntityId(params["entity_id"])
 
-    data = get_configuration_entity_data(ConfigEntityType.notification_parameter, entity_id)
+    entity = get_configuration_entity(ConfigEntityType.notification_parameter, entity_id)
 
     return serve_json(
         constructors.domain_object(
             domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
             identifier=entity_id,
-            title="",
-            extensions=dict(data),
+            title=entity.description,
+            extensions=dict(entity.data),
             editable=False,
             deletable=False,
         )
@@ -224,7 +224,7 @@ def get_configuration_entity(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.DomainObject,
 )
-def get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
+def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
     """Get a configuration entity form spec schema"""
     entity_type = ConfigEntityType(params["entity_type"])
     entity_type_specifier = params["entity_type_specifier"]
@@ -244,8 +244,8 @@ def get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Resp
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(create_configuration_entity)
-    endpoint_registry.register(update_configuration_entity)
-    endpoint_registry.register(list_configuration_entities)
-    endpoint_registry.register(get_configuration_entity)
-    endpoint_registry.register(get_configuration_entity_form_spec_schema)
+    endpoint_registry.register(_create_configuration_entity)
+    endpoint_registry.register(_update_configuration_entity)
+    endpoint_registry.register(_list_configuration_entities)
+    endpoint_registry.register(_get_configuration_entity)
+    endpoint_registry.register(_get_configuration_entity_form_spec_schema)

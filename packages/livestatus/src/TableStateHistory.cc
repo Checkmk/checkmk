@@ -501,12 +501,11 @@ void TableStateHistory::handle_state_entry(
     }
 
     // Find state object for this host/service
-    HostServiceState *state = nullptr;
     auto it_hst = state_info.find(key);
     if (it_hst == state_info.end()) {
         // Create state object that we also need for filtering right now
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        state = new HostServiceState();
+        auto *state = new HostServiceState();
         state->_is_host = entry->service_description().empty();
         state->_host = entry_host;
         state->_service = entry_service;
@@ -594,12 +593,12 @@ void TableStateHistory::handle_state_entry(
             state->_debug_info = "UNMONITORED ";
             state->_state = -1;
         }
+        update(query, user, core, query_timeframe, entry, *state, only_update,
+               notification_periods);
     } else {
-        state = it_hst->second;
+        update(query, user, core, query_timeframe, entry, *it_hst->second,
+               only_update, notification_periods);
     }
-
-    update(query, user, core, query_timeframe, entry, *state, only_update,
-           notification_periods);
 }
 
 void TableStateHistory::handle_timeperiod_transition(

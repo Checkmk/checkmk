@@ -55,7 +55,7 @@ class Check(BaseCheck):
                     local_path="/not_relevant_for_test",
                     makedirs=store.makedirs,
                 ),
-                dict,  # we don't beed the special agents here.
+                dict,  # we don't need the special agents here.
                 raise_errors=True,
             ).sane_check_info:
                 self._LEGACY_CHECKS[legacy_check.name] = legacy_check

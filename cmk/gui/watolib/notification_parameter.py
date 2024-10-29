@@ -16,6 +16,7 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
     DEFAULT_VALUE,
@@ -61,22 +62,20 @@ def save_notification_parameter(
     parameter_method: NotificationParameterMethod,
     data: object,
     object_id: NotificationParameterID | None = None,
-) -> NotificationParameterDescription | Sequence[shared_type_defs.ValidationMessage]:
+) -> NotificationParameterDescription:
+    """Save a notification parameter set.
+
+    Raises:
+        FormSpecValidationError: if the data does not match the form spec
+    """
     form_spec = registry.form_spec(parameter_method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
 
     validation_errors = visitor.validate(data)
-    if validation_errors:
-        return validation_errors
+    process_validation_messages(validation_errors)
 
     disk_data = visitor.to_disk(data)
-
-    try:
-        item = _to_param_item(disk_data)
-    except ValueError as exc:
-        return [
-            shared_type_defs.ValidationMessage(location=[], message=str(exc), invalid_value=None)
-        ]
+    item = _to_param_item(disk_data)
 
     parameter_id = (
         NotificationParameterID(object_id) if object_id else new_notification_parameter_id()

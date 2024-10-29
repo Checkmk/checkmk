@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Any
 
+from cmk.gui.form_specs.vue.shared_type_defs import ValidationMessage
+
 DataForDisk = Any
 
 
@@ -32,3 +34,13 @@ class EmptyValue:
 
 
 EMPTY_VALUE = EmptyValue()
+
+
+class FormSpecValidationError(ValueError):
+    def __init__(self, messages: list[ValidationMessage]) -> None:
+        super().__init__(messages)
+        self._messages = messages
+
+    @property
+    def messages(self) -> list[ValidationMessage]:
+        return self._messages

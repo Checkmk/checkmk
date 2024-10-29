@@ -14,7 +14,6 @@ from cmk.gui.wato._notification_parameter._registry import NotificationParameter
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
-    NotificationParameterDescription,
     save_notification_parameter,
 )
 
@@ -91,7 +90,6 @@ def test_update_configuration_entity(
         },
         None,
     )
-    assert isinstance(entity, NotificationParameterDescription), "type guard"
 
     # WHEN
     clients.ConfigurationEntity.update_configuration_entity(
@@ -164,7 +162,6 @@ def test_list_configuration_entities(
         {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
         None,
     )
-    assert isinstance(entity, NotificationParameterDescription), "type guard"
 
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
@@ -188,7 +185,6 @@ def test_get_configuration_entity(
         {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
         None,
     )
-    assert isinstance(entity, NotificationParameterDescription), "type guard"
 
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity(

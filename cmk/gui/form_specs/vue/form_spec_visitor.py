@@ -109,6 +109,7 @@ from .visitors import (
     TupleVisitor,
 )
 from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
+from .visitors._type_defs import FormSpecValidationError as FormSpecValidationError
 
 T = TypeVar("T")
 
@@ -196,6 +197,21 @@ def _process_validation_errors(
         "" if not first_error.location else first_error.location[-1],
         first_error.message,
     )
+
+
+def process_validation_messages(
+    validation_messages: list[shared_type_defs.ValidationMessage],
+) -> None:
+    """Helper function to process validation errors in general use cases.
+
+    Args:
+        validation_messages: Validation messages returned by Visitor.validate
+
+    Raises:
+        FormSpecValidationError: An error storing the validation messages
+    """
+    if validation_messages:
+        raise FormSpecValidationError(validation_messages)
 
 
 def get_vue_value(field_id: str, fallback_value: Any) -> Any:

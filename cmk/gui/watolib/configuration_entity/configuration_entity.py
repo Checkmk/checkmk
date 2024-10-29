@@ -9,6 +9,7 @@ from typing import assert_never, NamedTuple, NewType
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
@@ -35,17 +36,18 @@ def save_configuration_entity(
 ) -> ConfigurationEntityDescription | Sequence[shared_type_defs.ValidationMessage]:
     match entity_type:
         case ConfigEntityType.notification_parameter:
-            return_value = save_notification_parameter(
-                notification_parameter_registry,
-                NotificationParameterMethod(entity_type_specifier),
-                data,
-                NotificationParameterID(object_id) if object_id else None,
-            )
-            if isinstance(return_value, Sequence):
-                return return_value
-            return ConfigurationEntityDescription(
-                ident=EntityId(return_value.ident), description=return_value.description
-            )
+            try:
+                value = save_notification_parameter(
+                    notification_parameter_registry,
+                    NotificationParameterMethod(entity_type_specifier),
+                    data,
+                    NotificationParameterID(object_id) if object_id else None,
+                )
+                return ConfigurationEntityDescription(
+                    ident=EntityId(value.ident), description=value.description
+                )
+            except FormSpecValidationError as exc:
+                return exc.messages
         case other:
             assert_never(other)
 

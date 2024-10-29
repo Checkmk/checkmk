@@ -12,6 +12,7 @@ from cmk.utils.notify_types import (
 
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.wato._notification_parameter import NotificationParameter
@@ -123,11 +124,8 @@ def test_validation_on_saving_notification_params(
     registry: NotificationParameterRegistry, params: dict
 ) -> None:
     # WHEN
-    validation = save_notification_parameter(registry, "dummy_params", params)
-
-    # THEN
-    assert isinstance(validation, list)
-    assert len(validation) > 0
+    with pytest.raises(FormSpecValidationError):
+        save_notification_parameter(registry, "dummy_params", params)
 
 
 @pytest.mark.usefixtures("request_context")

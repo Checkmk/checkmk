@@ -16,6 +16,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_with_defaults_from_form_data,
     complete,
     recaps,
+    utils,
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
@@ -29,6 +30,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
     ServiceInterest,
+    StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
@@ -161,25 +163,45 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
+def recap_found_services(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    parsed_data: ParsedFormData,
+) -> Sequence[Widget]:
+    service_discovery_result = utils.get_service_discovery_preview(
+        rulespec_name=RuleGroup.SpecialAgents("azure"),
+        all_stages_form_data=parsed_data,
+        parameter_form=azure.formspec(),
+        collect_params=azure_collect_params,
+    )
+    azure_service_interest = ServiceInterest(r"(?i).*azure.*", "services")
+    filtered_groups_of_services, _other_services = utils.group_services_by_interest(
+        services_of_interest=[azure_service_interest],
+        service_discovery_result=service_discovery_result,
+    )
+    if len(filtered_groups_of_services[azure_service_interest]):
+        return [
+            Text(text=_("Azure services found!")),
+            Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+        ]
+    return [
+        Text(text=_("No Azure services found.")),
+        Text(
+            text=_(
+                "The connection to Azure was successful, but no services were found. If this is unintentional, please verify your configuration."
+            )
+        ),
+    ]
+
+
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Review and run preview service discovery"),
         sub_title=_("Review your configuration and run preview service discovery"),
         configure_components=[],
-        custom_validators=[
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("azure"),
-                parameter_form=azure.formspec(),
-                custom_collect_params=azure_collect_params,
-            )
-        ],
+        custom_validators=[],
         recap=[
-            recaps.recap_service_discovery_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("azure"),
-                parameter_form=azure.formspec(),
-                services_of_interest=[ServiceInterest(".*", "services")],
-                custom_collect_params=azure_collect_params,
-            )
+            recap_found_services,
         ],
         button_label="Run preview service discovery",
     )

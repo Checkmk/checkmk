@@ -13,6 +13,7 @@ from dataclasses import asdict
 from typing import Any, assert_never
 
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
     CreateConfigurationEntity,
@@ -71,24 +72,11 @@ def _to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             assert_never(other)
 
 
-def _serve_save_json(
-    save_data: ConfigurationEntityDescription | Sequence[shared_type_defs.ValidationMessage],
-) -> Response:
-    if isinstance(save_data, ConfigurationEntityDescription):
-        return serve_json(
-            constructors.domain_object(
-                domain_type="configuration_entity",
-                identifier=save_data.ident,
-                title=save_data.description,
-                deletable=False,
-                editable=False,
-            )
-        )
-
+def _serve_validations(data: Sequence[shared_type_defs.ValidationMessage]) -> Response:
     # Since data is not necessarily a nested dictionary, we cannot build a perfect
     # error response so we approximate the structure
     error_fields: dict[str, Any] = {"data": {}}
-    for val in save_data:
+    for val in data:
         node = error_fields["data"]
         for key in val.location:
             node = node.setdefault(key, {})
@@ -98,7 +86,19 @@ def _serve_save_json(
         422,
         "Validation error.",
         fields=FIELDS(error_fields),
-        ext=EXT({"validation_errors": [asdict(val) for val in save_data]}),
+        ext=EXT({"validation_errors": [asdict(val) for val in data]}),
+    )
+
+
+def _serve_entities(data: ConfigurationEntityDescription) -> Response:
+    return serve_json(
+        constructors.domain_object(
+            domain_type="configuration_entity",
+            identifier=data.ident,
+            title=data.description,
+            deletable=False,
+            editable=False,
+        )
     )
 
 
@@ -118,9 +118,12 @@ def create_configuration_entity(params: Mapping[str, Any]) -> Response:
     entity_type_specifier = body["entity_type_specifier"]
     data = body["data"]
 
-    return_data = save_configuration_entity(entity_type, entity_type_specifier, data, None)
+    try:
+        data = save_configuration_entity(entity_type, entity_type_specifier, data, None)
+    except FormSpecValidationError as exc:
+        return _serve_validations(exc.messages)
 
-    return _serve_save_json(return_data)
+    return _serve_entities(data)
 
 
 @Endpoint(
@@ -132,7 +135,7 @@ def create_configuration_entity(params: Mapping[str, Any]) -> Response:
     request_schema=UpdateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
-def put_configuration_entity(params: Mapping[str, Any]) -> Response:
+def update_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Update an existing configuration entity"""
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
@@ -140,9 +143,12 @@ def put_configuration_entity(params: Mapping[str, Any]) -> Response:
     entity_id = EntityId(body["entity_id"])
     data = body["data"]
 
-    return_data = save_configuration_entity(entity_type, entity_type_specifier, data, entity_id)
+    try:
+        data = save_configuration_entity(entity_type, entity_type_specifier, data, entity_id)
+    except FormSpecValidationError as exc:
+        return _serve_validations(exc.messages)
 
-    return _serve_save_json(return_data)
+    return _serve_entities(data)
 
 
 @Endpoint(
@@ -239,7 +245,7 @@ def get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Resp
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_configuration_entity)
-    endpoint_registry.register(put_configuration_entity)
+    endpoint_registry.register(update_configuration_entity)
     endpoint_registry.register(list_configuration_entities)
     endpoint_registry.register(get_configuration_entity)
     endpoint_registry.register(get_configuration_entity_form_spec_schema)

@@ -276,11 +276,7 @@ py_pytest_main(
 
 py_test(
     name = "doctest",
-    srcs = [
-        "__test__.py",
-        "//cmk:lib_cmk",
-        "//cmk:lib_cmk_cre",
-    ],
+    srcs = ["__test__.py"],
     args = [
         "--config-file=$(location @//:pyproject.toml)",
         "--doctest-modules",

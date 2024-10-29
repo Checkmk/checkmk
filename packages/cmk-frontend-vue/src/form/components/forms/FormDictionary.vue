@@ -224,7 +224,7 @@ span.checkbox {
   margin-right: 5px;
 }
 
-span.checkbox label {
+span.checkbox input + label {
   cursor: pointer;
 }
 

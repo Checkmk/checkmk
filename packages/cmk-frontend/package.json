@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Checkmk - Your complete IT monitoring solution",
   "engines": {
-    "npm": ">=10.0.0 <11.0.0",
-    "node": ">=18.0.0 <=20.15.1"
+    "npm": ">=10.9.0 <11.0.0",
+    "node": ">=22.0.0 <=23.0.0"
   },
   "browserslist": [
     "last 2 version",

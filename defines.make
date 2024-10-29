@@ -108,7 +108,7 @@ AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
 # Needed for bootstrapping CI and development environments
 PIPENV_VERSION := 2023.11.15
 VIRTUALENV_VERSION := 20.25.0
-NODEJS_VERSION := 18
+NODEJS_VERSION := 22
 NPM_VERSION := 10
 
 # PyPi Mirror Configuration

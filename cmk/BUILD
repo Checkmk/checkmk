@@ -292,7 +292,6 @@ py_test(
         "//cmk:lib_cmk",
         "//cmk:lib_cmk_cre",
         requirement("pytest"),
-        requirement("polyfactory"),
         requirement("marshmallow"),
     ] + CMK_PACKAGES,
 )

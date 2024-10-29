@@ -1,5 +1,6 @@
 [project]
 name = "cmk-mkp-tool"
+# Keep in sync with `cmk.mkp_tool.__version__.__version__`
 version = "0.2.0"
 dynamic = ["dependencies"]
 

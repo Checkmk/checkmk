@@ -463,6 +463,6 @@ def _bulk_sort_order() -> DictElement[Any]:
                 "at the top of the notification "
                 "mail."
             ),
-            prefill=DefaultValue("oldest_first"),
+            prefill=DefaultValue("newest_first"),
         ),
     )

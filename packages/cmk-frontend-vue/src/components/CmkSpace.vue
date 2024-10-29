@@ -8,7 +8,8 @@ import { type VariantProps, cva } from 'class-variance-authority'
 const cmkSpaceVariants = cva('', {
   variants: {
     direction: {
-      horizontal: 'cmk-space--direction-horizontal'
+      horizontal: 'cmk-space--direction-horizontal',
+      vertical: 'cmk-space--direction-vertical'
     },
     size: {
       small: 'cmk-space--size-small',
@@ -36,11 +37,16 @@ defineProps<CmkSpaceProps>()
 <style scoped>
 .cmk-space--direction-horizontal {
   display: inline-block;
+
   &.cmk-space--size-medium {
     width: var(--spacing);
   }
   &.cmk-space--size-small {
     width: var(--spacing-half);
   }
+}
+
+.cmk-space--direction-vertical.cmk-space--size-medium {
+  height: var(--spacing);
 }
 </style>

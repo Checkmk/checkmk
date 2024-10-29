@@ -102,13 +102,13 @@ const activeElement = computed((): ActiveElement | null => {
 const componentId = useId()
 
 interface LayoutSettings {
-  style: Record<string, string>
+  display_style: string
   side_by_side: boolean
 }
 
 const layoutSettings = computed((): LayoutSettings => {
   return {
-    style: props.spec.layout === 'vertical' ? {} : { display: 'inline-block' },
+    display_style: props.spec.layout === 'vertical' ? '' : 'inline-block',
     side_by_side: props.spec.layout === 'button_group'
   }
 })
@@ -121,7 +121,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
 </script>
 
 <template>
-  <span class="choice">
+  <span class="form-cascading-single-choice__choice">
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
     <template v-if="!layoutSettings.side_by_side">
       <DropDown
@@ -135,7 +135,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
   </span>
-  <span :style="layoutSettings.style">
+  <span class="form-cascading-single-choice__cascade">
     <template v-if="activeElement !== null">
       <HelpText :help="activeElement.spec.help" />
       <FormEdit
@@ -151,9 +151,16 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
 </template>
 
 <style scoped>
-span.choice {
-  margin-bottom: 5px;
-  margin-right: 5px;
+span.form-cascading-single-choice__choice,
+span.form-cascading-single-choice__cascade {
   vertical-align: top;
+}
+
+span.form-cascading-single-choice__choice {
+  margin-right: 5px;
+}
+
+span.form-cascading-single-choice__cascade {
+  display: v-bind('layoutSettings.display_style');
 }
 </style>

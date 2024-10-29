@@ -144,7 +144,7 @@ function sendDataUpstream() {
 </script>
 
 <template>
-  <table ref="tableRef" class="valuespec_listof vue_list">
+  <table ref="tableRef" class="valuespec_listof">
     <template v-for="backendIndex in frontendOrder" :key="backendIndex">
       <tr class="listof_element">
         <td class="vlof_buttons">
@@ -159,6 +159,7 @@ function sendDataUpstream() {
           >
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </CmkButton>
+          <CmkSpace v-if="props.spec.editable_order" direction="vertical" />
           <!-- TODO: move this delete text to the backend to make it translatable (CMK-19020) -->
           <CmkButton
             variant="transparent"
@@ -192,26 +193,27 @@ function sendDataUpstream() {
   border-collapse: collapse;
   margin-bottom: var(--spacing);
 
+  > tbody > .listof_element,
   > .listof_element {
-    border-bottom: 2px solid var(--default-form-element-bg-color);
+    --button-padding-top: 4px;
 
-    > .vlof_buttons {
-      padding: 2px 0 0;
+    > .vlof_buttons,
+    > .vlof_content {
+      vertical-align: top;
+      padding: var(--spacing) 0;
     }
 
     > .vlof_content {
-      padding: var(--spacing) 0;
+      padding-top: calc(var(--spacing) - var(--button-padding-top));
       padding-left: 8px;
     }
 
-    &:first-child {
-      > .vlof_buttons {
-        padding-bottom: var(--spacing-half);
-      }
+    &:first-child > .vlof_buttons {
+      padding-top: var(--button-padding-top);
+    }
 
-      > .vlof_content {
-        padding-top: var(--spacing-half);
-      }
+    &:first-child > .vlof_content {
+      padding-top: 0;
     }
   }
 }

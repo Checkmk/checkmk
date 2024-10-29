@@ -92,7 +92,7 @@ function onPaste(e: ClipboardEvent, index: number) {
 </script>
 
 <template>
-  <table ref="tableRef" class="vue_list">
+  <table ref="tableRef" class="form-list-of-srings">
     <tbody>
       <template v-for="(_, index) in backendData" :key="index">
         <tr
@@ -115,3 +115,13 @@ function onPaste(e: ClipboardEvent, index: number) {
   </table>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-list-of-srings {
+  border-spacing: 2px 0;
+
+  > tbody > .listof_element > .vlof_content {
+    vertical-align: top;
+  }
+}
+</style>

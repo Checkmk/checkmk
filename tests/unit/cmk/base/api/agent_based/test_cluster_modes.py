@@ -15,7 +15,7 @@ from cmk.checkengine.checking import CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin
-from cmk.base.api.agent_based.value_store._utils import ValueStoreManager
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
 from cmk.agent_based.v1.type_defs import CheckResult

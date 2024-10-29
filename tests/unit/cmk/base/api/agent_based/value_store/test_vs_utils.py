@@ -15,12 +15,14 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
 
-from cmk.base.api.agent_based.value_store._utils import (
-    _DiskSyncedMapping,
-    _DynamicDiskSyncedMapping,
-    _StaticDiskSyncedMapping,
+from cmk.base.api.agent_based.value_store._api import (
     _ValueStore,
     ValueStoreManager,
+)
+from cmk.base.api.agent_based.value_store._utils import (
+    _DynamicDiskSyncedMapping,
+    _StaticDiskSyncedMapping,
+    DiskSyncedMapping,
 )
 
 _TEST_KEY = ("check", "item", "user-key")
@@ -147,7 +149,7 @@ class Test_StaticDiskSyncedMapping:
 
 class Test_DiskSyncedMapping:
     @staticmethod
-    def _get_dsm() -> _DiskSyncedMapping:
+    def _get_dsm() -> DiskSyncedMapping:
         dynstore: _DynamicDiskSyncedMapping[tuple[str, str, str], str] = _DynamicDiskSyncedMapping()
         dynstore.update(
             {
@@ -155,7 +157,7 @@ class Test_DiskSyncedMapping:
                 ("dyn", "key", "2"): "dyn-val-2",
             }
         )
-        return _DiskSyncedMapping(
+        return DiskSyncedMapping(
             dynamic=dynstore,
             static={  # type: ignore[arg-type]
                 ("stat", "key", "1"): "stat-val-1",

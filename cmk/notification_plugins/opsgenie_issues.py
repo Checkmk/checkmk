@@ -25,6 +25,7 @@ from opsgenie_sdk import (  # type: ignore[import-untyped]
     UpdateAlertMessagePayload,
 )
 from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[import-untyped]
+from tenacity import RetryError
 
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify_types import PluginNotificationContext
@@ -35,14 +36,17 @@ from cmk.notification_plugins.utils import get_password_from_env_or_context
 
 
 @contextmanager
-def _handle_api_exceptions(api_call_name: str) -> Iterator[None]:
+def _handle_api_exceptions(api_call_name: str, ignore_retry: bool = False) -> Iterator[None]:
     try:
         yield
     except (ApiException, AuthenticationException) as err:
         sys.stderr.write(f"Exception when calling AlertApi -> {api_call_name}: {err}\n")
         sys.exit(2)
     except Exception as e:
-        sys.stderr.write(f"Unhandled exception: {e}\n")
+        if not ignore_retry and isinstance(e, RetryError):
+            with _handle_api_exceptions(api_call_name, ignore_retry=True):
+                e.reraise()
+        sys.stderr.write(f"Unhandled exception when calling AlertApi -> {api_call_name}: {e}\n")
         sys.exit(2)
 
 

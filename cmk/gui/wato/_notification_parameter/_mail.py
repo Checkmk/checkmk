@@ -367,7 +367,6 @@ def _reply_to() -> DictElement[Any]:
                         title=Title("Email address"),
                         custom_validate=[ValidateEmailAddress()],
                     ),
-                    required=True,
                 ),
                 "display_name": DictElement(
                     parameter_form=String(

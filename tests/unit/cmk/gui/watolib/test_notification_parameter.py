@@ -191,8 +191,9 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
     param = get_notification_parameter(registry, NotificationParameterID("some-id"))
 
     # THEN
-    assert param["general"]["description"] == "foo"
-    assert param["parameter_properties"]["test_param"] == "bar"
+    assert param.description == "foo"
+    assert param.data["general"]["description"] == "foo"
+    assert param.data["parameter_properties"]["test_param"] == "bar"
 
 
 @pytest.mark.usefixtures("request_context")
@@ -217,7 +218,7 @@ def test_get_notification_parameter_doesnt_just_return_from_disk(
     )
 
     # WHEN
-    param = get_notification_parameter(registry, NotificationParameterID("some-id"))
+    data = get_notification_parameter(registry, NotificationParameterID("some-id")).data
 
     # THEN
-    assert param["parameter_properties"]["select_param"] == SingleChoiceVisitor.option_id("name1")
+    assert data["parameter_properties"]["select_param"] == SingleChoiceVisitor.option_id("name1")

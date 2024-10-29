@@ -114,10 +114,15 @@ def get_list_of_notification_parameter(
     ]
 
 
+class NotificationParameter(NamedTuple):
+    description: str
+    data: NotificationParameterItem
+
+
 def get_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
-) -> NotificationParameterItem:
+) -> NotificationParameter:
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     method, item = next(
         (
@@ -132,4 +137,4 @@ def get_notification_parameter(
     form_spec = registry.form_spec(method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
     _, values = visitor.to_vue(item)
-    return values
+    return NotificationParameter(description=item["general"]["description"], data=values)

@@ -83,7 +83,7 @@ def get_configuration_entity_data(
             return get_notification_parameter(
                 notification_parameter_registry,
                 NotificationParameterID(entity_id),
-            )
+            ).data
         case other:
             assert_never(other)
 

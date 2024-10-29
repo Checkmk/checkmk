@@ -73,19 +73,21 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.git import do_git_commit
 
+from cmk import trace
+
 from .content_decoder import decode, KnownContentType
+
+tracer = trace.get_tracer()
+_logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 K = TypeVar("K")
 V = TypeVar("V")
 
+AcceptFieldType = KnownContentType | list[KnownContentType]
+ArgDict = dict[str, str | list[str]]
+Version = str
 WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
-
-
-_logger = logging.getLogger(__name__)
-
-
-ACCEPT_FIELD_TYPE = KnownContentType | list[KnownContentType]
 
 
 class WrappedEndpoint:
@@ -100,12 +102,6 @@ class WrappedEndpoint:
 
     def __call__(self, param: Mapping[str, Any]) -> cmk_http.Response:
         return self.func(param)
-
-
-Version = str
-
-
-ArgDict = dict[str, str | list[str]]
 
 
 def _filter_profile_headers(arg_dict: ArgDict) -> ArgDict:
@@ -302,7 +298,7 @@ class Endpoint:
         deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
         sort: int = 0,
-        accept: ACCEPT_FIELD_TYPE = "application/json",
+        accept: AcceptFieldType = "application/json",
         internal_user_only: bool = False,
     ):
         self.path = path
@@ -563,30 +559,36 @@ class Endpoint:
                 )
 
     def _path_validation(self, path_schema: type[Schema] | None, _params: dict[str, Any]) -> None:
-        try:
-            if path_schema:
+        if path_schema is None:
+            return
+
+        with tracer.start_as_current_span("path-parameter-validation"):
+            try:
                 _params.update(
                     path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
                 )
-        except ValidationError as exc:
-            raise RestAPIPathValidationException(
-                title=http.client.responses[404],
-                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
-                fields=FIELDS(
-                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
-                ),
-            )
-        except MKAuthException as exc:
-            raise RestAPIForbiddenException(
-                title=http.client.responses[403],
-                detail=exc.args[0],
-            )
+            except ValidationError as exc:
+                raise RestAPIPathValidationException(
+                    title=http.client.responses[404],
+                    detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                    fields=FIELDS(
+                        exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                    ),
+                )
+            except MKAuthException as exc:
+                raise RestAPIForbiddenException(
+                    title=http.client.responses[403],
+                    detail=exc.args[0],
+                )
 
     def _query_param_validation(
         self, query_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
-        try:
-            if query_schema:
+        if query_schema is None:
+            return
+
+        with tracer.start_as_current_span("query-parameter-validation"):
+            try:
                 list_fields = tuple(
                     {k for k, v in query_schema().fields.items() if isinstance(v, ma_fields.List)}
                 )
@@ -595,34 +597,37 @@ class Endpoint:
                         _filter_profile_headers(_from_multi_dict(request.args, list_fields))
                     )
                 )
-        except ValidationError as exc:
-            raise RestAPIQueryPathValidationException(
-                title=http.client.responses[400],
-                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
-                fields=FIELDS(
-                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
-                ),
-            )
-        except MKAuthException as exc:
-            raise RestAPIForbiddenException(
-                title=http.client.responses[403],
-                detail=exc.args[0],
-            )
+            except ValidationError as exc:
+                raise RestAPIQueryPathValidationException(
+                    title=http.client.responses[400],
+                    detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                    fields=FIELDS(
+                        exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                    ),
+                )
+            except MKAuthException as exc:
+                raise RestAPIForbiddenException(
+                    title=http.client.responses[403],
+                    detail=exc.args[0],
+                )
 
     def _header_validation(
         self, header_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
-        try:
-            if header_schema:
-                _params.update(header_schema().load(request.headers))
-        except ValidationError as exc:
-            raise RestAPIHeaderSchemaValidationException(
-                title=http.client.responses[400],
-                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
-                fields=FIELDS(
-                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
-                ),
-            )
+        if header_schema:
+            with tracer.start_as_current_span("header-parameter-validation"):
+                try:
+                    _params.update(header_schema().load(request.headers))
+                except ValidationError as exc:
+                    raise RestAPIHeaderSchemaValidationException(
+                        title=http.client.responses[400],
+                        detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                        fields=FIELDS(
+                            exc.messages
+                            if isinstance(exc.messages, dict)
+                            else {"exc": exc.messages},
+                        ),
+                    )
 
         # Accept Header Missing
         if not request.accept_mimetypes:
@@ -643,46 +648,51 @@ class Endpoint:
     def _request_data_validation(
         self, request_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
-        try:
-            # request.content_type was previously validated and is accepted by the endpoint or is None.
-            # If there is content_type, then we try to decode the payload
-            content_type, _ = parse_options_header(request.content_type)
+        # request.content_type was previously validated and is accepted by the endpoint or is None.
+        # If there is content_type, then we try to decode the payload
+        content_type, _ = parse_options_header(request.content_type)
 
-            if content_type and (body := decode(content_type, request, request_schema)) is not None:
-                _params["body"] = body
-                _params["content_type"] = content_type
+        if content_type:
+            with tracer.start_as_current_span("request-body-validation"):
+                try:
+                    if (body := decode(content_type, request, request_schema)) is not None:
+                        _params["body"] = body
+                        _params["content_type"] = content_type
 
-        except ValidationError as exc:
-            raise RestAPIRequestDataValidationException(
-                title=http.client.responses[400],
-                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
-                fields=FIELDS(
-                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
-                ),
-            )
+                except ValidationError as exc:
+                    raise RestAPIRequestDataValidationException(
+                        title=http.client.responses[400],
+                        detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                        fields=FIELDS(
+                            exc.messages
+                            if isinstance(exc.messages, dict)
+                            else {"exc": exc.messages},
+                        ),
+                    )
 
-        except MKAuthException as exc:
-            raise RestAPIForbiddenException(
-                title=http.client.responses[403],
-                detail=exc.args[0],
-            )
+                except MKAuthException as exc:
+                    raise RestAPIForbiddenException(
+                        title=http.client.responses[403],
+                        detail=exc.args[0],
+                    )
 
     def _validate_response(  # pylint: disable=too-many-branches
         self, response_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> cmk_http.Response:
-        try:
-            response = self.func(_params)
-        except ValidationError as exc:
-            response = problem(
-                status=400,
-                title=http.client.responses[400],
-                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
-                fields=FIELDS(
-                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
-                ),
-            )
-        except ProblemException as problem_exception:
-            response = problem_exception.to_problem()
+        with tracer.start_as_current_span("endpoint-body-call"):
+            try:
+                response = self.func(_params)
+            except ValidationError as exc:
+                response = problem(
+                    status=400,
+                    title=http.client.responses[400],
+                    detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                    fields=FIELDS(
+                        exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                    ),
+                )
+            except ProblemException as problem_exception:
+                response = problem_exception.to_problem()
 
         # We don't expect a permission to be triggered when an endpoint ran into an error.
         if response.status_code < 400:
@@ -755,38 +765,41 @@ class Endpoint:
             and response_schema
             and response.data
         ):
-            try:
-                data = json.loads(response.data.decode("utf-8"))
-            except json.decoder.JSONDecodeError as exc:
-                raise RestAPIResponseException(
-                    title="Server was about to send invalid JSON data.",
-                    detail="This is an error of the implementation.",
-                    ext=EXT(
-                        {
-                            "errors": str(exc),
-                            "orig": response.data,
-                        },
-                    ),
-                )
+            with tracer.start_as_current_span("response-to-json"):
+                try:
+                    data = json.loads(response.data.decode("utf-8"))
+                except json.decoder.JSONDecodeError as exc:
+                    raise RestAPIResponseException(
+                        title="Server was about to send invalid JSON data.",
+                        detail="This is an error of the implementation.",
+                        ext=EXT(
+                            {
+                                "errors": str(exc),
+                                "orig": response.data,
+                            },
+                        ),
+                    )
 
-            try:
-                outbound = response_schema().dump(data)
-            except ValidationError as exc:
-                raise RestAPIResponseException(
-                    title="Mismatch between endpoint and internal data format.",
-                    detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
-                    "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
-                    "If the problem persists afterwards, please report a bug.",
-                    ext=EXT(
-                        {
-                            "errors": exc.messages,
-                            "debug_data": {"orig": data},
-                        },
-                    ),
-                )
+            with tracer.start_as_current_span("response-schema-validation"):
+                try:
+                    outbound = response_schema().dump(data)
+                except ValidationError as exc:
+                    raise RestAPIResponseException(
+                        title="Mismatch between endpoint and internal data format.",
+                        detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
+                        "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
+                        "If the problem persists afterwards, please report a bug.",
+                        ext=EXT(
+                            {
+                                "errors": exc.messages,
+                                "debug_data": {"orig": data},
+                            },
+                        ),
+                    )
 
             if self.convert_response:
-                response.set_data(json.dumps(outbound))
+                with tracer.start_as_current_span("json-to-response"):
+                    response.set_data(json.dumps(outbound))
         elif response.headers["Content-Type"] == "application/problem+json" and response.data:
             data = response.data.decode("utf-8")
             try:

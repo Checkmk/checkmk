@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from unittest import mock
+
 import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
@@ -110,21 +112,24 @@ def test_update_configuration_entity(
 
 
 @pytest.mark.parametrize(
-    "data, num_expected_error_fields",
+    "data, expected_error_fields",
     [
-        ({}, {"general": 1, "parameter_properties": 1}),
+        ({}, {"general": {"": [mock.ANY]}, "parameter_properties": {"": [mock.ANY]}}),
         (
             {"general": {}, "parameter_properties": {}},
-            {"general": {"description": 1}, "parameter_properties": 1},
+            {
+                "general": {"description": {"": [mock.ANY]}},
+                "parameter_properties": {"test_param": {"": [mock.ANY]}},
+            },
         ),
         (
             {"general": {"description": "foo"}, "parameter_properties": {"test_param": {}}},
-            {"parameter_properties": {"test_param": 1}},
+            {"parameter_properties": {"test_param": {"": [mock.ANY]}}},
         ),
     ],
 )
 def test_save_configuration_validation(
-    clients: ClientRegistry, data: dict, num_expected_error_fields: dict
+    clients: ClientRegistry, data: dict, expected_error_fields: dict
 ) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
@@ -136,20 +141,9 @@ def test_save_configuration_validation(
         expect_ok=False,
     )
 
-    def error_fields_present(error_fields: dict, _num_expected_error_fields: dict | int) -> bool:
-        if isinstance(_num_expected_error_fields, int):
-            return len(error_fields) == _num_expected_error_fields
-
-        for key in _num_expected_error_fields.keys():
-            if key not in error_fields:
-                return False
-            return error_fields_present(error_fields[key], _num_expected_error_fields[key])
-
-        return True
-
     # THEN
     assert resp.json["ext"]["validation_errors"]
-    assert error_fields_present(resp.json["fields"]["data"], num_expected_error_fields)
+    assert resp.json["fields"]["data"] == expected_error_fields
 
 
 def test_list_configuration_entities(

@@ -77,12 +77,12 @@ private:
 
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,
-                 HostServiceState *hss);
+                 HostServiceState &hss);
 
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
         std::chrono::system_clock::duration query_timeframe,
-        const LogEntry *entry, HostServiceState *hss, bool only_update,
+        const LogEntry *entry, HostServiceState &hss, bool only_update,
         const notification_periods_t &notification_periods);
 };
 

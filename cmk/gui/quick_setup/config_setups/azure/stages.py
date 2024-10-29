@@ -106,7 +106,7 @@ def configure_authentication() -> QuickSetupStage:
             ),
         ],
         recap=[recaps.recaps_form_spec],
-        button_label="Configure host and authority",
+        button_label=_("Configure host and authority"),
     )
 
 
@@ -122,7 +122,7 @@ def configure_host_and_authority() -> QuickSetupStage:
         ],
         custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
-        button_label="Configure services to monitor",
+        button_label=_("Configure services to monitor"),
     )
 
 
@@ -159,7 +159,7 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label="Review & run preview service discovery",
+        button_label=_("Review and test configuration"),
     )
 
 
@@ -203,7 +203,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         recap=[
             recap_found_services,
         ],
-        button_label="Run preview service discovery",
+        button_label=_("Test configuration"),
     )
 
 

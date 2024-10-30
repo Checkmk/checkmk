@@ -794,8 +794,14 @@ def sending_conditions() -> QuickSetupStage:
                                         parameter_form=Tuple(
                                             title=Title("Limit notifications by count to"),
                                             elements=[
-                                                Integer(label=Label("between")),
-                                                Integer(label=Label("and")),
+                                                Integer(
+                                                    label=Label("between"),
+                                                    prefill=DefaultValue(5),
+                                                ),
+                                                Integer(
+                                                    label=Label("and"),
+                                                    prefill=DefaultValue(100),
+                                                ),
                                             ],
                                             layout="horizontal",
                                         )
@@ -808,10 +814,14 @@ def sending_conditions() -> QuickSetupStage:
                                             ),
                                             elements=[
                                                 Integer(
-                                                    label=Label("starting with notification number")
+                                                    label=Label(
+                                                        "starting with notification number"
+                                                    ),
+                                                    prefill=DefaultValue(10),
                                                 ),
                                                 Integer(
                                                     label=Label("send every"),
+                                                    prefill=DefaultValue(5),
                                                     unit_symbol="notifications",
                                                 ),
                                             ],

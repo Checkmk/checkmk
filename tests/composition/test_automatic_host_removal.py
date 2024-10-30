@@ -51,6 +51,13 @@ def test_automatic_host_removal(
             interval=20,
         )
 
+        logger.info("Waiting for changes to be activated")
+        wait_until(
+            lambda: not central_site.openapi.pending_changes(),
+            timeout=180,
+            interval=20,
+        )
+
     finally:
         central_site.openapi.delete_rule(rule_id=rule_id)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

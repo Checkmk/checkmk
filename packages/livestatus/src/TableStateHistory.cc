@@ -540,8 +540,7 @@ void TableStateHistory::handle_state_entry(
                 it_inh->second->_services.push_back(state);
             }
         }
-        // Store this state object for tracking state transitions
-        state_info.emplace(key, state);
+
         state->_from = since;
 
         // Get notification period of host/service. If this host/service is no
@@ -593,6 +592,10 @@ void TableStateHistory::handle_state_entry(
             state->_debug_info = "UNMONITORED ";
             state->_state = -1;
         }
+
+        // Store this state object for tracking state transitions
+        state_info[key] = state;
+
         update(query, user, core, query_timeframe, entry, *state, only_update,
                notification_periods);
     } else {

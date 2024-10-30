@@ -239,6 +239,34 @@ def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
     return BundleId(bundle_id)
 
 
+def _convert_explicit_passwords_to_stored_passwords(
+    rule_params: Mapping, explicit_password_ids: set[str]
+) -> Mapping[str, object]:
+    """Passwords that are explicitly set in the form data are replaced with a reference to the
+    password to be created in the password store
+
+    Notes:
+        * assumed that the password store entry will get the same id as the password id
+        * assumed that passwords are not part of a list and only a direct entry in a dictionary
+    """
+    params_with_converted_passwords: dict = {}
+    for key, value in rule_params.items():
+        match value:
+            case dict():
+                params_with_converted_passwords[key] = (
+                    _convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
+                )
+            case ("cmk_postprocessed", "explicit_password", (pw_id, _password)):
+                if pw_id in explicit_password_ids:
+                    password_store_reference = ("cmk_postprocessed", "stored_password", (pw_id, ""))
+                    params_with_converted_passwords[key] = password_store_reference
+                else:
+                    params_with_converted_passwords[key] = value
+            case _:
+                params_with_converted_passwords[key] = value
+    return params_with_converted_passwords
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -263,9 +291,10 @@ def _create_and_save_special_agent_bundle(
     stored_passwords = load_passwords()
     # We need to filter out the passwords that are already stored in the password store since they
     # should be independent of the configuration bundle
-    passwords = {
+    explicit_passwords = {
         pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
     }
+    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
@@ -285,7 +314,7 @@ def _create_and_save_special_agent_bundle(
                 )
             ],
             passwords=create_passwords(
-                passwords=passwords,
+                passwords=explicit_passwords,
                 rulespec_name=rulespec_name,
                 bundle_id=bundle_id,
             ),

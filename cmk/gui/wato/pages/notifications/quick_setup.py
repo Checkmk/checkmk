@@ -381,7 +381,7 @@ def notification_method() -> QuickSetupStage:
                         ),
                     ),
                 ],
-                layout=CascadingSingleChoiceLayout.horizontal,
+                layout=CascadingSingleChoiceLayout.vertical,
             ),
         )
 

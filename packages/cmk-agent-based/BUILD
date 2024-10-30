@@ -3,6 +3,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//omd/packages/rules:doctest.bzl", "py_doc_test")
 
 exports_files([
     "pyproject.toml",
@@ -44,6 +45,12 @@ py_library(
     ],
 )
 
+py_doc_test(
+    name = "doctest",
+    size = "small",
+    srcs = ["cmk-agent-based"],
+)
+
 py_pytest_main(
     name = "__test__",
 )
@@ -54,7 +61,6 @@ py_test(
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
     args = ["--config-file=$(location pyproject.toml)"],
     data = ["pyproject.toml"],
-    imports = ["."],
     main = ":__test__.py",
     deps = [
         ":__test__",

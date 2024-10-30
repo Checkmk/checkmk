@@ -31,6 +31,11 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger(__name__)
 
 
+def verbose_called_process_error(excp: subprocess.CalledProcessError) -> str:
+    """Return a verbose message containing debug information of a `CalledProcessError` exception."""
+    return f"STDOUT:\n{excp.stdout}\nSTDERR:\n{excp.stderr}\n"
+
+
 @dataclasses.dataclass
 class PExpectDialog:
     """An expected dialog for spawn_expect_message.
@@ -251,7 +256,7 @@ def execute(
     cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
-    return subprocess.Popen(cmd_, **kwargs)
+    return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
 
 
 def _extend_command(

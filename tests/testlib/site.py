@@ -742,11 +742,13 @@ class Site:
             except subprocess.CalledProcessError as excp:
                 excp.add_note("Execute 'tests/scripts/install-cmk.py' manually to debug the issue.")
                 if excp.returncode == 22:
-                    excp.add_note(f"Version {self.version.version} could not be installed!")
-                    raise RuntimeError from excp
+                    raise RuntimeError(
+                        f"Version {self.version.version} could not be installed!"
+                    ) from excp
                 if excp.returncode == 11:
-                    excp.add_note(f"Version {self.version.version} could not be downloaded!")
-                    raise FileNotFoundError from excp
+                    raise FileNotFoundError(
+                        f"Version {self.version.version} could not be downloaded!"
+                    ) from excp
                 raise excp
 
     def create(self) -> None:

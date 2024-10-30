@@ -22,6 +22,8 @@ import pytest_check  # type: ignore[import-untyped]
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
+from tests.testlib.utils import verbose_called_process_error
+
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
 pytest.register_assert_rewrite(
@@ -84,7 +86,11 @@ def fail_on_log_exception(
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(call: pytest.CallInfo) -> None:
+def pytest_exception_interact(
+    node: pytest.Item | pytest.Collector,
+    call: pytest.CallInfo,
+    report: pytest.CollectReport | pytest.TestReport,
+) -> None:
     if not (excinfo := call.excinfo):
         return
 
@@ -98,13 +104,10 @@ def pytest_exception_interact(call: pytest.CallInfo) -> None:
             # we do not want to break the exception handling
             logger.error('Could not get "top" output on TimeoutError!')
     elif isinstance(_excp, subprocess.CalledProcessError):
-        notes = "\n".join(getattr(_excp, "__notes__", []))
-        msg = (
-            f"Command: {str(_excp.cmd)}; Exit code: {str(_excp.returncode)}\n"
-            f"STDOUT: {_excp.stdout}\n"
-            f"STDERR: {_excp.stderr}\n"
-        ) + notes
-        logger.exception(msg)
+        _excp.add_note(verbose_called_process_error(_excp))
+        logger.exception(_excp)
+
+    report.longrepr = node.repr_failure(excinfo)
     if PYTEST_RAISE:
         raise _excp
 

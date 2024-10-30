@@ -1,0 +1,15 @@
+Title: oracle_performance: character string buffer too small
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1730295667
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+In the past it was possible to see <code>PL/SQL: numeric or value error: character
+string buffer too small</code> if a PDB name was longer than 11 characters. No memory
+performance was available in this case.
+
+This limit was now lifted, it's now possible to use the full length of 128
+characters for PDB names. This is the limit for PDB names defined by oracle.

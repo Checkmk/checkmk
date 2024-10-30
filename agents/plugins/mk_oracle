@@ -824,7 +824,7 @@ DECLARE
     l_vc_value  VARCHAR2(200);
     l_vc_unit   VARCHAR2(20);
     l_vc_sql    VARCHAR2(200);
-    l_vc_step   VARCHAR2(20);
+    l_vc_step   VARCHAR2(137);
 BEGIN
     dbms_output.enable(200000);
     l_i_cursor_id := dbms_sql.open_cursor(security_level => 2);

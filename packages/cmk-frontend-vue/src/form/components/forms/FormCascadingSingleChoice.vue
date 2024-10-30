@@ -17,6 +17,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import HelpText from '@/components/HelpText.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import DropDown from '@/components/DropDown.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -123,14 +124,12 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
   <span class="choice">
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
     <template v-if="!layoutSettings.side_by_side">
-      <select :id="componentId" v-model="selectedOption">
-        <option v-if="activeElement === null" disabled selected hidden value="">
-          {{ props.spec.input_hint }}
-        </option>
-        <option v-for="element in spec.elements" :key="element.name" :value="element.name">
-          {{ element.title }}
-        </option>
-      </select>
+      <DropDown
+        v-model:selected-option="selectedOption"
+        :component-id="componentId"
+        :options="spec.elements"
+        :input_hint="props.spec.input_hint as string"
+      />
     </template>
     <template v-else>
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />

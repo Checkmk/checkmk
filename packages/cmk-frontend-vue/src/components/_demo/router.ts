@@ -18,6 +18,7 @@ import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoFormList from './DemoFormList.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
+import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -89,6 +90,11 @@ const router = createRouter({
           path: 'formsinglechoiceeditable',
           name: 'FormSingleChoiceEditable',
           component: DemoFormSingleChoiceEditable
+        },
+        {
+          path: 'formcascadingsinglechoice',
+          name: 'FormCascadingSingleChoice',
+          component: DemoFormCascadingSingleChoice
         },
         {
           path: 'formlist',

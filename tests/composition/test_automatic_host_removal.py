@@ -15,7 +15,6 @@ from tests.testlib.utils import wait_until
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.xfail(reason="Test currently failing for pending changes not being activated.")
 @skip_if_saas_edition
 @pytest.mark.xfail(
     condition=os.getenv("DISTRO") == "almalinux-9",

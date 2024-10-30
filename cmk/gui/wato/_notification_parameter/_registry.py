@@ -110,7 +110,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
         return Catalog(
             topics=[
                 Topic(
-                    ident="general",
+                    name="general",
                     dictionary=Dictionary(
                         title=Title("Parameter properties"),
                         elements={
@@ -143,7 +143,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                     ),
                 ),
                 Topic(
-                    ident="parameter_properties",
+                    name="parameter_properties",
                     # TODO if sections are not rendered by fixed DictGroup(),
                     # we will need this:
                     # dictionary=FormSpecDictionary(

@@ -223,14 +223,14 @@ function renderDict(
   // Note: Dictionary validations are not shown
   const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
   formSpec.elements.map((element) => {
-    if (value[element.ident] === undefined) {
+    if (value[element.name] === undefined) {
       return
     }
 
     const elementForm = renderForm(
       element.parameter_form,
-      value[element.ident],
-      elementValidations[element.ident] || []
+      value[element.name],
+      elementValidations[element.name] || []
     )
     if (elementForm === null) {
       return

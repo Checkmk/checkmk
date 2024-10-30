@@ -252,7 +252,7 @@
         "dictionary_element": {
             "type": "object",
             "properties": {
-                "ident": {
+                "name": {
                     "type": "string"
                 },
                 "required": {
@@ -274,7 +274,7 @@
                 }
             },
             "required": [
-                "ident",
+                "name",
                 "required",
                 "parameter_form",
                 "default_value",
@@ -694,14 +694,14 @@
         "topic": {
             "type": "object",
             "properties": {
-                "ident": {
+                "name": {
                     "type": "string"
                 },
                 "dictionary": {
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": ["ident", "dictionary"]
+            "required": ["name", "dictionary"]
         },
         "catalog": {
             "type": "object",

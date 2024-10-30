@@ -57,7 +57,7 @@ const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 
 function getDefaultValue(key: string): unknown {
-  const element = props.spec.elements.find((element) => element.ident === key)
+  const element = props.spec.elements.find((element) => element.name === key)
   if (element === undefined) {
     return undefined
   }
@@ -111,9 +111,9 @@ function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
   props.spec.elements.forEach((element: DictionaryElement, index: number) => {
-    const isActive = element.ident in data.value ? true : element.required
-    if (isActive && data.value[element.ident] === undefined) {
-      data.value[element.ident] = structuredClone(getDefaultValue(element.ident))
+    const isActive = element.name in data.value ? true : element.required
+    if (isActive && data.value[element.name] === undefined) {
+      data.value[element.name] = structuredClone(getDefaultValue(element.name))
     }
 
     const groupIndex = groups.findIndex((group) => group.groupKey === getGroupKey(element, index))
@@ -167,23 +167,23 @@ const componentId = useId()
           <div :class="dictionaryVariants({ variant })">
             <div
               v-for="dict_element in group.elems"
-              :key="`${componentId}.${dict_element.dict_config.ident}`"
+              :key="`${componentId}.${dict_element.dict_config.name}`"
               class="form-dictionary__group_elem"
             >
               <template v-if="labelRequired(dict_element.dict_config)">
                 <span class="checkbox">
                   <input
                     v-if="!dict_element.dict_config.required"
-                    :id="`${componentId}.${dict_element.dict_config.ident}`"
+                    :id="`${componentId}.${dict_element.dict_config.name}`"
                     v-model="dict_element.is_active"
                     :onclick="
-                      (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
+                      (event: MouseEvent) => toggleElement(event, dict_element.dict_config.name)
                     "
                     type="checkbox"
                   />
                   <label
                     v-if="dict_element.dict_config.parameter_form.title"
-                    :for="`${componentId}.${dict_element.dict_config.ident}`"
+                    :for="`${componentId}.${dict_element.dict_config.name}`"
                   >
                     {{ dict_element.dict_config.parameter_form.title }}
                   </label>
@@ -199,9 +199,9 @@ const componentId = useId()
               >
                 <FormEdit
                   v-if="dict_element.is_active"
-                  v-model:data="data[dict_element.dict_config.ident]"
+                  v-model:data="data[dict_element.dict_config.name]"
                   :spec="dict_element.dict_config.parameter_form"
-                  :backend-validation="elementValidation[dict_element.dict_config.ident]!"
+                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
                   :aria-label="dict_element.dict_config.parameter_form.title"
                 />
               </div>

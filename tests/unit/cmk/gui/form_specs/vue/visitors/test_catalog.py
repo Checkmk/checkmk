@@ -23,7 +23,7 @@ def test_catalog_validation_simple(
     spec = Catalog(
         topics=[
             Topic(
-                ident="some_key",
+                name="some_key",
                 dictionary=Dictionary(
                     elements={
                         "key": DictElement(
@@ -56,7 +56,7 @@ def test_catalog_serializes_empty_topics_to_disk() -> None:
     spec = Catalog(
         topics=[
             Topic(
-                ident="some_topic",
+                name="some_topic",
                 dictionary=Dictionary(elements={"key": DictElement(parameter_form=String())}),
             )
         ]

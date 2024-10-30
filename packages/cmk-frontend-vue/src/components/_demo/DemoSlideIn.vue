@@ -15,7 +15,7 @@ import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import { ref } from 'vue'
 
 const data = ref<Record<string, Record<string, unknown>>>({
-  some_topic_id: { element_ident: 'string content' }
+  some_topic_id: { element_name: 'string content' }
 })
 
 const scrollOpen = ref<boolean>(false)
@@ -28,7 +28,7 @@ const catalog = ref<Catalog>({
   validators: [],
   topics: [
     {
-      ident: 'some_topic_id',
+      name: 'some_topic_id',
       dictionary: {
         type: 'dictionary',
         title: 'dict title',
@@ -38,7 +38,7 @@ const catalog = ref<Catalog>({
         additional_static_elements: {},
         elements: [
           {
-            ident: 'element_ident',
+            name: 'element_name',
             required: false,
             default_value: '',
             group: null,

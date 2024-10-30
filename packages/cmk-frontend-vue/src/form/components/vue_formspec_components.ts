@@ -243,7 +243,7 @@ export interface Autocompleter {
   data: {};
 }
 export interface DictionaryElement {
-  ident: string;
+  name: string;
   required: boolean;
   group: DictionaryGroup | null;
   default_value: unknown;
@@ -274,7 +274,7 @@ export interface I18NPassword {
   password_choice_invalid: string;
 }
 export interface Topic {
-  ident: string;
+  name: string;
   dictionary: Dictionary;
 }
 export interface MultipleChoiceElement {

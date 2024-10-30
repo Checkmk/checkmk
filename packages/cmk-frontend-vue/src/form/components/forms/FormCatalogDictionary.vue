@@ -26,8 +26,8 @@ immediateWatch(
   () => props.elements,
   (newValue) => {
     newValue.forEach((element) => {
-      if (!(element.ident in data.value)) {
-        data.value[element.ident] = element.default_value
+      if (!(element.name in data.value)) {
+        data.value[element.name] = element.default_value
       }
     })
   }
@@ -48,7 +48,7 @@ function isRequired(element: DictionaryElement): boolean {
 </script>
 
 <template>
-  <tr v-for="element in elements" :key="element.ident">
+  <tr v-for="element in elements" :key="element.name">
     <td class="legend">
       <div class="title">
         {{ element.parameter_form.title }}
@@ -65,8 +65,8 @@ function isRequired(element: DictionaryElement): boolean {
     </td>
     <td class="content">
       <FormEdit
-        v-model:data="data[element.ident]!"
-        :backend-validation="elementValidation[element.ident]!"
+        v-model:data="data[element.name]!"
+        :backend-validation="elementValidation[element.name]!"
         :spec="element.parameter_form"
       />
     </td>

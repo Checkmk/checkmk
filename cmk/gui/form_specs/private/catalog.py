@@ -13,7 +13,7 @@ from .dictionary_extended import DictionaryExtended
 
 @dataclass(frozen=True, kw_only=True)
 class Topic:
-    ident: str
+    name: str
     dictionary: Dictionary | DictionaryExtended
 
 

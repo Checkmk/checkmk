@@ -68,7 +68,7 @@ const api: API<ObjectId, ObjectId> = {
       additional_static_elements: null,
       elements: [
         {
-          ident: 'element_ident',
+          name: 'element_name',
           group: null,
           required: false,
           default_value: '',
@@ -117,7 +117,7 @@ const api: API<ObjectId, ObjectId> = {
         <option :value="[]">No error</option>
         <option
           :value="[
-            { location: ['element_ident'], message: 'error message!', invalid_value: 'dafuck' }
+            { location: ['element_name'], message: 'error message!', invalid_value: 'dafuck' }
           ]"
         >
           One error

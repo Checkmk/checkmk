@@ -101,7 +101,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
             elements_keyspec.append(
                 shared_type_defs.DictionaryElement(
-                    ident=key_name,
+                    name=key_name,
                     default_value=element_vue_value,
                     required=dict_element.required,
                     parameter_form=element_schema,

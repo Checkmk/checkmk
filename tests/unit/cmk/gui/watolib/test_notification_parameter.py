@@ -138,9 +138,9 @@ def test_get_notification_params_schema(registry: NotificationParameterRegistry)
     assert isinstance(default_values["parameter_properties"], dict)
     assert default_values["parameter_properties"]["test_param"] == "some_default_value"
     assert isinstance(schema, shared_type_defs.Catalog)
-    assert schema.topics[0].ident == "general"
-    assert schema.topics[1].ident == "parameter_properties"
-    assert schema.topics[1].dictionary.elements[0].ident == "test_param"
+    assert schema.topics[0].name == "general"
+    assert schema.topics[1].name == "parameter_properties"
+    assert schema.topics[1].dictionary.elements[0].name == "test_param"
     assert isinstance(
         schema.topics[1].dictionary.elements[0].parameter_form, shared_type_defs.String
     )

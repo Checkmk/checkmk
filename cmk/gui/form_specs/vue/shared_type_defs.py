@@ -255,7 +255,7 @@ class List(FormSpec):
 
 @dataclass(kw_only=True)
 class DictionaryElement:
-    ident: str
+    name: str
     required: bool
     group: Optional[DictionaryGroup]
     default_value: Any
@@ -354,7 +354,7 @@ class DataSize(FormSpec):
 
 @dataclass(kw_only=True)
 class Topic:
-    ident: str
+    name: str
     dictionary: Dictionary
 
 

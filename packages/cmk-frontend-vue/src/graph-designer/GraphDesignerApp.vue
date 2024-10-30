@@ -90,7 +90,7 @@ const specUnit = makeCascadingSingleChoice('', [
     title: props.i18n.graph_options.unit_custom,
     parameter_form: makeDictionary('', [
       {
-        ident: 'notation',
+        name: 'notation',
         required: true,
         parameter_form: makeCascadingSingleChoice(props.i18n.graph_options.unit_custom_notation, [
           {
@@ -154,11 +154,11 @@ const specUnit = makeCascadingSingleChoice('', [
         group: null
       },
       {
-        ident: 'precision',
+        name: 'precision',
         required: true,
         parameter_form: makeDictionary(props.i18n.graph_options.unit_custom_precision, [
           {
-            ident: 'type',
+            name: 'type',
             required: true,
             parameter_form: makeSingleChoice(props.i18n.graph_options.unit_custom_precision_type, [
               {
@@ -174,7 +174,7 @@ const specUnit = makeCascadingSingleChoice('', [
             group: null
           },
           {
-            ident: 'digits',
+            name: 'digits',
             required: true,
             parameter_form: makeFloat(props.i18n.graph_options.unit_custom_precision_digits, ''),
             default_value: 2,
@@ -205,7 +205,7 @@ const specExplicitVerticalRange = makeCascadingSingleChoice('', [
     title: props.i18n.graph_options.explicit_vertical_range_explicit,
     parameter_form: makeDictionary('', [
       {
-        ident: 'lower',
+        name: 'lower',
         required: true,
         parameter_form: makeFloat(
           props.i18n.graph_options.explicit_vertical_range_explicit_lower,
@@ -215,7 +215,7 @@ const specExplicitVerticalRange = makeCascadingSingleChoice('', [
         group: null
       },
       {
-        ident: 'upper',
+        name: 'upper',
         required: true,
         parameter_form: makeFloat(
           props.i18n.graph_options.explicit_vertical_range_explicit_upper,

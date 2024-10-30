@@ -40,13 +40,13 @@ immediateWatch(
 )
 
 function toggleTopic(topic: Topic) {
-  hiddenTopics.value[topic.ident] = !hiddenTopics.value[topic.ident]
+  hiddenTopics.value[topic.name] = !hiddenTopics.value[topic.name]
 }
 
-function getClass(ident: string) {
+function getClass(name: string) {
   return {
-    open: !hiddenTopics.value[ident],
-    closed: hiddenTopics.value[ident]
+    open: !hiddenTopics.value[name],
+    closed: hiddenTopics.value[name]
   }
 }
 
@@ -54,7 +54,7 @@ function getClass(ident: string) {
 // This function should be accessible outside of the component
 // function setAllTopics(isOpen: boolean) {
 //   for (const topic of props.spec.topics) {
-//     hiddenTopics.value[topic.ident] = !isOpen
+//     hiddenTopics.value[topic.name] = !isOpen
 //   }
 // }
 </script>
@@ -64,27 +64,27 @@ function getClass(ident: string) {
   <!--  <input type="button" :value="props.spec.i18n.collapse_all" @click="setAllTopics(false)" />-->
   <table
     v-for="topic in props.spec.topics"
-    :key="topic.ident"
+    :key="topic.name"
     class="nform"
-    :class="getClass(topic.ident)"
+    :class="getClass(topic.name)"
   >
     <thead>
       <tr class="heading" @click="toggleTopic(topic)">
         <td colspan="2">
-          <img class="vue nform treeangle" :class="getClass(topic.ident)" />
+          <img class="vue nform treeangle" :class="getClass(topic.name)" />
           {{ topic.dictionary.title }}
           <HelpText :help="topic.dictionary.help" />
         </td>
       </tr>
     </thead>
-    <tbody :class="getClass(topic.ident)">
+    <tbody :class="getClass(topic.name)">
       <tr>
         <td colspan="2" />
       </tr>
       <FormCatalogDictionary
-        v-model="data[topic.ident]!"
+        v-model="data[topic.name]!"
         :elements="topic.dictionary.elements"
-        :backend-validation="elementValidation[topic.ident]!"
+        :backend-validation="elementValidation[topic.name]!"
       />
       <tr class="bottom">
         <td colspan="2"></td>

@@ -97,13 +97,13 @@ export function requiresSomeInput(validators: Validator[]): boolean {
 }
 
 export function groupDictionaryValidations(
-  elements: Array<{ ident: string }>,
+  elements: Array<{ name: string }>,
   newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {
   // Prepare all elements with an empty list of validation messages
   const elementValidations = elements.reduce(
     (elements, el) => {
-      elements[el.ident] = []
+      elements[el.name] = []
       return elements
     },
     {} as Record<string, ValidationMessages>

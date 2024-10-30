@@ -44,7 +44,7 @@ const spec: FormSpec.Dictionary = {
   no_elements_text: 'no_text',
   elements: [
     {
-      ident: 'bar',
+      name: 'bar',
       required: false,
       default_value: 'baz',
       parameter_form: stringFormSpec,
@@ -162,7 +162,7 @@ test('FormDictionary appends default of required element if missing in data', as
       additional_static_elements: null,
       elements: [
         {
-          ident: 'bar',
+          name: 'bar',
           required: true,
           default_value: 'baz',
           parameter_form: stringFormSpec,
@@ -195,7 +195,7 @@ test('FormDictionary checks frontend validators on existing element', async () =
 })
 
 test('FormDictionary reads new defaultValue on updated spec', async () => {
-  function getSpec(ident: string): FormSpec.Dictionary {
+  function getSpec(name: string): FormSpec.Dictionary {
     return {
       type: 'dictionary',
       title: 'fooTitle',
@@ -207,7 +207,7 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
       no_elements_text: 'no_text',
       elements: [
         {
-          ident: ident,
+          name: name,
           required: true,
           default_value: 'something',
           parameter_form: stringFormSpec,

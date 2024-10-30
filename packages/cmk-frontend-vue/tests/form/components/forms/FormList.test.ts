@@ -150,7 +150,7 @@ const dictSpec: FormSpec.Dictionary = {
   additional_static_elements: null,
   elements: [
     {
-      ident: 'bar',
+      name: 'bar',
       required: true,
       default_value: 'baz',
       parameter_form: stringFormSpec,

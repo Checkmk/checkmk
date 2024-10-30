@@ -187,7 +187,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
     no_elements_text: 'no_text',
     elements: [
       {
-        ident: 'value',
+        name: 'value',
         required: false,
         default_value: 'baz',
         parameter_form: stringFormSpec,

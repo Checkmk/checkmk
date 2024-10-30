@@ -30,6 +30,8 @@ from playwright.sync_api import (
     Video,
 )
 
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+
 logger = logging.getLogger(__name__)
 _browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
 _browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
@@ -84,7 +86,10 @@ def _browser_type(_playwright: Playwright, browser_name: str) -> BrowserType:
 def _browser(
     _browser_type: BrowserType, browser_type_launch_args: dict
 ) -> t.Generator[Browser, None, None]:
-    browser = _browser_type.launch(**browser_type_launch_args)
+    with exit_pytest_on_exceptions(
+        exceptions=(Error,), exit_msg="Install playwright within the environment!"
+    ):
+        browser = _browser_type.launch(**browser_type_launch_args)
     yield browser
     browser.close()
 

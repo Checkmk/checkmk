@@ -32,9 +32,7 @@ const [validation, selectedObjectId] = useValidation<string | null>(
   () => props.backendValidation
 )
 
-const choices = ref<Array<{ name: string; ident: string }>>(
-  props.spec.elements.map((element) => ({ name: element.title, ident: element.name }))
-)
+const choices = ref<Array<{ title: string; name: string }>>(structuredClone(props.spec.elements))
 
 const error = ref<string | undefined>()
 
@@ -89,12 +87,12 @@ const slideInAPI = {
 
 function slideInSubmitted(event: { ident: string; description: string }) {
   data.value = event.ident
-  if (choices.value.find((object) => object.ident === event.ident) === undefined) {
-    choices.value.push({ name: event.description, ident: event.ident })
+  if (choices.value.find((object) => object.name === event.ident) === undefined) {
+    choices.value.push({ title: event.description, name: event.ident })
   } else {
     choices.value = choices.value.map((choice) =>
       // Update description of existing object
-      choice.ident === event.ident ? { name: event.description, ident: event.ident } : choice
+      choice.name === event.ident ? { title: event.description, name: event.ident } : choice
     )
   }
   closeSlideIn()

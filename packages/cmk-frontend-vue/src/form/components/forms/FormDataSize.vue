@@ -28,8 +28,8 @@ const componentId = useId()
 const magnitudeOptions = computed(() => {
   return props.spec.displayed_magnitudes.map((element: string) => {
     return {
-      ident: element,
-      name: element
+      name: element,
+      title: element
     }
   })
 })

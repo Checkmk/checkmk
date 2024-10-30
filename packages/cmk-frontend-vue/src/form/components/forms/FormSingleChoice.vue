@@ -4,11 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { SingleChoice, SingleChoiceElement } from '@/form/components/vue_formspec_components'
+import type { SingleChoice } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
-import { computed } from 'vue'
 import DropDown from '@/components/DropDown.vue'
 
 const props = defineProps<{
@@ -24,15 +23,6 @@ const [validation, value] = useValidation<string | null>(
 )
 
 const componentId = useId()
-
-const options = computed(() => {
-  return props.spec.elements.map((element: SingleChoiceElement) => {
-    return {
-      ident: element.name,
-      name: element.title
-    }
-  })
-})
 </script>
 
 <template>
@@ -40,7 +30,7 @@ const options = computed(() => {
     <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
     <DropDown
       v-model:selected-option="value"
-      :options="options"
+      :options="props.spec.elements"
       :input_hint="spec.input_hint || ''"
       :disabled="spec.frozen"
       :component-id="componentId"

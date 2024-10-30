@@ -13,8 +13,8 @@ const data = ref<string>('init')
   <DropDown
     v-model:selected-option="data"
     :options="[
-      { ident: 'init', name: 'selected by default' },
-      { ident: '2', name: 'two' }
+      { name: 'init', title: 'selected by default' },
+      { name: '2', title: 'two' }
     ]"
     input_hint="some input hint"
     component-id="some component id"

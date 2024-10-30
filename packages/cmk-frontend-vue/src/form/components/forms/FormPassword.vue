@@ -67,12 +67,12 @@ const passwordStoreChoice = computed({
 const passwordTypeOptions = computed(() => {
   return [
     {
-      ident: 'explicit_password',
-      name: props.spec.i18n.explicit_password
+      name: 'explicit_password',
+      title: props.spec.i18n.explicit_password
     },
     {
-      ident: 'stored_password',
-      name: props.spec.i18n.password_store
+      name: 'stored_password',
+      title: props.spec.i18n.password_store
     }
   ]
 })
@@ -81,8 +81,8 @@ const passwordStoreOptions = computed(() => {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   return props.spec.password_store_choices.map(({ password_id, name }) => {
     return {
-      ident: password_id,
-      name: name
+      name: password_id,
+      title: name
     }
   })
 })

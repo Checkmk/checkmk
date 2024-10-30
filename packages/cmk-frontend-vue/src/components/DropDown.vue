@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T extends PropertyKey">
 export interface DropdownOption<T> {
-  ident: T
-  name: string
+  name: T
+  title: string
 }
 
 const props = defineProps({
@@ -41,8 +41,8 @@ const selectedOption = defineModel<T | null>('selectedOption', { required: true 
     <option v-if="selectedOption === null" disabled selected hidden :value="null">
       {{ props.input_hint }}
     </option>
-    <option v-for="option in props.options" :key="option.ident" :value="option.ident">
-      {{ option.name }}
+    <option v-for="option in props.options" :key="option.name" :value="option.name">
+      {{ option.title }}
     </option>
   </select>
 </template>

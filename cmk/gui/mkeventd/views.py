@@ -15,12 +15,13 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
-from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request
+from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
@@ -655,9 +656,7 @@ class PainterEventHost(Painter):
         )
 
 
-def _get_event_host_link(  # pylint: disable=redefined-outer-name
-    host_name: HostName, row: Row, cell: "Cell", *, request: Request
-) -> str:
+def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell", *, request: Request) -> str:
     """
     Needed to support links to views and dashboards. If no link is configured,
     always use ec_events_of_host as target view.
@@ -955,9 +954,7 @@ def paint_event_icons(  # pylint: disable=redefined-outer-name
     return "", ""
 
 
-def render_delete_event_icons(  # pylint: disable=redefined-outer-name
-    row: Row, *, request: Request
-) -> str | HTML:
+def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
@@ -965,7 +962,7 @@ def render_delete_event_icons(  # pylint: disable=redefined-outer-name
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
     filename: str | None = None
-    if _is_rendered_from_view_dashlet():
+    if _is_rendered_from_view_dashlet(request):
         ident = request.get_integer_input_mandatory("id")
 
         from cmk.gui import dashboard
@@ -1005,7 +1002,7 @@ def render_delete_event_icons(  # pylint: disable=redefined-outer-name
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 
-def _is_rendered_from_view_dashlet() -> bool:
+def _is_rendered_from_view_dashlet(request: Request) -> bool:
     return request.has_var("name") and request.has_var("id")
 
 
@@ -1339,13 +1336,21 @@ def command_update_event_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_mkeventd_update"):
+    if active_request.var("_mkeventd_update"):
         if user.may("mkeventd.update_comment"):
-            comment = request.get_str_input_mandatory("_mkeventd_comment").strip().replace(";", ",")
+            comment = (
+                active_request.get_str_input_mandatory("_mkeventd_comment")
+                .strip()
+                .replace(";", ",")
+            )
         else:
             comment = ""
         if user.may("mkeventd.update_contact"):
-            contact = request.get_str_input_mandatory("_mkeventd_contact").strip().replace(":", ",")
+            contact = (
+                active_request.get_str_input_mandatory("_mkeventd_contact")
+                .strip()
+                .replace(":", ",")
+            )
         else:
             contact = ""
         ack = html.get_checkbox("_mkeventd_acknowledge")
@@ -1362,11 +1367,11 @@ CommandECUpdateEvent = ECCommand(
     title=_l("Update & acknowledge"),
     confirm_title=lambda: (
         _l("Update & acknowledge event?")
-        if request.var("_mkeventd_acknowledge")
+        if active_request.var("_mkeventd_acknowledge")
         else _l("Update event?")
     ),
     confirm_button=lambda: (
-        _l("Update & acknowledge") if request.var("_mkeventd_acknowledge") else _l("Update")
+        _l("Update & acknowledge") if active_request.var("_mkeventd_acknowledge") else _l("Update")
     ),
     permission=PermissionECUpdateEvent,
     group=CommandGroupVarious,
@@ -1425,7 +1430,7 @@ def command_change_state_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_mkeventd_changestate"):
+    if active_request.var("_mkeventd_changestate"):
         events = ",".join(str(entry["event_id"]) for entry in action_rows)
         state = MonitoringState().from_html_vars("_mkeventd_state")
         return (
@@ -1479,7 +1484,7 @@ def command_custom_actions_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     for action_id, _title in action_choices(omit_hidden=True):
-        if request.var("_action_" + action_id):
+        if active_request.var("_action_" + action_id):
             events = ",".join(str(entry["event_id"]) for entry in action_rows)
             return (
                 f"ACTION;{events};{user.id};{action_id}",
@@ -1492,7 +1497,7 @@ CommandECCustomAction = ECCommand(
     ident="ec_custom_actions",
     title=_l("Custom action"),
     confirm_title=lambda: (
-        _l("Execute custom action '%s'?") % list(request.itervars(prefix="_action_"))[0][1]
+        _l("Execute custom action '%s'?") % list(active_request.itervars(prefix="_action_"))[0][1]
     ),
     confirm_button=_l("Execute"),
     permission=PermissionECCustomActions,
@@ -1526,7 +1531,7 @@ def command_archive_event_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_delete_event"):
+    if active_request.var("_delete_event"):
         events = ",".join(str(entry["event_id"]) for entry in action_rows)
         cmd = f"DELETE;{events};{user.id}"
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
@@ -1561,7 +1566,7 @@ def command_archive_events_of_host_confirm_dialog_additions(
 ) -> HTML:
     return HTML.empty() + _(
         "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
-    ) % request.var("host")
+    ) % active_request.var("host")
 
 
 def command_archive_events_of_host_render(what: str) -> None:
@@ -1586,7 +1591,7 @@ def command_archive_events_of_host_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_archive_events_of_hosts"):
+    if active_request.var("_archive_events_of_hosts"):
         commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
         return (
             commands,
@@ -1633,7 +1638,15 @@ class SorterServicelevel(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["custom_variables"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 

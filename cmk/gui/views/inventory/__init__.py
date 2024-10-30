@@ -113,7 +113,7 @@ def _register_sorter(ident: str, spec: SorterFromHint) -> None:
             "title": property(lambda s: s._spec["title"]),
             "columns": property(lambda s: s._spec["columns"]),
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": lambda self, r1, r2, p: spec["cmp"](r1, r2),
+            "cmp": lambda self, r1, r2, **kwargs: spec["cmp"](r1, r2),
         },
     )
     sorter_registry.register(cls)

@@ -12,17 +12,14 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui import pagetypes, visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -32,7 +29,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
@@ -142,14 +138,7 @@ class View:
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(
-                        user=user,
-                        config=active_config,
-                        request=request,
-                        painter_options=PainterOptions.get_instance(),
-                        theme=theme,
-                        url_renderer=RenderLink(request, response, display_options),
-                    ),
+                    sorter=sorter_cls(),
                     negate=entry.negate,
                     join_key=entry.join_key,
                     parameters=sorter[1] if isinstance(sorter, tuple) else None,

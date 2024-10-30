@@ -9,6 +9,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.gui import utils
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import get_tag_groups
 from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
@@ -261,7 +263,15 @@ class SorterSvcstate(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["service_state", "service_has_been_checked"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (
             cmp_state_equiv(r1) < cmp_state_equiv(r2)
         )
@@ -280,7 +290,15 @@ class SorterHoststate(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_state", "host_has_been_checked"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (
             cmp_host_state_equiv(r1) < cmp_host_state_equiv(r2)
         )
@@ -299,7 +317,15 @@ class SorterSiteHost(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["site", "host_name"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
             "host_name", r1, r2
         )
@@ -318,7 +344,15 @@ class SorterHostName(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_name"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return cmp_num_split("host_name", r1, r2)
 
 
@@ -335,13 +369,21 @@ class SorterSitealias(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["site"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return (
-            get_site_config(self.config, r1["site"])["alias"]
-            > get_site_config(self.config, r2["site"])["alias"]
+            get_site_config(config, r1["site"])["alias"]
+            > get_site_config(config, r2["site"])["alias"]
         ) - (
-            get_site_config(self.config, r1["site"])["alias"]
-            < get_site_config(self.config, r2["site"])["alias"]
+            get_site_config(config, r1["site"])["alias"]
+            < get_site_config(config, r2["site"])["alias"]
         )
 
 
@@ -351,7 +393,15 @@ class ABCTagSorter(Sorter, abc.ABC):
     def object_type(self):
         raise NotImplementedError()
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         tag_groups_1 = sorted(get_tag_groups(r1, self.object_type).items())
         tag_groups_2 = sorted(get_tag_groups(r2, self.object_type).items())
         return (tag_groups_1 > tag_groups_2) - (tag_groups_1 < tag_groups_2)
@@ -399,7 +449,15 @@ class ABCLabelSorter(Sorter, abc.ABC):
     def object_type(self):
         raise NotImplementedError()
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         labels_1 = sorted(get_labels(r1, self.object_type).items())
         labels_2 = sorted(get_labels(r2, self.object_type).items())
         return (labels_1 > labels_2) - (labels_1 < labels_2)
@@ -462,7 +520,15 @@ class PerfValSorter(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["service_perf_data"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         v1 = utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True))
         v2 = utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True))
         return (v1 > v2) - (v1 < v2)
@@ -521,9 +587,9 @@ class SorterCustomHostVariable(ParameterizedSorter):
     def columns(self) -> list[str]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def vs_parameters(self, painters: Sequence[ColumnSpec]) -> Dictionary:
+    def vs_parameters(self, config: Config, painters: Sequence[ColumnSpec]) -> Dictionary:
         choices: list[tuple[str, str]] = []
-        for attr_spec in self.config.wato_host_attrs:
+        for attr_spec in config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))
         choices.sort(key=lambda x: x[1])
         return Dictionary(
@@ -540,7 +606,15 @@ class SorterCustomHostVariable(ParameterizedSorter):
             optional_keys=[],
         )
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         assert parameters is not None
         variable_name = parameters["ident"].upper()
 
@@ -567,7 +641,15 @@ class SorterHostIpv4Address(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         def get_address(row):
             custom_vars = dict(
                 zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
@@ -590,7 +672,15 @@ class SorterNumProblems(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         return (
             r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
             > r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"]

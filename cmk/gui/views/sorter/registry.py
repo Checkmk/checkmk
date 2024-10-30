@@ -24,14 +24,7 @@ from .base import Sorter
 
 class SorterRegistry(Registry[type[Sorter]]):
     def plugin_name(self, instance: type[Sorter]) -> str:
-        return instance(
-            user=user,
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        ).ident
+        return instance().ident
 
 
 sorter_registry = SorterRegistry()
@@ -49,7 +42,7 @@ def register_sorter(ident: str, spec: dict[str, Any]) -> None:
             "title": property(lambda s: s._spec["title"]),
             "columns": property(lambda s: s._spec["columns"]),
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": lambda self, r1, r2, p: spec["cmp"](r1, r2),
+            "cmp": lambda self, r1, r2, **kwargs: spec["cmp"](r1, r2),
         },
     )
     sorter_registry.register(cls)

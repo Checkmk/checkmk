@@ -11,11 +11,7 @@ from typing import Any, NamedTuple
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
-from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
-from cmk.gui.utils.theme import Theme
 from cmk.gui.valuespec import Dictionary
 
 
@@ -27,25 +23,7 @@ class SorterEntry(NamedTuple):
 
 
 class Sorter(abc.ABC):
-    """A sorter is used for allowing the user to sort the queried data
-    according to a certain logic."""
-
-    def __init__(
-        self,
-        *,
-        user: LoggedInUser,
-        config: Config,
-        request: Request,
-        painter_options: PainterOptions,
-        theme: Theme,
-        url_renderer: RenderLink,
-    ):
-        self.user = user
-        self.config = config
-        self.request = request
-        self._painter_options = painter_options
-        self.theme = theme
-        self.url_renderer = url_renderer
+    """A sorter is used to sort the queried view rows according to a certain logic."""
 
     @property
     @abc.abstractmethod
@@ -66,7 +44,15 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -93,7 +79,7 @@ class Sorter(abc.ABC):
 
 class ParameterizedSorter(Sorter):
     @abc.abstractmethod
-    def vs_parameters(self, painters: Sequence[ColumnSpec]) -> Dictionary:
+    def vs_parameters(self, config: Config, painters: Sequence[ColumnSpec]) -> Dictionary:
         """Valuespec to configure optional sorter parameters
 
         This Dictionary will be visible as sorter specific parameters after selecting this sorter in

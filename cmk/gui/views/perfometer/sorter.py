@@ -5,7 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import ColumnName, Row
@@ -33,13 +34,21 @@ class SorterPerfometer(Sorter):
             "service_plugin_output",
         ]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, object] | None) -> int:
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, object] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
         try:
             v1 = tuple(-float("inf") if s is None else s for s in Perfometer(r1).sort_value())
             v2 = tuple(-float("inf") if s is None else s for s in Perfometer(r2).sort_value())
             return (v1 > v2) - (v1 < v2)
         except Exception:
             logger.exception("error sorting perfometer values")
-            if active_config.debug:
+            if config.debug:
                 raise
             return 0

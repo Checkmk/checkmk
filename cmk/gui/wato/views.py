@@ -8,6 +8,7 @@ from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -178,8 +179,16 @@ class SorterWatoFolderAbs(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "abs", request=self.request)
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
+        return cmp_wato_folder(r1, r2, "abs", request=request)
 
 
 class SorterWatoFolderRel(Sorter):
@@ -195,8 +204,16 @@ class SorterWatoFolderRel(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "rel", request=self.request)
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
+        return cmp_wato_folder(r1, r2, "rel", request=request)
 
 
 class SorterWatoFolderPlain(Sorter):
@@ -212,5 +229,13 @@ class SorterWatoFolderPlain(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "plain", request=self.request)
+    def cmp(
+        self,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
+    ) -> int:
+        return cmp_wato_folder(r1, r2, "plain", request=request)

@@ -59,6 +59,9 @@ div.notification_rules {
       width: auto;
     }
   }
+  div.ruleset > div.text {
+    max-width: calc(100% - 20px);
+  }
 
   .ruleset_section {
     margin-top: var(--spacing-half);

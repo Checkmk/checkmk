@@ -467,7 +467,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 }
 
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
@@ -499,103 +498,110 @@ void TableStateHistory::handle_state_entry(
     // Find state object for this host/service
     auto it_hss = state_info.find(key);
     if (it_hss == state_info.end()) {
-        // Create state object that we also need for filtering right now
-        auto state = std::make_unique<HostServiceState>();
-        state->_is_host = entry->service_description().empty();
-        state->_host = entry_host;
-        state->_service = entry_service;
-        state->_host_name = entry->host_name();
-        state->_service_description = entry->service_description();
-
-        // No state found. Now check if this host/services is filtered out.
-        // Note: we currently do not filter out hosts since they might be needed
-        // for service states
-        if (!entry->service_description().empty()) {
-            if (!object_filter.accepts(Row{&state}, user,
-                                       query.timezoneOffset())) {
-                object_blacklist.insert(key);
-                return;
-            }
-        }
-
-        // Host/Service relations
-        if (state->_is_host) {
-            for (const auto &[key, hss] : state_info) {
-                if (hss->_host != nullptr &&
-                    hss->_host->handleForStateHistory() ==
-                        state->_host->handleForStateHistory()) {
-                    state->_services.push_back(hss.get());
-                }
-            }
-        } else {
-            auto it_inh =
-                state_info.find(state->_host->handleForStateHistory());
-            if (it_inh != state_info.end()) {
-                it_inh->second->_services.push_back(state.get());
-            }
-        }
-
-        state->_from = since;
-
-        // Get notification period of host/service. If this host/service is no
-        // longer available in nagios -> set to ""
-        state->_notification_period =
-            state->_service != nullptr
-                ? state->_service->notificationPeriodName()
-            : state->_host != nullptr ? state->_host->notificationPeriodName()
-                                      : "";
-
-        // Same for service period.
-        state->_service_period =
-            state->_service != nullptr ? state->_service->servicePeriodName()
-            : state->_host != nullptr  ? state->_host->servicePeriodName()
-                                       : "";
-
-        // Determine initial in_notification_period status
-        auto tmp_period =
-            notification_periods.find(state->_notification_period);
-        if (tmp_period != notification_periods.end()) {
-            state->_in_notification_period = tmp_period->second;
-        } else {
-            state->_in_notification_period = 1;
-        }
-
-        // Same for service period
-        tmp_period = notification_periods.find(state->_service_period);
-        if (tmp_period != notification_periods.end()) {
-            state->_in_service_period = tmp_period->second;
-        } else {
-            state->_in_service_period = 1;
-        }
-
-        // If this key is a service try to find its host and apply its
-        // _in_host_downtime and _host_down parameters
-        if (!state->_is_host) {
-            auto my_host =
-                state_info.find(state->_host->handleForStateHistory());
-            if (my_host != state_info.end()) {
-                state->_in_host_downtime = my_host->second->_in_host_downtime;
-                state->_host_down = my_host->second->_host_down;
-            }
-        }
-
-        // Log UNMONITORED state if this host or service just appeared within
-        // the query timeframe. It gets a grace period of ten minutes (nagios
-        // startup)
-        if (!only_update && entry->time() - since > 10min) {
-            state->_debug_info = "UNMONITORED ";
-            state->_state = -1;
-        }
-
-        // Store this state object for tracking state transitions
-        state_info[key] = std::move(state);
-
+        insert_new_state(query, user, entry, only_update, notification_periods,
+                         state_info, object_blacklist, object_filter, since,
+                         entry_host, entry_service, key);
         update(query, user, core, query_timeframe, entry, *state_info[key],
                only_update, notification_periods);
     } else {
         update(query, user, core, query_timeframe, entry, *it_hss->second,
                only_update, notification_periods);
     }
+}
+
+// static
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+void TableStateHistory::insert_new_state(
+    Query &query, const User &user, const LogEntry *entry, bool only_update,
+    const notification_periods_t &notification_periods,
+    state_info_t &state_info, object_blacklist_t &object_blacklist,
+    const Filter &object_filter, std::chrono::system_clock::time_point since,
+    const IHost *entry_host, const IService *entry_service,
+    HostServiceKey key) {
+    auto state = std::make_unique<HostServiceState>();
+    state->_is_host = entry->service_description().empty();
+    state->_host = entry_host;
+    state->_service = entry_service;
+    state->_host_name = entry->host_name();
+    state->_service_description = entry->service_description();
+
+    // No state found. Now check if this host/services is filtered out.
+    // Note: we currently do not filter out hosts since they might be needed
+    // for service states
+    if (!entry->service_description().empty()) {
+        if (!object_filter.accepts(Row{&state}, user, query.timezoneOffset())) {
+            object_blacklist.insert(key);
+            return;
+        }
+    }
+
+    // Host/Service relations
+    if (state->_is_host) {
+        for (const auto &[key, hss] : state_info) {
+            if (hss->_host != nullptr &&
+                hss->_host->handleForStateHistory() ==
+                    state->_host->handleForStateHistory()) {
+                state->_services.push_back(hss.get());
+            }
+        }
+    } else {
+        auto it_inh = state_info.find(state->_host->handleForStateHistory());
+        if (it_inh != state_info.end()) {
+            it_inh->second->_services.push_back(state.get());
+        }
+    }
+
+    state->_from = since;
+
+    // Get notification period of host/service. If this host/service is no
+    // longer available in nagios -> set to ""
+    state->_notification_period =
+        state->_service != nullptr ? state->_service->notificationPeriodName()
+        : state->_host != nullptr  ? state->_host->notificationPeriodName()
+                                   : "";
+
+    // Same for service period.
+    state->_service_period =
+        state->_service != nullptr ? state->_service->servicePeriodName()
+        : state->_host != nullptr  ? state->_host->servicePeriodName()
+                                   : "";
+
+    // Determine initial in_notification_period status
+    auto tmp_period = notification_periods.find(state->_notification_period);
+    if (tmp_period != notification_periods.end()) {
+        state->_in_notification_period = tmp_period->second;
+    } else {
+        state->_in_notification_period = 1;
+    }
+
+    // Same for service period
+    tmp_period = notification_periods.find(state->_service_period);
+    if (tmp_period != notification_periods.end()) {
+        state->_in_service_period = tmp_period->second;
+    } else {
+        state->_in_service_period = 1;
+    }
+
+    // If this key is a service try to find its host and apply its
+    // _in_host_downtime and _host_down parameters
+    if (!state->_is_host) {
+        auto my_host = state_info.find(state->_host->handleForStateHistory());
+        if (my_host != state_info.end()) {
+            state->_in_host_downtime = my_host->second->_in_host_downtime;
+            state->_host_down = my_host->second->_host_down;
+        }
+    }
+
+    // Log UNMONITORED state if this host or service just appeared within
+    // the query timeframe. It gets a grace period of ten minutes (nagios
+    // startup)
+    if (!only_update && entry->time() - since > 10min) {
+        state->_debug_info = "UNMONITORED ";
+        state->_state = -1;
+    }
+
+    // Store this state object for tracking state transitions
+    state_info[key] = std::move(state);
 }
 
 void TableStateHistory::handle_timeperiod_transition(

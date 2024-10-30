@@ -19,6 +19,8 @@ class Column;
 class ColumnOffsets;
 class Filter;
 class ICore;
+class IHost;
+class IService;
 class LogCache;
 class LogEntry;
 class LogFiles;
@@ -63,6 +65,14 @@ private:
                             object_blacklist_t &object_blacklist,
                             const Filter &object_filter,
                             std::chrono::system_clock::time_point since);
+
+    static void insert_new_state(
+        Query &query, const User &user, const LogEntry *entry, bool only_update,
+        const notification_periods_t &notification_periods,
+        state_info_t &state_info, object_blacklist_t &object_blacklist,
+        const Filter &object_filter,
+        std::chrono::system_clock::time_point since, const IHost *entry_host,
+        const IService *entry_service, HostServiceKey key);
 
     void handle_timeperiod_transition(
         Query &query, const User &user, const ICore &core,

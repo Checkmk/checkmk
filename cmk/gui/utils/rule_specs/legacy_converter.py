@@ -678,7 +678,7 @@ def _custom_to_builtin_legacy_group(
     custom_topic_to_convert: ruleset_api_v1.rule_specs.CustomTopic,
 ) -> type[legacy_rulespecs.RulespecBaseGroup] | None:
     if custom_topic_to_convert == ruleset_api_v1.rule_specs.CustomTopic(
-        ruleset_api_v1.Title("Linux/UNIX Agent Options")
+        ruleset_api_v1.Title("Linux/UNIX agent options")
     ):
         if (
             legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents

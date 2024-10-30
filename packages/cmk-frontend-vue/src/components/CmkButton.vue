@@ -50,6 +50,7 @@ defineProps<ButtonProps>()
   margin: 0;
   padding: 0 8px;
   align-items: center;
+  justify-content: center;
   letter-spacing: unset;
 }
 .button--variant-primary {
@@ -60,6 +61,7 @@ defineProps<ButtonProps>()
 }
 .button--variant-tertiary,
 .button--variant-transparent {
+  height: auto;
   background: none;
   border: none;
   padding: 0;

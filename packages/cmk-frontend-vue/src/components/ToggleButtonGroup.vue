@@ -49,6 +49,7 @@ function setSelectedOption(value: string) {
 }
 
 .toggle_option {
+  height: auto;
   min-width: 150px;
   border: none;
   background-color: transparent;

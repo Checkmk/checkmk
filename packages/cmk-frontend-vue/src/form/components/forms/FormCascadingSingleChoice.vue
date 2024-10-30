@@ -135,16 +135,17 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
     <template v-else>
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
-    <HelpText :help="props.spec.help" />
   </span>
   <span :style="layoutSettings.style">
     <template v-if="activeElement !== null">
+      <HelpText :help="activeElement.spec.help" />
       <FormEdit
         :key="data[0]"
         v-model:data="data[1]"
         :spec="activeElement.spec"
         :backend-validation="elementValidation"
       ></FormEdit>
+
       <FormValidation :validation="validation"></FormValidation>
     </template>
   </span>

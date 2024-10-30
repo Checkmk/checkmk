@@ -60,7 +60,7 @@ function capitalizeFirstLetter(value: string): string {
             <span v-if="spec.show_titles && element.title" class="title">{{
               capitalizeFirstLetter(element.title)
             }}</span>
-            <HelpText :help="spec.help" />
+
             <br
               v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'"
             />
@@ -70,6 +70,7 @@ function capitalizeFirstLetter(value: string): string {
               :spec="element"
               :backend-validation="elementValidation[index]!"
             />
+            <HelpText :help="element.help" />
           </td>
         </template>
       </tr>
@@ -83,7 +84,6 @@ function capitalizeFirstLetter(value: string): string {
           <span v-if="element.title" class="vs_floating_text">{{
             capitalizeFirstLetter(element.title)
           }}</span>
-          <HelpText :help="spec.help" />
         </td>
         <td :class="{ tuple_right: true, has_title: element.title }">
           <FormEdit
@@ -91,6 +91,7 @@ function capitalizeFirstLetter(value: string): string {
             :spec="element"
             :backend-validation="elementValidation[index]!"
           />
+          <HelpText :help="element.help" />
         </td>
       </tr>
     </tbody>
@@ -98,12 +99,12 @@ function capitalizeFirstLetter(value: string): string {
 
   <template v-if="spec.layout === 'float'">
     <template v-for="(element, index) in spec.elements" :key="index">
-      <HelpText :help="spec.help" />
       <FormEdit
         v-model:data="data[index]"
         :spec="element"
         :backend-validation="elementValidation[index]!"
       />
+      <HelpText :help="element.help" />
     </template>
   </template>
   <FormValidation :validation="validation"></FormValidation>

@@ -500,7 +500,6 @@ void TableStateHistory::handle_state_entry(
     auto it_hss = state_info.find(key);
     if (it_hss == state_info.end()) {
         // Create state object that we also need for filtering right now
-        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         auto state = std::make_unique<HostServiceState>();
         state->_is_host = entry->service_description().empty();
         state->_host = entry_host;

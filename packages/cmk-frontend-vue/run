@@ -37,7 +37,7 @@ parse_options() {
     RUN_ESLINT=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'ecbtdFTEafh' --long 'setup-environment,clean,build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbtdFTEafh' --long 'clean,build,build-dev,tests,check-format,tsc,eslint,all,format,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi

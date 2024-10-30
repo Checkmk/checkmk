@@ -120,10 +120,10 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-fr
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 cmk-frontend:
-	packages/cmk-frontend/run --setup-environment --all
+	packages/cmk-frontend/run --clean --all
 
 frontend-vue:
-	packages/cmk-frontend-vue/run --all
+	packages/cmk-frontend-vue/run --clean --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

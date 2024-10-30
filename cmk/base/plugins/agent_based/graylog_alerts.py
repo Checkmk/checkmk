@@ -3,41 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+Kuhn & Rueß GmbH
+Consulting and Development
+https://kuhn-ruess.de
+"""
+
+
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import check_levels, register, render, Service
+from .agent_based_api.v1 import check_levels, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<graylog_alerts>>>
-# {"alerts": {"num_of_alerts": 0, "has_since_argument": false, "alerts_since": null, "num_of_alerts_in_range": 0}}
+# {"alerts": {"num_of_events": 947, "num_of_alerts": 174}}
 
 # <<<graylog_alerts>>>
-# {"alerts": {"num_of_alerts": 5, "has_since_argument": true, "alerts_since": 1800, "num_of_alerts_in_range": 2}}
+# {"alerts": {"num_of_events": 543, "num_of_alerts": 0}}
 
 
-@dataclass
-class AlertsInfo:
+class AlertsInfo(NamedTuple):
+    num_of_events: int
     num_of_alerts: int
-    has_since_argument: bool
-    alerts_since: int | None
-    num_of_alerts_in_range: int
 
 
 def parse_graylog_alerts(string_table: StringTable) -> AlertsInfo | None:
     alerts_section = json.loads(string_table[0][0])
+
     if len(alerts_section) != 1:
         return None
 
     alerts_data = alerts_section.get("alerts")
 
     return AlertsInfo(
+        num_of_events=alerts_data.get("num_of_events"),
         num_of_alerts=alerts_data.get("num_of_alerts"),
-        has_since_argument=alerts_data.get("has_since_argument"),
-        alerts_since=alerts_data.get("alerts_since"),
-        num_of_alerts_in_range=alerts_data.get("num_of_alerts_in_range"),
     )
 
 
@@ -53,21 +55,14 @@ def discover_graylog_alerts(section: AlertsInfo) -> DiscoveryResult:
 
 
 def check_graylog_alerts(params: Mapping[str, Any], section: AlertsInfo) -> CheckResult:
-    yield from check_levels(
-        value=section.num_of_alerts,
-        levels_upper=params.get("alerts_upper", (None, None)),
-        levels_lower=params.get("alerts_lower", (None, None)),
-        render_func=lambda x: str(int(x)),
-        label="Total number of alerts",
-    )
-
-    if section.has_since_argument and section.alerts_since:
+    for which in ["alerts", "events"]:
         yield from check_levels(
-            value=section.num_of_alerts_in_range,
-            levels_upper=params.get("alerts_in_range_upper", (None, None)),
-            levels_lower=params.get("alerts_in_range_lower", (None, None)),
+            value=(section._asdict())[f"num_of_{which}"],
+            levels_upper=params.get(f"{which}_upper", (None, None)),
+            levels_lower=params.get(f"{which}_lower", (None, None)),
+            metric_name=f"graylog_{which}",
             render_func=lambda x: str(int(x)),
-            label=f"Total number of alerts in the last {render.timespan(section.alerts_since)}",
+            label=f"Total number of {which}",
         )
 
 

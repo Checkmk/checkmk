@@ -28,11 +28,8 @@ HOST_CONFIG = HostConfig(
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "--address",
                     "address:8443",
-                    "--venueid",
                     "venueID",
-                    "--apikey",
                     Secret(23).unsafe(),
                 ]
             ),
@@ -48,11 +45,8 @@ HOST_CONFIG = HostConfig(
             },
             SpecialAgentCommand(
                 command_arguments=[
-                    "--address",
                     "addresstest:8443",
-                    "--venueid",
                     "venueID",
-                    "--apikey",
                     Secret(23).unsafe(),
                     "--agent_port",
                     "6556",

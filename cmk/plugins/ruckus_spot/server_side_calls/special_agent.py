@@ -29,16 +29,14 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
 
     if params.address[0] == "use_host_address":
         command_arguments += [
-            "--address",
             f"{host_config.primary_ip_config.address}:{params.port}",
         ]
     elif params.address[0] == "manual_address":
-        command_arguments += ["--address", f"{params.address[1]}:{params.port}"]
+        command_arguments += [f"{params.address[1]}:{params.port}"]
     else:
         assert_never(params.address)
 
-    command_arguments += ["--venueid", params.venueid]
-    command_arguments += ["--apikey", params.api_key.unsafe()]
+    command_arguments += [params.venueid, params.api_key.unsafe()]
 
     if params.cmk_agent is not None:
         command_arguments += ["--agent_port", "%s" % params.cmk_agent.port]

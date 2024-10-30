@@ -50,5 +50,13 @@ const selectedOption = defineModel<T | null>('selectedOption', { required: true 
 <style scoped>
 select.drop-down {
   cursor: pointer;
+
+  &:disabled {
+    cursor: auto;
+
+    &:hover {
+      background-color: var(--default-form-element-bg-color);
+    }
+  }
 }
 </style>

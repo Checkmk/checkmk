@@ -6,7 +6,7 @@
 import abc
 import json
 from collections.abc import Iterable, Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 import livestatus
 
@@ -330,7 +330,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
 
     @classmethod

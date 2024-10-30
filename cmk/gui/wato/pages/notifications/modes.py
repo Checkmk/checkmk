@@ -942,7 +942,7 @@ class ModeNotifications(ABCNotificationsMode):
                     contact = contact[7:]  # strip of fake-contact mailto:-prefix
                 table.cell(_("Recipient"), contact)
                 table.cell(_("Method"), self._vs_notification_scripts().value_to_html(plugin))
-                table.cell(_("Parameters"), ", ".join(parameters))
+                table.cell(_("Parameters"), ", ".join(list(parameters)))
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text_permissive(_("Time horizon") + ": ")

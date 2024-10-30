@@ -38,6 +38,7 @@ const { buttonPadding = '16px', ...props } = defineProps<{
             @dragstart="draggable?.dragStart"
             @drag="draggable?.dragging"
             @dragend="draggable?.dragEnd"
+            @click.prevent="() => {}"
           >
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </CmkButton>

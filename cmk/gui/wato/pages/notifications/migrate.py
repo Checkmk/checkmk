@@ -187,11 +187,14 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
 
     def _get_recipients() -> list[Recipient]:
         recipients: list[Recipient] = []
-        if "contact_object" in event_rule:
+        if event_rule["contact_object"]:
             recipients.append(("all_contacts_affected", None))
 
-        if "contact_all_with_email" in event_rule:
+        if event_rule["contact_all_with_email"]:
             recipients.append(("all_email_users", None))
+
+        if event_rule["contact_all"]:
+            recipients.append(("all_users", None))
 
         if "contact_groups" in event_rule:
             recipients.append(("contact_group", event_rule["contact_groups"]))
@@ -211,9 +214,6 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
 
         if "contact_users" in event_rule:
             recipients.append(("specific_users", event_rule["contact_users"]))
-
-        if "contact_all" in event_rule:
-            recipients.append(("all_users", None))
 
         return recipients
 

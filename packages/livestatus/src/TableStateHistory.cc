@@ -465,10 +465,6 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     if (!abort_query_) {
         final_reports(query, user, query_timeframe, state_info, until);
     }
-
-    for (auto &[key, hst] : state_info) {
-        delete hst;  // NOLINT(cppcoreguidelines-owning-memory)
-    }
 }
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
@@ -505,7 +501,7 @@ void TableStateHistory::handle_state_entry(
     if (it_hst == state_info.end()) {
         // Create state object that we also need for filtering right now
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        auto *state = new HostServiceState();
+        auto state = std::make_unique<HostServiceState>();
         state->_is_host = entry->service_description().empty();
         state->_host = entry_host;
         state->_service = entry_service;
@@ -516,10 +512,9 @@ void TableStateHistory::handle_state_entry(
         // Note: we currently do not filter out hosts since they might be needed
         // for service states
         if (!entry->service_description().empty()) {
-            if (!object_filter.accepts(Row{state}, user,
+            if (!object_filter.accepts(Row{&state}, user,
                                        query.timezoneOffset())) {
                 object_blacklist.insert(key);
-                delete state;  // NOLINT(cppcoreguidelines-owning-memory)
                 return;
             }
         }
@@ -530,14 +525,14 @@ void TableStateHistory::handle_state_entry(
                 if (hst->_host != nullptr &&
                     hst->_host->handleForStateHistory() ==
                         state->_host->handleForStateHistory()) {
-                    state->_services.push_back(hst);
+                    state->_services.push_back(hst.get());
                 }
             }
         } else {
             auto it_inh =
                 state_info.find(state->_host->handleForStateHistory());
             if (it_inh != state_info.end()) {
-                it_inh->second->_services.push_back(state);
+                it_inh->second->_services.push_back(state.get());
             }
         }
 
@@ -594,10 +589,10 @@ void TableStateHistory::handle_state_entry(
         }
 
         // Store this state object for tracking state transitions
-        state_info[key] = state;
+        state_info[key] = std::move(state);
 
-        update(query, user, core, query_timeframe, entry, *state, only_update,
-               notification_periods);
+        update(query, user, core, query_timeframe, entry, *state_info[key],
+               only_update, notification_periods);
     } else {
         update(query, user, core, query_timeframe, entry, *it_hst->second,
                only_update, notification_periods);

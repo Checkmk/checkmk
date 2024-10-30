@@ -40,7 +40,8 @@ public:
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
-    using state_info_t = std::map<HostServiceKey, HostServiceState *>;
+    using state_info_t =
+        std::map<HostServiceKey, std::unique_ptr<HostServiceState>>;
 
 private:
     using notification_periods_t = std::map<std::string, int>;

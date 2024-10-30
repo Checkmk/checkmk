@@ -14,6 +14,10 @@ class IHost;
 class IService;
 class HostServiceState;
 
+// NOTE regarding object lifetimes: The HostServiceState objects are owned by
+// TableStateHistory::answerQueryInternal()'s state_info local variable of type
+// state_info_t. This variable outlives any HostServiceState objects, so using a
+// raw pointer here is safe.
 using HostServices = std::vector<HostServiceState *>;
 
 using HostServiceKey = void const *;

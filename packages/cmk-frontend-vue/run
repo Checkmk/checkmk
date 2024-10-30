@@ -130,6 +130,8 @@ npm_dependencies_installed() {
 setup_npm() {
     test "${SETUP_NPM_RAN}" = "yes" && return
     npm_dependencies_installed || npm_install_dependencies
+    echo "npm version $(npm --version)"
+    echo "node version $(node --version)"
     SETUP_NPM_RAN=yes
 }
 

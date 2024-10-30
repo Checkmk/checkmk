@@ -495,18 +495,13 @@ void TableStateHistory::handle_state_entry(
         return;
     }
 
-    // Find state object for this host/service
-    auto it_hss = state_info.find(key);
-    if (it_hss == state_info.end()) {
+    if (!state_info.contains(key)) {
         insert_new_state(query, user, entry, only_update, notification_periods,
                          state_info, object_blacklist, object_filter, since,
                          entry_host, entry_service, key);
-        update(query, user, core, query_timeframe, entry, *state_info[key],
-               only_update, notification_periods);
-    } else {
-        update(query, user, core, query_timeframe, entry, *it_hss->second,
-               only_update, notification_periods);
     }
+    update(query, user, core, query_timeframe, entry, *state_info[key],
+           only_update, notification_periods);
 }
 
 // static

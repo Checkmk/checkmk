@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import assert_never, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -25,21 +25,17 @@ class Params(BaseModel, frozen=True):
 
 
 def command_function(params: Params, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
-    command_arguments: list[str | Secret] = []
+    address = (
+        f"{host_config.primary_ip_config.address}:{params.port}"
+        if params.address[0] == "use_host_address"
+        else f"{params.address[1]}:{params.port}"
+    )
 
+    command_arguments: list[str | Secret] = [address, params.venueid, params.api_key.unsafe()]
     if params.address[0] == "use_host_address":
-        command_arguments += [
-            f"{host_config.primary_ip_config.address}:{params.port}",
-        ]
-    elif params.address[0] == "manual_address":
-        command_arguments += [f"{params.address[1]}:{params.port}"]
-    else:
-        assert_never(params.address)
-
-    command_arguments += [params.venueid, params.api_key.unsafe()]
-
+        command_arguments += ["--cert-server-name", host_config.name]
     if params.cmk_agent is not None:
-        command_arguments += ["--agent_port", "%s" % params.cmk_agent.port]
+        command_arguments += ["--agent_port", str(params.cmk_agent.port)]
 
     yield SpecialAgentCommand(command_arguments=command_arguments)
 

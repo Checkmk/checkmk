@@ -31,6 +31,8 @@ HOST_CONFIG = HostConfig(
                     "address:8443",
                     "venueID",
                     Secret(23).unsafe(),
+                    "--cert-server-name",
+                    "hostname",
                 ]
             ),
             id="Host adress and no cmk_agent",

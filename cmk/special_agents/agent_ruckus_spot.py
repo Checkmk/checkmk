@@ -12,6 +12,8 @@ import requests
 
 from cmk.utils.password_store import replace_passwords
 
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
+
 
 # TODO: put into special_agent lib
 def get_agent_info_tcp(host: str) -> bytes:
@@ -43,15 +45,20 @@ def main() -> int:
     args = _parse_arguments(sys_argv)
 
     try:
-        for url_end, section_type in [
+        base_url = f"http://{args.address}/api/v1/venues/{args.venueid}"
+
+        endpoints = [
             ("access_points/statuses.json", "ap"),
             ("locations/last_known.json", "locations"),
-        ]:
-            url = f"http://{args.address}/api/v1/venues/{args.venueid}/{url_end}"
-            response = requests.get(url, auth=(args.apikey, "X"))  # nosec B113 # BNS:0b0eac
+        ]
+        with requests.Session() as session:
+            if args.cert_server_name is not None:
+                session.mount(base_url, HostnameValidationAdapter(args.cert_server_name))
 
-            sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)
-            sys.stdout.write(response.text + "\n")
+            for url_end, section_type in endpoints:
+                _fetch_data_and_write_to_stdout(
+                    session, f"{base_url}/{url_end}", args.apikey, section_type
+                )
 
         if args.agent_port is not None:
             hostname = args.address.split(":")[0]
@@ -69,6 +76,7 @@ class _Arguments:
     venueid: str
     apikey: str
     agent_port: int | None = None
+    cert_server_name: str | None = None
 
 
 def _parse_arguments(argv: Sequence[str]) -> _Arguments:
@@ -91,6 +99,10 @@ def _parse_arguments(argv: Sequence[str]) -> _Arguments:
         type=int,
         help="Agent port",
     )
+    parser.add_argument(
+        "--cert-server-name",
+        help="Use this server name for TLS certificate validation.",
+    )
     args = parser.parse_args(argv)
 
     return _Arguments(
@@ -98,4 +110,16 @@ def _parse_arguments(argv: Sequence[str]) -> _Arguments:
         venueid=args.venueid,
         apikey=args.apikey,
         agent_port=args.agent_port,
+        cert_server_name=args.cert_server_name,
     )
+
+
+def _fetch_data_and_write_to_stdout(
+    session: requests.Session,
+    url: str,
+    apikey: str,
+    section_type: str,
+) -> None:
+    response = session.get(url, auth=(apikey, "X"))  # nosec B113 # BNS:0b0eac
+    sys.stdout.write(f"<<<ruckus_spot_{section_type}:sep(0)>>>\n")
+    sys.stdout.write(response.text + "\n")

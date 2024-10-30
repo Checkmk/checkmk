@@ -4,9 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { mount } from '@vue/test-utils'
 import FormList from '@/form/components/forms/FormList.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
+import FormDataVisualizer from '../FormDataVisualizer.vue'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -40,11 +42,33 @@ const spec: FormSpec.List = {
   validators: [],
   element_template: stringFormSpec,
   element_default_value: '',
-  editable_order: false,
+  editable_order: true,
   add_element_label: 'Add element',
   remove_element_label: 'Remove element',
   no_element_label: 'No element'
 }
+
+test('List elements are draggable', async () => {
+  // It's horrible that we need to drop down to vue test utils here.
+  // The documented way of specifying event options with @testing-library/vue doesn't work.
+  // And we are STILL not testing the actual UI behavior, but only the handling of the drag
+  // event. The UI for example is not draggable without deleting the pointer-events in the
+  // nested img or draggable="true", but this test still passes.
+  const wrapper = mount(FormDataVisualizer, {
+    props: {
+      spec,
+      data: ['first_value', 'second_value'],
+      backendValidation: []
+    }
+  })
+
+  const draggables = wrapper.findAll('[aria-label="Drag to reorder"]')
+  draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
+
+  wrapper.vm.$nextTick(() => {
+    expect(wrapper.find('[data-testid="test-data"]').text()).toBe('["second_value","first_value"]')
+  })
+})
 
 test('FormList renders backend validation messages', async () => {
   render(FormList, {

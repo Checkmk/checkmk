@@ -150,17 +150,19 @@ function sendDataUpstream() {
           <CmkButton
             v-if="props.spec.editable_order"
             variant="transparent"
+            aria-label="Drag to reorder"
+            :draggable="true"
             @dragstart="dragStart"
             @drag="dragging"
             @dragend="dragEnd"
           >
-            <CmkIcon name="drag" size="small" />
+            <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </CmkButton>
           <!-- TODO: move this delete text to the backend to make it translatable (CMK-19020) -->
           <CmkButton
             variant="transparent"
             title="Delete this entry"
-            @click.prevent="removeElement(backendIndex)"
+            @click.prevent="() => removeElement(backendIndex)"
           >
             <CmkIcon name="close" size="small" />
           </CmkButton>

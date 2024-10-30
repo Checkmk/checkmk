@@ -5,46 +5,18 @@
 
 from __future__ import annotations
 
-import abc
-from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, NamedTuple, Protocol
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Dictionary
 
 
-class SorterEntry(NamedTuple):
-    sorter: Sorter
-    negate: bool
-    join_key: str | None
-    parameters: Mapping[str, Any] | None
-
-
-class Sorter(abc.ABC):
-    """A sorter is used to sort the queried view rows according to a certain logic."""
-
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """The identity of a sorter. One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        """Used as display string for the sorter in the GUI (e.g. view editor)"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def columns(self) -> Sequence[ColumnName]:
-        """Livestatus columns needed for this sorter"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def cmp(
+class SorterProtocol(Protocol):
+    def __call__(
         self,
         r1: Row,
         r2: Row,
@@ -68,20 +40,46 @@ class Sorter(abc.ABC):
         Only ParameterizedPainters get a Mapping as parameters (A dict produced with the
         Dictionary valuespec returned by `vs_parameters`).
         """
-        raise NotImplementedError()
 
-    # TODO: Cleanup this hack
+
+class SorterEntry(NamedTuple):
+    sorter: Sorter
+    negate: bool
+    join_key: str | None
+    parameters: Mapping[str, Any] | None
+
+
+class Sorter:
+    """A sorter is used to sort the queried view rows according to a certain logic."""
+
+    def __init__(
+        self,
+        ident: str,
+        title: str | LazyString,
+        columns: Sequence[ColumnName],
+        sort_function: SorterProtocol,
+        load_inv: bool = False,
+    ):
+        self.ident = ident
+        self._title = title
+        self.columns = columns
+        self.cmp = sort_function
+        self.load_inv = load_inv
+
     @property
-    def load_inv(self) -> bool:
-        """Whether or not to load the HW/SW Inventory for this column"""
-        return False
+    def title(self) -> str:
+        return str(self._title)
 
 
 class ParameterizedSorter(Sorter):
-    @abc.abstractmethod
-    def vs_parameters(self, config: Config, painters: Sequence[ColumnSpec]) -> Dictionary:
-        """Valuespec to configure optional sorter parameters
-
-        This Dictionary will be visible as sorter specific parameters after selecting this sorter in
-        the section "Sorting" in the "Edit View" form.
-        """
+    def __init__(
+        self,
+        ident: str,
+        title: str | LazyString,
+        columns: Sequence[ColumnName],
+        sort_function: SorterProtocol,
+        parameter_valuespec: Callable[[Config, Sequence[ColumnSpec]], Dictionary],
+        load_inv: bool = False,
+    ):
+        super().__init__(ident, title, columns, sort_function, load_inv)
+        self.vs_parameters = parameter_valuespec

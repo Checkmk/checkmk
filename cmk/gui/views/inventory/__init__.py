@@ -13,7 +13,9 @@ from cmk.utils.structured_data import SDKey, SDPath
 from cmk.utils.user import UserId
 
 from cmk.gui import inventory
+from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry, DataSourceRegistry
+from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import FilterInvBool, FilterInvFloat, FilterInvText
 from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry
@@ -21,6 +23,7 @@ from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
+    Row,
     SorterSpec,
     ViewName,
     ViewSpec,
@@ -102,21 +105,15 @@ def _register_painter(
 
 
 def _register_sorter(ident: str, spec: SorterFromHint) -> None:
-    # TODO Clean this up one day
-    cls = type(
-        "LegacySorter%s" % str(ident).title(),
-        (Sorter,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._spec["title"]),
-            "columns": property(lambda s: s._spec["columns"]),
-            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": lambda self, r1, r2, **kwargs: spec["cmp"](r1, r2),
-        },
+    sorter_registry.register(
+        Sorter(
+            ident=ident,
+            title=spec["title"],
+            columns=spec["columns"],
+            sort_function=lambda r1, r2, **_kwargs: spec["cmp"](r1, r2),
+            load_inv=spec.get("load_inv", False),
+        )
     )
-    sorter_registry.register(cls)
 
 
 def _make_attribute_filter(

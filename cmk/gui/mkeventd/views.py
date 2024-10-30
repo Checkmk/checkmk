@@ -1625,29 +1625,23 @@ CommandECArchiveEventsOfHost = ECCommand(
 #   '----------------------------------------------------------------------'
 
 
-class SorterServicelevel(Sorter):
-    @property
-    def ident(self) -> str:
-        return "servicelevel"
+def _sort_service_level(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
-    @property
-    def title(self) -> str:
-        return _("Service level")
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["custom_variables"]
-
-    def cmp(
-        self,
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
-    ) -> int:
-        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
+SorterServicelevel = Sorter(
+    ident="servicelevel",
+    title=_("Service level"),
+    columns=["custom_variables"],
+    sort_function=_sort_service_level,
+)
 
 
 def cmp_simple_state(column: ColumnName, ra: Row, rb: Row) -> int:

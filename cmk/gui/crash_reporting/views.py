@@ -301,29 +301,23 @@ class PainterCrashException(Painter):
         return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
 
 
-class SorterCrashTime(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_time"
+def _sort_crash_time(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_number("crash_time", r1, r2)
 
-    @property
-    def title(self) -> str:
-        return _("Crash time")
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_time"]
-
-    def cmp(
-        self,
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
-    ) -> int:
-        return cmp_simple_number("crash_time", r1, r2)
+SorterCrashTime = Sorter(
+    ident="crash_time",
+    title=_l("Crash time"),
+    columns=["crash_time"],
+    sort_function=_sort_crash_time,
+)
 
 
 PermissionActionDeleteCrashReport = permission_registry.register(

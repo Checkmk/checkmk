@@ -1015,8 +1015,8 @@ def _allowed_for_datasource(
     allowed: dict[str, Sorter | Painter] = {}
     plugin: Sorter | Painter
     for name, instance in collection.items():
-        if issubclass(instance, Sorter):
-            plugin = instance()
+        if isinstance(instance, Sorter):
+            plugin = instance
         elif issubclass(instance, Painter):
             plugin = instance(
                 user=user,

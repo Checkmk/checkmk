@@ -29,10 +29,9 @@ def test_registered_sorter_cmp() -> None:
         is_show_more=False,
     )
     _register_sorter("inv_key", attribute_sorter_from_hint((), SDKey("key"), hint))
-    sorter_cls = sorter_registry.get("inv_key")
-    assert sorter_cls is not None
+    sorter = sorter_registry["inv_key"]
     assert (
-        sorter_cls().cmp(
+        sorter.cmp(
             {"host_inventory": ImmutableTree()},
             {"host_inventory": ImmutableTree()},
             parameters=None,

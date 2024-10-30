@@ -129,19 +129,19 @@ class View:
     def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:
         sorters: list[SorterEntry] = []
         for entry in sorter_list:
-            sorter = entry.sorter
-            sorter_cls = sorter_registry.get(
-                sorter[0] if isinstance(sorter, tuple) else sorter, None
+            sorter_spec = entry.sorter
+            sorter = sorter_registry.get(
+                sorter_spec[0] if isinstance(sorter_spec, tuple) else sorter_spec, None
             )
-            if sorter_cls is None:
+            if sorter is None:
                 continue  # Skip removed sorters
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(),
+                    sorter=sorter,
                     negate=entry.negate,
                     join_key=entry.join_key,
-                    parameters=sorter[1] if isinstance(sorter, tuple) else None,
+                    parameters=sorter_spec[1] if isinstance(sorter_spec, tuple) else None,
                 )
             )
         return sorters

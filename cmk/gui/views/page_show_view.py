@@ -11,7 +11,7 @@ import functools
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any, Protocol
+from typing import Any
 from urllib.parse import quote_plus
 
 import livestatus
@@ -58,7 +58,7 @@ from cmk.gui.visuals.filter import Filter
 
 from . import availability
 from .row_post_processing import post_process_rows
-from .sorter import SorterEntry
+from .sorter import SorterEntry, SorterProtocol
 from .store import get_all_views, get_permitted_views
 
 
@@ -627,18 +627,6 @@ def _link_to_folder_by_path(path: str) -> str:
         [("mode", "folder"), ("folder", path)],
         filename="wato.py",
     )
-
-
-class SorterProtocol(Protocol):
-    def __call__(
-        self,
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,  # pylint: disable=redefined-outer-name
-    ) -> int: ...
 
 
 def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:

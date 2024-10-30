@@ -18,6 +18,7 @@ import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
@@ -940,6 +941,25 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
             ),
             id="TimePeriod",
+        ),
+        pytest.param(
+            Tuple(
+                title=api_v1.Title("title"),
+                help_text=api_v1.Help("help text"),
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                title="title",
+                help="help text",
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Tuple",
         ),
     ],
 )

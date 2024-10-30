@@ -9,7 +9,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Literal, Self, Tuple, TypeVar
+from typing import Any, assert_never, Literal, Self, TypeVar
 
 from cmk.ccc.version import Edition
 
@@ -21,6 +21,7 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
     LegacyValueSpec,
@@ -815,6 +816,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.TimePeriod():
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
 
+        case Tuple():
+            return _convert_to_legacy_tuple(to_convert, localizer)
+
         case LegacyValueSpec():
             return to_convert.valuespec
 
@@ -1502,7 +1506,7 @@ def _convert_to_legacy_cascading_dropdown(
 def _get_item_spec_maker(
     condition: ruleset_api_v1.rule_specs.HostAndItemCondition,
     localizer: Callable[[str], str],
-) -> Tuple[
+) -> tuple[
     Callable[
         [],
         legacy_valuespecs.TextInput
@@ -2458,4 +2462,20 @@ def _convert_to_legacy_timeperiod_selection(
         ),
         back=_transform_timeperiod_back,
         forth=_transform_timeperiod_forth,
+    )
+
+
+def _convert_to_legacy_tuple(
+    to_convert: Tuple, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Tuple:
+    orientation = to_convert.layout
+    # The legacy Tuple does not support the "horizontal_titles_top" orientation.
+    if orientation == "horizontal_titles_top":
+        orientation = "horizontal"
+    return legacy_valuespecs.Tuple(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        elements=[convert_to_legacy_valuespec(e, localizer) for e in to_convert.elements],
+        orientation=orientation,
+        show_titles=to_convert.show_titles,
     )

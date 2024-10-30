@@ -272,9 +272,9 @@ void set_unknown_to_unmonitored(
     bool in_nagios_initial_states,
     const TableStateHistory::state_info_t &state_info) {
     if (in_nagios_initial_states) {
-        for (const auto &[key, hst] : state_info) {
-            if (hst->_may_no_longer_exist) {
-                hst->_has_vanished = true;
+        for (const auto &[key, hss] : state_info) {
+            if (hss->_may_no_longer_exist) {
+                hss->_has_vanished = true;
             }
         }
     }
@@ -287,10 +287,10 @@ void handle_log_initial_states(
     // all known hosts and services. Therefore we can detect if a host is no
     // longer available after a nagios startup. If it still exists an INITIAL
     // HOST/SERVICE state entry will follow up shortly.
-    for (const auto &[key, hst] : state_info) {
-        if (!hst->_has_vanished) {
-            hst->_last_known_time = entry->time();
-            hst->_may_no_longer_exist = true;
+    for (const auto &[key, hss] : state_info) {
+        if (!hss->_has_vanished) {
+            hss->_last_known_time = entry->time();
+            hss->_may_no_longer_exist = true;
         }
     }
 }
@@ -391,9 +391,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         if (only_update && entry->time() >= since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
-            for (const auto &[key, hst] : state_info) {
-                hst->_from = since;
-                hst->_until = since;
+            for (const auto &[key, hss] : state_info) {
+                hss->_from = since;
+                hss->_until = since;
             }
             only_update = false;
         }
@@ -497,8 +497,8 @@ void TableStateHistory::handle_state_entry(
     }
 
     // Find state object for this host/service
-    auto it_hst = state_info.find(key);
-    if (it_hst == state_info.end()) {
+    auto it_hss = state_info.find(key);
+    if (it_hss == state_info.end()) {
         // Create state object that we also need for filtering right now
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         auto state = std::make_unique<HostServiceState>();
@@ -521,11 +521,11 @@ void TableStateHistory::handle_state_entry(
 
         // Host/Service relations
         if (state->_is_host) {
-            for (const auto &[key, hst] : state_info) {
-                if (hst->_host != nullptr &&
-                    hst->_host->handleForStateHistory() ==
+            for (const auto &[key, hss] : state_info) {
+                if (hss->_host != nullptr &&
+                    hss->_host->handleForStateHistory() ==
                         state->_host->handleForStateHistory()) {
-                    state->_services.push_back(hst.get());
+                    state->_services.push_back(hss.get());
                 }
             }
         } else {
@@ -594,7 +594,7 @@ void TableStateHistory::handle_state_entry(
         update(query, user, core, query_timeframe, entry, *state_info[key],
                only_update, notification_periods);
     } else {
-        update(query, user, core, query_timeframe, entry, *it_hst->second,
+        update(query, user, core, query_timeframe, entry, *it_hss->second,
                only_update, notification_periods);
     }
 }
@@ -607,9 +607,9 @@ void TableStateHistory::handle_timeperiod_transition(
     try {
         const TimeperiodTransition tpt(entry->options());
         notification_periods[tpt.name()] = tpt.to();
-        for (const auto &[key, hst] : state_info) {
+        for (const auto &[key, hss] : state_info) {
             updateHostServiceState(query, user, core, query_timeframe, entry,
-                                   *hst, only_update, notification_periods);
+                                   *hss, only_update, notification_periods);
         }
     } catch (const std::logic_error &e) {
         Warning(core.loggerLivestatus())
@@ -623,26 +623,26 @@ void TableStateHistory::final_reports(
     std::chrono::system_clock::duration query_timeframe,
     const state_info_t &state_info,
     std::chrono::system_clock::time_point until) {
-    for (const auto &[key, hst] : state_info) {
+    for (const auto &[key, hss] : state_info) {
         // No trace since the last two nagios startup -> host/service has
         // vanished
-        if (hst->_may_no_longer_exist) {
+        if (hss->_may_no_longer_exist) {
             // Log last known state up to nagios restart
-            hst->_time = hst->_last_known_time;
-            hst->_until = hst->_last_known_time;
-            process(query, user, query_timeframe, *hst);
+            hss->_time = hss->_last_known_time;
+            hss->_until = hss->_last_known_time;
+            process(query, user, query_timeframe, *hss);
 
             // Set absent state
-            hst->_state = -1;
-            hst->_debug_info = "UNMONITORED";
-            hst->_log_output = "";
-            hst->_long_log_output = "";
+            hss->_state = -1;
+            hss->_debug_info = "UNMONITORED";
+            hss->_log_output = "";
+            hss->_long_log_output = "";
         }
 
-        hst->_time = until - 1s;
-        hst->_until = hst->_time;
+        hss->_time = until - 1s;
+        hss->_until = hss->_time;
 
-        process(query, user, query_timeframe, *hst);
+        process(query, user, query_timeframe, *hss);
     }
 }
 

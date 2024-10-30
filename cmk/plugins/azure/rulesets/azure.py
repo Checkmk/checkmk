@@ -36,8 +36,8 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
 RAW_AZURE_SERVICES: Final = [
-    ("users_count", Title("Users in the Active Directory")),
-    ("ad_connect", Title("AD Connect Sync")),
+    ("users_count", Title("Users in Entra ID")),
+    ("ad_connect", Title("Entra Connect Sync")),
     ("app_registrations", Title("App Registrations")),
     ("usage_details", Title("Usage Details")),
     ("Microsoft.Compute/virtualMachines", Title("Virtual Machines")),

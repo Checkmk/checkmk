@@ -74,27 +74,18 @@ def configure_authentication() -> QuickSetupStage:
                 items=[
                     Text(
                         text=_(
-                            "Create an Azure app for Checkmk: Register the app in Azure Active Directory and note down the Application ID."
+                            "Register an app in Entra ID. Note down the Directory (tenant) ID, Application (client) ID as well as the used Subscription ID."
                         )
                     ),
                     Text(
                         text=_(
-                            'Assign permissions to the app: Grant necessary access rights, assigning the "Reader" role.'
+                            'Assign the built-in role "Reader" to the app in the Access control (IAM). Additionally add the application permissions "Directory.Read.All" and "User.Read.All" to the app if resources available through the Graph API will be monitored. These resources include "Users in Entra ID", "Entra Connect Sync", "App Registrations".'
                         ),
                     ),
+                    Text(text=_("Create a client secret for the app and note it down.")),
                     Text(
                         text=_(
-                            "Generate a key for the app: Create a Secret key in the app settings and note it down."
-                        )
-                    ),
-                    Text(
-                        text=_(
-                            "Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, and the Client secret from Azure."
-                        )
-                    ),
-                    Text(
-                        text=_(
-                            "Return to Checkmk: Define a unique Azure account name, and use the  Subscription ID, Tenant ID, Client ID, and the Client secret below."
+                            "Return to Checkmk, define a unique configuration name, and use the Subscription ID, Tenant ID, Client ID, and the Client secret below. Please note that the Subscription ID is not needed if only monitoring resources through the Graph API."
                         )
                     ),
                 ],

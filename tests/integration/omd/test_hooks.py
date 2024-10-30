@@ -51,6 +51,6 @@ def test_hooks(site: Site) -> None:
             "TRACE_JAEGER_ADMIN_PORT",
         ]
 
-    installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))
+    installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)

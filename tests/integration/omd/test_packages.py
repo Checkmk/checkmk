@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -148,7 +147,7 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
         plugin.binary_name == "check_mysql"
     )  # What? Why? Is printing the version dangerous?
 
-    cmd_line = [os.path.join(site.root, plugin.path, plugin.binary_name), plugin.cmd_line_option]
+    cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert p.stdout and p.stderr  # for mypy

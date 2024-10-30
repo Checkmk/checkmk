@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -46,7 +45,7 @@ def fixture_omd_site(monkeypatch: MonkeyPatch) -> None:
 
 @pytest.fixture(name="patch_web_dir")
 def fixture_patch_web_dir(tmp_path: Path, monkeypatch: MonkeyPatch, site: Site) -> None:
-    web_dir = os.path.join(site.root, "version/share/check_mk/web")
+    web_dir = (site.root / "version" / "share" / "check_mk" / "web").as_posix()
     monkeypatch.setattr(cmk.utils.paths, "web_dir", web_dir)
 
 

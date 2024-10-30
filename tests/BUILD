@@ -10,6 +10,7 @@ py_library(
     imports = [".."],
     deps = [
         "//cmk:lib_cmk",
+        requirement("beautifulsoup4"),
         requirement("cryptography"),
         requirement("docker"),
         requirement("dockerpty"),

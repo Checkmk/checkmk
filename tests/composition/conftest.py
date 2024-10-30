@@ -7,6 +7,7 @@ import logging
 from collections.abc import Iterator
 from pathlib import Path
 from shutil import which
+from typing import Literal
 
 import pytest
 
@@ -33,22 +34,30 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
 def _remote_site(
     central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
 ) -> Iterator[Site]:
-    remote_site_generator = site_factory.get_test_site(
-        "remote", description=request.node.name, auto_restart_httpd=True
-    )
-    try:  # make pylint happy
-        remote_site = next(remote_site_generator)
-    except StopIteration as excp:
-        excp.add_note("I should have received a remote site...")
+    yield from _make_connected_remote_site("remote", central_site, request.node.name)
 
-    try:
-        _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
-        yield remote_site
-    finally:
-        # Teardown of remote site. We first stop the central site to avoid crashes due to
-        # interruptions in the remote-central communication caused by the teardown.
-        central_site.stop()
-        yield from remote_site_generator
+
+@pytest.fixture(name="remote_site_2", scope="session")
+def _remote_site_2(
+    central_site: Site, request: pytest.FixtureRequest, ensure_cron: None
+) -> Iterator[Site]:
+    yield from _make_connected_remote_site("remote2", central_site, request.node.name)
+
+
+def _make_connected_remote_site(
+    site_name: Literal["remote", "remote2"],  # just to track what we're doing...
+    central_site: Site,
+    site_description: str,
+) -> Iterator[Site]:
+    with site_factory.get_test_site_ctx(
+        site_name, description=site_description, auto_restart_httpd=True
+    ) as remote_site:
+        try:
+            _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+            yield remote_site
+        finally:
+            # Stop the central site to avoid crashes due to interruptions in the remote-central communication caused by the teardown.
+            central_site.stop()
 
 
 def _add_remote_site_to_central_site(

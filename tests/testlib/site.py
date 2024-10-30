@@ -1701,6 +1701,27 @@ class SiteFactory:
 
         return site
 
+    @contextmanager
+    def get_test_site_ctx(
+        self,
+        name: str = "central",
+        description: str = "",
+        auto_cleanup: bool = True,
+        auto_restart_httpd: bool = False,
+        init_livestatus: bool = True,
+        save_results: bool = True,
+        report_crashes: bool = True,
+    ) -> Iterator[Site]:
+        yield from self.get_test_site(
+            name=name,
+            description=description,
+            auto_cleanup=auto_cleanup,
+            auto_restart_httpd=auto_restart_httpd,
+            init_livestatus=init_livestatus,
+            save_results=save_results,
+            report_crashes=report_crashes,
+        )
+
     def get_test_site(
         self,
         name: str = "central",

@@ -10,6 +10,7 @@ from operator import itemgetter
 from pathlib import Path
 from typing import (
     Any,
+    Container,
     get_args,
     Literal,
     NewType,
@@ -21,7 +22,7 @@ from typing import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
-from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.definition import RuleGroupType
@@ -37,7 +38,7 @@ from cmk.gui.watolib.utils import multisite_dir
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
-IdentFinder = Callable[[GlobalIdent | None], BundleId | None]
+IdentFinder = Callable[[GlobalIdent | None], str | None]
 Entity = Literal["host", "rule", "password", "dcd"]
 Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections"]
 CreateFunction = Callable[[], None]
@@ -149,7 +150,7 @@ def identify_bundle_references(
     bundle_group: str, bundle_ids: set[BundleId], *, rulespecs_hint: set[str] | None = None
 ) -> Mapping[BundleId, BundleReferences]:
     """Identify the configuration references of the configuration bundles."""
-    bundle_id_finder = _prepare_bundle_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
+    bundle_id_finder = _prepare_id_finder(PROGRAM_ID_QUICK_SETUP, bundle_ids)
     affected_entities = _get_affected_entities(bundle_group)
 
     bundle_rule_ids = (
@@ -286,9 +287,10 @@ def delete_config_bundle(bundle_id: BundleId) -> None:
     store.save(all_bundles)
 
 
-def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Sequence[_T]]:
+def _collect_many(values: Iterable[tuple[str, _T]]) -> Mapping[BundleId, Sequence[_T]]:
     mapping: dict[BundleId, list[_T]] = {}
-    for bundle_id, value in values:
+    for bundle_id_str, value in values:
+        bundle_id = BundleId(bundle_id_str)
         if bundle_id in mapping:
             mapping[bundle_id].append(value)
         else:
@@ -297,7 +299,7 @@ def _collect_many(values: Iterable[tuple[BundleId, _T]]) -> Mapping[BundleId, Se
     return mapping
 
 
-def _collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple[BundleId, Host]]:
+def _collect_hosts(finder: IdentFinder, hosts: Iterable[Host]) -> Iterable[tuple[str, Host]]:
     for host in hosts:
         if bundle_id := finder(host.locked_by()):
             yield bundle_id, host
@@ -357,7 +359,7 @@ def _delete_hosts(hosts: Iterable[Host]) -> None:
 
 def _collect_passwords(
     finder: IdentFinder, passwords: Mapping[str, Password]
-) -> Iterable[tuple[BundleId, tuple[str, Password]]]:
+) -> Iterable[tuple[str, tuple[str, Password]]]:
     for password_id, password in passwords.items():
         if bundle_id := finder(password.get("locked_by")):
             yield bundle_id, (password_id, password)
@@ -402,7 +404,7 @@ def _iter_all_rules(rulespecs: set[str] | None) -> Iterable[tuple[Folder, int, R
 
 def _collect_rules(
     finder: IdentFinder, rules: Iterable[tuple[Folder, int, Rule]]
-) -> Iterable[tuple[BundleId, Rule]]:
+) -> Iterable[tuple[str, Rule]]:
     for _folder, _idx, rule in rules:
         if bundle_id := finder(rule.locked_by):
             yield bundle_id, rule
@@ -458,7 +460,7 @@ def _delete_rules(rules: Iterable[Rule]) -> None:
 
 def _collect_dcd_connections(
     finder: IdentFinder, dcd_connections: DCDConnectionDict
-) -> Iterable[tuple[BundleId, tuple[str, DCDConnectionSpec]]]:
+) -> Iterable[tuple[str, tuple[str, DCDConnectionSpec]]]:
     for connection_id, connection in dcd_connections.items():
         if bundle_id := finder(connection.get("locked_by")):
             yield bundle_id, (connection_id, connection)
@@ -483,24 +485,32 @@ def _prepare_create_dcd_connections(
     return create
 
 
-def _delete_dcd_connections(dcd_connections: Iterable[tuple[str, DCDConnectionSpec]]) -> None:
+def _delete_dcd_connections(dcd_connections: Sequence[tuple[str, DCDConnectionSpec]]) -> None:
     for dcd_connection_id, _spec in dcd_connections:
         DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
 
+    _delete_hosts(
+        host
+        for _dcd_id, host in _collect_hosts(
+            _prepare_id_finder(PROGRAM_ID_DCD, {dcd_id for dcd_id, _spec in dcd_connections}),
+            Host.all().values(),
+        )
+    )
 
-def _prepare_bundle_id_finder(bundle_program_id: str, bundle_ids: set[BundleId]) -> IdentFinder:
-    def find_matching_bundle_id(
+
+def _prepare_id_finder(program_id: str, instance_ids: Container[str]) -> IdentFinder:
+    def find_matching_id(
         ident: GlobalIdent | None,
-    ) -> BundleId | None:
+    ) -> str | None:
         if (
             ident is not None
-            and ident["program_id"] == bundle_program_id
-            and ident["instance_id"] in bundle_ids
+            and ident["program_id"] == program_id
+            and ident["instance_id"] in instance_ids
         ):
-            return BundleId(ident["instance_id"])
+            return ident["instance_id"]
         return None
 
-    return find_matching_bundle_id
+    return find_matching_id
 
 
 class ConfigBundle(TypedDict):

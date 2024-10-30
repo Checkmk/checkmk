@@ -243,25 +243,22 @@ private:
 };
 }  // namespace
 
-// Create a partial filter, that contains only such filters that check
-// attributes of current hosts and services
-
 // static
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
     const Query &query) {
     return query.partialFilter(
         "current host/service columns", [](const std::string &columnName) {
+            // NOTE: This is quite brittle and must be kept in sync with its
+            // usage in TableStateHistory::insert_new_state()!
             return (
-                // "current_host_*" (joined via HostServiceState::_host) or
-                // "current_service_*" (joined via HostServiceState::_service)
-                columnName.starts_with("current_") ||
-                // "host_down" (i.e. HostServiceState::_host_down) or
-                // "host_name" (i.e. HostServiceState::_host_name)
-                columnName.starts_with("host_") ||
-                // "service_description"
-                // (i.e. HostServiceState::_service_description) or
-                // "service_period" (i.e. HostServiceState::_service_period)
-                columnName.starts_with("service_"));
+                // joined via HostServiceState::_host
+                columnName.starts_with("current_host_") ||
+                // joined via HostServiceState::_service
+                columnName.starts_with("current_service_") ||
+                // HostServiceState::_host_name
+                columnName == "host_name" ||
+                // HostServiceState::_service_description
+                columnName == "service_description");
         });
 }
 
@@ -532,6 +529,8 @@ void TableStateHistory::insert_new_state(
     // Note: we currently do not filter out hosts since they might be needed
     // for service states
     if (!entry->service_description().empty()) {
+        // NOTE: The filter is only allowed to inspect those fields of state
+        // which are set by now, see createPartialFilter()!
         if (!object_filter.accepts(Row{&state}, user, query.timezoneOffset())) {
             object_blacklist.insert(key);
             return;

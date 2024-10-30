@@ -18,7 +18,7 @@ def update_visuals(
     visual_type: VisualTypeName,
     all_visuals: dict[tuple[UserId, str], visuals.TVisual],
 ) -> None:
-    with _save_user_visuals(visual_type, all_visuals) as affected_user:
+    with save_user_visuals(visual_type, all_visuals) as affected_user:
         # skip builtins, only users
         affected_user.update(owner for owner, _name in all_visuals if owner)
 
@@ -27,7 +27,7 @@ def update_visuals(
 
 
 @contextmanager
-def _save_user_visuals(
+def save_user_visuals(
     visual_type: VisualTypeName,
     all_visuals: dict[tuple[UserId, str], visuals.TVisual],
 ) -> Iterator[set[UserId]]:

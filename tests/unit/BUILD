@@ -105,7 +105,6 @@ py_test(
         requirement("pytest-random-order"),
         requirement("responses"),
         requirement("time-machine"),
-        requirement("webtest"),
         "//cmk:lib_cmk_repo",
         "//tests:conftest",
         "//tests:testlib",

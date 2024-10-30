@@ -24,7 +24,6 @@ from cmk.base.api.agent_based.plugin_classes import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
-from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
 
 registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
@@ -153,12 +152,8 @@ def get_relevant_raw_sections(
     }
 
 
-def get_section_plugin(section_name: SectionName) -> SectionPlugin:
-    return (
-        registered_agent_sections.get(section_name)
-        or registered_snmp_sections.get(section_name)
-        or trivial_section_factory(section_name)
-    )
+def get_section_plugin(section_name: SectionName) -> SectionPlugin | None:
+    return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
 
 
 def get_section_producers(parsed_section_name: ParsedSectionName) -> set[SectionName]:
@@ -183,7 +178,10 @@ def is_stored_ruleset(ruleset_name: RuleSetName) -> bool:
 
 def needs_redetection(section_name: SectionName) -> bool:
     section = get_section_plugin(section_name)
-    return len(get_section_producers(section.parsed_section_name)) > 1
+    ps_name = (
+        ParsedSectionName(str(section_name)) if section is None else section.parsed_section_name
+    )
+    return len(get_section_producers(ps_name)) > 1
 
 
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:

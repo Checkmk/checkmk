@@ -2727,8 +2727,10 @@ class ConfigCache:
         """
 
         def snmp_fetch_interval_impl() -> int | None:
-            section = agent_based_register.get_section_plugin(section_name)
-            if not isinstance(section, SNMPSectionPlugin):
+            # TODO: move this up the call stack, of course.
+            plugins = agent_based_register.get_previously_loaded_plugins()
+
+            if section_name not in plugins.snmp_sections:
                 return None  # no values at all for non snmp section
 
             # Previous to 1.5 "match" could be a check name (including subchecks) instead of

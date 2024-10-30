@@ -118,8 +118,8 @@ def register_agent_section(
 ) -> None:
     section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
-    if is_registered_section_plugin(section_plugin.name):
-        if get_section_plugin(section_plugin.name).location == location:
+    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+        if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,
@@ -140,8 +140,8 @@ def register_snmp_section(
 ) -> None:
     section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
-    if is_registered_section_plugin(section_plugin.name):
-        if get_section_plugin(section_plugin.name).location == location:
+    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+        if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,

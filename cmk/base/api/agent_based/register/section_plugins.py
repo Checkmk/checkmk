@@ -344,17 +344,3 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
                 "You must add those to the supersedes keyword argument."
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
-
-
-def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
-    return AgentSectionPlugin(
-        name=section_name,
-        parsed_section_name=ParsedSectionName(str(section_name)),
-        parse_function=lambda string_table: string_table,
-        host_label_function=_noop_host_label_function,
-        host_label_default_parameters=None,
-        host_label_ruleset_name=None,
-        host_label_ruleset_type="merged",  # doesn't matter, use default.
-        supersedes=set(),
-        location=None,
-    )

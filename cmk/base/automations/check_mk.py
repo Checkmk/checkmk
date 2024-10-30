@@ -347,9 +347,14 @@ class AutomationDiscovery(DiscoveryAutomation):
                     config_cache.summary_config,
                     override_non_ok_state=None,
                 ),
-                section_plugins=SectionPluginMapper(),
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
                 section_error_handling=section_error_handling,
-                host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=ruleset_matcher,
+                    sections={**plugins.agent_sections, **plugins.snmp_sections},
+                ),
                 plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
                 ignore_service=config_cache.service_ignored,
                 ignore_plugin=config_cache.check_plugin_ignored,
@@ -631,7 +636,9 @@ def _execute_discovery(
                 config_cache.summary_config,
                 override_non_ok_state=None,
             ),
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                 operation="parsing",
                 section_name=section_name,
@@ -639,7 +646,10 @@ def _execute_discovery(
                 host_name=host_name,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
@@ -732,8 +742,11 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
-    section_plugins = SectionPluginMapper()
-    host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
+    section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
+    host_label_plugins = HostLabelPluginMapper(
+        ruleset_matcher=ruleset_matcher,
+        sections={**ab_plugins.agent_sections, **ab_plugins.snmp_sections},
+    )
     plugins = DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher)
     on_error = OnError.IGNORE
 

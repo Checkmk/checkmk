@@ -1898,7 +1898,9 @@ def mode_check_discovery(
             fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
             summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                 operation="parsing",
                 section_name=section_name,
@@ -1906,7 +1908,10 @@ def mode_check_discovery(
                 host_name=hostname,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
             ignore_service=config_cache.service_ignored,
             ignore_plugin=config_cache.check_plugin_ignored,
@@ -2224,9 +2229,14 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             ruleset_matcher=config_cache.ruleset_matcher,
             parser=parser,
             fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=section_error_handling,
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=config_cache.ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
             run_plugin_names=run_plugin_names,
             ignore_plugin=config_cache.check_plugin_ignored,
@@ -2420,7 +2430,9 @@ def mode_check(
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
                 summarizer=summarizer,
-                section_plugins=SectionPluginMapper(),
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
                 section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                     operation="parsing",
                     section_name=section_name,
@@ -2622,7 +2634,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
-    section_plugins = SectionPluginMapper()
+    section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = InventoryPluginMapper()
 
     for hostname in hostnames:
@@ -2899,7 +2911,9 @@ def mode_inventory_as_check(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
@@ -3063,7 +3077,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         process_hosts = EVERYTHING
 
-    section_plugins = SectionPluginMapper()
+    section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = InventoryPluginMapper()
 
     start = time.monotonic()

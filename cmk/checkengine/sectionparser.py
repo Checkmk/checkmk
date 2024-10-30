@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Generic, NamedTuple, TypeVar
+from typing import Any, Final, Generic, NamedTuple, Self, TypeVar
 
 from cmk.ccc import debug
 
@@ -40,6 +40,14 @@ class SectionPlugin:
     # keep the smallest common type of all the unions defined over there.
     parse_function: Callable[..., object]
     parsed_section_name: ParsedSectionName
+
+    @classmethod
+    def trivial(cls, name: SectionName) -> Self:
+        return cls(
+            supersedes=set(),
+            parse_function=lambda x: x,
+            parsed_section_name=ParsedSectionName(str(name)),
+        )
 
 
 class _ParsingResult(NamedTuple):

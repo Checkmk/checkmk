@@ -76,7 +76,9 @@ from cmk.checkengine.summarize import summarize, SummaryConfig
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin as AgentSectionPluginAPI
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin as SNMPSectionPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import (
     ConfigCache,
@@ -468,57 +470,65 @@ class CMKFetcher:
 
 
 class SectionPluginMapper(SectionMap[SectionPlugin]):
-    # We should probably not tap into the private `register._config` module but
-    # the data we need doesn't seem to be available elsewhere.  Anyway, this is
-    # an *immutable* Mapping so we are actually on the safe side.
+    def __init__(
+        self,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> SectionPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return SectionPlugin(
-            supersedes=plugin.supersedes,
-            parse_function=plugin.parse_function,
-            parsed_section_name=plugin.parsed_section_name,
+        plugin = self._sections.get(__key)
+        return (
+            SectionPlugin.trivial(__key)
+            if plugin is None
+            else SectionPlugin(
+                supersedes=plugin.supersedes,
+                parse_function=plugin.parse_function,
+                parsed_section_name=plugin.parsed_section_name,
+            )
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return len(self._sections)
 
 
 class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
-    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        *,
+        ruleset_matcher: RulesetMatcher,
+        sections: Mapping[SectionName, AgentSectionPluginAPI | SNMPSectionPluginAPI],
+    ) -> None:
         super().__init__()
         self.ruleset_matcher: Final = ruleset_matcher
+        self._sections = sections
 
     def __getitem__(self, __key: SectionName) -> HostLabelPlugin:
-        plugin = _api.get_section_plugin(__key)
-        return HostLabelPlugin(
-            function=plugin.host_label_function,
-            parameters=partial(
-                get_plugin_parameters,
-                matcher=self.ruleset_matcher,
-                default_parameters=plugin.host_label_default_parameters,
-                ruleset_name=plugin.host_label_ruleset_name,
-                ruleset_type=plugin.host_label_ruleset_type,
-                rules_getter_function=agent_based_register.get_host_label_ruleset,
-            ),
+        plugin = self._sections.get(__key)
+        return (
+            HostLabelPlugin(
+                function=plugin.host_label_function,
+                parameters=partial(
+                    get_plugin_parameters,
+                    matcher=self.ruleset_matcher,
+                    default_parameters=plugin.host_label_default_parameters,
+                    ruleset_name=plugin.host_label_ruleset_name,
+                    ruleset_type=plugin.host_label_ruleset_type,
+                    rules_getter_function=agent_based_register.get_host_label_ruleset,
+                ),
+            )
+            if plugin is not None
+            else HostLabelPlugin.trivial()
         )
 
     def __iter__(self) -> Iterator[SectionName]:
-        return iter(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return iter(self._sections)
 
     def __len__(self) -> int:
-        return len(
-            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
-        )
+        return len(self._sections)
 
 
 class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):

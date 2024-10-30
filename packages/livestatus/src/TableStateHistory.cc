@@ -249,12 +249,20 @@ private:
 // static
 std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
     const Query &query) {
-    return query.partialFilter("current host/service columns",
-                               [](const std::string &columnName) {
-                                   return columnName.starts_with("current_") ||
-                                          columnName.starts_with("host_") ||
-                                          columnName.starts_with("service_");
-                               });
+    return query.partialFilter(
+        "current host/service columns", [](const std::string &columnName) {
+            return (
+                // "current_host_*" (joined via HostServiceState::_host) or
+                // "current_service_*" (joined via HostServiceState::_service)
+                columnName.starts_with("current_") ||
+                // "host_down" (i.e. HostServiceState::_host_down) or
+                // "host_name" (i.e. HostServiceState::_host_name)
+                columnName.starts_with("host_") ||
+                // "service_description"
+                // (i.e. HostServiceState::_service_description) or
+                // "service_period" (i.e. HostServiceState::_service_period)
+                columnName.starts_with("service_"));
+        });
 }
 
 void TableStateHistory::answerQuery(Query &query, const User &user,

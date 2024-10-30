@@ -204,7 +204,6 @@ def triggering_events() -> QuickSetupStage:
                             ],
                             "service_events": [
                                 ("status_change", (-1, ServiceState.CRIT)),
-                                ("status_change", (-1, ServiceState.UNKNOWN)),
                                 ("status_change", (-1, ServiceState.WARN)),
                                 ("status_change", (-1, ServiceState.OK)),
                             ],

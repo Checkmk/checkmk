@@ -22,6 +22,7 @@ from pprint import pformat
 from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
+import pytest
 
 from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
@@ -276,11 +277,14 @@ def _extend_command(
             f"`shell=True` is not supported by {methods}.\n"
             "Use desired `subprocess.<method>` directly for such cases."
         )
-    if preserve_env and not (sudo or substitute_user):
-        raise TypeError(
-            f"'preserve_env' requires usage of 'sudo' or 'substitute_user' in {methods}!"
-        )
-
+    if preserve_env:
+        # Skip the test cases calling this for some distros
+        if os.environ.get("DISTRO") == "centos-8":
+            pytest.skip("preserve env not possible in this environment")
+        if not (sudo or substitute_user):
+            raise TypeError(
+                f"'preserve_env' requires usage of 'sudo' or 'substitute_user' in {methods}!"
+            )
     sudo_cmd = _cmd_as_sudo(preserve_env) if sudo else []
     user_cmd = (
         (_cmd_as_user(substitute_user, preserve_env) + [shlex.join(cmd)])

@@ -100,6 +100,21 @@ def _check_broker_ping(site: Site, destination: str) -> None:
         logger.info("".join(output))
 
 
+@contextmanager
+def _broker_stopped(site: Site) -> Iterator[None]:
+    """Disable the broker on the site"""
+    if site.omd("status", "rabbitmq") != 0:
+        # broker is not running anyway
+        yield
+        return
+
+    assert site.omd("stop", "rabbitmq") == 0
+    try:
+        yield
+    finally:
+        assert site.omd("start", "rabbitmq") == 0
+
+
 @skip_if_saas_edition
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
@@ -125,3 +140,17 @@ class TestMessageBroker:
         """Test if the connection between central and remote site works"""
         with _broker_pong(central_site):
             _check_broker_ping(remote_site, central_site.id)
+
+    def test_message_broker_remote_remote_via_central(
+        self,
+        central_site: Site,
+        remote_site: Site,
+        remote_site_2: Site,
+    ) -> None:
+        with _broker_pong(remote_site):
+            _check_broker_ping(remote_site_2, remote_site.id)
+
+            # test complement: should not work without the central site running:
+            with _broker_stopped(central_site):
+                with pytest.raises(_Timeout):
+                    _check_broker_ping(remote_site_2, remote_site.id)

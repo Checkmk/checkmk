@@ -30,11 +30,10 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
     if params.address[0] == "use_host_address":
         command_arguments += [
             "--address",
-            host_config.primary_ip_config.address,
-            str(params.port),
+            f"{host_config.primary_ip_config.address}:{params.port}",
         ]
     elif params.address[0] == "manual_address":
-        command_arguments += ["--address", params.address[1], str(params.port)]
+        command_arguments += ["--address", f"{params.address[1]}:{params.port}"]
     else:
         assert_never(params.address)
 

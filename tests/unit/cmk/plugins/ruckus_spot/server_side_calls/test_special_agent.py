@@ -29,8 +29,7 @@ HOST_CONFIG = HostConfig(
             SpecialAgentCommand(
                 command_arguments=[
                     "--address",
-                    "address",
-                    "8443",
+                    "address:8443",
                     "--venueid",
                     "venueID",
                     "--apikey",
@@ -50,8 +49,7 @@ HOST_CONFIG = HostConfig(
             SpecialAgentCommand(
                 command_arguments=[
                     "--address",
-                    "addresstest",
-                    "8443",
+                    "addresstest:8443",
                     "--venueid",
                     "venueID",
                     "--apikey",

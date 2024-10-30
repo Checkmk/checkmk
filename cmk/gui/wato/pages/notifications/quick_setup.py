@@ -356,7 +356,7 @@ def notification_method() -> QuickSetupStage:
         return DictElement(
             required=False,
             parameter_form=CascadingSingleChoiceExtended(
-                title=Title("Bulk Notification"),
+                title=Title("Bulk notification"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="always",

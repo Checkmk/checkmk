@@ -370,14 +370,13 @@ def notification_method() -> QuickSetupStage:
                         parameter_form=CascadingSingleChoice(
                             elements=[
                                 CascadingSingleChoiceElement(
-                                    name=timeperiod,
+                                    name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
                                     title=Title("%s") % (_("%s") % timeperiod),
                                     parameter_form=bulk_notification(
                                         title="timeperiod",
                                     ),
                                 )
-                                for timeperiod in load_timeperiods()
-                                if timeperiod != "24X7"
+                                for name, timeperiod in _get_time_periods()
                             ],
                         ),
                     ),

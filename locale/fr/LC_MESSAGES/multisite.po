@@ -2578,6 +2578,12 @@ msgstr "ACTIF"
 msgid "AD Connect Sync"
 msgstr "AD Connect Sync"
 
+msgid "ADMIN"
+msgstr ""
+
+msgid "ADMINISTRATOR"
+msgstr ""
+
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -3310,6 +3316,12 @@ msgstr "Accusé de réception expire :"
 msgid "Acknowledgments: "
 msgstr "Remerciements : "
 
+msgid ""
+"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
+"project, note down the Project ID either from the dashboard or project "
+"settings, and use it below."
+msgstr ""
+
 msgid "Act."
 msgstr "Agir."
 
@@ -3346,6 +3358,11 @@ msgstr "Actions en cas d'annulation"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Activer (désactivé : prendre en compte toutes les alertes)"
+
+msgid ""
+"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
+"necessary, and wait for it to become accessible."
+msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Activer le planificateur de changements"
@@ -3750,6 +3767,10 @@ msgstr "Ajouter une exception"
 
 msgid "Add Group"
 msgstr "Ajouter un groupe"
+
+#, fuzzy
+msgid "Add Instance"
+msgstr "Ajouter l'instance NGINX"
 
 msgid "Add LDAP connection"
 msgstr "Ajouter une connexion LDAP"
@@ -4975,7 +4996,7 @@ msgid "Agent baking finished."
 msgstr "La cuisson de l'agent est terminée."
 
 #, fuzzy
-msgid "Agent based plug-ins (deprecated)"
+msgid "Agent based plug-ins (outdated, ignored)"
 msgstr "Plugins basés sur les agents (Contrôles, Inventaire)"
 
 #, fuzzy
@@ -10457,6 +10478,9 @@ msgstr "Modes de port CA"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - Appels incomplets"
 
+msgid "CALLBACK"
+msgstr ""
+
 msgid "CARA"
 msgstr "CARA"
 
@@ -10925,6 +10949,10 @@ msgstr "Appeler une règle"
 
 msgid "Call legs"
 msgstr "Pattes d'appel"
+
+#, fuzzy
+msgid "Call with the following parameters"
+msgstr "Appel avec les paramètres suivants :"
 
 msgid "Call with the following parameters:"
 msgstr "Appel avec les paramètres suivants :"
@@ -14003,6 +14031,10 @@ msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
 msgstr "Surveillance des services Web d'Amazon (AWS)"
 
 #, fuzzy
+msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
+msgstr "Surveillance des services Web d'Amazon (AWS)"
+
+#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Surveillance des services Web d'Amazon (AWS)"
 
@@ -15191,6 +15223,12 @@ msgstr ""
 "Aucun objet utilisateur n'a été trouvé pour la synchronisation. Veuillez "
 "vérifier les paramètres de votre filtre."
 
+#, fuzzy
+msgid "Could not access your GCP account. Please check your credentials."
+msgstr ""
+"Aucun objet utilisateur n'a été trouvé pour la synchronisation. Veuillez "
+"vérifier les paramètres de votre filtre."
+
 #, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
@@ -15624,6 +15662,12 @@ msgstr "Créer des hôtes"
 msgid "Create hosts in"
 msgstr "Créer des hôtes dans"
 
+msgid ""
+"Create key: Generate a key for the service account to access monitoring and "
+"asset data, ensuring it's in JSON format. Copy JSON object including the "
+"curly brackets and store to use it below."
+msgstr ""
+
 #, python-format
 msgid "Create new %s"
 msgstr "Créer un nouveau %s"
@@ -15732,6 +15776,12 @@ msgstr "Créez les groupes d'interface suivants"
 
 msgid "Create topic"
 msgstr "Créer un sujet"
+
+msgid ""
+"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
+"service account with a descriptive name, assign roles (Monitoring Viewer and "
+"Cloud Asset Viewer), and finalize the creation."
+msgstr ""
 
 msgid "Create users only on login"
 msgstr "Créer des utilisateurs uniquement à la connexion"
@@ -16534,8 +16584,9 @@ msgstr "Nom des paquets de l'agent (Linux, UNIX)"
 msgid "Customize and use %s"
 msgstr "Personnaliser et utiliser %s"
 
-msgid "Customize installation directories (required when customizing user)"
-msgstr ""
+#, fuzzy
+msgid "Customize installation directories"
+msgstr "Audit de l'installation de l'agent Checkmk"
 
 msgid "Customize login screen"
 msgstr "Personnaliser l'écran de connexion"
@@ -16565,8 +16616,9 @@ msgstr "Personnaliser la plage horaire"
 msgid "Customize title"
 msgstr "Personnaliser le titre"
 
-msgid "Customize user, e.g., deploy as unprivileged user"
-msgstr ""
+#, fuzzy
+msgid "Customize user"
+msgstr "Personnaliser"
 
 msgid "Customized"
 msgstr "Personnalisé"
@@ -20396,6 +20448,10 @@ msgid "Do not offer this action as a command on open events"
 msgstr ""
 "Ne proposez pas cette action comme une commande sur des événements ouverts"
 
+#, fuzzy
+msgid "Do not output information about cache creation/deletion"
+msgstr "Informations contextuelles sur cette connexion"
+
 msgid "Do not pad"
 msgstr "Ne pas tamponner"
 
@@ -22978,6 +23034,10 @@ msgstr "Commentaire sur l'événement"
 
 msgid "Event console"
 msgstr "Console d'événement"
+
+#, fuzzy
+msgid "Event console filters"
+msgstr "Alertes de la console d'événements"
 
 msgid "Event console performance"
 msgstr "Performances de la console d'événements"
@@ -25891,6 +25951,10 @@ msgstr "Stockage alloué"
 msgid "GCP piggyback services"
 msgstr "Services de piggyback GCP"
 
+#, fuzzy
+msgid "GCP services found!"
+msgstr "Aucun hôte/service trouvé."
+
 msgid "GCP services to monitor"
 msgstr "Services de BPC à surveiller"
 
@@ -26145,11 +26209,12 @@ msgstr "spécification de la cartouche"
 msgid "Generating report..."
 msgstr "Générer des rapports..."
 
-msgid "Generic Options"
-msgstr "Options génériques"
-
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Dispositif générique UPS : Capteur de température"
+
+#, fuzzy
+msgid "Generic agent options"
+msgstr "Options génériques"
 
 #, fuzzy
 msgid "Generic check plug-ins"
@@ -29590,6 +29655,10 @@ msgstr "Limite de l'événement de l'hôte"
 #, fuzzy
 msgid "Host events"
 msgstr "Événements d'accueil"
+
+#, fuzzy
+msgid "Host filters"
+msgstr "Fichiers journaux des hôtes"
 
 msgid "Host gets unreachble"
 msgstr "L'hôte n'est pas joignable"
@@ -37149,9 +37218,6 @@ msgstr "Liens vers les vues globales et les tableaux de bord"
 msgid "Linux"
 msgstr "Linux"
 
-msgid "Linux Agent"
-msgstr "Agent Linux"
-
 msgid "Linux Multipath Inventory"
 msgstr "Inventaire de Linux Multipath"
 
@@ -37185,6 +37251,13 @@ msgstr "Fichiers Linux, Solaris, AIX"
 
 msgid "Linux-User:"
 msgstr "Utilisateur de Linux :"
+
+#, fuzzy
+msgid "Linux/UNIX Agent Options"
+msgstr "Agent Linux"
+
+msgid "Linux/UNIX agent options"
+msgstr ""
 
 msgid "Linux: DPKG (.deb)"
 msgstr "Linux : DPKG (.deb)"
@@ -42129,6 +42202,9 @@ msgstr "Nommez votre %s pour qu'il soit facilement reconnaissable."
 msgid "Name your host and define the folder"
 msgstr ""
 
+msgid "Name your host and define the folder path"
+msgstr ""
+
 msgid ""
 "Name your host, define the path and select the regions you would like to "
 "monitor"
@@ -42653,6 +42729,10 @@ msgstr "Variable de configuration :"
 msgid "No Dictionary ValueSpec within Migrate: %s"
 msgstr ""
 
+#, fuzzy
+msgid "No GCP services found."
+msgstr "Aucun hôte/service trouvé."
+
 msgid "No IP"
 msgstr "Pas d'IP"
 
@@ -43030,14 +43110,6 @@ msgstr "Pas de recherche"
 
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
-
-#, fuzzy
-msgid "No selected graph line"
-msgstr "Opération sur les métriques sélectionnées"
-
-#, fuzzy
-msgid "No selected graph lines"
-msgstr "Opération sur les métriques sélectionnées"
 
 #, fuzzy
 msgid "No smarthosts"
@@ -44797,6 +44869,9 @@ msgstr "OO/Notif"
 
 msgid "OO/Service"
 msgstr "OO/Service"
+
+msgid "OPERATOR"
+msgstr ""
 
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
@@ -48841,6 +48916,10 @@ msgstr "Veuillez choisir une image PNG."
 msgid "Please choose a file to upload."
 msgstr "Veuillez choisir un fichier à télécharger."
 
+#, fuzzy
+msgid "Please choose a notification parameter or create one."
+msgstr "Supprimer cette règle de notification"
+
 msgid "Please choose a report to schedule"
 msgstr "Veuillez choisir un rapport à programmer"
 
@@ -49872,6 +49951,10 @@ msgstr "Initialisation de GIT pour Checkmk"
 msgid "Prepare Azure for Checkmk"
 msgstr "Initialisation de GIT pour Checkmk"
 
+#, fuzzy
+msgid "Prepare GCP for Checkmk"
+msgstr "Initialisation de GIT pour Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Préfixe d'espace de nom pour les hôtes"
 
@@ -50543,7 +50626,7 @@ msgid "Python Version"
 msgstr "Version Python"
 
 #, fuzzy
-msgid "Python agent plug-in execution (UNIX)"
+msgid "Python agent plug-in execution (Linux, UNIX)"
 msgstr "Exécution du plugin d'agent Python (UNIX)"
 
 msgid ""
@@ -52051,6 +52134,10 @@ msgstr "Retirer"
 msgid "Remove %s from extensions"
 msgstr "Supprimer %s des extensions"
 
+#, fuzzy
+msgid "Remove Instance"
+msgstr "Supprimer tout"
+
 msgid "Remove TLS registration"
 msgstr "Supprimer l'enregistrement TLS"
 
@@ -53302,6 +53389,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
+"and JSON object below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 
@@ -54521,6 +54613,11 @@ msgid ""
 "instances may take a few minutes to show up."
 msgstr ""
 
+msgid ""
+"Save your progress and go to the Activate Changes page to enable it. Virtual "
+"machines may take a few minutes to show up."
+msgstr ""
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -55131,8 +55228,18 @@ msgstr "Services Azure à surveiller"
 
 #, fuzzy
 msgid ""
+"Select and configure the Google Cloud Platform services you would like to "
+"monitor"
+msgstr "Services Azure à surveiller"
+
+#, fuzzy
+msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Services Azure à surveiller"
+
+#, fuzzy
+msgid "Select at least one graph line to edit"
+msgstr "Veuillez sélectionner au moins un élément"
 
 #, fuzzy
 msgid "Select contact group"
@@ -55144,6 +55251,9 @@ msgstr "Sélectionner la source de données"
 
 msgid "Select device type"
 msgstr "Sélectionnez le type de dispositif"
+
+msgid "Select exactly one graph line to edit"
+msgstr ""
 
 msgid "Select file"
 msgstr "Sélectionnez le fichier"
@@ -55504,6 +55614,10 @@ msgstr "Envoyer les métriques à InfluxDB"
 
 msgid "Send monitoring notification"
 msgstr "Envoyer une notification de suivi"
+
+#, fuzzy
+msgid "Send notification"
+msgstr "Envoyer une notification personnalisée"
 
 msgid "Send notifications to Event Console"
 msgstr "Envoyer des notifications à la console d'événements"
@@ -55871,6 +55985,10 @@ msgstr "Découverte des services : État"
 #, fuzzy
 msgid "Service events"
 msgstr "Niveau de service"
+
+#, fuzzy
+msgid "Service filters"
+msgstr "Filtres de service"
 
 msgid "Service goes into critical state"
 msgstr "Le service passe en état critique"
@@ -56285,7 +56403,7 @@ msgid "Set by rule pack"
 msgstr "Défini par un ensemble de règles"
 
 #, fuzzy
-msgid "Set cache age for plug-ins (UNIX)"
+msgid "Set cache age for plug-ins (Linux, UNIX)"
 msgstr "Définir l'âge du cache pour les plugins (UNIX)"
 
 #, fuzzy
@@ -61076,6 +61194,10 @@ msgstr "Appui aux diagnostics"
 msgid "Supporting rules"
 msgstr "Règles horizontales"
 
+#, fuzzy
+msgid "Suppress all previous"
+msgstr "Suppression des capteurs non disponibles"
+
 msgid "Suppress not available sensors"
 msgstr "Suppression des capteurs non disponibles"
 
@@ -62914,7 +63036,8 @@ msgstr ""
 "L'URL doit commencer par <tt>http</tt> ou <tt>https</tt> et se terminer par "
 "<tt>/check_mk/</tt>."
 
-msgid "The URL must begin with <tt>https</tt>."
+#, fuzzy
+msgid "The URL must begin with https://"
 msgstr "L'URL doit commencer par <tt>https</tt>."
 
 msgid "The URL of the target page the link of the element should link to."
@@ -63677,6 +63800,11 @@ msgstr ""
 
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
+"unintentional, please verify your configuration."
+msgstr ""
+
+msgid ""
+"The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
 msgstr ""
 
@@ -69990,6 +70118,14 @@ msgstr ""
 "Cette règle vous permet de configurer le nombre de connexions maximales pour "
 "un VSID donné."
 
+msgid ""
+"This rule allows you to customize the user and installation directory of the "
+"agent. If you want to customize the user, such as deploying as an "
+"unprivileged user, you must also configure the installation directory.\n"
+"\n"
+"Note: Work in progress - This ruleset is not yet active."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -75759,6 +75895,9 @@ msgstr "URL :"
 
 msgid "USD per day"
 msgstr "USD par jour"
+
+msgid "USER"
+msgstr ""
 
 #, fuzzy
 msgid "USrv - Allocation latency"
@@ -81834,6 +81973,10 @@ msgstr "Dépannage du contrôleur d'agent Windows"
 msgid "Windows agent logging"
 msgstr "Journalisation des agents Windows"
 
+#, fuzzy
+msgid "Windows agent options"
+msgstr "Journalisation des agents Windows"
+
 msgid "Windows authentication"
 msgstr "Authentification Windows"
 
@@ -82263,9 +82406,6 @@ msgstr ""
 
 msgid "Words"
 msgstr "Mots"
-
-msgid "Work in progress - This ruleset is not yet active."
-msgstr ""
 
 msgid "Work request queue length"
 msgstr "Longueur de la file d'attente des demandes de travail"
@@ -83226,6 +83366,11 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "Vous ne pouvez créer un nouveau paquet que s'il existe des fichiers non "
 "emballés."
+
+msgid ""
+"You can only use this configuration with the new single directory structure. "
+"Please configure this before saving the rule."
+msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -85663,6 +85808,10 @@ msgstr "ignorer lequel est actif"
 msgid "ignored"
 msgstr "ignorer"
 
+#, fuzzy
+msgid "imb - Intel IMB Interface"
+msgstr "Interfaces Fibrechannel"
+
 msgid "immediate stop"
 msgstr "arrêt immédiat"
 
@@ -85791,6 +85940,13 @@ msgstr "compteur de noyaux"
 
 msgid "l/s"
 msgstr "l/s"
+
+#, fuzzy
+msgid "lan - IPMI v1.5 LAN Interface"
+msgstr "Interface IPMI"
+
+msgid "lanplus - IPMI v2.0 RMCP+ LAN Interface"
+msgstr ""
 
 msgid "laserFault"
 msgstr "laserFault"
@@ -86184,6 +86340,9 @@ msgstr "uniquement lorsque l'hôte n'est pas en panne"
 
 msgid "open"
 msgstr "ouvrir"
+
+msgid "open - Linux OpenIPMI Interface (default)"
+msgstr ""
 
 msgid "optional"
 msgstr "en option"
@@ -86912,6 +87071,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 #, fuzzy
+#~ msgid "No selected graph line"
+#~ msgstr "Opération sur les métriques sélectionnées"
+
+#, fuzzy
+#~ msgid "No selected graph lines"
+#~ msgstr "Opération sur les métriques sélectionnées"
+
+#, fuzzy
 #~ msgid ""
 #~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 #~ msgstr ""
@@ -86940,10 +87107,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #, fuzzy, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."
 #~ msgstr "Modification de la règle de notification %d"
-
-#, fuzzy
-#~ msgid "Event console alerts"
-#~ msgstr "Alertes de la console d'événements"
 
 #, fuzzy
 #~ msgid "File upload"

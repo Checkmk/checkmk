@@ -2518,6 +2518,12 @@ msgstr "AKTIV"
 msgid "AD Connect Sync"
 msgstr "AD Connect Sync"
 
+msgid "ADMIN"
+msgstr ""
+
+msgid "ADMINISTRATOR"
+msgstr ""
+
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -3220,6 +3226,12 @@ msgstr "Ablauf der Quittierung:"
 msgid "Acknowledgments: "
 msgstr "Quittierungen: "
 
+msgid ""
+"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
+"project, note down the Project ID either from the dashboard or project "
+"settings, and use it below."
+msgstr ""
+
 msgid "Act."
 msgstr "Akt."
 
@@ -3256,6 +3268,11 @@ msgstr "Aktionen beim Aufheben"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Aktivieren (aus: berücksichtige alle Alerts)"
+
+msgid ""
+"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
+"necessary, and wait for it to become accessible."
+msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Planer zum Aktivieren von Änderungen"
@@ -3648,6 +3665,10 @@ msgstr "Ausnahme ergänzen"
 
 msgid "Add Group"
 msgstr "Gruppe hinzufügen"
+
+#, fuzzy
+msgid "Add Instance"
+msgstr "NGNIX-Instanz hinzufügen"
 
 msgid "Add LDAP connection"
 msgstr "LDAP-Verbindung hinzufügen"
@@ -4821,7 +4842,8 @@ msgstr "Agenten backen und signieren"
 msgid "Agent baking finished."
 msgstr "Agentenbacken beendet."
 
-msgid "Agent based plug-ins (deprecated)"
+#, fuzzy
+msgid "Agent based plug-ins (outdated, ignored)"
 msgstr "Agenten-basierte Plugins (veraltet)"
 
 msgid "Agent certificates"
@@ -10029,6 +10051,9 @@ msgstr "CA-Port-Modi"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - unvollständig Anrufe"
 
+msgid "CALLBACK"
+msgstr ""
+
 msgid "CARA"
 msgstr "CARA"
 
@@ -10467,6 +10492,10 @@ msgstr "Eine Regel aufrufen"
 
 msgid "Call legs"
 msgstr "Call legs"
+
+#, fuzzy
+msgid "Call with the following parameters"
+msgstr "Mit den folgenden Parametern aufrufen:"
 
 msgid "Call with the following parameters:"
 msgstr "Mit den folgenden Parametern aufrufen:"
@@ -13427,6 +13456,10 @@ msgstr "Konfiguriere"
 msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
 msgstr "Amazon Web Service (AWS) Monitoring in Checkmk konfigurieren"
 
+#, fuzzy
+msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
+msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
 
@@ -14568,6 +14601,12 @@ msgstr ""
 "Der Zugriff auf Ihr Azure-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
 
+#, fuzzy
+msgid "Could not access your GCP account. Please check your credentials."
+msgstr ""
+"Der Zugriff auf Ihr Azure-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
+"Zugangsdaten."
+
 #, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
@@ -14999,6 +15038,12 @@ msgstr "Hosts erstellen"
 msgid "Create hosts in"
 msgstr "Hosts erstellen in"
 
+msgid ""
+"Create key: Generate a key for the service account to access monitoring and "
+"asset data, ensuring it's in JSON format. Copy JSON object including the "
+"curly brackets and store to use it below."
+msgstr ""
+
 #, python-format
 msgid "Create new %s"
 msgstr "%s neu erstellen"
@@ -15102,6 +15147,12 @@ msgstr "Lege die folgenden Schnittstellengruppen an"
 
 msgid "Create topic"
 msgstr "Thema erstellen"
+
+msgid ""
+"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
+"service account with a descriptive name, assign roles (Monitoring Viewer and "
+"Cloud Asset Viewer), and finalize the creation."
+msgstr ""
 
 msgid "Create users only on login"
 msgstr "Nutzer nur bei Login anlegen"
@@ -15868,8 +15919,9 @@ msgstr "Namen von Agenten-Paketen (Linux, UNIX)"
 msgid "Customize and use %s"
 msgstr "%s anpassen und benutzen"
 
-msgid "Customize installation directories (required when customizing user)"
-msgstr ""
+#, fuzzy
+msgid "Customize installation directories"
+msgstr "Überwachung der Checkmk-Agent Installation"
 
 msgid "Customize login screen"
 msgstr "Anpassen des Login-Bildschirms"
@@ -15898,8 +15950,9 @@ msgstr "Zeitraum anpassen"
 msgid "Customize title"
 msgstr "Titel anpassen"
 
-msgid "Customize user, e.g., deploy as unprivileged user"
-msgstr ""
+#, fuzzy
+msgid "Customize user"
+msgstr "Anpassen"
 
 msgid "Customized"
 msgstr "Angepasst"
@@ -19494,6 +19547,10 @@ msgstr "Service nicht überwachen"
 msgid "Do not offer this action as a command on open events"
 msgstr "Aktion nicht als Befehl für offene Ereignisse anbieten"
 
+#, fuzzy
+msgid "Do not output information about cache creation/deletion"
+msgstr "Kontextinformation zu dieser Verbindung"
+
 msgid "Do not pad"
 msgstr "Nicht auffüllen"
 
@@ -22035,6 +22092,10 @@ msgstr "Ereigniskommentar"
 
 msgid "Event console"
 msgstr "Event Console"
+
+#, fuzzy
+msgid "Event console filters"
+msgstr "Alarme der Event Console"
 
 msgid "Event console performance"
 msgstr "Leistung der Event Console"
@@ -24833,6 +24894,10 @@ msgstr "GCP Cloud Speicher"
 msgid "GCP piggyback services"
 msgstr "GCP Piggyback Services"
 
+#, fuzzy
+msgid "GCP services found!"
+msgstr "AWS Services gefunden!"
+
 msgid "GCP services to monitor"
 msgstr "Zu überwachende GCP-Dienste"
 
@@ -25086,11 +25151,12 @@ msgstr "REST-API Spezifikation wird erzeugt"
 msgid "Generating report..."
 msgstr "Erstelle Report..."
 
-msgid "Generic Options"
-msgstr "Generische Einstellungen"
-
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Generische USV: Temperatursensor"
+
+#, fuzzy
+msgid "Generic agent options"
+msgstr "Generische Einstellungen"
 
 msgid "Generic check plug-ins"
 msgstr "Generische Check-Plugins"
@@ -28164,6 +28230,10 @@ msgstr "Host-Ereignis-Limit"
 
 msgid "Host events"
 msgstr "Host-Ereignisse"
+
+#, fuzzy
+msgid "Host filters"
+msgstr "Logdateien des Hosts"
 
 msgid "Host gets unreachble"
 msgstr "Host wird unerreichbar"
@@ -35435,9 +35505,6 @@ msgstr "Links zu globalen Ansichten und Dashboards"
 msgid "Linux"
 msgstr "Linux"
 
-msgid "Linux Agent"
-msgstr "Linux-Agent"
-
 msgid "Linux Multipath Inventory"
 msgstr "Linux Multipath Inventar"
 
@@ -35470,6 +35537,13 @@ msgstr "Linux, Solaris, AIX Dateien"
 
 msgid "Linux-User:"
 msgstr "Linux-Benutzer:"
+
+#, fuzzy
+msgid "Linux/UNIX Agent Options"
+msgstr "Linux-Agent"
+
+msgid "Linux/UNIX agent options"
+msgstr ""
 
 msgid "Linux: DPKG (.deb)"
 msgstr "Linux: DPKG (.deb)"
@@ -40185,6 +40259,10 @@ msgstr "Benennen Sie Ihr %s zur einfachen Wiedererkennung."
 msgid "Name your host and define the folder"
 msgstr "Benennen Sie Ihren Host und definieren Sie den Ordner"
 
+#, fuzzy
+msgid "Name your host and define the folder path"
+msgstr "Benennen Sie Ihren Host und definieren Sie den Ordner"
+
 msgid ""
 "Name your host, define the path and select the regions you would like to "
 "monitor"
@@ -40692,6 +40770,10 @@ msgstr "Kein Quick Setup für die Konfiguration von %s verfügbar"
 msgid "No Dictionary ValueSpec within Migrate: %s"
 msgstr "Kein Wörterbuch ValueSpec innerhalb von Migrate: %s"
 
+#, fuzzy
+msgid "No GCP services found."
+msgstr "Keine AWS-Services gefunden."
+
 msgid "No IP"
 msgstr "Keine IP"
 
@@ -41055,12 +41137,6 @@ msgstr "Keine Suche"
 
 msgid "No search, specify list of arguments"
 msgstr "Keine Suche, Liste der Argumente angeben"
-
-msgid "No selected graph line"
-msgstr "Keine ausgewählte Graphlinie"
-
-msgid "No selected graph lines"
-msgstr "Keine ausgewählten Graphlinien"
 
 msgid "No smarthosts"
 msgstr "Keine Smarthosts"
@@ -42740,6 +42816,9 @@ msgstr "Auß.Ben"
 
 msgid "OO/Service"
 msgstr "Auß.Service"
+
+msgid "OPERATOR"
+msgstr ""
 
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
@@ -46453,6 +46532,10 @@ msgstr "Bitte wählen Sie ein PNG-Bild."
 msgid "Please choose a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen."
 
+#, fuzzy
+msgid "Please choose a notification parameter or create one."
+msgstr "Diesen Benachrichtigungsparameter löschen"
+
 msgid "Please choose a report to schedule"
 msgstr "Bitte wählen Sie einen Bericht für den Planeintrag aus"
 
@@ -47433,6 +47516,10 @@ msgstr "AWS für Checkmk vorbereiten"
 msgid "Prepare Azure for Checkmk"
 msgstr "Azure für Checkmk vorbereiten"
 
+#, fuzzy
+msgid "Prepare GCP for Checkmk"
+msgstr "AWS für Checkmk vorbereiten"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Namespace-Präfix für Hosts voranstellen"
 
@@ -48079,7 +48166,8 @@ msgstr "Python-Modul-Pfad"
 msgid "Python Version"
 msgstr "Python-Version"
 
-msgid "Python agent plug-in execution (UNIX)"
+#, fuzzy
+msgid "Python agent plug-in execution (Linux, UNIX)"
 msgstr "Python Agent Plugin Ausführung (UNIX)"
 
 msgid ""
@@ -49507,6 +49595,10 @@ msgstr "Entferne"
 msgid "Remove %s from extensions"
 msgstr "%s aus Erweiterungen entfernen"
 
+#, fuzzy
+msgid "Remove Instance"
+msgstr "Name entfernen"
+
 msgid "Remove TLS registration"
 msgstr "TLS-Registrierung entfernen"
 
@@ -50708,6 +50800,15 @@ msgstr ""
 "fest und verwenden Sie die Subskritions-ID, Tenant-ID, Client-ID und das "
 "Client-Geheimnis unten."
 
+#, fuzzy
+msgid ""
+"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
+"and JSON object below."
+msgstr ""
+"Kehren Sie zu Checkmk zurück, legen Sie einen eindeutigen AWS-Kontonamen "
+"fest und verwenden Sie den Zugriffsschlüssel-ID und den geheimen "
+"Zugriffsschlüssel unten."
+
 msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
@@ -51853,6 +51954,15 @@ msgstr ""
 "aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis die "
 "EC2-Instanzen angezeigt werden."
 
+#, fuzzy
+msgid ""
+"Save your progress and go to the Activate Changes page to enable it. Virtual "
+"machines may take a few minutes to show up."
+msgstr ""
+"Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
+"aktivieren, um sie zu aktivieren. Es kann ein paar Minuten dauern, bis die "
+"EC2-Instanzen angezeigt werden."
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Check-Konfiguration von '%s' mit %d Services gespeichert"
@@ -52430,11 +52540,23 @@ msgid "Select and configure AWS services you would like to monitor"
 msgstr ""
 "Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten"
 
+#, fuzzy
+msgid ""
+"Select and configure the Google Cloud Platform services you would like to "
+"monitor"
+msgstr ""
+"Wählen und konfigurieren Sie die Microsoft Azure-Services, die Sie "
+"überwachen möchten"
+
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr ""
 "Wählen und konfigurieren Sie die Microsoft Azure-Services, die Sie "
 "überwachen möchten"
+
+#, fuzzy
+msgid "Select at least one graph line to edit"
+msgstr "Bitte wählen Sie mindestens ein zu überwachendes Element aus"
 
 msgid "Select contact group"
 msgstr "Kontaktgruppe auswählen"
@@ -52444,6 +52566,9 @@ msgstr "Datenquelle auswählen"
 
 msgid "Select device type"
 msgstr "Gerätetyp auswählen"
+
+msgid "Select exactly one graph line to edit"
+msgstr ""
 
 msgid "Select file"
 msgstr "Datei auswählen"
@@ -52821,6 +52946,10 @@ msgstr "Senden von Metriken an InfluxDB"
 msgid "Send monitoring notification"
 msgstr "Monitoring-Benachrichtigung senden"
 
+#, fuzzy
+msgid "Send notification"
+msgstr "Individuelle Benachrichtigung senden"
+
 msgid "Send notifications to Event Console"
 msgstr "Benachrichtigungen an Event Console senden"
 
@@ -53170,6 +53299,10 @@ msgstr "Service-Erkennung: Zustand"
 
 msgid "Service events"
 msgstr "Service-Ereignisse"
+
+#, fuzzy
+msgid "Service filters"
+msgstr "Servicefilter"
 
 msgid "Service goes into critical state"
 msgstr "Service in Status CRIT gewechselt"
@@ -53561,7 +53694,8 @@ msgstr "Als Start-URL einstellen"
 msgid "Set by rule pack"
 msgstr "Von Regelpaket festgelegt"
 
-msgid "Set cache age for plug-ins (UNIX)"
+#, fuzzy
+msgid "Set cache age for plug-ins (Linux, UNIX)"
 msgstr "Cache-Alter für Plugins (UNIX) festlegen"
 
 msgid "Set cache age for plug-ins and local checks"
@@ -58210,6 +58344,10 @@ msgstr "Support Diagnostics"
 msgid "Supporting rules"
 msgstr "Unterstützende Regeln"
 
+#, fuzzy
+msgid "Suppress all previous"
+msgstr "Unterdrücke nicht verfügbare Sensoren"
+
 msgid "Suppress not available sensors"
 msgstr "Unterdrücke nicht verfügbare Sensoren"
 
@@ -59946,7 +60084,8 @@ msgstr ""
 "Die URL muss mit <tt>http</tt> oder <tt>https</tt> beginnen und mit <tt>/"
 "check_mk/</tt> enden."
 
-msgid "The URL must begin with <tt>https</tt>."
+#, fuzzy
+msgid "The URL must begin with https://"
 msgstr "Die URL muss mit <tt>https</tt> beginnen."
 
 msgid "The URL of the target page the link of the element should link to."
@@ -60699,6 +60838,15 @@ msgstr ""
 
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
+"unintentional, please verify your configuration."
+msgstr ""
+"Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
+"gefunden. Wenn dies unbeabsichtigt ist, überprüfen Sie bitte Ihre "
+"Konfiguration."
+
+#, fuzzy
+msgid ""
+"The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
 msgstr ""
 "Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
@@ -66988,6 +67136,14 @@ msgstr ""
 "bestimmte VSID konfigurieren."
 
 msgid ""
+"This rule allows you to customize the user and installation directory of the "
+"agent. If you want to customize the user, such as deploying as an "
+"unprivileged user, you must also configure the installation directory.\n"
+"\n"
+"Note: Work in progress - This ruleset is not yet active."
+msgstr ""
+
+msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
 "your Checkmk servers here. You can enter either IP addresses in the form "
@@ -72144,6 +72300,9 @@ msgstr "URL:"
 
 msgid "USD per day"
 msgstr "Dollar pro Tag"
+
+msgid "USER"
+msgstr ""
 
 msgid "USrv - Allocation latency"
 msgstr "USrv - Latenz der Bereitstellung"
@@ -77877,6 +78036,10 @@ msgstr "Fehlerbehebung beim Windows Agent Controller"
 msgid "Windows agent logging"
 msgstr "Protokollierung Windows Agent"
 
+#, fuzzy
+msgid "Windows agent options"
+msgstr "Protokollierung Windows Agent"
+
 msgid "Windows authentication"
 msgstr "Windows-Authentifizierung"
 
@@ -78310,9 +78473,6 @@ msgstr ""
 
 msgid "Words"
 msgstr "Wörter"
-
-msgid "Work in progress - This ruleset is not yet active."
-msgstr ""
 
 msgid "Work request queue length"
 msgstr "Länge der Arbeitsauftragsschlange"
@@ -79223,6 +79383,11 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "Sie können erst dann ein neues Paket erstellen, wenn unverpackte Dateien "
 "exisitieren."
+
+msgid ""
+"You can only use this configuration with the new single directory structure. "
+"Please configure this before saving the rule."
+msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -81653,6 +81818,10 @@ msgstr "ignorieren welcher aktiv ist"
 msgid "ignored"
 msgstr "ignoriert"
 
+#, fuzzy
+msgid "imb - Intel IMB Interface"
+msgstr "Fibrechannel-Schnittstellen"
+
 msgid "immediate stop"
 msgstr "sofortiger Stop"
 
@@ -81780,6 +81949,13 @@ msgstr "Kernel Zähler"
 
 msgid "l/s"
 msgstr "l/s"
+
+#, fuzzy
+msgid "lan - IPMI v1.5 LAN Interface"
+msgstr "IPMI-Schnittstelle"
+
+msgid "lanplus - IPMI v2.0 RMCP+ LAN Interface"
+msgstr ""
 
 msgid "laserFault"
 msgstr "laserFault"
@@ -82173,6 +82349,9 @@ msgstr "nur wenn der Host nicht in Wartung ist"
 
 msgid "open"
 msgstr "offen"
+
+msgid "open - Linux OpenIPMI Interface (default)"
+msgstr ""
 
 msgid "optional"
 msgstr "optional"
@@ -82884,6 +83063,12 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "No selected graph line"
+#~ msgstr "Keine ausgewählte Graphlinie"
+
+#~ msgid "No selected graph lines"
+#~ msgstr "Keine ausgewählten Graphlinien"
+
 #~ msgid ""
 #~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 #~ msgstr ""
@@ -82918,9 +83103,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."
 #~ msgstr "Keine FormSpec-Implementation für die Methode '%s' gefunden."
-
-#~ msgid "Event console alerts"
-#~ msgstr "Alarme der Event Console"
 
 #~ msgid "File upload"
 #~ msgstr "Datei-Upload"

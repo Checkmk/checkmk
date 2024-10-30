@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-09-11 05:00+0000\n"
+"PO-Revision-Date: 2024-10-29 06:00+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -2441,6 +2441,12 @@ msgstr "アクティブ"
 msgid "AD Connect Sync"
 msgstr "AD Connect Sync"
 
+msgid "ADMIN"
+msgstr ""
+
+msgid "ADMINISTRATOR"
+msgstr ""
+
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -3144,6 +3150,12 @@ msgstr "承認期限切れ:"
 msgid "Acknowledgments: "
 msgstr "了承 "
 
+msgid ""
+"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
+"project, note down the Project ID either from the dashboard or project "
+"settings, and use it below."
+msgstr ""
+
 msgid "Act."
 msgstr "Act."
 
@@ -3179,6 +3191,11 @@ msgstr "キャンセル時のアクション"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "アクティブ化(オフ:すべてのアラートを検討)"
+
+msgid ""
+"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
+"necessary, and wait for it to become accessible."
+msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "変更スケジューラをアクティブ化する"
@@ -3569,6 +3586,10 @@ msgstr "例外を追加"
 
 msgid "Add Group"
 msgstr "グループを追加"
+
+#, fuzzy
+msgid "Add Instance"
+msgstr "NGINXインスタンスを追加します"
 
 msgid "Add LDAP connection"
 msgstr "LDAP接続を追加します"
@@ -4723,7 +4744,8 @@ msgstr "エージェントのベーキングと署名"
 msgid "Agent baking finished."
 msgstr "エージェントのベーキングが終了しました。"
 
-msgid "Agent based plug-ins (deprecated)"
+#, fuzzy
+msgid "Agent based plug-ins (outdated, ignored)"
 msgstr "エージェントベースのプラグイン(廃止)"
 
 msgid "Agent certificates"
@@ -9952,6 +9974,9 @@ msgstr "CAポートモード"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - 不完全な呼び出し"
 
+msgid "CALLBACK"
+msgstr ""
+
 msgid "CARA"
 msgstr "CARA"
 
@@ -10408,6 +10433,10 @@ msgstr "ルールを呼び出す"
 
 msgid "Call legs"
 msgstr "コールレッグ"
+
+#, fuzzy
+msgid "Call with the following parameters"
+msgstr "次のパラメータを使用して呼び出します。"
 
 msgid "Call with the following parameters:"
 msgstr "次のパラメータを使用して呼び出します。"
@@ -13302,6 +13331,10 @@ msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
 msgstr "Amazon Web Services (AWS)監視"
 
 #, fuzzy
+msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
+msgstr "Amazon Web Services (AWS)監視"
+
+#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Amazon Web Services (AWS)監視"
 
@@ -14407,6 +14440,12 @@ msgstr ""
 "同期するユーザーオブジェクトが見つかりませんでした。フィルタ設定を確認してく"
 "ださい。"
 
+#, fuzzy
+msgid "Could not access your GCP account. Please check your credentials."
+msgstr ""
+"同期するユーザーオブジェクトが見つかりませんでした。フィルタ設定を確認してく"
+"ださい。"
+
 #, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
@@ -14829,6 +14868,12 @@ msgstr "ホストを作成する"
 msgid "Create hosts in"
 msgstr "ホストを作成する"
 
+msgid ""
+"Create key: Generate a key for the service account to access monitoring and "
+"asset data, ensuring it's in JSON format. Copy JSON object including the "
+"curly brackets and store to use it below."
+msgstr ""
+
 #, python-format
 msgid "Create new %s"
 msgstr "新しい%sを作成する"
@@ -14929,6 +14974,12 @@ msgstr "次のインターフェイスグループを作成します"
 
 msgid "Create topic"
 msgstr "トピックを作成する"
+
+msgid ""
+"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
+"service account with a descriptive name, assign roles (Monitoring Viewer and "
+"Cloud Asset Viewer), and finalize the creation."
+msgstr ""
 
 msgid "Create users only on login"
 msgstr "ログイン時にのみユーザーを作成する"
@@ -15695,8 +15746,9 @@ msgstr "エージェントパッケージの名前(Linux、UNIX)"
 msgid "Customize and use %s"
 msgstr "%s をカスタマイズして使用する"
 
-msgid "Customize installation directories (required when customizing user)"
-msgstr ""
+#, fuzzy
+msgid "Customize installation directories"
+msgstr "Checkmkエージェントのインストール監査"
 
 msgid "Customize login screen"
 msgstr "ログイン画面をカスタマイズする"
@@ -15724,8 +15776,9 @@ msgstr "時間範囲をカスタマイズ"
 msgid "Customize title"
 msgstr "タイトルをカスタマイズする"
 
-msgid "Customize user, e.g., deploy as unprivileged user"
-msgstr ""
+#, fuzzy
+msgid "Customize user"
+msgstr "カスタマイズ"
 
 msgid "Customized"
 msgstr "カスタマイズ"
@@ -19289,6 +19342,10 @@ msgstr "監視しない"
 msgid "Do not offer this action as a command on open events"
 msgstr "オープンイベントのコマンドとしてこのアクションを提供しないでください"
 
+#, fuzzy
+msgid "Do not output information about cache creation/deletion"
+msgstr "この接続に関するコンテキスト情報"
+
 msgid "Do not pad"
 msgstr "パッドを入れないでください"
 
@@ -21797,6 +21854,10 @@ msgstr "イベントコメント"
 msgid "Event console"
 msgstr "イベントコンソール"
 
+#, fuzzy
+msgid "Event console filters"
+msgstr "イベントコンソールアラート"
+
 msgid "Event console performance"
 msgstr "イベントコンソールのパフォーマンス"
 
@@ -22138,10 +22199,10 @@ msgid "Exclude volume from service name"
 msgstr "サービス名からボリュームを除外する"
 
 msgid "Excluded hosts"
-msgstr "ホストを除外しました"
+msgstr "除外されたホスト"
 
 msgid "Excluded services"
-msgstr "サービスを除外しました"
+msgstr "除外されたサービス"
 
 msgid "Exclusion patterns"
 msgstr "除外パターン"
@@ -24638,6 +24699,10 @@ msgstr "GCPクラウドストレージ"
 msgid "GCP piggyback services"
 msgstr "GCPピギーバックサービス"
 
+#, fuzzy
+msgid "GCP services found!"
+msgstr "ホスト/サービスが見つかりません。"
+
 msgid "GCP services to monitor"
 msgstr "監視するGCPサービス"
 
@@ -24895,11 +24960,12 @@ msgstr "カートリッジ仕様"
 msgid "Generating report..."
 msgstr "レポートを生成しています..."
 
-msgid "Generic Options"
-msgstr "一般的なオプション"
-
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "汎用UPSデバイス: 温度センサー"
+
+#, fuzzy
+msgid "Generic agent options"
+msgstr "一般的なオプション"
 
 #, fuzzy
 msgid "Generic check plug-ins"
@@ -28260,6 +28326,10 @@ msgstr "ホストイベントの制限"
 #, fuzzy
 msgid "Host events"
 msgstr "ホストイベント"
+
+#, fuzzy
+msgid "Host filters"
+msgstr "ホストログファイル"
 
 msgid "Host gets unreachble"
 msgstr "ホストが到達不能になる"
@@ -35598,9 +35668,6 @@ msgstr "グローバルビューとダッシュボードへのリンク"
 msgid "Linux"
 msgstr "Linux"
 
-msgid "Linux Agent"
-msgstr "Linuxエージェント"
-
 msgid "Linux Multipath Inventory"
 msgstr "Linuxマルチパスインベントリ"
 
@@ -35634,6 +35701,13 @@ msgstr "Linux、Solaris、AIXファイル"
 
 msgid "Linux-User:"
 msgstr "Linux-ユーザー:"
+
+#, fuzzy
+msgid "Linux/UNIX Agent Options"
+msgstr "Linuxエージェント"
+
+msgid "Linux/UNIX agent options"
+msgstr ""
 
 msgid "Linux: DPKG (.deb)"
 msgstr "—Linux: DPKG (.deb)"
@@ -40488,6 +40562,9 @@ msgstr "わかりやすいように%sに名前をつけます。"
 msgid "Name your host and define the folder"
 msgstr ""
 
+msgid "Name your host and define the folder path"
+msgstr ""
+
 msgid ""
 "Name your host, define the path and select the regions you would like to "
 "monitor"
@@ -41009,6 +41086,10 @@ msgstr "構成変数:"
 msgid "No Dictionary ValueSpec within Migrate: %s"
 msgstr ""
 
+#, fuzzy
+msgid "No GCP services found."
+msgstr "ホスト/サービスが見つかりません。"
+
 msgid "No IP"
 msgstr "IPなし"
 
@@ -41379,14 +41460,6 @@ msgstr "検索なし"
 
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
-
-#, fuzzy
-msgid "No selected graph line"
-msgstr "選択したメトリックの操作"
-
-#, fuzzy
-msgid "No selected graph lines"
-msgstr "選択したメトリックの操作"
 
 #, fuzzy
 msgid "No smarthosts"
@@ -43090,6 +43163,9 @@ msgstr "OO/Notif"
 
 msgid "OO/Service"
 msgstr "OO/サービス"
+
+msgid "OPERATOR"
+msgstr ""
 
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
@@ -47055,6 +47131,10 @@ msgstr "PNG画像を選択してください。"
 msgid "Please choose a file to upload."
 msgstr "アップロードするファイルを選択してください。"
 
+#, fuzzy
+msgid "Please choose a notification parameter or create one."
+msgstr "この通知ルールを削除します"
+
 msgid "Please choose a report to schedule"
 msgstr "スケジュールするレポートを選択してください"
 
@@ -48037,6 +48117,10 @@ msgstr "Checkmkの初期化されたGIT"
 msgid "Prepare Azure for Checkmk"
 msgstr "Checkmkの初期化されたGIT"
 
+#, fuzzy
+msgid "Prepare GCP for Checkmk"
+msgstr "Checkmkの初期化されたGIT"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "ホストの名前スペースプレフィックスを付加する"
 
@@ -48692,7 +48776,7 @@ msgid "Python Version"
 msgstr "Pythonバージョン"
 
 #, fuzzy
-msgid "Python agent plug-in execution (UNIX)"
+msgid "Python agent plug-in execution (Linux, UNIX)"
 msgstr "Pythonエージェントプラグインの実行(UNIX)"
 
 #, fuzzy
@@ -50191,6 +50275,10 @@ msgstr "削除する"
 msgid "Remove %s from extensions"
 msgstr "お気に入りから%sを削除"
 
+#, fuzzy
+msgid "Remove Instance"
+msgstr "すべて削除する"
+
 msgid "Remove TLS registration"
 msgstr "TLSの登録を解除する"
 
@@ -51416,6 +51504,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
+"and JSON object below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
@@ -52620,6 +52713,11 @@ msgid ""
 "instances may take a few minutes to show up."
 msgstr ""
 
+msgid ""
+"Save your progress and go to the Activate Changes page to enable it. Virtual "
+"machines may take a few minutes to show up."
+msgstr ""
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
@@ -53211,8 +53309,18 @@ msgstr "監視するAzureサービス"
 
 #, fuzzy
 msgid ""
+"Select and configure the Google Cloud Platform services you would like to "
+"monitor"
+msgstr "監視するAzureサービス"
+
+#, fuzzy
+msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "監視するAzureサービス"
+
+#, fuzzy
+msgid "Select at least one graph line to edit"
+msgstr "少なくとも1つの要素を選択してください"
 
 #, fuzzy
 msgid "Select contact group"
@@ -53224,6 +53332,9 @@ msgstr "データソースを選択"
 
 msgid "Select device type"
 msgstr "デバイスタイプを選択します"
+
+msgid "Select exactly one graph line to edit"
+msgstr ""
 
 msgid "Select file"
 msgstr "ファイルを選択"
@@ -53580,6 +53691,10 @@ msgstr "InfluxDBにメトリクスを送信する"
 
 msgid "Send monitoring notification"
 msgstr "監視通知を送信する"
+
+#, fuzzy
+msgid "Send notification"
+msgstr "カスタム通知の送信"
 
 msgid "Send notifications to Event Console"
 msgstr "イベントコンソールに通知を送信する"
@@ -53942,6 +54057,10 @@ msgstr "サービスディスカバリ:状態"
 #, fuzzy
 msgid "Service events"
 msgstr "サービスレベル"
+
+#, fuzzy
+msgid "Service filters"
+msgstr "サービスフィルター"
 
 msgid "Service goes into critical state"
 msgstr "サービスがクリティカル状態になります"
@@ -54348,7 +54467,7 @@ msgid "Set by rule pack"
 msgstr "ルールパックで設定"
 
 #, fuzzy
-msgid "Set cache age for plug-ins (UNIX)"
+msgid "Set cache age for plug-ins (Linux, UNIX)"
 msgstr "プラグインのキャッシュ経過時間を設定する(UNIX)"
 
 #, fuzzy
@@ -58991,6 +59110,10 @@ msgstr "診断をサポートする"
 msgid "Supporting rules"
 msgstr "水平方向のルール"
 
+#, fuzzy
+msgid "Suppress all previous"
+msgstr "利用できないセンサーを抑制する"
+
 msgid "Suppress not available sensors"
 msgstr "利用できないセンサーを抑制する"
 
@@ -60727,7 +60850,8 @@ msgstr ""
 "URLは、<tt>http</tt>または<tt>https</tt>で始まり、<tt>/check_mk/</tt>で終わる"
 "必要があります。"
 
-msgid "The URL must begin with <tt>https</tt>."
+#, fuzzy
+msgid "The URL must begin with https://"
 msgstr "URLは次から開始する必要があります。<tt>https</tt>。"
 
 msgid "The URL of the target page the link of the element should link to."
@@ -61445,6 +61569,11 @@ msgstr ""
 
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
+"unintentional, please verify your configuration."
+msgstr ""
+
+msgid ""
+"The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
 msgstr ""
 
@@ -67485,6 +67614,14 @@ msgid ""
 "given VSID."
 msgstr "このルールを使用すると、特定のVSIDの最大接続数を構成できます。"
 
+msgid ""
+"This rule allows you to customize the user and installation directory of the "
+"agent. If you want to customize the user, such as deploying as an "
+"unprivileged user, you must also configure the installation directory.\n"
+"\n"
+"Note: Work in progress - This ruleset is not yet active."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -73115,6 +73252,9 @@ msgstr "URL:"
 
 msgid "USD per day"
 msgstr "1日あたりのUSD"
+
+msgid "USER"
+msgstr ""
 
 #, fuzzy
 msgid "USrv - Allocation latency"
@@ -78925,6 +79065,10 @@ msgstr "Windowsエージェントコントローラーのトラブルシュー�
 msgid "Windows agent logging"
 msgstr "Windows エージェント ログ"
 
+#, fuzzy
+msgid "Windows agent options"
+msgstr "Windows エージェント ログ"
+
 msgid "Windows authentication"
 msgstr "Windows認証"
 
@@ -79338,9 +79482,6 @@ msgstr ""
 
 msgid "Words"
 msgstr "言葉"
-
-msgid "Work in progress - This ruleset is not yet active."
-msgstr ""
 
 msgid "Work request queue length"
 msgstr "作業要求キューの長さ"
@@ -80248,6 +80389,11 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "パッケージ化されていないファイルがある場合にのみ、新しいパッケージを作成でき"
 "ます。"
+
+msgid ""
+"You can only use this configuration with the new single directory structure. "
+"Please configure this before saving the rule."
+msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -82600,6 +82746,10 @@ msgstr "どちらがアクティブかを無視します"
 msgid "ignored"
 msgstr "無視する"
 
+#, fuzzy
+msgid "imb - Intel IMB Interface"
+msgstr "ファイバチャネルインターフェイス"
+
 msgid "immediate stop"
 msgstr "即時停止"
 
@@ -82727,6 +82877,13 @@ msgstr "カーネルカウンター"
 
 msgid "l/s"
 msgstr "l/s"
+
+#, fuzzy
+msgid "lan - IPMI v1.5 LAN Interface"
+msgstr "IPMI インターフェース"
+
+msgid "lanplus - IPMI v2.0 RMCP+ LAN Interface"
+msgstr ""
 
 msgid "laserFault"
 msgstr "LaserFault"
@@ -83125,6 +83282,9 @@ msgstr "ホストがダウンタイムになっていない場合のみ"
 
 msgid "open"
 msgstr "開いた"
+
+msgid "open - Linux OpenIPMI Interface (default)"
+msgstr ""
 
 msgid "optional"
 msgstr "オプション"
@@ -83845,6 +84005,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#, fuzzy
+#~ msgid "No selected graph line"
+#~ msgstr "選択したメトリックの操作"
+
+#, fuzzy
+#~ msgid "No selected graph lines"
+#~ msgstr "選択したメトリックの操作"
+
 #~ msgid ""
 #~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 #~ msgstr ""
@@ -83872,10 +84040,6 @@ msgstr ""
 #, fuzzy, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."
 #~ msgstr "通知ルール %d を変更しました"
-
-#, fuzzy
-#~ msgid "Event console alerts"
-#~ msgstr "イベントコンソールアラート"
 
 #, fuzzy
 #~ msgid "File upload"

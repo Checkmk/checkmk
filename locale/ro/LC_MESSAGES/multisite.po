@@ -2554,6 +2554,12 @@ msgstr "ACTIVE"
 msgid "AD Connect Sync"
 msgstr "AD Connect Sync"
 
+msgid "ADMIN"
+msgstr ""
+
+msgid "ADMINISTRATOR"
+msgstr ""
+
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -3282,6 +3288,12 @@ msgstr "Confirmarea expiră:"
 msgid "Acknowledgments: "
 msgstr "Recunoștințe: "
 
+msgid ""
+"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
+"project, note down the Project ID either from the dashboard or project "
+"settings, and use it below."
+msgstr ""
+
 msgid "Act."
 msgstr "Act."
 
@@ -3321,6 +3333,11 @@ msgstr "Acțiuni în cazul anulării"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Activare (dezactivat: ia în considerare toate alertele)"
+
+msgid ""
+"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
+"necessary, and wait for it to become accessible."
+msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Activarea modificării Scheduler"
@@ -3721,6 +3738,10 @@ msgstr "Adaugă Excepție"
 
 msgid "Add Group"
 msgstr "Adăugați un grup"
+
+#, fuzzy
+msgid "Add Instance"
+msgstr "Adăugați instanța NGINX"
 
 msgid "Add LDAP connection"
 msgstr "Adăugați conexiunea LDAP"
@@ -4933,7 +4954,7 @@ msgid "Agent baking finished."
 msgstr "Agentul de coacere a terminat."
 
 #, fuzzy
-msgid "Agent based plug-ins (deprecated)"
+msgid "Agent based plug-ins (outdated, ignored)"
 msgstr "Plugin-uri bazate pe agent (depreciat)"
 
 msgid "Agent certificates"
@@ -10407,6 +10428,9 @@ msgstr "Moduri de port CA"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - Apeluri incomplete"
 
+msgid "CALLBACK"
+msgstr ""
+
 msgid "CARA"
 msgstr "CARA"
 
@@ -10877,6 +10901,10 @@ msgstr "Apelarea unei reguli"
 
 msgid "Call legs"
 msgstr "Picioare de apel"
+
+#, fuzzy
+msgid "Call with the following parameters"
+msgstr "Se apelează cu următorii parametri:"
 
 msgid "Call with the following parameters:"
 msgstr "Se apelează cu următorii parametri:"
@@ -13904,6 +13932,10 @@ msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
 #, fuzzy
+msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
+msgstr "Monitorizarea serviciilor web Amazon (AWS)"
+
+#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
@@ -15073,6 +15105,12 @@ msgstr ""
 "Nu s-a găsit niciun obiect utilizator pentru sincronizare. Vă rugăm să "
 "verificați setările de filtrare."
 
+#, fuzzy
+msgid "Could not access your GCP account. Please check your credentials."
+msgstr ""
+"Nu s-a găsit niciun obiect utilizator pentru sincronizare. Vă rugăm să "
+"verificați setările de filtrare."
+
 #, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
@@ -15508,6 +15546,12 @@ msgstr "Creați gazde"
 msgid "Create hosts in"
 msgstr "Creați gazde în"
 
+msgid ""
+"Create key: Generate a key for the service account to access monitoring and "
+"asset data, ensuring it's in JSON format. Copy JSON object including the "
+"curly brackets and store to use it below."
+msgstr ""
+
 #, python-format
 msgid "Create new %s"
 msgstr "Creați un nou %s."
@@ -15617,6 +15661,12 @@ msgstr "Creați următoarele grupuri de interfețe"
 
 msgid "Create topic"
 msgstr "Creați un subiect"
+
+msgid ""
+"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
+"service account with a descriptive name, assign roles (Monitoring Viewer and "
+"Cloud Asset Viewer), and finalize the creation."
+msgstr ""
 
 msgid "Create users only on login"
 msgstr "Creați utilizatori numai la conectare"
@@ -16404,8 +16454,9 @@ msgstr "Numele pachetelor agentului (Linux, UNIX)"
 msgid "Customize and use %s"
 msgstr "Personalizați și utilizați %s"
 
-msgid "Customize installation directories (required when customizing user)"
-msgstr ""
+#, fuzzy
+msgid "Customize installation directories"
+msgstr "Checkmk Audit de instalare a agentului Checkmk"
 
 msgid "Customize login screen"
 msgstr "Personalizați ecranul de conectare"
@@ -16434,8 +16485,9 @@ msgstr "Personalizați intervalul de timp"
 msgid "Customize title"
 msgstr "Personalizați titlul"
 
-msgid "Customize user, e.g., deploy as unprivileged user"
-msgstr ""
+#, fuzzy
+msgid "Customize user"
+msgstr "Personalizați"
 
 msgid "Customized"
 msgstr "Personalizat"
@@ -20258,6 +20310,10 @@ msgstr "Nu monitorizați"
 msgid "Do not offer this action as a command on open events"
 msgstr "Nu oferiți această acțiune ca o comandă pentru evenimentele deschise."
 
+#, fuzzy
+msgid "Do not output information about cache creation/deletion"
+msgstr "Informații contextuale despre această conexiune"
+
 msgid "Do not pad"
 msgstr "Nu tamponați"
 
@@ -22817,6 +22873,10 @@ msgstr "Comentariu la eveniment"
 
 msgid "Event console"
 msgstr "Consola de evenimente"
+
+#, fuzzy
+msgid "Event console filters"
+msgstr "Alertele din consola de evenimente"
 
 msgid "Event console performance"
 msgstr "Performanța consolei de evenimente"
@@ -25702,6 +25762,10 @@ msgstr "Stocarea în cloud GCP"
 msgid "GCP piggyback services"
 msgstr "Servicii GCP piggyback"
 
+#, fuzzy
+msgid "GCP services found!"
+msgstr "Nu s-au găsit gazde/servicii."
+
 msgid "GCP services to monitor"
 msgstr "Servicii de monitorizare a BPC"
 
@@ -25955,11 +26019,12 @@ msgstr "Generarea specificației REST API"
 msgid "Generating report..."
 msgstr "Generarea de rapoarte..."
 
-msgid "Generic Options"
-msgstr "Opțiuni generice"
-
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Dispozitiv UPS generic: Senzor de temperatură"
+
+#, fuzzy
+msgid "Generic agent options"
+msgstr "Opțiuni generice"
 
 #, fuzzy
 msgid "Generic check plug-ins"
@@ -29352,6 +29417,10 @@ msgstr "Limita evenimentului gazdă"
 #, fuzzy
 msgid "Host events"
 msgstr "Gazda evenimentelor"
+
+#, fuzzy
+msgid "Host filters"
+msgstr "Fișiere jurnal gazdă"
 
 msgid "Host gets unreachble"
 msgstr "Gazda devine inaccesibilă"
@@ -36881,9 +36950,6 @@ msgstr "Legături către vizualizări globale și tablouri de bord"
 msgid "Linux"
 msgstr "Linux"
 
-msgid "Linux Agent"
-msgstr "Agent Linux"
-
 msgid "Linux Multipath Inventory"
 msgstr "Inventarul Linux Multipath"
 
@@ -36917,6 +36983,13 @@ msgstr "Fișiere Linux, Solaris, AIX"
 
 msgid "Linux-User:"
 msgstr "Utilizator Linux:"
+
+#, fuzzy
+msgid "Linux/UNIX Agent Options"
+msgstr "Agent Linux"
+
+msgid "Linux/UNIX agent options"
+msgstr ""
 
 msgid "Linux: DPKG (.deb)"
 msgstr "Linux: DPKG (.deb)"
@@ -41822,6 +41895,9 @@ msgstr "Dați un nume %s pentru a fi ușor de recunoscut."
 msgid "Name your host and define the folder"
 msgstr ""
 
+msgid "Name your host and define the folder path"
+msgstr ""
+
 msgid ""
 "Name your host, define the path and select the regions you would like to "
 "monitor"
@@ -42348,6 +42424,10 @@ msgstr "Variabila de configurare:"
 msgid "No Dictionary ValueSpec within Migrate: %s"
 msgstr ""
 
+#, fuzzy
+msgid "No GCP services found."
+msgstr "Nu s-au găsit gazde/servicii."
+
 msgid "No IP"
 msgstr "Fără IP"
 
@@ -42719,14 +42799,6 @@ msgstr "Fără căutare"
 
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
-
-#, fuzzy
-msgid "No selected graph line"
-msgstr "Operațiunea privind metricele selectate"
-
-#, fuzzy
-msgid "No selected graph lines"
-msgstr "Operațiunea privind metricele selectate"
 
 #, fuzzy
 msgid "No smarthosts"
@@ -44466,6 +44538,9 @@ msgstr "OO/Notif"
 
 msgid "OO/Service"
 msgstr "OO/Serviciu"
+
+msgid "OPERATOR"
+msgstr ""
 
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
@@ -48473,6 +48548,10 @@ msgstr "Vă rugăm să alegeți o imagine PNG."
 msgid "Please choose a file to upload."
 msgstr "Vă rugăm să alegeți un fișier de încărcat."
 
+#, fuzzy
+msgid "Please choose a notification parameter or create one."
+msgstr "Ștergeți această regulă de notificare"
+
 msgid "Please choose a report to schedule"
 msgstr "Vă rugăm să alegeți un raport de programat"
 
@@ -49495,6 +49574,10 @@ msgstr "GIT inițializat pentru Checkmk"
 msgid "Prepare Azure for Checkmk"
 msgstr "GIT inițializat pentru Checkmk"
 
+#, fuzzy
+msgid "Prepare GCP for Checkmk"
+msgstr "GIT inițializat pentru Checkmk"
+
 msgid "Prepend namespace prefix for hosts"
 msgstr "Prefixul de spațiu de nume pentru gazde"
 
@@ -50154,7 +50237,7 @@ msgid "Python Version"
 msgstr "Versiunea Python"
 
 #, fuzzy
-msgid "Python agent plug-in execution (UNIX)"
+msgid "Python agent plug-in execution (Linux, UNIX)"
 msgstr "Executarea plugin-ului agentului Python (UNIX)"
 
 #, fuzzy
@@ -51655,6 +51738,10 @@ msgstr "Eliminați"
 msgid "Remove %s from extensions"
 msgstr "Eliminați %s din extensii"
 
+#, fuzzy
+msgid "Remove Instance"
+msgstr "Eliminați toate"
+
 msgid "Remove TLS registration"
 msgstr "Îndepărtați înregistrarea TLS"
 
@@ -52877,6 +52964,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
+"and JSON object below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 "Returnează cele mai recente descărcări de accident de fiecare tip, așa cum "
@@ -54087,6 +54179,11 @@ msgid ""
 "instances may take a few minutes to show up."
 msgstr ""
 
+msgid ""
+"Save your progress and go to the Activate Changes page to enable it. Virtual "
+"machines may take a few minutes to show up."
+msgstr ""
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -54688,8 +54785,18 @@ msgstr "Servicii Azure de monitorizat"
 
 #, fuzzy
 msgid ""
+"Select and configure the Google Cloud Platform services you would like to "
+"monitor"
+msgstr "Servicii Azure de monitorizat"
+
+#, fuzzy
+msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Servicii Azure de monitorizat"
+
+#, fuzzy
+msgid "Select at least one graph line to edit"
+msgstr "Vă rugăm să selectați cel puțin un element"
 
 #, fuzzy
 msgid "Select contact group"
@@ -54701,6 +54808,9 @@ msgstr "Selectați sursa de date"
 
 msgid "Select device type"
 msgstr "Selectați tipul de dispozitiv"
+
+msgid "Select exactly one graph line to edit"
+msgstr ""
 
 msgid "Select file"
 msgstr "Selectați fișierul"
@@ -55078,6 +55188,10 @@ msgstr "Trimiteți metrici la InfluxDB"
 msgid "Send monitoring notification"
 msgstr "Trimiterea unei notificări de monitorizare"
 
+#, fuzzy
+msgid "Send notification"
+msgstr "Trimiteți o notificare personalizată"
+
 msgid "Send notifications to Event Console"
 msgstr "Trimiteți notificări către Consola de evenimente"
 
@@ -55444,6 +55558,11 @@ msgstr "Descoperirea serviciilor: Stare"
 #, fuzzy
 msgid "Service events"
 msgstr "Nivelul serviciilor"
+
+# georgem ##############
+#, fuzzy
+msgid "Service filters"
+msgstr "Filtre de service"
 
 msgid "Service goes into critical state"
 msgstr "Serviciul trece în stare critică"
@@ -55873,7 +55992,7 @@ msgid "Set by rule pack"
 msgstr "Setat de pachetul de reguli"
 
 #, fuzzy
-msgid "Set cache age for plug-ins (UNIX)"
+msgid "Set cache age for plug-ins (Linux, UNIX)"
 msgstr "Stabiliți vârsta cache-ului pentru plugin-uri (UNIX)"
 
 #, fuzzy
@@ -60664,6 +60783,10 @@ msgstr "Diagnosticarea suportului"
 msgid "Supporting rules"
 msgstr "Reguli orizontale"
 
+#, fuzzy
+msgid "Suppress all previous"
+msgstr "Suprimarea senzorilor care nu sunt disponibili"
+
 msgid "Suppress not available sensors"
 msgstr "Suprimarea senzorilor care nu sunt disponibili"
 
@@ -62465,7 +62588,8 @@ msgstr ""
 "URL-ul trebuie să înceapă cu <tt>http</tt> sau <tt>https</tt> și să se "
 "termine cu <tt>/check_mk/</tt>."
 
-msgid "The URL must begin with <tt>https</tt>."
+#, fuzzy
+msgid "The URL must begin with https://"
 msgstr "URL-ul trebuie să înceapă cu <tt>https</tt>."
 
 msgid "The URL of the target page the link of the element should link to."
@@ -63221,6 +63345,11 @@ msgstr ""
 
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
+"unintentional, please verify your configuration."
+msgstr ""
+
+msgid ""
+"The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
 msgstr ""
 
@@ -69533,6 +69662,14 @@ msgstr ""
 "un anumit VSID."
 
 msgid ""
+"This rule allows you to customize the user and installation directory of the "
+"agent. If you want to customize the user, such as deploying as an "
+"unprivileged user, you must also configure the installation directory.\n"
+"\n"
+"Note: Work in progress - This ruleset is not yet active."
+msgstr ""
+
+msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
 "your Checkmk servers here. You can enter either IP addresses in the form "
@@ -75210,6 +75347,9 @@ msgstr "URL:"
 
 msgid "USD per day"
 msgstr "USD pe zi"
+
+msgid "USER"
+msgstr ""
 
 #, fuzzy
 msgid "USrv - Allocation latency"
@@ -81205,6 +81345,10 @@ msgstr "Depanarea controlerului de agent Windows"
 msgid "Windows agent logging"
 msgstr "Jurnalizare agent Windows"
 
+#, fuzzy
+msgid "Windows agent options"
+msgstr "Jurnalizare agent Windows"
+
 msgid "Windows authentication"
 msgstr "Autentificare Windows"
 
@@ -81633,9 +81777,6 @@ msgstr ""
 
 msgid "Words"
 msgstr "Cuvinte"
-
-msgid "Work in progress - This ruleset is not yet active."
-msgstr ""
 
 msgid "Work request queue length"
 msgstr "Lungimea cozii de așteptare a cererilor de lucru"
@@ -82565,6 +82706,11 @@ msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
 msgstr "Puteți crea un pachet nou numai dacă există fișiere neambalate."
+
+msgid ""
+"You can only use this configuration with the new single directory structure. "
+"Please configure this before saving the rule."
+msgstr ""
 
 msgid ""
 "You can optionally define one or multiple regular expressions. Matching "
@@ -84976,6 +85122,10 @@ msgstr "ignoră care dintre ele este activă"
 msgid "ignored"
 msgstr "ignorat"
 
+#, fuzzy
+msgid "imb - Intel IMB Interface"
+msgstr "Interfețe Fibrechannel"
+
 msgid "immediate stop"
 msgstr "oprirea imediată"
 
@@ -85103,6 +85253,13 @@ msgstr "contor kernel"
 
 msgid "l/s"
 msgstr "l/s"
+
+#, fuzzy
+msgid "lan - IPMI v1.5 LAN Interface"
+msgstr "Interfața IPMI"
+
+msgid "lanplus - IPMI v2.0 RMCP+ LAN Interface"
+msgstr ""
 
 msgid "laserFault"
 msgstr "laserFault"
@@ -85490,6 +85647,9 @@ msgstr "numai atunci când gazda nu este în timp de nefuncționare"
 
 msgid "open"
 msgstr "deschis"
+
+msgid "open - Linux OpenIPMI Interface (default)"
+msgstr ""
 
 msgid "optional"
 msgstr "opțional"
@@ -86217,6 +86377,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "No selected graph line"
+#~ msgstr "Operațiunea privind metricele selectate"
+
+#, fuzzy
+#~ msgid "No selected graph lines"
+#~ msgstr "Operațiunea privind metricele selectate"
+
+#, fuzzy
 #~ msgid ""
 #~ "Configure your modem URL here (e.g. https://mymodem.mydomain.example)."
 #~ msgstr ""
@@ -86245,10 +86413,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."
 #~ msgstr "Regula de notificare modificată %d"
-
-#, fuzzy
-#~ msgid "Event console alerts"
-#~ msgstr "Alertele din consola de evenimente"
 
 #, fuzzy
 #~ msgid "File upload"

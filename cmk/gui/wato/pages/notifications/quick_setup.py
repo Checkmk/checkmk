@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import cast, get_args, Literal
+from typing import cast, Literal
 
-from cmk.utils.notify_types import (
-    SysLogFacilityStrType,
-    SysLogPriorityStrType,
-)
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -33,7 +29,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     ListOfStringsLayout,
 )
 from cmk.gui.i18n import _
-from cmk.gui.mkeventd import service_levels
+from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationECAlertStageWidget,
     ConditionalNotificationHostEventStageWidget,
@@ -332,7 +328,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                         title=_("Event console alert filters"),
                         items=[
                             FormSpecWrapper(
-                                id=FormSpecId("filter_ec"),
+                                id=FormSpecId("ec_alert_filters"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
                                     elements={
@@ -349,28 +345,26 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=Tuple(
                                                 title=Title("Syslog priority"),
                                                 elements=[
-                                                    SingleChoice(
+                                                    SingleChoiceExtended(
                                                         title=Title("from:"),
+                                                        type=int,
                                                         elements=[
-                                                            SingleChoiceElement(
+                                                            SingleChoiceElementExtended(
                                                                 name=name,
-                                                                title=Title("%s") % _(" %s") % name,
+                                                                title=Title("%s") % title,
                                                             )
-                                                            for name in get_args(
-                                                                SysLogPriorityStrType
-                                                            )
+                                                            for name, title in syslog_priorities
                                                         ],
                                                     ),
-                                                    SingleChoice(
+                                                    SingleChoiceExtended(
                                                         title=Title("to:"),
+                                                        type=int,
                                                         elements=[
-                                                            SingleChoiceElement(
+                                                            SingleChoiceElementExtended(
                                                                 name=name,
-                                                                title=Title("%s") % _(" %s") % name,
+                                                                title=Title("%s") % title,
                                                             )
-                                                            for name in get_args(
-                                                                SysLogPriorityStrType
-                                                            )
+                                                            for name, title in syslog_priorities
                                                         ],
                                                     ),
                                                 ],
@@ -378,14 +372,15 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             )
                                         ),
                                         "syslog_facility": DictElement(
-                                            parameter_form=SingleChoice(
+                                            parameter_form=SingleChoiceExtended(
                                                 title=Title("Syslog facility"),
+                                                type=int,
                                                 elements=[
-                                                    SingleChoiceElement(
+                                                    SingleChoiceElementExtended(
                                                         name=name,
-                                                        title=Title("%s") % _(" %s") % name,
+                                                        title=Title("%s") % title,
                                                     )
-                                                    for name in get_args(SysLogFacilityStrType)
+                                                    for name, title in syslog_facilities
                                                 ],
                                             ),
                                         ),
@@ -408,7 +403,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                         title=_("Host filters"),
                         items=[
                             FormSpecWrapper(
-                                id=FormSpecId("filter_hosts"),
+                                id=FormSpecId("host_filters"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
                                     elements={
@@ -467,7 +462,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                         title=_("Service filters"),
                         items=[
                             FormSpecWrapper(
-                                id=FormSpecId("filter_services"),
+                                id=FormSpecId("service_filters"),
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
                                     elements={
@@ -540,9 +535,9 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
                             ),
                             elements={
-                                "contact_group": DictElement(
+                                "contact_groups": DictElement(
                                     parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Contact group"),
+                                        title=Title("Contact groups"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=name,

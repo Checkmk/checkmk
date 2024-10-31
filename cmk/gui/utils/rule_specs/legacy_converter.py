@@ -19,7 +19,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
-from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
@@ -184,7 +183,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.DiscoveryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                legacy_wato_groups.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
         case ruleset_api_v1.rule_specs.Service():
@@ -211,7 +210,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.SpecialAgent():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato.RulespecGroupDatasourcePrograms,
+                legacy_wato_groups.RulespecGroupDatasourcePrograms,
                 localizer,
                 config_scope_prefix=RuleGroup.SpecialAgents,
             )
@@ -540,7 +539,7 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
                 return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesVarious
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
                 return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
-            if legacy_main_group == legacy_wato.RulespecGroupDiscoveryCheckParameters:
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDiscoveryCheckParameters:
                 return legacy_wato_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.rule_specs.Topic.ENVIRONMENTAL:

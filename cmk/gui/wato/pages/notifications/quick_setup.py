@@ -300,7 +300,7 @@ def _get_contact_group_users() -> list[tuple[UserId, str]]:
     return sorted(
         (name, f"{name} - {user.get('alias', name)}")
         for name, user in load_users().items()
-        if user["contactgroups"]
+        if user.get("contactgroups")
     )
 
 

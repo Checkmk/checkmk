@@ -20,6 +20,10 @@ msgstr ""
 msgid " "
 msgstr ""
 
+#, fuzzy, python-format
+msgid " %s"
+msgstr "%s"
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, durata întreruperii %s."
@@ -2708,6 +2712,10 @@ msgstr "Etichete AWS"
 #, fuzzy
 msgid "AWS services found!"
 msgstr "Nu s-au găsit gazde/servicii."
+
+#, fuzzy
+msgid "AWS tags"
+msgstr "Etichete AWS"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Costurile și utilizarea AWS/CE"
@@ -9384,10 +9392,6 @@ msgstr "Descoperire în vrac"
 msgid "Bulk ID"
 msgstr "Identificare în vrac"
 
-#, fuzzy
-msgid "Bulk Notification"
-msgstr "Deschideți notificări în masă"
-
 msgid "Bulk discovery"
 msgstr "Descoperire în vrac"
 
@@ -14279,6 +14283,11 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Configurați nivelurile superioare"
 
+msgid ""
+"Configure whether RCC validates TLS certificates when downloading or pulling "
+"dependencies."
+msgstr ""
+
 #, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
@@ -18687,6 +18696,10 @@ msgstr "Deprecieri"
 msgid "Descending"
 msgstr "Coborâre"
 
+#, fuzzy
+msgid "Describes the business impact of a host or service"
+msgstr "Afișează un grafic de performanță al unei gazde sau al unui serviciu."
+
 msgid "Description"
 msgstr "Descriere"
 
@@ -22875,7 +22888,7 @@ msgid "Event console"
 msgstr "Consola de evenimente"
 
 #, fuzzy
-msgid "Event console filters"
+msgid "Event console alert filters"
 msgstr "Alertele din consola de evenimente"
 
 msgid "Event console performance"
@@ -31656,12 +31669,6 @@ msgstr ""
 "Dacă rulați Consola de evenimente ca persoană care nu este rădăcină (cum ar "
 "fi într-un site OMD), alegeți un număr de port mai mare de 1024."
 
-#, python-format
-msgid ""
-"If you are still using %s, we recommend switching to an PAT/API token, as "
-"the password authentication is deprecated."
-msgstr ""
-
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
 "then Checkmk will check for ripe notification bulks to be sent out at latest "
@@ -36983,10 +36990,6 @@ msgstr "Fișiere Linux, Solaris, AIX"
 
 msgid "Linux-User:"
 msgstr "Utilizator Linux:"
-
-#, fuzzy
-msgid "Linux/UNIX Agent Options"
-msgstr "Agent Linux"
 
 msgid "Linux/UNIX agent options"
 msgstr ""
@@ -42857,6 +42860,10 @@ msgstr ""
 msgid "No users are defined yet."
 msgstr "Nu sunt definiți încă utilizatori."
 
+#, fuzzy
+msgid "No users available"
+msgstr "Porturi disponibile"
+
 msgid "No valid target folder."
 msgstr "Nu există un dosar țintă valid."
 
@@ -43274,6 +43281,11 @@ msgstr "Nu a început."
 
 msgid "Not supported"
 msgstr "Neacceptat"
+
+msgid ""
+"Not the recipient, but filters hosts and services assigned to specific "
+"person(s) or group(s)"
+msgstr ""
 
 msgid "Not yet monitored"
 msgstr "Nu este încă monitorizat"
@@ -50754,6 +50766,10 @@ msgstr "Întârziere aleatorie"
 
 msgid "Randomize password"
 msgstr "Randomize parola"
+
+#, fuzzy
+msgid "Range"
+msgstr "gama"
 
 msgid "Range limits"
 msgstr "Limitele gamei"
@@ -61273,6 +61289,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS Autentificarea fără TLS nu este posibilă"
+
+#, fuzzy
+msgid "TLS certificate validation"
+msgstr "Validarea certificatului SSL"
 
 #, fuzzy
 msgid "TLS certificate verification"
@@ -79010,6 +79030,10 @@ msgstr "Valabil până la"
 msgid "Valid until Checkmk version"
 msgstr "Valabil până la versiunea Checkmk"
 
+#, fuzzy
+msgid "Validate TLS certificates"
+msgstr "Certificat invalid"
+
 msgid "Validate server certificate during port query"
 msgstr "Validarea certificatului serverului în timpul interogării portului"
 
@@ -79776,6 +79800,10 @@ msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 
 msgid "Waiting for replication to start"
 msgstr "Așteptare pentru începerea replicării"
+
+#, fuzzy
+msgid "Waiting on team Engelbart"
+msgstr "Containere în așteptare"
 
 msgid "Waitlocks"
 msgstr "Blocuri de așteptare"
@@ -84941,9 +84969,6 @@ msgstr "grafic"
 msgid "graph number %d"
 msgstr "număr grafic %d"
 
-msgid "graphs"
-msgstr "grafice"
-
 msgid "group by"
 msgstr "grup de"
 
@@ -86375,6 +86400,17 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Bulk Notification"
+#~ msgstr "Deschideți notificări în masă"
+
+#, fuzzy
+#~ msgid "Linux/UNIX Agent Options"
+#~ msgstr "Agent Linux"
+
+#~ msgid "graphs"
+#~ msgstr "grafice"
 
 #, fuzzy
 #~ msgid "No selected graph line"

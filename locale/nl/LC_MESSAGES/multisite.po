@@ -19,6 +19,10 @@ msgstr ""
 msgid " "
 msgstr ""
 
+#, fuzzy, python-format
+msgid " %s"
+msgstr "%s"
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, duur van de onderbreking %s"
@@ -2687,6 +2691,10 @@ msgstr "AWS Tags"
 #, fuzzy
 msgid "AWS services found!"
 msgstr "Geen hosts/services gevonden."
+
+#, fuzzy
+msgid "AWS tags"
+msgstr "AWS Tags"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Kosten en gebruik van AWS/CE"
@@ -9397,10 +9405,6 @@ msgstr "Bulkontdekking"
 msgid "Bulk ID"
 msgstr "Bulk ID"
 
-#, fuzzy
-msgid "Bulk Notification"
-msgstr "Open bulk meldingen"
-
 msgid "Bulk discovery"
 msgstr "Bulkontdekking"
 
@@ -14271,6 +14275,11 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Containers bovenste niveaus"
 
+msgid ""
+"Configure whether RCC validates TLS certificates when downloading or pulling "
+"dependencies."
+msgstr ""
+
 #, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
@@ -18663,6 +18672,10 @@ msgstr "Afschrijvingen"
 msgid "Descending"
 msgstr "Aflopend"
 
+#, fuzzy
+msgid "Describes the business impact of a host or service"
+msgstr "Geeft een prestatiegrafiek van een host of service weer."
+
 msgid "Description"
 msgstr "Beschrijving"
 
@@ -22836,7 +22849,7 @@ msgid "Event console"
 msgstr "Gebeurtenis console"
 
 #, fuzzy
-msgid "Event console filters"
+msgid "Event console alert filters"
 msgstr "Event Console waarschuwingen"
 
 msgid "Event console performance"
@@ -31620,12 +31633,6 @@ msgstr ""
 "Als je de Event Console draait als een niet-root (zoals in een OMD site) "
 "kies dan een poortnummer groter dan 1024."
 
-#, python-format
-msgid ""
-"If you are still using %s, we recommend switching to an PAT/API token, as "
-"the password authentication is deprecated."
-msgstr ""
-
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
 "then Checkmk will check for ripe notification bulks to be sent out at latest "
@@ -36927,10 +36934,6 @@ msgstr "Linux, Solaris, AIX bestanden"
 
 msgid "Linux-User:"
 msgstr "Linux-gebruiker:"
-
-#, fuzzy
-msgid "Linux/UNIX Agent Options"
-msgstr "Linux Agent"
 
 msgid "Linux/UNIX agent options"
 msgstr ""
@@ -42793,6 +42796,10 @@ msgstr "Voer een bestandsnaam in."
 msgid "No users are defined yet."
 msgstr "Er zijn nog geen gebruikers gedefinieerd."
 
+#, fuzzy
+msgid "No users available"
+msgstr "Beschikbare poorten"
+
 msgid "No valid target folder."
 msgstr "Geen geldige doelmap."
 
@@ -43209,6 +43216,11 @@ msgstr "Niet begonnen."
 
 msgid "Not supported"
 msgstr "Niet ondersteund"
+
+msgid ""
+"Not the recipient, but filters hosts and services assigned to specific "
+"person(s) or group(s)"
+msgstr ""
 
 msgid "Not yet monitored"
 msgstr "Nog niet gecontroleerd"
@@ -50687,6 +50699,10 @@ msgstr "Willekeurige vertraging"
 
 msgid "Randomize password"
 msgstr "Willekeurig wachtwoord"
+
+#, fuzzy
+msgid "Range"
+msgstr "bereik"
 
 msgid "Range limits"
 msgstr "Bereik grenzen"
@@ -61119,6 +61135,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-authenticatie zonder TLS is niet mogelijk"
+
+#, fuzzy
+msgid "TLS certificate validation"
+msgstr "SSL-certificaat validatie"
 
 #, fuzzy
 msgid "TLS certificate verification"
@@ -78829,6 +78849,10 @@ msgstr "Geldig tot"
 msgid "Valid until Checkmk version"
 msgstr "Geldig tot Checkmk versie"
 
+#, fuzzy
+msgid "Validate TLS certificates"
+msgstr "Ongeldig certificaat"
+
 msgid "Validate server certificate during port query"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
 
@@ -79598,6 +79622,10 @@ msgstr "Wachten op andere wissels om online te komen"
 
 msgid "Waiting for replication to start"
 msgstr "Wachten op replicatie om te beginnen"
+
+#, fuzzy
+msgid "Waiting on team Engelbart"
+msgstr "Wachtende containers"
 
 msgid "Waitlocks"
 msgstr "Wachtsloten"
@@ -84760,9 +84788,6 @@ msgstr "grafiek"
 msgid "graph number %d"
 msgstr "grafieknummer %d"
 
-msgid "graphs"
-msgstr "grafieken"
-
 msgid "group by"
 msgstr "groep door"
 
@@ -86203,6 +86228,17 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Bulk Notification"
+#~ msgstr "Open bulk meldingen"
+
+#, fuzzy
+#~ msgid "Linux/UNIX Agent Options"
+#~ msgstr "Linux Agent"
+
+#~ msgid "graphs"
+#~ msgstr "grafieken"
 
 #, fuzzy
 #~ msgid "No selected graph line"

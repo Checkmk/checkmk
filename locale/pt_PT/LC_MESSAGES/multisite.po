@@ -19,6 +19,10 @@ msgstr ""
 msgid " "
 msgstr ""
 
+#, fuzzy, python-format
+msgid " %s"
+msgstr "%s"
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, duração de indisponibilidade %s"
@@ -2687,6 +2691,10 @@ msgstr "Tags AWS"
 #, fuzzy
 msgid "AWS services found!"
 msgstr "Não foram encontrados hospedeiros/serviços."
+
+#, fuzzy
+msgid "AWS tags"
+msgstr "Tags AWS"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Custos e Utilização"
@@ -9403,10 +9411,6 @@ msgstr "Descoberta a Granel"
 msgid "Bulk ID"
 msgstr "Identificação de Granel"
 
-#, fuzzy
-msgid "Bulk Notification"
-msgstr "Notificações em massa abertas"
-
 msgid "Bulk discovery"
 msgstr "Descoberta de massa"
 
@@ -14267,6 +14271,11 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Contentores níveis superiores"
 
+msgid ""
+"Configure whether RCC validates TLS certificates when downloading or pulling "
+"dependencies."
+msgstr ""
+
 #, fuzzy
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "Configure o seu ServiceNow URL aqui (ex. https://myservicenow.com)."
@@ -18657,6 +18666,10 @@ msgstr "Depreciações"
 msgid "Descending"
 msgstr "Descendente"
 
+#, fuzzy
+msgid "Describes the business impact of a host or service"
+msgstr "Mostra um gráfico de desempenho de um host ou serviço."
+
 msgid "Description"
 msgstr "Descrição"
 
@@ -22830,7 +22843,7 @@ msgid "Event console"
 msgstr "Console do evento"
 
 #, fuzzy
-msgid "Event console filters"
+msgid "Event console alert filters"
 msgstr "Alertas de Console de Eventos"
 
 msgid "Event console performance"
@@ -31616,12 +31629,6 @@ msgstr ""
 "Se você estiver rodando o Console de Eventos como um não-root (como em um "
 "site OMD), escolha um número de porta maior que 1024."
 
-#, python-format
-msgid ""
-"If you are still using %s, we recommend switching to an PAT/API token, as "
-"the password authentication is deprecated."
-msgstr ""
-
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
 "then Checkmk will check for ripe notification bulks to be sent out at latest "
@@ -36906,10 +36913,6 @@ msgstr "Arquivos Linux, Solaris, AIX"
 
 msgid "Linux-User:"
 msgstr "Linux-User:"
-
-#, fuzzy
-msgid "Linux/UNIX Agent Options"
-msgstr "Agente Linux"
 
 msgid "Linux/UNIX agent options"
 msgstr ""
@@ -42781,6 +42784,10 @@ msgstr ""
 msgid "No users are defined yet."
 msgstr "Nenhum usuário está definido ainda."
 
+#, fuzzy
+msgid "No users available"
+msgstr "Portos disponíveis"
+
 msgid "No valid target folder."
 msgstr "Nenhuma pasta de destino válida."
 
@@ -43195,6 +43202,11 @@ msgstr "Não começou."
 
 msgid "Not supported"
 msgstr "Não suportado"
+
+msgid ""
+"Not the recipient, but filters hosts and services assigned to specific "
+"person(s) or group(s)"
+msgstr ""
 
 msgid "Not yet monitored"
 msgstr "Ainda não monitorado"
@@ -50658,6 +50670,10 @@ msgstr "Atraso aleatório"
 
 msgid "Randomize password"
 msgstr "Randomize a senha"
+
+#, fuzzy
+msgid "Range"
+msgstr "faixa"
 
 msgid "Range limits"
 msgstr "Limites de alcance"
@@ -61117,6 +61133,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "A autenticação TLS sem TLS não é possível"
+
+#, fuzzy
+msgid "TLS certificate validation"
+msgstr "Validação de certificados SSL"
 
 #, fuzzy
 msgid "TLS certificate verification"
@@ -78774,6 +78794,10 @@ msgstr "Válido até"
 msgid "Valid until Checkmk version"
 msgstr "Válido até a versão Checkmk"
 
+#, fuzzy
+msgid "Validate TLS certificates"
+msgstr "Certificado inválido"
+
 msgid "Validate server certificate during port query"
 msgstr "Validar o certificado do servidor durante a consulta do porto"
 
@@ -79539,6 +79563,10 @@ msgstr "À espera que outros interruptores estejam online"
 
 msgid "Waiting for replication to start"
 msgstr "À espera que a replicação comece"
+
+#, fuzzy
+msgid "Waiting on team Engelbart"
+msgstr "Contentores em espera"
 
 msgid "Waitlocks"
 msgstr "Waitlocks"
@@ -84664,9 +84692,6 @@ msgstr "gráfico"
 msgid "graph number %d"
 msgstr "número do gráfico %d"
 
-msgid "graphs"
-msgstr "gráficos"
-
 msgid "group by"
 msgstr "grupo por"
 
@@ -86100,6 +86125,17 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Bulk Notification"
+#~ msgstr "Notificações em massa abertas"
+
+#, fuzzy
+#~ msgid "Linux/UNIX Agent Options"
+#~ msgstr "Agente Linux"
+
+#~ msgid "graphs"
+#~ msgstr "gráficos"
 
 #, fuzzy
 #~ msgid "No selected graph line"

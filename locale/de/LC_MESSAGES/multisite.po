@@ -19,6 +19,10 @@ msgstr ""
 msgid " "
 msgstr " "
 
+#, fuzzy, python-format
+msgid " %s"
+msgstr "%s"
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, Dauer des Ausfalls %s"
@@ -2663,6 +2667,10 @@ msgstr "AWS-Tags"
 
 msgid "AWS services found!"
 msgstr "AWS Services gefunden!"
+
+#, fuzzy
+msgid "AWS tags"
+msgstr "AWS-Tags"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
@@ -9034,9 +9042,6 @@ msgstr "Massenerkennung"
 msgid "Bulk ID"
 msgstr "Sammel-ID"
 
-msgid "Bulk Notification"
-msgstr "Sammelbenachrichtigung"
-
 msgid "Bulk discovery"
 msgstr "Bulk-Discovery"
 
@@ -13791,6 +13796,11 @@ msgstr ""
 msgid "Configure upper levels"
 msgstr "Obergrenzen konfigurieren"
 
+msgid ""
+"Configure whether RCC validates TLS certificates when downloading or pulling "
+"dependencies."
+msgstr ""
+
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr ""
 "Konfigurieren Sie hier Ihre Servicenow URL (bspw. https://myservicenow.com)."
@@ -18026,6 +18036,10 @@ msgstr "Überholte Einstellungen"
 msgid "Descending"
 msgstr "Absteigend"
 
+#, fuzzy
+msgid "Describes the business impact of a host or service"
+msgstr "Zeigt den Performance-Graph eines Hosts oder Services an."
+
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -22094,7 +22108,7 @@ msgid "Event console"
 msgstr "Event Console"
 
 #, fuzzy
-msgid "Event console filters"
+msgid "Event console alert filters"
 msgstr "Alarme der Event Console"
 
 msgid "Event console performance"
@@ -30395,14 +30409,6 @@ msgstr ""
 "Wenn Sie die Event Console als Nicht-Root verwenden (wie in OMD-Instanzen) "
 "wählen Sie bitte eine Port-Nummer größer als 1024."
 
-#, python-format
-msgid ""
-"If you are still using %s, we recommend switching to an PAT/API token, as "
-"the password authentication is deprecated."
-msgstr ""
-"Wenn Sie immer noch %s verwenden, empfehlen wir Ihnen, zu einem PAT/API-"
-"Token zu wechseln, da die Passwortauthentifizierung veraltet ist."
-
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
 "then Checkmk will check for ripe notification bulks to be sent out at latest "
@@ -35537,10 +35543,6 @@ msgstr "Linux, Solaris, AIX Dateien"
 
 msgid "Linux-User:"
 msgstr "Linux-Benutzer:"
-
-#, fuzzy
-msgid "Linux/UNIX Agent Options"
-msgstr "Linux-Agent"
 
 msgid "Linux/UNIX agent options"
 msgstr ""
@@ -41191,6 +41193,10 @@ msgstr "Kein Benutzername eingegeben. Bitte geben Sie einen Benutzernamen ein."
 msgid "No users are defined yet."
 msgstr "Keine Benutzer definiert."
 
+#, fuzzy
+msgid "No users available"
+msgstr "Verfügbare Ports"
+
 msgid "No valid target folder."
 msgstr "Ungültiger Zielordner."
 
@@ -41596,6 +41602,11 @@ msgstr "Nicht gestartet."
 
 msgid "Not supported"
 msgstr "Nicht unterstützt"
+
+msgid ""
+"Not the recipient, but filters hosts and services assigned to specific "
+"person(s) or group(s)"
+msgstr ""
 
 msgid "Not yet monitored"
 msgstr "Noch nicht überwacht"
@@ -48656,6 +48667,10 @@ msgstr "Zufällige zusätzliche Verzögerung"
 
 msgid "Randomize password"
 msgstr "Zufallsgesteuertes Passwort"
+
+#, fuzzy
+msgid "Range"
+msgstr "Zeitspanne"
 
 msgid "Range limits"
 msgstr "Bereichsgrenzen"
@@ -58816,6 +58831,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-Authentifizierung ohne TLS ist nicht möglich"
+
+#, fuzzy
+msgid "TLS certificate validation"
+msgstr "SSL Zertifikats Überprüfung"
 
 msgid "TLS certificate verification"
 msgstr "Verifizierung des TLS-Zertifikats"
@@ -75745,6 +75764,10 @@ msgstr "Gültig bis"
 msgid "Valid until Checkmk version"
 msgstr "Gültig bis Checkmk-Version"
 
+#, fuzzy
+msgid "Validate TLS certificates"
+msgstr "Ungültiges Zertifikat"
+
 msgid "Validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage validieren"
 
@@ -76485,6 +76508,10 @@ msgstr "Warte auf andere Switche online zu gehen"
 
 msgid "Waiting for replication to start"
 msgstr "Warte auf den Beginn der Replikation"
+
+#, fuzzy
+msgid "Waiting on team Engelbart"
+msgstr "Wartende Container"
 
 msgid "Waitlocks"
 msgstr "Waitlocks"
@@ -81644,9 +81671,6 @@ msgstr "Graph"
 msgid "graph number %d"
 msgstr "Graph Nummer %d"
 
-msgid "graphs"
-msgstr "Graphen"
-
 msgid "group by"
 msgstr "gruppieren nach"
 
@@ -83062,6 +83086,24 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Bulk Notification"
+#~ msgstr "Sammelbenachrichtigung"
+
+#, python-format
+#~ msgid ""
+#~ "If you are still using %s, we recommend switching to an PAT/API token, as "
+#~ "the password authentication is deprecated."
+#~ msgstr ""
+#~ "Wenn Sie immer noch %s verwenden, empfehlen wir Ihnen, zu einem PAT/API-"
+#~ "Token zu wechseln, da die Passwortauthentifizierung veraltet ist."
+
+#, fuzzy
+#~ msgid "Linux/UNIX Agent Options"
+#~ msgstr "Linux-Agent"
+
+#~ msgid "graphs"
+#~ msgstr "Graphen"
 
 #~ msgid "No selected graph line"
 #~ msgstr "Keine ausgewählte Graphlinie"

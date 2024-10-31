@@ -19,6 +19,10 @@ msgstr ""
 msgid " "
 msgstr ""
 
+#, fuzzy, python-format
+msgid " %s"
+msgstr "%s"
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, 停止期間 %s"
@@ -2589,6 +2593,10 @@ msgstr "AWSタグ"
 #, fuzzy
 msgid "AWS services found!"
 msgstr "ホスト/サービスが見つかりません。"
+
+#, fuzzy
+msgid "AWS tags"
+msgstr "AWSタグ"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CEのコストと使用法"
@@ -9006,10 +9014,6 @@ msgstr "バルクディスカバリー"
 msgid "Bulk ID"
 msgstr "バルクID"
 
-#, fuzzy
-msgid "Bulk Notification"
-msgstr "一括通知を開く"
-
 msgid "Bulk discovery"
 msgstr "一括発見"
 
@@ -13651,6 +13655,11 @@ msgstr "クラスタのノード数に応じて、クラスタに適用する閾
 msgid "Configure upper levels"
 msgstr "上位レベルの設定"
 
+msgid ""
+"Configure whether RCC validates TLS certificates when downloading or pulling "
+"dependencies."
+msgstr ""
+
 msgid "Configure your ServiceNow URL here (e.g. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
 
@@ -17844,6 +17853,10 @@ msgstr "非推奨"
 msgid "Descending"
 msgstr "降順"
 
+#, fuzzy
+msgid "Describes the business impact of a host or service"
+msgstr "ホストまたはサービスのパフォーマンスグラフを表示します。"
+
 msgid "Description"
 msgstr "説明"
 
@@ -21855,7 +21868,7 @@ msgid "Event console"
 msgstr "イベントコンソール"
 
 #, fuzzy
-msgid "Event console filters"
+msgid "Event console alert filters"
 msgstr "イベントコンソールアラート"
 
 msgid "Event console performance"
@@ -30512,12 +30525,6 @@ msgstr ""
 "(OMDサイトなどで)非ルートとしてイベントコンソールを実行している場合は、1024よ"
 "り大きいポート番号を選択してください。"
 
-#, python-format
-msgid ""
-"If you are still using %s, we recommend switching to an PAT/API token, as "
-"the password authentication is deprecated."
-msgstr ""
-
 msgid ""
 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
 "then Checkmk will check for ripe notification bulks to be sent out at latest "
@@ -35701,10 +35708,6 @@ msgstr "Linux、Solaris、AIXファイル"
 
 msgid "Linux-User:"
 msgstr "Linux-ユーザー:"
-
-#, fuzzy
-msgid "Linux/UNIX Agent Options"
-msgstr "Linuxエージェント"
 
 msgid "Linux/UNIX agent options"
 msgstr ""
@@ -41516,6 +41519,10 @@ msgstr "ユーザー名が入力されていません。ユーザー名を入力
 msgid "No users are defined yet."
 msgstr "ユーザーはまだ定義されていません。"
 
+#, fuzzy
+msgid "No users available"
+msgstr "利用可能なポート"
+
 msgid "No valid target folder."
 msgstr "有効なターゲットフォルダがありません。"
 
@@ -41922,6 +41929,11 @@ msgstr "始まっていない。"
 
 msgid "Not supported"
 msgstr "サポートされていません"
+
+msgid ""
+"Not the recipient, but filters hosts and services assigned to specific "
+"person(s) or group(s)"
+msgstr ""
 
 msgid "Not yet monitored"
 msgstr "まだ監視されていません"
@@ -49297,6 +49309,10 @@ msgstr "ランダムな遅延"
 
 msgid "Randomize password"
 msgstr "パスワードをランダム化する"
+
+#, fuzzy
+msgid "Range"
+msgstr "範囲"
 
 msgid "Range limits"
 msgstr "範囲制限"
@@ -59598,6 +59614,10 @@ msgstr "TLS"
 
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLSなしでの認証は不可"
+
+#, fuzzy
+msgid "TLS certificate validation"
+msgstr "SSL証明書の検証"
 
 #, fuzzy
 msgid "TLS certificate verification"
@@ -76824,6 +76844,10 @@ msgstr "まで有効"
 msgid "Valid until Checkmk version"
 msgstr "Checkmkバージョンまで有効"
 
+#, fuzzy
+msgid "Validate TLS certificates"
+msgstr "無効な証明書"
+
 msgid "Validate server certificate during port query"
 msgstr "ポート照会時にサーバ証明書を検証する"
 
@@ -77582,6 +77606,10 @@ msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
+
+#, fuzzy
+msgid "Waiting on team Engelbart"
+msgstr "待機中コンテナ"
 
 msgid "Waitlocks"
 msgstr "ウェイトロック"
@@ -82568,9 +82596,6 @@ msgstr "グラフ"
 msgid "graph number %d"
 msgstr "グラフ番号 %d"
 
-msgid "graphs"
-msgstr "グラフ"
-
 msgid "group by"
 msgstr "グループ化"
 
@@ -84004,6 +84029,17 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Bulk Notification"
+#~ msgstr "一括通知を開く"
+
+#, fuzzy
+#~ msgid "Linux/UNIX Agent Options"
+#~ msgstr "Linuxエージェント"
+
+#~ msgid "graphs"
+#~ msgstr "グラフ"
 
 #, fuzzy
 #~ msgid "No selected graph line"

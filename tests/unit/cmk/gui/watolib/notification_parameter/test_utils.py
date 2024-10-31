@@ -197,6 +197,14 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
 
 
 @pytest.mark.usefixtures("request_context")
+def test_get_notification_parameter_throws_keyerror(
+    registry: NotificationParameterRegistry,
+) -> None:
+    with pytest.raises(KeyError):
+        get_notification_parameter(registry, NotificationParameterID("some-id"))
+
+
+@pytest.mark.usefixtures("request_context")
 def test_get_notification_parameter_doesnt_just_return_from_disk(
     registry: NotificationParameterRegistry,
 ) -> None:

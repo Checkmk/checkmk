@@ -124,6 +124,11 @@ def get_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
 ) -> NotificationParameter:
+    """Get notification parameter to supply to frontend.
+
+    Raises:
+        KeyError: if notification parameter with parameter_id doesn't exist.
+    """
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     method, item = next(
         (

@@ -30,6 +30,7 @@ def test_password_encrypts_password(
     _, frontend_value = disk_visitor.to_vue(
         ("cmk_postprocessed", "explicit_password", ("", password))
     )
+    assert isinstance(frontend_value, tuple)
 
     assert not any(password in value for value in frontend_value if isinstance(value, str))
 

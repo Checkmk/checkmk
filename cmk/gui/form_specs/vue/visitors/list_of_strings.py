@@ -47,6 +47,8 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, Sequence[str]]):
         element_visitor = get_visitor(self.form_spec.string_spec, self.options)
         string_spec, string_default_value = element_visitor.to_vue(DEFAULT_VALUE)
 
+        assert isinstance(string_default_value, str)
+
         return (
             shared_type_defs.ListOfStrings(
                 title=title,

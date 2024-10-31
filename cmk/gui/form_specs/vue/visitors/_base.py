@@ -29,7 +29,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
         self.options = options
 
     @final
-    def to_vue(self, raw_value: object) -> tuple[shared_type_defs.FormSpec, Any]:
+    def to_vue(self, raw_value: object) -> tuple[shared_type_defs.FormSpec, object]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         return self._to_vue(raw_value, parsed_value)
 
@@ -64,7 +64,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
     @abc.abstractmethod
     def _to_vue(
         self, raw_value: object, parsed_value: ModelT | EmptyValue
-    ) -> tuple[shared_type_defs.FormSpec, Any]:
+    ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     @abc.abstractmethod

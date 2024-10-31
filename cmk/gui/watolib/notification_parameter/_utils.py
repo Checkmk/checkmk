@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Mapping, NamedTuple
 
 from cmk.ccc.i18n import _
 
@@ -117,7 +117,7 @@ def get_list_of_notification_parameter(
 
 class NotificationParameter(NamedTuple):
     description: str
-    data: NotificationParameterItem
+    data: Mapping
 
 
 def get_notification_parameter(
@@ -138,4 +138,5 @@ def get_notification_parameter(
     form_spec = registry.form_spec(method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
     _, values = visitor.to_vue(item)
+    assert isinstance(values, Mapping)
     return NotificationParameter(description=item["general"]["description"], data=values)

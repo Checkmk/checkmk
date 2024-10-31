@@ -30,6 +30,9 @@ def test_builtin_autocompleters_registered() -> None:
     ]
 
     if is_enterprise_repo():
-        expected.append("add_to_report_choices")
+        expected += [
+            "add_to_report_choices",
+            "graph_template_for_combined_graph",
+        ]
 
     assert sorted(registered) == sorted(expected)

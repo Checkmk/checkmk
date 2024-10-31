@@ -160,7 +160,8 @@ type AutoCompleterConfigIdent =
     | "tag_group_opt"
     | "kubernetes_labes"
     | "service_levels"
-    | "syslog_facilities";
+    | "syslog_facilities"
+    | "graph_template_for_combined_graph";
 
 type ContextAutocompleterConfigIdent =
     | "monitored_service_description"

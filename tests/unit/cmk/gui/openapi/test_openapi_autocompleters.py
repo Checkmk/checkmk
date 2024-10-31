@@ -5,6 +5,7 @@
 
 import pytest
 
+from tests.testlib.repo import is_enterprise_repo
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -14,7 +15,7 @@ from cmk.gui.valuespec import autocompleter_registry
 
 @pytest.fixture(name="expected_autocompleters")
 def fixture_expected_autocompleters() -> list[str]:
-    return [
+    autocompleters = [
         "sites",
         "monitored_hostname",
         "allgroups",
@@ -23,6 +24,11 @@ def fixture_expected_autocompleters() -> list[str]:
         "tag_groups_opt",
         "monitored_service_description",
     ]
+
+    if is_enterprise_repo():
+        autocompleters.append("graph_template_for_combined_graph")
+
+    return autocompleters
 
 
 def test_openapi_autocompleter_functions_exist(expected_autocompleters: list[str]) -> None:
@@ -108,3 +114,15 @@ def test_openapi_lenny_autocompleter(
 
     with mock_livestatus(expect_status_query=True):
         clients.AutoComplete.invoke("label", {"world": "core", "context": {}}, "")
+
+
+@pytest.mark.skipif(
+    not is_enterprise_repo(),
+    reason="graph_template_for_combined_graph is not available in CRE",
+)
+def test_openapi_graph_template_for_combined_graph_autocompleter(clients: ClientRegistry) -> None:
+    clients.AutoComplete.invoke(
+        "graph_template_for_combined_graph",
+        {"strict": True},
+        "",
+    )

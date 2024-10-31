@@ -128,6 +128,7 @@ def register() -> None:
         visual_type_registry,
         dashlet_registry,
         contact_group_usage_finder_registry,
+        autocompleter_registry,
     )
     crash_reporting.register(
         page_registry,

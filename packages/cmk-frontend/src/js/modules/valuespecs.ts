@@ -165,7 +165,7 @@ type AutoCompleterConfigIdent =
 
 type ContextAutocompleterConfigIdent =
     | "monitored_service_description"
-    | "available_graphs"
+    | "available_graph_templates"
     | "monitored_metrics";
 
 type GroupAutocompleterConfigIdent = "allgroups" | "kubernetes_labels";

@@ -13,7 +13,7 @@ def test_builtin_autocompleters_registered() -> None:
     expected = [
         "add_to_dashboard_choices",
         "allgroups",
-        "available_graphs",
+        "available_graph_templates",
         "check_cmd",
         "config_hostname",
         "kubernetes_labels",

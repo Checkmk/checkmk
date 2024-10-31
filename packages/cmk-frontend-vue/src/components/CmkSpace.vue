@@ -11,6 +11,7 @@ const cmkSpaceVariants = cva('', {
       horizontal: 'cmk-space--direction-horizontal'
     },
     size: {
+      small: 'cmk-space--size-small',
       medium: 'cmk-space--size-medium'
     }
   },
@@ -37,6 +38,9 @@ defineProps<CmkSpaceProps>()
   display: inline-block;
   &.cmk-space--size-medium {
     width: var(--spacing);
+  }
+  &.cmk-space--size-small {
+    width: var(--spacing-half);
   }
 }
 </style>

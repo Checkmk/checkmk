@@ -44,6 +44,7 @@
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
   --icon-help: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
+  --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');
   --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 }
 

@@ -8,6 +8,7 @@ import { ref, watch } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
@@ -178,9 +179,11 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <CmkButton variant="secondary" size="small" @click.prevent="addElement">{{
-    spec.add_element_label
-  }}</CmkButton>
+  <CmkButton size="small" @click.prevent="addElement">
+    <CmkIcon name="plus" />
+    <CmkSpace size="small" />
+    {{ spec.add_element_label }}
+  </CmkButton>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 

@@ -14,14 +14,17 @@ py_library(
     name = "cmk-livestatus-client",
     srcs = ["cmk/livestatus_client/__init__.py"],
     imports = ["."],
-    visibility = ["//visibility:public"],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_library(
     name = "py_livestatus",
     srcs = ["livestatus/__init__.py"],
     imports = ["."],
-    visibility = ["//visibility:public"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//tests:__subpackages__",
+    ],
     deps = [":cmk-livestatus-client"],
 )
 

@@ -205,7 +205,6 @@ create_python_requirements(
         # Our own packages
         "agent-based",
         "agent-receiver",
-        "ccc",
         "crypto",
         "graphing",
         "messaging",

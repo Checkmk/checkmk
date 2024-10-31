@@ -267,6 +267,7 @@ beautifulsoup4==4.12.3 ; python_full_version >= "3.6.0" \
     # via
     #   -r requirements_cmk.txt
     #   furo
+    #   webtest
 black==24.10.0 \
     --hash=sha256:14b3502784f09ce2443830e3133dacf2c0110d45191ed470ecb04d0f5f6fcb0f \
     --hash=sha256:17374989640fbca88b6a448129cd1745c5eb8d9547b464f281b251dd00155ccd \
@@ -299,24 +300,24 @@ blinker==1.8.2 ; python_version >= "3.8" \
     # via
     #   -r requirements_cmk.txt
     #   flask
-boto3==1.35.51 ; python_version >= "3.8" \
-    --hash=sha256:a57c6c7012ecb40c43e565a6f7a891f39efa990ff933eab63cd456f7501c2731 \
-    --hash=sha256:c922f6a18958af9d8af0489d6d8503b517029d8159b26aa4859a8294561c72e9
+boto3==1.35.50 ; python_version >= "3.8" \
+    --hash=sha256:14724b905fd13f26d9d8f7cdcea0fa65a9acad79f60f41f7662667f4e233d97c \
+    --hash=sha256:4f15d1ccb481d66f6925b8c91c970ce41b956b6ecf7c479f23e2159531b37eec
     # via -r requirements_cmk.txt
-boto3-stubs[logs]==1.35.51 ; python_version >= "3.8" \
-    --hash=sha256:b554ae00039a028c3c8f768d8732da9c2fd14189c24fe38c07ced604723d7481 \
-    --hash=sha256:cf7de3010bb2cbf62b543f4c48c26f1365a9584501efc8e248c48bfbfcac9047
+boto3-stubs[logs]==1.35.50 ; python_version >= "3.8" \
+    --hash=sha256:b29199a6d1a24b4b86c550199e37029d8e9f3b7af13aa1408d87c74d52137d0d \
+    --hash=sha256:e585a1c71ef754d514ee5b379f4c8dc72a34fdf6f1c5ed281520a1e7cb668f05
     # via -r requirements_cmk.txt
-botocore==1.35.51 ; python_version >= "3.8" \
-    --hash=sha256:4d65b00111bd12b98e9f920ecab602cf619cc6a6d0be6e5dd53f517e4b92901c \
-    --hash=sha256:a9b3d1da76b3e896ad74605c01d88f596324a3337393d4bfbfa0d6c35822ca9c
+botocore==1.35.50 ; python_version >= "3.8" \
+    --hash=sha256:136ecef8d5a1088f1ba485c0bbfca40abd42b9f9fe9e11d8cde4e53b4c05b188 \
+    --hash=sha256:965d3b99179ac04aa98e4c4baf4a970ebce77a5e02bb2a0a21cb6304e2bc0955
     # via
     #   -r requirements_cmk.txt
     #   boto3
     #   s3transfer
-botocore-stubs==1.35.51 ; python_version >= "3.8" \
-    --hash=sha256:08fe20889a7dfd9c503fb594a717a2cb7045a7fa3fa97b06cb52593f223fcb18 \
-    --hash=sha256:6cde969dede1a6c58fb7023f1071708cf963884435892b1699e5668486bb4b00
+botocore-stubs==1.35.50 ; python_version >= "3.8" \
+    --hash=sha256:2733ed5a0391c1dbef3e22f3d3bf4ad2f2500b1456d5b01815b455a8389346bd \
+    --hash=sha256:9d8e0224a9e920615d58a57356345d81dba2b315dcbd311dbb536dd11616c7dd
     # via
     #   -r requirements_cmk.txt
     #   boto3-stubs
@@ -553,9 +554,9 @@ check-manifest==0.50 ; python_version >= "3.7" \
     # via
     #   -r requirements_cmk.txt
     #   devpi-client
-checkmk-dev-tools==0.1.66 ; python_full_version >= "3.10.4" and python_full_version < "4.0.0" \
-    --hash=sha256:10b9c0a7b2e9bb6ee644f0f0ec06f72f2fdb66e68291e89a47c8b6df5d8bfd25 \
-    --hash=sha256:d4ef4d50ebc2c0a7dbc69888b721be0633c00dce46cc418d0023e6a27f0a2f7a
+checkmk-dev-tools==0.1.65 ; python_full_version >= "3.10.4" and python_full_version < "4.0.0" \
+    --hash=sha256:05290e3243995570071e41d79e9ebd2c9a32b24e132066c87a1e0675cb5046b3 \
+    --hash=sha256:839540ef48b65672fee3662f4409fb4ea111b27c7f4d96392bd288df04a39516
     # via -r requirements_cmk.txt
 click==8.1.7 ; python_version >= "3.7" \
     --hash=sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28 \
@@ -1332,9 +1333,9 @@ httpx==0.27.2 ; python_version >= "3.8" \
     # via
     #   -r requirements_cmk.txt
     #   schemathesis
-hypothesis==6.115.6 ; python_version >= "3.9" \
-    --hash=sha256:d4db48eef183591085676783967e943bb89fef4d596f78c3e4116c61fcc63a6b \
-    --hash=sha256:d7b7173934753b9624680b38a85749de4fce367c44acb36c08b62765cc0a7a19
+hypothesis==6.115.5 ; python_version >= "3.9" \
+    --hash=sha256:4768c5fb426b305462ed31032d6e216a31daaefb1dc3134fdf2795b7961d7cb3 \
+    --hash=sha256:b7733459ae9a93020fac3b91b41473c9b85e975139a152a70d88f3a5caa3fa3f
     # via
     #   -r requirements_cmk.txt
     #   hypothesis-graphql
@@ -2097,9 +2098,9 @@ mypy==1.13.0 ; python_version >= "3.8" \
     # via
     #   -r requirements_cmk.txt
     #   pylsp-mypy
-mypy-boto3-logs==1.35.51 \
-    --hash=sha256:30ecda98d7d925d5f847f34eff5744c04ad276c09f170f19c068dee4e71bee86 \
-    --hash=sha256:7031e76e28addac46c6904233e75f6b2ef402061f42dcf9c9512ea80daf7892f
+mypy-boto3-logs==1.35.49 \
+    --hash=sha256:29a97475cb2cea606bcb710d14e0a524b21457f0854cb86787969be4d5fce46a \
+    --hash=sha256:3f9b97fd58b8bd06f9530788564a07b7627baf87e40679cb1e575a4479b26b9f
     # via
     #   -r requirements_cmk.txt
     #   boto3-stubs
@@ -2772,7 +2773,6 @@ pydantic[email]==2.9.2 ; python_version >= "3.8" \
     --hash=sha256:f048cec7b26778210e28a0459867920654d48e5e62db0958433636cde4254f12
     # via
     #   -r packages/cmk-agent-based/requirements.txt
-    #   -r packages/cmk-ccc/requirements.txt
     #   -r packages/cmk-messaging/requirements.txt
     #   -r packages/cmk-mkp-tool/requirements.txt
     #   -r packages/cmk-werks/requirements.txt
@@ -3171,9 +3171,9 @@ pytest-check==2.4.1 ; python_version >= "3.8" \
     --hash=sha256:5224efcef059bf7f0cda253f8d0f62704b4819ff48c93f51c675aea6a014f650 \
     --hash=sha256:74f38938183880d9921aeb85662437d2b13e1e053e1bed7d186d54613d3068c7
     # via -r requirements_cmk.txt
-pytest-cov==6.0.0 ; python_version >= "3.9" \
-    --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35 \
-    --hash=sha256:fde0b595ca248bb8e2d76f020b465f3b107c9632e6a1d1705f17834c89dcadc0
+pytest-cov==5.0.0 ; python_version >= "3.8" \
+    --hash=sha256:4f0764a1219df53214206bf1feea4633c3b558a2925c8b59f144f682861ce652 \
+    --hash=sha256:5837b58e9f6ebd335b0f8060eecce69b662415b16dc503883a02f45dfeb14857
     # via -r requirements_cmk.txt
 pytest-html==4.1.1 ; python_version >= "3.8" \
     --hash=sha256:70a01e8ae5800f4a074b56a4cb1025c8f4f9b038bba5fe31e3c98eb996686f07 \
@@ -4097,9 +4097,9 @@ types-pillow==10.2.0.20240822 ; python_version >= "3.8" \
     --hash=sha256:559fb52a2ef991c326e4a0d20accb3bb63a7ba8d40eb493e0ecb0310ba52f0d3 \
     --hash=sha256:d9dab025aba07aeb12fd50a6799d4eac52a9603488eca09d7662543983f16c5d
     # via -r requirements_cmk.txt
-types-protobuf==5.28.3.20241030 ; python_version >= "3.8" \
-    --hash=sha256:f3dae16adf342d4fb5bb3673cabb22549a6252e5dd66fc52d8310b1a39c64ba9 \
-    --hash=sha256:f7e6b45845d75393fb41c0b3ce82c46d775f9771fae2097414a1dbfe5b51a988
+types-protobuf==5.28.3.20241029 ; python_version >= "3.8" \
+    --hash=sha256:58e6c547601102e0601e3ad95ad326f85c27cda41dc9bd8c5f29ad2f3b6c6967 \
+    --hash=sha256:7536ea95a7f0a19710a5e0520dd096c985333ae49b7c5eb29e1367703096f17a
     # via
     #   -r requirements_cmk.txt
     #   mypy-protobuf
@@ -4329,18 +4329,34 @@ virtualenv==20.27.1 ; python_version >= "3.8" \
     # via
     #   -r requirements_cmk.txt
     #   pre-commit
+waitress==3.0.1 ; python_full_version >= "3.9.0" \
+    --hash=sha256:26cdbc593093a15119351690752c99adc13cbc6786d75f7b6341d1234a3730ac \
+    --hash=sha256:ef0c1f020d9f12a515c4ec65c07920a702613afcad1dbfdc3bcec256b6c072b3
+    # via
+    #   -r requirements_cmk.txt
+    #   webtest
 webcolors==24.8.0 \
     --hash=sha256:08b07af286a01bcd30d583a7acadf629583d1f79bfef27dd2c2c5c263817277d \
     --hash=sha256:fc4c3b59358ada164552084a8ebee637c221e4059267d0f8325b3b560f6c7f0a
     # via
     #   -r requirements_cmk.txt
     #   jsonschema
+webob==1.8.9 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 3.2, 3.3" \
+    --hash=sha256:45e34c58ed0c7e2ecd238ffd34432487ff13d9ad459ddfd77895e67abba7c1f9 \
+    --hash=sha256:ad6078e2edb6766d1334ec3dee072ac6a7f95b1e32ce10def8ff7f0f02d56589
+    # via
+    #   -r requirements_cmk.txt
+    #   webtest
 websocket-client==1.8.0 ; python_version >= "3.8" \
     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526 \
     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da
     # via
     #   -r requirements_cmk.txt
     #   kubernetes
+webtest==3.0.1 ; python_version >= "3.7" \
+    --hash=sha256:493b5c802f8948a65b5e3a1ad5b2524ee5e1ab60cd713d9a3da3b8da082c06fe \
+    --hash=sha256:b3bc75d020d0576ee93a5f149666045e58fe2400ea5f0c214d7430d7d213d0d0
+    # via -r requirements_cmk.txt
 werkzeug==3.0.6 ; python_version >= "3.8" \
     --hash=sha256:1bc0c2310d2fbb07b1dd1105eba2f7af72f322e1e455f2f93c993bee8c8a5f17 \
     --hash=sha256:a8dd59d4de28ca70471a34cba79bed5f7ef2e036a76b3ab0835474246eb41f8d

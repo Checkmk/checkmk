@@ -7,4 +7,5 @@ from collections.abc import Mapping
 
 RENAMED_GRAPH_TEMPLATES: Mapping[str, str] = {
     "if_errors": "if_errors_discards",
+    "robotmk_test_runtime": "METRIC_robotmk_test_runtime",
 }

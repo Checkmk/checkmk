@@ -40,6 +40,7 @@ public:
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;
     const Logfile::map_type *entries_{nullptr};
+    Logfile::const_iterator it_entries_;
     size_t max_lines_per_log_file_;
 };
 

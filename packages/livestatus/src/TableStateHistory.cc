@@ -197,13 +197,12 @@ const Logfile::map_type *getEntries(Logfile *logfile,
     });
 }
 
-LogEntry *getNextLogentry(LogEntryForwardIterator &it,
-                          Logfile::const_iterator &it_entries) {
-    if (it_entries != it.entries_->end()) {
-        ++it_entries;
+LogEntry *getNextLogentry(LogEntryForwardIterator &it) {
+    if (it.it_entries_ != it.entries_->end()) {
+        ++it.it_entries_;
     }
 
-    while (it_entries == it.entries_->end()) {
+    while (it.it_entries_ == it.entries_->end()) {
         auto it_logs_cpy = it.it_logs_;
         if (++it_logs_cpy == it.log_files_->end()) {
             return nullptr;
@@ -211,9 +210,9 @@ LogEntry *getNextLogentry(LogEntryForwardIterator &it,
         ++it.it_logs_;
         it.entries_ =
             getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
-        it_entries = it.entries_->begin();
+        it.it_entries_ = it.entries_->begin();
     }
-    return it_entries->second.get();
+    return it.it_entries_->second.get();
 }
 
 class TimeperiodTransition {
@@ -362,17 +361,16 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Determine initial logentry
     it.entries_ =
         getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
-    Logfile::const_iterator it_entries;
     if (!it.entries_->empty() && it.it_logs_ != newest_log) {
-        it_entries = it.entries_->end();
+        it.it_entries_ = it.entries_->end();
         // Check last entry. If it's younger than _since -> use this logfile too
-        if (--it_entries != it.entries_->begin()) {
-            if (it_entries->second->time() >= since) {
-                it_entries = it.entries_->begin();
+        if (--it.it_entries_ != it.entries_->begin()) {
+            if (it.it_entries_->second->time() >= since) {
+                it.it_entries_ = it.entries_->begin();
             }
         }
     } else {
-        it_entries = it.entries_->begin();
+        it.it_entries_ = it.entries_->begin();
     }
 
     // From now on use getNextLogentry()
@@ -382,7 +380,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     notification_periods_t notification_periods;
 
-    while (LogEntry *entry = getNextLogentry(it, it_entries)) {
+    while (LogEntry *entry = getNextLogentry(it)) {
         if (abort_query_ || entry->time() >= until) {
             break;
         }

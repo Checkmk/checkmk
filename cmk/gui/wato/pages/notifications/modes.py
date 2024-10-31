@@ -3184,8 +3184,10 @@ class ABCNotificationParameterMode(WatoMode):
 
         method_parameter_list = list(method_parameters.items())
         if request.has_var("_delete"):
-            parameter_id = request.get_str_input_mandatory("_delete")
-            method_parameters.pop(NotificationParameterID(parameter_id), None)
+            parameter_id = request.get_validated_type_input_mandatory(
+                NotificationParameterID, "_delete"
+            )
+            method_parameters.pop(parameter_id, None)
             self._parameters[self._method()] = method_parameters
             self._save_parameters(self._parameters)
 

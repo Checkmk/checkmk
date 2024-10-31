@@ -4,6 +4,7 @@ import time
 from email.policy import default
 from getpass import getuser
 from pathlib import Path
+from typing import Final
 
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import run
@@ -13,12 +14,14 @@ logger = logging.getLogger(__name__)
 
 class EmailManager:
     def __init__(self) -> None:
-        self.maildir_folder = Path.home() / "Maildir" / "new"
+        self.temp_folder = Path("/tmp")
+        self.base_folder: Final[Path] = Path.home()  # enforced by postfix
+        self.maildir_folder = self.base_folder / "Maildir"
+        self.unread_folder = self.maildir_folder / "new"
         scripts_folder = repo_path() / "tests" / "scripts"
         self.setup_postfix_script = scripts_folder / "setup_postfix.sh"
         self.teardown_postfix_script = scripts_folder / "teardown_postfix.sh"
         self._username = getuser()
-        self.html_file_path = repo_path() / "email_content.html"
 
     def __enter__(self):
         self.setup_postfix()
@@ -27,6 +30,10 @@ class EmailManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.teardown_postfix()
         self.delete_html_file()
+
+    @property
+    def html_file_path(self) -> Path:
+        return self.temp_folder / "email_content.html"
 
     def setup_postfix(self) -> None:
         """Install and configure Postfix to send emails to a local Maildir."""
@@ -45,8 +52,8 @@ class EmailManager:
         """Check all emails in the Maildir folder and return the file path of the email
         with the specified subject. Delete checked emails.
         """
-        for file_name in self.maildir_folder.iterdir():
-            file_path = self.maildir_folder / file_name
+        for file_name in self.unread_folder.iterdir():
+            file_path = self.unread_folder / file_name
             with open(file_path, "r") as file:
                 msg = email.message_from_file(file, policy=default)
                 logger.info("Email received, subject: '%s'", msg.get("Subject"))
@@ -65,12 +72,15 @@ class EmailManager:
         logger.info("Waiting for email %s", subject_note)
         start_time = time.time()
         while time.time() - start_time < timeout:
-            if self.maildir_folder.exists():
+            if self.unread_folder.exists():
                 file_path = self.find_email_by_subject(email_subject)
                 if file_path:
                     return file_path
             time.sleep(interval)
-        raise TimeoutError(f"No email {subject_note} was received within {timeout} seconds")
+        raise TimeoutError(
+            f"No email {subject_note} was received within {timeout} seconds!"
+            f" (Mail folder: {self.unread_folder})"
+        )
 
     def check_email_content(
         self,

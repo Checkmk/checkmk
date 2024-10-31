@@ -944,8 +944,25 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             Tuple(
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Minimal Tuple",
+        ),
+        pytest.param(
+            Tuple(
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
+                show_titles=False,
+                layout="float",
                 elements=[
                     api_v1.form_specs.String(),
                     api_v1.form_specs.Integer(),
@@ -954,6 +971,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             legacy_valuespecs.Tuple(
                 title="title",
                 help="help text",
+                show_titles=False,
+                orientation="float",
                 elements=[
                     legacy_valuespecs.TextInput(placeholder="", size=35),
                     legacy_valuespecs.Integer(),

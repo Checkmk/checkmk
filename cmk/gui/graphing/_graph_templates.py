@@ -20,8 +20,9 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import Row, VisualContext
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.visuals import livestatus_query_bare
 
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
@@ -351,9 +352,9 @@ def evaluate_metrics(
     return results
 
 
-def get_evaluated_graph_template_choices(
+def graph_and_single_metric_template_choices_for_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[GraphTemplateChoice]:
+) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
     for id_, graph_plugin in _get_graph_plugins():
@@ -371,15 +372,37 @@ def get_evaluated_graph_template_choices(
                 )
             )
             already_graphed_metrics.update({n for e in evaluated_metrics for n in e.metric_names()})
+
+    single_metric_template_choices = []
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            graph_template_choices.append(
+            single_metric_template_choices.append(
                 GraphTemplateChoice(
-                    metric_name[7:] if metric_name.startswith("METRIC_") else metric_name,
-                    "",
+                    f"METRIC_{metric_name}",
+                    _("Metric: %s") % translated_metric.title,
                 )
             )
-    return graph_template_choices
+    return graph_template_choices, single_metric_template_choices
+
+
+def graph_and_single_metric_templates_choices_for_context(
+    context: VisualContext,
+) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
+    graph_template_choices: list[GraphTemplateChoice] = []
+    single_metric_template_choices: list[GraphTemplateChoice] = []
+
+    for row in livestatus_query_bare(
+        "service",
+        context,
+        ["service_check_command", "service_perf_data", "service_metrics"],
+    ):
+        graph_template_choices_for_row, single_metric_template_choices_for_row = (
+            graph_and_single_metric_template_choices_for_metrics(translated_metrics_from_row(row))
+        )
+        graph_template_choices.extend(graph_template_choices_for_row)
+        single_metric_template_choices.extend(single_metric_template_choices_for_row)
+
+    return graph_template_choices, single_metric_template_choices
 
 
 def _to_metric_operation(

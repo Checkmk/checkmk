@@ -6,11 +6,13 @@
 from collections.abc import Iterable
 
 from cmk.gui.type_defs import Choices
-from cmk.gui.visuals import livestatus_query_bare
 
-from ._graph_templates import get_evaluated_graph_template_choices, get_graph_template_choices
-from ._metrics import get_metric_spec, registered_metrics
-from ._translated_metrics import translated_metrics_from_row
+from ._graph_templates import (
+    get_graph_template_choices,
+    graph_and_single_metric_templates_choices_for_context,
+    GraphTemplateChoice,
+)
+from ._metrics import registered_metrics
 from ._valuespecs import metrics_of_query
 
 
@@ -32,27 +34,45 @@ def metrics_autocompleter(value: str, params: dict) -> Choices:
     )
 
 
-def graph_templates_autocompleter(value: str, params: dict) -> Choices:
+def graph_templates_autocompleter(value_entered_by_user: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[tuple[str, str]] = [(c.id, c.title) for c in get_graph_template_choices()]
-    else:
-        choices = {
-            (c.id, c.title or str(get_metric_spec(c.id).title))
-            for row in livestatus_query_bare(
-                "service",
-                params["context"],
-                ["service_check_command", "service_perf_data", "service_metrics"],
-            )
-            for c in get_evaluated_graph_template_choices(translated_metrics_from_row(row))
-        }
+        _sorted_matching_graph_template_choices(
+            value_entered_by_user,
+            get_graph_template_choices(),
+        )
 
-    return sorted(
-        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
+    graph_template_choices, single_metric_template_choices = (
+        graph_and_single_metric_templates_choices_for_context(params["context"])
+    )
+    return _sorted_matching_graph_template_choices(
+        value_entered_by_user,
+        graph_template_choices,
+    ) + _sorted_matching_graph_template_choices(
+        value_entered_by_user,
+        single_metric_template_choices,
     )
 
 
 def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
     return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
+
+
+def _sorted_matching_graph_template_choices(
+    value_entered_by_user: str,
+    all_choices: Iterable[GraphTemplateChoice],
+) -> Choices:
+    return [
+        (graph_template_choice.id, graph_template_choice.title)
+        for graph_template_choice in sorted(
+            (
+                graph_template_choice
+                for graph_template_choice in all_choices
+                if value_entered_by_user.lower() in graph_template_choice.id.lower()
+                or value_entered_by_user.lower() in graph_template_choice.title.lower()
+            ),
+            key=lambda graph_template_choice: graph_template_choice.title,
+        )
+    ]

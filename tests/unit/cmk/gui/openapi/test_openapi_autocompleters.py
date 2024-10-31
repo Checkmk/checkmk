@@ -7,9 +7,6 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.valuespec import autocompleter_registry
@@ -17,7 +14,7 @@ from cmk.gui.valuespec import autocompleter_registry
 
 @pytest.fixture(name="expected_autocompleters")
 def fixture_expected_autocompleters() -> list[str]:
-    autocompleters = [
+    return [
         "sites",
         "monitored_hostname",
         "allgroups",
@@ -26,11 +23,6 @@ def fixture_expected_autocompleters() -> list[str]:
         "tag_groups_opt",
         "monitored_service_description",
     ]
-
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        autocompleters.append("combined_graphs")
-
-    return autocompleters
 
 
 def test_openapi_autocompleter_functions_exist(expected_autocompleters: list[str]) -> None:
@@ -116,23 +108,3 @@ def test_openapi_lenny_autocompleter(
 
     with mock_livestatus(expect_status_query=True):
         clients.AutoComplete.invoke("label", {"world": "core", "context": {}}, "")
-
-
-@pytest.mark.skipif(
-    cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE,
-    reason="combined_graphs is not available in CRE",
-)
-def test_openapi_combined_graphs_autocompleter(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-) -> None:
-    clients.AutoComplete.invoke(
-        "combined_graphs",
-        {
-            "presentation": "lines",
-            "mode": "metric",
-            "datasource": "services",
-            "single_infos": ["host"],
-            "context": {},
-        },
-        "",
-    )

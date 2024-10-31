@@ -713,6 +713,32 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
+    def update_site(self, site_id: str, site_config: dict) -> None:
+        response = self.put(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def show_site(self, site_id: str) -> dict[str, Any]:
+        response = self.get(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
     def login_to_site(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
         response = self.post(
             f"/objects/site_connection/{site_id}/actions/login/invoke",

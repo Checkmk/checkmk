@@ -5,7 +5,6 @@ Checkmk vue experiments
 ## development
 
 ```sh
-./run --setup-environment
 ./run --all
 ```
 

@@ -164,6 +164,15 @@ provide_agent_paths() {
     # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
     SPOOLDIR=${MK_VARDIR}/spool
+
+    # JOBDIR contains subfolders with snippets of agent output
+    # coming from the mk-job executable.
+    # These snippets will be used to create the <<<job>>> section.
+    JOBDIR=${MK_VARDIR}/job
+
+    # Cache directory for agent output from asynchonous parts of the agent and plugins.
+    # Handled in a sophisticated way by our caching mechanism.
+    CACHEDIR=${MK_VARDIR}/cache
 }
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
@@ -554,7 +563,7 @@ section_job() {
     }
 
     (
-        cd "${MK_VARDIR}/job" 2>/dev/null || return
+        cd "${JOBDIR}" 2>/dev/null || return
         printf "<<<job>>>\n"
         for user in *; do
             (
@@ -708,8 +717,8 @@ _run_cached_internal() {
         return
     fi
 
-    [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
-    CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
+    [ -d "${CACHEDIR}" ] || mkdir -p "${CACHEDIR}"
+    CACHEFILE="${CACHEDIR}/${NAME}.cache"
     FAIL_REPORT_FILE="${SPOOLDIR}/${NAME}.cachefail"
 
     NOW="$(get_epoch)"

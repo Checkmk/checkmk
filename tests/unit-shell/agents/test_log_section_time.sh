@@ -11,6 +11,7 @@ MK_SOURCE_AGENT="true" LOG_SECTION_TIME="true" source "$AGENT_LINUX"
 oneTimeSetUp() {
 
     export MK_VARDIR="${SHUNIT_TMPDIR}"
+    export CACHEDIR="${SHUNIT_TMPDIR}/cache"
     export MK_LOGDIR="${SHUNIT_TMPDIR}"
 
     set_up_get_epoch
@@ -56,10 +57,10 @@ test_export_with_run_cached() {
 
     # wait for the async part to complete
     wait_for "$(profiling_dir)/echo____my_test_section____.log"
-    wait_for "${MK_VARDIR}/cache/my_test_name.cache"
+    wait_for "${CACHEDIR}/my_test_name.cache"
 
     # make sure the file has been created
-    assertEquals "<<<my_test_section>>>" "$(cat "${MK_VARDIR}/cache/my_test_name.cache")"
+    assertEquals "<<<my_test_section>>>" "$(cat "${CACHEDIR}/my_test_name.cache")"
 }
 
 # shellcheck disable=SC1090

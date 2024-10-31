@@ -14,8 +14,8 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
-    _get_password_from_env_or_context,
     collect_context,
+    get_password_from_env_or_context,
     get_sms_message_from_context,
     quote_message,
 )
@@ -139,7 +139,7 @@ def _get_request_params_from_context(
             raw_context.get("PARAMETER_PROXY_URL")
         ).to_requests_proxies(),
         user=raw_context["PARAMETER_USERNAME"],
-        pwd=_get_password_from_env_or_context(
+        pwd=get_password_from_env_or_context(
             key="PARAMETER_PASSWORD",
             context=raw_context,
         ),

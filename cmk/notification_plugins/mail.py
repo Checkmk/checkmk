@@ -29,7 +29,7 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 from cmk.utils.paths import omd_root, web_dir
 
 from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import _get_password_from_env_or_context, render_cmk_graphs
+from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 
 # Elements to be put into the mail body. Columns:
 # 1. Name
@@ -446,7 +446,7 @@ def send_mail_smtp_impl(
     if context.get("PARAMETER_SMTP_AUTH_USER") is not None:
         conn.login(
             context["PARAMETER_SMTP_AUTH_USER"],
-            _get_password_from_env_or_context(
+            get_password_from_env_or_context(
                 key="PARAMETER_SMTP_AUTH_PASSWORD",
                 context=context,
             ),

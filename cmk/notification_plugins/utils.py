@@ -275,7 +275,7 @@ def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
     return value
 
 
-def _get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
+def get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
     """
     Since 2.4 the passwords are stored in FormSpec format, this leads to
     multiple keys in the notification context

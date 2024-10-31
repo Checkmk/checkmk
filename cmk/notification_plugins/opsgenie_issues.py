@@ -31,7 +31,7 @@ from cmk.utils.notify_types import PluginNotificationContext
 from cmk.utils.paths import trusted_ca_file
 
 from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import retrieve_from_passwordstore
+from cmk.notification_plugins.utils import get_password_from_env_or_context
 
 
 @contextmanager
@@ -163,12 +163,15 @@ class Connector:
 
 
 def _get_connector(context: PluginNotificationContext) -> Connector:
-    if "PARAMETER_PASSWORD" not in context:
+    if "PARAMETER_PASSWORD_1" not in context:
         sys.stderr.write("API key not set\n")
         sys.exit(2)
 
-    api_key = retrieve_from_passwordstore(context["PARAMETER_PASSWORD"])
-    return Connector(api_key, context.get("PARAMETER_URL"), context.get("PARAMETER_PROXY_URL"))
+    api_key = get_password_from_env_or_context(
+        key="PARAMETER_PASSWORD",
+        context=context,
+    )
+    return Connector(api_key, context.get("PARAMETER_URL"), context.get("PARAMETER_PROXY_URLLALA"))
 
 
 def _get_alias(context: PluginNotificationContext) -> str:

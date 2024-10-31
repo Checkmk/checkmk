@@ -1,0 +1,84 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import type { Labels, Autocompleter } from '@/form/components/vue_formspec_components'
+import FormLabels from '@/form/components/forms/FormLabels.vue'
+import { http, HttpResponse } from 'msw'
+import { setupWorker } from 'msw/browser'
+
+type StringMapping = Record<string, string>
+
+const autocompleter: Autocompleter = {
+  data: { ident: 'label', params: { world: 'config' } },
+  fetch_method: 'ajax_vs_autocomplete'
+}
+
+const spec: Labels = {
+  type: 'labels',
+  title: 'some title',
+  help: 'some help',
+  i18n: {
+    add_some_labels: 'Add some labels',
+    key_value_format_error: 'Key value format error',
+    max_labels_reached: 'Max labels reached',
+    uniqueness_error: 'Uniqueness error'
+  },
+  validators: [],
+  max_labels: 5,
+  autocompleter: autocompleter
+}
+
+async function interceptor() {
+  return HttpResponse.json({
+    result: {
+      choices: [
+        ['cmk/check_mk_server:yes', 'cmk/check_mk_server:yes'],
+        ['cmk/os_family:linux', 'cmk/os_family:linux'],
+        ['cmk/os_name:Ubuntu', 'cmk/os_name:Ubuntu'],
+        ['cmk/os_platform:ubuntu', 'cmk/os_platform:ubuntu'],
+        ['cmk/os_type:linux', 'cmk/os_type:linux'],
+        ['cmk/os_version:22.04', 'cmk/os_version:22.04'],
+        ['cmk/site:heute_cl', 'cmk/site:heute_cl']
+      ]
+    },
+    result_code: 0,
+    severity: 'success'
+  })
+}
+const worker = setupWorker(
+  ...[
+    http.post(
+      new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
+      interceptor
+    )
+  ]
+)
+
+onBeforeMount(async () => {
+  await worker.start()
+  mockLoaded.value = true
+})
+
+onBeforeUnmount(() => {
+  worker.stop()
+})
+
+const mockLoaded = ref<boolean>(false)
+
+const data = ref<StringMapping>({
+  'cmk/check_mk_server': 'yes',
+  'cmk/os_family': 'linux',
+  'cmk/os_name': 'Ubuntu'
+})
+</script>
+
+<template>
+  <span v-if="mockLoaded">
+    <FormLabels v-model:data="data" :spec="spec" :backend-validation="[]" />
+    <pre>{{ data }}</pre>
+  </span>
+</template>

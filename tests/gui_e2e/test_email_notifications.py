@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -32,12 +33,14 @@ def test_filesystem_email_notifications(
     notification_user: tuple[str, str],
     email_manager: EmailManager,
     test_site: Site,
+    tmp_path: Path,
 ) -> None:
     """Test that email notification is sent and contain expected data.
 
     Test that when email notifications are set up and the status of 'Filesystem /' service changes,
     the email notification is sent and contains the expected data.
     """
+    email_manager.temp_folder = tmp_path
     username, email = notification_user
     host_name = linux_hosts[0]
     service_name = "Filesystem /"

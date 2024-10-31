@@ -55,11 +55,14 @@ class EmailManager:
                 file_path.unlink()
         return None
 
-    def wait_for_email(self, email_subject: str, interval: int = 3, timeout: int = 20) -> Path:
+    def wait_for_email(
+        self, email_subject: str | None = None, interval: int = 3, timeout: int = 20
+    ) -> Path:
         """Wait for an email with the specified subject to be received in the Maildir folder.
         Return the file path of the email if it is received, otherwise raise TimeoutError.
         """
-        logger.info("Waiting for the email with subject: '%s'", email_subject)
+        subject_note = f'with subject "{email_subject}"' if email_subject else "(any subject)"
+        logger.info("Waiting for email %s", subject_note)
         start_time = time.time()
         while time.time() - start_time < timeout:
             if self.maildir_folder.exists():
@@ -67,9 +70,7 @@ class EmailManager:
                 if file_path:
                     return file_path
             time.sleep(interval)
-        raise TimeoutError(
-            f"Email with subject '{email_subject}' was not received after {timeout} seconds"
-        )
+        raise TimeoutError(f"No email {subject_note} was received within {timeout} seconds")
 
     def check_email_content(
         self,

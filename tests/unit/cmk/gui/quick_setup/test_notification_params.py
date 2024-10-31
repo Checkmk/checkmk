@@ -60,7 +60,7 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
         "notification_effect": (
             "send",
             {
-                "method": ("mail", "PLACEHOLDER"),
+                "method": ("mail", "61736d07-326a-4fb9-affd-201e3bd2a637"),
             },
         ),
     },
@@ -100,7 +100,7 @@ EVENT_RULE_PARAMS: EventRule = EventRule(
     rule_id=NotificationRuleID("uuid4_rule_id"),
     match_host_event=["?r", "du", "f", "x", "af"],
     match_service_event=["?r", "wc", "ur", "s", "as"],
-    notify_plugin=("mail", None),
+    notify_plugin=("mail", "61736d07-326a-4fb9-affd-201e3bd2a637"),  # type: ignore[typeddict-item]
     match_escalation=(2, 4),
     match_escalation_throttle=(3, 5),
     match_timeperiod="24X7",

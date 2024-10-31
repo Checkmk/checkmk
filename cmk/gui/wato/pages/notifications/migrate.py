@@ -229,15 +229,11 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
                 return "always", _get_always_bulk(notifybulk[1])
             return "timeperiod", (notifybulk[1]["timeperiod"], _get_timeperiod_bulk(notifybulk[1]))
 
+        notify_plugin = event_rule["notify_plugin"]
         notify_method = NotificationMethod(
             notification_effect=(
-                "send",
-                Effect(
-                    method=(
-                        event_rule["notify_plugin"][0],
-                        "PLACEHOLDER",
-                    ),  # TODO: replace PLACEHOLDER with actual uuid
-                ),
+                "send" if notify_plugin[1] is not None else "suppress",
+                Effect(method=notify_plugin),  # type: ignore[typeddict-item]
             ),
         )
         if (bulk_notification := _bulk_type()) is not None:
@@ -527,8 +523,9 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
                     ),
                 )
 
-        # TODO: update once slidein is implemented
-        # event_rule["notify_plugin"] = notification["notification_method"]["method"]
+        event_rule["notify_plugin"] = notification["notification_method"]["notification_effect"][1][
+            "method"
+        ]  # type: ignore[typeddict-item]
 
     def _set_recipients(event_rule: EventRule) -> None:
         for recipient in notification["recipient"]:

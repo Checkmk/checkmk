@@ -907,17 +907,19 @@ def notification_method() -> QuickSetupStage:
                                             elements={
                                                 "method": DictElement(
                                                     required=True,
-                                                    parameter_form=SingleChoiceExtended(
+                                                    parameter_form=CascadingSingleChoiceExtended(
                                                         title=Title("Method"),
                                                         elements=[
-                                                            SingleChoiceElementExtended(
+                                                            CascadingSingleChoiceElement(
                                                                 title=Title("%s")
                                                                 % (_("%s") % title),
                                                                 name=script_name,
+                                                                parameter_form=FixedValue(
+                                                                    value=None
+                                                                ),
                                                             )
                                                             for script_name, title in notification_script_choices()
                                                         ],
-                                                        type=str,
                                                     ),
                                                 ),
                                                 "bulk_notification": bulk_notification_dict_element(),

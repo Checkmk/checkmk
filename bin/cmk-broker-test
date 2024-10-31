@@ -139,8 +139,11 @@ def main() -> int:
     try:
         return _command_pong() if args.site is None else _command_ping(args.site)
     except KeyboardInterrupt:
-        sys.stdout.write("\nExiting\n")
-        return 0
+        if args.site is None:
+            sys.stdout.write("\nExiting (interrupted)\n")
+            return 0
+        sys.stdout.write("\nGiving up (interrupted)\n")
+        return 2
 
 
 if __name__ == "__main__":

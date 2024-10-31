@@ -7,7 +7,6 @@
 
 #include <bitset>
 #include <compare>
-#include <cstddef>
 #include <optional>
 #include <ratio>
 #include <stdexcept>
@@ -199,22 +198,21 @@ const Logfile::map_type *getEntries(Logfile *logfile,
     });
 }
 
-LogEntry *getNextLogentry(const LogFiles &log_files,
+LogEntry *getNextLogentry(LogEntryForwardIterator &it,
                           LogFiles::const_iterator &it_logs,
                           const Logfile::map_type *&entries,
-                          Logfile::const_iterator &it_entries,
-                          size_t max_lines_per_log_file) {
+                          Logfile::const_iterator &it_entries) {
     if (it_entries != entries->end()) {
         ++it_entries;
     }
 
     while (it_entries == entries->end()) {
         auto it_logs_cpy = it_logs;
-        if (++it_logs_cpy == log_files.end()) {
+        if (++it_logs_cpy == it.log_files_->end()) {
             return nullptr;
         }
         ++it_logs;
-        entries = getEntries(it_logs->second.get(), max_lines_per_log_file);
+        entries = getEntries(it_logs->second.get(), it.max_lines_per_log_file_);
         it_entries = entries->begin();
     }
     return it_entries->second.get();
@@ -267,7 +265,8 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
     log_cache_->apply(
         [this, &query, &user, &core](const LogFiles &log_files,
                                      size_t /*num_cached_log_messages*/) {
-            answerQueryInternal(query, user, core, log_files);
+            LogEntryForwardIterator it{log_files, core.maxLinesPerLogFile()};
+            answerQueryInternal(query, user, core, it);
         });
 }
 
@@ -304,8 +303,8 @@ void handle_log_initial_states(
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
-                                            const LogFiles &log_files) {
-    if (log_files.begin() == log_files.end()) {
+                                            LogEntryForwardIterator &it) {
+    if (it.log_files_->begin() == it.log_files_->end()) {
         return;
     }
     auto object_filter = createPartialFilter(query);
@@ -346,12 +345,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Switch to last logfile (we have at least one)
-    LogFiles::const_iterator it_logs{log_files.end()};
+    LogFiles::const_iterator it_logs{it.log_files_->end()};
     --it_logs;
     auto newest_log = it_logs;
 
     // Now find the log where 'since' starts.
-    while (it_logs != log_files.begin() && it_logs->second->since() >= since) {
+    while (it_logs != it.log_files_->begin() &&
+           it_logs->second->since() >= since) {
         --it_logs;  // go back in history
     }
 
@@ -363,9 +363,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Determine initial logentry
-    auto max_lines_per_log_file = core.maxLinesPerLogFile();
     const auto *entries =
-        getEntries(it_logs->second.get(), max_lines_per_log_file);
+        getEntries(it_logs->second.get(), it.max_lines_per_log_file_);
     Logfile::const_iterator it_entries;
     if (!entries->empty() && it_logs != newest_log) {
         it_entries = entries->end();
@@ -387,8 +386,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     notification_periods_t notification_periods;
 
     while (LogEntry *entry =
-               getNextLogentry(log_files, it_logs, entries, it_entries,
-                               max_lines_per_log_file)) {
+               getNextLogentry(it, it_logs, entries, it_entries)) {
         if (abort_query_ || entry->time() >= until) {
             break;
         }

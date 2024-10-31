@@ -7,6 +7,7 @@
 #define TableStateHistory_h
 
 #include <chrono>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>
@@ -26,6 +27,18 @@ class LogEntry;
 class LogFiles;
 class Query;
 class User;
+
+// TODO(sp) Better name?
+class LogEntryForwardIterator {
+public:
+    LogEntryForwardIterator(const LogFiles &log_files,
+                            size_t max_lines_per_log_file)
+        : log_files_{&log_files}
+        , max_lines_per_log_file_{max_lines_per_log_file} {}
+
+    const LogFiles *log_files_;
+    size_t max_lines_per_log_file_;
+};
 
 class TableStateHistory : public Table {
 public:
@@ -55,7 +68,7 @@ private:
     enum class ModificationStatus { unchanged, changed };
 
     void answerQueryInternal(Query &query, const User &user, const ICore &core,
-                             const LogFiles &log_files);
+                             LogEntryForwardIterator &it);
 
     void handle_state_entry(Query &query, const User &user, const ICore &core,
                             std::chrono::system_clock::duration query_timeframe,

@@ -5,6 +5,11 @@
 
 from typing import Literal, NotRequired, TypedDict
 
+from cmk.utils.notify_types import (
+    SysLogFacilityIntType,
+    SyslogPriorityIntType,
+)
+
 StatusChangeStateHost = Literal[-1, 0, 1, 2]
 StatusChangeStateService = Literal[-1, 0, 1, 2, 3]
 StatusChangeHost = tuple[
@@ -29,13 +34,41 @@ class TriggeringEvents(TypedDict):
     ec_alerts: NotRequired[Literal["Enabled"]]
 
 
-# TODO: add correct types after Stage 2 is implemented
-class FilterForHostsAndServices(TypedDict):
-    ec_alert_filters: object
-    host_filters: object
-    service_filters: object
-    assignee_filters: object
-    general_filters: object
+class ECAlertFilters(TypedDict):
+    rule_ids: NotRequired[list[str]]
+    syslog_priority: NotRequired[tuple[SyslogPriorityIntType, SyslogPriorityIntType]]
+    syslog_facility: NotRequired[SysLogFacilityIntType]
+    event_comment: NotRequired[str]
+
+
+class HostFilters(TypedDict):
+    host_tags: NotRequired[list[str]]
+    host_labels: NotRequired[list[str]]
+    match_host_groups: NotRequired[list[str]]
+    match_hosts: NotRequired[list[str]]
+    exclude_hosts: NotRequired[list[str]]
+
+
+class ServiceFilters(TypedDict):
+    service_labels: NotRequired[list[str]]
+    match_service_groups: NotRequired[list[str]]
+    exclude_service_groups: NotRequired[list[str]]
+    match_services: NotRequired[list[str]]
+    exclude_services: NotRequired[list[str]]
+
+
+class AssigneeFilters(TypedDict):
+    contact_groups: NotRequired[list[str]]
+    users: NotRequired[list[str]]
+
+
+class GeneralFilters(TypedDict):
+    service_level: NotRequired[
+        tuple[Literal["explicit"], int] | tuple[Literal["range"], tuple[int, int]]
+    ]
+    folder: NotRequired[str]
+    sites: NotRequired[list[str]]
+    check_type_plugin: NotRequired[list[str]]
 
 
 class BulkingParameters(TypedDict):
@@ -131,7 +164,11 @@ class GeneralProperties(TypedDict):
 
 class NotificationQuickSetupSpec(TypedDict):
     triggering_events: TriggeringEvents
-    filter_for_hosts_and_services: FilterForHostsAndServices
+    ec_alert_filters: NotRequired[ECAlertFilters]
+    host_filters: NotRequired[HostFilters]
+    service_filters: NotRequired[ServiceFilters]
+    assignee_filters: AssigneeFilters
+    general_filters: GeneralFilters
     notification_method: NotificationMethod
     recipient: list[Recipient]
     sending_conditions: SendingConditions

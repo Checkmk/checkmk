@@ -24,7 +24,6 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     BulkingParameters,
     ContentBasedFiltering,
     Effect,
-    FilterForHostsAndServices,
     FrequencyAndTiming,
     GeneralProperties,
     HostEvent,
@@ -107,17 +106,6 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             trigger_events["ec_alerts"] = "Enabled"
 
         return trigger_events
-
-    def _get_host_and_service_filters() -> FilterForHostsAndServices:
-        # TODO: add migration logic
-
-        return FilterForHostsAndServices(
-            ec_alert_filters={},
-            host_filters={},
-            service_filters={},
-            assignee_filters={},
-            general_filters={},
-        )
 
     def _get_notification_method() -> NotificationMethod:
         def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple | None:
@@ -256,7 +244,11 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
 
     return NotificationQuickSetupSpec(
         triggering_events=_get_triggering_events(),
-        filter_for_hosts_and_services=_get_host_and_service_filters(),
+        ec_alert_filters={},
+        host_filters={},
+        service_filters={},
+        assignee_filters={},
+        general_filters={},
         notification_method=_get_notification_method(),
         recipient=_get_recipients(),
         sending_conditions=_get_sending_conditions(),
@@ -317,11 +309,11 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
             event_rule["match_ec"] = False
 
     def _set_host_and_service_filters(event_rule: EventRule) -> None:
-        _ec_alert_filters = notification["filter_for_hosts_and_services"]["ec_alert_filters"]
-        _host_filters = notification["filter_for_hosts_and_services"]["host_filters"]
-        _service_filters = notification["filter_for_hosts_and_services"]["service_filters"]
-        _assignee_filters = notification["filter_for_hosts_and_services"]["assignee_filters"]
-        _general_filters = notification["filter_for_hosts_and_services"]["general_filters"]
+        _ec_alert_filters = notification["ec_alert_filters"]
+        _host_filters = notification["host_filters"]
+        _service_filters = notification["service_filters"]
+        _assignee_filters = notification["assignee_filters"]
+        _general_filters = notification["general_filters"]
 
         # TODO: implement migration logic
 

@@ -30,13 +30,11 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
             ("alert_handler", "success"),
         ],
     },
-    "filter_for_hosts_and_services": {
-        "host_filters": {},
-        "service_filters": {},
-        "assignee_filters": {},
-        "general_filters": {},
-        "ec_alert_filters": {},
-    },
+    "host_filters": {},
+    "service_filters": {},
+    "assignee_filters": {},
+    "general_filters": {},
+    "ec_alert_filters": {},
     "notification_method": {
         "notification_effect": (
             "send",

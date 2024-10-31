@@ -21,7 +21,7 @@ username=$1
 echo "@test.com $username" >>/etc/postfix/virtual
 
 echo "Update postfix configuration..."
-echo -e "home_mailbox = /Maildir/
+echo -e "home_mailbox = Maildir/
 virtual_transport = local
 virtual_alias_maps = hash:/etc/postfix/virtual" >>/etc/postfix/main.cf
 

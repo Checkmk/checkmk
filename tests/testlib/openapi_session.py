@@ -213,6 +213,7 @@ class CMKOpenApiSession(requests.Session):
         email: str,
         contactgroups: list[str],
         customer: None | str = None,
+        roles: list[str] | None = None,
     ) -> None:
         body = {
             "username": username,
@@ -225,6 +226,7 @@ class CMKOpenApiSession(requests.Session):
                 "email": email,
             },
             "contactgroups": contactgroups,
+            "roles": roles or [],
         }
         if customer:
             body["customer"] = customer

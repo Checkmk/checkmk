@@ -121,11 +121,13 @@ def _command_ping(site_id: str) -> int:
     sys.stdout.write("Establishing connection to local broker\n")
     with Connection(APP_NAME, omd_root) as conn:
         channel = conn.channel(TestMessage)
+        channel.queue_declare(queue=QUEUE_NAME)
+
         message = TestMessage.new()
+
         sys.stdout.write("Sending message:\n" f"  {message!r}\n")
         channel.publish_for_site(site_id, message, routing=ROUTING_KEY)
 
-        channel.queue_declare(queue=QUEUE_NAME)
         sys.stdout.write("Waiting for response\n")
         channel.consume(QUEUE_NAME, _make_callback_ping(message))
 

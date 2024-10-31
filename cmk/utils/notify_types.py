@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 from typing import (
     Annotated,
@@ -942,3 +942,9 @@ NotificationParameterID = NewType("NotificationParameterID", str)
 NotificationParameterMethod = str
 NotificationParameterSpec = dict[NotificationParameterID, NotificationParameterItem]
 NotificationParameterSpecs = dict[NotificationParameterMethod, NotificationParameterSpec]
+
+
+def get_rules_related_to_parameter(
+    rules: Iterable[EventRule], parameter_id: NotificationParameterID
+) -> list[EventRule]:
+    return [rule for rule in rules if parameter_id in rule["notify_plugin"]]

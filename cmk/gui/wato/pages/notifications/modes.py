@@ -13,6 +13,7 @@ from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any, cast, Literal, NamedTuple, overload
+from urllib.parse import urlencode
 
 from livestatus import LivestatusResponse, SiteId
 
@@ -24,6 +25,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import (
     EventRule,
+    get_rules_related_to_parameter,
     is_always_bulk,
     NotificationParameterGeneralInfos,
     NotificationParameterID,
@@ -71,6 +73,7 @@ from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.notifications import (
     get_disabled_notifications_infos,
     get_failed_notification_count,
@@ -3187,6 +3190,17 @@ class ABCNotificationParameterMode(WatoMode):
             parameter_id = request.get_validated_type_input_mandatory(
                 NotificationParameterID, "_delete"
             )
+            rules = NotificationRuleConfigFile().load_for_reading()
+
+            if get_rules_related_to_parameter(rules, parameter_id):
+                return redirect(
+                    mode_url(
+                        "notification_parameters",
+                        method=self._method(),
+                        _parameter_id_with_related_rules=parameter_id,
+                    )
+                )
+
             method_parameters.pop(parameter_id, None)
             self._parameters[self._method()] = method_parameters
             self._save_parameters(self._parameters)
@@ -3304,6 +3318,12 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         if self._method() not in load_notification_scripts():
             raise MKUserError(None, _("Notification method '%s' does not exist") % self._method())
 
+        if parameter_id_with_related_rules := request.var("_parameter_id_with_related_rules"):
+            parameter_id = NotificationParameterID(parameter_id_with_related_rules)
+            all_rules = NotificationRuleConfigFile().load_for_reading()
+            related_rules = get_rules_related_to_parameter(all_rules, parameter_id)
+            self._render_related_rule_error(related_rules)
+
         parameters = self._load_parameters()
         if not (method_parameters := parameters.get(self._method())):
             html.show_message(
@@ -3311,6 +3331,38 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             )
             return
         self._render_notification_parameters(method_parameters)
+
+    def _render_related_rule_error(self, related_rules: list[EventRule]) -> None:
+        notifications_url = self.breadcrumb()[-3].url
+
+        def build_href(query: str) -> str:
+            return f"{notifications_url}&{urlencode({"search": query})}"
+
+        links_to_related_rules = HTML.with_escaping("").join(
+            html.render_li(html.render_a(rule["description"], href=build_href(rule["description"])))
+            for rule in related_rules
+            if rule["description"]
+        )
+
+        # If description not available, link to all rules filtered by their method, i.e. "mail".
+        if nondescript_rule_count := sum(not bool(rule["description"]) for rule in related_rules):
+            links_to_related_rules += html.render_li(
+                HTML.with_escaping("").join(
+                    (
+                        _("%d notification rule(s) ") % nondescript_rule_count,
+                        html.render_a(
+                            _("without a description were found"),
+                            href=build_href(query=self._method()),
+                        ),
+                    )
+                )
+            )
+
+        html.show_error(
+            _("This notification parameter is used by the following notification rule(s):")
+            + html.render_ul(links_to_related_rules)
+            + _("Only unused parameters can be deleted.")
+        )
 
     def _render_notification_parameters(
         self,

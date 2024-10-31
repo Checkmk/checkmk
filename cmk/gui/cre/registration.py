@@ -39,7 +39,6 @@ from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.wato import (
     default_user_menu_topics,
-    notification_parameter_registry,
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
@@ -61,6 +60,7 @@ from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry

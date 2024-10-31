@@ -15,15 +15,15 @@ from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.wato._notification_parameter import NotificationParameter
-from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
     get_notification_parameter_schema,
-    NotificationParameterDescription,
+    NotificationParameter,
+    NotificationParameterRegistry,
     save_notification_parameter,
 )
+from cmk.gui.watolib.notification_parameter._utils import NotificationParameterDescription
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 
 from cmk.rulesets.v1 import Title

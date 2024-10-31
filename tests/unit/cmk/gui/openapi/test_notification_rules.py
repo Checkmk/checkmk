@@ -46,7 +46,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     PluginType,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
-from cmk.gui.wato._notification_parameter._registry import (
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     register_notification_parameters,
 )

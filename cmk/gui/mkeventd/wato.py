@@ -127,8 +127,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import (
     ContactGroupSelection,
     MainModuleTopicEvents,
-    NotificationParameter,
-    NotificationParameterRegistry,
 )
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
@@ -165,6 +163,10 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.notification_parameter import (
+    NotificationParameter,
+    NotificationParameterRegistry,
+)
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,

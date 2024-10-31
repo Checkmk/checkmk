@@ -15,7 +15,6 @@ from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.wato import NotificationParameterRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -26,6 +25,7 @@ from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry

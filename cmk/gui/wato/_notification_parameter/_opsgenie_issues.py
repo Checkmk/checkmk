@@ -8,6 +8,7 @@ from typing import cast
 from cmk.gui.form_specs.private import ListOfStrings
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -29,7 +30,6 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex
 
 from ...form_specs.vue.shared_type_defs import ListOfStringsLayout
-from ._base import NotificationParameter
 from ._helpers import notification_macro_help_fs
 
 

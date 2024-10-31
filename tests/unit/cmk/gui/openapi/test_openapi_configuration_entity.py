@@ -11,11 +11,11 @@ from tests.testlib.rest_api_client import ClientRegistry
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.wato import NotificationParameter
-from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
+    NotificationParameter,
+    NotificationParameterRegistry,
     save_notification_parameter,
 )
 

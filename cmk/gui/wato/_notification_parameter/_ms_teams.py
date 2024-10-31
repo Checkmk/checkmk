@@ -18,6 +18,7 @@ from cmk.utils.ms_teams_constants import (
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 from cmk.gui.watolib.password_store import passwordstore_choices_without_user
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -36,7 +37,6 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
 
-from ._base import NotificationParameter
 from ._helpers import (
     _get_url_prefix_setting,
     notification_macro_help_fs,

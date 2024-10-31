@@ -49,7 +49,7 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 

@@ -14,6 +14,7 @@ from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
 from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -33,7 +34,6 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
 
-from ._base import NotificationParameter
 from ._helpers import _get_url_prefix_setting
 
 

@@ -35,6 +35,7 @@ from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
@@ -54,7 +55,6 @@ from . import (
     filters,
 )
 from . import pages as wato_pages
-from ._notification_parameter import NotificationParameterRegistry
 from ._notification_parameter import registration as _notification_parameter_registration
 from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon

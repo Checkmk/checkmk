@@ -9,12 +9,12 @@ from typing import assert_never, NamedTuple, NewType
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
 from cmk.gui.form_specs.vue import shared_type_defs
-from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
     get_notification_parameter_schema,
+    notification_parameter_registry,
     save_notification_parameter,
 )
 

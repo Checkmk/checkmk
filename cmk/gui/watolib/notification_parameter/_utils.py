@@ -23,9 +23,10 @@ from cmk.gui.form_specs.vue.visitors import (
     get_visitor,
     VisitorOptions,
 )
-from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
+
+from ._registry import NotificationParameterRegistry
 
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
 

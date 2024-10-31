@@ -8,12 +8,12 @@ from pytest import MonkeyPatch
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.wato import (  # type: ignore[attr-defined]
+from cmk.gui.watolib import rulespecs
+from cmk.gui.watolib.notification_parameter import (
+    _registry,
     notification_parameter_registry,
     register_notification_parameters,
 )
-from cmk.gui.wato._notification_parameter import _registry
-from cmk.gui.watolib import rulespecs
 
 expected_plugins = [
     "asciimail",

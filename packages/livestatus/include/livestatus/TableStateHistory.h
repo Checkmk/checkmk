@@ -14,6 +14,7 @@
 #include <string>
 
 #include "livestatus/HostServiceState.h"
+#include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 
 class Column;
@@ -22,9 +23,7 @@ class Filter;
 class ICore;
 class IHost;
 class IService;
-class LogCache;
 class LogEntry;
-class LogFiles;
 class Query;
 class User;
 
@@ -34,9 +33,11 @@ public:
     LogEntryForwardIterator(const LogFiles &log_files,
                             size_t max_lines_per_log_file)
         : log_files_{&log_files}
+        , it_logs_{log_files.end()}
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
     const LogFiles *log_files_;
+    LogFiles::const_iterator it_logs_;
     size_t max_lines_per_log_file_;
 };
 

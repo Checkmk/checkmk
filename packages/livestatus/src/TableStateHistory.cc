@@ -199,7 +199,6 @@ const Logfile::map_type *getEntries(Logfile *logfile,
 }
 
 LogEntry *getNextLogentry(LogEntryForwardIterator &it,
-                          LogFiles::const_iterator &it_logs,
                           const Logfile::map_type *&entries,
                           Logfile::const_iterator &it_entries) {
     if (it_entries != entries->end()) {
@@ -207,12 +206,13 @@ LogEntry *getNextLogentry(LogEntryForwardIterator &it,
     }
 
     while (it_entries == entries->end()) {
-        auto it_logs_cpy = it_logs;
+        auto it_logs_cpy = it.it_logs_;
         if (++it_logs_cpy == it.log_files_->end()) {
             return nullptr;
         }
-        ++it_logs;
-        entries = getEntries(it_logs->second.get(), it.max_lines_per_log_file_);
+        ++it.it_logs_;
+        entries =
+            getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
         it_entries = entries->begin();
     }
     return it_entries->second.get();
@@ -345,18 +345,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Switch to last logfile (we have at least one)
-    LogFiles::const_iterator it_logs{it.log_files_->end()};
-    --it_logs;
-    auto newest_log = it_logs;
+    --it.it_logs_;
+    auto newest_log = it.it_logs_;
 
     // Now find the log where 'since' starts.
-    while (it_logs != it.log_files_->begin() &&
-           it_logs->second->since() >= since) {
-        --it_logs;  // go back in history
+    while (it.it_logs_ != it.log_files_->begin() &&
+           it.it_logs_->second->since() >= since) {
+        --it.it_logs_;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (it_logs->second->since() > until) {
+    if (it.it_logs_->second->since() > until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;
@@ -364,9 +363,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
     // Determine initial logentry
     const auto *entries =
-        getEntries(it_logs->second.get(), it.max_lines_per_log_file_);
+        getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
     Logfile::const_iterator it_entries;
-    if (!entries->empty() && it_logs != newest_log) {
+    if (!entries->empty() && it.it_logs_ != newest_log) {
         it_entries = entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--it_entries != entries->begin()) {
@@ -385,8 +384,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     notification_periods_t notification_periods;
 
-    while (LogEntry *entry =
-               getNextLogentry(it, it_logs, entries, it_entries)) {
+    while (LogEntry *entry = getNextLogentry(it, entries, it_entries)) {
         if (abort_query_ || entry->time() >= until) {
             break;
         }

@@ -192,6 +192,16 @@ def test_get_configuration_entity(
     assert resp.json["extensions"]["parameter_properties"]["test_param"] == "some_value"
 
 
+def test_get_configuration_entity_throws_404(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.notification_parameter, entity_id="foo_bar", expect_ok=False
+    )
+
+    # THEN
+    assert resp.status_code == 404
+
+
 def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity_schema(

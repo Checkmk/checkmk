@@ -92,6 +92,11 @@ def get_configuration_entity(
     entity_type: ConfigEntityType,
     entity_id: EntityId,
 ) -> ConfigurationEntity:
+    """Get configuration entity to supply to frontend.
+
+    Raises:
+        KeyError: if configuration entity with entity_id doesn't exist.
+    """
     match entity_type:
         case ConfigEntityType.notification_parameter:
             entity = get_notification_parameter(

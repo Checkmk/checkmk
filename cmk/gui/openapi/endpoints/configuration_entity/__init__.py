@@ -201,7 +201,12 @@ def _get_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Get a notification parameter"""
     entity_id = EntityId(params["entity_id"])
 
-    entity = get_configuration_entity(ConfigEntityType.notification_parameter, entity_id)
+    try:
+        entity = get_configuration_entity(ConfigEntityType.notification_parameter, entity_id)
+    except KeyError:
+        return problem(
+            404, title="Not found", detail=f"Configuration entity {entity_id} not found."
+        )
 
     return serve_json(
         constructors.domain_object(

@@ -65,12 +65,21 @@ def _add_remote_site_to_central_site(
     central_site: Site,
     remote_site: Site,
 ) -> None:
+    if central_site.version.is_managed_edition():
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+            "customer": "provider",
+        }
+    else:
+        basic_settings = {
+            "alias": "Remote Testsite",
+            "site_id": remote_site.id,
+        }
+
     central_site.openapi.create_site(
         {
-            "basic_settings": {
-                "alias": "Remote Testsite",
-                "site_id": remote_site.id,
-            },
+            "basic_settings": basic_settings,
             "status_connection": {
                 "connection": {
                     "socket_type": "tcp",

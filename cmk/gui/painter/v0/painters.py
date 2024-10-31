@@ -8,6 +8,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Literal
 
 import cmk.ccc.version as cmk_version
 
@@ -4571,12 +4572,12 @@ class PainterLogPluginOutput(Painter):
         return ["log_plugin_output", "log_type", "log_state_type", "log_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        output = row["log_plugin_output"]
-        comment = row["log_comment"]
-        if output:
+        if output := self._decode_item(row, column="log_plugin_output"):
             return "", format_plugin_output(output, request=self.request, row=row)
-        if comment:
+
+        if comment := self._decode_item(row, column="log_comment"):
             return "", comment
+
         log_type = row["log_type"]
         lst = row["log_state_type"]
         if "FLAPPING" in log_type:
@@ -4587,6 +4588,12 @@ class PainterLogPluginOutput(Painter):
         if lst:
             return "", (lst + " - " + log_type)
         return "", ""
+
+    @staticmethod
+    def _decode_item(row: Row, *, column: Literal["log_plugin_output", "log_comment"]) -> str:
+        """Decode escaped characters coming from Nagios history monitoring."""
+        # TODO: decode all escaped characters coming from monitoring history.
+        return row.get(column, "").replace("%3B", ";")
 
 
 class PainterLogWhat(Painter):

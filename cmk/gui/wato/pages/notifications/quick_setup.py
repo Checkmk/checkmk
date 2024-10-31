@@ -33,6 +33,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     ListOfStringsLayout,
 )
 from cmk.gui.i18n import _
+from cmk.gui.mkeventd import service_levels
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationECAlertStageWidget,
     ConditionalNotificationHostEventStageWidget,
@@ -312,19 +313,13 @@ def _get_check_types() -> list[tuple[str, str]]:
     ]
 
 
-def _get_service_levels_single_choice() -> Sequence[CascadingSingleChoiceElement]:
+def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended]:
     return [
-        CascadingSingleChoiceElement(
+        SingleChoiceElementExtended(
             name=name,
             title=Title("%s") % _(" %s") % title,
-            parameter_form=FixedValue(value=None),
         )
-        for name, title in (
-            ("no_service", "No service level"),
-            ("silver", "Silver"),
-            ("gold", "Gold"),
-            ("platinum", "Platinum"),
-        )
+        for name, title in service_levels()
     ]
 
 
@@ -354,30 +349,24 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=Tuple(
                                                 title=Title("Syslog priority"),
                                                 elements=[
-                                                    CascadingSingleChoice(
+                                                    SingleChoice(
                                                         title=Title("from:"),
                                                         elements=[
-                                                            CascadingSingleChoiceElement(
+                                                            SingleChoiceElement(
                                                                 name=name,
                                                                 title=Title("%s") % _(" %s") % name,
-                                                                parameter_form=FixedValue(
-                                                                    value=None
-                                                                ),
                                                             )
                                                             for name in get_args(
                                                                 SysLogPriorityStrType
                                                             )
                                                         ],
                                                     ),
-                                                    CascadingSingleChoice(
+                                                    SingleChoice(
                                                         title=Title("to:"),
                                                         elements=[
-                                                            CascadingSingleChoiceElement(
+                                                            SingleChoiceElement(
                                                                 name=name,
                                                                 title=Title("%s") % _(" %s") % name,
-                                                                parameter_form=FixedValue(
-                                                                    value=None
-                                                                ),
                                                             )
                                                             for name in get_args(
                                                                 SysLogPriorityStrType
@@ -389,13 +378,12 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             )
                                         ),
                                         "syslog_facility": DictElement(
-                                            parameter_form=CascadingSingleChoice(
+                                            parameter_form=SingleChoice(
                                                 title=Title("Syslog facility"),
                                                 elements=[
-                                                    CascadingSingleChoiceElement(
+                                                    SingleChoiceElement(
                                                         name=name,
                                                         title=Title("%s") % _(" %s") % name,
-                                                        parameter_form=FixedValue(value=None),
                                                     )
                                                     for name in get_args(SysLogFacilityStrType)
                                                 ],
@@ -599,7 +587,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                             layout=DictionaryLayout.two_columns,
                             elements={
                                 "service_level": DictElement(
-                                    required=True,
                                     parameter_form=CascadingSingleChoiceExtended(
                                         prefill=DefaultValue("explicit"),
                                         layout=CascadingSingleChoiceLayout.button_group,
@@ -611,22 +598,25 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             CascadingSingleChoiceElement(
                                                 name="explicit",
                                                 title=Title("Explicit"),
-                                                parameter_form=CascadingSingleChoiceExtended(
+                                                parameter_form=SingleChoiceExtended(
+                                                    type=int,
                                                     elements=_get_service_levels_single_choice(),
                                                 ),
                                             ),
                                             CascadingSingleChoiceElement(
-                                                name="suppress",
+                                                name="range",
                                                 title=Title("Range"),
                                                 parameter_form=Tuple(
                                                     title=Title("Match service level"),
                                                     elements=[
-                                                        CascadingSingleChoiceExtended(
+                                                        SingleChoiceExtended(
                                                             title=Title("From:"),
+                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
-                                                        CascadingSingleChoiceExtended(
+                                                        SingleChoiceExtended(
                                                             title=Title("to:"),
+                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
                                                     ],
@@ -637,17 +627,16 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     ),
                                 ),
                                 "folder": DictElement(
-                                    parameter_form=CascadingSingleChoiceExtended(
+                                    parameter_form=SingleChoiceExtended(
                                         title=Title("Folder"),
+                                        type=str,
                                         elements=[
-                                            CascadingSingleChoiceElement(
-                                                name="main" if name == "" else name,
+                                            SingleChoiceElementExtended(
+                                                name=name,
                                                 title=Title("%s") % _(" %s") % folder,
-                                                parameter_form=FixedValue(value=None),
                                             )
                                             for name, folder in folder_tree().folder_choices()
                                         ],
-                                        layout=CascadingSingleChoiceLayout.horizontal,
                                     ),
                                 ),
                                 "sites": DictElement(

@@ -2770,6 +2770,7 @@ pydantic[email]==2.9.2 \
     --hash=sha256:f048cec7b26778210e28a0459867920654d48e5e62db0958433636cde4254f12
     # via
     #   -r packages/cmk-agent-based/requirements.txt
+    #   -r packages/cmk-ccc/requirements.txt
     #   -r packages/cmk-messaging/requirements.txt
     #   -r packages/cmk-mkp-tool/requirements.txt
     #   -r packages/cmk-werks/requirements.txt

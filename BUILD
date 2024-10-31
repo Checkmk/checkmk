@@ -87,6 +87,7 @@ pip_compile(
     data = [
         "//packages/cmk-agent-based:requirements.txt",
         "//packages/cmk-agent-receiver:requirements.txt",
+        "//packages/cmk-ccc:requirements.txt",
         "//packages/cmk-crypto:requirements.txt",
         "//packages/cmk-graphing:requirements.txt",
         "//packages/cmk-livestatus-client:requirements.txt",

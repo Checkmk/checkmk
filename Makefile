@@ -146,7 +146,7 @@ version:
 # but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/ccc/version.py bin/livedump
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)

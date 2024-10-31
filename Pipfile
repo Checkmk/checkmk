@@ -150,6 +150,7 @@ opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==5.28.3"  # Keep in synch with MODULE.bazel---will work automatically when we drop pipenv
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
+cmk-ccc = {editable = true, path = "./packages/cmk-ccc"}
 cmk-crypto = {editable = true, path = "./packages/cmk-crypto"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
 cmk-messaging = {editable = true, path = "./packages/cmk-messaging"}

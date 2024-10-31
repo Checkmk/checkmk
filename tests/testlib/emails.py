@@ -146,7 +146,7 @@ class EmailManager:
         return dict_result
 
 
-def create_notification_user(site: Site) -> Iterator[tuple[str, str]]:
+def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[str, str]]:
     """Create a user for email notifications via API.
 
     Create a user with email in order to receive email notifications.
@@ -163,6 +163,7 @@ def create_notification_user(site: Site) -> Iterator[tuple[str, str]]:
         email=email_address,
         contactgroups=["all"],
         customer="global" if site.version.is_managed_edition() else None,
+        roles=["admin"] if admin else [],
     )
     site.openapi.activate_changes_and_wait_for_completion()
     yield user_name, email_address

@@ -6,9 +6,8 @@ import logging
 from collections.abc import Iterator
 
 import pytest
-from faker import Faker
 
-from tests.testlib.emails import EmailManager
+from tests.testlib.emails import create_notification_user, EmailManager
 from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.email import EmailPage
@@ -21,29 +20,9 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="notification_user", scope="module")
-def create_notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
-    """Create a user for email notifications via API.
-
-    Create a user with email in order to receive email notifications.
-    Delete the user after the test.
-    """
-    faker = Faker()
-    username = faker.user_name()
-    email = f"{username}@test.com"
-
-    test_site.openapi.create_user(
-        username=username,
-        fullname=faker.name(),
-        password=faker.password(length=12),
-        email=email,
-        contactgroups=["all"],
-        customer="global" if test_site.version.is_managed_edition() else None,
-    )
-    test_site.openapi.activate_changes_and_wait_for_completion()
-    yield username, email
-    test_site.openapi.delete_user(username)
-    test_site.openapi.activate_changes_and_wait_for_completion()
+@pytest.fixture(name="notification_user", scope="function")
+def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
+    yield from create_notification_user(test_site)
 
 
 @pytest.mark.skip(reason="New email templates need adjustments")

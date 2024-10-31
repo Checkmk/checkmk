@@ -1,12 +1,16 @@
 import email
 import logging
 import time
+from collections.abc import Iterator
 from email.policy import default
 from getpass import getuser
 from pathlib import Path
 from typing import Final
 
+from faker import Faker
+
 from tests.testlib.repo import repo_path
+from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
@@ -140,3 +144,27 @@ class EmailManager:
                 key, value = line.split(": ", 1)
                 dict_result[key.strip()] = value.strip()
         return dict_result
+
+
+def create_notification_user(site: Site) -> Iterator[tuple[str, str]]:
+    """Create a user for email notifications via API.
+
+    Create a user with email in order to receive email notifications.
+    Delete the user after the test.
+    """
+    faker = Faker()
+    user_name = faker.user_name()
+    email_address = f"{user_name}@test.com"
+
+    site.openapi.create_user(
+        username=user_name,
+        fullname=faker.name(),
+        password=faker.password(length=12),
+        email=email_address,
+        contactgroups=["all"],
+        customer="global" if site.version.is_managed_edition() else None,
+    )
+    site.openapi.activate_changes_and_wait_for_completion()
+    yield user_name, email_address
+    site.openapi.delete_user(user_name)
+    site.openapi.activate_changes_and_wait_for_completion()

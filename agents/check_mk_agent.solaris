@@ -114,23 +114,11 @@ set_variable_defaults() {
     : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
     : "${MK_CONFDIR:="/etc/check_mk"}"
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
-    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
-
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+    : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
+    : "${MK_BIN:="/usr/bin"}"
 }
 
 preamble_1() {
-
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-    export MK_LOGDIR
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
     # Provide information about the remote host. That helps when data
     # is being sent only once to each remote host.
     if [ "${REMOTE_HOST}" ]; then
@@ -138,6 +126,27 @@ preamble_1() {
     elif [ "${SSH_CLIENT}" ]; then
         export REMOTE=${SSH_CLIENT%% *}
     fi
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
@@ -145,18 +154,14 @@ preamble_1() {
     PLUGINSDIR=${MK_LIBDIR}/plugins
 
     # All executables in LOCALDIR will by executabled and their
-    # output inserted into the section <<<local>>>. Please refer
-    # to online documentation for details.
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
     LOCALDIR=${MK_LIBDIR}/local
 
-    # All files in SPOOLDIR will simply be appended to the agent
+    # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
     SPOOLDIR=${MK_VARDIR}/spool
 }
-
-#
-# BEGIN COMMON AGENT CODE
-#
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -1052,6 +1057,10 @@ main_setup() {
     set_up_grep
 
     set_variable_defaults
+
+    determine_sync_async
+
+    provide_agent_paths
 
     unset_locale
 

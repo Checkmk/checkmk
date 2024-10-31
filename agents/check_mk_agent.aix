@@ -104,14 +104,11 @@ set_up_current_shell() {
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/check_mk/lib}"
-    : "${MK_CONFDIR:=/usr/check_mk/conf}"
-    : "${MK_VARDIR:=/tmp/check_mk}"
-    : "${MK_LOGDIR:=/var/log/check_mk}"
-
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+    : "${MK_LIBDIR:="/usr/check_mk/lib"}"
+    : "${MK_CONFDIR:="/usr/check_mk/conf"}"
+    : "${MK_VARDIR:="/tmp/check_mk"}"
+    : "${MK_LOGDIR:="/var/log/check_mk"}"
+    : "${MK_BIN:="/usr/bin"}"
 }
 
 preamble_1() { # TODO: split these up more meaningful
@@ -122,14 +119,6 @@ preamble_1() { # TODO: split these up more meaningful
         . "${HOME}/.profile" >/dev/null 2>&1
     fi
 
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-    export MK_LOGDIR
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
     # Provide information about the remote host. That helps when data
     # is being sent only once to each remote host.
     if [ "${REMOTE_HOST}" ]; then
@@ -138,20 +127,6 @@ preamble_1() { # TODO: split these up more meaningful
         export REMOTE=${SSH_CLIENT%% *}
     fi
 
-    # All executables in PLUGINSDIR will simply be executed and their
-    # ouput appended to the output of the agent. Plugins define their own
-    # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR="${MK_LIBDIR}/plugins"
-
-    # All executables in LOCALDIR will by executabled and their
-    # output inserted into the section <<<local>>>. Please refer
-    # to online documentation for details.
-    LOCALDIR="${MK_LIBDIR}/local"
-
-    # All files in SPOOLDIR will simply appended to the agent
-    # output if they are not outdated (see below)
-    SPOOLDIR="${MK_VARDIR}/spool"
-
     #Avoid problems with wrong decimal separators in other language verions of aix
     export LC_NUMERIC="en_US"
 }
@@ -159,6 +134,37 @@ preamble_1() { # TODO: split these up more meaningful
 #
 # BEGIN COMMON AGENT CODE
 #
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=${MK_LIBDIR}/plugins
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
+}
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -1006,6 +1012,8 @@ main_setup() {
     set_up_get_epoch
     set_up_current_shell
     set_variable_defaults
+    determine_sync_async
+    provide_agent_paths
     unset_locale
     preamble_1
     detect_python

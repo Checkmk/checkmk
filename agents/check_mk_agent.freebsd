@@ -117,44 +117,20 @@ set_up_current_shell() {
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/local/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
-    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
-
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+    : "${MK_LIBDIR:="/usr/local/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
+    : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
+    : "${MK_BIN:="/usr/bin"}"
 }
 
 preamble_1() {
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
     # Make sure locally installed binaries are found
     # Only add binaries if they are not already in the path! If you append to path in a loop the process will
     # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
     [ "${PATH#*"/usr/local/bin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/bin"
     [ "${PATH#*"/usr/local/sbin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/sbin"
     [ -d "/var/qmail/bin" ] && { [ "${PATH#*"/var/qmail/bin"}" != "${PATH}" ] || PATH="${PATH}:/var/qmail/bin"; }
-
-    # All executables in PLUGINSDIR will simply be executed and their
-    # ouput appended to the output of the agent. Plugins define their own
-    # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR=${MK_LIBDIR}/plugins
-
-    # All executables in LOCALDIR will by executabled and their
-    # output inserted into the section <<<local>>>. Please refer
-    # to online documentation for details.
-    LOCALDIR=${MK_LIBDIR}/local
-
-    # All files in SPOOLDIR will simply be appended to the agent
-    # output if they are not outdated (see below)
-    SPOOLDIR=${MK_VARDIR}/spool
 }
 
 # encryption not implemented
@@ -162,6 +138,37 @@ optionally_encrypt() { cat; }
 #
 # BEGIN COMMON AGENT CODE
 #
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=${MK_LIBDIR}/plugins
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
+}
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -964,6 +971,10 @@ main_setup() {
     set_up_current_shell
 
     set_variable_defaults
+
+    determine_sync_async
+
+    provide_agent_paths
 
     unset_locale
 

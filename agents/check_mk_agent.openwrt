@@ -106,24 +106,14 @@ set_up_current_shell() {
 #
 
 set_variable_defaults() {
-    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
-    : "${MK_CONFDIR:=/etc/check_mk}"
-    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
-    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
-
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+    : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
+    : "${MK_CONFDIR:="/etc/check_mk"}"
+    : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
+    : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
+    : "${MK_BIN:="/usr/bin"}"
 }
 
 preamble_1() {
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
     # The service name gets patched for baked agents to "check-mk-agent"
     XINETD_SERVICE_NAME=check_mk
 
@@ -140,6 +130,30 @@ preamble_1() {
     # eventually each the 128k size limit for the environment and become a zombie process. See execve manpage.
     [ "${PATH#*"/usr/local/bin"}" != "${PATH}" ] || PATH="${PATH}:/usr/local/bin"
     [ -d "/var/qmail/bin" ] && { [ "${PATH#*"/var/qmail/bin"}" != "${PATH}" ] || PATH="${PATH}:/var/qmail/bin"; }
+}
+
+# encryption not implemented
+optionally_encrypt() { cat; }
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
 
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
@@ -155,13 +169,6 @@ preamble_1() {
     # output if they are not outdated (see below)
     SPOOLDIR=${MK_VARDIR}/spool
 }
-
-# encryption not implemented
-optionally_encrypt() { cat; }
-
-#
-# BEGIN COMMON AGENT CODE
-#
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -1509,6 +1516,10 @@ main_setup() {
     set_up_current_shell
 
     set_variable_defaults
+
+    determine_sync_async
+
+    provide_agent_paths
 
     set_up_profiling
 

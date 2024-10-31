@@ -104,10 +104,6 @@ set_up_current_shell() {
 #
 
 set_variable_defaults() {
-    # some 'booleans'
-    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
-    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
-
     # WATCH OUT: These 5 lines are searched for and replaced by the
     # agent bakery!
     # TODO: CMK-8339 (proper configuration)
@@ -116,29 +112,6 @@ set_variable_defaults() {
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
     : "${MK_LOGDIR:="/var/log/check_mk_agent"}"
     : "${MK_BIN:="/usr/bin"}"
-
-    export MK_LIBDIR
-    export MK_CONFDIR
-    export MK_VARDIR
-    export MK_LOGDIR
-    export MK_BIN
-
-    # Optionally set a tempdir for all subsequent calls
-    #export TMPDIR=
-
-    # All executables in PLUGINSDIR will simply be executed and their
-    # ouput appended to the output of the agent. Plugins define their own
-    # sections and must output headers with '<<<' and '>>>'
-    PLUGINSDIR=${MK_LIBDIR}/plugins
-
-    # All executables in LOCALDIR will by executabled and their
-    # output inserted into the section <<<local>>>. Please
-    # refer to online documentation for details about local checks.
-    LOCALDIR=${MK_LIBDIR}/local
-
-    # All files in SPOOLDIR will simply appended to the agent
-    # output if they are not outdated (see below)
-    SPOOLDIR=${MK_VARDIR}/spool
 }
 
 set_up_path() {
@@ -173,6 +146,37 @@ announce_remote() {
 #
 # BEGIN COMMON AGENT CODE
 #
+
+determine_sync_async() {
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+provide_agent_paths() {
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
+    export MK_BIN
+
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
+
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=${MK_LIBDIR}/plugins
+
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
+    LOCALDIR=${MK_LIBDIR}/local
+
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=${MK_VARDIR}/spool
+}
 
 # SC2089: Quotes/backslashes will be treated literally. Use an array.
 # shellcheck disable=SC2089
@@ -2249,6 +2253,8 @@ main_setup() {
     set_up_current_shell
 
     set_variable_defaults
+    determine_sync_async
+    provide_agent_paths
 
     announce_remote # needs MK_VARDIR!
 

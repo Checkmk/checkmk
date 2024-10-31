@@ -2,13 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from collections.abc import Mapping
 from typing import Literal, NotRequired, TypedDict
 
 from cmk.utils.notify_types import (
     SysLogFacilityIntType,
     SyslogPriorityIntType,
 )
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import TagGroupID
 
 StatusChangeStateHost = Literal[-1, 0, 1, 2]
 StatusChangeStateService = Literal[-1, 0, 1, 2, 3]
@@ -42,15 +44,17 @@ class ECAlertFilters(TypedDict):
 
 
 class HostFilters(TypedDict):
-    host_tags: NotRequired[list[str]]
-    host_labels: NotRequired[list[str]]
+    host_tags: NotRequired[
+        Mapping[TagGroupID, TagCondition]
+    ]  # TODO: double check this type after implementation
+    host_labels: NotRequired[dict[str, str]]  # TODO: double check this type after implementation
     match_host_groups: NotRequired[list[str]]
     match_hosts: NotRequired[list[str]]
     exclude_hosts: NotRequired[list[str]]
 
 
 class ServiceFilters(TypedDict):
-    service_labels: NotRequired[list[str]]
+    service_labels: NotRequired[dict[str, str]]  # TODO: double check this type after implementation
     match_service_groups: NotRequired[list[str]]
     exclude_service_groups: NotRequired[list[str]]
     match_services: NotRequired[list[str]]

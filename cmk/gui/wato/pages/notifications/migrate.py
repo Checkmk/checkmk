@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
+    ConditionEventConsoleAlertsType,
     EventRule,
     GroupBy,
     HostEventType,
@@ -21,18 +22,23 @@ from cmk.utils.notify_types import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     AlwaysBulk,
     AlwaysBulkTuple,
+    AssigneeFilters,
     BulkingParameters,
     ContentBasedFiltering,
+    ECAlertFilters,
     Effect,
     FrequencyAndTiming,
+    GeneralFilters,
     GeneralProperties,
     HostEvent,
+    HostFilters,
     NotificationMethod,
     NotificationQuickSetupSpec,
     OtherTriggerEvent,
     Recipient,
     SendingConditions,
     ServiceEvent,
+    ServiceFilters,
     Settings,
     StatusChangeHost,
     StatusChangeService,
@@ -106,6 +112,72 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             trigger_events["ec_alerts"] = "Enabled"
 
         return trigger_events
+
+    def _get_ec_alert_filters() -> ECAlertFilters:
+        ec_alert_filters = ECAlertFilters()
+        match_ec = event_rule["match_ec"]
+        if not match_ec:
+            return ec_alert_filters
+        if "match_rule_id" in match_ec:
+            ec_alert_filters["rule_ids"] = match_ec["match_rule_id"]
+        if "match_priority" in match_ec:
+            ec_alert_filters["syslog_priority"] = match_ec["match_priority"]
+        if "match_facility" in match_ec:
+            ec_alert_filters["syslog_facility"] = match_ec["match_facility"]
+        if "match_comment" in match_ec:
+            ec_alert_filters["event_comment"] = match_ec["match_comment"]
+        return ec_alert_filters
+
+    def _get_host_filters() -> HostFilters:
+        host_filters = HostFilters()
+        if "match_hosttags" in event_rule:
+            host_filters["host_tags"] = event_rule["match_hosttags"]
+        if "match_hostlabels" in event_rule:
+            host_filters["host_labels"] = event_rule["match_hostlabels"]
+        if "match_hostgroups" in event_rule:
+            host_filters["match_host_groups"] = event_rule["match_hostgroups"]
+        if "match_hosts" in event_rule:
+            host_filters["match_hosts"] = event_rule["match_hosts"]
+        if "match_exclude_hosts" in event_rule:
+            host_filters["exclude_hosts"] = event_rule["match_exclude_hosts"]
+        return host_filters
+
+    def _get_service_filters() -> ServiceFilters:
+        service_filters = ServiceFilters()
+        if "match_servicelabels" in event_rule:
+            service_filters["service_labels"] = event_rule["match_servicelabels"]
+        if "match_servicegroups" in event_rule:
+            service_filters["match_service_groups"] = event_rule["match_servicegroups"]
+        if "match_exclude_servicegroups" in event_rule:
+            service_filters["exclude_service_groups"] = event_rule["match_exclude_servicegroups"]
+        if "match_services" in event_rule:
+            service_filters["match_services"] = event_rule["match_services"]
+        if "match_exclude_services" in event_rule:
+            service_filters["exclude_services"] = event_rule["match_exclude_services"]
+        return service_filters
+
+    def _get_assignee_filters() -> AssigneeFilters:
+        assignee_filters = AssigneeFilters()
+        if "match_contactgroups" in event_rule:
+            assignee_filters["contact_groups"] = event_rule["match_contactgroups"]
+        if "match_contacts" in event_rule:
+            assignee_filters["users"] = event_rule["match_contacts"]
+        return assignee_filters
+
+    def _get_general_filters() -> GeneralFilters:
+        general_filters = GeneralFilters()
+        if "match_sl" in event_rule:
+            if event_rule["match_sl"][0] == event_rule["match_sl"][1]:
+                general_filters["service_level"] = ("explicit", event_rule["match_sl"][0])
+            else:
+                general_filters["service_level"] = ("range", event_rule["match_sl"])
+        if "match_folder" in event_rule:
+            general_filters["folder"] = event_rule["match_folder"]
+        if "match_site" in event_rule:
+            general_filters["sites"] = event_rule["match_site"]
+        if "match_checktype" in event_rule:
+            general_filters["check_type_plugin"] = event_rule["match_checktype"]
+        return general_filters
 
     def _get_notification_method() -> NotificationMethod:
         def _bulk_type() -> AlwaysBulkTuple | TimeperiodBulkTuple | None:
@@ -242,18 +314,40 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             documentation_url=event_rule.get("docu_url", ""),
         )
 
-    return NotificationQuickSetupSpec(
+    spec = NotificationQuickSetupSpec(
         triggering_events=_get_triggering_events(),
-        ec_alert_filters={},
-        host_filters={},
-        service_filters={},
-        assignee_filters={},
-        general_filters={},
+        assignee_filters=_get_assignee_filters(),
+        general_filters=_get_general_filters(),
         notification_method=_get_notification_method(),
         recipient=_get_recipients(),
         sending_conditions=_get_sending_conditions(),
         general_properties=_get_general_properties(),
     )
+    if "match_ec" in event_rule and event_rule["match_ec"]:
+        spec["ec_alert_filters"] = _get_ec_alert_filters()
+    if any(
+        k in event_rule
+        for k in [
+            "match_hosttags",
+            "match_hostlabels",
+            "match_hostgroups",
+            "match_hosts",
+            "match_exclude_hosts",
+        ]
+    ):
+        spec["host_filters"] = _get_host_filters()
+    if any(
+        k in event_rule
+        for k in [
+            "match_servicelabels",
+            "match_servicegroups",
+            "match_exclude_servicegroups",
+            "match_services",
+            "match_exclude_services",
+        ]
+    ):
+        spec["service_filters"] = _get_service_filters()
+    return spec
 
 
 def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule:
@@ -308,14 +402,73 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
         if "ec_alerts" not in notification["triggering_events"]:
             event_rule["match_ec"] = False
 
-    def _set_host_and_service_filters(event_rule: EventRule) -> None:
-        _ec_alert_filters = notification["ec_alert_filters"]
-        _host_filters = notification["host_filters"]
-        _service_filters = notification["service_filters"]
-        _assignee_filters = notification["assignee_filters"]
-        _general_filters = notification["general_filters"]
+    def _set_event_console_filters(event_rule: EventRule) -> None:
+        ec_alert_filters = notification["ec_alert_filters"]
+        ec_alerts_type = ConditionEventConsoleAlertsType()
+        if "rule_ids" in ec_alert_filters:
+            ec_alerts_type["match_rule_id"] = ec_alert_filters["rule_ids"]
+        if "syslog_priority" in ec_alert_filters:
+            ec_alerts_type["match_priority"] = ec_alert_filters["syslog_priority"]
+        if "syslog_facility" in ec_alert_filters:
+            ec_alerts_type["match_facility"] = ec_alert_filters["syslog_facility"]
+        if "event_comment" in ec_alert_filters:
+            ec_alerts_type["match_comment"] = ec_alert_filters["event_comment"]
+        if ec_alerts_type:
+            event_rule["match_ec"] = ec_alerts_type
+        else:
+            event_rule["match_ec"] = False
 
-        # TODO: implement migration logic
+    def _set_host_filters(event_rule: EventRule) -> None:
+        host_filters = notification["host_filters"]
+        if "host_tags" in host_filters:
+            event_rule["match_hosttags"] = host_filters["host_tags"]
+        if "host_labels" in host_filters:
+            event_rule["match_hostlabels"] = host_filters["host_labels"]
+        if "match_host_groups" in host_filters:
+            event_rule["match_hostgroups"] = host_filters["match_host_groups"]
+        if "match_hosts" in host_filters:
+            event_rule["match_hosts"] = host_filters["match_hosts"]
+        if "exclude_hosts" in host_filters:
+            event_rule["match_exclude_hosts"] = host_filters["exclude_hosts"]
+
+    def _set_service_filters(event_rule: EventRule) -> None:
+        service_filters = notification["service_filters"]
+        if "service_labels" in service_filters:
+            event_rule["match_servicelabels"] = service_filters["service_labels"]
+        if "match_service_groups" in service_filters:
+            event_rule["match_servicegroups"] = service_filters["match_service_groups"]
+        if "exclude_service_groups" in service_filters:
+            event_rule["match_exclude_servicegroups"] = service_filters["exclude_service_groups"]
+        if "match_services" in service_filters:
+            event_rule["match_services"] = service_filters["match_services"]
+        if "exclude_services" in service_filters:
+            event_rule["match_exclude_services"] = service_filters["exclude_services"]
+
+    def _set_assignee_filters(event_rule: EventRule) -> None:
+        assignee_filters = notification["assignee_filters"]
+        if "contact_groups" in assignee_filters:
+            event_rule["match_contactgroups"] = assignee_filters["contact_groups"]
+        if "users" in assignee_filters:
+            event_rule["match_contacts"] = assignee_filters["users"]
+
+    def _set_general_filters(event_rule: EventRule) -> None:
+        general_filters = notification["general_filters"]
+        if "service_level" in general_filters:
+            service_level = general_filters["service_level"]
+            match service_level:
+                case ("explicit", level):
+                    assert isinstance(level, int)
+                    event_rule["match_sl"] = (level, level)
+                case ("range", (range_from, range_to)):
+                    assert isinstance(range_from, int)
+                    assert isinstance(range_to, int)
+                    event_rule["match_sl"] = (range_from, range_to)
+        if "folder" in general_filters:
+            event_rule["match_folder"] = general_filters["folder"]
+        if "sites" in general_filters:
+            event_rule["match_site"] = general_filters["sites"]
+        if "check_type_plugin" in general_filters:
+            event_rule["match_checktype"] = general_filters["check_type_plugin"]
 
     def _set_notification_effect_parameters(event_rule: EventRule) -> None:
         def _get_always_bulk_parameters(
@@ -447,8 +600,11 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
         notify_plugin=("mail", None),
     )
 
-    # TODO: add correct migration after implementing stage 2
-    # _set_host_and_service_filters(event_rule)
+    _set_event_console_filters(event_rule)
+    _set_host_filters(event_rule)
+    _set_service_filters(event_rule)
+    _set_assignee_filters(event_rule)
+    _set_general_filters(event_rule)
     _set_triggering_events(event_rule)
     _set_notification_effect_parameters(event_rule)
     _set_recipients(event_rule)

@@ -6,6 +6,7 @@
 import copy
 import logging
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from shutil import which
 from typing import Any, Literal
@@ -84,19 +85,16 @@ def _make_connected_remote_site(
     with site_factory.get_test_site_ctx(
         site_name, description=site_description, auto_restart_httpd=True
     ) as remote_site:
-        try:
-            _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+        with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site
-        finally:
-            # Stop the central site to avoid crashes due to interruptions in the remote-central communication caused by the teardown.
-            central_site.stop()
 
 
-def _add_remote_site_to_central_site(
+@contextmanager
+def _connection(
     *,
     central_site: Site,
     remote_site: Site,
-) -> None:
+) -> Iterator[None]:
     if central_site.version.is_managed_edition():
         basic_settings = {
             "alias": "Remote Testsite",
@@ -147,6 +145,14 @@ def _add_remote_site_to_central_site(
         # this seems to be necessary to avoid sporadic CI failures
         force_foreign_changes=True,
     )
+    try:
+        yield
+    finally:
+        central_site.openapi.delete_site(remote_site.id)
+        central_site.openapi.activate_changes_and_wait_for_completion(
+            # this seems to be necessary to avoid sporadic CI failures
+            force_foreign_changes=True,
+        )
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")

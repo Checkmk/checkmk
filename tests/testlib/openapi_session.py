@@ -762,6 +762,12 @@ class CMKOpenApiSession(requests.Session):
         value: dict[str, Any] = response.json()
         return value
 
+    def delete_site(self, site_id: str) -> None:
+        if (
+            response := self.post(f"/objects/site_connection/{site_id}/actions/delete/invoke")
+        ).status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def login_to_site(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
         response = self.post(
             f"/objects/site_connection/{site_id}/actions/login/invoke",

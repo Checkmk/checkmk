@@ -22,7 +22,6 @@
 #include "livestatus/Interface.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
-#include "livestatus/Logfile.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
@@ -199,21 +198,20 @@ const Logfile::map_type *getEntries(Logfile *logfile,
 }
 
 LogEntry *getNextLogentry(LogEntryForwardIterator &it,
-                          const Logfile::map_type *&entries,
                           Logfile::const_iterator &it_entries) {
-    if (it_entries != entries->end()) {
+    if (it_entries != it.entries_->end()) {
         ++it_entries;
     }
 
-    while (it_entries == entries->end()) {
+    while (it_entries == it.entries_->end()) {
         auto it_logs_cpy = it.it_logs_;
         if (++it_logs_cpy == it.log_files_->end()) {
             return nullptr;
         }
         ++it.it_logs_;
-        entries =
+        it.entries_ =
             getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
-        it_entries = entries->begin();
+        it_entries = it.entries_->begin();
     }
     return it_entries->second.get();
 }
@@ -362,19 +360,19 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Determine initial logentry
-    const auto *entries =
+    it.entries_ =
         getEntries(it.it_logs_->second.get(), it.max_lines_per_log_file_);
     Logfile::const_iterator it_entries;
-    if (!entries->empty() && it.it_logs_ != newest_log) {
-        it_entries = entries->end();
+    if (!it.entries_->empty() && it.it_logs_ != newest_log) {
+        it_entries = it.entries_->end();
         // Check last entry. If it's younger than _since -> use this logfile too
-        if (--it_entries != entries->begin()) {
+        if (--it_entries != it.entries_->begin()) {
             if (it_entries->second->time() >= since) {
-                it_entries = entries->begin();
+                it_entries = it.entries_->begin();
             }
         }
     } else {
-        it_entries = entries->begin();
+        it_entries = it.entries_->begin();
     }
 
     // From now on use getNextLogentry()
@@ -384,7 +382,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     notification_periods_t notification_periods;
 
-    while (LogEntry *entry = getNextLogentry(it, entries, it_entries)) {
+    while (LogEntry *entry = getNextLogentry(it, it_entries)) {
         if (abort_query_ || entry->time() >= until) {
             break;
         }

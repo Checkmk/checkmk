@@ -15,6 +15,7 @@
 
 #include "livestatus/HostServiceState.h"
 #include "livestatus/LogCache.h"
+#include "livestatus/Logfile.h"
 #include "livestatus/Table.h"
 
 class Column;
@@ -38,6 +39,7 @@ public:
 
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;
+    const Logfile::map_type *entries_{nullptr};
     size_t max_lines_per_log_file_;
 };
 

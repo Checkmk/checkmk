@@ -268,24 +268,27 @@ class NotificationParameterPushover(NotificationParameter):
 
 
 # TODO add typing
-def _migrate_to_priority(p):
+def _migrate_to_priority(value):
     # Already migrated
-    if isinstance(value := p["priority"], tuple):
-        return p
+    if isinstance(value, tuple):
+        return value
+
+    if isinstance(value, dict):
+        assert isinstance(value["retry"], int)
+        assert isinstance(value["expire"], int)
+        assert value["receipts"] is not None and isinstance(value["receipts"], str)
+        return ("emergency", (float(value["retry"]), float(value["expire"]), value["receipts"]))
 
     if value == "0":
-        return {"priority": ("normal", None)}
+        return ("normal", None)
 
     if value == "1":
-        return {"priority": ("high", None)}
+        return ("high", None)
 
     if value == "-1":
-        return {"priority": ("low", None)}
+        return ("low", None)
 
     if value == "-2":
-        return {"priority": ("lowest", None)}
+        return ("lowest", None)
 
-    if value == "2":
-        return {"priority": ("emergency", (p["retry"], p["expire"], p["receipts"]))}
-
-    raise ValueError(f"Invalid priority format: {p}")
+    raise ValueError(f"Invalid priority format: {value}")

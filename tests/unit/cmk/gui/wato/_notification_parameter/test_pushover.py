@@ -14,8 +14,8 @@ from cmk.gui.wato._notification_parameter._pushover import _migrate_to_priority
     "old_priority, new_priority",
     [
         pytest.param(
-            {"priority": "0"},
-            {"priority": ("normal", None)},
+            "0",
+            ("normal", None),
             id="Normal",
         ),
         pytest.param(
@@ -25,19 +25,13 @@ from cmk.gui.wato._notification_parameter._pushover import _migrate_to_priority
                 "expire": 0,
                 "receipts": "ergerahtrehrthrthrhrhaergherhtgrsth",
             },
-            {"priority": ("emergency", (0.0, 0.0, "ergerahtrehrthrthrhrhaergherhtgrsth"))},
+            ("emergency", (0.0, 0.0, "ergerahtrehrthrthrhrhaergherhtgrsth")),
             id="Emergency",
         ),
     ],
 )
 def test__migrate_to_priority(
-    old_priority: dict[str, str],
-    new_priority: dict[
-        str,
-        tuple[
-            Literal["normal", "high", "low", "lowest", "emergency"],
-            None | tuple[float, float, str],
-        ],
-    ],
+    old_priority: tuple[str, None] | dict[str, int | str] | str,
+    new_priority: tuple[str, None] | tuple[Literal["emergency"], tuple[float, float, str]],
 ) -> None:
     assert _migrate_to_priority(old_priority) == new_priority

@@ -32210,18 +32210,6 @@ msgstr ""
 "serviço')."
 
 msgid ""
-"If you specify an URL prefix here, then several parts of the email body are "
-"armed with hyperlinks to your Checkmk GUI, so that the recipient of the "
-"email can directly visit the host or service in question in Checkmk. Specify "
-"an absolute URL including the <tt>.../check_mk/</tt>"
-msgstr ""
-"Se especificar um prefixo de URL aqui, várias partes do corpo do e-mail são "
-"armadas com hiperligações para a GUI do Checkmk, para que o destinatário do "
-"e-mail possa visitar directamente o anfitrião ou serviço em questão no "
-"Checkmk. Especifique um URL absoluto, incluindo o prefixo <tt>.../check_mk/</"
-"tt>"
-
-msgid ""
 "If you think this is an error, please ask your administrator to check the "
 "permissions configuration."
 msgstr ""
@@ -33969,6 +33957,10 @@ msgstr "Intervalo:"
 msgid "Invalid (Not loaded)"
 msgstr "Inválido (Não carregado)"
 
+#, fuzzy
+msgid "Invalid API key"
+msgstr "Chave privada inválida"
+
 msgid "Invalid CRCs"
 msgstr "CRCs inválidos"
 
@@ -34247,6 +34239,10 @@ msgstr "Tipo de perfómetro inválido: %s"
 msgid "Invalid private key"
 msgstr "Chave privada inválida"
 
+#, fuzzy
+msgid "Invalid receipt"
+msgstr "Relatório inválido"
+
 msgid "Invalid regular expression"
 msgstr "Expressão inválida regular"
 
@@ -34373,6 +34369,10 @@ msgstr "Teste inválido."
 
 msgid "Invalid type specified."
 msgstr "Tipo inválido especificado."
+
+#, fuzzy
+msgid "Invalid user / group key"
+msgstr "Entrada de usuário inválida"
 
 #, python-format
 msgid "Invalid user connection: %s"
@@ -35482,6 +35482,16 @@ msgid ""
 msgstr ""
 "Os rótulos precisam estar no formato <tt>[KEY]:[VALUE]</tt>. Por exemplo, "
 "<tt>cmk/os_family:linux</tt>."
+
+#, fuzzy
+msgid "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+msgstr ""
+"As etiquetas devem ter o formato \"[KEY]:[VALUE]\". Por exemplo, \"os:windows"
+"\"."
+
+#, fuzzy
+msgid "Labels need to be unique."
+msgstr "A identificação tem de ser única."
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -86125,6 +86135,18 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid ""
+#~ "If you specify an URL prefix here, then several parts of the email body "
+#~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
+#~ "the email can directly visit the host or service in question in Checkmk. "
+#~ "Specify an absolute URL including the <tt>.../check_mk/</tt>"
+#~ msgstr ""
+#~ "Se especificar um prefixo de URL aqui, várias partes do corpo do e-mail "
+#~ "são armadas com hiperligações para a GUI do Checkmk, para que o "
+#~ "destinatário do e-mail possa visitar directamente o anfitrião ou serviço "
+#~ "em questão no Checkmk. Especifique um URL absoluto, incluindo o prefixo "
+#~ "<tt>.../check_mk/</tt>"
 
 #, fuzzy
 #~ msgid "Bulk Notification"

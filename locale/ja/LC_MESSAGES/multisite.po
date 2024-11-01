@@ -31080,17 +31080,6 @@ msgstr ""
 "ができます)。"
 
 msgid ""
-"If you specify an URL prefix here, then several parts of the email body are "
-"armed with hyperlinks to your Checkmk GUI, so that the recipient of the "
-"email can directly visit the host or service in question in Checkmk. Specify "
-"an absolute URL including the <tt>.../check_mk/</tt>"
-msgstr ""
-"ここでURLプレフィックスを指定すると、メール本文のいくつかの部分にCheckmk GUI"
-"へのハイパーリンクが設定されるため、メールの受信者はCheckmkで問題のホストまた"
-"はサービスに直接アクセスできます。<tt> .../check_mk/</tt>を含む絶対URLを指定"
-"します"
-
-msgid ""
 "If you think this is an error, please ask your administrator to check the "
 "permissions configuration."
 msgstr ""
@@ -32819,6 +32808,10 @@ msgstr "間隔:"
 msgid "Invalid (Not loaded)"
 msgstr "無効(ロードされていません)"
 
+#, fuzzy
+msgid "Invalid API key"
+msgstr "無効なプライベートキー"
+
 msgid "Invalid CRCs"
 msgstr "無効なCRC"
 
@@ -33088,6 +33081,10 @@ msgstr "無効な性能計タイプ: %s"
 msgid "Invalid private key"
 msgstr "無効なプライベートキー"
 
+#, fuzzy
+msgid "Invalid receipt"
+msgstr "無効なレポート"
+
 msgid "Invalid regular expression"
 msgstr "無効な正規表現"
 
@@ -33208,6 +33205,10 @@ msgstr "無効なテスト。"
 
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
+
+#, fuzzy
+msgid "Invalid user / group key"
+msgstr "無効なユーザー入力"
 
 #, python-format
 msgid "Invalid user connection: %s"
@@ -34307,6 +34308,16 @@ msgid ""
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
 "<tt>cmk/os_family:linux</tt>です。"
+
+#, fuzzy
+msgid "Labels need to be in the format [KEY]:[VALUE]. For example os:windows."
+msgstr ""
+"ラベルは\"[KEY]:[VALUE]\"という形式である必要があります。例えば、\"os:"
+"windows \"のように。"
+
+#, fuzzy
+msgid "Labels need to be unique."
+msgstr "IDは一意である必要があります。"
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -84029,6 +84040,17 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid ""
+#~ "If you specify an URL prefix here, then several parts of the email body "
+#~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
+#~ "the email can directly visit the host or service in question in Checkmk. "
+#~ "Specify an absolute URL including the <tt>.../check_mk/</tt>"
+#~ msgstr ""
+#~ "ここでURLプレフィックスを指定すると、メール本文のいくつかの部分にCheckmk "
+#~ "GUIへのハイパーリンクが設定されるため、メールの受信者はCheckmkで問題のホス"
+#~ "トまたはサービスに直接アクセスできます。<tt> .../check_mk/</tt>を含む絶対"
+#~ "URLを指定します"
 
 #, fuzzy
 #~ msgid "Bulk Notification"

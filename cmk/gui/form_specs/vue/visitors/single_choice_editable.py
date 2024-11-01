@@ -42,9 +42,9 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
         from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
         title, help_text = get_title_and_help(self.form_spec)
-        entities = get_list_of_configuration_entities(
-            ConfigEntityType(self.form_spec.entity_type.value), self.form_spec.entity_type_specifier
-        )
+        entity_type = ConfigEntityType(self.form_spec.entity_type.value)
+        entity_selection = self.form_spec.entity_type_specifier
+        entities = get_list_of_configuration_entities(entity_type, entity_selection)
         return (
             shared_type_defs.SingleChoiceEditable(
                 # FormSpec

@@ -399,7 +399,9 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
             event_rule["match_ec"] = False
 
     def _set_event_console_filters(event_rule: EventRule) -> None:
-        ec_alert_filters = notification["ec_alert_filters"]
+        if not (ec_alert_filters := notification.get("ec_alert_filters")):
+            return
+
         ec_alerts_type = ConditionEventConsoleAlertsType()
         if "rule_ids" in ec_alert_filters:
             ec_alerts_type["match_rule_id"] = ec_alert_filters["rule_ids"]
@@ -415,7 +417,9 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
             event_rule["match_ec"] = False
 
     def _set_host_filters(event_rule: EventRule) -> None:
-        host_filters = notification["host_filters"]
+        if not (host_filters := notification.get("host_filters")):
+            return
+
         if "host_tags" in host_filters:
             event_rule["match_hosttags"] = host_filters["host_tags"]
         if "host_labels" in host_filters:
@@ -428,7 +432,9 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
             event_rule["match_exclude_hosts"] = host_filters["exclude_hosts"]
 
     def _set_service_filters(event_rule: EventRule) -> None:
-        service_filters = notification["service_filters"]
+        if not (service_filters := notification.get("service_filters")):
+            return
+
         if "service_labels" in service_filters:
             event_rule["match_servicelabels"] = service_filters["service_labels"]
         if "match_service_groups" in service_filters:

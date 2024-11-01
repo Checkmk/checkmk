@@ -17,6 +17,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     save_notification_parameter,
 )
+from cmk.gui.watolib.users import notification_script_title
 
 EntityId = NewType("EntityId", str)
 
@@ -70,6 +71,14 @@ def get_configuration_entity_schema(
                     NotificationParameterMethod(entity_type_specifier),
                 )
             )
+        case other:
+            assert_never(other)
+
+
+def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_specifier: str) -> str:
+    match entity_type:
+        case ConfigEntityType.notification_parameter:
+            return notification_script_title(entity_type_specifier)
         case other:
             assert_never(other)
 

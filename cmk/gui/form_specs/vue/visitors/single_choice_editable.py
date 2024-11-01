@@ -38,6 +38,7 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (
             get_list_of_configuration_entities,
+            get_readable_entity_selection,
         )
         from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
@@ -45,6 +46,7 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)
         entity_selection = self.form_spec.entity_type_specifier
         entities = get_list_of_configuration_entities(entity_type, entity_selection)
+        readable_entity_selection = get_readable_entity_selection(entity_type, entity_selection)
         return (
             shared_type_defs.SingleChoiceEditable(
                 # FormSpec
@@ -65,8 +67,8 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
                     slidein_save_button=_("Save"),
                     slidein_cancel_button=_("Cancel"),
                     slidein_create_button=_("Create"),
-                    slidein_new_title=_("New notification parameter"),
-                    slidein_edit_title=_("Edit notification parameter"),
+                    slidein_new_title=_("New %s parameter") % readable_entity_selection,
+                    slidein_edit_title=_("Edit %s parameter") % readable_entity_selection,
                     edit=_("Edit"),
                     create=_("Create"),
                     loading=_("Loading ..."),

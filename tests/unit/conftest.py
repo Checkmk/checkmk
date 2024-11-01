@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import os
 import shutil
@@ -41,6 +40,11 @@ from cmk.utils.licensing.handler import (
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
+)
+
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
 )
 
 import cmk.crypto.password_hashing
@@ -263,44 +267,19 @@ def clear_caches_per_function():
     yield
 
 
-class FixRegister:
-    """Access agent based plugins"""
+@pytest.fixture(scope="session")
+def agent_based_plugins() -> AgentBasedPlugins:
+    # Local import to have faster pytest initialization
+    from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        config,
+    )
 
-    def __init__(self) -> None:
-        # Local import to have faster pytest initialization
-        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-        from cmk.base.api.agent_based import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            register,
-        )
-
-        errors = config.load_all_plugins(
-            local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
-            checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
-        )
-        assert not errors
-
-        self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
-        self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
-        self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
-        self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
-
-    @property
-    def snmp_sections(self):
-        return self._snmp_sections
-
-    @property
-    def agent_sections(self):
-        return self._agent_sections
-
-    @property
-    def check_plugins(self):
-        return self._check_plugins
-
-    @property
-    def inventory_plugins(self):
-        return self._inventory_plugins
+    errors = config.load_all_plugins(
+        local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
+        checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
+    )
+    assert not errors
+    return get_previously_loaded_plugins()
 
 
 class FixPluginLegacy:
@@ -318,11 +297,6 @@ class FixPluginLegacy:
             raise_errors=True,
         )
         self.check_info = {p.name: p for p in result.sane_check_info}
-
-
-@pytest.fixture(scope="session", name="fix_register")
-def fix_register_fixture() -> Iterator[FixRegister]:
-    yield FixRegister()
 
 
 @pytest.fixture(scope="session")

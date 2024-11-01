@@ -1119,7 +1119,7 @@ def test__check_host_labels_changed() -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     # plugins have been loaded by the fixture. Better: load the ones we need for this test
     plugins = agent_based_register.get_previously_loaded_plugins()
@@ -1279,21 +1279,21 @@ _expected_host_labels = [
 ]
 
 
-@pytest.mark.usefixtures("patch_omd_site", "fix_register")
-def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("patch_omd_site", "agent_based_plugins")
+def test_commandline_discovery(
+    monkeypatch: MonkeyPatch,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
-    plugins = (
-        agent_based_register.get_previously_loaded_plugins()
-    )  # loaded by "fix_regsiter" fixture
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
+            agent_based_plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -1302,7 +1302,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
-        plugins,
+        agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -1600,7 +1600,7 @@ class DiscoveryTestCase(NamedTuple):
     on_cluster: ExpectedDiscoveryResultOnCluster
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "host_labels, expected_services",
     [
@@ -1771,7 +1771,7 @@ _discovery_test_cases = [
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(
     realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
@@ -1806,7 +1806,7 @@ def test__discover_host_labels_and_services_on_realhost(
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_realhost(
     realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
@@ -1836,7 +1836,7 @@ def test__perform_host_label_discovery_on_realhost(
     assert host_label_result.present == discovery_test_case.on_realhost.expected_kept_labels
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
@@ -1869,7 +1869,7 @@ def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> Non
     }
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase

@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Generator, Sequence
-from itertools import chain
-
-from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.plugin_classes import SectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin,
+    InventoryPlugin,
+    SectionPlugin,
+    SNMPSectionPlugin,
+)
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 
 def _section_permutations(
@@ -35,7 +38,9 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRegister) -> None:
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(
+    agent_based_plugins: AgentBasedPlugins,
+) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -61,7 +66,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     }
 
     plugins_discovering_upon_empty = set()
-    for _name, plugin in sorted(fix_register.check_plugins.items()):
+    for _name, plugin in sorted(agent_based_plugins.check_plugins.items()):
         for sections in _section_permutations(plugin.sections):
             kwargs = {
                 str(section.parsed_section_name): _get_empty_parsed_result(section)
@@ -88,7 +93,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
 
 
-def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
+def test_no_plugins_with_trivial_sections(agent_based_plugins: AgentBasedPlugins) -> None:
     """
     This is a sanity test for registered inventory and check plug-ins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
@@ -98,15 +103,16 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     """
     known_exceptions: set[ParsedSectionName] = set()  # currently no exceptions!
 
-    # fix_register does not include trivial sections created by the trivial_section_factory
+    # agent_based_plugins does not include trivial sections created by the trivial_section_factory
     registered_sections = {
-        s.parsed_section_name
-        for s in chain(fix_register.agent_sections.values(), fix_register.snmp_sections.values())
+        *(s.parsed_section_name for s in agent_based_plugins.agent_sections.values()),
+        *(s.parsed_section_name for s in agent_based_plugins.snmp_sections.values()),
     }
 
-    registered_check_and_inventory_plugins = list(
-        chain(fix_register.check_plugins.values(), fix_register.inventory_plugins.values())
-    )
+    registered_check_and_inventory_plugins: list[CheckPlugin | InventoryPlugin] = [
+        *agent_based_plugins.check_plugins.values(),
+        *agent_based_plugins.inventory_plugins.values(),
+    ]
 
     sections_ok_to_subscribe_to = registered_sections | known_exceptions
     all_subscribed_sections = {

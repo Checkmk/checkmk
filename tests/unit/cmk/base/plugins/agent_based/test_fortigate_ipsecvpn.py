@@ -5,9 +5,9 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Metric, Result, State
 
@@ -79,11 +79,11 @@ SECTION = [
     ],
 )
 def test_fortigate_ipsecvpn_simple(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     tunnels_ignore_levels: list[str],
     expected_check_result: list[Result | Metric],
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("fortigate_ipsecvpn")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("fortigate_ipsecvpn")]
     assert plugin
     assert (
         list(

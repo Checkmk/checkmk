@@ -7,9 +7,10 @@
 import pytest
 
 from tests.unit.cmk.plugins.oracle.agent_based.utils_inventory import sort_inventory_result
-from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
@@ -153,9 +154,9 @@ def test_parse_oracle_instance_invalid() -> None:
     }
 
 
-def test_discover_oracle_instance(fix_register: FixRegister) -> None:
+def test_discover_oracle_instance(agent_based_plugins: AgentBasedPlugins) -> None:
     assert list(
-        fix_register.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
+        agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
             {
                 "a": InvalidData("a", "This is an error"),
                 "b": GeneralError("b", "something went wrong"),
@@ -344,13 +345,13 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
     ],
 )
 def test_check_oracle_instance(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     agent_line: list[str],
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
+            agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].check_function(
                 item="IC731",
                 params={
                     "logins": 2,
@@ -367,9 +368,9 @@ def test_check_oracle_instance(
     )
 
 
-def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
+def test_check_oracle_instance_empty_section(agent_based_plugins: AgentBasedPlugins) -> None:
     assert list(
-        fix_register.check_plugins[CheckPluginName("oracle_instance")].check_function(
+        agent_based_plugins.check_plugins[CheckPluginName("oracle_instance")].check_function(
             item="item",
             params={
                 "logins": 2,

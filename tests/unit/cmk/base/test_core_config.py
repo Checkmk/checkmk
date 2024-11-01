@@ -163,7 +163,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname,result",
     [

@@ -155,7 +155,7 @@ from cmk.server_side_calls.v1 import (
         ),
     ],
 )
-def test_parse_arguments(params: Mapping[str, object], expected_args: list[str | Secret]) -> None:
+def test_parse_arguments(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
     host_config = HostConfig(name="host", ipv4_config=IPv4Config(address="11.211.3.32"))
     commands = list(special_agent_kube(params, host_config))

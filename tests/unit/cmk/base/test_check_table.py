@@ -31,7 +31,7 @@ from cmk.discover_plugins import PluginLocation
 
 
 @pytest.fixture(autouse=True, scope="module")
-def _use_fix_register(fix_register):
+def _use_fix_register(agent_based_plugins):
     """These tests modify the plug-in registry. Make sure to load it first."""
 
 

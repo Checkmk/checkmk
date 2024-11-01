@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import abc
 import typing as t
 from pprint import pprint
@@ -13,6 +11,7 @@ from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -26,11 +25,6 @@ from cmk.gui.watolib.rulespecs import (
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
 TC = t.TypeVar("TC", bound=t.Union[CheckPlugin, InventoryPlugin])
-
-
-class FixRegister:  # TODO: make the original class importable?!
-    check_plugins: t.Dict[str, CheckPlugin]
-    inventory_plugins: t.Dict[str, InventoryPlugin]
 
 
 class MergeKey(t.NamedTuple):
@@ -196,14 +190,14 @@ class WatoCheck(Wato[t.Union[CheckParameterRulespecWithoutItem, CheckParameterRu
         return isinstance(self._element, CheckParameterRulespecWithItem)
 
 
-def load_plugin(fix_register: FixRegister) -> t.Iterator[PluginProtocol]:
-    for check_element in fix_register.check_plugins.values():
+def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProtocol]:
+    for check_element in agent_based_plugins.check_plugins.values():
         if check_element.check_ruleset_name is not None:
             yield PluginCheck(check_element)
-    for discovery_element in fix_register.check_plugins.values():
+    for discovery_element in agent_based_plugins.check_plugins.values():
         if discovery_element.discovery_ruleset_name is not None:
             yield PluginDiscovery(discovery_element)
-    for inventory_element in fix_register.inventory_plugins.values():
+    for inventory_element in agent_based_plugins.inventory_plugins.values():
         if inventory_element.inventory_ruleset_name is not None:
             yield PluginInventory(inventory_element)
 
@@ -224,9 +218,9 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-def test_plugin_vs_wato(fix_register: FixRegister) -> None:
+def test_plugin_vs_wato(agent_based_plugins: AgentBasedPlugins) -> None:
     error_reporter = ErrorReporter()
-    for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
+    for plugin, wato in merge(sorted(load_plugin(agent_based_plugins)), sorted(load_wato())):
         if plugin is None and wato is not None:
             error_reporter.report_wato_unused(wato)
         elif wato is None and plugin is not None:
@@ -490,4 +484,4 @@ def test_compare() -> None:
     assert CompareBase(MergeKey("a", "")) < CompareBase(MergeKey("b", ""))
     assert CompareBase(MergeKey("a", "")) == CompareBase(MergeKey("a", ""))
     result = sorted([CompareBase(MergeKey("b", "zwei")), CompareBase(MergeKey("a", "eins"))])
-    assert result[0]._element.name == "eins"
+    assert result[0]._element.name == "eins"  # pylint: disable=protected-access

@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Hashable
 
-from tests.unit.conftest import FixRegister
-
-from cmk.base.api.agent_based.register import get_relevant_raw_sections
+from cmk.base.api.agent_based.register import AgentBasedPlugins, get_relevant_raw_sections
 
 
 def test_detect_spec_dedup(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """Test which snmp sections share a detect spec, but do not share the code for it
 
@@ -24,15 +23,15 @@ def test_detect_spec_dedup(
      b) You accidently changed a detect specification where you should have changed all of them,
         or you can share a spec with another plugin. -> please turn this situation into a)!
     """
-    plugins_by_detect_spec: dict[tuple[tuple[str, ...], ...], dict[int, list[str]]] = {}
-    for snmp_section in fix_register.snmp_sections.values():
+    plugins_by_detect_spec: dict[Hashable, dict[int, list[str]]] = {}
+    for snmp_section in agent_based_plugins.snmp_sections.values():
         plugins_by_detect_spec.setdefault(
             tuple(tuple(e) for e in snmp_section.detect_spec), {}
         ).setdefault(id(snmp_section.detect_spec), []).append(str(snmp_section.name))
 
     offenders: set[tuple[str, ...]] = {
         tuple(sorted([s for sections in values.values() for s in sections]))
-        for _spec, values in plugins_by_detect_spec.items()
+        for values in plugins_by_detect_spec.values()
         if len(values) > 1
     }
     assert offenders == {
@@ -107,7 +106,7 @@ def test_detect_spec_dedup(
 
 
 def test_all_sections_are_subscribed_by_some_plugin(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
@@ -122,12 +121,14 @@ def test_all_sections_are_subscribed_by_some_plugin(
         "elbv2_generic_labels",
     }
 
-    all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
+    all_section_names = set(agent_based_plugins.snmp_sections) | set(
+        agent_based_plugins.agent_sections
+    )
 
     subscribed_sections_names = set(
         get_relevant_raw_sections(
-            check_plugin_names=fix_register.check_plugins,
-            inventory_plugin_names=fix_register.inventory_plugins,
+            check_plugin_names=agent_based_plugins.check_plugins,
+            inventory_plugin_names=agent_based_plugins.inventory_plugins,
         )
     )
 
@@ -137,7 +138,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
 
 
 def test_section_detection_uses_sysdescr_or_sysobjid(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """Make sure the first OID is the system description or the system object ID
 
@@ -197,7 +198,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
         },
     }
 
-    for section in fix_register.snmp_sections.values():
+    for section in agent_based_plugins.snmp_sections.values():
         for (first_checked_oid, *_rest1), *_rest2 in (  #
             criterion
             for criterion in section.detect_spec
@@ -215,8 +216,12 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
 
 
 def test_snmp_section_parse_function_deals_with_empty_input(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """We make sure that all parse functions can handle empty table data"""
-    for section in fix_register.snmp_sections.values():
-        _ = section.parse_function(len(section.trees) * [[]])
+
+    def empty(l: int) -> list[list[list]]:
+        return [[] for _ in range(l)]
+
+    for section in agent_based_plugins.snmp_sections.values():
+        _ = section.parse_function(empty(len(section.trees)))

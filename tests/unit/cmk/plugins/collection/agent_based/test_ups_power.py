@@ -19,7 +19,7 @@ DATA0 = """
 """
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test_ups_power_detect(as_path: Callable[[str], Path]) -> None:
     assert snmp_is_detected(ups_power.snmp_section_ups_power, as_path(DATA0))
 

@@ -9,17 +9,17 @@ Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
 
-import itertools
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import DefaultDict, Final
-
-from tests.unit.conftest import FixRegister
 
 import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
+
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
@@ -80,13 +80,13 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 
 
 def test_all_sections_have_host_labels_documented(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     """Test that all sections have documented their host labels"""
-    sections = itertools.chain(
-        fix_register.agent_sections.values(),
-        fix_register.snmp_sections.values(),
-    )
+    sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
+        *(s for s in agent_based_plugins.agent_sections.values()),
+        *(s for s in agent_based_plugins.snmp_sections.values()),
+    ]
 
     encountered_labels: DefaultDict[str, dict[SectionName, Sequence[str]]] = defaultdict(dict)
 

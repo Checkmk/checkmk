@@ -1759,7 +1759,7 @@ def test_config_cache_snmp_credentials_of_version(
     assert config_cache.snmp_credentials_of_version(hostname, version) == result
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname, section_name, result",
     [

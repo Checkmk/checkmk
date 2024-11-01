@@ -1273,7 +1273,7 @@ def general_properties() -> QuickSetupStage:
         configure_components=_components,
         custom_validators=[],
         recap=[recaps.recaps_form_spec],
-        button_label=_("Next step: Saving"),
+        button_label=_("Next step: Summary"),
     )
 
 

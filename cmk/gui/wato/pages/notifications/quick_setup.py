@@ -714,6 +714,7 @@ def notification_method() -> QuickSetupStage:
                     ),
                 ],
                 layout=CascadingSingleChoiceLayout.vertical,
+                prefill=DefaultValue("always"),
             ),
         )
 

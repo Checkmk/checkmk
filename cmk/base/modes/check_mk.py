@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import enum
 import itertools
 import logging
 import os
@@ -80,7 +81,11 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import inventory
-from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
+from cmk.checkengine.checking import (
+    CheckPluginName,
+    execute_checkmk_checks,
+    make_timing_results,
+)
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     commandline_discovery,
@@ -106,7 +111,7 @@ import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, SNMPSectionPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -470,6 +475,55 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+class _DSType(enum.Enum):
+    ACTIVE = enum.auto()
+    SNMP = enum.auto()
+    AGENT = enum.auto()
+    AGENT_SNMP = enum.auto()
+
+
+@dataclasses.dataclass(frozen=True)
+class _TableRow:
+    name: str
+    ds_type: _DSType
+    title: str
+
+    def render_tty(self) -> str:
+        return f"{self._render_name()}{self._render_ds_type()}{self._render_title()}"
+
+    def _render_name(self) -> str:
+        return f"{tty.bold}{self.name!s:44}"
+
+    def _render_ds_type(self) -> str:
+        match self.ds_type:
+            case _DSType.ACTIVE:
+                return f"{tty.blue}{'active':10}"
+            case _DSType.SNMP:
+                return f"{tty.magenta}{'snmp':10}"
+            case _DSType.AGENT:
+                return f"{tty.yellow}{'agent':10}"
+            case _DSType.AGENT_SNMP:
+                return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
+
+    def _render_title(self) -> str:
+        return f"{tty.normal}{self.title}"
+
+
+def _get_ds_type(check: CheckPlugin) -> _DSType:
+    raw_section_is_snmp = {
+        isinstance(s, SNMPSectionPlugin)
+        for s in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(check.name,),
+            inventory_plugin_names=(),
+        ).values()
+    }
+    if all(raw_section_is_snmp):
+        return _DSType.SNMP
+    if not any(raw_section_is_snmp):
+        return _DSType.AGENT
+    return _DSType.AGENT_SNMP
+
+
 def mode_list_checks() -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
@@ -483,41 +537,33 @@ def mode_list_checks() -> None:
         ).items()
     }
 
-    all_checks: list[CheckPluginName | str] = list(plugins.check_plugins)
-
-    all_checks.extend(
-        "check_" + p.name for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
-    )
-
-    for plugin_name in sorted(all_checks, key=str):
-        ds_protocol = _get_ds_protocol(plugin_name)
+    def _get_title(plugin_name: str) -> str:
         try:
-            title = all_check_manuals[str(plugin_name)].title
+            return all_check_manuals[plugin_name].title
         except KeyError:
-            title = "(no man page present)"
+            return "(no man page present)"
 
-        print_(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
+    table = [
+        *(
+            _TableRow(
+                name=(name := f"check_{p.name}"),
+                ds_type=_DSType.ACTIVE,
+                title=_get_title(name),
+            )
+            for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
+        ),
+        *(
+            _TableRow(
+                name=str(plugin.name),
+                ds_type=_get_ds_type(plugin),
+                title=_get_title(str(plugin.name)),
+            )
+            for plugin in plugins.check_plugins.values()
+        ),
+    ]
 
-
-def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
-    if isinstance(check_name, str):  # active check
-        return f"{tty.blue}{'active':10}"
-
-    raw_section_is_snmp = {
-        isinstance(s, SNMPSectionPlugin)
-        for s in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(check_name,),
-            inventory_plugin_names=(),
-        ).values()
-    }
-
-    if not any(raw_section_is_snmp):
-        return f"{tty.yellow}{'agent':10}"
-
-    if all(raw_section_is_snmp):
-        return f"{tty.magenta}{'snmp':10}"
-
-    return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
+    for e in sorted(table, key=lambda e: e.name):
+        print_(f"{e.render_tty()}\n")
 
 
 modes.register(

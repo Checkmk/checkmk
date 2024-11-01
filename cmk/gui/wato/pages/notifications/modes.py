@@ -566,7 +566,7 @@ class ABCNotificationsMode(ABCEventsMode):
         elif userid:
             mode = "user_notification_rule"
         else:
-            mode = "notification_rule"
+            mode = "notification_rule_quick_setup"
 
         back_mode = []
         mode_from_vars = request.var("mode")

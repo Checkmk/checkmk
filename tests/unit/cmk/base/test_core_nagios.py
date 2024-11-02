@@ -31,6 +31,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.discover_plugins import PluginLocation
@@ -371,6 +372,32 @@ class TestHostCheckStore:
         assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
 
 
+def _make_plugins_for_test() -> AgentBasedPlugins:
+    """Don't load actual plugins, just create some dummy objects."""
+    # most attributes are not used in this test
+    return AgentBasedPlugins(
+        agent_sections={},
+        snmp_sections={},
+        check_plugins={
+            CheckPluginName("uptime"): CheckPlugin(
+                name=CheckPluginName("uptime"),
+                sections=[],
+                service_name="",
+                discovery_function=lambda: (),
+                discovery_default_parameters=None,
+                discovery_ruleset_name=None,
+                discovery_ruleset_type="merged",
+                check_function=lambda: (),
+                check_default_parameters=None,
+                check_ruleset_name=None,
+                cluster_check_function=None,
+                location=PluginLocation("some.test.module.name", "uptime"),
+            )
+        },
+        inventory_plugins={},
+    )
+
+
 def test_dump_precompiled_hostcheck(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
@@ -387,7 +414,7 @@ def test_dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
-        plugins=AgentBasedPlugins({}, {}, {}, {}),
+        plugins=_make_plugins_for_test(),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is not None

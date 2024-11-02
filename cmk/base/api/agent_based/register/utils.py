@@ -6,19 +6,20 @@
 # pylint: disable=protected-access
 import inspect
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
 from cmk.ccc.version import Edition
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin, SectionPlugin
 
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.discover_plugins import PluginLocation
@@ -237,3 +238,20 @@ def validate_check_ruleset_item_consistency(
             "At least one of the checks in this group needs to be changed "
             f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
         )
+
+
+def filter_relevant_raw_sections(
+    *,
+    consumers: Iterable[CheckPlugin | InventoryPlugin],
+    sections: Iterable[SectionPlugin],
+) -> Mapping[SectionName, SectionPlugin]:
+    """Return the raw sections potentially relevant for the given check or inventory plugins"""
+    parsed_section_names = {
+        section_name for plugin in consumers for section_name in plugin.sections
+    }
+
+    return {
+        section.name: section
+        for section in sections
+        if section.parsed_section_name in parsed_section_names
+    }

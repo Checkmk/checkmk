@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Hashable
+import itertools
+from collections.abc import Hashable, Mapping
 
-from cmk.base.api.agent_based.register import AgentBasedPlugins, get_relevant_raw_sections
+from cmk.utils.sectionname import SectionName
+
+from cmk.base.api.agent_based.plugin_classes import SectionPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins, filter_relevant_raw_sections
 
 
 def test_detect_spec_dedup(
@@ -121,18 +125,24 @@ def test_all_sections_are_subscribed_by_some_plugin(
         "elbv2_generic_labels",
     }
 
-    all_section_names = set(agent_based_plugins.snmp_sections) | set(
-        agent_based_plugins.agent_sections
-    )
+    all_existing_sections: Mapping[SectionName, SectionPlugin] = {
+        **agent_based_plugins.agent_sections,
+        **agent_based_plugins.snmp_sections,
+    }
 
     subscribed_sections_names = set(
-        get_relevant_raw_sections(
-            check_plugin_names=agent_based_plugins.check_plugins,
-            inventory_plugin_names=agent_based_plugins.inventory_plugins,
+        filter_relevant_raw_sections(
+            consumers=itertools.chain(
+                agent_based_plugins.check_plugins.values(),
+                agent_based_plugins.inventory_plugins.values(),
+            ),
+            sections=all_existing_sections.values(),
         )
     )
 
-    unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
+    unsubscribed_sections_names = {
+        str(n) for n in set(all_existing_sections) - subscribed_sections_names
+    }
 
     assert unsubscribed_sections_names == allowed_unsubscribed_sections
 

@@ -18,7 +18,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Collection, Iterable
+from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never
 
@@ -34,12 +34,14 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
-from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin,
+    InventoryPlugin,
+    LegacyPluginLocation,
+    SectionPlugin,
+)
 from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
 from cmk.discover_plugins import PluginLocation
@@ -248,59 +250,37 @@ def _make_needed_plugins_locations(
     list[PluginLocation],
     list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
 ]:
-    (
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname, plugins.inventory_plugins)
+    needed_agent_based_plugins = _get_needed_plugins(config_cache, hostname, plugins)
 
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
-            (
-                node_needed_agent_based_check_plugin_names,
-                node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node, plugins.inventory_plugins)
-            needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
-            needed_agent_based_inventory_plugin_names.update(
-                node_needed_agent_based_inventory_plugin_names
-            )
+            # we're deduplicating later.
+            needed_agent_based_plugins.extend(_get_needed_plugins(config_cache, node, plugins))
 
     needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
 
-    if not any(
-        (
-            needed_legacy_special_agents,
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-        )
-    ):
-        return [], []
-
-    needed_agent_based_section_plugin_names = agent_based_register.get_relevant_raw_sections(
-        check_plugin_names=needed_agent_based_check_plugin_names,
-        inventory_plugin_names=needed_agent_based_inventory_plugin_names,
-    )
+    needed_agent_based_sections = agent_based_register.filter_relevant_raw_sections(
+        consumers=needed_agent_based_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+    ).values()
 
     return (
         _get_needed_agent_based_locations(
-            needed_agent_based_section_plugin_names.values(),
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-            plugins,
+            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
         ),
         _get_needed_legacy_check_files(
-            needed_agent_based_section_plugin_names.values(),
-            needed_agent_based_check_plugin_names,
+            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins),
             needed_legacy_special_agents,
         ),
     )
 
 
-def _get_needed_plugin_names(
+def _get_needed_plugins(
     config_cache: ConfigCache,
     host_name: HostName,
-    inventory_plugins: Collection[InventoryPluginName],
-) -> tuple[set[CheckPluginName], set[InventoryPluginName]]:
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> list[CheckPlugin | InventoryPlugin]:
     # Collect the needed check plug-in names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
     # In those cases, the module attribute will be `None`, so nothing will
@@ -308,16 +288,22 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    return (
-        config_cache.check_table(
-            host_name,
-            filter_mode=FilterMode.INCLUDE_CLUSTERED,
-            skip_ignored=False,
-        ).needed_check_names(),
-        set(inventory_plugins)
-        if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory
-        else set(),
-    )
+    return [
+        *(
+            plugin
+            for name in config_cache.check_table(
+                host_name,
+                filter_mode=FilterMode.INCLUDE_CLUSTERED,
+                skip_ignored=False,
+            ).needed_check_names()
+            if (plugin := agent_based_plugins.check_plugins.get(name))
+        ),
+        *(
+            agent_based_plugins.inventory_plugins.values()
+            if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory
+            else ()
+        ),
+    ]
 
 
 def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: HostName) -> set[str]:
@@ -332,23 +318,13 @@ def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: Host
 
 
 def _get_needed_legacy_check_files(
-    section_plugins: Iterable[SectionPlugin],
-    check_plugin_names: Iterable[CheckPluginName],
+    # Note: we don't *have* any InventoryPlugins that match the condition below, but
+    # it's easier to type it like this.
+    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
     legacy_special_agent_names: set[str],
 ) -> list[str]:
     return sorted(
-        {
-            section.location.file_name
-            for section in section_plugins
-            if isinstance(section.location, LegacyPluginLocation)
-        }
-        | {
-            check_plugin.location.file_name
-            for check_plugin_name in check_plugin_names
-            if (check_plugin := agent_based_register.get_check_plugin(check_plugin_name))
-            is not None
-            and isinstance(check_plugin.location, LegacyPluginLocation)
-        }
+        {p.location.file_name for p in plugins if isinstance(p.location, LegacyPluginLocation)}
         | {
             f"{os.path.join(base, name)}.py"
             for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
@@ -358,26 +334,7 @@ def _get_needed_legacy_check_files(
 
 
 def _get_needed_agent_based_locations(
-    section_plugins: Iterable[SectionPlugin],
-    check_plugin_names: Iterable[CheckPluginName],
-    inventory_plugin_names: Iterable[InventoryPluginName],
-    plugins: agent_based_register.AgentBasedPlugins,
+    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
 ) -> list[PluginLocation]:
-    modules = {
-        plugin.location
-        for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and isinstance(plugin.location, PluginLocation)
-    }
-    modules.update(
-        plugin.location
-        for name in inventory_plugin_names
-        if (plugin := plugins.inventory_plugins.get(name)) is not None
-        and isinstance(plugin.location, PluginLocation)
-    )
-    modules.update(
-        section.location
-        for section in section_plugins
-        if isinstance(section.location, PluginLocation)
-    )
-
+    modules = {plugin.location for plugin in plugins if isinstance(plugin.location, PluginLocation)}
     return sorted(modules, key=lambda l: (l.module, l.name or ""))

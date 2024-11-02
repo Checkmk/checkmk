@@ -129,29 +129,6 @@ def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | 
     return registered_inventory_plugins.get(plugin_name)
 
 
-def get_relevant_raw_sections(
-    *,
-    check_plugin_names: Iterable[CheckPluginName],
-    inventory_plugin_names: Iterable[InventoryPluginName],
-) -> dict[SectionName, SectionPlugin]:
-    """return the raw sections potentially relevant for the given check or inventory plugins"""
-    parsed_section_names: set[ParsedSectionName] = set()
-
-    for check_plugin_name in check_plugin_names:
-        if check_plugin := get_check_plugin(check_plugin_name):
-            parsed_section_names.update(check_plugin.sections)
-
-    for inventory_plugin_name in inventory_plugin_names:
-        if inventory_plugin := get_inventory_plugin(inventory_plugin_name):
-            parsed_section_names.update(inventory_plugin.sections)
-
-    return {
-        section_name: section
-        for parsed_name in parsed_section_names
-        for section_name, section in _sections_by_parsed_name[parsed_name].items()
-    }
-
-
 def get_section_plugin(section_name: SectionName) -> SectionPlugin | None:
     return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
 

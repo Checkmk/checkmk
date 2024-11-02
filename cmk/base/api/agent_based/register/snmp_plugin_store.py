@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
+
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import (
@@ -17,7 +19,9 @@ from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
 
 from ._config import (
     AgentBasedPlugins,
-    get_relevant_raw_sections,
+)
+from .utils import (
+    filter_relevant_raw_sections,
 )
 
 __all__ = ["make_plugin_store"]
@@ -26,9 +30,11 @@ __all__ = ["make_plugin_store"]
 def _make_inventory_sections(plugins: AgentBasedPlugins) -> frozenset[SectionName]:
     return frozenset(
         s
-        for s in get_relevant_raw_sections(  # this will need to know all the plugins soon.
-            check_plugin_names=(),
-            inventory_plugin_names=plugins.inventory_plugins,
+        for s in filter_relevant_raw_sections(
+            consumers=plugins.inventory_plugins.values(),
+            sections=itertools.chain(
+                plugins.agent_sections.values(), plugins.snmp_sections.values()
+            ),
         )
         if s in plugins.snmp_sections
     )

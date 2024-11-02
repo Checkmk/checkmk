@@ -1942,13 +1942,19 @@ class ConfigCache:
             checking_sections = selected_sections
         else:
             checking_sections = frozenset(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=self.check_table(
-                        hostname,
-                        filter_mode=FilterMode.INCLUDE_CLUSTERED,
-                        skip_ignored=True,
-                    ).needed_check_names(),
-                    inventory_plugin_names=(),
+                agent_based_register.filter_relevant_raw_sections(
+                    consumers=[
+                        plugins.check_plugins[n]
+                        for n in self.check_table(
+                            hostname,
+                            filter_mode=FilterMode.INCLUDE_CLUSTERED,
+                            skip_ignored=True,
+                        ).needed_check_names()
+                        if n in plugins.check_plugins
+                    ],
+                    sections=itertools.chain(
+                        plugins.agent_sections.values(), plugins.snmp_sections.values()
+                    ),
                 )
             )
         return frozenset(s for s in checking_sections if s in plugins.snmp_sections)

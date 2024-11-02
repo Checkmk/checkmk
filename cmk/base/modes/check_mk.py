@@ -16,7 +16,7 @@ from contextlib import suppress
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
 
 import livestatus
 
@@ -111,7 +111,12 @@ import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    CheckPlugin,
+    SNMPSectionPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import InventoryPlugin as InventoryPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -509,12 +514,14 @@ class _TableRow:
         return f"{tty.normal}{self.title}"
 
 
-def _get_ds_type(check: CheckPlugin) -> _DSType:
+def _get_ds_type(
+    check: CheckPlugin, sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin]
+) -> _DSType:
     raw_section_is_snmp = {
         isinstance(s, SNMPSectionPlugin)
-        for s in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(check.name,),
-            inventory_plugin_names=(),
+        for s in agent_based_register.filter_relevant_raw_sections(
+            consumers=(check,),
+            sections=sections,
         ).values()
     }
     if all(raw_section_is_snmp):
@@ -528,6 +535,10 @@ def mode_list_checks() -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     plugins = agent_based_register.get_previously_loaded_plugins()
+    section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
+        *plugins.agent_sections.values(),
+        *plugins.snmp_sections.values(),
+    ]
 
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
@@ -555,7 +566,7 @@ def mode_list_checks() -> None:
         *(
             _TableRow(
                 name=str(plugin.name),
-                ds_type=_get_ds_type(plugin),
+                ds_type=_get_ds_type(plugin, section_plugins),
                 title=_get_title(str(plugin.name)),
             )
             for plugin in plugins.check_plugins.values()
@@ -2031,26 +2042,23 @@ _option_detect_plugins = Option(
     argument_conv=_convert_detect_plugins_argument,
 )
 
-
-@overload
-def _extract_plugin_selection(
-    options: "_CheckingOptions | _DiscoveryOptions",
-    type_: type[CheckPluginName],
-) -> tuple[SectionNameCollection, Container[CheckPluginName]]:
-    pass
+_PluginName = TypeVar("_PluginName", CheckPluginName, InventoryPluginName)
 
 
-@overload
-def _extract_plugin_selection(
-    options: "_InventoryOptions",
-    type_: type[InventoryPluginName],
-) -> tuple[SectionNameCollection, Container[InventoryPluginName]]:
-    pass
+def _lookup_plugin(
+    plugin_name: _PluginName, plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI]
+) -> CheckPlugin | InventoryPluginAPI:
+    try:
+        return plugins[plugin_name]
+    except KeyError as exc:
+        raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
 
 
 def _extract_plugin_selection(
     options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
-    type_: type,
+    plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI],
+    sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
+    type_: type[_PluginName],
 ) -> tuple[SectionNameCollection, Container]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
@@ -2072,31 +2080,16 @@ def _extract_plugin_selection(
         # something different. Keeping this for compatibility with old --checks
         return NO_SELECTION, EVERYTHING
 
-    if type_ is CheckPluginName:
-        check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
-        return (
-            frozenset(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_plugin_names,
-                    inventory_plugin_names=(),
-                )
-            ),
-            check_plugin_names,
-        )
-
-    if type_ is InventoryPluginName:
-        inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
-        return (
-            frozenset(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=(),
-                    inventory_plugin_names=inventory_plugin_names,
-                )
-            ),
-            inventory_plugin_names,
-        )
-
-    raise NotImplementedError(f"unknown plug-in name {type_}")
+    plugin_names = {type_(p) for p in detect_plugins}
+    return (
+        frozenset(
+            agent_based_register.filter_relevant_raw_sections(
+                consumers=(_lookup_plugin(pn, plugins) for pn in plugin_names),
+                sections=sections,
+            )
+        ),
+        plugin_names,
+    )
 
 
 _DiscoveryOptions = TypedDict(
@@ -2172,7 +2165,12 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.check_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        CheckPluginName,
+    )
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
@@ -2355,7 +2353,12 @@ def mode_check(
     plugins = agent_based_register.get_previously_loaded_plugins()
 
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.check_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        CheckPluginName,
+    )
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
@@ -2602,7 +2605,12 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.inventory_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        InventoryPluginName,
+    )
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),

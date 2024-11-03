@@ -9,7 +9,15 @@ import time
 from pathlib import Path
 from typing import Any, cast, NamedTuple
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    ConnectionId,
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+)
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -319,6 +327,69 @@ class SiteManagement:
                 }
 
         return connected
+
+    @classmethod
+    def get_broker_connections(cls) -> BrokerConnections:
+        return BrokerConnectionsConfigFile().load_for_reading()
+
+    @classmethod
+    def broker_connection_id_exists(cls, connection_id: str) -> bool:
+        return connection_id in cls.get_broker_connections()
+
+    @classmethod
+    def _validate_broker_connection(
+        cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
+    ) -> None:
+        if connection.connecter.site_id == connection.connectee.site_id:
+            raise MKUserError(
+                None,
+                _("Connecter and connectee sites must be different."),
+            )
+
+        if is_new and cls.broker_connection_id_exists(connection_id):
+            raise MKUserError(
+                None,
+                _("Connection id %s already exists.") % connection_id,
+            )
+
+        old_connection_sites = {connection.connecter.site_id, connection.connectee.site_id}
+        for _conn_id, conn in cls.get_broker_connections().items():
+            if _conn_id == connection_id:
+                continue
+
+            if old_connection_sites == {conn.connecter.site_id, conn.connectee.site_id}:
+                raise MKUserError(
+                    None,
+                    _("A connection with the same sites already exists."),
+                )
+
+    @classmethod
+    def _save_broker_connection_config(
+        cls, save_id: str, connection: BrokerConnection
+    ) -> tuple[SiteId, SiteId]:
+        broker_connections = cls.get_broker_connections()
+        broker_connections[ConnectionId(save_id)] = connection
+        BrokerConnectionsConfigFile().save(broker_connections)
+        return connection.connectee.site_id, connection.connecter.site_id
+
+    @classmethod
+    def validate_and_save_broker_connection(
+        cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
+    ) -> tuple[SiteId, SiteId]:
+        cls._validate_broker_connection(connection_id, connection, is_new)
+        return cls._save_broker_connection_config(connection_id, connection)
+
+    @classmethod
+    def delete_broker_connection(cls, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+        broker_connections = cls.get_broker_connections()
+        if connection_id not in broker_connections:
+            raise MKUserError(None, _("Unable to delete unknown connection id: %s") % connection_id)
+
+        connection = broker_connections[connection_id]
+        del broker_connections[connection_id]
+        BrokerConnectionsConfigFile().save(broker_connections)
+
+        return connection.connectee.site_id, connection.connecter.site_id
 
     @classmethod
     def validate_configuration(  # pylint: disable=too-many-branches

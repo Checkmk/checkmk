@@ -626,6 +626,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
+        self._site_mgmt = site_management_registry["site_management"]
 
         self._connection: BrokerConnection | None = None
 
@@ -660,11 +661,6 @@ class ModeEditBrokerConnection(WatoMode):
         assert self._edit_id is not None
         return self.mode_url(site=self._edit_id)
 
-    def _save_connection_config(self, save_id: str, connection: BrokerConnection) -> str:
-        self._connections[ConnectionId(save_id)] = connection
-        BrokerConnectionsConfigFile().save(self._connections)
-        return "Connection configuration saved successfully."
-
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="broker_connection", button_name="_save"
@@ -672,37 +668,11 @@ class ModeEditBrokerConnection(WatoMode):
         return menu
 
     def _validate_connection_id(self, connection_id: str, varprefix: str | None) -> None:
-        if self._is_new and connection_id in self._connections:
-            raise MKUserError(
-                "unique_id",
-                _("A connection with this ID already exists."),
-            )
-
-    def _check_connection_values(self, connection_id: str, connection: BrokerConnection) -> None:
-        if connection.connecter.site_id == connection.connectee.site_id:
+        if self._site_mgmt.broker_connection_id_exists(connection_id):
             raise MKUserError(
                 None,
-                _("Connecter and connectee sites must be different."),
+                _("Connection id %s already exists.") % connection_id,
             )
-
-        self._validate_connection_id(connection_id, None)
-
-        for _conn_id, conn in self._connections.items():
-            old_connection_sites = [
-                connection.connecter.site_id,
-                connection.connectee.site_id,
-            ]
-            edit_connection_sites = [conn.connecter.site_id, conn.connectee.site_id]
-
-            if (self._is_new and set(old_connection_sites) == set(edit_connection_sites)) or (
-                not self._is_new
-                and _conn_id != self._edit_id
-                and set(old_connection_sites) == set(edit_connection_sites)
-            ):
-                raise MKUserError(
-                    None,
-                    _("A connection with the same sites already exists."),
-                )
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -725,8 +695,9 @@ class ModeEditBrokerConnection(WatoMode):
             connectee=BrokerSite(site_id=dest_site),
         )
 
-        self._check_connection_values(raw_site_spec["unique_id"], connection)
-        self._save_connection_config(raw_site_spec["unique_id"], connection)
+        self._site_mgmt.validate_and_save_broker_connection(
+            raw_site_spec["unique_id"], connection, self._is_new
+        )
         msg = add_changes_after_editing_broker_connection(
             connection_id=raw_site_spec["unique_id"],
             is_new_broker_connection=self._is_new,
@@ -875,7 +846,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
-            return self._action_delete_broker_connection(delete_connection_id)
+            return self._action_delete_broker_connection(ConnectionId(delete_connection_id))
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
@@ -928,37 +899,13 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.delete_site(delete_id)
         return redirect(mode_url("sites"))
 
-    def _action_delete_broker_connection(self, delete_connection_id: str) -> ActionResult:
-        connection_config = BrokerConnectionsConfigFile()
-        connections = connection_config.load_for_modification()
-
-        if delete_connection_id not in connections:
-            raise MKUserError(
-                None, _("Unable to delete unknown connection id: %s") % delete_connection_id
-            )
-        try:
-            source_site, dest_site = (
-                SiteId(connections[ConnectionId(delete_connection_id)].connecter.site_id),
-                SiteId(connections[ConnectionId(delete_connection_id)].connectee.site_id),
-            )
-        except KeyError:
-            raise MKUserError(
-                None,
-                _(
-                    "Unable to delete connection id: %s. Connecter and connectee sites must be specified."
-                )
-                % delete_connection_id,
-            )
-
+    def _action_delete_broker_connection(self, delete_connection_id: ConnectionId) -> ActionResult:
+        source_site, dest_site = self._site_mgmt.delete_broker_connection(delete_connection_id)
         add_changes_after_editing_broker_connection(
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
             sites=[source_site, dest_site],
         )
-
-        del connections[ConnectionId(delete_connection_id)]
-
-        connection_config.save(connections)
         return redirect(mode_url("sites"))
 
     def _action_logout(self, logout_id: SiteId) -> ActionResult:
@@ -1092,7 +1039,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_message_broker_connection(table, site_id, site)
 
         # Message broker connections table
-        connections = BrokerConnectionsConfigFile().load_for_reading()
+        connections = self._site_mgmt.get_broker_connections()
         if connections:
             with table_element(
                 "brokers_connections",

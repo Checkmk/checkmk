@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 import inspect
 import sys
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
@@ -19,7 +20,12 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin, SectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin,
+    InventoryPlugin,
+    SectionPlugin,
+    SNMPSectionPlugin,
+)
 
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.discover_plugins import PluginLocation
@@ -254,4 +260,23 @@ def filter_relevant_raw_sections(
         section.name: section
         for section in sections
         if section.parsed_section_name in parsed_section_names
+    }
+
+
+def sections_needing_redetection(
+    sections: Iterable[SNMPSectionPlugin],
+) -> set[SectionName]:
+    """Return the names of sections that need to be redetected
+
+    Sections that are not the only producers of their parsed
+    sections need to be re-detected during checking.
+    """
+    sections_by_parsed_name = defaultdict(set)
+    for section in sections:
+        sections_by_parsed_name[section.parsed_section_name].add(section.name)
+    return {
+        section_name
+        for section_names in sections_by_parsed_name.values()
+        if len(section_names) > 1
+        for section_name in section_names
     }

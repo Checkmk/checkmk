@@ -4067,13 +4067,15 @@ class FetcherFactory:
         host_name: HostName,
         *,
         checking_sections: frozenset[SectionName],
+        sections: Iterable[SNMPSectionPlugin],
     ) -> dict[SectionName, SNMPSectionMeta]:
         disabled_sections = self._disabled_snmp_sections(host_name)
+        redetect_sections = agent_based_register.sections_needing_redetection(sections)
         return {
             name: SNMPSectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
-                redetect=name in checking_sections and agent_based_register.needs_redetection(name),
+                redetect=name in checking_sections and name in redetect_sections,
                 fetch_interval=self._config_cache.snmp_fetch_interval(host_name, name),
             )
             for name in (checking_sections | disabled_sections)
@@ -4100,6 +4102,7 @@ class FetcherFactory:
                 checking_sections=self._config_cache.make_checking_sections(
                     plugins, host_name, selected_sections=fetcher_config.selected_sections
                 ),
+                sections=plugins.snmp_sections.values(),
             ),
             scan_config=fetcher_config.scan_config,
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(

@@ -161,53 +161,11 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str | None:
-    (
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname, plugins.inventory_plugins)
-
-    if hostname in config_cache.hosts_config.clusters:
-        assert config_cache.nodes(hostname)
-        for node in config_cache.nodes(hostname):
-            (
-                node_needed_agent_based_check_plugin_names,
-                node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node, plugins.inventory_plugins)
-            needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
-            needed_agent_based_inventory_plugin_names.update(
-                node_needed_agent_based_inventory_plugin_names
-            )
-
-    needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
-
-    if not any(
-        (
-            needed_legacy_special_agents,
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-        )
-    ):
+    locations, legacy_checks_to_load = _make_needed_plugins_locations(
+        config_cache, hostname, plugins
+    )
+    if not locations and not legacy_checks_to_load:
         return None
-
-    needed_agent_based_section_plugin_names = agent_based_register.get_relevant_raw_sections(
-        check_plugin_names=needed_agent_based_check_plugin_names,
-        inventory_plugin_names=needed_agent_based_inventory_plugin_names,
-    )
-
-    locations = _get_needed_agent_based_locations(
-        needed_agent_based_section_plugin_names.values(),
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-        plugins,
-    )
-
-    legacy_checks_to_load = sorted(
-        _get_needed_legacy_check_files(
-            needed_agent_based_section_plugin_names.values(),
-            needed_agent_based_check_plugin_names,
-            needed_legacy_special_agents,
-        )
-    )
 
     # IP addresses
     # FIXME:
@@ -282,6 +240,62 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     )
 
 
+def _make_needed_plugins_locations(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    plugins: agent_based_register.AgentBasedPlugins,
+) -> tuple[  # we need `list` for the weird template replacement technique
+    list[PluginLocation],
+    list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
+]:
+    (
+        needed_agent_based_check_plugin_names,
+        needed_agent_based_inventory_plugin_names,
+    ) = _get_needed_plugin_names(config_cache, hostname, plugins.inventory_plugins)
+
+    if hostname in config_cache.hosts_config.clusters:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
+            (
+                node_needed_agent_based_check_plugin_names,
+                node_needed_agent_based_inventory_plugin_names,
+            ) = _get_needed_plugin_names(config_cache, node, plugins.inventory_plugins)
+            needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
+            needed_agent_based_inventory_plugin_names.update(
+                node_needed_agent_based_inventory_plugin_names
+            )
+
+    needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
+
+    if not any(
+        (
+            needed_legacy_special_agents,
+            needed_agent_based_check_plugin_names,
+            needed_agent_based_inventory_plugin_names,
+        )
+    ):
+        return [], []
+
+    needed_agent_based_section_plugin_names = agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=needed_agent_based_check_plugin_names,
+        inventory_plugin_names=needed_agent_based_inventory_plugin_names,
+    )
+
+    return (
+        _get_needed_agent_based_locations(
+            needed_agent_based_section_plugin_names.values(),
+            needed_agent_based_check_plugin_names,
+            needed_agent_based_inventory_plugin_names,
+            plugins,
+        ),
+        _get_needed_legacy_check_files(
+            needed_agent_based_section_plugin_names.values(),
+            needed_agent_based_check_plugin_names,
+            needed_legacy_special_agents,
+        ),
+    )
+
+
 def _get_needed_plugin_names(
     config_cache: ConfigCache,
     host_name: HostName,
@@ -321,8 +335,8 @@ def _get_needed_legacy_check_files(
     section_plugins: Iterable[SectionPlugin],
     check_plugin_names: Iterable[CheckPluginName],
     legacy_special_agent_names: set[str],
-) -> set[str]:
-    return (
+) -> list[str]:
+    return sorted(
         {
             section.location.file_name
             for section in section_plugins

@@ -14,10 +14,6 @@ from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     snmp_is_detected,
 )
 
-from cmk.checkengine.checking import CheckPluginName
-
-import cmk.base.api.agent_based.register as agent_based_register
-
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.cisco_wlc_clients import (
@@ -25,7 +21,10 @@ from cmk.plugins.collection.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_clients,
     snmp_section_cisco_wlc_9800_clients,
 )
-from cmk.plugins.collection.agent_based.wlc_clients import check_wlc_clients
+from cmk.plugins.collection.agent_based.wlc_clients import (
+    check_plugin_wlc_clients,
+    check_wlc_clients,
+)
 from cmk.plugins.lib.wlc_clients import (
     ClientsPerInterface,
     ClientsTotal,
@@ -211,9 +210,6 @@ DATA = """
 
 
 def test_cisco_wlc_client_with_snmp_walk(as_path: Callable[[str], Path]) -> None:
-    plugin = agent_based_register.get_check_plugin(CheckPluginName("wlc_clients"))
-    assert plugin
-
     # test detect
     assert snmp_is_detected(snmp_section_cisco_wlc_9800_clients, as_path(DATA))
 
@@ -221,7 +217,7 @@ def test_cisco_wlc_client_with_snmp_walk(as_path: Callable[[str], Path]) -> None
     parsed = get_parsed_snmp_section(snmp_section_cisco_wlc_9800_clients, as_path(DATA))
 
     # test discovery
-    assert list(plugin.discovery_function(parsed)) == [
+    assert list(check_plugin_wlc_clients.discovery_function(parsed)) == [
         Service(item="Summary"),
         Service(item="WLAN"),
         Service(item="PHONES"),
@@ -229,7 +225,7 @@ def test_cisco_wlc_client_with_snmp_walk(as_path: Callable[[str], Path]) -> None
     ]
 
     # test check
-    assert list(plugin.check_function("WLAN", {}, parsed)) == [
+    assert list(check_plugin_wlc_clients.check_function("WLAN", {}, parsed)) == [
         Result(state=State.OK, summary="Connections: 13"),
         Metric("connections", 13.0),
     ]

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import abc
 import copy
 import os
 import types
@@ -20,8 +19,6 @@ from cmk.ccc import store
 
 import cmk.utils.paths
 
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
@@ -30,46 +27,38 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(abc.ABC):
-    """Abstract base class for Check and ActiveCheck"""
+class Check:
+    _LEGACY_CHECKS: dict[str, LegacyCheckDefinition] = {}
+
+    @classmethod
+    def _load_checks(cls) -> None:
+        for legacy_check in discover_legacy_checks(
+            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            FileLoader(
+                precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                local_path="/not_relevant_for_test",
+                makedirs=store.makedirs,
+            ),
+            dict,  # we don't need the special agents here.
+            raise_errors=True,
+        ).sane_check_info:
+            cls._LEGACY_CHECKS[legacy_check.name] = legacy_check
 
     def __init__(self, name: str) -> None:
         self.name = name
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name!r})"
-
-
-class Check(BaseCheck):
-    _LEGACY_CHECKS: dict[str, LegacyCheckDefinition] = {}
-
-    def __init__(self, name: str) -> None:
-        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
-
-        super().__init__(name)
         if not self._LEGACY_CHECKS:
-            for legacy_check in discover_legacy_checks(
-                find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
-                FileLoader(
-                    precomile_path=cmk.utils.paths.precompiled_checks_dir,
-                    local_path="/not_relevant_for_test",
-                    makedirs=store.makedirs,
-                ),
-                dict,  # we don't need the special agents here.
-                raise_errors=True,
-            ).sane_check_info:
-                self._LEGACY_CHECKS[legacy_check.name] = legacy_check
+            self._load_checks()
 
         if (info := self._LEGACY_CHECKS.get(name)) is None:
             raise MissingCheckInfoError(self.name)
 
         self.info = info
-        self._migrated_plugin = register.get_check_plugin(CheckPluginName(info.name))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r})"
 
     def default_parameters(self) -> Mapping[str, Any]:
-        if self._migrated_plugin:
-            return self._migrated_plugin.check_default_parameters or {}
-        return {}
+        return self.info.check_default_parameters or {}
 
     def run_parse(self, info: list) -> object:
         if self.info.parse_function is None:

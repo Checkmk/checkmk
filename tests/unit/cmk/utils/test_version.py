@@ -49,7 +49,7 @@ class TestVersion:
             Version.from_str("2.2.0p5-rc")
 
     def test_roundtrip(self) -> None:
-        v = Version.from_str("2.3.0p34-rc42")
+        v = Version.from_str("2.3.0p34-rc42+security")
         assert Version.from_str(str(v)) == v
 
     def test_version_base_master(self) -> None:
@@ -64,28 +64,47 @@ class TestVersion:
     def test_version_release_candidate(self) -> None:
         assert Version.from_str("2.3.0b4-rc1").release_candidate.value == 1
 
+    def test_version_meta_data(self) -> None:
+        assert Version.from_str("2.3.0p21+security").meta.value == "security"
+
     @pytest.mark.parametrize(
         "vers, expected",
         [
             (
                 Version.from_str("1.2.3"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.na, value=0), _ReleaseCandidate(value=None))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.na, value=0), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
+            ),
+            (
+                Version.from_str("1.2.3+security"),
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.na, value=0), _ReleaseCandidate(value=None), _ReleaseMeta(value='security'))",
+            ),
+            (
+                Version.from_str("1.2.3-rc7"),
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.na, value=0), _ReleaseCandidate(value=7), _ReleaseMeta(value=None))",
             ),
             (
                 Version.from_str("2024.03.14"),
-                "Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=3, day=14)), _ReleaseCandidate(value=None))",
+                "Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=3, day=14)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
                 Version.from_str("3.4.5p8"),
-                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(release_type=ReleaseType.p, value=8), _ReleaseCandidate(value=None))",
+                "Version(_BaseVersion(major=3, minor=4, sub=5), _Release(release_type=ReleaseType.p, value=8), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
                 Version.from_str("1.2.3-2024.09.09"),
-                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=9, day=9)), _ReleaseCandidate(value=None))",
+                "Version(_BaseVersion(major=1, minor=2, sub=3), _Release(release_type=ReleaseType.daily, value=BuildDate(year=2024, month=9, day=9)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))",
             ),
             (
                 Version.from_str("2.2.0p5-rc1"),
-                "Version(_BaseVersion(major=2, minor=2, sub=0), _Release(release_type=ReleaseType.p, value=5), _ReleaseCandidate(value=1))",
+                "Version(_BaseVersion(major=2, minor=2, sub=0), _Release(release_type=ReleaseType.p, value=5), _ReleaseCandidate(value=1), _ReleaseMeta(value=None))",
+            ),
+            (
+                Version.from_str("2.2.0p5-rc1+security"),
+                "Version(_BaseVersion(major=2, minor=2, sub=0), _Release(release_type=ReleaseType.p, value=5), _ReleaseCandidate(value=1), _ReleaseMeta(value='security'))",
+            ),
+            (
+                Version.from_str("2.2.0p5+security"),
+                "Version(_BaseVersion(major=2, minor=2, sub=0), _Release(release_type=ReleaseType.p, value=5), _ReleaseCandidate(value=None), _ReleaseMeta(value='security'))",
             ),
         ],
     )
@@ -98,6 +117,8 @@ class TestVersion:
             (Version.from_str("1.2.3"), "1.2.3"),
             (Version.from_str("2024.03.14"), "2024.03.14"),
             (Version.from_str("3.4.5p8"), "3.4.5p8"),
+            (Version.from_str("6.7.8p9-rc1"), "6.7.8p9-rc1"),
+            (Version.from_str("6.7.8p9-rc1+security"), "6.7.8p9-rc1+security"),
             (Version.from_str("1.2.3-2024.09.09"), "1.2.3-2024.09.09"),
             (Version.from_str("2022.06.23-sandbox-az-sles-15sp3"), "2022.06.23"),
         ],
@@ -139,6 +160,9 @@ class TestVersion:
             (Version.from_str("2.3.0p8-rc1"), Version.from_str("2.3.0p8-rc2")),
             (Version.from_str("2.3.0p8-rc1"), Version.from_str("2.3.0p9")),
             (Version.from_str("2.3.0p8"), Version.from_str("2.3.0p9-rc1")),
+            (Version.from_str("2.3.0p8"), Version.from_str("2.3.0p9+security")),
+            (Version.from_str("2.3.0p8+security"), Version.from_str("2.3.0p9")),
+            (Version.from_str("2.3.0p8-rc1+security"), Version.from_str("2.3.0p8-rc2+security")),
         ],
     )
     def test_lt(self, smaller: Version, bigger: Version) -> None:
@@ -162,6 +186,16 @@ class TestVersion:
             (Version.from_str("2024.03.13"), Version.from_str("3.4.5p8"), False),
             (Version.from_str("2.3.0p5-rc2"), Version.from_str("2.3.0p5-rc2"), True),
             (Version.from_str("2.3.0p5-rc2"), Version.from_str("2.3.0p5-rc3"), False),
+            (
+                Version.from_str("2.3.0p5-rc3+security"),
+                Version.from_str("2.3.0p5-rc3+security"),
+                True,
+            ),
+            (
+                Version.from_str("2.3.0p5-rc4+security"),
+                Version.from_str("2.3.0p5-rc4"),
+                True,  # https://semver.org/#spec-item-10, Build metadata MUST be ignored when determining version precedence
+            ),
         ],
     )
     def test_eq(self, one: Version, other: Version, equal: bool) -> None:

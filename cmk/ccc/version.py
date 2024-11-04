@@ -175,6 +175,14 @@ class _ReleaseCandidate:
                 )
 
 
+@dataclass
+class _ReleaseMeta:
+    value: str | None
+
+    def __str__(self) -> str:
+        return f"{self.value}"
+
+
 @dataclass(order=True)
 class _Release:
     release_type: ReleaseType
@@ -212,9 +220,10 @@ class Version:
     _PAT_DATE = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
+    _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
     _RGX_STABLE = re.compile(
-        rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?"
-    )  # e.g. "2.1.0p17-rc3"
+        rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
+    )  # e.g. "2.1.0p17-rc3+securtiy"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # -> The master branch also uses the [branch_version]-[date] schema since 2023-11-16.
@@ -235,30 +244,62 @@ class Version:
         if not (match := cls._RGX_STABLE.fullmatch(vstring)):
             raise ValueError(f'Invalid version string "{vstring}"')
 
-        match match.group(1, 2, 3, 4, 5, 6):
-            case major, minor, sub, None, None, None:
+        match match.group(1, 2, 3, 4, 5, 6, 7):
+            case major, minor, sub, None, None, None, None:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
                     _Release.unspecified(),
                     _ReleaseCandidate(None),
+                    _ReleaseMeta(None),
                 )
-            case major, minor, sub, None, None, rc:
+            case major, minor, sub, None, None, rc, None:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
                     _Release.unspecified(),
                     _ReleaseCandidate(int(rc)),
+                    _ReleaseMeta(None),
                 )
-            case major, minor, sub, release_type, patch, None:
+            case major, minor, sub, None, None, None, meta:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release.unspecified(),
+                    _ReleaseCandidate(None),
+                    _ReleaseMeta(meta),
+                )
+            case major, minor, sub, release_type, patch, None, None:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
                     _Release(ReleaseType[release_type], int(patch)),
                     _ReleaseCandidate(None),
+                    _ReleaseMeta(None),
                 )
-            case major, minor, sub, release_type, patch, rc:
+            case major, minor, sub, release_type, patch, rc, None:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),
                     _Release(ReleaseType[release_type], int(patch)),
                     _ReleaseCandidate(int(rc)),
+                    _ReleaseMeta(None),
+                )
+            case major, minor, sub, release_type, patch, None, meta:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release(ReleaseType[release_type], int(patch)),
+                    _ReleaseCandidate(None),
+                    _ReleaseMeta(meta),
+                )
+            case major, minor, sub, release_type, patch, rc, None:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release(ReleaseType[release_type], int(patch)),
+                    _ReleaseCandidate(int(rc)),
+                    _ReleaseMeta(None),
+                )
+            case major, minor, sub, release_type, patch, rc, meta:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release(ReleaseType[release_type], int(patch)),
+                    _ReleaseCandidate(int(rc)),
+                    _ReleaseMeta(meta),
                 )
 
         raise ValueError(f'Cannot parse version string "{vstring}".')
@@ -278,6 +319,7 @@ class Version:
             ),
             _Release(ReleaseType.daily, BuildDate(int(year), int(month), int(day))),
             _ReleaseCandidate(None),
+            _ReleaseMeta(None),
         )
 
     def __init__(
@@ -285,10 +327,12 @@ class Version:
         base: _BaseVersion | None,
         release: _Release,
         release_candidate: _ReleaseCandidate,
+        meta: _ReleaseMeta,
     ) -> None:
         self.base: Final = base
         self.release: Final = release
         self.release_candidate: Final = release_candidate
+        self.meta: Final = meta
 
     @property
     def version_base(self) -> str:
@@ -303,13 +347,14 @@ class Version:
         return str(self)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.base!r}, {self.release!r}, {self.release_candidate!r})"
+        return f"{self.__class__.__name__}({self.base!r}, {self.release!r}, {self.release_candidate!r}, {self.meta!r})"
 
     def __str__(self) -> str:
         optional_rc_suffix = (
             "" if self.release_candidate.value is None else f"-rc{self.release_candidate.value}"
         )
-        return f"{'' if self.base is None else self.base}{self.release.suffix()}{optional_rc_suffix}".lstrip(
+        optional_meta_suffix = "" if self.meta.value is None else f"+{self.meta.value}"
+        return f"{'' if self.base is None else self.base}{self.release.suffix()}{optional_rc_suffix}{optional_meta_suffix}".lstrip(
             "-"
         )
 

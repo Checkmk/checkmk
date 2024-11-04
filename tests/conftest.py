@@ -141,6 +141,7 @@ test_types = [
     "unit",
     "pylint",
     "docker",
+    "docker_sit",
     "agent-integration",
     "agent-plugin-unit",
     "integration",

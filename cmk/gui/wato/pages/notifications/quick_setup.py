@@ -1173,6 +1173,13 @@ def sending_conditions() -> QuickSetupStage:
                                     "by_plugin_output": DictElement(
                                         parameter_form=String(
                                             title=Title("By plugin output"),
+                                            custom_validate=[
+                                                not_empty(
+                                                    error_msg=Message(
+                                                        "Enter a plugin output to define what to filter for."
+                                                    )
+                                                )
+                                            ],
                                         )
                                     ),
                                     "custom_by_comment": DictElement(

@@ -996,8 +996,9 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Contact group"),
                                 name="contact_group",
-                                parameter_form=ListOfStrings(
-                                    string_spec=_contact_group_choice(),
+                                parameter_form=ListExtended(
+                                    prefill=DefaultValue([]),
+                                    element_template=_contact_group_choice(),
                                 ),
                             ),
                             CascadingSingleChoiceElement(
@@ -1020,8 +1021,9 @@ def recipient() -> QuickSetupStage:
                                         CascadingSingleChoiceElement(
                                             name="contact_group",
                                             title=Title("Users of contact groups"),
-                                            parameter_form=ListOfStrings(
-                                                string_spec=_contact_group_choice(),
+                                            parameter_form=ListExtended(
+                                                prefill=DefaultValue([]),
+                                                element_template=_contact_group_choice(),
                                             ),
                                         ),
                                         CascadingSingleChoiceElement(
@@ -1052,9 +1054,9 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Specific users"),
                                 name="specific_users",
-                                parameter_form=ListOfStrings(
-                                    layout=ListOfStringsLayout.vertical,
-                                    string_spec=SingleChoiceExtended(
+                                parameter_form=ListExtended(
+                                    prefill=DefaultValue([]),
+                                    element_template=SingleChoiceExtended(
                                         prefill=InputHint(Title("Select user")),
                                         type=str,
                                         elements=[

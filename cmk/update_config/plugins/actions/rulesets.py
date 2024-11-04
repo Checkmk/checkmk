@@ -8,7 +8,8 @@ from logging import Logger
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.rulesets import RulesetCollection
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 
 from cmk.update_config.lib import format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform
@@ -37,7 +38,7 @@ def validate_rule_values(
         "ignored_checks",
     }
 
-    n_invalid = 0
+    n_invalid, n_broken = 0, 0
     for ruleset in all_rulesets.get_rulesets().values():
         if ruleset.name in rulesets_skip:
             continue
@@ -52,14 +53,17 @@ def validate_rule_values(
                 n_invalid += 1
                 logger.warning(
                     format_warning(
-                        "WARNING: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
-                        "Folder: %s,\nRule nr: %s, Exception: %s)"
+                        f"WARNING: Invalid rule configuration detected ({_make_rule_reference(ruleset, folder, index, excpt)})"
                     ),
-                    ruleset.name,
-                    ruleset.title(),
-                    folder.path(),
-                    index + 1,
-                    excpt,
+                )
+
+            except Exception as excpt:
+                n_broken += 1
+                logger.warning(
+                    format_warning(
+                        f"WARNING: Exception in ruleset implementation detected ({_make_rule_reference(ruleset, folder, index, excpt)})"
+                    ),
+                    exc_info=True,
                 )
 
     if n_invalid:
@@ -71,6 +75,21 @@ def validate_rule_values(
             ),
             n_invalid,
         )
+    if n_broken:
+        logger.warning(
+            format_warning(
+                "Detected %s issue(s) in loaded rulesets. This is a problem with the plug-in implementation.\n"
+                "To correct these issues, fix either the `migrate` or `custom_validate` attribute."
+            ),
+            n_invalid,
+        )
+
+
+def _make_rule_reference(ruleset: Ruleset, folder: Folder, index: int, excpt: Exception) -> str:
+    return (
+        f"Ruleset: {ruleset.name}, Title: {ruleset.title()}, Folder: {folder.path()},\n"
+        f"Rule nr: {index + 1}, Exception: {excpt}"
+    )
 
 
 update_action_registry.register(

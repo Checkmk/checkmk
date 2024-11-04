@@ -1,0 +1,13 @@
+Title: mk_jolokia: allow import of integer values for timeout values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1730721264
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Values for <code>timeout</code> when configuring a bakery rule for "JMX monitoring of Java JVMs using Jolokia"
+have to be floating point, resulting in <code>ValueError</code> when integer values are configured instead.
+
+This change introduces a migration rule for <code>timeout</code> turning all numbers into <code>float</code>.

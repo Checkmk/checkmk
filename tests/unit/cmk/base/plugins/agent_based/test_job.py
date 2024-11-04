@@ -114,6 +114,11 @@ SECTION_3: job.Section = {
     },
 }
 
+STRING_TABLE_RUNNING = [
+    ["==>", "230-testing-running.113660running", "<=="],
+    ["start_time", "1730702681"],
+]
+
 TIME = 1594300620.0, "CET"
 
 
@@ -597,3 +602,7 @@ def test_check_job(
 ) -> None:
     with on_time(*TIME):
         assert list(job.check_job(item, params, section)) == expected_results
+
+
+def test_discover():
+    assert not list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING)))

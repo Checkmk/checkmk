@@ -9,6 +9,7 @@
 import logging
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -44,6 +45,29 @@ logger = logging.getLogger(__name__)
 # when pytest based tests are being run from inside the IDE
 # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _sigterm_to_sigint() -> Iterator[None]:
+    """Process SIGTERM as SIGINT.
+
+    Enables teardown of test-setup and collection of artifacts required for debugging.
+    Performed for all test runs except `unit tests`.
+    """
+    if _is_unit_test():
+        yield
+    else:
+        orig_handler = signal.signal(signal.SIGTERM, signal.getsignal(signal.SIGINT))
+        yield
+        signal.signal(signal.SIGTERM, orig_handler)
+
+
+def _is_unit_test() -> bool:
+    try:
+        return sys.argv[sys.argv.index("-T") + 1] == "unit"
+    except ValueError as _:
+        # default pytest '-T' value is 'unit'
+        return True
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -314,12 +338,7 @@ def _patch_cmk_utils() -> bool:
     `unit tests` can be identified by parsing value of `-T` within pytest commandline, or
     detecting whether the test run is an `xdist` based run (parallel unit-test runs).
     """
-    try:
-        is_unit_test = sys.argv[sys.argv.index("-T") + 1] == "unit"
-    except ValueError as _:
-        # default pytest '-T' value is 'unit'
-        is_unit_test = True
-    return is_unit_test or bool(os.getenv("PYTEST_XDIST_TESTRUNUID", ""))
+    return _is_unit_test() or bool(os.getenv("PYTEST_XDIST_TESTRUNUID", ""))
 
 
 #

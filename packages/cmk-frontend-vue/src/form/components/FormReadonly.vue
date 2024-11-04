@@ -483,4 +483,8 @@ export default defineComponent({
   padding-left: var(--spacing-half);
   list-style-position: inside;
 }
+
+.form-readonly__list > li > div {
+  display: inline-block;
+}
 </style>

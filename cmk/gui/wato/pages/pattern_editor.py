@@ -254,7 +254,6 @@ class ModePatternEditor(WatoMode):
 
                         # If hostname (and maybe filename) try match it
                         rule_matches = rule.matches_host_and_item(
-                            folder_from_request(request.var("folder"), self._hostname),
                             self._hostname,
                             self._item,
                             service_desc,

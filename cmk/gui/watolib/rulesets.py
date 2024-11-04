@@ -51,7 +51,6 @@ from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
@@ -63,7 +62,6 @@ from .changes import add_change
 from .check_mk_automations import get_services_labels
 from .hosts_and_folders import (
     Folder,
-    folder_from_request,
     folder_preserving_link,
     folder_tree,
     get_wato_redis_client,
@@ -1010,7 +1008,6 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                folder_from_request(request.var("folder"), hostname),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,
@@ -1257,16 +1254,15 @@ class Rule:
         does not match any service has never been tested. Probably because this would be
         too expensive."""
         hosts = Host.all()
-        for host_name, host in hosts.items():
-            if self.matches_host_conditions(host.folder(), host_name):
+        for host_name in hosts.keys():
+            if self.matches_host_conditions(host_name):
                 return False
         return True
 
-    def matches_host_conditions(self, host_folder: Folder, hostname: HostName) -> bool:
-        """Whether or not the given folder/host matches this rule
+    def matches_host_conditions(self, hostname: HostName) -> bool:
+        """Whether or not the given host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
         return self.matches(
-            host_folder,
             hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -1276,7 +1272,6 @@ class Rule:
 
     def matches_host_and_item(
         self,
-        host_folder: Folder,
         hostname: HostName,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
@@ -1284,7 +1279,6 @@ class Rule:
     ) -> bool:
         """Whether the given host and service/item matches this rule"""
         return self.matches(
-            host_folder,
             hostname,
             svc_desc_or_item,
             svc_desc,
@@ -1294,7 +1288,6 @@ class Rule:
 
     def matches(
         self,
-        host_folder: Folder,
         hostname: HostName,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
@@ -1302,10 +1295,6 @@ class Rule:
         service_labels: Labels,
     ) -> bool:
         """Wether a given host or service/item matches this rule"""
-        host = host_folder.host(hostname)
-        if host is None:
-            raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
-
         # BE AWARE: Depending on the service ruleset the service_description of
         # the rules is only a check item or a full service name. For
         # example the check parameters rulesets only use the item, and other

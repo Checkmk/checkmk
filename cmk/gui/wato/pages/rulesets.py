@@ -1315,7 +1315,6 @@ class ModeEditRuleset(WatoMode):
             return _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
 
         if not rule.matches(
-            self._folder,
             self._hostname,
             self._item,
             self._service,

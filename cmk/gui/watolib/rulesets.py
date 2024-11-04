@@ -1265,16 +1265,13 @@ class Rule:
     def matches_host_conditions(self, host_folder: Folder, hostname: HostName) -> bool:
         """Whether or not the given folder/host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return not any(
-            True
-            for _r in self.get_mismatch_reasons(
-                host_folder,
-                hostname,
-                svc_desc_or_item=None,
-                svc_desc=None,
-                only_host_conditions=True,
-                service_labels={},
-            )
+        return self.matches(
+            host_folder,
+            hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            only_host_conditions=True,
+            service_labels={},
         )
 
     def matches_host_and_item(
@@ -1285,20 +1282,17 @@ class Rule:
         svc_desc: str | None,
         service_labels: Labels,
     ) -> bool:
-        """Whether or not the given folder/host/item matches this rule"""
-        return not any(
-            True
-            for _r in self.get_mismatch_reasons(
-                host_folder,
-                hostname,
-                svc_desc_or_item,
-                svc_desc,
-                only_host_conditions=False,
-                service_labels=service_labels,
-            )
+        """Whether the given host and service/item matches this rule"""
+        return self.matches(
+            host_folder,
+            hostname,
+            svc_desc_or_item,
+            svc_desc,
+            only_host_conditions=False,
+            service_labels=service_labels,
         )
 
-    def get_mismatch_reasons(
+    def matches(
         self,
         host_folder: Folder,
         hostname: HostName,
@@ -1306,8 +1300,8 @@ class Rule:
         svc_desc: str | None,
         only_host_conditions: bool,
         service_labels: Labels,
-    ) -> Iterator[str]:
-        """A generator that provides the reasons why a given folder/host/item does not match this rule"""
+    ) -> bool:
+        """Wether a given host or service/item matches this rule"""
         host = host_folder.host(hostname)
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
@@ -1345,22 +1339,16 @@ class Rule:
         if only_host_conditions:
             match_service_conditions = False
 
-        yield from self._get_mismatch_reasons_of_match_object(
-            match_object, match_service_conditions
-        )
+        return self._matches_match_object(match_object, match_service_conditions)
 
-    def _get_mismatch_reasons_of_match_object(
+    def _matches_match_object(
         self, match_object: ruleset_matcher.RulesetMatchObject, match_service_conditions: bool
-    ) -> Iterator[str]:
+    ) -> bool:
         matcher = _get_ruleset_matcher()
         ruleset = self.to_single_base_ruleset()
         if match_service_conditions:
-            if list(matcher.get_service_ruleset_values(match_object, ruleset)):
-                return
-        elif list(matcher.get_host_values(match_object.host_name, ruleset)):
-            return
-
-        yield _("The rule does not match")
+            return bool(list(matcher.get_service_ruleset_values(match_object, ruleset)))
+        return bool(list(matcher.get_host_values(match_object.host_name, ruleset)))
 
     def matches_search(  # pylint: disable=too-many-branches
         self,

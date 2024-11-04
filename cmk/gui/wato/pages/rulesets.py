@@ -1310,22 +1310,20 @@ class ModeEditRuleset(WatoMode):
                 "host", _('Unable to analyze matching, because "host" parameter is missing')
             )
         self._get_host_labels_from_remote_site()
-        reasons = (
-            [_("This rule is disabled")]
-            if rule.is_disabled()
-            else list(
-                rule.get_mismatch_reasons(
-                    self._folder,
-                    self._hostname,
-                    self._item,
-                    self._service,
-                    only_host_conditions=False,
-                    service_labels=service_labels,
-                )
-            )
-        )
-        if reasons:
-            return _("This rule does not match: %s") % " ".join(reasons), "hyphen"
+
+        if rule.is_disabled():
+            return _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
+
+        if not rule.matches(
+            self._folder,
+            self._hostname,
+            self._item,
+            self._service,
+            only_host_conditions=False,
+            service_labels=service_labels,
+        ):
+            return _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
+
         ruleset = rule.ruleset
         if ruleset.match_type() == "dict":
             new_keys = set(rule.value.keys())

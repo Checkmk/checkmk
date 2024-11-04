@@ -37,7 +37,6 @@ public:
         , it_logs_{log_files.end()}
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
-    [[nodiscard]] bool no_log_files() const;
     bool rewind_to_start(std::chrono::system_clock::time_point since,
                          std::chrono::system_clock::time_point until);
     LogEntry *getNextLogentry();

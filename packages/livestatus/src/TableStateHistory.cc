@@ -184,10 +184,6 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-bool LogEntryForwardIterator::no_log_files() const {
-    return log_files_->begin() == log_files_->end();
-}
-
 const Logfile::map_type *LogEntryForwardIterator::getEntries() {
     return it_logs_->second->getEntriesFor({
         .max_lines_per_log_file = max_lines_per_log_file_,
@@ -302,6 +298,10 @@ void handle_log_initial_states(
 bool LogEntryForwardIterator::rewind_to_start(
     std::chrono::system_clock::time_point since,
     std::chrono::system_clock::time_point until) {
+    if (log_files_->begin() == log_files_->end()) {
+        return false;
+    }
+
     // Switch to last logfile (we have at least one)
     --it_logs_;
     auto newest_log = it_logs_;
@@ -339,9 +339,6 @@ bool LogEntryForwardIterator::rewind_to_start(
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
                                             LogEntryForwardIterator &it) {
-    if (it.no_log_files()) {
-        return;
-    }
     auto object_filter = createPartialFilter(query);
 
     // This flag might be set to true by the return value of processDataset(...)

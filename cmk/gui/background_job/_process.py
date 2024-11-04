@@ -26,6 +26,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.log.console import empty_stream_handler as console_empty_stream
 
 from cmk.gui import log, sites
+from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.i18n import _
 from cmk.gui.utils.timeout_manager import timeout_manager
 
@@ -105,8 +106,10 @@ class BackgroundProcess(multiprocessing.Process):
             self._logger.warning("Job was stopped")
             self._jobstatus_store.update({"state": JobStatusStates.STOPPED})
         except Exception:
+            crash = create_gui_crash_report()
             self._logger.error(
-                "Exception while preparing background function environment",
+                "Exception while preparing background function environment (Crash ID: %s)",
+                crash.ident_to_text(),
                 exc_info=True,
             )
             self._jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
@@ -181,8 +184,13 @@ class BackgroundProcess(multiprocessing.Process):
         except MKTerminate:
             raise
         except Exception as e:
-            self._logger.exception("Exception in background function")
-            self._job_interface.send_exception(_("Exception: %s") % (e))
+            crash = create_gui_crash_report()
+            self._logger.exception(
+                "Exception in background function (Crash ID: %s)", crash.ident_to_text()
+            )
+            self._job_interface.send_exception(
+                _("Exception (Crash ID: %s): %s") % (crash.ident_to_text(), e)
+            )
 
     def _open_stdout_and_stderr(self) -> None:
         """Create a temporary file and use it as stdout / stderr buffer"""

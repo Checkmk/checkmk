@@ -57,11 +57,18 @@ def handle_exception_as_gui_crash_report(
     fail_silently: bool = False,
     show_crash_link: bool | None = None,
 ) -> None:
-    crash = GUICrashReport.from_exception(details=details)
-    CrashReportStore().save(crash)
+    crash = create_gui_crash_report(details=details)
 
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
     _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
+
+
+def create_gui_crash_report(
+    details: dict | None = None,
+) -> GUICrashReport:
+    crash = GUICrashReport.from_exception(details=details)
+    CrashReportStore().save(crash)
+    return crash
 
 
 def _show_crash_dump_message(

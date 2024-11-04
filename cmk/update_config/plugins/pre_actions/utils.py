@@ -85,8 +85,8 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
-USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
-USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
+USER_INPUT_CONTINUE: Final = ("c", "continue")
+USER_INPUT_DISABLE: Final = ("d", "disable")
 
 
 def disable_incomp_mkp(

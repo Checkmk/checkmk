@@ -2,16 +2,14 @@
 
 /// file: notify.groovy
 
-import org.codehaus.groovy.runtime.StackTraceUtils;
-
 def get_author_email() {
     // Workaround since CHANGE_AUTHOR_EMAIL is not available
     // Bug: https://issues.jenkins-ci.org/browse/JENKINS-39838
     return (
         onWindows ?
-        /// windows will replace %ae with ae..
-        cmd_output('git log -1 --pretty=format:%%ae') :
-        cmd_output('git log -1 --pretty=format:%ae'));
+            /// windows will replace %ae with ae..
+            cmd_output('git log -1 --pretty=format:%%ae') :
+            cmd_output('git log -1 --pretty=format:%ae'));
 }
 
 // Send a build failed massage to jenkins
@@ -55,7 +53,7 @@ def notify_error(error) {
             // ugly workaround, split() only + unique() does not work
             notify_emails.addAll(TEAM_CI_MAIL.replaceAll(',', ' ').split(' ').grep());
             currentBuild.changeSets.each { changeSet ->
-                def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
+                def culprits_emails = changeSet.items.collect { e -> e.authorEmail };
                 print(
                     """
                     ||==========================================================================================
@@ -123,9 +121,9 @@ def notify_error(error) {
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),
-           );
+            );
         }
-    } catch(Exception exc) {    // groovylint-disable CatchException
+    } catch (Exception exc) {    // groovylint-disable CatchException
         print("Could not report error by mail - got ${exc}");
     }
 
@@ -145,13 +143,6 @@ def notify_error(error) {
     //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
     // This ensures that the build status is set correctly
-
-    StackTraceUtils.sanitize(error);
-    print("ERROR: ${error.stackTrace.head()}: ${error}");
-    currentBuild.description += (
-        "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
-        "<br><strong style='color:red'>${error}</strong>");
-    throw error;
 }
 
 return this;

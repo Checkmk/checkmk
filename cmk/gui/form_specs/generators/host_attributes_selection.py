@@ -5,8 +5,10 @@
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.private.list_extended import ListExtended
+from cmk.gui.form_specs.vue.shared_type_defs import CascadingSingleChoiceLayout
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     get_sorted_host_attribute_topics,
@@ -15,7 +17,6 @@ from cmk.gui.watolib.host_attributes import (
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
 )
@@ -70,7 +71,8 @@ def create_host_attributes_selection(
         ),
         add_element_label=Label("Add attribute"),
         custom_validate=(_validate_attributes,),
-        element_template=CascadingSingleChoice(
+        element_template=CascadingSingleChoiceExtended(
+            layout=CascadingSingleChoiceLayout.horizontal,
             title=Title("Attribute"),
             elements=attribute_choices,
             prefill=DefaultValue(attribute_choices[0].name),

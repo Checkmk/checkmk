@@ -90,6 +90,10 @@ def _validate_rule_values(
     conflict_mode: ConflictMode,
     logger: Logger,
 ) -> bool:
+    """Validate all ruleset values.
+
+    Returns True if the update shall continue, False otherwise.
+    """
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
@@ -123,12 +127,12 @@ def _validate_rule_values(
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
                 error_message = _error_message(ruleset, rule.value, folder, index, e)
                 logger.error(error_message)
-                if conflict_mode is ConflictMode.ASK:
-                    user_input = prompt(
-                        "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                    )
-                    return user_input.lower() in USER_INPUT_CONTINUE
-                return False
+                if conflict_mode is not ConflictMode.ASK:
+                    return False
+                user_input = prompt(
+                    "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+                )
+                return user_input.lower() in USER_INPUT_CONTINUE
     return True
 
 

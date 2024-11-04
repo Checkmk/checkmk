@@ -13,14 +13,8 @@ import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
 from tests.testlib.docker import start_checkmk
-from tests.testlib.version import CMKVersion, version_from_env
 
 logger = logging.getLogger()
-
-
-@pytest.fixture(name="version", scope="session")
-def _version() -> CMKVersion:
-    return version_from_env()
 
 
 @pytest.fixture(name="client", scope="session")

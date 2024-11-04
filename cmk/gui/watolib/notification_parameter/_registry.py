@@ -33,7 +33,7 @@ from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfiguration
 from cmk.gui.watolib.users import notification_script_choices, notification_script_title
 
 from cmk.rulesets.v1 import Help, rule_specs, Title
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String
+from cmk.rulesets.v1.form_specs import DictElement, DictGroup, Dictionary, FieldSize, String
 
 from ._base import NotificationParameter
 
@@ -115,19 +115,23 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                         title=Title("Parameter properties"),
                         elements={
                             "description": DictElement(
+                                required=True,
                                 parameter_form=String(
                                     title=Title("Description"),
                                     field_size=FieldSize.LARGE,
                                     custom_validate=[not_empty()],
                                 ),
-                                required=True,
+                                group=DictGroup(title=Title("")),
                             ),
                             "comment": DictElement(
+                                required=True,
                                 parameter_form=CommentTextArea(
                                     title=Title("Comment"),
-                                )
+                                ),
+                                group=DictGroup(title=Title("")),
                             ),
                             "docu_url": DictElement(
+                                required=True,
                                 parameter_form=String(
                                     title=Title("Documentation URL"),
                                     help_text=Help(
@@ -137,7 +141,8 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                                         "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
                                         "URLs (that are relative to <tt>check_mk/</tt>)."
                                     ),
-                                )
+                                ),
+                                group=DictGroup(title=Title("")),
                             ),
                         },
                     ),

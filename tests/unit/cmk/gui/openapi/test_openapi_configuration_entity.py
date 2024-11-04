@@ -69,7 +69,7 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
             "entity_type": ConfigEntityType.notification_parameter.value,
             "entity_type_specifier": "dummy_params",
             "data": {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "", "docu_url": ""},
                 "parameter_properties": {"test_param": "bar"},
             },
         }
@@ -87,7 +87,7 @@ def test_update_configuration_entity(
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo"},
+            "general": {"description": "foo", "comment": "", "docu_url": ""},
             "parameter_properties": {"test_param": "initial_value"},
         },
         None,
@@ -100,7 +100,7 @@ def test_update_configuration_entity(
             "entity_type_specifier": "dummy_params",
             "entity_id": entity.ident,
             "data": {
-                "general": {"description": "foo"},
+                "general": {"description": "foo", "comment": "", "docu_url": ""},
                 "parameter_properties": {"test_param": "bar"},
             },
         }
@@ -118,13 +118,20 @@ def test_update_configuration_entity(
         (
             {"general": {}, "parameter_properties": {}},
             {
-                "general": {"description": {"": [mock.ANY]}},
+                "general": {
+                    "comment": {"": [mock.ANY]},
+                    "description": {"": [mock.ANY]},
+                    "docu_url": {"": [mock.ANY]},
+                },
                 "parameter_properties": {"test_param": {"": [mock.ANY]}},
             },
         ),
         (
             {"general": {"description": "foo"}, "parameter_properties": {"test_param": {}}},
-            {"parameter_properties": {"test_param": {"": [mock.ANY]}}},
+            {
+                "general": {"comment": {"": [mock.ANY]}, "docu_url": {"": [mock.ANY]}},
+                "parameter_properties": {"test_param": {"": [mock.ANY]}},
+            },
         ),
     ],
 )
@@ -153,7 +160,10 @@ def test_list_configuration_entities(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        {
+            "general": {"description": "foo", "docu_url": "", "comment": ""},
+            "parameter_properties": {"test_param": "some_value"},
+        },
         None,
     )
 
@@ -176,7 +186,10 @@ def test_get_configuration_entity(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        {
+            "general": {"description": "foo", "docu_url": "", "comment": ""},
+            "parameter_properties": {"test_param": "some_value"},
+        },
         None,
     )
 

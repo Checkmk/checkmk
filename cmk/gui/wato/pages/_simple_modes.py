@@ -532,6 +532,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         elements: dict[str, form_specs.DictElement[Any]] = {}
         if self._new:
             elements["ident"] = form_specs.DictElement(
+                required=True,
                 parameter_form=form_specs.String(
                     title=Title("Unique ID"),
                     help_text=Help(
@@ -566,6 +567,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             )
 
         elements["title"] = form_specs.DictElement(
+            required=True,
             parameter_form=form_specs.String(
                 title=Title("Title"),
                 help_text=Help("Name your %s for easy recognition.")
@@ -575,6 +577,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             ),
         )
         elements["comment"] = form_specs.DictElement(
+            required=True,
             parameter_form=CommentTextArea(
                 title=Title("Comment"),
                 help_text=Help(
@@ -593,6 +596,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 )
 
         elements["docu_url"] = form_specs.DictElement(
+            required=True,
             parameter_form=form_specs.String(
                 title=Title("Documentation URL"),
                 help_text=Help(
@@ -610,6 +614,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
 
         if self._mode_type.can_be_disabled():
             elements["disabled"] = form_specs.DictElement(
+                required=True,
                 parameter_form=form_specs.BooleanChoice(
                     title=Title("Activation"),
                     help_text=Help(
@@ -622,7 +627,9 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             )
 
         if self._mode_type.is_site_specific():
-            elements["site"] = form_specs.DictElement(parameter_form=create_setup_site_choice())
+            elements["site"] = form_specs.DictElement(
+                required=True, parameter_form=create_setup_site_choice()
+            )
 
         return elements
 

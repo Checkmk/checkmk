@@ -6,7 +6,6 @@
 #ifndef TableStateHistory_h
 #define TableStateHistory_h
 
-#include <chrono>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -81,7 +80,6 @@ private:
                              LogEntryForwardIterator &it);
 
     void handle_state_entry(Query &query, const User &user, const ICore &core,
-                            std::chrono::system_clock::duration query_timeframe,
                             const LogEntry *entry, bool only_update,
                             const notification_periods_t &notification_periods,
                             bool is_host_entry, state_info_t &state_info,
@@ -99,30 +97,25 @@ private:
 
     void handle_timeperiod_transition(
         Query &query, const User &user, const ICore &core,
-        std::chrono::system_clock::duration query_timeframe,
-        const LogEntry *entry, bool only_update,
+        const LogPeriod &period, const LogEntry *entry, bool only_update,
         notification_periods_t &notification_periods,
         const state_info_t &state_info);
 
     void final_reports(Query &query, const User &user,
-                       std::chrono::system_clock::duration query_timeframe,
                        const state_info_t &state_info, const LogPeriod &period);
 
-    void process(Query &query, const User &user,
-                 std::chrono::system_clock::duration query_timeframe,
+    void process(Query &query, const User &user, const LogPeriod &period,
                  HostServiceState &hss);
 
     void update(Query &query, const User &user, const ICore &core,
-                std::chrono::system_clock::duration query_timeframe,
-                const LogEntry *entry, HostServiceState &state,
-                bool only_update,
+                const LogPeriod &period, const LogEntry *entry,
+                HostServiceState &state, bool only_update,
                 const notification_periods_t &notification_periods);
 
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
-        std::chrono::system_clock::duration query_timeframe,
-        const LogEntry *entry, HostServiceState &hss, bool only_update,
-        const notification_periods_t &notification_periods);
+        const LogPeriod &period, const LogEntry *entry, HostServiceState &hss,
+        bool only_update, const notification_periods_t &notification_periods);
 };
 
 #endif  // TableStateHistory_h

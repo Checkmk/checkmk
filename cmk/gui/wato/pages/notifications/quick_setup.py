@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import cast, Literal
+from typing import Any, cast, Literal
 
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
@@ -75,6 +75,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
+from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -692,6 +693,12 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
     )
 
 
+def supports_bulk(script_name: str, notification_scripts: dict[str, Any]) -> bool:
+    if script_name not in notification_scripts:
+        return False
+    return notification_scripts[script_name].get("bulk", False)
+
+
 def notification_method() -> QuickSetupStage:
     def bulk_notification_dict_element() -> DictElement:
         return DictElement(
@@ -727,6 +734,15 @@ def notification_method() -> QuickSetupStage:
                 prefill=DefaultValue("always"),
             ),
         )
+
+    def bulk_notification_supported(
+        script_name: str, notification_scripts: dict[str, Any]
+    ) -> dict[str, DictElement]:
+        if not supports_bulk(script_name, notification_scripts):
+            return {}
+        return {
+            "bulk_notification": bulk_notification_dict_element(),
+        }
 
     def bulk_notification(
         title: Literal["always", "timeperiod"],
@@ -861,6 +877,8 @@ def notification_method() -> QuickSetupStage:
         )
 
     def _components() -> Sequence[Widget]:
+        notification_scripts = load_notification_scripts()
+
         return [
             FormSpecWrapper(
                 id=FormSpecId("notification_method"),
@@ -880,62 +898,49 @@ def notification_method() -> QuickSetupStage:
                                     CascadingSingleChoiceElement(
                                         name="send",
                                         title=Title("Send notification"),
-                                        parameter_form=DictionaryExtended(
-                                            elements={
-                                                "method": DictElement(
-                                                    required=True,
-                                                    parameter_form=CascadingSingleChoiceExtended(
-                                                        title=Title("Method"),
-                                                        elements=[
-                                                            CascadingSingleChoiceElement(
-                                                                title=Title("%s")
-                                                                % (_("%s") % title),
-                                                                name=script_name,
+                                        parameter_form=CascadingSingleChoiceExtended(
+                                            title=Title("Method"),
+                                            elements=[
+                                                CascadingSingleChoiceElement(
+                                                    title=Title("%s") % (_("%s") % title),
+                                                    name=script_name,
+                                                    parameter_form=Dictionary(
+                                                        elements={
+                                                            "parameter_id": DictElement(
+                                                                required=True,
                                                                 parameter_form=SingleChoiceEditable(
-                                                                    title=Title(
-                                                                        "Notification method"
-                                                                    ),
+                                                                    title=Title("Parameters"),
                                                                     entity_type=ConfigEntityType.notification_parameter,
                                                                     entity_type_specifier=script_name,
                                                                 ),
-                                                            )
-                                                            for script_name, title in notification_script_choices()
-                                                        ],
-                                                        custom_validate=[
-                                                            _validate_parameter_choice
-                                                        ],
-                                                        layout=CascadingSingleChoiceLayout.horizontal,
-                                                        prefill=DefaultValue("mail"),
+                                                            ),
+                                                        }
+                                                        | bulk_notification_supported(
+                                                            script_name,
+                                                            notification_scripts,
+                                                        )
                                                     ),
-                                                ),
-                                                "bulk_notification": bulk_notification_dict_element(),
-                                            }
+                                                )
+                                                for script_name, title in notification_script_choices()
+                                            ],
+                                            custom_validate=[_validate_parameter_choice],
+                                            layout=CascadingSingleChoiceLayout.vertical,
+                                            prefill=DefaultValue("mail"),
                                         ),
                                     ),
                                     CascadingSingleChoiceElement(
                                         name="suppress",
                                         title=Title("Suppress all previous"),
-                                        parameter_form=DictionaryExtended(
-                                            elements={
-                                                "method": DictElement(
-                                                    required=True,
-                                                    parameter_form=CascadingSingleChoiceExtended(
-                                                        title=Title("Method"),
-                                                        elements=[
-                                                            CascadingSingleChoiceElement(
-                                                                title=Title("%s")
-                                                                % (_("%s") % title),
-                                                                name=script_name,
-                                                                parameter_form=FixedValue(
-                                                                    value=None
-                                                                ),
-                                                            )
-                                                            for script_name, title in notification_script_choices()
-                                                        ],
-                                                    ),
-                                                ),
-                                                "bulk_notification": bulk_notification_dict_element(),
-                                            }
+                                        parameter_form=CascadingSingleChoiceExtended(
+                                            title=Title("Method"),
+                                            elements=[
+                                                CascadingSingleChoiceElement(
+                                                    title=Title("%s") % (_("%s") % title),
+                                                    name=script_name,
+                                                    parameter_form=FixedValue(value=None),
+                                                )
+                                                for script_name, title in notification_script_choices()
+                                            ],
                                         ),
                                     ),
                                 ],

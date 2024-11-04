@@ -106,12 +106,14 @@ TimeperiodBulkTuple = tuple[Literal["timeperiod"], tuple[str, TimeperiodBulk]]
 BulkNotificatons = AlwaysBulkTuple | TimeperiodBulkTuple
 
 
-class Effect(TypedDict):
-    method: tuple[str, str]
+class Method(TypedDict):
+    parameter_id: str
     bulk_notification: NotRequired[BulkNotificatons]
 
 
-NotificationEffect = tuple[Literal["send", "suppress"], Effect]
+NotificationEffect = (
+    tuple[Literal["send"], tuple[str, Method]] | tuple[Literal["suppress"], tuple[str, None]]
+)
 
 
 class NotificationMethod(TypedDict):

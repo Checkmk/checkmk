@@ -11,7 +11,7 @@ from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
 )
-from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
+from cmk.gui.wato.pages.notifications.quick_setup_types import Method, NotificationQuickSetupSpec
 
 QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
     "triggering_events": {
@@ -59,9 +59,7 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
     "notification_method": {
         "notification_effect": (
             "send",
-            {
-                "method": ("mail", "61736d07-326a-4fb9-affd-201e3bd2a637"),
-            },
+            ("mail", Method(parameter_id="61736d07-326a-4fb9-affd-201e3bd2a637")),
         ),
     },
     "recipient": [

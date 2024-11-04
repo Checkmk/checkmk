@@ -26,12 +26,12 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     BulkingParameters,
     ContentBasedFiltering,
     ECAlertFilters,
-    Effect,
     FrequencyAndTiming,
     GeneralFilters,
     GeneralProperties,
     HostEvent,
     HostFilters,
+    Method,
     NotificationMethod,
     NotificationQuickSetupSpec,
     OtherTriggerEvent,
@@ -230,14 +230,18 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             return "timeperiod", (notifybulk[1]["timeperiod"], _get_timeperiod_bulk(notifybulk[1]))
 
         notify_plugin = event_rule["notify_plugin"]
+        if notify_plugin[1] is None:
+            return NotificationMethod(notification_effect=("suppress", (notify_plugin[0], None)))
         notify_method = NotificationMethod(
             notification_effect=(
-                "send" if notify_plugin[1] is not None else "suppress",
-                Effect(method=notify_plugin),  # type: ignore[typeddict-item]
+                "send",
+                (notify_plugin[0], Method(parameter_id=notify_plugin[1])),  # type: ignore[typeddict-item]
             ),
         )
-        if (bulk_notification := _bulk_type()) is not None:
-            notify_method["notification_effect"][1]["bulk_notification"] = bulk_notification
+        if (bulk_notification := _bulk_type()) is not None and notify_method["notification_effect"][
+            0
+        ] == "send":
+            notify_method["notification_effect"][1][1]["bulk_notification"] = bulk_notification
 
         return notify_method
 
@@ -511,11 +515,18 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
                 )
             return time_period_bulk_params
 
-        if (
-            bulk_notification := notification["notification_method"]["notification_effect"][1].get(
-                "bulk_notification"
-            )
-        ) is not None:
+        notification_effect = notification["notification_method"]["notification_effect"]
+        if notification_effect[0] == "suppress":
+            event_rule["notify_plugin"] = notification_effect[1]  # type: ignore[typeddict-item]
+            return
+
+        if notification_effect[0] == "send":
+            event_rule["notify_plugin"] = (
+                notification_effect[1][0],
+                notification_effect[1][1]["parameter_id"],
+            )  # type: ignore[typeddict-item]
+
+        if (bulk_notification := notification_effect[1][1].get("bulk_notification")) is not None:
             if bulk_notification[0] == "always":
                 event_rule["bulk"] = (
                     bulk_notification[0],
@@ -528,10 +539,6 @@ def migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule
                         bulk_notification[1][0], bulk_notification[1][1]
                     ),
                 )
-
-        event_rule["notify_plugin"] = notification["notification_method"]["notification_effect"][1][
-            "method"
-        ]  # type: ignore[typeddict-item]
 
     def _set_recipients(event_rule: EventRule) -> None:
         for recipient in notification["recipient"]:

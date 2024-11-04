@@ -195,21 +195,21 @@ const Logfile::map_type *LogEntryForwardIterator::getEntries() {
     });
 }
 
-LogEntry *getNextLogentry(LogEntryForwardIterator &it) {
-    if (it.it_entries_ != it.entries_->end()) {
-        ++it.it_entries_;
+LogEntry *LogEntryForwardIterator::getNextLogentry() {
+    if (it_entries_ != entries_->end()) {
+        ++it_entries_;
     }
 
-    while (it.it_entries_ == it.entries_->end()) {
-        auto it_logs_cpy = it.it_logs_;
-        if (++it_logs_cpy == it.log_files_->end()) {
+    while (it_entries_ == entries_->end()) {
+        auto it_logs_cpy = it_logs_;
+        if (++it_logs_cpy == log_files_->end()) {
             return nullptr;
         }
-        ++it.it_logs_;
-        it.entries_ = it.getEntries();
-        it.it_entries_ = it.entries_->begin();
+        ++it_logs_;
+        entries_ = getEntries();
+        it_entries_ = entries_->begin();
     }
-    return it.it_entries_->second.get();
+    return it_entries_->second.get();
 }
 
 namespace {
@@ -377,7 +377,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Notification periods information, name: active(1)/inactive(0)
     notification_periods_t notification_periods;
 
-    while (LogEntry *entry = getNextLogentry(it)) {
+    while (LogEntry *entry = it.getNextLogentry()) {
         if (abort_query_ || entry->time() >= until) {
             break;
         }

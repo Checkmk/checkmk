@@ -38,6 +38,7 @@ public:
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
     const Logfile::map_type *getEntries();
+    LogEntry *getNextLogentry();
 
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;

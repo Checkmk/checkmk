@@ -184,10 +184,9 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-namespace {
-const Logfile::map_type *getEntries(LogEntryForwardIterator &it) {
-    return it.it_logs_->second->getEntriesFor({
-        .max_lines_per_log_file = it.max_lines_per_log_file_,
+const Logfile::map_type *LogEntryForwardIterator::getEntries() {
+    return it_logs_->second->getEntriesFor({
+        .max_lines_per_log_file = max_lines_per_log_file_,
         .log_entry_classes =
             LogEntryClasses{}
                 .set(static_cast<int>(LogEntry::Class::alert))
@@ -207,12 +206,13 @@ LogEntry *getNextLogentry(LogEntryForwardIterator &it) {
             return nullptr;
         }
         ++it.it_logs_;
-        it.entries_ = getEntries(it);
+        it.entries_ = it.getEntries();
         it.it_entries_ = it.entries_->begin();
     }
     return it.it_entries_->second.get();
 }
 
+namespace {
 class TimeperiodTransition {
 public:
     explicit TimeperiodTransition(const std::string &str) {
@@ -357,7 +357,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Determine initial logentry
-    it.entries_ = getEntries(it);
+    it.entries_ = it.getEntries();
     if (!it.entries_->empty() && it.it_logs_ != newest_log) {
         it.it_entries_ = it.entries_->end();
         // Check last entry. If it's younger than _since -> use this logfile too

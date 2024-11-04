@@ -7,6 +7,15 @@
 # BEGIN COMMON AGENT CODE
 #
 
+###
+# Note on agent package deployment modes:
+# (Only relevant when deploying a Checkmk agent package manually)
+# Agent paths (MK_LIBDIR, MK_CONFDIR, MK_VARDIR, MK_LOGDIR, MK_BIN)
+# can be configured implicitly by setting MK_INSTALLDIR in function "set_up_single_directory()"
+# or by setting the path variables explicitly under "set_default_paths()".
+# Please refer to the official documentation for more details.
+###
+
 usage() {
     cat <<HERE
 Usage: ${0} [OPTION...]
@@ -99,14 +108,20 @@ set_up_current_shell() {
     CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
+set_up_single_directory() {
+    # Set this path when deploying the Checkmk agent installation
+    # under a single directory.
+    : "${MK_INSTALLDIR:=""}"
+}
+
 #
 # END COMMON AGENT CODE
 #
 
-set_variable_defaults() {
-    # WATCH OUT: These 5 lines are searched for and replaced by the
-    # agent bakery!
-    # TODO: CMK-8339 (proper configuration)
+set_default_paths() {
+    # Set/edit these paths when deploying the Checkmk agent installation
+    # under multiple directories.
+    # Will be ignored if MK_INSTALLDIR is already set and not empty.
     : "${MK_LIBDIR:="/usr/lib/check_mk_agent"}"
     : "${MK_CONFDIR:="/etc/check_mk"}"
     : "${MK_VARDIR:="/var/lib/check_mk_agent"}"
@@ -154,6 +169,15 @@ determine_sync_async() {
 }
 
 provide_agent_paths() {
+    # If MK_INSTALLDIR is set, this will always win over separately set agent paths
+    [ -n "${MK_INSTALLDIR}" ] && {
+        MK_LIBDIR="${MK_INSTALLDIR}/package"
+        MK_CONFDIR="${MK_INSTALLDIR}/package/config"
+        MK_VARDIR="${MK_INSTALLDIR}/runtime"
+        MK_LOGDIR="${MK_INSTALLDIR}/runtime/log"
+        MK_BIN="${MK_INSTALLDIR}/package/bin"
+    }
+
     export MK_LIBDIR
     export MK_CONFDIR
     export MK_VARDIR
@@ -2261,8 +2285,10 @@ main_setup() {
 
     set_up_current_shell
 
-    set_variable_defaults
     determine_sync_async
+
+    set_up_single_directory
+    set_default_paths
     provide_agent_paths
 
     announce_remote # needs MK_VARDIR!

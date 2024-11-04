@@ -128,11 +128,22 @@ int wmain(int argc, wchar_t **argv) {
     }
 
     std::set_terminate([]() {
-        //
         XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
-        XLOG::stdio.crit("Win Agent is Terminated.");
-        XLOG::l.bp("WaTest is Terminated.");
-        abort();
+        try {
+            std::exception_ptr eptr{std::current_exception()};
+            if (eptr) {
+                std::rethrow_exception(eptr);
+            } else {
+                XLOG::stdio.crit("watest exits normally");
+                std::exit(59);
+            }
+        } catch (const std::exception &ex) {
+            XLOG::stdio.crit("Unexpected Exception: {}", ex.what());
+            abort();
+        } catch (...) {
+            XLOG::stdio.crit("Unknown exception caught by watest");
+            abort();
+        }
     });
 
     XLOG::setup::ColoredOutputOnStdio(true);

@@ -16,6 +16,7 @@ from tests.testlib.rest_api_client import RequestHandler, Response
 from tests.testlib.version import CMKVersion
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 
 logger = logging.getLogger("rest-session")
 
@@ -723,6 +724,57 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
+
+    def get_broker_connections(
+        self,
+    ) -> list[dict[str, Any]]:
+        response = self.get(
+            "/domain-types/broker_connection/collections/all",
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def create_broker_connection(
+        self, connection_id: str, connection_config: BrokerConnectionInfo
+    ) -> dict[str, Any]:
+        response = self.post(
+            "/domain-types/broker_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"connection_id": connection_id, "connection_config": connection_config},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: dict[str, Any] = response.json()
+        return value
+
+    def edit_broker_connection(
+        self, connection_id: str, connection_config: BrokerConnectionInfo
+    ) -> dict[str, Any]:
+        response = self.put(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"connection_config": connection_config},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: dict[str, Any] = response.json()
+        return value
+
+    def delete_broker_connection(self, connection_id: str) -> None:
+        response = self.delete(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
     def create_site(self, site_config: dict) -> None:
         response = self.post(

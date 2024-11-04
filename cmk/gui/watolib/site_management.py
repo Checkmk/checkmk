@@ -10,6 +10,9 @@ from dataclasses import dataclass, field
 from typing import Any, cast, Literal
 
 from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    ConnectionId,
     LocalSocketInfo,
     NetworkSocketDetails,
     NetworkSocketInfo,
@@ -600,6 +603,19 @@ class SitesApiMgr:
         return self.site_mgmt.get_connected_sites_to_update(
             new_or_deleted_connection, modified_site, current_site_config, old_site_config
         )
+
+    def get_broker_connections(self) -> BrokerConnections:
+        return self.site_mgmt.get_broker_connections()
+
+    def validate_and_save_broker_connection(
+        self, connection_id: ConnectionId, broker_connection: BrokerConnection, is_new: bool
+    ) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.validate_and_save_broker_connection(
+            connection_id, broker_connection, is_new
+        )
+
+    def delete_broker_connection(self, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.delete_broker_connection(connection_id)
 
 
 def add_changes_after_editing_broker_connection(

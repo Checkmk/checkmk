@@ -72,6 +72,7 @@ API_DOMAIN = Literal[
     "quick_setup",
     "managed_robots",
     "notification_parameter",
+    "broker_connection",
 ]
 
 
@@ -3153,6 +3154,73 @@ class ManagedRobotsClient(RestApiClient):
         )
 
 
+class BrokerConnectionClient(RestApiClient):
+    domain: API_DOMAIN = "broker_connection"
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def get(self, connection_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{connection_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        connection_id: str,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{connection_id}",
+            body=payload,
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(connection_id, etag),
+        )
+
+    def delete(
+        self,
+        connection_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{connection_id}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(connection_id, etag),
+        )
+
+    def _set_etag_header(
+        self,
+        connection_id: str,
+        etag: IF_MATCH_HEADER_OPTIONS,
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(connection_id).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3201,6 +3269,7 @@ class ClientRegistry:
     ParentScan: ParentScanClient
     QuickSetup: QuickSetupClient
     ManagedRobots: ManagedRobotsClient
+    BrokerConnection: BrokerConnectionClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3241,4 +3310,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
         ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
+        BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
     )

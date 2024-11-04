@@ -20,6 +20,7 @@ DomainType = Literal[
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
+    "broker_connection",
     "comment",
     "configuration_entity",
     "contact_group_config",

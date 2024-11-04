@@ -18,7 +18,7 @@ from cmk.utils.servicename import Item
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import config
-from cmk.base.api.agent_based.register import get_check_plugin
+from cmk.base.api.agent_based.register import get_previously_loaded_plugins
 
 _config_loaded = False
 _checks_loaded = False
@@ -45,7 +45,10 @@ def reset_config() -> None:
     _config_loaded = False
 
 
-def logwatch_service_description(hostname: HostName, item: Item) -> str:
+def logwatch_service_description(
+    hostname: HostName,
+    item: Item,
+) -> str:
     # Note: We actually only need the logwatch plug-in here, but to be
     # *absolutely* sure we get the real thing, we need to load all plug-ins
     # (users might shadow/redefine the logwatch plug-in in unexpected places)
@@ -53,13 +56,12 @@ def logwatch_service_description(hostname: HostName, item: Item) -> str:
     # in turn leading to wrong service labels and ruleset matches.
     _load_checks()
     plugin_name = CheckPluginName("logwatch")
+    plugin = get_previously_loaded_plugins().check_plugins[plugin_name]
     return config.service_description(
         get_ruleset_matcher(),
         hostname,
-        plugin_name,
-        service_name_template=(
-            None if (p := get_check_plugin(plugin_name)) is None else p.service_name
-        ),
+        plugin.name,
+        service_name_template=plugin.service_name,
         item=item,
     )
 

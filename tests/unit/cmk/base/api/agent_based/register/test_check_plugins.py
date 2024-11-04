@@ -13,7 +13,9 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register import AgentBasedPlugins, check_plugins
+from cmk.base.api.agent_based.register.check_plugins import get_check_plugin
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_function_arguments,
@@ -225,3 +227,36 @@ def test_module_attribute(agent_based_plugins: AgentBasedPlugins) -> None:
     assert local_check.location == PluginLocation(
         "cmk.plugins.collection.agent_based.local", "check_plugin_local"
     )
+
+
+TEST_PLUGIN = CheckPlugin(
+    CheckPluginName("my_test_plugin"),
+    [],
+    "Unit Test",
+    lambda: [],
+    None,
+    None,
+    "merged",
+    lambda: [],
+    None,
+    None,
+    None,
+    PluginLocation(module="not-relevant"),
+)
+
+TEST_PLUGINS = {TEST_PLUGIN.name: TEST_PLUGIN}
+
+
+def test_get_registered_check_plugins_lookup() -> None:
+    assert get_check_plugin(TEST_PLUGIN.name, TEST_PLUGINS) is TEST_PLUGIN
+
+
+def test_get_registered_check_plugins_no_match() -> None:
+    assert get_check_plugin(CheckPluginName("mgmt_this_should_not_exists"), TEST_PLUGINS) is None
+
+
+def test_get_registered_check_plugins_mgmt_factory() -> None:
+    mgmt_plugin = get_check_plugin(TEST_PLUGIN.name.create_management_name(), TEST_PLUGINS)
+    assert mgmt_plugin is not None
+    assert mgmt_plugin.name.create_basic_name() == TEST_PLUGIN.name
+    assert mgmt_plugin.service_name.startswith("Management Interface: ")

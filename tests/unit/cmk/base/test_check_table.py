@@ -71,7 +71,9 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    clustered_service = config_cache.check_table(cluster)[service_id]
+    clustered_service = config_cache.check_table(
+        cluster, agent_based_register.get_previously_loaded_plugins().check_plugins
+    )[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet({}, ()),
         TimespecificParameterSet({"levels": (35, 40)}, ()),
@@ -135,8 +137,9 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
     )
     config_cache = ts.apply(monkeypatch)
 
-    node_services = config_cache.check_table(node)
-    cluster_services = config_cache.check_table(cluster)
+    check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
+    node_services = config_cache.check_table(node, check_plugins)
+    cluster_services = config_cache.check_table(cluster, check_plugins)
 
     assert len(node_services) == 1
     assert len(cluster_services) == 2
@@ -494,8 +497,14 @@ def test_check_table(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert set(config_cache.check_table(hostname, filter_mode=filter_mode)) == set(expected_result)
-    for key, value in config_cache.check_table(hostname, filter_mode=filter_mode).items():
+    assert set(
+        config_cache.check_table(
+            hostname,
+            agent_based_register.get_previously_loaded_plugins().check_plugins,
+            filter_mode=filter_mode,
+        ),
+    ) == set(expected_result)
+    for key, value in config_cache.check_table(hostname, {}, filter_mode=filter_mode).items():
         assert key in expected_result
         assert expected_result[key] == value
 
@@ -550,7 +559,7 @@ def test_check_table_of_mgmt_boards(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert list(config_cache.check_table(hostname).keys()) == expected_result
+    assert list(config_cache.check_table(hostname, {}).keys()) == expected_result
 
 
 def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
@@ -575,7 +584,9 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     )
     ts.set_autochecks(hostname, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
 
-    chk_table = ts.apply(monkeypatch).check_table(hostname)
+    chk_table = ts.apply(monkeypatch).check_table(
+        hostname, agent_based_register.get_previously_loaded_plugins().check_plugins
+    )
 
     # assert check table is populated as expected
     assert len(chk_table) == 1
@@ -633,7 +644,7 @@ def test_check_table__get_static_check_entries(
     monkeypatch.setattr(
         agent_based_register,
         "get_check_plugin",
-        lambda cpn: CheckPlugin(
+        lambda _cpn, _plugins: CheckPlugin(
             CheckPluginName("ps"),
             [],
             "Process item",
@@ -650,7 +661,8 @@ def test_check_table__get_static_check_entries(
     )
 
     static_check_parameters = [
-        service.parameters for _, service in config_cache.enforced_services_table(hostname).values()
+        service.parameters
+        for _, service in config_cache.enforced_services_table(hostname, {}).values()
     ]
 
     entries = config._get_checkgroup_parameters(

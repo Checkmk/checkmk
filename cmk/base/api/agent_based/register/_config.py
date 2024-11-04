@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
@@ -21,7 +20,6 @@ from cmk.base.api.agent_based.plugin_classes import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 
 registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}
@@ -81,24 +79,6 @@ def add_section_plugin(section_plugin: SectionPlugin) -> None:
         registered_snmp_sections[section_plugin.name] = section_plugin
 
 
-def get_check_plugin(plugin_name: CheckPluginName) -> CheckPlugin | None:
-    """Returns the registered check plug-in
-
-    Management plugins may be created on the fly.
-    """
-    plugin = registered_check_plugins.get(plugin_name)
-    if plugin is not None or not plugin_name.is_management_name():
-        return plugin
-
-    return (
-        None
-        if (non_mgmt_plugin := registered_check_plugins.get(plugin_name.create_basic_name()))
-        is None
-        # create management board plug-in on the fly:
-        else management_plugin_factory(non_mgmt_plugin)
-    )
-
-
 def get_discovery_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
     """Returns all rulesets of a given name"""
     return stored_rulesets.get(ruleset_name, [])
@@ -116,10 +96,6 @@ def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | 
 
 def get_section_plugin(section_name: SectionName) -> SectionPlugin | None:
     return registered_agent_sections.get(section_name) or registered_snmp_sections.get(section_name)
-
-
-def is_registered_check_plugin(check_plugin_name: CheckPluginName) -> bool:
-    return check_plugin_name in registered_check_plugins
 
 
 def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -> bool:

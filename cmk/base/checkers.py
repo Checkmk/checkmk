@@ -535,6 +535,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
     def __init__(
         self,
         config_cache: ConfigCache,
+        check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
         value_store_manager: ValueStoreManager,
         *,
         clusters: Container[HostName],
@@ -544,9 +545,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         self.value_store_manager: Final = value_store_manager
         self.clusters: Final = clusters
         self.rtc_package: Final = rtc_package
+        self.check_plugins: Final = check_plugins
 
     def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
-        plugin = _api.get_check_plugin(__key)
+        plugin = agent_based_register.get_check_plugin(__key, self.check_plugins)
         if plugin is None:
             raise KeyError(__key)
 
@@ -1031,14 +1033,20 @@ def _postprocess_predictive_levels(
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
     # See comment to SectionPluginMapper.
-    def __init__(self, *, ruleset_matcher: RulesetMatcher) -> None:
+    def __init__(
+        self,
+        *,
+        ruleset_matcher: RulesetMatcher,
+        check_plugins: Mapping[CheckPluginName, CheckPluginAPI],
+    ) -> None:
         super().__init__()
         self.ruleset_matcher: Final = ruleset_matcher
+        self._check_plugins: Final = check_plugins
 
     def __getitem__(self, __key: CheckPluginName) -> DiscoveryPlugin:
         # `get_check_plugin()` is not an error.  Both check plug-ins and
         # discovery are declared together in the check API.
-        plugin = _api.get_check_plugin(__key)
+        plugin = agent_based_register.get_check_plugin(__key, self._check_plugins)
         if plugin is None:
             raise KeyError(__key)
 

@@ -293,7 +293,10 @@ def dump_host(
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
     table_data = []
-    for service in sorted(config_cache.check_table(hostname).values(), key=lambda s: s.description):
+    for service in sorted(
+        config_cache.check_table(hostname, plugins.check_plugins).values(),
+        key=lambda s: s.description,
+    ):
         table_data.append(
             [
                 str(service.check_plugin_name),

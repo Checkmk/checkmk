@@ -5,7 +5,7 @@
 """Background tools required to register a check plug-in"""
 
 import functools
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Mapping
 from typing import Any
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -226,7 +226,7 @@ def create_check_plugin(
     )
 
 
-def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
+def _management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
     return CheckPlugin(
         original_plugin.name.create_management_name(),
         original_plugin.sections,
@@ -240,4 +240,24 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.check_ruleset_name,
         original_plugin.cluster_check_function,
         original_plugin.location,
+    )
+
+
+def get_check_plugin(
+    plugin_name: CheckPluginName, registered_check_plugins: Mapping[CheckPluginName, CheckPlugin]
+) -> CheckPlugin | None:
+    """Returns the registered check plug-in
+
+    Management plugins may be created on the fly.
+    """
+    plugin = registered_check_plugins.get(plugin_name)
+    if plugin is not None or not plugin_name.is_management_name():
+        return plugin
+
+    return (
+        None
+        if (non_mgmt_plugin := registered_check_plugins.get(plugin_name.create_basic_name()))
+        is None
+        # create management board plug-in on the fly:
+        else _management_plugin_factory(non_mgmt_plugin)
     )

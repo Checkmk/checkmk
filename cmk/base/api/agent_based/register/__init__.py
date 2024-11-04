@@ -7,7 +7,6 @@ from ._config import (
     add_discovery_ruleset,
     add_host_label_ruleset,
     AgentBasedPlugins,
-    get_check_plugin,
     get_discovery_ruleset,
     get_host_label_ruleset,
     get_previously_loaded_plugins,
@@ -18,6 +17,7 @@ from ._config import (
     set_host_label_ruleset,
 )
 from ._discover import load_all_plugins, load_selected_plugins
+from .check_plugins import get_check_plugin
 from .utils import filter_relevant_raw_sections, sections_needing_redetection
 
 __all__ = [

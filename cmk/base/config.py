@@ -251,8 +251,10 @@ def _aggregate_check_table_services(
     filter_mode: FilterMode,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
-        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+        [HostName, Sequence[AutocheckEntry]],
+        Iterable[ConfiguredService],
     ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
     sfilter = _ServiceFilter(
         host_name,
@@ -271,7 +273,7 @@ def _aggregate_check_table_services(
             yield from (
                 s
                 for s in _get_clustered_services(
-                    config_cache, host_name, get_autochecks, configure_autochecks
+                    config_cache, host_name, get_autochecks, configure_autochecks, plugins
                 )
                 if sfilter.keep(s)
             )
@@ -282,7 +284,7 @@ def _aggregate_check_table_services(
 
     yield from (
         svc
-        for _, svc in config_cache.enforced_services_table(host_name).values()
+        for _, svc in config_cache.enforced_services_table(host_name, plugins).values()
         if sfilter.keep(svc)
     )
 
@@ -308,7 +310,7 @@ def _aggregate_check_table_services(
         s
         # ... this adds it for node2
         for s in _get_services_from_cluster_nodes(
-            config_cache, host_name, get_autochecks, configure_autochecks
+            config_cache, host_name, get_autochecks, configure_autochecks, plugins
         )
         if sfilter.keep(s)
         # ... and this condition prevents it from being added on node3
@@ -376,12 +378,14 @@ def _get_services_from_cluster_nodes(
     node_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
-        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+        [HostName, Sequence[AutocheckEntry]],
+        Iterable[ConfiguredService],
     ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
         yield from _get_clustered_services(
-            config_cache, cluster, get_autochecks, configure_autochecks
+            config_cache, cluster, get_autochecks, configure_autochecks, plugins
         )
 
 
@@ -390,8 +394,10 @@ def _get_clustered_services(
     cluster_name: HostName,
     get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
     configure_autochecks: Callable[
-        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+        [HostName, Sequence[AutocheckEntry]],
+        Iterable[ConfiguredService],
     ],
+    plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
     nodes = config_cache.nodes(cluster_name)
 
@@ -406,7 +412,10 @@ def _get_clustered_services(
                 entry.check_plugin_name,
                 service_name_template=(
                     None
-                    if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                    if (
+                        p := agent_based_register.get_check_plugin(entry.check_plugin_name, plugins)
+                    )
+                    is None
                     else p.service_name
                 ),
                 item=entry.item,
@@ -428,7 +437,10 @@ def _get_clustered_services(
         )
 
     yield from merge_enforced_services(
-        {node_name: config_cache.enforced_services_table(node_name) for node_name in nodes},
+        {
+            node_name: config_cache.enforced_services_table(node_name, plugins)
+            for node_name in nodes
+        },
         # similiar to appears_on_cluster, but we don't check for ignored services
         lambda node_name, service_name, discovered_labels: (
             config_cache.effective_host(
@@ -1187,6 +1199,7 @@ def get_plugin_parameters(
 
 def _make_service_description_cb(
     matcher: RulesetMatcher,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
     """Replacement for functool.partial(service_description, matcher)
 
@@ -1200,7 +1213,8 @@ def _make_service_description_cb(
             check_plugin_name,
             service_name_template=(
                 None
-                if (p := agent_based_register.get_check_plugin(check_plugin_name)) is None
+                if (p := agent_based_register.get_check_plugin(check_plugin_name, check_plugins))
+                is None
                 else p.service_name
             ),
             item=item,
@@ -1495,6 +1509,7 @@ def load_and_convert_legacy_checks(
 
 def _make_compute_check_parameters_cb(
     matcher: RulesetMatcher,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Callable[
     [HostName, CheckPluginName, Item, Labels, Mapping[str, object]],
     TimespecificParameters,
@@ -1512,7 +1527,7 @@ def _make_compute_check_parameters_cb(
         params: Mapping[str, object],
     ) -> TimespecificParameters:
         return compute_check_parameters(
-            matcher, host_name, plugin_name, item, service_labels, params, None
+            matcher, check_plugins, host_name, plugin_name, item, service_labels, params, None
         )
 
     return callback
@@ -1520,6 +1535,7 @@ def _make_compute_check_parameters_cb(
 
 def compute_check_parameters(
     matcher: RulesetMatcher,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
     host_name: HostName,
     plugin_name: CheckPluginName,
     item: Item,
@@ -1534,7 +1550,7 @@ def compute_check_parameters(
      * the discovered parameters
      * the plugins defaults
     """
-    check_plugin = agent_based_register.get_check_plugin(plugin_name)
+    check_plugin = agent_based_register.get_check_plugin(plugin_name, plugins)
     if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
 
@@ -1759,8 +1775,11 @@ def _make_clusters_nodes_maps() -> tuple[
 class AutochecksConfigurer:
     """Implementation of the autochecks configuration"""
 
-    def __init__(self, config_cache: ConfigCache) -> None:
+    def __init__(
+        self, config_cache: ConfigCache, check_plugins: Mapping[CheckPluginName, CheckPlugin]
+    ) -> None:
         self._config_cache = config_cache
+        self._check_plugins = check_plugins
 
     def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
         return self._config_cache.check_plugin_ignored(host_name, plugin_name)
@@ -1780,13 +1799,15 @@ class AutochecksConfigurer:
         return self._config_cache.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
+        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
         return service_description(
             self._config_cache.ruleset_matcher,
             host_name,
             entry.check_plugin_name,
             service_name_template=(
                 None
-                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name)) is None
+                if (p := agent_based_register.get_check_plugin(entry.check_plugin_name, plugins))
+                is None
                 else p.service_name
             ),
             item=entry.item,
@@ -1881,9 +1902,11 @@ class ConfigCache:
             }
         )
 
+        check_plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
+
         self._service_configurer = ServiceConfigurer(
-            _make_compute_check_parameters_cb(self.ruleset_matcher),
-            _make_service_description_cb(self.ruleset_matcher),
+            _make_compute_check_parameters_cb(self.ruleset_matcher, check_plugins),
+            _make_service_description_cb(self.ruleset_matcher, check_plugins),
             self.effective_host,
             self.ruleset_matcher.labels_of_service,
         )
@@ -2036,6 +2059,7 @@ class ConfigCache:
                         plugins.check_plugins[n]
                         for n in self.check_table(
                             hostname,
+                            plugins.check_plugins,
                             filter_mode=FilterMode.INCLUDE_CLUSTERED,
                             skip_ignored=True,
                         ).needed_check_names()
@@ -2084,11 +2108,13 @@ class ConfigCache:
     def check_table(
         self,
         hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
         *,
         use_cache: bool = True,
         filter_mode: FilterMode = FilterMode.NONE,
         skip_ignored: bool = True,
     ) -> HostCheckTable:
+        # we blissfully ignore the plugins parameter here
         cache_key = (hostname, filter_mode, skip_ignored) if use_cache else None
         if cache_key:
             with contextlib.suppress(KeyError):
@@ -2102,6 +2128,7 @@ class ConfigCache:
                 filter_mode=filter_mode,
                 get_autochecks=self._autochecks_manager.get_autochecks,
                 configure_autochecks=self._service_configurer.configure_autochecks,
+                plugins=plugins,
             )
         )
 
@@ -2110,15 +2137,19 @@ class ConfigCache:
 
         return host_check_table
 
-    def _sorted_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
+    def _sorted_services(
+        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+    ) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            self.check_table(hostname).values(),
+            self.check_table(hostname, plugins).values(),
             key=lambda service: service.description,
         )
 
-    def configured_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
-        services = self._sorted_services(hostname)
+    def configured_services(
+        self, hostname: HostName, plugins: Mapping[CheckPluginName, CheckPlugin]
+    ) -> Sequence[ConfiguredService]:
+        services = self._sorted_services(hostname, plugins)
         if is_cmc():
             return services
 
@@ -2146,7 +2177,9 @@ class ConfigCache:
         return resolved
 
     def enforced_services_table(
-        self, hostname: HostName
+        self,
+        hostname: HostName,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
     ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
@@ -2173,7 +2206,8 @@ class ConfigCache:
                     check_plugin_name,
                     service_name_template=(
                         None
-                        if (p := agent_based_register.get_check_plugin(check_plugin_name)) is None
+                        if (p := agent_based_register.get_check_plugin(check_plugin_name, plugins))
+                        is None
                         else p.service_name
                     ),
                     item=item,
@@ -2189,6 +2223,7 @@ class ConfigCache:
                         description=descr,
                         parameters=compute_check_parameters(
                             self.ruleset_matcher,
+                            plugins,
                             self.effective_host(hostname, descr, labels),
                             check_plugin_name,
                             item,
@@ -3802,6 +3837,7 @@ class ConfigCache:
         return self._nodes_cache.get(hostname, ())
 
     def effective_host_of_autocheck(self, node_name: HostName, entry: AutocheckEntry) -> HostName:
+        plugins = agent_based_register.get_previously_loaded_plugins().check_plugins
         return self.effective_host(
             node_name,
             (
@@ -3811,7 +3847,11 @@ class ConfigCache:
                     entry.check_plugin_name,
                     service_name_template=(
                         None
-                        if (p := agent_based_register.get_check_plugin(entry.check_plugin_name))
+                        if (
+                            p := agent_based_register.get_check_plugin(
+                                entry.check_plugin_name, plugins
+                            )
+                        )
                         is None
                         else p.service_name
                     ),

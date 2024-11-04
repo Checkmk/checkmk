@@ -1492,7 +1492,9 @@ def test_host_config_static_checks(
     hostname: HostName,
     result: Mapping[ServiceID, tuple[str, ConfiguredService]],
 ) -> None:
-    def make_plugin(name: CheckPluginName) -> CheckPluginAPI:
+    def make_plugin(
+        name: CheckPluginName, _plugins: Mapping[CheckPluginName, CheckPluginAPI]
+    ) -> CheckPluginAPI:
         return CheckPluginAPI(
             name=name,
             sections=[],
@@ -1508,7 +1510,11 @@ def test_host_config_static_checks(
             location=LegacyPluginLocation(""),
         )
 
-    monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
+    monkeypatch.setattr(
+        agent_based_register,
+        agent_based_register.get_check_plugin.__name__,
+        make_plugin,
+    )
 
     ts = Scenario()
     ts.add_host(hostname)
@@ -1529,7 +1535,7 @@ def test_host_config_static_checks(
             ],
         },
     )
-    assert ts.apply(monkeypatch).enforced_services_table(hostname) == result
+    assert ts.apply(monkeypatch).enforced_services_table(hostname, {}) == result
 
 
 @pytest.mark.parametrize(
@@ -1826,7 +1832,7 @@ def test_get_sorted_check_table_no_cmc(
         }.get(descr, []),
     )
 
-    services = config_cache.configured_services(host_name)
+    services = config_cache.configured_services(host_name, {})
     assert [s.description for s in services] == [
         "description F",  #
         "description C",  # no deps => input order maintained
@@ -1866,7 +1872,7 @@ def test_resolve_service_dependencies_cyclic(
             " 'description B' (plugin_B / item)"
         ),
     ):
-        config_cache.configured_services(HostName("MyHost"))
+        config_cache.configured_services(HostName("MyHost"), {})
 
 
 def test_service_depends_on_unknown_host(monkeypatch: MonkeyPatch) -> None:
@@ -3144,7 +3150,7 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.check_table(CN) == expected
+    assert config_cache.check_table(CN, {}) == expected
 
 
 def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:

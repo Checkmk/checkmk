@@ -71,6 +71,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
     ):
         check_plugins = CheckPluginMapper(
             config_cache,
+            agent_based_plugins.check_plugins,
             value_store_manager,
             clusters=(),
             rtc_package=None,

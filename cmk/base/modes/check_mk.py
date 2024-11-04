@@ -1228,7 +1228,9 @@ def mode_flush(hosts: list[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
-    effective_host_callback = config.AutochecksConfigurer(config_cache).effective_host
+    effective_host_callback = config.AutochecksConfigurer(
+        config_cache, agent_based_register.get_previously_loaded_plugins().check_plugins
+    ).effective_host
 
     if not hosts:
         hosts = sorted(
@@ -1239,6 +1241,9 @@ def mode_flush(hosts: list[HostName]) -> None:
             }
         )
 
+    effective_host_callback = config.AutochecksConfigurer(
+        config_cache, agent_based_register.get_previously_loaded_plugins().check_plugins
+    ).effective_host
     for host in hosts:
         print_("%-20s: " % host)
         flushed = False
@@ -1383,6 +1388,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         sys.stdout,
         next(VersionedConfigPath.current()),
         config_cache,
+        agent_based_register.get_previously_loaded_plugins().check_plugins,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
         passwords=cmk.utils.password_store.load(
@@ -1835,7 +1841,7 @@ def mode_check_discovery(
     plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    autochecks_config = config.AutochecksConfigurer(config_cache)
+    autochecks_config = config.AutochecksConfigurer(config_cache, plugins.check_plugins)
     check_interval = config_cache.check_mk_check_interval(hostname)
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
@@ -1906,9 +1912,13 @@ def mode_check_discovery(
                     ruleset_matcher=ruleset_matcher,
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
                 ),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+                plugins=DiscoveryPluginMapper(
+                    ruleset_matcher=ruleset_matcher, check_plugins=plugins.check_plugins
+                ),
                 autochecks_config=autochecks_config,
-                enforced_services=config_cache.enforced_services_table(hostname),
+                enforced_services=config_cache.enforced_services_table(
+                    hostname, plugins.check_plugins
+                ),
             )
         check_results = [
             *check_results,
@@ -2219,7 +2229,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
                 ruleset_matcher=config_cache.ruleset_matcher,
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
             ),
-            plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            plugins=DiscoveryPluginMapper(
+                ruleset_matcher=config_cache.ruleset_matcher, check_plugins=plugins.check_plugins
+            ),
             run_plugin_names=run_plugin_names,
             ignore_plugin=config_cache.check_plugin_ignored,
             arg_only_new=options["discover"] == 1,
@@ -2399,6 +2411,7 @@ def mode_check(
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(
             config_cache,
+            plugins.check_plugins,
             value_store_manager,
             clusters=hosts_config.clusters,
             rtc_package=None,
@@ -2423,7 +2436,7 @@ def mode_check(
                 inventory_plugins=InventoryPluginMapper(),
                 inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
-                services=config_cache.configured_services(hostname),
+                services=config_cache.configured_services(hostname, plugins.check_plugins),
                 run_plugin_names=run_plugin_names,
                 get_check_period=lambda service_name,
                 service_labels: config_cache.check_period_of_service(

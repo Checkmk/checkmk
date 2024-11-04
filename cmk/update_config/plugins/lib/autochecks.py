@@ -19,6 +19,7 @@ from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
 from cmk.checkengine.legacy import LegacyCheckParameters
 
 from cmk.base.api.agent_based import register
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
@@ -70,14 +71,17 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets()
+    check_plugins = register.get_previously_loaded_plugins().check_plugins
     for hostname in _autocheck_hosts():
-        fixed_autochecks = yield from _get_fixed_autochecks(hostname, all_rulesets)
+        fixed_autochecks = yield from _get_fixed_autochecks(hostname, all_rulesets, check_plugins)
         if write:
             AutochecksStore(hostname).write(fixed_autochecks)
 
 
 def _get_fixed_autochecks(
-    host_name: HostName, all_rulesets: AllRulesets
+    host_name: HostName,
+    all_rulesets: AllRulesets,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Generator[RewriteError, None, list[AutocheckEntry]]:
     try:
         autochecks = AutochecksStore(host_name).read()
@@ -90,7 +94,7 @@ def _get_fixed_autochecks(
     fixed_autochecks: list[AutocheckEntry] = []
     for entry in autochecks:
         try:
-            fixed_autochecks.append(_fix_entry(entry, all_rulesets, host_name))
+            fixed_autochecks.append(_fix_entry(entry, all_rulesets, check_plugins, host_name))
         except Exception as exc:
             if debug.enabled():
                 raise
@@ -109,6 +113,7 @@ def _autocheck_hosts() -> Iterable[HostName]:
 def _fix_entry(
     entry: AutocheckEntry,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: str,
 ) -> AutocheckEntry:
     """Change names of removed plugins to the new ones and transform parameters"""
@@ -130,6 +135,7 @@ def _fix_entry(
             new_plugin_name,
             explicit_parameters_transform(entry.parameters),
             all_rulesets,
+            check_plugins,
             hostname,
         ),
         service_labels=entry.service_labels,
@@ -143,9 +149,10 @@ def _transformed_params(
     plugin_name: CheckPluginName,
     params: T,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     host: str,
 ) -> Mapping[str, object]:
-    if (ruleset := _get_ruleset(plugin_name, all_rulesets)) is None:
+    if (ruleset := _get_ruleset(plugin_name, all_rulesets, check_plugins)) is None:
         if not params:
             return {}
         if isinstance(params, dict):
@@ -168,9 +175,10 @@ def _transformed_params(
 def _get_ruleset(
     plugin_name: CheckPluginName,
     all_rulesets: RulesetCollection,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Ruleset | None:
     if (
-        check_plugin := register.get_check_plugin(plugin_name)
+        check_plugin := register.get_check_plugin(plugin_name, check_plugins)
     ) is None or check_plugin.check_ruleset_name is None:
         return None
 

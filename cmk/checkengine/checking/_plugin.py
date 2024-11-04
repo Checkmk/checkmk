@@ -115,7 +115,9 @@ class ServiceConfigurer:
         self._get_service_labels = get_service_labels
 
     def _configure_autocheck(
-        self, hostname: HostName, autocheck_entry: AutocheckEntryProtocol
+        self,
+        hostname: HostName,
+        autocheck_entry: AutocheckEntryProtocol,
     ) -> ConfiguredService:
         # TODO: only call this function when we know "effective host" == hostname and simplify accordingly
         service_name = self._get_service_description(
@@ -141,7 +143,9 @@ class ServiceConfigurer:
         )
 
     def configure_autochecks(
-        self, hostname: HostName, autocheck_entries: Iterable[AutocheckEntryProtocol]
+        self,
+        hostname: HostName,
+        autocheck_entries: Iterable[AutocheckEntryProtocol],
     ) -> Sequence[ConfiguredService]:
         return [self._configure_autocheck(hostname, entry) for entry in autocheck_entries]
 

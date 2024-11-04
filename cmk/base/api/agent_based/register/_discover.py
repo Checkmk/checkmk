@@ -35,14 +35,13 @@ from ._config import (
     add_host_label_ruleset,
     add_inventory_plugin,
     add_section_plugin,
-    get_check_plugin,
     get_inventory_plugin,
+    get_previously_loaded_plugins,
     get_section_plugin,
-    is_registered_check_plugin,
     is_registered_inventory_plugin,
     is_registered_section_plugin,
 )
-from .check_plugins import create_check_plugin
+from .check_plugins import create_check_plugin, get_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
 
@@ -174,8 +173,9 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
         validate_kwargs=check.name not in {"logwatch_ec", "logwatch_ec_single"},
     )
 
-    if is_registered_check_plugin(plugin.name):
-        if (present := get_check_plugin(plugin.name)) is not None and present.location == location:
+    plugins_up_to_now = get_previously_loaded_plugins().check_plugins
+    if (present := get_check_plugin(plugin.name, plugins_up_to_now)) is not None:
+        if present.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,
@@ -228,8 +228,9 @@ def _add_sections_to_register(
 def _add_checks_to_register(
     checks: Iterable[BackendCheckPlugin],
 ) -> None:
+    existing_plugins = get_previously_loaded_plugins().check_plugins
     for check in checks:
-        present_plugin = get_check_plugin(check.name)
+        present_plugin = existing_plugins.get(check.name)
         if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
             # location is PluginLocation => it's a new plug-in
             # (allow loading multiple times, e.g. update-config)

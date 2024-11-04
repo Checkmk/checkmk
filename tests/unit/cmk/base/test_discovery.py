@@ -1186,7 +1186,8 @@ def test__find_candidates(
         [
             (name, p.sections)
             for name, p in DiscoveryPluginMapper(
-                ruleset_matcher=config_cache.ruleset_matcher
+                ruleset_matcher=config_cache.ruleset_matcher,
+                check_plugins=agent_based_plugins.check_plugins,
             ).items()
         ],
     ) == {
@@ -1322,7 +1323,10 @@ def test_commandline_discovery(
             ruleset_matcher=config_cache.ruleset_matcher,
             sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
         ),
-        plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+        plugins=DiscoveryPluginMapper(
+            ruleset_matcher=config_cache.ruleset_matcher,
+            check_plugins=agent_based_plugins.check_plugins,
+        ),
         run_plugin_names=EVERYTHING,
         ignore_plugin=lambda *args, **kw: False,
         arg_only_new=False,
@@ -1599,7 +1603,6 @@ class DiscoveryTestCase(NamedTuple):
     on_cluster: ExpectedDiscoveryResultOnCluster
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "host_labels, expected_services",
     [
@@ -1617,6 +1620,7 @@ def test__discovery_considers_host_labels(
     host_labels: tuple[HostLabel],
     expected_services: set[ServiceID],
     realhost_scenario: RealHostScenario,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
@@ -1627,7 +1631,10 @@ def test__discovery_considers_host_labels(
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
+    plugins = DiscoveryPluginMapper(
+        ruleset_matcher=config_cache.ruleset_matcher,
+        check_plugins=agent_based_plugins.check_plugins,
+    )
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -1770,10 +1777,11 @@ _discovery_test_cases = [
 ]
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(
-    realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
+    realhost_scenario: RealHostScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
 ) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
@@ -1786,7 +1794,10 @@ def test__discover_host_labels_and_services_on_realhost(
     providers = realhost_scenario.providers
 
     # arrange
-    plugins = DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher)
+    plugins = DiscoveryPluginMapper(
+        ruleset_matcher=config_cache.ruleset_matcher,
+        check_plugins=agent_based_plugins.check_plugins,
+    )
     plugin_names = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -1843,12 +1854,17 @@ def test__perform_host_label_discovery_on_realhost(
     assert host_label_result.present == discovery_test_case.on_realhost.expected_kept_labels
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
-def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> None:
+def test__discover_services_on_cluster(
+    cluster_scenario: ClusterScenario,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
         cluster_scenario.providers,
-        DiscoveryPluginMapper(ruleset_matcher=cluster_scenario.config_cache.ruleset_matcher),
+        DiscoveryPluginMapper(
+            ruleset_matcher=cluster_scenario.config_cache.ruleset_matcher,
+            check_plugins=agent_based_plugins.check_plugins,
+        ),
         OnError.RAISE,
     ) == {
         "test-node1": [

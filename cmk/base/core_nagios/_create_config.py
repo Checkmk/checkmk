@@ -34,6 +34,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
@@ -75,7 +76,9 @@ class NagiosCore(core_config.MonitoringCore):
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         self._config_cache = config_cache
-        self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
+        self._create_core_config(
+            config_path, plugins.check_plugins, licensing_handler, passwords, ip_address_of
+        )
         self._precompile_hostchecks(
             config_path,
             plugins,
@@ -87,6 +90,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _create_core_config(
         self,
         config_path: VersionedConfigPath,
+        plugins: Mapping[CheckPluginName, CheckPlugin],
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
         ip_address_of: config.IPLookup,
@@ -106,6 +110,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_buffer,
             config_path,
             self._config_cache,
+            plugins,
             hostnames=sorted(
                 {
                     hn
@@ -185,6 +190,7 @@ def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
     hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
@@ -198,7 +204,7 @@ def create_config(
     all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
         all_notify_host_configs[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, passwords, licensing_counter, ip_address_of
+            cfg, config_cache, plugins, hostname, passwords, licensing_counter, ip_address_of
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -230,6 +236,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
@@ -249,6 +256,7 @@ def _create_nagios_config_host(
         service_labels=create_nagios_servicedefs(
             cfg,
             config_cache,
+            plugins,
             hostname,
             host_attrs,
             stored_passwords,
@@ -388,6 +396,7 @@ def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServ
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    plugins: Mapping[CheckPluginName, CheckPlugin],
     hostname: HostName,
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
@@ -432,7 +441,7 @@ def create_nagios_servicedefs(
 
         return result
 
-    host_check_table = config_cache.check_table(hostname)
+    host_check_table = config_cache.check_table(hostname, plugins)
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
@@ -471,7 +480,7 @@ def create_nagios_servicedefs(
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
-        plugin = get_check_plugin(service.check_plugin_name)
+        plugin = get_check_plugin(service.check_plugin_name, plugins)
         passive_service_attributes = core_config.get_cmk_passive_service_attributes(
             config_cache,
             hostname,

@@ -9,10 +9,12 @@ from __future__ import annotations
 import abc
 import json
 import re
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from enum import auto, Enum
 from typing import Any, cast, Final, Literal, overload, TypedDict
+
+from livestatus import SiteId
 
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
@@ -33,7 +35,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNOR,
     TagConditionOR,
 )
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
 import cmk.gui.watolib.changes as _changes
@@ -1153,18 +1155,22 @@ class ModeEditRuleset(WatoMode):
             html.div(_("There are no rules defined in this set."), class_="info")
             return
 
-        match_state = MatchState({"matched": False, "keys": set()})
         search_options: SearchOptions = ModeRuleSearchForm().search_options
 
         html.div("", id_="row_info")
         num_rows = 0
-        service_labels: Labels = {}
-        if self._hostname and self._host and self._service:
-            service_labels = analyse_service(
+
+        rule_match_results = (
+            self._analyze_rule_matching(
                 self._host.site_id(),
                 self._hostname,
+                self._item,
                 self._service,
-            ).labels
+                [e[2] for e in rules],
+            )
+            if self._hostname and self._host
+            else {}
+        )
 
         for folder, folder_rules in rules_grouped_by_folder(rules, self._folder):
             with table_element(
@@ -1188,13 +1194,11 @@ class ModeEditRuleset(WatoMode):
                     self._set_focus(rule)
                     self._show_rule_icons(
                         table,
-                        match_state,
                         folder,
                         rule,
                         rulenr,
                         search_options,
-                        service_labels=service_labels,
-                        analyse_rule_matching=bool(self._hostname),
+                        rule_match_results,
                     )
                     self._rule_cells(table, rule)
 
@@ -1217,17 +1221,15 @@ class ModeEditRuleset(WatoMode):
     def _show_rule_icons(
         self,
         table: Table,
-        match_state: MatchState,
         folder: Folder,
         rule: Rule,
         rulenr: int,
         search_options: SearchOptions,
-        service_labels: Labels,
-        analyse_rule_matching: bool,
+        rule_match_results: Mapping[str, tuple[str, str]],
     ) -> None:
-        if analyse_rule_matching:
+        if rule_match_results:
             table.cell(_("Match host"), css=["narrow"])
-            title, img = self._match(match_state, rule, service_labels=service_labels)
+            title, img = rule_match_results[rule.id]
             html.icon(img, title)
 
         if rule.ruleset.has_rule_search_options(search_options):
@@ -1299,32 +1301,62 @@ class ModeEditRuleset(WatoMode):
                 icon="delete",
             )
 
+    def _analyze_rule_matching(
+        self,
+        site_id: SiteId,
+        host_name: HostName,
+        item: Item,
+        service_name: ServiceName | None,
+        rules: Sequence[Rule],
+    ) -> dict[str, tuple[str, str]]:
+        service_labels = (
+            analyse_service(
+                site_id,
+                host_name,
+                service_name,
+            ).labels
+            if service_name
+            else {}
+        )
+        self._get_host_labels_from_remote_site()
+
+        match_state = MatchState({"matched": False, "keys": set()})
+
+        return {
+            rule.id: self._match(
+                match_state,
+                rule,
+                host_name,
+                item,
+                service_name,
+                service_labels=service_labels,
+            )
+            for rule in rules
+        }
+
     def _match(
         self,
         match_state: MatchState,
         rule: Rule,
+        host_name: HostName,
+        item: Item,
+        service_name: ServiceName | None,
         service_labels: Labels,
     ) -> tuple[str, str]:
-        if self._hostname is None:
-            raise MKUserError(
-                "host", _('Unable to analyze matching, because "host" parameter is missing')
-            )
-        self._get_host_labels_from_remote_site()
-
         if rule.is_disabled():
             return _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
 
         if not rule.matches(
-            self._hostname,
-            self._item,
-            self._service,
+            host_name,
+            item,
+            service_name,
             only_host_conditions=False,
             service_labels=service_labels,
         ):
             return _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
 
         ruleset = rule.ruleset
-        if ruleset.match_type() == "dict":
+        if rule.ruleset.match_type() == "dict":
             new_keys = set(rule.value.keys())
             already_existing = match_state["keys"] & new_keys
             match_state["keys"] |= new_keys
@@ -1354,10 +1386,8 @@ class ModeEditRuleset(WatoMode):
                 "checkmark_orange",
             )
         match_state["matched"] = True
-        return (_("This rule matches for the host '%s'") % self._hostname) + (
-            _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
-            if ruleset.item_type()
-            else "."
+        return (_("This rule matches for the host '%s'") % host_name) + (
+            _(" and the %s '%s'.") % (ruleset.item_name(), item) if ruleset.item_type() else "."
         ), "checkmark"
 
     def _get_host_labels_from_remote_site(self) -> None:

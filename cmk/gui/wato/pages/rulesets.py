@@ -12,7 +12,7 @@ import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, Final, Literal, overload, TypedDict
+from typing import Any, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 from livestatus import SiteId
 
@@ -773,6 +773,11 @@ class MatchState(TypedDict):
     keys: set[str]
 
 
+class RuleMatchResult(NamedTuple):
+    title: str
+    img: str
+
+
 class ModeEditRuleset(WatoMode):
     related_page_menu_hooks: list[Callable[[str], Iterator[PageMenuEntry]]] = []
 
@@ -1225,12 +1230,12 @@ class ModeEditRuleset(WatoMode):
         rule: Rule,
         rulenr: int,
         search_options: SearchOptions,
-        rule_match_results: Mapping[str, tuple[str, str]],
+        rule_match_results: Mapping[str, RuleMatchResult],
     ) -> None:
         if rule_match_results:
             table.cell(_("Match host"), css=["narrow"])
-            title, img = rule_match_results[rule.id]
-            html.icon(img, title)
+            result = rule_match_results[rule.id]
+            html.icon(result.img, result.title)
 
         if rule.ruleset.has_rule_search_options(search_options):
             table.cell(_("Match search"), css=["narrow"])
@@ -1308,7 +1313,7 @@ class ModeEditRuleset(WatoMode):
         item: Item,
         service_name: ServiceName | None,
         rules: Sequence[Rule],
-    ) -> dict[str, tuple[str, str]]:
+    ) -> dict[str, RuleMatchResult]:
         service_labels = (
             analyse_service(
                 site_id,
@@ -1342,9 +1347,11 @@ class ModeEditRuleset(WatoMode):
         item: Item,
         service_name: ServiceName | None,
         service_labels: Labels,
-    ) -> tuple[str, str]:
+    ) -> RuleMatchResult:
         if rule.is_disabled():
-            return _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
+            return RuleMatchResult(
+                _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
+            )
 
         if not rule.matches(
             host_name,
@@ -1353,7 +1360,9 @@ class ModeEditRuleset(WatoMode):
             only_host_conditions=False,
             service_labels=service_labels,
         ):
-            return _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
+            return RuleMatchResult(
+                _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
+            )
 
         ruleset = rule.ruleset
         if rule.ruleset.match_type() == "dict":
@@ -1361,34 +1370,40 @@ class ModeEditRuleset(WatoMode):
             already_existing = match_state["keys"] & new_keys
             match_state["keys"] |= new_keys
             if not new_keys:
-                return (
+                return RuleMatchResult(
                     _("This rule matches, but does not define any parameters."),
                     "checkmark_orange",
                 )
             if not already_existing:
-                return _("This rule matches and defines new parameters."), "checkmark"
+                return RuleMatchResult(
+                    _("This rule matches and defines new parameters."), "checkmark"
+                )
             if already_existing == new_keys:
-                return (
+                return RuleMatchResult(
                     _(
                         "This rule matches, but all of its parameters are overridden by previous rules."
                     ),
                     "checkmark_orange",
                 )
-            return (
+            return RuleMatchResult(
                 _(
                     "This rule matches, but some of its parameters are overridden by previous rules."
                 ),
                 "checkmark_plus",
             )
         if match_state["matched"] and ruleset.match_type() != "all":
-            return (
+            return RuleMatchResult(
                 _("This rule matches, but is overridden by a previous rule."),
                 "checkmark_orange",
             )
         match_state["matched"] = True
-        return (_("This rule matches for the host '%s'") % host_name) + (
-            _(" and the %s '%s'.") % (ruleset.item_name(), item) if ruleset.item_type() else "."
-        ), "checkmark"
+        return RuleMatchResult(
+            (_("This rule matches for the host '%s'") % host_name)
+            + (
+                _(" and the %s '%s'.") % (ruleset.item_name(), item) if ruleset.item_type() else "."
+            ),
+            "checkmark",
+        )
 
     def _get_host_labels_from_remote_site(self) -> None:
         """To be able to execute the match simulation we need the discovered host labels to be

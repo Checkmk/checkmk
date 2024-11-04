@@ -648,20 +648,21 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         layout=AdaptiveMultipleChoiceLayout.dual_list,
                                     ),
                                 ),
-                                "check_type_plugin": DictElement(
-                                    parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Match check types"),
-                                        elements=[
-                                            MultipleChoiceElement(
-                                                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
-                                                title=Title("%s") % title,
-                                            )
-                                            for name, title in _get_check_types()
-                                        ],
-                                        show_toggle_all=True,
-                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
-                                    ),
-                                ),
+                                # TODO disabled until we found a solution to load on demand or faster
+                                # "check_type_plugin": DictElement(
+                                #    parameter_form=AdaptiveMultipleChoice(
+                                #        title=Title("Match check types"),
+                                #        elements=[
+                                #            MultipleChoiceElement(
+                                #                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
+                                #                title=Title("%s") % title,
+                                #            )
+                                #            for name, title in _get_check_types()
+                                #        ],
+                                #        show_toggle_all=True,
+                                #        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                #    ),
+                                # ),
                             },
                         ),
                     ),

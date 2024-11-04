@@ -340,6 +340,11 @@ class SiteManagement:
     def _validate_broker_connection(
         cls, connection_id: ConnectionId, connection: BrokerConnection, is_new: bool
     ) -> None:
+        if not re.match("^[-a-z0-9A-Z_]+$", connection_id):
+            raise MKUserError(
+                "id", _("The connection id must consist only of letters, digit and the underscore.")
+            )
+
         if connection.connecter.site_id == connection.connectee.site_id:
             raise MKUserError(
                 None,

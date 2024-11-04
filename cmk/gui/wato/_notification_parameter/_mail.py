@@ -422,7 +422,7 @@ def _host_subject() -> DictElement[Any]:
                 "all macros that are defined in "
                 "the notification context."
             ),
-            prefill=DefaultValue("Check_MK: $HOSTNAME$ - $EVENT_TXT$"),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$ - $EVENT_TXT$"),
             field_size=FieldSize.LARGE,
             macro_support=True,
         ),
@@ -441,7 +441,7 @@ def _service_subject() -> DictElement[Any]:
                 "all macros that are defined in "
                 "the notification context."
             ),
-            prefill=DefaultValue("Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"),
             field_size=FieldSize.LARGE,
             macro_support=True,
         ),

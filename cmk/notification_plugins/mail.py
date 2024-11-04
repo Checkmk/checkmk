@@ -255,8 +255,8 @@ BODY_ELEMENTS = [
     ),
 ]
 
-TMPL_HOST_SUBJECT = "Check_MK: $HOSTNAME$ - $EVENT_TXT$"
-TMPL_SERVICE_SUBJECT = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
+TMPL_HOST_SUBJECT = "Checkmk: $HOSTNAME$ - $EVENT_TXT$"
+TMPL_SERVICE_SUBJECT = "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
 
 opt_debug = "-d" in sys.argv
 bulk_mode = "--bulk" in sys.argv

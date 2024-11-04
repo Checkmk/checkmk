@@ -2,6 +2,10 @@
   "name": "check_mk",
   "version": "1.0.0",
   "description": "Check_MK - Your complete IT monitoring solution",
+  "engines": {
+    "npm": ">=10.9.0 <11.0.0",
+    "node": ">=22.0.0 <=23.0.0"
+  },
   "main": "web/htdocs/js/index.js",
   "directories": {
     "doc": "doc",

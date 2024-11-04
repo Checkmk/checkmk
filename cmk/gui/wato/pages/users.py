@@ -88,6 +88,7 @@ from cmk.gui.watolib.users import (
     edit_users,
     get_vs_user_idle_timeout,
     make_user_object_ref,
+    user_features_registry,
     verify_password_policy,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
@@ -286,7 +287,7 @@ class ModeUsers(WatoMode):
         if self._can_create_and_delete_users and (
             delete_user := request.get_validated_type_input(UserId, "_delete")
         ):
-            delete_users([delete_user])
+            delete_users([delete_user], user_features_registry.features().sites)
             return redirect(self.mode_url())
 
         if request.var("_sync"):
@@ -344,7 +345,7 @@ class ModeUsers(WatoMode):
                     selected_users.append(user_id)
 
         if selected_users:
-            delete_users(selected_users)
+            delete_users(selected_users, user_features_registry.features().sites)
 
     def page(self) -> None:
         if not self._job_snapshot.exists:
@@ -836,7 +837,7 @@ class ModeEditUser(WatoMode):
             }
         }
         # The following call validates and updated the users
-        edit_users(user_object)
+        edit_users(user_object, user_features_registry.features().sites)
         return redirect(mode_url("users"))
 
     def _get_identity_userattrs(self, user_attrs: UserSpec) -> None:

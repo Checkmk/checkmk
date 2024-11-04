@@ -67,6 +67,11 @@ from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.sites import site_management_registry, SiteManagement
 from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
+from cmk.gui.watolib.users import (
+    default_sites,
+    user_features_registry,
+    UserFeatures,
+)
 
 
 def register_pages() -> None:
@@ -137,6 +142,12 @@ def register(edition: Edition) -> None:
         default_user_menu_topics,
         edition_supports_ldap=True,
         edition_supports_managing_roles=True,
+    )
+    user_features_registry.register(
+        UserFeatures(
+            edition=edition,
+            sites=default_sites,
+        )
     )
     activation_features_registry.register(
         ActivationFeatures(

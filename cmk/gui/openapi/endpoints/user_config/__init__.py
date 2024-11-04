@@ -33,7 +33,12 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
-from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
+from cmk.gui.watolib.users import (
+    delete_users,
+    edit_users,
+    user_features_registry,
+    verify_password_policy,
+)
 
 from cmk.crypto.password import Password
 
@@ -148,7 +153,8 @@ def create_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": True,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 
@@ -164,7 +170,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
 def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
-    delete_users([username])
+    delete_users([username], user_features_registry.features().sites)
     return Response(status=204)
 
 
@@ -210,7 +216,8 @@ def edit_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": False,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 

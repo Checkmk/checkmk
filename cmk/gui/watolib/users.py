@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import cast, Literal
+from typing import Callable, cast, Literal, TypeAlias
 
 from livestatus import SiteId
 
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -40,32 +42,32 @@ from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 from cmk.crypto.password import Password, PasswordPolicy
 
-# Wrong module layer violation warning due to CME/CRE split
-if edition(paths.omd_root) is Edition.CME:
-    from cmk.gui.cme.watolib.users import (  # pylint: disable=cmk-module-layer-violation
-        user_associated_sites,
-    )
-else:
-    from cmk.gui.cre.watolib.users import (  # pylint: disable=cmk-module-layer-violation
-        user_associated_sites,
-    )
+_UserAssociatedSitesFn: TypeAlias = Callable[[UserSpec], Sequence[SiteId] | None]
+
+_AffectedSites: TypeAlias = set[SiteId] | Literal["all"]
 
 
-AffectedSites = set[SiteId] | Literal["all"]
+def default_sites(_user: UserSpec) -> Sequence[SiteId] | None:
+    """The default implementation to get sites associated with user.
+
+    Which sites are associated to a user is edition-specific."""
+    return _user.get("authorized_sites")
 
 
-def _update_affected_sites(affected_sites: AffectedSites, user_attrs: UserSpec) -> AffectedSites:
+def _update_affected_sites(
+    affected_sites: _AffectedSites,
+    user_sites: Sequence[SiteId] | None,
+) -> _AffectedSites:
     if affected_sites == "all":
         return "all"
 
-    associated_sites = user_associated_sites(user_attrs)
-    if associated_sites is None:
+    if user_sites is None:
         return "all"
 
-    return affected_sites | set(associated_sites)
+    return affected_sites | set(user_sites)
 
 
-def delete_users(users_to_delete: Sequence[UserId]) -> None:
+def delete_users(users_to_delete: Sequence[UserId], sites: _UserAssociatedSitesFn) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     if user.id in users_to_delete:
@@ -74,11 +76,11 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
     all_users = userdb.load_users(lock=True)
 
     deleted_users = []
-    affected_sites: AffectedSites = set()
+    affected_sites: _AffectedSites = set()
     for entry in users_to_delete:
         if entry in all_users:  # Silently ignore not existing users
             deleted_users.append(entry)
-            affected_sites = _update_affected_sites(affected_sites, all_users[entry])
+            affected_sites = _update_affected_sites(affected_sites, sites(all_users[entry]))
             connection_id = all_users[entry].get("connector", None)
             connection = get_connection(connection_id)
             log_security_event(
@@ -109,26 +111,26 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
         userdb.save_users(all_users, datetime.now())
 
 
-def edit_users(changed_users: UserObject) -> None:
+def edit_users(changed_users: UserObject, sites: _UserAssociatedSitesFn) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []
-    affected_sites: AffectedSites = set()
+    affected_sites: _AffectedSites = set()
     for user_id, settings in changed_users.items():
         user_attrs: UserSpec = settings.get("attributes", {})
         is_new_user = settings.get("is_new_user", True)
         _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=is_new_user)
 
-        affected_sites = _update_affected_sites(affected_sites, user_attrs)
+        affected_sites = _update_affected_sites(affected_sites, sites(user_attrs))
         if is_new_user:
             new_users_info.append(user_id)
             add_internal_attributes(user_attrs)
         else:
             modified_users_info.append(user_id)
             old_user_attrs = all_users[user_id]
-            affected_sites = _update_affected_sites(affected_sites, old_user_attrs)
+            affected_sites = _update_affected_sites(affected_sites, sites(old_user_attrs))
 
         old_object = make_user_audit_log_object(all_users.get(user_id, {}))
         log_audit(
@@ -171,7 +173,9 @@ def edit_users(changed_users: UserObject) -> None:
     userdb.save_users(all_users, datetime.now())
 
 
-def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+def remove_custom_attribute_from_all_users(
+    custom_attribute_name: str, sites: _UserAssociatedSitesFn
+) -> None:
     edit_users(
         {
             user_id: {
@@ -182,7 +186,8 @@ def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
                 "is_new_user": False,
             }
             for user_id, settings in userdb.load_users(lock=True).items()
-        }
+        },
+        sites,
     )
 
 
@@ -375,6 +380,23 @@ class ContactsConfigFile(WatoSingleConfigFile[dict]):
     def read_file_and_validate(self) -> None:
         cfg = self.load_for_reading()
         validate_contacts(cfg)
+
+
+@dataclass(frozen=True, kw_only=True)
+class UserFeatures:
+    edition: Edition
+    sites: _UserAssociatedSitesFn
+
+
+class UserFeaturesRegistry(Registry[UserFeatures]):
+    def plugin_name(self, instance: UserFeatures) -> str:
+        return str(instance.edition)
+
+    def features(self) -> UserFeatures:
+        return self[str(edition(paths.omd_root))]
+
+
+user_features_registry = UserFeaturesRegistry()
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

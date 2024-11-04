@@ -42,7 +42,7 @@ from cmk.gui.watolib.custom_attributes import (
     update_user_custom_attrs,
 )
 from cmk.gui.watolib.userroles import clone_role, RoleID
-from cmk.gui.watolib.users import edit_users
+from cmk.gui.watolib.users import default_sites, edit_users
 
 from cmk.crypto.password_hashing import PasswordHash
 
@@ -166,7 +166,7 @@ def test_openapi_user_minimal_settings(
                 "is_new_user": True,
             }
         }
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -350,7 +350,7 @@ def test_openapi_user_internal_with_notifications(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -553,7 +553,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with run_as_superuser():
-            edit_users(user_object)
+            edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -585,7 +585,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
 
     assert _load_internal_attributes(name) == {
@@ -619,7 +620,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -685,7 +687,7 @@ def test_managed_global_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -769,7 +771,7 @@ def test_managed_idle_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
@@ -1429,7 +1431,7 @@ def test_edit_ldap_user_with_locked_attributes(
         },
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     clients.User.edit(
         username=name,

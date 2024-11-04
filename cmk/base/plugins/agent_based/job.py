@@ -172,9 +172,8 @@ register.agent_section(
 
 
 def discover_job(section: Section) -> type_defs.DiscoveryResult:
-    for jobname, job in section.items():
-        if not job["running"]:
-            yield Service(item=jobname)
+    for jobname, _job in section.items():
+        yield Service(item=jobname)
 
 
 _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {

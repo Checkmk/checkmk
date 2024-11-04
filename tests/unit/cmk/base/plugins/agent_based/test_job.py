@@ -12,7 +12,7 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import job
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 from cmk.agent_based.v1.type_defs import StringTable
 
@@ -605,4 +605,6 @@ def test_check_job(
 
 
 def test_discover():
-    assert not list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING)))
+    assert list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING))) == [
+        Service(item="230-testing-running")
+    ]

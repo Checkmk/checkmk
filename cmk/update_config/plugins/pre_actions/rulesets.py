@@ -129,10 +129,13 @@ def _validate_rule_values(
                 logger.error(error_message)
                 if conflict_mode is not ConflictMode.ASK:
                     return False
-                user_input = prompt(
-                    "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                )
-                return user_input.lower() in USER_INPUT_CONTINUE
+                if (
+                    prompt(
+                        "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+                    ).lower()
+                    not in USER_INPUT_CONTINUE
+                ):
+                    return False
     return True
 
 

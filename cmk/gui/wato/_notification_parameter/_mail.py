@@ -51,8 +51,8 @@ class NotificationParameterMail(NotificationParameter):
         # TODO register CSE specific version
         return DictionaryExtended(
             title=Title("HTML Email parameters"),
-            # must be called at run time!!
             elements=self._parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
+            ignored_elements=("no_floating_graphs",),
         )
 
     def _parameter_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
@@ -231,6 +231,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show contact groups"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -240,6 +241,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show service labels"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -249,6 +251,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show host labels"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -258,6 +261,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show host tags"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -282,9 +286,9 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                 title=Title("Email body/content"),
             ),
             parameter_form=FixedValue(
+                label=Label(""),
                 value=True,
             ),
-            render_only=True,
         ),
     }
 
@@ -323,6 +327,7 @@ def _testing_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show notification rule that triggered the notification"),
+                label=Label(""),
                 value=True,
             ),
         ),

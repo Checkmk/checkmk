@@ -293,6 +293,42 @@ void handle_log_initial_states(
         }
     }
 }
+
+bool rewind_to_start(LogEntryForwardIterator &it,
+                     std::chrono::system_clock::time_point since,
+                     std::chrono::system_clock::time_point until) {
+    // Switch to last logfile (we have at least one)
+    --it.it_logs_;
+    auto newest_log = it.it_logs_;
+
+    // Now find the log where 'since' starts.
+    while (it.it_logs_ != it.log_files_->begin() &&
+           it.it_logs_->second->since() >= since) {
+        --it.it_logs_;  // go back in history
+    }
+
+    // Check if 'until' is within these logfiles
+    if (it.it_logs_->second->since() > until) {
+        // All logfiles are too new, invalid timeframe -> No data available.
+        // Return empty result.
+        return false;
+    }
+
+    // Determine initial logentry
+    it.entries_ = it.getEntries();
+    if (!it.entries_->empty() && it.it_logs_ != newest_log) {
+        it.it_entries_ = it.entries_->end();
+        // Check last entry. If it's younger than _since -> use this logfile too
+        if (--it.it_entries_ != it.entries_->begin()) {
+            if (it.it_entries_->second->time() >= since) {
+                it.it_entries_ = it.entries_->begin();
+            }
+        }
+    } else {
+        it.it_entries_ = it.entries_->begin();
+    }
+    return true;
+}
 }  // namespace
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
@@ -339,35 +375,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         return;
     }
 
-    // Switch to last logfile (we have at least one)
-    --it.it_logs_;
-    auto newest_log = it.it_logs_;
-
-    // Now find the log where 'since' starts.
-    while (it.it_logs_ != it.log_files_->begin() &&
-           it.it_logs_->second->since() >= since) {
-        --it.it_logs_;  // go back in history
-    }
-
-    // Check if 'until' is within these logfiles
-    if (it.it_logs_->second->since() > until) {
-        // All logfiles are too new, invalid timeframe
-        // -> No data available. Return empty result.
+    if (!rewind_to_start(it, since, until)) {
         return;
-    }
-
-    // Determine initial logentry
-    it.entries_ = it.getEntries();
-    if (!it.entries_->empty() && it.it_logs_ != newest_log) {
-        it.it_entries_ = it.entries_->end();
-        // Check last entry. If it's younger than _since -> use this logfile too
-        if (--it.it_entries_ != it.entries_->begin()) {
-            if (it.it_entries_->second->time() >= since) {
-                it.it_entries_ = it.entries_->begin();
-            }
-        }
-    } else {
-        it.it_entries_ = it.entries_->begin();
     }
 
     // From now on use getNextLogentry()

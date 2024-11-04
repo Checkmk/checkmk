@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import CollapsibleTitle from '@/quick-setup/components/CollapsibleTitle.vue'
 import CompositeWidget from './CompositeWidget.vue'
 import { type CollapsibleWidgetProps } from './widget_types'
@@ -17,6 +17,13 @@ const isOpen = ref(!!props?.open)
 const toggleOpen = () => {
   isOpen.value = !isOpen.value
 }
+
+watch(props, (newProps) => {
+  const errors = newProps.errors || {}
+  if (Object.keys(errors).length > 0) {
+    isOpen.value = true
+  }
+})
 
 const updateData = (id: string, value: object) => {
   emits('update', id, value)

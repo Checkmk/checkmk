@@ -677,7 +677,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
         ),
         configure_components=_components,
         custom_validators=[],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Notification method (plug-in)"),
     )
 
@@ -940,7 +940,7 @@ def notification_method() -> QuickSetupStage:
         sub_title=_("What should be send out?"),
         configure_components=_components,
         custom_validators=[],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Recipient"),
     )
 

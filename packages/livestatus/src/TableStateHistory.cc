@@ -184,6 +184,10 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
+bool LogEntryForwardIterator::no_log_files() const {
+    return log_files_->begin() == log_files_->end();
+}
+
 const Logfile::map_type *LogEntryForwardIterator::getEntries() {
     return it_logs_->second->getEntriesFor({
         .max_lines_per_log_file = max_lines_per_log_file_,
@@ -335,7 +339,7 @@ bool LogEntryForwardIterator::rewind_to_start(
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
                                             LogEntryForwardIterator &it) {
-    if (it.log_files_->begin() == it.log_files_->end()) {
+    if (it.no_log_files()) {
         return;
     }
     auto object_filter = createPartialFilter(query);

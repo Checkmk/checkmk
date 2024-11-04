@@ -37,10 +37,13 @@ public:
         , it_logs_{log_files.end()}
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
-    const Logfile::map_type *getEntries();
-    LogEntry *getNextLogentry();
+    [[nodiscard]] bool no_log_files() const;
     bool rewind_to_start(std::chrono::system_clock::time_point since,
                          std::chrono::system_clock::time_point until);
+    LogEntry *getNextLogentry();
+
+private:
+    const Logfile::map_type *getEntries();
 
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;

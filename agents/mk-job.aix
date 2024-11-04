@@ -18,11 +18,6 @@ help() {
     echo "This file is being distributed with the Check_MK Agent."
 }
 
-if [ $# -lt 2 ]; then
-    help >&2
-    exit 1
-fi
-
 CURRENT_USER=$(whoami)
 JOB_DIR="${MK_VARDIR}/job/${CURRENT_USER}"
 JOB_NAME="${1}"
@@ -30,46 +25,56 @@ TMP_FILE="${TMPDIR}/${JOB_NAME}.$$"
 RUNNING_FILE="${JOB_DIR}/${JOB_NAME}.$$running"
 COMPLETED_FILE="${JOB_DIR}/${JOB_NAME}"
 
-shift
+main() {
 
-if [ ! -d "${JOB_DIR}" ]; then
-    if [ "${CURRENT_USER}" = root ]; then
-        mkdir -p "${JOB_DIR}"
-    else
-        echo "ERROR: Missing output directory ${JOB_DIR} for non-root user '${CURRENT_USER}'." >&2
+    if [ $# -lt 2 ]; then
+        help >&2
         exit 1
     fi
-fi
 
-if ! type "${1}" >/dev/null 2>&1; then
-    echo -e "ERROR: Cannot run ${1}. Command not found.\n" >&2
-    help >&2
-    exit 1
-fi
+    shift
 
-cleanup() {
-    # shellcheck disable=SC2317 # shellcheck doesn't understand trap
-    rm "${RUNNING_FILE}" 2>/dev/null
+    if [ ! -d "${JOB_DIR}" ]; then
+        if [ "${CURRENT_USER}" = root ]; then
+            mkdir -p "${JOB_DIR}"
+        else
+            echo "ERROR: Missing output directory ${JOB_DIR} for non-root user '${CURRENT_USER}'." >&2
+            exit 1
+        fi
+    fi
+
+    if ! type "${1}" >/dev/null 2>&1; then
+        echo -e "ERROR: Cannot run ${1}. Command not found.\n" >&2
+        help >&2
+        exit 1
+    fi
+
+    cleanup() {
+        # shellcheck disable=SC2317 # shellcheck doesn't understand trap
+        rm "${RUNNING_FILE}" 2>/dev/null
+    }
+
+    echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
+    cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
+
+    if [ ! -w "${RUNNING_FILE}" ]; then
+        # Looks like we are lacking the permissions to create this file..
+        # In this scenario no mk-job status file is created. We simply execute the command
+        rm "${TMP_FILE}" 2>/dev/null
+        exec "$@"
+        exit $?
+    fi
+
+    trap "cleanup" 0
+
+    # BEGIN PLATFORM SPECIFIC CODE
+    /usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
+    # END PLATFORM SPECIFIC CODE
+    RC=$?
+    echo "exit_code ${RC}" >>"${TMP_FILE}"
+
+    mv "${TMP_FILE}" "${COMPLETED_FILE}"
+    exit $RC
 }
 
-echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
-cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
-
-if [ ! -w "${RUNNING_FILE}" ]; then
-    # Looks like we are lacking the permissions to create this file..
-    # In this scenario no mk-job status file is created. We simply execute the command
-    rm "${TMP_FILE}" 2>/dev/null
-    exec "$@"
-    exit $?
-fi
-
-trap "cleanup" 0
-
-# BEGIN PLATFORM SPECIFIC CODE
-/usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
-# END PLATFORM SPECIFIC CODE
-RC=$?
-echo "exit_code ${RC}" >>"${TMP_FILE}"
-
-mv "${TMP_FILE}" "${COMPLETED_FILE}"
-exit $RC
+[ -z "${MK_SOURCE_ONLY}" ] && main "$@"

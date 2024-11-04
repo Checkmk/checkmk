@@ -295,9 +295,7 @@ void handle_log_initial_states(
 }
 }  // namespace
 
-bool LogEntryForwardIterator::rewind_to_start(
-    std::chrono::system_clock::time_point since,
-    std::chrono::system_clock::time_point until) {
+bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period) {
     if (log_files_->begin() == log_files_->end()) {
         return false;
     }
@@ -308,12 +306,12 @@ bool LogEntryForwardIterator::rewind_to_start(
 
     // Now find the log where 'since' starts.
     while (it_logs_ != log_files_->begin() &&
-           it_logs_->second->since() >= since) {
+           it_logs_->second->since() >= period.since) {
         --it_logs_;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (it_logs_->second->since() > until) {
+    if (it_logs_->second->since() > period.until) {
         // All logfiles are too new, invalid timeframe -> No data available.
         // Return empty result.
         return false;
@@ -325,7 +323,7 @@ bool LogEntryForwardIterator::rewind_to_start(
         it_entries_ = entries_->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--it_entries_ != entries_->begin()) {
-            if (it_entries_->second->time() >= since) {
+            if (it_entries_->second->time() >= period.since) {
                 it_entries_ = entries_->begin();
             }
         }
@@ -369,14 +367,16 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                       : std::chrono::system_clock::now()) +
                  1s;
 
+    const LogPeriod period = {.since = since, .until = until};
+
     // NOTE: We have a closed interval with a resolution of 1s, so we have
     // to subtract 1s to get the duration. Silly representation...
-    auto query_timeframe = until - since - 1s;
+    auto query_timeframe = period.until - period.since - 1s;
     if (query_timeframe <= 0s) {
         return;
     }
 
-    if (!it.rewind_to_start(since, until)) {
+    if (!it.rewind_to_start(period)) {
         return;
     }
 
@@ -388,16 +388,16 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     notification_periods_t notification_periods;
 
     while (LogEntry *entry = it.getNextLogentry()) {
-        if (abort_query_ || entry->time() >= until) {
+        if (abort_query_ || entry->time() >= period.until) {
             break;
         }
 
-        if (only_update && entry->time() >= since) {
+        if (only_update && entry->time() >= period.since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (const auto &[key, hss] : state_info) {
-                hss->_from = since;
-                hss->_until = since;
+                hss->_from = period.since;
+                hss->_until = period.since;
             }
             only_update = false;
         }
@@ -417,7 +417,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, false,
                                    state_info, object_blacklist, *object_filter,
-                                   since);
+                                   period);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
@@ -428,14 +428,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, false,
                                    state_info, object_blacklist, *object_filter,
-                                   since);
+                                   period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, true,
                                    state_info, object_blacklist, *object_filter,
-                                   since);
+                                   period);
                 break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
@@ -446,7 +446,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 handle_state_entry(query, user, core, query_timeframe, entry,
                                    only_update, notification_periods, true,
                                    state_info, object_blacklist, *object_filter,
-                                   since);
+                                   period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
@@ -467,7 +467,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     if (!abort_query_) {
-        final_reports(query, user, query_timeframe, state_info, until);
+        final_reports(query, user, query_timeframe, state_info, period);
     }
 }
 
@@ -477,7 +477,7 @@ void TableStateHistory::handle_state_entry(
     bool only_update, const notification_periods_t &notification_periods,
     bool is_host_entry, state_info_t &state_info,
     object_blacklist_t &object_blacklist, const Filter &object_filter,
-    std::chrono::system_clock::time_point since) {
+    const LogPeriod &period) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
         core.find_service(entry->host_name(), entry->service_description());
@@ -501,7 +501,7 @@ void TableStateHistory::handle_state_entry(
 
     if (!state_info.contains(key)) {
         insert_new_state(query, user, entry, only_update, notification_periods,
-                         state_info, object_blacklist, object_filter, since,
+                         state_info, object_blacklist, object_filter, period,
                          entry_host, entry_service, key);
     }
     update(query, user, core, query_timeframe, entry, *state_info[key],
@@ -514,7 +514,7 @@ void TableStateHistory::insert_new_state(
     Query &query, const User &user, const LogEntry *entry, bool only_update,
     const notification_periods_t &notification_periods,
     state_info_t &state_info, object_blacklist_t &object_blacklist,
-    const Filter &object_filter, std::chrono::system_clock::time_point since,
+    const Filter &object_filter, const LogPeriod &period,
     const IHost *entry_host, const IService *entry_service,
     HostServiceKey key) {
     auto state = std::make_unique<HostServiceState>();
@@ -552,7 +552,7 @@ void TableStateHistory::insert_new_state(
         }
     }
 
-    state->_from = since;
+    state->_from = period.since;
 
     // Get notification period of host/service. If this host/service is no
     // longer available in nagios -> set to ""
@@ -596,7 +596,7 @@ void TableStateHistory::insert_new_state(
     // Log UNMONITORED state if this host or service just appeared within
     // the query timeframe. It gets a grace period of ten minutes (nagios
     // startup)
-    if (!only_update && entry->time() - since > 10min) {
+    if (!only_update && entry->time() - period.since > 10min) {
         state->_debug_info = "UNMONITORED ";
         state->_state = -1;
     }
@@ -627,8 +627,7 @@ void TableStateHistory::handle_timeperiod_transition(
 void TableStateHistory::final_reports(
     Query &query, const User &user,
     std::chrono::system_clock::duration query_timeframe,
-    const state_info_t &state_info,
-    std::chrono::system_clock::time_point until) {
+    const state_info_t &state_info, const LogPeriod &period) {
     for (const auto &[key, hss] : state_info) {
         // No trace since the last two nagios startup -> host/service has
         // vanished
@@ -645,7 +644,7 @@ void TableStateHistory::final_reports(
             hss->_long_log_output = "";
         }
 
-        hss->_time = until - 1s;
+        hss->_time = period.until - 1s;
         hss->_until = hss->_time;
 
         process(query, user, query_timeframe, *hss);

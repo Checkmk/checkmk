@@ -37,8 +37,7 @@ public:
         , it_logs_{log_files.end()}
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
-    bool rewind_to_start(std::chrono::system_clock::time_point since,
-                         std::chrono::system_clock::time_point until);
+    bool rewind_to_start(const LogPeriod &period);
     LogEntry *getNextLogentry();
 
 private:
@@ -88,15 +87,15 @@ private:
                             bool is_host_entry, state_info_t &state_info,
                             object_blacklist_t &object_blacklist,
                             const Filter &object_filter,
-                            std::chrono::system_clock::time_point since);
+                            const LogPeriod &period);
 
     static void insert_new_state(
         Query &query, const User &user, const LogEntry *entry, bool only_update,
         const notification_periods_t &notification_periods,
         state_info_t &state_info, object_blacklist_t &object_blacklist,
-        const Filter &object_filter,
-        std::chrono::system_clock::time_point since, const IHost *entry_host,
-        const IService *entry_service, HostServiceKey key);
+        const Filter &object_filter, const LogPeriod &period,
+        const IHost *entry_host, const IService *entry_service,
+        HostServiceKey key);
 
     void handle_timeperiod_transition(
         Query &query, const User &user, const ICore &core,
@@ -107,8 +106,7 @@ private:
 
     void final_reports(Query &query, const User &user,
                        std::chrono::system_clock::duration query_timeframe,
-                       const state_info_t &state_info,
-                       std::chrono::system_clock::time_point until);
+                       const state_info_t &state_info, const LogPeriod &period);
 
     void process(Query &query, const User &user,
                  std::chrono::system_clock::duration query_timeframe,

@@ -156,6 +156,7 @@ def _event_choices(what: Literal["host", "service"]) -> Sequence[CascadingSingle
                         ],
                     ),
                 ],
+                custom_validate=[_validate_from_to],
             ),
         ),
         CascadingSingleChoiceElement(
@@ -185,6 +186,14 @@ def _event_choices(what: Literal["host", "service"]) -> Sequence[CascadingSingle
             ),
         ),
     ]
+
+
+# TODO maybe introduce a real validator
+def _validate_from_to(p):
+    if p[0] == p[1]:
+        raise ValidationError(
+            Message("Source state can not be equal to target state."),
+        )
 
 
 def _validate_at_least_one_event(

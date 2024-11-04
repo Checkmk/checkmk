@@ -62,27 +62,27 @@ def configure_authentication() -> QuickSetupStage:
                 items=[
                     Text(
                         text=_(
-                            "Acquire Project ID: Log in to the Google Cloud Console, select the correct project, note down the Project ID either from the dashboard or project settings, and use it below."
+                            "Log in to the Google Cloud Console, select the project to monitor and note down the Project ID either from the dashboard or project settings."
                         )
                     ),
                     Text(
                         text=_(
-                            "Create user: Navigate to IAM & Admin, select Service Accounts, create a new service account with a descriptive name, assign roles (Monitoring Viewer and Cloud Asset Viewer), and finalize the creation."
+                            'Create a Service Account in "IAM & Admin" and assign the roles "Monitoring Viewer" and "Cloud Asset Viewer" to this account.'
                         ),
                     ),
                     Text(
                         text=_(
-                            "Create key: Generate a key for the service account to access monitoring and asset data, ensuring it's in JSON format. Copy JSON object including the curly brackets and store to use it below."
+                            "Create a new key in json format for the service account and download the created file."
                         )
                     ),
                     Text(
                         text=_(
-                            "Activate APIs: Check if the Cloud Asset API is enabled, activate it if necessary, and wait for it to become accessible."
+                            'Verify that the "Cloud Asset API" on "APIs & Serivces" is activated. It may take some minutes until the API is accessible.'
                         )
                     ),
                     Text(
                         text=_(
-                            "Return to Checkmk: Define a unique GCP account name, and use the Project ID and JSON object below."
+                            "Return to Checkmk, define a unique configuration name, and use the Project ID as well as the raw output of the JSON file for the key below."
                         )
                     ),
                 ],

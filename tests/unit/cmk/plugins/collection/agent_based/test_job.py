@@ -15,7 +15,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based import job
 
 SECTION_1: job.Section = {
@@ -591,4 +591,6 @@ def test_check_job(
 
 
 def test_discover():
-    assert not list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING)))
+    assert list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING))) == [
+        Service(item="230-testing-running")
+    ]

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import suppress
 from pathlib import Path
 
 from tests.testlib.agent import (
@@ -11,7 +10,6 @@ from tests.testlib.agent import (
     controller_status_json,
     register_controller,
 )
-from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 
@@ -52,9 +50,9 @@ def _test_rename_preserves_registration(
             connection_details["remote"]["hostname"] == new_hostname
         ), f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
     finally:
-        with suppress(UnexpectedResponse):
-            central_site.openapi.delete_host(hostname)
-            central_site.openapi.delete_host(new_hostname)
+        hostnames = {_["id"] for _ in central_site.openapi.get_hosts()}
+        for hostname_ in hostnames.intersection({hostname, new_hostname}):
+            central_site.openapi.delete_host(hostname_)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 

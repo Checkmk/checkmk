@@ -188,6 +188,12 @@ class LabelsI18n:
     max_labels_reached: str
 
 
+class LabelSource(str, Enum):
+    explicit = "explicit"
+    ruleset = "ruleset"
+    discovered = "discovered"
+
+
 @dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
@@ -421,6 +427,7 @@ class Labels(FormSpec):
     max_labels: int
     type: str = "labels"
     autocompleter: Optional[Autocompleter] = None
+    label_source: Optional[LabelSource] = None
 
 
 Components = Union[

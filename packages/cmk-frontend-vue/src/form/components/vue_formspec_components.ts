@@ -199,6 +199,7 @@ export type Labels = FormSpec & {
   i18n: LabelsI18N;
   autocompleter?: Autocompleter;
   max_labels: number;
+  label_source?: "explicit" | "ruleset" | "discovered";
 };
 
 export interface VueFormspecComponents {

@@ -298,3 +298,32 @@ test('FormReadonly renders multiline_text', () => {
   // Title of cascading
   screen.getByText('BLABLA')
 })
+
+const labelsFormSpec: FormSpec.Labels = {
+  type: 'labels',
+  title: 'fooTitle',
+  help: 'fooHelp',
+  i18n: {
+    add_some_labels: 'Add some labels',
+    key_value_format_error: 'Key value format error',
+    max_labels_reached: 'Max labels reached',
+    uniqueness_error: 'Uniqueness error'
+  },
+  max_labels: 3,
+  autocompleter: { data: [], fetch_method: 'ajax_vs_autocomplete' } as FormSpec.Autocompleter,
+  label_source: 'discovered',
+  validators: []
+}
+
+test('FormReadonly renders labels', () => {
+  render(FormReadonly, {
+    props: {
+      spec: labelsFormSpec,
+      backendValidation: [],
+      data: { key1: 'value1', key2: 'value2' }
+    }
+  })
+  screen.getByText('key1: value1')
+  screen.getByText('key2: value2')
+  expect(screen.queryByText('key3: value3')).toBeNull()
+})

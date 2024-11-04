@@ -1059,6 +1059,9 @@
                 },
                 "max_labels": {
                     "type": "integer"
+                },
+                "label_source": {
+                    "enum": ["explicit", "ruleset", "discovered"]
                 }
             },
             "required": ["type", "i18n", "max_labels"],

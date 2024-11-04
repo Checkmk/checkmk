@@ -12,6 +12,10 @@
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
   --form-readonly-error-bg-color: rgb(252, 85, 85);
   --tag-added-color-light: rgb(6, 103, 193);
+  --tag-color: rgb(0, 168, 181);
+  --tag-discovered-color: rgb(119, 72, 152);
+  --tag-explicit-color: rgba(243, 174, 75);
+  --tag-ruleset-color: rgba(222, 67, 131);
 
   /* Fonts */
   --font-size-xlarge: 16px;

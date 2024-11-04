@@ -73,6 +73,9 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                     data={"ident": "label", "params": {"world": self.form_spec.world.value}},
                 ),
                 max_labels=self.form_spec.max_labels,
+                label_source=self.form_spec.label_source.value
+                if self.form_spec.label_source
+                else None,
             ),
             {} if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

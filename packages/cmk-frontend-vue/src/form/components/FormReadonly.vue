@@ -24,7 +24,8 @@ import type {
   ListOfStrings,
   DualListChoice,
   CheckboxListChoice,
-  Folder
+  Folder,
+  Labels
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -88,7 +89,7 @@ function renderForm(
     case 'folder':
       return renderFolder(formSpec as Folder, value as string, backendValidation)
     case 'labels':
-      return renderLabels(value as string)
+      return renderLabels(formSpec as Labels, value as Record<string, string>)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -422,9 +423,26 @@ function renderFolder(
   return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
 }
 
-// Todo: https://jira.lan.tribe29.com/browse/CMK-19962
-function renderLabels(value: string): VNode {
-  return h('div', value)
+function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
+  let color = 'var(--tag-color)'
+  switch (formSpec.label_source) {
+    case 'discovered':
+      color = 'var(--tag-discovered-color)'
+      break
+    case 'explicit':
+      color = 'var(--tag-explicit-color)'
+      break
+    case 'ruleset':
+      color = 'var(--tag-ruleset-color)'
+      break
+  }
+  return h(
+    'div',
+    { class: 'form-readonly__labels' },
+    Object.entries(value).map(([key, value]) => {
+      return h('div', { class: 'label', style: { backgroundColor: color } }, `${key}: ${value}`)
+    })
+  )
 }
 
 export default defineComponent({
@@ -491,5 +509,23 @@ export default defineComponent({
 
 .form-readonly__list > li > div {
   display: inline-block;
+}
+
+.form-readonly__labels {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+
+  > .label {
+    width: fit-content;
+    margin: 0 5px;
+    padding: 1px 4px;
+    border-radius: 5px;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
 }
 </style>

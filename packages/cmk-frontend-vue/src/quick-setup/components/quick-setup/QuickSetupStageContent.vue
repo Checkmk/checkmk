@@ -12,7 +12,6 @@ import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()
 
-const isLast = computed(() => props.index === props.numberOfStages - 1)
 const isSaveOverview = computed(
   () => props.index === props.numberOfStages && props.mode === 'overview'
 )
@@ -22,19 +21,22 @@ const filteredButtons = computed(() =>
 )
 
 function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
-  ariaLabel: string
   icon: { name: string; rotate: number }
 } {
-  /* TODO: move this strings to the backend to make it translatable (CMK-19020) */
   switch (variant) {
     case 'prev':
-      return { ariaLabel: 'Go to the previous stage', icon: { name: 'back', rotate: 90 } }
+      return { icon: { name: 'back', rotate: 90 } }
+
     case 'next':
-      return { ariaLabel: 'Go to the next stage', icon: { name: 'continue', rotate: 90 } }
+      return {
+        icon: { name: 'continue', rotate: 90 }
+      }
     case 'save':
-      return { ariaLabel: 'Save', icon: { name: 'save-to-services', rotate: 0 } }
+      return {
+        icon: { name: 'save-to-services', rotate: 0 }
+      }
   }
-  return { ariaLabel: '', icon: { name: '', rotate: 0 } }
+  return { icon: { name: '', rotate: 0 } }
 }
 </script>
 
@@ -53,7 +55,7 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
             return { button: btn, buttonConfig: getButtonConfig(btn.variant) }
           })"
           :key="button.label"
-          :aria-label="buttonConfig.ariaLabel"
+          :aria-label="button.ariaLabel"
           :variant="
             button.variant === 'next' || button.variant === 'save' ? 'primary' : 'secondary'
           "
@@ -68,9 +70,7 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
       </div>
       <div v-else class="qs-stage-content__loading">
         <CmkIcon name="load-graph" variant="inline" size="xlarge" />
-        <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
-        <span v-if="isLast">This process may take several minutes, please wait...</span>
-        <span v-else>Please wait...</span>
+        <span>{{ loadWaitLabel }}</span>
       </div>
     </div>
   </div>

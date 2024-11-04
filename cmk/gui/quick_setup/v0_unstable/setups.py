@@ -42,8 +42,10 @@ class QuickSetupStage:
     configure_components: WidgetConfigurator | Sequence[Widget]
     custom_validators: Iterable[CallableValidator]
     recap: Iterable[CallableRecap]
-    button_label: str
     sub_title: str | None = None
+    next_button_label: str | None = None
+    prev_button_label: str | None = None
+    load_wait_label: str | None = None
 
 
 @dataclass(frozen=True)

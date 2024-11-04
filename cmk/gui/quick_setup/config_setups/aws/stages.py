@@ -46,6 +46,10 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
 
+NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
+PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
+PREV_BUTTON_LABEL = _("Back")
+
 
 def prepare_aws() -> QuickSetupStage:
     return QuickSetupStage(
@@ -97,7 +101,7 @@ def prepare_aws() -> QuickSetupStage:
             ),
         ],
         recap=[recaps.recaps_form_spec],
-        button_label="Configure host and regions",
+        next_button_label=_("Configure host and regions"),
     )
 
 
@@ -120,7 +124,8 @@ def configure_host_and_regions() -> QuickSetupStage:
         ],
         custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
-        button_label="Configure services to monitor",
+        next_button_label=_("Configure services to monitor"),
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 
@@ -160,7 +165,8 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label=_("Review and test configuration"),
+        next_button_label=_("Review and test configuration"),
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 
@@ -208,7 +214,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         recap=[
             recap_found_services,
         ],
-        button_label=_("Test configuration"),
+        load_wait_label=_("This process may take several minutes, please wait..."),
+        next_button_label=_("Test configuration"),
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 

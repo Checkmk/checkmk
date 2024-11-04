@@ -35,6 +35,7 @@ const showSaveStage = computed(
       :recap-content="stg.recapContent || null"
       :errors="stg.errors"
       :go-to-this-stage="stg.goToThisStage || null"
+      :load-wait-label="stg.loadWaitLabel"
     />
   </ol>
   <QuickSetupSaveStage
@@ -47,6 +48,7 @@ const showSaveStage = computed(
     :content="saveStage.content || null"
     :errors="saveStage.errors || []"
     :buttons="saveStage.buttons || []"
+    :load-wait-label="saveStage.loadWaitLabel"
   />
 </template>
 

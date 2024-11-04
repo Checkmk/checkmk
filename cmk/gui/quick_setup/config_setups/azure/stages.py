@@ -47,6 +47,10 @@ from cmk.plugins.azure.rulesets import (  # pylint: disable=cmk-module-layer-vio
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, Dictionary
 
+NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
+PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
+PREV_BUTTON_LABEL = _("Back")
+
 
 def configure_authentication() -> QuickSetupStage:
     return QuickSetupStage(
@@ -106,7 +110,7 @@ def configure_authentication() -> QuickSetupStage:
             ),
         ],
         recap=[recaps.recaps_form_spec],
-        button_label=_("Configure host and authority"),
+        next_button_label=_("Configure host and authority"),
     )
 
 
@@ -122,7 +126,8 @@ def configure_host_and_authority() -> QuickSetupStage:
         ],
         custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
-        button_label=_("Configure services to monitor"),
+        next_button_label=_("Configure services to monitor"),
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 
@@ -159,7 +164,8 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label=_("Review and test configuration"),
+        next_button_label=_("Review and test configuration"),
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 
@@ -203,7 +209,9 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         recap=[
             recap_found_services,
         ],
-        button_label=_("Test configuration"),
+        next_button_label=_("Test configuration"),
+        prev_button_label=PREV_BUTTON_LABEL,
+        load_wait_label=_("This process may take several minutes, please wait..."),
     )
 
 

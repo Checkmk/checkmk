@@ -14,7 +14,11 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupStage,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -72,7 +76,7 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -81,7 +85,7 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
     )
     assert len(resp.json["overviews"]) == 1
     assert len(resp.json["stage"]["next_stage_structure"]["components"]) == 1
-    assert resp.json["stage"]["next_stage_structure"]["button_label"] == "Next"
+    assert resp.json["stage"]["next_stage_structure"]["next_button"]["label"] == "Next"
 
 
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
@@ -94,14 +98,14 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[recaps.recaps_form_spec],
-                button_label="Next",
+                next_button_label="Next",
             ),
             lambda: QuickSetupStage(
                 title="stage2",
                 configure_components=[],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -111,7 +115,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     )
     assert resp.json["errors"] is None
     assert len(resp.json["stage_recap"]) == 1
-    assert resp.json["next_stage_structure"]["button_label"] == "Next"
+    assert resp.json["next_stage_structure"]["next_button"]["label"] == "Next"
 
 
 def _form_spec_extra_validate(
@@ -130,7 +134,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -182,7 +186,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -218,7 +222,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -238,7 +242,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
                 configure_components=[],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -264,7 +268,7 @@ def test_unique_id_must_be_unique(
                 ],
                 custom_validators=[qs_validators.validate_unique_id],
                 recap=[recaps.recaps_form_spec],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -288,7 +292,7 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
             lambda: QuickSetupStage(
                 title="stage2",
@@ -296,7 +300,7 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
                 configure_components=[],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -304,7 +308,14 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
         quick_setup_id="quick_setup_test", mode="overview"
     )
     assert len(resp.json["stages"]) == 2
-    assert set(resp.json["stages"][0]) == {"title", "sub_title", "components", "button_label"}
+    assert set(resp.json["stages"][0]) == {
+        "title",
+        "sub_title",
+        "components",
+        "next_button",
+        "prev_button",
+        "load_wait_label",
+    }
 
 
 def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
@@ -324,7 +335,7 @@ def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
         load_data=load_data,
@@ -361,7 +372,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                 ],
                 custom_validators=[],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )
@@ -468,7 +479,7 @@ def test_validation_on_save_all(
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
             lambda: QuickSetupStage(
                 title="stage2",
@@ -483,7 +494,7 @@ def test_validation_on_save_all(
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
-                button_label="Next",
+                next_button_label="Next",
             ),
         ],
     )

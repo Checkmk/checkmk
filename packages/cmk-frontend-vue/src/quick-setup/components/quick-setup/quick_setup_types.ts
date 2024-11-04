@@ -36,6 +36,9 @@ export interface QuickSetupSaveStageSpec {
 
   /** @property {StageButtonSpec} buttons - List of butons to be rendered at the bottom of the stage */
   buttons: Readonly<StageButtonSpec[]>
+
+  /** @property {string} loadWaitLabel - String to be displayed while waiting for the backend response */
+  loadWaitLabel: string
 }
 
 export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
@@ -67,6 +70,9 @@ interface QuickSetupSaveAndStageContentProps extends QuickSetupSaveStageSpec {
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
   mode: WizardMode
+
+  /** @property {string} loadWaitLabel - String to be displayed while waiting for the backend response */
+  loadWaitLabel: string
 }
 
 export interface QuickSetupSaveStageProps extends QuickSetupSaveAndStageContentProps {
@@ -82,6 +88,9 @@ export interface QuickSetupStageProps extends QuickSetupStageSpec, QuickSetupSav
 export interface StageButtonSpec {
   /** @property {string} label - Button's caption */
   label: string
+
+  /** @property {string | null} aria_label - Button's caption */
+  ariaLabel?: string | null
 
   /** @property {'prev' | 'next' | 'save'} variant - type of button */
   variant: 'prev' | 'next' | 'save'

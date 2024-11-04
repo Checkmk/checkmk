@@ -50,12 +50,14 @@ interface QSStageStore {
   form_spec_errors?: AllValidationMessages
   errors?: string[]
   buttons?: StageButtonSpec[]
+  load_wait_label: string
 }
 
-/* TODO: move this string to the backend to make it translatable (CMK-19020) */
-const PREV_BUTTON_LABEL = 'Back'
-const GUIDED_MODE_LABEL = 'Guided mode'
-const OVERVIEW_MODE_LABEL = 'Overview mode'
+const GUIDED_MODE = 'guided'
+const OVERVIEW_MODE = 'overview'
+
+let guidedModeLabel = ''
+let overviewModeLabel = ''
 
 const props = withDefaults(defineProps<QuickSetupAppProps>(), {
   mode: 'guided',
@@ -112,18 +114,35 @@ const nextStage = async () => {
 
   stages.value[thisStage]!.recap = result.stage_recap
 
-  //If we have not finished the quick setup yet, but still on the, regular steps
+  //If we have not finished the quick setup yet, but still on the, regular step
   if (nextStage < numberOfStages.value - 1) {
+    const btn = []
+    if (result.next_stage_structure.next_button) {
+      btn.push(
+        defineButton.next(
+          result.next_stage_structure.next_button.label,
+          result.next_stage_structure.next_button.aria_label
+        )
+      )
+    }
+
+    if (result.next_stage_structure.prev_button) {
+      btn.push(
+        defineButton.prev(
+          result.next_stage_structure.prev_button.label,
+          result.next_stage_structure.prev_button.aria_label
+        )
+      )
+    }
+
     stages.value[nextStage] = {
       ...stages.value[nextStage]!,
       components: result.next_stage_structure.components,
       recap: [],
       form_spec_errors: {},
       errors: [],
-      buttons: [
-        defineButton.next(result.next_stage_structure.button_label),
-        defineButton.prev(PREV_BUTTON_LABEL)
-      ]
+      buttons: btn,
+      load_wait_label: result.next_stage_structure.load_wait_label
     }
   }
 
@@ -139,15 +158,18 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
   const data = await getAllStages(props.quick_setup_id, props.objectId)
   const result: QSStageStore[] = []
 
+  guidedModeLabel = data.guided_mode_string
+  overviewModeLabel = data.overview_mode_string
+
   for (let stageIndex = 0; stageIndex < data.stages.length; stageIndex++) {
     const stage = data.stages[stageIndex]!
     const btn: StageButtonSpec[] = []
     if (stageIndex !== data.stages.length - 1) {
-      btn.push(defineButton.next(stage.button_label))
+      btn.push(defineButton.next(stage.next_button!.label, stage.next_button!.aria_label))
     }
 
     if (stageIndex !== 0) {
-      btn.push(defineButton.prev(PREV_BUTTON_LABEL))
+      btn.push(defineButton.prev(stage.prev_button!.label, stage.prev_button!.aria_label))
     }
 
     const userInput = stages.value[stageIndex]?.user_input || {}
@@ -159,7 +181,8 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
       form_spec_errors: {},
       errors: [],
       user_input: ref(userInput),
-      buttons: btn
+      buttons: btn,
+      load_wait_label: stage.load_wait_label
     })
   }
 
@@ -173,9 +196,12 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     errors: [],
     user_input: ref({}),
     buttons: [
-      ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
-      defineButton.prev(PREV_BUTTON_LABEL)
-    ]
+      ...data.complete_buttons.map((button) =>
+        defineButton.save(button.id, button.label, button.ariaLabel)
+      ),
+      defineButton.prev(data.prev_button.label, data.prev_button.aria_label)
+    ],
+    load_wait_label: ''
   })
   loadedAllStages.value = true
   return result
@@ -185,12 +211,26 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
   const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
   const result: QSStageStore[] = []
 
+  guidedModeLabel = data.guided_mode_string
+  overviewModeLabel = data.overview_mode_string
+
   //Load stages
   for (let index = 0; index < data.overviews.length; index++) {
     const isFirst = index === 0
     const overview = data.overviews[index]!
 
     const userInput = stages.value[index]?.user_input || {}
+
+    const btn = []
+    if (isFirst) {
+      btn.push(
+        defineButton.next(
+          data.stage.next_stage_structure.next_button!.label,
+          data.stage.next_stage_structure.next_button!.aria_label
+        )
+      )
+    }
+
     result.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
@@ -199,7 +239,8 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
       form_spec_errors: {},
       errors: [],
       user_input: ref(userInput),
-      buttons: isFirst ? [defineButton.next(data.stage.next_stage_structure.button_label)] : []
+      buttons: btn,
+      load_wait_label: isFirst ? data.stage.next_stage_structure.load_wait_label : ''
     })
   }
 
@@ -213,10 +254,14 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     errors: [],
     user_input: ref({}),
     buttons: [
-      ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
-      defineButton.prev(PREV_BUTTON_LABEL)
-    ]
+      ...data.complete_buttons.map((button) =>
+        defineButton.save(button.id, button.label, button.ariaLabel)
+      ),
+      defineButton.prev(data.prev_button.label, data.prev_button.aria_label)
+    ],
+    load_wait_label: ''
   })
+
   return result
 }
 
@@ -290,7 +335,8 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
         stg.user_input
       ),
       buttons: stg.buttons!,
-      errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])]
+      errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
+      loadWaitLabel: stg.load_wait_label || ''
     }
     return item
   })
@@ -301,7 +347,8 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 
   return {
     buttons: stg.buttons!,
-    errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])]
+    errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
+    loadWaitLabel: stg.load_wait_label || ''
   }
 })
 
@@ -337,10 +384,10 @@ watch(currentMode, async (mode: WizardMode) => {
 })
 
 switch (props.mode) {
-  case 'guided':
+  case GUIDED_MODE:
     stages.value = await loadGuidedStages()
     break
-  case 'overview':
+  case OVERVIEW_MODE:
     stages.value = await loadAllStages()
     break
 }
@@ -353,8 +400,8 @@ showQuickSetup.value = true
     v-if="toggleEnabled"
     v-model="currentMode"
     :options="[
-      { label: GUIDED_MODE_LABEL, value: 'guided' },
-      { label: OVERVIEW_MODE_LABEL, value: 'overview' }
+      { label: guidedModeLabel, value: GUIDED_MODE },
+      { label: overviewModeLabel, value: OVERVIEW_MODE }
     ]"
   />
   <QuickSetup

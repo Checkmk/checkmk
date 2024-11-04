@@ -8,6 +8,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, cast
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
@@ -44,6 +45,14 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
+GUIDED_MODE_STRING = _("Guided mode")
+OVERVIEW_MODE_STRING = _("Overview mode")
+LOAD_WAIT_LABEL = _("Please wait...")
+PREV_BUTTON_LABEL = _("Back")
+PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
+NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
+COMPLETE_BUTTON_ARIA_LABEL = _("Save")
+
 
 class InvalidStageException(MKGeneralException):
     pass
@@ -61,6 +70,12 @@ class QuickSetupValidationError:
 
 
 ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
+
+
+@dataclass
+class StageButton:
+    label: str
+    aria_label: str
 
 
 @dataclass
@@ -82,7 +97,9 @@ class Errors:
 @dataclass
 class NextStageStructure:
     components: Sequence[dict]
-    button_label: str | None
+    next_button: StageButton | None = None
+    prev_button: StageButton | None = None
+    load_wait_label: str = field(default=LOAD_WAIT_LABEL)
 
 
 @dataclass
@@ -101,6 +118,7 @@ class AllStageErrors:
 class CompleteButton:
     id: str
     label: str
+    aria_label: str | None = None
 
 
 @dataclass
@@ -109,7 +127,10 @@ class QuickSetupOverview:
     overviews: list[StageOverview]
     stage: Stage
     complete_buttons: list[CompleteButton]
+    prev_button: StageButton
     mode: str = field(default="guided")
+    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
+    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
 
 
 @dataclass
@@ -117,7 +138,9 @@ class CompleteStage:
     title: str
     sub_title: str | None
     components: Sequence[dict]
-    button_label: str | None
+    next_button: StageButton | None = None
+    prev_button: StageButton | None = None
+    load_wait_label: str = field(default=LOAD_WAIT_LABEL)
 
 
 @dataclass
@@ -125,7 +148,10 @@ class QuickSetupAllStages:
     quick_setup_id: QuickSetupId
     stages: list[CompleteStage]
     complete_buttons: list[CompleteButton]
+    prev_button: StageButton
     mode: str = field(default="overview")
+    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
+    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
 
 
 def _get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormData | None) -> dict:
@@ -206,12 +232,24 @@ def quick_setup_guided_mode(
                     _get_stage_components_from_widget(widget, prefill_data)
                     for widget in stage_components(stages[0])
                 ],
-                button_label=stages[0].button_label,
+                next_button=StageButton(
+                    label=stages[0].next_button_label, aria_label=NEXT_BUTTON_ARIA_LABEL
+                )
+                if stages[0].next_button_label
+                else None,
+                load_wait_label=stages[0].load_wait_label
+                if stages[0].load_wait_label
+                else LOAD_WAIT_LABEL,
             ),
         ),
         complete_buttons=[
-            CompleteButton(id=action.id, label=action.label) for action in quick_setup.actions
+            CompleteButton(id=action.id, label=action.label, aria_label=COMPLETE_BUTTON_ARIA_LABEL)
+            for action in quick_setup.actions
         ],
+        prev_button=StageButton(
+            label=PREV_BUTTON_LABEL,
+            aria_label=PREV_BUTTON_ARIA_LABEL,
+        ),
     )
 
 
@@ -291,7 +329,20 @@ def retrieve_next_stage(
                 _get_stage_components_from_widget(widget, prefill_data)
                 for widget in stage_components(next_stage)
             ],
-            button_label=next_stage.button_label,
+            next_button=StageButton(
+                label=next_stage.next_button_label,
+                aria_label=NEXT_BUTTON_ARIA_LABEL,
+            )
+            if next_stage.next_button_label
+            else None,
+            prev_button=StageButton(
+                label=next_stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL
+            )
+            if next_stage.prev_button_label
+            else None,
+            load_wait_label=next_stage.load_wait_label
+            if next_stage.load_wait_label
+            else LOAD_WAIT_LABEL,
         ),
         stage_recap=current_stage_recap,
     )
@@ -330,11 +381,26 @@ def quick_setup_overview_mode(
                     _get_stage_components_from_widget(widget, prefill_data)
                     for widget in stage_components(stage)
                 ],
-                button_label=stage.button_label,
+                next_button=StageButton(
+                    label=stage.next_button_label,
+                    aria_label=NEXT_BUTTON_ARIA_LABEL,
+                )
+                if stage.next_button_label
+                else None,
+                prev_button=StageButton(
+                    label=stage.prev_button_label,
+                    aria_label=PREV_BUTTON_ARIA_LABEL,
+                )
+                if stage.prev_button_label
+                else None,
             )
             for stage in stages
         ],
         complete_buttons=[
             CompleteButton(id=action.id, label=action.label) for action in quick_setup.actions
         ],
+        prev_button=StageButton(
+            label=PREV_BUTTON_LABEL,
+            aria_label=PREV_BUTTON_ARIA_LABEL,
+        ),
     )

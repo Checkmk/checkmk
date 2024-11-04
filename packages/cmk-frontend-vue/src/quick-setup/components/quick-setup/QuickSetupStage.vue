@@ -50,6 +50,7 @@ const onClickGoTo = computed(() =>
             :errors="errors"
             :buttons="buttons"
             :content="content || null"
+            :load-wait-label="loadWaitLabel"
           />
         </CollapsibleContent>
       </Collapsible>

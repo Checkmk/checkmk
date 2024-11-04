@@ -19,8 +19,7 @@ const toggleOpen = () => {
 }
 
 watch(props, (newProps) => {
-  const errors = newProps.errors || {}
-  if (Object.keys(errors).length > 0) {
+  if (Object.keys(newProps?.errors || {}).length > 0) {
     isOpen.value = true
   }
 })

@@ -11,7 +11,17 @@ import type { ValidationMessages } from '@/form'
  */
 export interface QSStageStructure {
   components: ComponentSpec[]
-  button_label: string
+  load_wait_label: string
+  next_button?: QSStageButton
+  prev_button?: QSStageButton
+}
+
+/**
+ * Regular buttons
+ */
+export interface QSStageButton {
+  label: string
+  aria_label?: string | null
 }
 
 /**
@@ -20,20 +30,29 @@ export interface QSStageStructure {
 export interface QSCompleteButton {
   id: string
   label: string
+  ariaLabel?: string | null
+}
+
+interface QSCommonInitializationResponse {
+  quick_setup_id: string
+  guided_mode_string: string
+  overview_mode_string: string
+  complete_buttons: QSCompleteButton[]
+
+  /** previous stage button for save stage */
+  prev_button: QSStageButton
 }
 
 /**
  * Response from the API when initializing the quick setup when in guided mode
  */
-export interface QSInitializationResponse {
-  quick_setup_id: string
+export interface QSInitializationResponse extends QSCommonInitializationResponse {
   overviews: QSOverviewSpec[]
   stage: {
     stage_id: number
     stage_recap: ComponentSpec[]
     next_stage_structure: QSStageStructure
   }
-  complete_buttons: QSCompleteButton[]
 }
 
 interface QSStage extends QSOverviewSpec, QSStageStructure {}
@@ -41,10 +60,8 @@ interface QSStage extends QSOverviewSpec, QSStageStructure {}
 /**
  * Response from the API when initializing the quick setup when in overview mode
  */
-export interface QSAllStagesResponse {
-  quick_setup_id: string
+export interface QSAllStagesResponse extends QSCommonInitializationResponse {
   stages: QSStage[]
-  complete_buttons: QSCompleteButton[]
 }
 
 /**

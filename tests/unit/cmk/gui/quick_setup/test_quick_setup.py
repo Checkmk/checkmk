@@ -39,7 +39,7 @@ def test_form_spec_recap() -> None:
             ],
             custom_validators=[],
             recap=[recaps_form_spec],
-            button_label="Next",
+            next_button_label="Next",
         ),
     ]
     quick_setup = QuickSetupFactory.build(stages=setup_stages)
@@ -79,7 +79,7 @@ def test_retrieve_next_following_last_stage() -> None:
             ],
             custom_validators=[],
             recap=[recaps_form_spec],
-            button_label="Next",
+            next_button_label="Next",
         ),
     ]
     quick_setup = QuickSetupFactory.build(stages=setup_stages)

@@ -18,9 +18,9 @@ import type { StageButtonSpec, VnodeOrNull } from './components/quick-setup/quic
 export type UpdateCallback = (value: StageData) => void
 
 export interface ButtonDefiner {
-  next: (label: string) => StageButtonSpec
-  prev: (label: string) => StageButtonSpec
-  save: (buttonId: string, label: string) => StageButtonSpec
+  next: (label: string, ariaLabel?: string | null) => StageButtonSpec
+  prev: (label: string, ariaLabel?: string | null) => StageButtonSpec
+  save: (buttonId: string, label: string, ariaLabel?: string | null) => StageButtonSpec
 }
 
 type Callback = () => void
@@ -71,25 +71,28 @@ export const defineButtons = (
   prevStageCallback: Callback,
   saveCallback: SaveCallback
 ): ButtonDefiner => {
-  const next = (label: string): StageButtonSpec => {
+  const next = (label: string, ariaLabel?: string | null): StageButtonSpec => {
     return {
       label,
+      ariaLabel: ariaLabel || null,
       variant: 'next',
       action: nextStageCallback
     }
   }
 
-  const prev = (label: string): StageButtonSpec => {
+  const prev = (label: string, ariaLabel?: string | null): StageButtonSpec => {
     return {
       label,
+      ariaLabel: ariaLabel || null,
       variant: 'prev',
       action: prevStageCallback
     }
   }
 
-  const save = (buttonId: string, label: string): StageButtonSpec => {
+  const save = (buttonId: string, label: string, ariaLabel?: string | null): StageButtonSpec => {
     return {
       label,
+      ariaLabel: ariaLabel || null,
       variant: 'save',
       action: () => saveCallback(buttonId)
     }

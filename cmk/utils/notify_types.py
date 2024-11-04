@@ -677,6 +677,10 @@ class SmsApiPluginModel(TypedDict):
     timeout: NotRequired[str]
 
 
+class SmsPluginModel(TypedDict):
+    params: list[str]
+
+
 class SpectrumPluginModel(TypedDict):
     destination: str
     community: str
@@ -733,7 +737,7 @@ SmsApiPluginName = Literal["sms_api"]
 SmsApiNotify = tuple[SmsApiPluginName, SmsApiPluginModel | None]
 
 SmsPluginName = Literal["sms"]
-SmsNotify = tuple[SmsPluginName, list[str] | None]
+SmsNotify = tuple[SmsPluginName, SmsPluginModel | None]
 
 SpectrumPluginName = Literal["spectrum"]
 SpectrumNotify = tuple[SpectrumPluginName, SpectrumPluginModel | None]
@@ -742,9 +746,9 @@ SplunkPluginName = Literal["victorops"]
 SplunkNotify = tuple[SplunkPluginName, SplunkPluginModel | None]
 
 CustomPluginName = NewType("CustomPluginName", str)
-CustomPluginType = tuple[CustomPluginName, dict[str, Any] | list[str] | None]
+CustomPluginParameters = tuple[CustomPluginName, dict[str, Any] | None]
 
-KnownPlugins = (
+KnownPluginParameters = (
     MailNotify
     | AsciiMailNotify
     | CiscoNotify
@@ -784,19 +788,6 @@ BuiltInPluginNames = (
     | SplunkPluginName
 )
 
-
-NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
-NotifyPlugin = KnownPlugins | CustomPluginType
-
-
-def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
-    return [get_args(name)[0] for name in get_args(BuiltInPluginNames)]
-
-
-def is_known_plugin(notify_plugin: NotifyPlugin) -> TypeGuard[KnownPlugins]:
-    return notify_plugin[0] in get_builtin_plugin_names()
-
-
 NotifyPluginParamsDict = (
     MailPluginModel
     | AsciiMailPluginModel
@@ -811,17 +802,32 @@ NotifyPluginParamsDict = (
     | SignL4PluginModel
     | SlackPluginModel
     | SmsApiPluginModel
+    | SmsPluginModel
     | SpectrumPluginModel
     | SplunkPluginModel
     | MicrosoftTeamsPluginModel
     | dict[str, Any]
 )
 
-custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginType)
-known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPlugins)
+NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
+NotificationParameterID = NewType("NotificationParameterID", str)
+PluginNameWithParameters = tuple[NotificationPluginNameStr, NotifyPluginParamsDict | None]
+NotifyPlugin = tuple[NotificationPluginNameStr, NotificationParameterID | None]
 
 
-def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
+def get_builtin_plugin_names() -> list[BuiltInPluginNames]:
+    return [get_args(name)[0] for name in get_args(BuiltInPluginNames)]
+
+
+def is_known_plugin(notify_plugin: PluginNameWithParameters) -> TypeGuard[KnownPluginParameters]:
+    return notify_plugin[0] in get_builtin_plugin_names()
+
+
+custom_plugin_type_adapter: TypeAdapter = TypeAdapter(CustomPluginParameters)
+known_plugin_type_adapter: TypeAdapter = TypeAdapter(KnownPluginParameters)
+
+
+def validate_plugin(value: Any, _handler: ValidationInfo) -> PluginNameWithParameters:
     assert isinstance(value, tuple)
     assert len(value) == 2
 
@@ -834,9 +840,6 @@ def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
     return value
 
 
-NotificationParameterID = NewType("NotificationParameterID", str)
-
-
 class _EventRuleMandatory(TypedDict):
     rule_id: NotificationRuleID
     allow_disable: bool
@@ -845,7 +848,7 @@ class _EventRuleMandatory(TypedDict):
     contact_object: bool
     description: str
     disabled: bool
-    notify_plugin: tuple[NotificationPluginNameStr, NotificationParameterID | None]
+    notify_plugin: NotifyPlugin
 
 
 class EventRule(_EventRuleMandatory, total=False):

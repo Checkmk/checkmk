@@ -28,16 +28,21 @@ import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, NotRequired, TypedDict
 
 from cmk.ccc import store
 
 from cmk.utils.notify_types import (
     EventRule,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
     NotificationParameterSpec,
+    NotificationPluginNameStr,
     NotificationRuleID,
     NotifyBulkType,
     NotifyPlugin,
+    PluginNameWithParameters,
 )
 from cmk.utils.user import UserId
 
@@ -199,6 +204,11 @@ class RuleProperties:
 class BulkNotAllowedException(Exception): ...
 
 
+class NotificationMethodMkFormat(TypedDict):
+    notify_plugin: PluginNameWithParameters
+    bulk: NotRequired[NotifyBulkType | None]
+
+
 @dataclass
 class NotificationMethod:
     notification_bulking: CheckboxNotificationBulking
@@ -206,7 +216,7 @@ class NotificationMethod:
 
     @classmethod
     def from_mk_file_format(
-        cls, notify_plugin: NotifyPlugin, bulk_config: NotifyBulkType | None
+        cls, notify_plugin: PluginNameWithParameters, bulk_config: NotifyBulkType | None
     ) -> NotificationMethod:
         return cls(
             notify_plugin=get_plugin_from_mk_file(notify_plugin),
@@ -229,20 +239,18 @@ class NotificationMethod:
         }
         return r
 
-    def to_mk_file_format(self) -> dict[str, Any]:
-        plugin_name, plugin_params = self.notify_plugin.to_mk_file_format()
-        r: dict[str, Any] = {"notify_plugin": (plugin_name, plugin_params)}
-
+    def to_mk_file_format(self) -> NotificationMethodMkFormat:
+        r = NotificationMethodMkFormat(notify_plugin=self.notify_plugin.to_mk_file_format())
         notification_scripts = load_notification_scripts()
-        if plugin_name in notification_scripts:
-            bulk_allowed = notification_scripts[plugin_name]["bulk"]
+        if r["notify_plugin"][0] in notification_scripts:
+            bulk_allowed = notification_scripts[r["notify_plugin"][0]]["bulk"]
         else:
             bulk_allowed = False
 
         if (bulk := self.notification_bulking.to_mk_file_format()) is not None:
             if not bulk_allowed:
                 raise BulkNotAllowedException(
-                    _("The notification script %s does not allow bulking.") % plugin_name
+                    _("The notification script %s does not allow bulking.") % r["notify_plugin"][0]
                 )
 
             r["bulk"] = bulk
@@ -594,6 +602,47 @@ class Conditions:
         return {k: v for k, v in r.items() if v is not None}
 
 
+def _get_parameters_for_rule_with_id(
+    notify_plugin_name: NotificationPluginNameStr,
+    params_id: NotificationParameterID | None,
+) -> PluginNameWithParameters:
+    if params_id is None:
+        return (notify_plugin_name, None)
+
+    all_parameters = NotificationParameterConfigFile().load_for_reading()
+    parameters_for_method = all_parameters.get(notify_plugin_name, {})
+    if params_id not in parameters_for_method:
+        return (notify_plugin_name, None)
+
+    return (notify_plugin_name, parameters_for_method[params_id]["parameter_properties"])
+
+
+def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> NotifyPlugin:
+    if notify_plugin[1] is None:
+        return (notify_plugin[0], None)
+
+    notification_parameters = NotificationParameterConfigFile().load_for_reading()
+    new_params_id = NotificationParameterID(str(uuid.uuid4()))
+    new_notification_parameter_item = NotificationParameterItem(
+        general=NotificationParameterGeneralInfos(
+            description="",
+            comment="",
+            docu_url="",
+        ),
+        parameter_properties=notify_plugin[1],
+    )
+
+    if notify_plugin[0] not in notification_parameters:
+        notification_parameters[notify_plugin[0]] = {new_params_id: new_notification_parameter_item}
+    else:
+        notification_parameters[notify_plugin[0]].update(
+            {new_params_id: new_notification_parameter_item}
+        )
+
+    NotificationParameterConfigFile().save(notification_parameters)
+    return (notify_plugin[0], new_params_id)
+
+
 @dataclass
 class NotificationRule:
     rule_properties: RuleProperties
@@ -604,12 +653,11 @@ class NotificationRule:
 
     @classmethod
     def from_mk_file_format(cls, config: EventRule) -> NotificationRule:
+        notify_plugin_name, params_id = config["notify_plugin"]
         return cls(
             rule_properties=RuleProperties.from_mk_file_format(config),
             notification_method=NotificationMethod.from_mk_file_format(
-                # TODO adjust typing to new tuple[NotificationPluginNameStr, NotificationParameterID]
-                # CMK-20009
-                config["notify_plugin"],  # type: ignore[arg-type]
+                _get_parameters_for_rule_with_id(notify_plugin_name, params_id),
                 config.get("bulk"),
             ),
             contact_selection=ContactSelection.from_mk_file_format(config),
@@ -642,11 +690,14 @@ class NotificationRule:
 
     def to_mk_file_format(self) -> EventRule:
         r: dict[str, Any] = {"rule_id": self.rule_id}
-        r.update(
-            self.rule_properties.to_mk_file_format()
-            | self.notification_method.to_mk_file_format()
-            | self.conditions.to_mk_file_format()
-        )
+        notify_method = self.notification_method.to_mk_file_format()
+        if "bulk" in notify_method:
+            r["bulk"] = notify_method["bulk"]
+
+        r["notify_plugin"] = _create_parameters_for_rule(notify_method["notify_plugin"])
+
+        r.update(self.rule_properties.to_mk_file_format() | self.conditions.to_mk_file_format())
+
         if self.contact_selection is not None:
             r.update(self.contact_selection.to_mk_file_format())
 

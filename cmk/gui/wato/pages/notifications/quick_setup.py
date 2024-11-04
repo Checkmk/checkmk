@@ -895,6 +895,7 @@ def notification_method() -> QuickSetupStage:
                                                             _validate_parameter_choice
                                                         ],
                                                         layout=CascadingSingleChoiceLayout.horizontal,
+                                                        prefill=DefaultValue("mail"),
                                                     ),
                                                 ),
                                                 "bulk_notification": bulk_notification_dict_element(),

@@ -18,7 +18,7 @@ from livestatus import SiteId
 
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import LabelGroups, Labels
+from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.conditions import (
@@ -1325,41 +1325,43 @@ class ModeEditRuleset(WatoMode):
         )
         self._get_host_labels_from_remote_site()
 
-        match_state = MatchState({"matched": False, "keys": set()})
-
-        return {
-            rule.id: self._match(
-                match_state,
-                rule,
+        rule_matches = {
+            rule.id: rule.matches(
                 host_name,
                 item,
                 service_name,
+                only_host_conditions=False,
                 service_labels=service_labels,
             )
             for rule in rules
         }
 
-    def _match(
+        match_state = MatchState({"matched": False, "keys": set()})
+        return {
+            rule.id: self._make_match_result(
+                match_state,
+                rule,
+                rule_matches[rule.id],
+                host_name,
+                item,
+            )
+            for rule in rules
+        }
+
+    def _make_match_result(
         self,
         match_state: MatchState,
         rule: Rule,
+        rule_matches: bool,
         host_name: HostName,
         item: Item,
-        service_name: ServiceName | None,
-        service_labels: Labels,
     ) -> RuleMatchResult:
         if rule.is_disabled():
             return RuleMatchResult(
                 _("This rule does not match: %s") % _("This rule is disabled"), "hyphen"
             )
 
-        if not rule.matches(
-            host_name,
-            item,
-            service_name,
-            only_host_conditions=False,
-            service_labels=service_labels,
-        ):
+        if not rule_matches:
             return RuleMatchResult(
                 _("This rule does not match: %s") % _("The rule does not match"), "hyphen"
             )

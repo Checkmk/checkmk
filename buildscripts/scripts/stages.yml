@@ -406,7 +406,7 @@ STAGES:
     - NAME: "Package cmk-agent-based"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_BASED_FILES
       DIR: "packages/cmk-agent-based"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-based.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-agent-based.txt"
       TEXT_ON_SKIP: "No cmk-agent-based files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-based.txt"
 

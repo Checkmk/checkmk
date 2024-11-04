@@ -1,0 +1,16 @@
+Title: Decode semi-colon from monitoring history
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1730713541
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+The plugin output and comments are saved in a Nagios-compatible format
+(semi-colon-separated). Therefore, it is necessary to escape semi-colons
+to <code>%3B</code> when writing out history.
+
+In the GUI, where plugin output or comments from the monitoring history
+are displayed, we can translate <code>%3B</code> back to a semi-colon using a
+simple replace.

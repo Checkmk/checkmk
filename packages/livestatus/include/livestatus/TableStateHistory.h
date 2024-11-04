@@ -39,6 +39,8 @@ public:
 
     const Logfile::map_type *getEntries();
     LogEntry *getNextLogentry();
+    bool rewind_to_start(std::chrono::system_clock::time_point since,
+                         std::chrono::system_clock::time_point until);
 
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;

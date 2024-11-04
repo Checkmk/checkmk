@@ -134,24 +134,29 @@ class _ReleaseCandidate:
 
 
 @dataclass
-class _StableVersion(_VersionBase, _ReleaseCandidate):
+class _ReleaseMeta:
+    meta: str | None
+
+
+@dataclass
+class _StableVersion(_VersionBase, _ReleaseCandidate, _ReleaseMeta):
     pass
 
 
 @dataclass
-class _BetaVersion(_VersionBase, _ReleaseCandidate):
+class _BetaVersion(_VersionBase, _ReleaseCandidate, _ReleaseMeta):
     vtype = "b"
     patch: int
 
 
 @dataclass
-class _InnovationVersion(_VersionBase, _ReleaseCandidate):
+class _InnovationVersion(_VersionBase, _ReleaseCandidate, _ReleaseMeta):
     vtype = "i"
     patch: int
 
 
 @dataclass
-class _PatchVersion(_VersionBase, _ReleaseCandidate):
+class _PatchVersion(_VersionBase, _ReleaseCandidate, _ReleaseMeta):
     vtype = "p"
     patch: int
 
@@ -159,12 +164,14 @@ class _PatchVersion(_VersionBase, _ReleaseCandidate):
 @dataclass
 class _MasterDailyVersion(_VersionDate):
     release_candidate = None
+    meta = None
 
 
 @dataclass
 class _StableDailyVersion(_VersionDate, _VersionBase):
     # Order of attributes: major, minor, sub, date
     release_candidate = None
+    meta = None
 
 
 _NoneDailyVersion = _StableVersion | _BetaVersion | _InnovationVersion | _PatchVersion
@@ -180,9 +187,8 @@ class Version:
     _pat_date: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _pat_build: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _pat_rc_candidate: str = r"-rc(\d+)"  # e.g. "-rc3"
-    _pat_stable: str = (
-        rf"{_pat_base}(?:{_pat_build})?(?:{_pat_rc_candidate})?"  # e.g. "2.1.0p17-rc3"
-    )
+    _pat_meta_data = r"\+(.*)"  # e.g. "+security"
+    _pat_stable: str = rf"{_pat_base}(?:{_pat_build})?(?:{_pat_rc_candidate})?(?:{_pat_meta_data})?"  # e.g. "2.1.0p17-rc3+security"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
@@ -222,7 +228,7 @@ class Version:
         if not match:
             raise ValueError('Invalid version string "%s"' % vstring)
 
-        major, minor, sub, vtype, patch, rc = match.group(1, 2, 3, 4, 5, 6)
+        major, minor, sub, vtype, patch, rc, meta = match.group(1, 2, 3, 4, 5, 6, 7)
         if rc is not None:
             rc = int(rc)
 
@@ -232,6 +238,7 @@ class Version:
                 minor=int(minor),
                 sub=int(sub),
                 release_candidate=rc,
+                meta=meta,
             )
         if vtype == "b":
             return _BetaVersion(
@@ -240,6 +247,7 @@ class Version:
                 sub=int(sub),
                 patch=int(patch),
                 release_candidate=rc,
+                meta=meta,
             )
         if vtype == "i":
             return _InnovationVersion(
@@ -248,6 +256,7 @@ class Version:
                 sub=int(sub),
                 patch=int(patch),
                 release_candidate=rc,
+                meta=meta,
             )
         if vtype == "p":
             return _PatchVersion(
@@ -256,6 +265,7 @@ class Version:
                 sub=int(sub),
                 patch=int(patch),
                 release_candidate=rc,
+                meta=meta,
             )
 
         raise ValueError(
@@ -285,18 +295,26 @@ class Version:
         v = self.version
 
         optional_rc_suffix = "" if v.release_candidate is None else f"-rc{v.release_candidate}"
+        optional_meta_suffix = "" if v.meta is None else f"+{v.meta}"
 
         if isinstance(v, _StableVersion):
-            return "%d.%d.%d%s" % (v.major, v.minor, v.sub, optional_rc_suffix)
+            return "%d.%d.%d%s%s" % (
+                v.major,
+                v.minor,
+                v.sub,
+                optional_rc_suffix,
+                optional_meta_suffix,
+            )
 
         if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
-            return "%d.%d.%d%s%d%s" % (
+            return "%d.%d.%d%s%d%s%s" % (
                 v.major,
                 v.minor,
                 v.sub,
                 v.vtype,
                 v.patch,
                 optional_rc_suffix,
+                optional_meta_suffix,
             )
 
         if isinstance(v, _MasterDailyVersion):

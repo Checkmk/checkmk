@@ -50,6 +50,7 @@ class TestVersion:
         [
             Version("2.3.0p34"),
             Version("2.3.0p34-rc42"),
+            Version("2.3.0p34-rc42+security"),
             Version("1.2.3-2023.12.24"),
             Version("2023.12.24"),
         ],
@@ -87,12 +88,27 @@ class TestVersion:
     def test_version_rc_aware_release_candidate(self) -> None:
         assert Version("2.3.0b4-rc1").version_rc_aware == "2.3.0b4-rc1"
 
+    def test_version_meta_data(self) -> None:
+        assert Version("2.3.0p21+security").version.meta == "security"
+
     @pytest.mark.parametrize(
         "vers, expected",
         [
             (
                 Version("1.2.3"),
-                "_StableVersion(release_candidate=None, major=1, minor=2, sub=3)",
+                "_StableVersion(meta=None, release_candidate=None, major=1, minor=2, sub=3)",
+            ),
+            (
+                Version("1.2.3+security"),
+                "_StableVersion(meta='security', release_candidate=None, major=1, minor=2, sub=3)",
+            ),
+            (
+                Version("1.2.3-rc7"),
+                "_StableVersion(meta=None, release_candidate=7, major=1, minor=2, sub=3)",
+            ),
+            (
+                Version("1.2.3-rc7+security"),
+                "_StableVersion(meta='security', release_candidate=7, major=1, minor=2, sub=3)",
             ),
             (
                 Version("2024.03.14"),
@@ -100,7 +116,7 @@ class TestVersion:
             ),
             (
                 Version("3.4.5p8"),
-                "_PatchVersion(release_candidate=None, major=3, minor=4, sub=5, patch=8)",
+                "_PatchVersion(meta=None, release_candidate=None, major=3, minor=4, sub=5, patch=8)",
             ),
             (
                 Version("1.2.3-2024.09.09"),
@@ -108,7 +124,15 @@ class TestVersion:
             ),
             (
                 Version("2.2.0p5-rc1"),
-                "_PatchVersion(release_candidate=1, major=2, minor=2, sub=0, patch=5)",
+                "_PatchVersion(meta=None, release_candidate=1, major=2, minor=2, sub=0, patch=5)",
+            ),
+            (
+                Version("2.2.0p5-rc1+security"),
+                "_PatchVersion(meta='security', release_candidate=1, major=2, minor=2, sub=0, patch=5)",
+            ),
+            (
+                Version("2.2.0p5+security"),
+                "_PatchVersion(meta='security', release_candidate=None, major=2, minor=2, sub=0, patch=5)",
             ),
         ],
     )
@@ -121,6 +145,8 @@ class TestVersion:
             (Version("1.2.3"), "1.2.3"),
             (Version("2024.03.14"), "2024.03.14"),
             (Version("3.4.5p8"), "3.4.5p8"),
+            (Version("6.7.8p9-rc1"), "6.7.8p9-rc1"),
+            (Version("6.7.8p9-rc1+security"), "6.7.8p9-rc1+security"),
             (Version("1.2.3-2024.09.09"), "1.2.3-2024.09.09"),
             (Version("2022.06.23-sandbox-az-sles-15sp3"), "2022.06.23"),
         ],
@@ -162,6 +188,9 @@ class TestVersion:
             (Version("2.3.0p8-rc1"), Version("2.3.0p8-rc2")),
             # (Version("2.3.0p8-rc1"), Version("2.3.0p9")),
             (Version("2.3.0p8"), Version("2.3.0p9-rc1")),
+            (Version("2.3.0p8"), Version("2.3.0p9+security")),
+            (Version("2.3.0p8+security"), Version("2.3.0p9")),
+            (Version("2.3.0p8-rc1+security"), Version("2.3.0p8-rc2+security")),
         ],
     )
     def test_lt(self, smaller: Version, bigger: Version) -> None:
@@ -181,6 +210,12 @@ class TestVersion:
             (Version("2024.03.13"), Version("3.4.5p8"), False),
             (Version("2.3.0p5-rc2"), Version("2.3.0p5-rc2"), True),
             (Version("2.3.0p5-rc2"), Version("2.3.0p5-rc3"), False),
+            (Version("2.3.0p5-rc3+security"), Version("2.3.0p5-rc3+security"), True),
+            (
+                Version("2.3.0p5-rc4+security"),
+                Version("2.3.0p5-rc4"),
+                True,  # https://semver.org/#spec-item-10, Build metadata MUST be ignored when determining version precedence
+            ),
         ],
     )
     def test_eq(self, one: Version, other: Version, equal: bool) -> None:

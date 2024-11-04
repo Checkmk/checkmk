@@ -2409,6 +2409,11 @@ class ABCEditRuleMode(WatoMode):
                     FixedValue(
                         value=rule.id,
                         title=_("Rule ID"),
+                        help=_(
+                            "This ID uniquely identifies this rule in Checkmk. "
+                            "Use this ID when working with rules in Checkmk REST API "
+                            "calls, e.g., to show, modify or delete the rule."
+                        ),
                     ),
                 ),
                 (
@@ -2417,9 +2422,9 @@ class ABCEditRuleMode(WatoMode):
                         value=rule.ruleset.name,
                         title=_("Ruleset name"),
                         help=_(
-                            "The ruleset name identifies the ruleset within "
-                            "Checkmk. Use this name when working with the rules "
-                            "and ruleset REST API calls."
+                            "This name uniquely identifies the rule set in Checkmk. "
+                            "Use this name when working with rule sets and rules in "
+                            "Checkmk REST API calls, e.g. to create a new rule."
                         ),
                     ),
                 ),

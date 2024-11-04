@@ -5,10 +5,15 @@
 
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import modes, quick_setup
 
 
-def register(mode_registry: ModeRegistry, quick_setup_registry: QuickSetupRegistry) -> None:
-    modes.register(mode_registry)
+def register(
+    mode_registry: ModeRegistry,
+    quick_setup_registry: QuickSetupRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
+    modes.register(mode_registry, match_item_generator_registry)
     quick_setup.register(quick_setup_registry)

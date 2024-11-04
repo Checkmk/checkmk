@@ -157,12 +157,21 @@ from cmk.gui.watolib.sample_config import (
     new_notification_parameter_id,
     new_notification_rule_id,
 )
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     mode_registry.register(ModeNotifications)
     mode_registry.register(ModeAnalyzeNotifications)
     mode_registry.register(ModeTestNotifications)
@@ -176,6 +185,10 @@ def register(mode_registry: ModeRegistry) -> None:
 
     mode_registry.register(ModeNotificationParameters)
     mode_registry.register(ModeEditNotificationParameter)
+
+    match_item_generator_registry.register(
+        MatchItemGeneratorNotificationParameter("notification_parameter")
+    )
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -3555,3 +3568,30 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
                 "object_id": self._object_id,
             },
         )
+
+
+class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        for script_name, script_title in notification_script_choices():
+            title = _("%s") % script_title
+            yield MatchItem(
+                title=title,
+                topic=_("Notification parameter"),
+                url=makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "notification_parameters"),
+                        ("method", script_name),
+                    ],
+                    filename="wato.py",
+                ),
+                match_texts=[title],
+            )
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True

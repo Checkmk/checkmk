@@ -314,6 +314,7 @@ class PermissionsHandler:
             "event_console": user.may("mkeventd.edit") or user.may("wato.seeall"),
             "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
             "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
+            "notification_parameter": user.may("wato.notifications") or user.may("wato.seeall"),
         }
 
     @staticmethod
@@ -504,6 +505,7 @@ class IndexSearcher:
             _("Event Console rule packs"),
             _("Event Console rules"),
             _("Event Console settings"),
+            _("Notification parameter"),
             # _("Users"),
             _("Enforced services"),
             _("Global settings"),

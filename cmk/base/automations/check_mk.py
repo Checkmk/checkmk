@@ -20,7 +20,7 @@ import subprocess
 import sys
 import time
 import uuid
-from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict
 from itertools import islice
@@ -68,6 +68,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -359,9 +360,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 ignore_service=config_cache.service_ignored,
                 ignore_plugin=config_cache.check_plugin_ignored,
                 get_effective_host=config_cache.effective_host,
-                get_service_description=functools.partial(
-                    config.service_description, ruleset_matcher
-                ),
+                get_service_description=_make_service_description_cb(ruleset_matcher),
                 settings=settings,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
@@ -664,7 +663,7 @@ def _execute_discovery(
             ignore_service=config_cache.service_ignored,
             ignore_plugin=config_cache.check_plugin_ignored,
             get_effective_host=config_cache.effective_host,
-            find_service_description=functools.partial(config.service_description, ruleset_matcher),
+            find_service_description=_make_service_description_cb(ruleset_matcher),
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
         )
@@ -681,6 +680,20 @@ def _execute_discovery(
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
     )
+
+
+def _make_service_description_cb(
+    matcher: RulesetMatcher,
+) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
+    """Replacement for functool.partial(config.service_description, matcher)
+
+    functools.partial is not supported by the mypy type checker.
+    """
+
+    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
+        return config.service_description(matcher, hostname, check_plugin_name, item)
+
+    return callback
 
 
 class AutomationAutodiscovery(DiscoveryAutomation):
@@ -836,9 +849,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         ignore_service=config_cache.service_ignored,
                         ignore_plugin=config_cache.check_plugin_ignored,
                         get_effective_host=config_cache.effective_host,
-                        get_service_description=(
-                            functools.partial(config.service_description, ruleset_matcher)
-                        ),
+                        get_service_description=_make_service_description_cb(ruleset_matcher),
                         schedule_discovery_check=_schedule_discovery_check,
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
@@ -1014,7 +1025,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
                 {hostname: new_services},
                 config_cache.effective_host,
-                functools.partial(config.service_description, config_cache.ruleset_matcher),
+                _make_service_description_cb(config_cache.ruleset_matcher),
             )
         else:
             set_autochecks_of_real_hosts(hostname, new_services)

@@ -9,7 +9,6 @@ import contextlib
 import copy
 import dataclasses
 import enum
-import functools
 import ipaddress
 import itertools
 import logging
@@ -1167,6 +1166,20 @@ def get_plugin_parameters(
     raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
 
 
+def _make_service_description_cb(
+    matcher: RulesetMatcher,
+) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
+    """Replacement for functool.partial(service_description, matcher)
+
+    functools.partial is not supported by the mypy type checker.
+    """
+
+    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
+        return service_description(matcher, hostname, check_plugin_name, item)
+
+    return callback
+
+
 def service_description(
     matcher: RulesetMatcher,
     hostname: HostName,
@@ -1466,6 +1479,28 @@ def new_check_context() -> CheckContext:
 #   +----------------------------------------------------------------------+
 #   | Misc check related helper functions                                  |
 #   '----------------------------------------------------------------------'
+
+
+def _make_compute_check_parameters_cb(
+    matcher: RulesetMatcher,
+) -> Callable[
+    [HostName, CheckPluginName, Item, Mapping[str, object]],
+    TimespecificParameters,
+]:
+    """Replacement for functools.partial(compute_check_parameters, matcher)
+
+    functools.partial is not supported by the mypy type checker.
+    """
+
+    def callback(
+        host: HostName,
+        plugin_name: CheckPluginName,
+        item: Item,
+        params: Mapping[str, object],
+    ) -> TimespecificParameters:
+        return compute_check_parameters(matcher, host, plugin_name, item, params, None)
+
+    return callback
 
 
 def compute_check_parameters(
@@ -1781,9 +1816,10 @@ class ConfigCache:
                 if self.is_active(hn) and self.is_online(hn)
             }
         )
+
         self._service_configurer = ServiceConfigurer(
-            functools.partial(compute_check_parameters, self.ruleset_matcher),
-            functools.partial(service_description, self.ruleset_matcher),
+            _make_compute_check_parameters_cb(self.ruleset_matcher),
+            _make_service_description_cb(self.ruleset_matcher),
             self.effective_host,
         )
 
@@ -1821,7 +1857,7 @@ class ConfigCache:
         return self._discovered_labels_cache.discovered_labels_of(
             hostname,
             service_desc,
-            functools.partial(service_description, self.ruleset_matcher),
+            _make_service_description_cb(self.ruleset_matcher),
             self.effective_host,
         )
 

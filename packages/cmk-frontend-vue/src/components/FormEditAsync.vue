@@ -104,34 +104,47 @@ immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 </script>
 
 <template>
-  <div v-if="!error" class="edit-object__buttons">
-    <CmkButtonSubmit @click="save">
-      {{
-        objectId === undefined ? props.i18n.create_button : props.i18n.save_button
-      }}</CmkButtonSubmit
-    >
-    <CmkSpace />
-    <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
-    <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
-    <AlertBox v-if="backendValidation.length !== 0" variant="error">
-      {{ i18n.validation_error }}
+  <div class="edit-object__wrapper">
+    <div v-if="!error" class="edit-object__buttons">
+      <CmkButtonSubmit @click="save">
+        {{
+          objectId === undefined ? props.i18n.create_button : props.i18n.save_button
+        }}</CmkButtonSubmit
+      >
+      <CmkSpace />
+      <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
+      <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
+      <AlertBox v-if="backendValidation.length !== 0" variant="error">
+        {{ i18n.validation_error }}
+      </AlertBox>
+    </div>
+    <AlertBox v-if="error" variant="error">
+      {{ i18n.fatal_error }}
+      {{ error }}
+      <button @click="() => reloadAll({ api: props.api, objectId: props.objectId })">reload</button>
     </AlertBox>
-  </div>
-  <AlertBox v-if="error" variant="error">
-    {{ i18n.fatal_error }}
-    {{ error }}
-    <button @click="() => reloadAll({ api: props.api, objectId: props.objectId })">reload</button>
-  </AlertBox>
-  <div v-if="schema !== undefined && !error && data !== undefined">
-    <FormEdit v-model:data="data" :spec="schema" :backend-validation="backendValidation" />
-  </div>
-  <div v-if="schema === undefined && !error">
-    <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+    <div class="edit-object__content">
+      <div v-if="schema !== undefined && !error && data !== undefined">
+        <FormEdit v-model:data="data" :spec="schema" :backend-validation="backendValidation" />
+      </div>
+      <div v-if="schema === undefined && !error">
+        <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.edit-object__wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .edit-object__buttons {
   margin-bottom: 1em;
+}
+.edit-object__content {
+  overflow: auto;
+  height: 100%;
 }
 </style>

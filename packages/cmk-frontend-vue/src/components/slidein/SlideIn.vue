@@ -42,7 +42,9 @@ const emit = defineEmits(['close'])
             <CmkIcon name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
-        <slot />
+        <div class="slide-in__slot">
+          <slot />
+        </div>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -51,6 +53,8 @@ const emit = defineEmits(['close'])
 <style scoped>
 .slide-in__content {
   max-width: 80%;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   position: fixed;
   top: 0;
@@ -58,7 +62,6 @@ const emit = defineEmits(['close'])
   bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
-  overflow: auto;
 
   &[data-state='open'] {
     animation: slide-in__content-show 0.2s ease-in-out;
@@ -67,6 +70,11 @@ const emit = defineEmits(['close'])
   &[data-state='closed'] {
     animation: slide-in__content-hide 0.2s ease-in-out;
   }
+}
+
+.slide-in__slot {
+  overflow: auto;
+  height: 100%;
 }
 
 @keyframes slide-in__content-show {

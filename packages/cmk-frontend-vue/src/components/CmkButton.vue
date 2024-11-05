@@ -29,7 +29,6 @@ const buttonVariants = cva('', {
 export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 interface ButtonProps {
-  /** @property {ButtonVariants['variant']} variant - three different levels of importance */
   variant?: ButtonVariants['variant']
   size?: ButtonVariants['size']
   type?: never // This should help finding problems with changes still using type. Can be removed after 2024-12-01

@@ -615,12 +615,12 @@ class Site:
 
         return completed_process.returncode
 
-    def path(self, rel_path: str | Path) -> Path:
-        return self.root / rel_path
+    def path(self, rel_path: str | Path) -> str:
+        return os.path.join(self.root, rel_path)
 
     def read_file(self, rel_path: str | Path) -> str:
         try:
-            stdout = self.check_output(["cat", self.path(rel_path).as_posix()])
+            stdout = self.check_output(["cat", self.path(rel_path)])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
@@ -628,7 +628,7 @@ class Site:
 
     def read_binary_file(self, rel_path: str | Path) -> bytes:
         try:
-            stdout = self.check_output(["cat", self.path(rel_path).as_posix()], encoding=None)
+            stdout = self.check_output(["cat", self.path(rel_path)], encoding=None)
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
@@ -636,14 +636,14 @@ class Site:
 
     def delete_file(self, rel_path: str | Path) -> None:
         try:
-            _ = self.run(["rm", "-f", self.path(rel_path).as_posix()])
+            _ = self.run(["rm", "-f", self.path(rel_path)])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
 
     def delete_dir(self, rel_path: str | Path) -> None:
         try:
-            _ = self.run(["rm", "-rf", self.path(rel_path).as_posix()])
+            _ = self.run(["rm", "-rf", self.path(rel_path)])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to delete directory '{rel_path}'!")
             raise excp
@@ -663,30 +663,27 @@ class Site:
 
     def resolve_path(self, rel_path: str | Path) -> Path:
         try:
-            stdout = self.check_output(["readlink", "-e", self.path(rel_path).as_posix()])
+            stdout = self.check_output(["readlink", "-e", self.path(rel_path)])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read symlink at {rel_path}!")
             raise excp
         return Path(stdout.strip())
 
     def file_exists(self, rel_path: str | Path) -> bool:
-        p = self.run(["test", "-e", self.path(rel_path).as_posix()], check=False)
+        p = self.run(["test", "-e", self.path(rel_path)], check=False)
         return p.returncode == 0
 
     def is_file(self, rel_path: str | Path) -> bool:
-        return self.run(["test", "-f", self.path(rel_path).as_posix()], check=False).returncode == 0
+        return self.run(["test", "-f", self.path(rel_path)], check=False).returncode == 0
 
     def is_dir(self, rel_path: str | Path) -> bool:
-        return self.run(["test", "-d", self.path(rel_path).as_posix()], check=False).returncode == 0
+        return self.run(["test", "-d", self.path(rel_path)], check=False).returncode == 0
 
     def file_mode(self, rel_path: str | Path) -> int:
-        return int(
-            self.check_output(["stat", "-c", "%f", self.path(rel_path).as_posix()]).rstrip(),
-            base=16,
-        )
+        return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
 
     def inode(self, rel_path: str | Path) -> int:
-        return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())
+        return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
 
     def makedirs(self, rel_path: str | Path) -> None:
         makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
@@ -695,7 +692,7 @@ class Site:
         self.run(["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password)
 
     def listdir(self, rel_path: str | Path) -> list[str]:
-        output = self.check_output(["ls", "-1", self.path(rel_path).as_posix()])
+        output = self.check_output(["ls", "-1", self.path(rel_path)])
         return output.strip().split("\n") if output else []
 
     def system_temp_dir(self) -> Iterator[str]:
@@ -1010,8 +1007,8 @@ class Site:
         else:
             logger.info("Site is already running")
 
-        assert (
-            self.path("tmp").is_mount()
+        assert os.path.ismount(
+            self.path("tmp")
         ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self) -> None:
@@ -1200,14 +1197,10 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-        if self.path("junit.xml").exists():
-            execute(
-                ["cp", self.path("junit.xml").as_posix(), self.result_dir().as_posix()], sudo=True
-            )
+        if os.path.exists(self.path("junit.xml")):
+            execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
 
-        execute(
-            ["cp", "-r", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
-        )
+        execute(["cp", "-r", self.path("var/log"), self.result_dir().as_posix()], sudo=True)
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
@@ -1222,28 +1215,20 @@ class Site:
                     sudo=True,
                 )
 
-        for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             execute(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
 
         cmc_dir = self.result_dir() / "cmc"
         makedirs(cmc_dir, sudo=True)
 
         execute(
-            [
-                "cp",
-                self.path("var/check_mk/core/history").as_posix(),
-                (cmc_dir / "history").as_posix(),
-            ],
+            ["cp", self.path("var/check_mk/core/history"), (cmc_dir / "history").as_posix()],
             sudo=True,
         )
 
-        if self.path("var/check_mk/core/core").exists():
+        if os.path.exists(self.path("var/check_mk/core/core")):
             execute(
-                [
-                    "cp",
-                    self.path("var/check_mk/core/core").as_posix(),
-                    (cmc_dir / "core_dump").as_posix(),
-                ],
+                ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
                 sudo=True,
             )
 
@@ -1256,7 +1241,7 @@ class Site:
             [
                 "cp",
                 "-r",
-                self.path("var/check_mk/background_jobs").as_posix(),
+                Path(self.root, "var/check_mk/background_jobs").as_posix(),
                 self.result_dir().as_posix(),
             ],
             sudo=True,
@@ -1343,7 +1328,7 @@ class Site:
             old_t = site.live.query_value("GET status\nColumns: program_start\n")
 
             logger.debug("Read replication changes of site")
-            base_dir = site.path("var/check_mk/wato").as_posix()
+            base_dir = site.path("var/check_mk/wato")
             for path in glob.glob(base_dir + "/replication_*"):
                 logger.debug("Replication file: %r", path)
                 with suppress(FileNotFoundError):
@@ -1881,7 +1866,7 @@ class PythonHelper:
     def __init__(self, site: Site, helper_path: Path) -> None:
         self.site: Final = site
         self.helper_path: Final = helper_path
-        self.site_path: Final = site.root / self.helper_path.name
+        self.site_path: Final = Path(site.root, self.helper_path.name)
 
     @contextmanager
     def copy_helper(self) -> Iterator[None]:

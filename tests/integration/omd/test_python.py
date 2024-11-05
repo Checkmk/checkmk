@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from subprocess import check_output
@@ -84,7 +85,7 @@ def _load_pipfile_data() -> dict:
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:
-    assert site.path(f"/bin/python{_get_python_version_from_defines_make().major}").exists()
+    assert os.path.exists(site.root / f"/bin/python{_get_python_version_from_defines_make().major}")
 
 
 def test_02_python_interpreter_path(site: Site) -> None:
@@ -125,7 +126,7 @@ def test_03_python_path(site: Site) -> None:
 
 
 def test_01_pip_exists(site: Site) -> None:
-    assert site.path("/bin/pip3").exists()
+    assert os.path.exists(site.root / "/bin/pip3")
 
 
 def test_02_pip_path(site: Site) -> None:

@@ -28,12 +28,12 @@ TEST_MSI_FILE: Final = Path(
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
 def test_executables(site: Site, executable: Path) -> None:
-    p = site.path("bin") / executable
+    p = Path(site.path("bin")) / executable
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 
 
 def _get_msi_file_path_standard(site: Site) -> Path:
-    return site.path(MSI_LOCATION) / msi_engine.AGENT_STANDARD_MSI_FILE
+    return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
 # check the export with site/bin tools

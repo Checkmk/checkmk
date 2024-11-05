@@ -29,7 +29,7 @@ class WatchLog:
             self._site.write_text_file(self._log_path, "")
 
         self._tail_process = self._site.execute(
-            ["tail", "-f", self._site.path(self._log_path).as_posix()],
+            ["tail", "-f", self._site.path(self._log_path)],
             stdout=subprocess.PIPE,
             bufsize=1,  # line buffered
         )

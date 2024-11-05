@@ -23,9 +23,7 @@ def test_http_methods(site: Site) -> None:
         "PROPFIND", site.internal_url, timeout=5, headers={"User-Agent": user_agent}
     )
     assert response.status_code == 405
-    apache_log_file = check_output(
-        ["cat", site.path("var/log/apache/access_log").as_posix()], sudo=True
-    )
+    apache_log_file = check_output(["cat", site.path("var/log/apache/access_log")], sudo=True)
     for line in apache_log_file.splitlines():
         if re.match(r'^.*"PROPFIND /\w+/check_mk/ HTTP/1.1" 405 \d+ "-" "' + user_agent, line):
             return

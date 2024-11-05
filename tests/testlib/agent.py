@@ -104,7 +104,7 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     # Please note: We can not verify the agent controller from the package below, as it is
     # automatically deleted by the post install script in case it is not executable (see also
     # agents/scripts/super-server/0_systemd/setup).
-    run([site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"])
+    run([site.path("share/check_mk/agents/linux/cmk-agent-ctl"), "--version"])
 
     if site.version.is_raw_edition():
         agent_download_resp = site.openapi.get(

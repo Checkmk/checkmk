@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.fritzbox.lib.config import AgentConfigParams
 from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
@@ -30,7 +29,6 @@ def _formspec_fritzbox():
                 ),
             ),
         },
-        custom_validate=(AgentConfigParams.model_validate,),
     )
 
 

@@ -221,8 +221,6 @@ class Float(FormSpec):
 
 @dataclass(kw_only=True)
 class LegacyValuespec(FormSpec):
-    input_html: str
-    readonly_html: str
     varprefix: str
     type: str = "legacy_valuespec"
 

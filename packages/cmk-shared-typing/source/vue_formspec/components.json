@@ -80,23 +80,11 @@
                     "const": "legacy_valuespec",
                     "default": "legacy_valuespec"
                 },
-                "input_html": {
-                    "type": "string"
-                },
-                "readonly_html": {
-                    "type": "string"
-                },
                 "varprefix": {
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "html",
-                "varprefix",
-                "input_html",
-                "readonly_html"
-            ],
+            "required": ["type", "html", "varprefix"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"

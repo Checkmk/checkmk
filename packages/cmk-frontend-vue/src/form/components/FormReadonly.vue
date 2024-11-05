@@ -394,16 +394,21 @@ function renderCascadingSingleChoice(
   return null
 }
 
+interface PreRenderedHtml {
+  input_html: string
+  readonly_html: string
+}
+
 function renderLegacyValuespec(
-  formSpec: LegacyValuespec,
-  _value: unknown,
+  _formSpec: LegacyValuespec,
+  value: unknown,
   backendValidation: ValidationMessages
 ): VNode {
   return h('div', [
     h('div', {
       style: 'background: #595959',
       class: 'legacy_valuespec',
-      innerHTML: formSpec.readonly_html
+      innerHTML: (value as PreRenderedHtml).readonly_html
     }),
     h('div', { validation: backendValidation })
   ])

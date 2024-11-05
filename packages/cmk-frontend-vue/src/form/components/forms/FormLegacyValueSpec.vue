@@ -33,7 +33,15 @@ watch(
 const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
+const inputHtml = ref('')
+
+interface PreRenderedHtml {
+  input_html: string
+  readonly_html: string
+}
+
 onMounted(() => {
+  inputHtml.value = (data.value as PreRenderedHtml).input_html
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
@@ -79,7 +87,7 @@ function collectData() {
     ref="legacyDOM"
     style="background: #595959"
     class="legacy_valuespec"
-    v-html="spec.input_html"
+    v-html="inputHtml"
   ></form>
   <!--eslint-enable-->
   <FormValidation :validation="validation"></FormValidation>

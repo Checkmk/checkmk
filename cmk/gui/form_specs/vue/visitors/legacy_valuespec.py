@@ -84,11 +84,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                         shared_type_defs.LegacyValuespec(
                             title=title,
                             help=help_text,
-                            input_html=input_html,
-                            readonly_html=readonly_html,
                             varprefix=varprefix,
                         ),
-                        None,
+                        {"input_html": input_html, "readonly_html": readonly_html},
                     )
         else:
             value_to_render = parsed_value
@@ -101,11 +99,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
             shared_type_defs.LegacyValuespec(
                 title=title,
                 help=help_text,
-                input_html=input_html,
-                readonly_html=readonly_html,
                 varprefix=varprefix,
             ),
-            value_to_render,  # Note: this value is not used in the frontend
+            {"input_html": input_html, "readonly_html": readonly_html},
         )
 
     def _validate(

@@ -67,6 +67,30 @@ class TestVersion:
     def test_version_meta_data(self) -> None:
         assert Version.from_str("2.3.0p21+security").meta.value == "security"
 
+    def test_version_without_rc_master(self) -> None:
+        assert Version.from_str("1984.04.01").version_without_rc == "1984.04.01"
+
+    def test_version_without_rc_stable(self) -> None:
+        assert Version.from_str("1.2.3").version_without_rc == "1.2.3"
+
+    def test_version_without_rc_release(self) -> None:
+        assert Version.from_str("4.5.6p8").version_without_rc == "4.5.6p8"
+
+    def test_version_without_rc_release_candidate(self) -> None:
+        assert Version.from_str("2.3.0b4-rc1").version_without_rc == "2.3.0b4"
+
+    def test_version_rc_aware_master(self) -> None:
+        assert Version.from_str("1984.04.01").version_rc_aware == "1984.04.01"
+
+    def test_version_rc_aware_stable(self) -> None:
+        assert Version.from_str("1.2.3").version_rc_aware == "1.2.3"
+
+    def test_version_rc_aware_release(self) -> None:
+        assert Version.from_str("4.5.6p8").version_rc_aware == "4.5.6p8"
+
+    def test_version_rc_aware_release_candidate(self) -> None:
+        assert Version.from_str("2.3.0b4-rc1").version_rc_aware == "2.3.0b4-rc1"
+
     @pytest.mark.parametrize(
         "vers, expected",
         [

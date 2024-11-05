@@ -372,10 +372,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // NOTE: We have a closed interval with a resolution of 1s, so we have
     // to subtract 1s to get the duration. Silly representation...
     if (period.since >= period.until - 1s) {
+        Debug(core.loggerLivestatus()) << "empty query period " << period;
         return;
     }
 
     if (!it.rewind_to_start(period)) {
+        Debug(core.loggerLivestatus())
+            << "no monitoring history for the query period " << period;
         return;
     }
 

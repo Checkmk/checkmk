@@ -8,8 +8,10 @@
 
 #include <bitset>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <filesystem>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -41,11 +43,17 @@ public:
     LogEntryClasses log_entry_classes;
 };
 
+// This represents the half-open interval {t | since <= t < until}.
 class LogPeriod {
 public:
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
+
+    [[nodiscard]] bool empty() const { return since >= until; }
+    [[nodiscard]] auto duration() const { return until - since; }
 };
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p);
 
 // NOTE: This class is currently broken due to race conditions: Although it uses
 // a lock internally to guard against concurrent modifications happening by its

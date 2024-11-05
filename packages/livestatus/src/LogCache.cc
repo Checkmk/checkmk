@@ -5,10 +5,11 @@
 
 #include "livestatus/LogCache.h"
 
-#include <compare>
+#include <iostream>
 #include <system_error>
 #include <utility>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
@@ -17,6 +18,11 @@ namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p) {
+    return os << "[" << FormattedTimePoint(p.since) << ", "
+              << FormattedTimePoint(p.until) << ")";
+}
 
 LogCache::LogCache(ICore *core)
     : core_{core}, num_cached_log_messages_{0}, num_at_last_check_{0} {}

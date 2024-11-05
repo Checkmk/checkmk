@@ -1095,12 +1095,12 @@ class Site:
     def core_name(self) -> Literal["cmc", "nagios"]:
         return "nagios" if self.version.is_raw_edition() else "cmc"
 
-    def core_history_log(self) -> Path:
+    def core_history_log(self) -> str:
         core = self.core_name()
         if core == "nagios":
-            return self.path("var/log/nagios.log")
+            return "var/log/nagios.log"
         if core == "cmc":
-            return self.path("var/check_mk/core/history")
+            return "var/check_mk/core/history"
         raise ValueError(f"Unhandled core: {core}")
 
     def core_history_log_timeout(self) -> int:

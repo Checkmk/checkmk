@@ -15,7 +15,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    Integer,
     migrate_to_password,
     migrate_to_proxy,
     Password,
@@ -116,10 +115,10 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                 ),
                 "timeout": DictElement(
                     required=True,
-                    parameter_form=Integer(
+                    parameter_form=String(
                         title=Title("Set optional timeout for connections to the modem."),
                         help_text=Help("Here you can configure timeout settings."),
-                        prefill=DefaultValue(10),
+                        prefill=DefaultValue("10"),
                     ),
                 ),
             },

@@ -36,7 +36,7 @@ SECTION_1: job.Section = {
         },
     },
     "SNOWWHITE": {
-        "running": False,
+        "running": True,
         "start_time": 1557301201,
         "exit_code": 1,
         "running_start_time": [
@@ -63,7 +63,7 @@ SECTION_1: job.Section = {
 
 SECTION_2: job.Section = {
     "backup.sh": {
-        "running": False,
+        "running": True,
         "start_time": 1415204091,
         "exit_code": 0,
         "running_start_time": [1415205713],
@@ -621,6 +621,4 @@ def test_parse_order():
     assert section["230-testing-funning"]["running"] is True
 
     section = job.parse_job(STRING_TABLE_RUNNING_FINISHED_PART + STRING_TABLE_RUNNING)
-    assert section["230-testing-funning"]["running"] is False
-    # TODO: this is a bug, ordering of the sub-sections should not matter, its defined by find which
-    # is probably not stable
+    assert section["230-testing-funning"]["running"] is True

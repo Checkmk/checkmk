@@ -115,6 +115,21 @@ def _broker_stopped(site: Site) -> Iterator[None]:
         assert site.omd("start", "rabbitmq") == 0
 
 
+@contextmanager
+def _p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -> Iterator[None]:
+    """Establish a direct connection between two sites"""
+    connection_id = f"comp_test_p2p_{remote_site.id}_{remote_site_2.id}"
+    try:
+        central_site.openapi.create_broker_connection(
+            connection_id, connecter=remote_site.id, connectee=remote_site_2.id
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        yield
+    finally:
+        central_site.openapi.delete_broker_connection(connection_id)
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+
+
 @skip_if_saas_edition
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""
@@ -154,3 +169,13 @@ class TestMessageBroker:
             with _broker_stopped(central_site):
                 with pytest.raises(_Timeout):
                     _check_broker_ping(remote_site_2, remote_site.id)
+
+    def test_message_broker_remote_remote_p2p(
+        self, central_site: Site, remote_site: Site, remote_site_2: Site
+    ) -> None:
+        with (
+            _p2p_connection(central_site, remote_site, remote_site_2),
+            _broker_pong(remote_site),
+            _broker_stopped(central_site),
+        ):
+            _check_broker_ping(remote_site_2, remote_site.id)

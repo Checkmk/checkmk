@@ -14,7 +14,6 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
-from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
@@ -40,10 +39,6 @@ stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]] = defaultdict(list)
-
-_sections_by_parsed_name: dict[ParsedSectionName, dict[SectionName, SectionPlugin]] = defaultdict(
-    dict
-)
 
 
 @dataclass(frozen=True)
@@ -87,9 +82,6 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
-    _sections_by_parsed_name[section_plugin.parsed_section_name][section_plugin.name] = (
-        section_plugin
-    )
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:

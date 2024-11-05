@@ -19,6 +19,7 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
     return Float(
         title=form_spec.title,
         help_text=form_spec.help_text,
+        migrate=form_spec.migrate,
         custom_validate=form_spec.custom_validate,
         label=form_spec.label,
         prefill=form_spec.prefill,

@@ -22,6 +22,7 @@ def recompose(form_spec: FormSpec[Any]) -> ListExtended[Any]:
         title=form_spec.title,
         help_text=form_spec.help_text,
         custom_validate=form_spec.custom_validate,
+        migrate=form_spec.migrate,
         element_template=form_spec.element_template,
         add_element_label=form_spec.add_element_label,
         remove_element_label=form_spec.remove_element_label,

@@ -33,7 +33,7 @@ ServiceEvent = StatusChangeService | OtherTriggerEvent
 class TriggeringEvents(TypedDict):
     host_events: NotRequired[list[HostEvent]]
     service_events: NotRequired[list[ServiceEvent]]
-    ec_alerts: NotRequired[Literal["Enabled"]]
+    ec_alerts: NotRequired[Literal[True]]
 
 
 class ECAlertFilters(TypedDict):

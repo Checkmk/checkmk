@@ -29,7 +29,7 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
             ("downtime", None),
             ("alert_handler", "success"),
         ],
-        "ec_alerts": "Enabled",
+        "ec_alerts": True,
     },
     "host_filters": {
         "match_host_groups": ["group1", "group2", "group3"],

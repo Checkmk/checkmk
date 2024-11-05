@@ -108,7 +108,7 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
         ]
 
     if event_rule.get("match_ec", False):
-        trigger_events["ec_alerts"] = "Enabled"
+        trigger_events["ec_alerts"] = True
 
     return trigger_events
 
@@ -402,9 +402,6 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
             for ev in notification["triggering_events"]["service_events"]
         ]
 
-    if "ec_alerts" not in notification["triggering_events"]:
-        event_rule["match_ec"] = False
-
 
 def _set_event_console_filters(
     event_rule: EventRule, notification: NotificationQuickSetupSpec
@@ -423,8 +420,6 @@ def _set_event_console_filters(
         ec_alerts_type["match_comment"] = ec_alert_filters["event_comment"]
     if ec_alerts_type:
         event_rule["match_ec"] = ec_alerts_type
-    else:
-        event_rule["match_ec"] = False
 
 
 def _set_host_filters(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:

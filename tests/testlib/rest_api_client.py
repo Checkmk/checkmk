@@ -95,7 +95,7 @@ def set_if_match_header(
 class Response:
     status_code: int
     body: bytes | None
-    headers: Mapping[str, str]
+    headers: Mapping[str, str]  # TODO: Use werkzeug.datastructures.Headers?
 
     def assert_status_code(self, status_code: int) -> Response:
         assert self.status_code == status_code

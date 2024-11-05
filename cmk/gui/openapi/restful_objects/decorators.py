@@ -617,7 +617,7 @@ class Endpoint:
         if header_schema:
             with tracer.start_as_current_span("header-parameter-validation"):
                 try:
-                    _params.update(header_schema().load(request.headers))
+                    _params.update(header_schema().load(dict(request.headers)))
                 except ValidationError as exc:
                     raise RestAPIHeaderSchemaValidationException(
                         title=http.client.responses[400],

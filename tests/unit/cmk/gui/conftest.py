@@ -772,7 +772,7 @@ class WebTestAppRequestHandler(RequestHandler):
             headers=dict(headers or {}),
             expect_errors=True,
         )
-        return Response(status_code=resp.status_code, body=resp.body, headers=resp.headers)
+        return Response(status_code=resp.status_code, body=resp.body, headers=dict(resp.headers))
 
 
 @pytest.fixture()

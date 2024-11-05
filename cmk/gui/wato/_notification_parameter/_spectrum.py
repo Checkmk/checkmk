@@ -84,5 +84,9 @@ def _migrate_to_password(
                 "explicit_password",
                 (str(uuid4()), password),
             )
+        case "cmk_postprocessed", "explicit_password", (str(password_id), str(password)):
+            return "cmk_postprocessed", "explicit_password", (password_id, password)
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
+            return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
     raise TypeError(f"Could not migrate {model!r} to Password.")

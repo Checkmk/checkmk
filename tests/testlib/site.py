@@ -75,7 +75,7 @@ class Site:
     ) -> None:
         assert site_id
         self.id = site_id
-        self.root = Path("/omd/sites") / self.id
+        self.root = "/omd/sites/%s" % self.id
         self.version: Final = version
 
         self.reuse = reuse
@@ -122,7 +122,7 @@ class Site:
 
     @property
     def licensing_dir(self) -> Path:
-        return self.root / "var" / "check_mk" / "licensing"
+        return Path(self.root) / "var" / "check_mk" / "licensing"
 
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
@@ -1288,7 +1288,7 @@ class Site:
 
     @property
     def crash_report_dir(self) -> Path:
-        return self.root / "var" / "check_mk" / "crashes"
+        return Path(self.root) / "var/check_mk/crashes"
 
     @property
     def crash_archive_dir(self) -> Path:
@@ -1296,7 +1296,7 @@ class Site:
 
     @property
     def logs_dir(self) -> Path:
-        return self.root / "var" / "log"
+        return Path(self.root) / "var/log"
 
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"

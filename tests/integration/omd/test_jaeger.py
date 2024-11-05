@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 
 @skip_if_saas_edition
 def test_jaeger_exists(site: Site) -> None:
-    assert (site.root / "bin" / "jaeger").exists()
+    assert Path(site.root, "bin", "jaeger").exists()
 
 
 @skip_if_saas_edition

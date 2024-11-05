@@ -123,7 +123,7 @@ def test_linked_libraries(site: Site) -> None:
         "libcrypto.so.1.1",
     ]
 
-    files = _run_find_dynamically_linked(site, site.root)
+    files = _run_find_dynamically_linked(site, Path(site.root))
 
     exclude_entirely = [
         # That is a 32bit binary.

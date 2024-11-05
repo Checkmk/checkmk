@@ -92,7 +92,7 @@ def test_active_check_macros(site: Site) -> None:
         "$USER1$": "/omd/sites/%s/lib/nagios/plugins" % site.id,
         "$USER2$": "/omd/sites/%s/local/lib/nagios/plugins" % site.id,
         "$USER3$": site.id,
-        "$USER4$": site.root.as_posix(),
+        "$USER4$": site.root,
     }
 
     def descr(var):

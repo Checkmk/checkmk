@@ -47,16 +47,16 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
         topics = []
         topic_values = {}
         for topic in self.form_spec.topics:
-            if topic_value := parsed_value.get(topic.name):
-                dict_visitor = get_visitor(topic.dictionary, self.options)
-                topic_schema, topic_vue_value = dict_visitor.to_vue(topic_value)
-                topics.append(
-                    shared_type_defs.Topic(
-                        name=topic.name,
-                        dictionary=cast(shared_type_defs.Dictionary, topic_schema),
-                    )
+            topic_value = parsed_value.get(topic.name, {})
+            dict_visitor = get_visitor(topic.dictionary, self.options)
+            topic_schema, topic_vue_value = dict_visitor.to_vue(topic_value)
+            topics.append(
+                shared_type_defs.Topic(
+                    name=topic.name,
+                    dictionary=cast(shared_type_defs.Dictionary, topic_schema),
                 )
-                topic_values[topic.name] = topic_vue_value
+            )
+            topic_values[topic.name] = topic_vue_value
 
         return (
             shared_type_defs.Catalog(title=title, help=help_text, topics=topics),

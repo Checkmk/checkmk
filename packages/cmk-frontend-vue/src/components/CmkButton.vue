@@ -13,6 +13,7 @@ const buttonVariants = cva('', {
       secondary: 'button--variant-secondary',
       tertiary: 'button--variant-tertiary',
       transparent: 'button--variant-transparent',
+      minimal: 'button--variant-minimal',
       info: 'button--variant-info'
     },
     size: {
@@ -67,6 +68,14 @@ defineProps<ButtonProps>()
   padding: 0;
   margin: 0;
   font-weight: normal;
+}
+.button--variant-minimal {
+  border: none;
+  background: none;
+  font-weight: normal;
+}
+.button--variant-minimal:hover {
+  color: var(--default-button-hover-text-color);
 }
 .button--variant-info {
   background-color: var(--default-help-icon-bg-color);

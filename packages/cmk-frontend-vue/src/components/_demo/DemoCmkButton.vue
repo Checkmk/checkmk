@@ -29,6 +29,10 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
     <dd>
       <CmkButton variant="transparent">button</CmkButton>
     </dd>
+    <dt><code>&lt;CmkButton variant="minimal"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="minimal">button</CmkButton>
+    </dd>
     <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
     <dd>
       <CmkButtonCancel>button</CmkButtonCancel>

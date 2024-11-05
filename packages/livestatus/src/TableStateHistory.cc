@@ -311,7 +311,7 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period) {
     }
 
     // Check if 'until' is within these logfiles
-    if (it_logs_->second->since() > period.until) {
+    if (it_logs_->second->since() >= period.until) {
         // All logfiles are too new, invalid timeframe -> No data available.
         // Return empty result.
         return false;
@@ -369,9 +369,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
     const LogPeriod period = {.since = since, .until = until};
 
-    // NOTE: We have a closed interval with a resolution of 1s, so we have
-    // to subtract 1s to get the duration. Silly representation...
-    if (period.since >= period.until - 1s) {
+    if (period.empty()) {
         Debug(core.loggerLivestatus()) << "empty query period " << period;
         return;
     }
@@ -640,6 +638,10 @@ void TableStateHistory::final_reports(Query &query, const User &user,
             hss->_long_log_output = "";
         }
 
+        // A slight hack: We put the final HostServiceStates a tiny bit before
+        // the end of the query period. Conceptually, they are exactly at
+        // period.until, but rows with such a timestamp would get filtered out:
+        // The query period is a half-open interval.
         hss->_time = period.until - 1s;
         hss->_until = hss->_time;
 
@@ -867,9 +869,7 @@ void TableStateHistory::process(Query &query, const User &user,
                                 const LogPeriod &period,
                                 HostServiceState &hss) {
     hss._duration = hss._until - hss._from;
-    // NOTE: We have a closed interval with a resolution of 1s, so we have
-    // to subtract 1s to get the duration. Silly representation...
-    hss.computePerStateDurations(period.until - period.since - 1s);
+    hss.computePerStateDurations(period.duration());
 
     // if (hss._duration > 0)
     abort_query_ =

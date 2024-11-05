@@ -12,6 +12,8 @@ description:
  If the Rittal device returns {Closed}, the check is {OK}, if it is
  {Open} Checkmk reports WARN, otherwise {CRIT}.
 
+ Firmware versions using the MIB of firmware V3.15.20 are supported.
+
 item:
  The unit number and the internal name of the access module
 

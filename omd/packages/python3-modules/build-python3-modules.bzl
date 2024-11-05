@@ -1,6 +1,3 @@
-# ToDo:
-#    - PIPENV_PYPI_MIRROR (see technical dept socumentation)
-
 load("@python_modules//:requirements.bzl", "packages")
 
 def get_pip_options(module_name):
@@ -96,7 +93,6 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      -i {pypi_mirror} \\
       {pip_add_opts} \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

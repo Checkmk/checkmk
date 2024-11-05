@@ -10,8 +10,7 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-# TODO: Prefixing the command with the environment variable breaks xargs usage below!
-PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
+PIPENV             := scripts/run-pipenv
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
@@ -287,5 +286,5 @@ Pipfile.lock:
 .venv: Pipfile.lock
 	@( \
 		flock $(LOCK_FD); \
-		PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) $(REPO_PATH)/scripts/make_venv \
+		$(REPO_PATH)/scripts/make_venv \
 	) $(LOCK_FD)>$(LOCK_PATH)

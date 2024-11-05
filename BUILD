@@ -98,9 +98,6 @@ compile_pip_requirements(
         "//packages/cmk-trace:requirements.txt",
         "//packages/cmk-werks:requirements.txt",
     ],
-    env = {
-        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
-    },
     extra_args = [
         "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
         "--quiet",

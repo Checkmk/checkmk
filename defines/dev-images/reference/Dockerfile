@@ -37,7 +37,6 @@ RUN apt-get install -y \
 COPY \
     .bazelversion \
     package_versions.bzl \
-    static_variables.bzl \
     defines.make \
     /opt/
 

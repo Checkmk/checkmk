@@ -101,7 +101,6 @@ ENV \
 COPY \
     .bazelversion \
     package_versions.bzl \
-    static_variables.bzl \
     defines.make \
     /opt/
 

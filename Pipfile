@@ -1,5 +1,5 @@
 [[source]]
-url = "${PIPENV_PYPI_MIRROR}"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 

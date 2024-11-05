@@ -1,4 +1,3 @@
-load("@omd_packages//:static_variables.bzl", "INTERNAL_PYPI_MIRROR")
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "all_requirements")
 load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file", "get_pip_options")
@@ -34,7 +33,6 @@ config_setting(
             module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
@@ -42,7 +40,6 @@ config_setting(
             module_name = module,
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
     }),
@@ -71,7 +68,6 @@ build_python_module(
             module_name = MODULE_NETAPP,
             pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = MODULE_NETAPP_SOURCE,
         ),
         ":git_ssl_no_verify": build_cmd.format(
@@ -79,7 +75,6 @@ build_python_module(
             module_name = MODULE_NETAPP,
             pip_add_opts = get_pip_options(MODULE_NETAPP),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = MODULE_NETAPP_SOURCE,
         ),
     }),

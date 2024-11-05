@@ -76,7 +76,7 @@ copy_files_around() {
     VERSION_NUMBER=$(lsb_release -sr)
     cp omd/distros/UBUNTU_"$VERSION_NUMBER".mk "${INSTALL_PATH}"
     # copy files to buildscripts/infrastructure/build-nodes/scripts
-    cp .bazelversion defines.make package_versions.bzl static_variables.bzl "${SCRIPT_DIR}"
+    cp .bazelversion defines.make package_versions.bzl "${SCRIPT_DIR}"
     print_green "Necessary file copying done"
 }
 
@@ -85,7 +85,6 @@ perform_cleanup() {
     rm -f "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
     rm -f "${SCRIPT_DIR}"/.bazelversion
     rm -f "${SCRIPT_DIR}"/defines.make
-    rm -f "${SCRIPT_DIR}"/static_variables.bzl
     rm -f "${SCRIPT_DIR}"/package_versions.bzl
     rm -f "${SCRIPT_DIR}"/*.mk
     print_green "Cleanup done"

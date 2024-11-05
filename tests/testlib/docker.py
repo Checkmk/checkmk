@@ -9,11 +9,8 @@ import logging
 import os
 import subprocess
 import tarfile
-import time
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager, nullcontext
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, ContextManager
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -21,6 +18,7 @@ import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
+from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
@@ -65,7 +63,7 @@ def get_container_ip(c: docker.models.containers.Container) -> str:
 def send_to_container(c: docker.models.containers.Container, text: str) -> None:
     """Send text to the STDIN of a given container."""
     s = c.attach_socket(c, params={"stdin": 1, "stream": 1})
-    s._sock.send(text.encode("utf-8"))
+    s._sock.send(text.encode("utf-8"))  # noqa: SLF001
     s.close()
 
 
@@ -214,88 +212,129 @@ def build_checkmk(
     return image, build_logs
 
 
-@contextmanager
-def start_checkmk(
-    client: docker.client.DockerClient,
-    version: CMKVersion | None = None,
-    is_update: bool = False,
-    site_id: str = "cmk",
-    name: str | None = None,
-    hostname: str | None = None,
-    environment: dict[str, str] | None = None,
-    ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
-    volumes: list[str] | None = None,
-    volumes_from: list[str] | None = None,
-) -> Iterator[docker.models.containers.Container]:
-    """Provide a readily configured Checkmk docker container."""
-    environment = {"CMK_PASSWORD": "cmk"} | (environment or {})
+class CheckmkApp:
+    def __init__(
+        self,
+        client: docker.client.DockerClient,
+        version: CMKVersion | None = None,
+        is_update: bool = False,
+        site_id: str = "cmk",
+        name: str | None = None,
+        hostname: str | None = None,
+        environment: dict[str, str] | None = None,
+        ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
+        volumes: list[str] | None = None,
+        volumes_from: list[str] | None = None,
+    ):
+        # docker container defaults
+        self.username = "cmkadmin"
+        self.password = "cmk"
+        self.port = 5000
+        self.agent_receiver_port = 8000
+        self.api_version = "1.0"
+        self.api_user = "automation"
 
-    if version is None:
-        version = version_from_env()
+        self.client = client
+        self.name = name
+        self.hostname = hostname
+        self.site_id = site_id
+        self.site_root = f"/omd/sites/{self.site_id}"
+        self.version = version or version_from_env()
+        self.environment = {"CMK_PASSWORD": self.password} | (environment or {})
+        self.is_update = is_update
+        self.ports = ports
+        self.volumes = volumes or []
+        if self.version.is_saas_edition():
+            self.volumes += self._get_cse_volumes(cse_config_root)
+        self.volumes_from = volumes_from
 
-    try:
-        if version.version == version_from_env().version:
-            _image, _build_logs = build_checkmk(client, version)
-        else:
-            # In case the given version is not the current branch version, don't
-            # try to build it. Download it instead!
-            _image = pull_checkmk(client, version)
-    except requests.exceptions.ConnectionError as e:
-        raise Exception(
-            "Failed to access docker socket (Permission denied). You need to be member of the "
-            'docker group to get access to the socket (e.g. use "make -C docker_image setup") to '
-            "fix this, then restart your computer and try again."
-        ) from e
+        self.container = self._setup()
+        self.ip = get_container_ip(self.container)
 
-    if version.is_saas_edition():
-        from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
-            create_cse_initial_config,
+        self.url = f"http://{self.ip}:{self.port}"
+
+        # setup openapi session
+        self.openapi = CMKOpenApiSession(
+            host=self.ip,
+            user=self.username,
+            password=self.password,
+            site_version=self.version,
+            port=self.port,
+            site=self.site_id,
+            api_version=self.api_version,
         )
 
-        create_cse_initial_config(root=Path(cse_config_root))
-        volumes = (volumes or []) + get_cse_volumes(cse_config_root)
+    @property
+    def logs(self) -> str:
+        return self.container.logs().decode("utf-8")
 
-    kwargs = {
-        key: value
-        for key, value in {
-            "name": name,
-            "hostname": hostname,
-            "environment": environment,
-            "ports": ports,
-            "volumes": volumes,
-            "volumes_from": volumes_from,
-        }.items()
-        if value is not None
-    }
-
-    try:
-        c: docker.models.containers.Container = client.containers.get(name)
-        if os.getenv("REUSE") == "1":
-            logger.info("Reusing existing container %s", c.short_id)
-            c.start()
-            c.exec_run(["omd", "start"], user=site_id)
-        else:
-            logger.info("Removing existing container %s", c.short_id)
-            c.remove(force=True)
-            raise docker.errors.NotFound(name)
-    except (docker.errors.NotFound, docker.errors.NullResource):
-        c = client.containers.run(image=_image.id, detach=True, **kwargs)
-        logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
+    def _setup(self) -> docker.models.containers.Container:
+        """Provide a readily configured Checkmk docker container."""
 
         try:
-            site_id = (environment).get("CMK_SITE_ID", site_id)
-            wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
-            output = c.logs().decode("utf-8")
+            if self.version.version == version_from_env().version:
+                _image, _build_logs = build_checkmk(self.client, self.version)
+            else:
+                # In case the given version is not the current branch version, don't
+                # try to build it. Download it instead!
+                _image = pull_checkmk(self.client, self.version)
+        except requests.exceptions.ConnectionError as e:
+            raise Exception(
+                "Failed to access docker socket (Permission denied). You need to be member of the"
+                ' docker group to get access to the socket (e.g. use "make -C docker_image setup")'
+                " to fix this, then restart your computer and try again."
+            ) from e
 
-            assert ("Created new site" in output) != is_update
-            assert ("cmkadmin with password:" in output) != is_update
+        if self.version.is_saas_edition():
+            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+                create_cse_initial_config,
+            )
 
-            assert "STARTING SITE" in output
-        except TimeoutError:
-            logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
-            raise
-    try:
-        status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
+            create_cse_initial_config(root=Path(cse_config_root))
+
+        kwargs = {
+            key: value
+            for key, value in {
+                "name": self.name,
+                "hostname": self.hostname,
+                "environment": self.environment,
+                "ports": self.ports,
+                "volumes": self.volumes,
+                "volumes_from": self.volumes_from,
+            }.items()
+            if value is not None
+        }
+
+        try:
+            c: docker.models.containers.Container = self.client.containers.get(self.name)
+            if os.getenv("REUSE") == "1":
+                logger.info("Reusing existing container %s", c.short_id)
+                c.start()
+                c.exec_run(["omd", "start"], user=self.site_id)
+            else:
+                logger.info("Removing existing container %s", c.short_id)
+                c.remove(force=True)
+                raise docker.errors.NotFound(self.name)
+        except (docker.errors.NotFound, docker.errors.NullResource):
+            c = self.client.containers.run(image=_image.id, detach=True, **kwargs)
+            logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
+
+            try:
+                self.site_id = self.environment.get("CMK_SITE_ID", self.site_id)
+                wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
+                output = c.logs().decode("utf-8")
+
+                assert ("Created new site" in output) != self.is_update
+                assert ("cmkadmin with password:" in output) != self.is_update
+
+                assert "STARTING SITE" in output
+            except TimeoutError:
+                logger.error(
+                    "TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8")
+                )
+                raise
+
+        status_rc, status_output = c.exec_run(["omd", "status"], user=self.site_id)
         assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
 
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
@@ -303,300 +342,119 @@ def start_checkmk(
 
         logger.debug(c.logs().decode("utf-8"))
 
-        cse_oauth_context_mngr: ContextManager = nullcontext()
-        if version.is_saas_edition():
-            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
-                cse_openid_oauth_provider,
-            )
+        # TODO: add CSE auth provider setup
 
-            # TODO: The Oauth provider is currently not reachable from the Checkmk container.
-            # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
-            # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
-            # This is similar to what we are doing with the Oracle container in the
-            # test_docker_oracle test.
-            cse_oauth_context_mngr = cse_openid_oauth_provider(
-                site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
-            )
-        with cse_oauth_context_mngr:
-            yield c
-    finally:
-        if os.getenv("CLEANUP", "1") != "0":
-            c.stop()
-            c.remove(force=True)
+        return c
 
+    def _teardown(self) -> None:
+        if os.getenv("CLEANUP", "1") == "1":
+            self.container.stop()
+            self.container.remove(force=True)
 
-def get_cse_volumes(config_root: Path) -> list[str]:
-    cse_config_dir = Path("etc/cse")
-    cse_config_on_local_machine = config_root / cse_config_dir
-    cse_config_on_container = Path("/") / cse_config_dir
-    return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
+    @staticmethod
+    def _get_cse_volumes(config_root: Path) -> list[str]:
+        cse_config_dir = Path("etc/cse")
+        cse_config_on_local_machine = config_root / cse_config_dir
+        cse_config_on_container = Path("/") / cse_config_dir
+        return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
 
+    def __enter__(self):
+        return self
 
-def checkmk_docker_automation_secret(
-    checkmk: docker.models.containers.Container, site_id: str = "cmk", api_user: str = "automation"
-) -> str:
-    """Return the automation secret for a Checkmk docker instance."""
-    secret_rc, secret_output = checkmk.exec_run(
-        f"cat '/omd/sites/{site_id}/var/check_mk/web/{api_user}/automation.secret'"
-    )
-    assert secret_rc == 0
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._teardown()
 
-    api_secret = secret_output.decode("utf-8").split("\n")[0]
-    assert api_secret
-
-    return f"{api_secret}"
-
-
-def checkmk_docker_api_request(
-    checkmk: docker.models.containers.Container,
-    method: str,
-    endpoint: str,
-    json: Any | None = None,
-    allow_redirects: bool = False,
-    headers: dict[str, str] | None = None,
-) -> requests.Response:
-    """Run an API request against a Checkmk docker instance."""
-    site_ip = get_container_ip(checkmk)
-    # docker container defaults
-    site_port = 5000
-    site_id = "cmk"
-
-    api_url = f"http://{site_ip}:{site_port}/{site_id}/check_mk/api/1.0/{endpoint}"
-    api_user = "automation"
-    api_secret = checkmk_docker_automation_secret(checkmk, site_id, api_user)
-    api_token = f"Bearer {api_user} {api_secret}"
-    api_headers = {
-        "Authorization": api_token,
-        "Content-Type": "application/json",
-        "If-Match": "*",
-    }
-    if headers:
-        api_headers.update(headers)
-    return requests.request(
-        method,
-        url=api_url,
-        headers=api_headers,
-        json=json,
-        allow_redirects=allow_redirects,
-    )
-
-
-def checkmk_docker_get_host_services(
-    checkmk: docker.models.containers.Container,
-    hostname: str,
-) -> Any:
-    """Return the service list for a host in a Checkmk docker instance."""
-    return checkmk_docker_api_request(
-        checkmk, "get", f"/objects/host/{hostname}/collections/services"
-    ).json()["value"]
-
-
-def checkmk_docker_activate_changes(
-    checkmk: docker.models.containers.Container, attempts: int = 15
-) -> bool:
-    """Activate changes in a Checkmk docker instance and wait for completion."""
-    activate_response = checkmk_docker_api_request(
-        checkmk,
-        "post",
-        "/domain-types/activation_run/actions/activate-changes/invoke",
-    )
-    if activate_response.status_code == 204:
-        return True
-
-    # wait for completion
-    activation_id = activate_response.json().get("id")
-    for _ in range(attempts):
-        if (
-            checkmk_docker_api_request(
-                checkmk,
-                "get",
-                f"/objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
-            ).status_code
-            == 204
-        ):
-            return True
-        time.sleep(1)
-
-    return False
-
-
-def checkmk_docker_discover_services(
-    checkmk: docker.models.containers.Container, hostname: str, attempts: int = 15
-) -> bool:
-    """Perform a service discovery within a Checkmk docker instance and wait for completion."""
-    checkmk_docker_schedule_check(checkmk, hostname, "Check_MK")
-    checkmk_docker_schedule_check(checkmk, hostname, "Check_MK Discovery")
-    discovery_response = checkmk_docker_api_request(
-        checkmk,
-        "post",
-        f"/objects/host/{hostname}/actions/discover_services/invoke",
-        json={
-            "mode": "tabula_rasa",
-        },
-    )
-    if discovery_response.status_code == 204:
-        return True
-
-    # wait for completion
-    for _ in range(attempts):
-        if (
-            checkmk_docker_api_request(
-                checkmk,
-                "get",
-                f"/objects/service_discovery_run/{hostname}/actions/wait-for-completion/invoke",
-            ).status_code
-            == 204
-        ):
-            return True
-        time.sleep(1)
-
-    return False
-
-
-def checkmk_docker_schedule_check(
-    checkmk: docker.models.containers.Container,
-    hostname: str,
-    checkname: str = "Check_MK",
-    site_id: str = "cmk",
-) -> None:
-    """Schedule a check for a host in a Checkmk docker instance."""
-    cmd_time = time.time()
-    checkmk.exec_run(
-        [
-            f"/omd/sites/{site_id}/bin/lq",
-            f"COMMAND [{cmd_time}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{checkname};{cmd_time}",
-        ],
-        user=site_id,
-    )
-
-
-def checkmk_docker_add_host(
-    checkmk: docker.models.containers.Container,
-    hostname: str,
-    ipv4: str,
-) -> None:
-    """Create a host in a Checkmk docker instance."""
-    logger.info('Add host "%s" to Checkmk at %s...', hostname, ipv4)
-    response = checkmk_docker_api_request(
-        checkmk,
-        "post",
-        "/domain-types/host_config/collections/all",
-        json={
-            "folder": "/",
-            "host_name": hostname,
-            "attributes": {
-                "ipaddress": ipv4,
-                "tag_address_family": "ip-v4-only",
-            },
-        },
-    )
-    assert response.status_code == 200, f'Failed to add host "{hostname}" to Checkmk at {ipv4}!'
-    checkmk_docker_activate_changes(checkmk)
-
-
-def checkmk_docker_wait_for_services(
-    checkmk: docker.models.containers.Container,
-    hostname: str,
-    min_services: int = 5,
-    attempts: int = 15,
-) -> None:
-    """Repeatedly discover services in a Checkmk docker instance until min_services are found."""
-    logger.info("Wait for service discovery...")
-    for _ in range(attempts):
-        if len(checkmk_docker_get_host_services(checkmk, hostname)) > min_services:
-            break
-
-        checkmk_docker_discover_services(checkmk, hostname)
-        checkmk_docker_activate_changes(checkmk)
-
-
-def checkmk_install_agent(
-    app: docker.models.containers.Container,
-    checkmk: docker.models.containers.Container,
-) -> None:
-    """Download an agent from Checkmk container and install it into an application container."""
-    agent_os = "linux"
-    agent_type = "rpm"
-    agent_path = f"/tmp/check_mk_agent.{agent_type}"
-
-    logger.info('Downloading Checkmk agent "%s"...', agent_path)
-    with open(agent_path, "wb") as agent_file:
-        agent_file.write(
-            checkmk_docker_api_request(
-                checkmk,
-                "get",
-                f"/domain-types/agent/actions/download/invoke?os_type={agent_os}_{agent_type}",
-            ).content
+    def automation_secret(
+        self,
+    ) -> str:
+        """Return the automation secret for a Checkmk docker instance."""
+        secret_rc, secret_output = self.container.exec_run(
+            f"cat '/omd/sites/{self.site_id}/var/check_mk/web/{self.api_user}/automation.secret'"
         )
+        assert secret_rc == 0
 
-    logger.info('Installing Checkmk agent "%s"...', agent_path)
-    assert copy_to_container(app, agent_path, "/")
-    install_agent_rc, install_agent_output = app.exec_run(
-        f"dnf install '/{os.path.basename(agent_path)}'",
-        user="root",
-        privileged=True,
-    )
-    assert (
-        install_agent_rc == 0
-    ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
+        assert (api_secret := str(secret_output.decode("utf-8").split("\n")[0]))
 
+        return api_secret
 
-def checkmk_register_agent(
-    app: docker.models.containers.Container,
-    site_ip: str,
-    site_id: str,
-    hostname: str,
-    api_user: str,
-    api_secret: str,
-    agent_receiver_port: int = 8000,
-) -> None:
-    """Register an agent in an application container with a site."""
-    cmd = [
-        "/usr/bin/cmk-agent-ctl",
-        "register",
-        "--server",
-        f"{site_ip}:{agent_receiver_port}",
-        "--site",
-        site_id,
-        "--user",
-        api_user,
-        "--password",
-        api_secret,
-        "--hostname",
-        hostname,
-        "--trust-cert",
-    ]
-    logger.info("Running command: %s", " ".join(cmd))
-    register_agent_rc, register_agent_output = app.exec_run(
-        cmd,
-        user="root",
-        privileged=True,
-    )
-    assert (
-        register_agent_rc == 0
-    ), f"Error registering agent: {register_agent_output.decode('utf-8')}"
+    def install_agent(self, app: docker.models.containers.Container) -> None:
+        """Download an agent from Checkmk container and install it into an application container."""
+        agent_os = "linux"
+        agent_type = "rpm"
+        os_type = f"{agent_os}_{agent_type}"
+        agent_path = f"/tmp/check_mk_agent.{agent_type}"
 
+        logger.info('Downloading Checkmk agent "%s"...', agent_path)
+        with open(agent_path, "wb") as agent_file:
+            agent_file.write(
+                self.openapi.get(
+                    "/domain-types/agent/actions/download/invoke",
+                    params={"os_type": os_type},
+                    headers={"Accept": "application/octet-stream"},
+                ).content
+            )
 
-def checkmk_install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
-    """Install an agent controller daemon in an application container
-    to avoid systemd dependency."""
-    daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
+        logger.info('Installing Checkmk agent "%s"...', agent_path)
+        assert copy_to_container(app, agent_path, "/")
+        install_agent_rc, install_agent_output = app.exec_run(
+            f"dnf install '/{os.path.basename(agent_path)}'",
+            user="root",
+            privileged=True,
+        )
+        assert (
+            install_agent_rc == 0
+        ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
 
-    logger.info("Installing Python...")
-    install_python_rc, install_python_output = app.exec_run(
-        "dnf install 'python3.11'",
-        user="root",
-        privileged=True,
-    )
-    assert (
-        install_python_rc == 0
-    ), f"Error during python setup: {install_python_output.decode('utf-8')}"
+    def register_agent(self, app: docker.models.containers.Container, hostname: str) -> None:
+        """Register an agent in an application container with a site."""
+        cmd = [
+            "/usr/bin/cmk-agent-ctl",
+            "register",
+            "--server",
+            f"{self.ip}:{self.agent_receiver_port}",
+            "--site",
+            self.site_id,
+            "--user",
+            self.api_user,
+            "--password",
+            self.automation_secret(),
+            "--hostname",
+            hostname,
+            "--trust-cert",
+        ]
+        logger.info("Running command: %s", " ".join(cmd))
+        register_agent_rc, register_agent_output = app.exec_run(
+            cmd,
+            user="root",
+            privileged=True,
+        )
+        assert (
+            register_agent_rc == 0
+        ), f"Error registering agent: {register_agent_output.decode('utf-8')}"
 
-    logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
-    assert copy_to_container(app, daemon_path, "/")
-    app.exec_run(
-        f'python3 "/{os.path.basename(daemon_path)}"',
-        user="root",
-        privileged=True,
-        detach=True,
-    )
+    @staticmethod
+    def install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
+        """Install an agent controller daemon in an application container
+        to avoid systemd dependency."""
+        daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
+
+        python_pkg_name = "python3.11"
+        python_bin_name = "python3.11"
+        logger.info("Installing %s...", python_pkg_name)
+        install_python_rc, install_python_output = app.exec_run(
+            f"dnf install '{python_pkg_name}'",
+            user="root",
+            privileged=True,
+        )
+        assert (
+            install_python_rc == 0
+        ), f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
+
+        logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
+        assert copy_to_container(app, daemon_path, "/")
+        app.exec_run(
+            f'{python_bin_name} "/{os.path.basename(daemon_path)}"',
+            user="root",
+            privileged=True,
+            detach=True,
+        )

@@ -18,13 +18,7 @@ import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
 from tests.testlib.docker import (
-    checkmk_docker_add_host,
-    checkmk_docker_api_request,
-    checkmk_docker_automation_secret,
-    checkmk_docker_wait_for_services,
-    checkmk_install_agent,
-    checkmk_install_agent_controller_daemon,
-    checkmk_register_agent,
+    CheckmkApp,
     copy_to_container,
     get_container_ip,
     resolve_image_alias,
@@ -39,13 +33,14 @@ logger = logging.getLogger()
 class OracleDatabase:
     def __init__(
         self,
-        docker_client: docker.client.DockerClient,
-        checkmk: docker.models.containers.Container,
+        client: docker.client.DockerClient,
+        checkmk: CheckmkApp,
         *,  # enforce named arguments
         temp_dir: Path,
         name: str = "oracle",
     ):
-        self.docker_client = docker_client
+        self.client = client
+        self.container: docker.models.containers.Container
         self.checkmk = checkmk
         self.name: str = name
         self.temp_dir = temp_dir
@@ -116,6 +111,7 @@ class OracleDatabase:
                 ]
             ),
             "register_listener.sql": "ALTER SYSTEM REGISTER;",
+            "shutdown.sql": "shutdown immediate;exit;",
         }
         self.cfg_files = {
             self.cmk_credentials_cfg: "\n".join(
@@ -141,7 +137,7 @@ class OracleDatabase:
             self.volumes.append(f"{self.ORADATA.as_posix()}:{self.DATA.as_posix()}")
 
         self._init_envfiles()
-        self.container = self._start_container()
+        self._start_container()
         self._setup_container()
 
     def _create_oracle_wallet(self) -> None:
@@ -185,50 +181,52 @@ class OracleDatabase:
         """Pull the container image from the repository."""
         logger.info("Downloading Oracle Database Free docker image")
 
-        return self.docker_client.images.pull(resolve_image_alias(self.IMAGE_NAME))
+        return self.client.images.pull(resolve_image_alias(self.IMAGE_NAME))
 
-    def _start_container(self) -> docker.models.containers.Container:
+    def _start_container(self) -> None:
         """Start the container."""
         try:
-            container = self.docker_client.containers.get(self.name)
+            self.container = self.client.containers.get(self.name)
             if os.getenv("REUSE") == "1":
-                logger.info("Reusing existing container %s", container.short_id)
-                container.start()
+                logger.info("Reusing existing container %s", self.container.short_id)
+                self.container.start()
             else:
-                logger.info("Removing existing container %s", container.short_id)
-                container.remove(force=True)
+                logger.info("Removing existing container %s", self.container.short_id)
+                self.container.remove(force=True)
                 raise docker.errors.NotFound(self.name)
         except docker.errors.NotFound:
             logger.info("Starting container %s from image %s", self.name, self.image.short_id)
             run_cmds = [
+                "$(ls -1 /etc/init.d/oracle-* | grep -v firstboot) stop",
                 f"rm -rf '{self.DATA}/'**",
                 f"sed -i -e 's/memory_target=.*/memory_target=2G/g' '{self.INIT_ORA}'",
                 "/opt/oracle/runOracle.sh",
             ]
-            container = self.docker_client.containers.run(
+            assert self.image.id, "Image ID not defined!"
+            self.container = self.client.containers.run(
                 command=(None if self.reuse_db else ["/bin/bash", "-c", ";".join(run_cmds)]),
                 image=self.image.id,
                 name=self.name,
                 volumes=self.volumes,
                 environment=self.environment,
                 detach=True,
-                shm_size="4G",
-                mem_reservation="6G",
-                mem_limit="8G",
-                memswap_limit="8G",
             )
+
             try:
                 wait_until(
-                    lambda: "DATABASE IS READY TO USE!" in container.logs().decode("utf-8"),
-                    timeout=900,
+                    lambda: "DATABASE IS READY TO USE!" in self.container.logs().decode(),
+                    timeout=1200,
+                    interval=5,
                 )
             except TimeoutError:
                 logger.error(
                     "TIMEOUT while starting Oracle. Log output: %s",
-                    container.logs().decode("utf-8"),
+                    self.container.logs().decode("utf-8"),
                 )
                 raise
-        return container
+        # reload() to make sure all attributes are set (e.g. NetworkSettings)
+        self.container.reload()
+        self.ip = get_container_ip(self.container)
 
     def _setup_container(self) -> None:
         """Initialise the container setup."""
@@ -250,37 +248,50 @@ class OracleDatabase:
         )
         assert rc == 0, f"Error during user creation: {output.decode('UTF-8')}"
 
-        # reload() to make sure all attributes are set (e.g. NetworkSettings)
-        self.container.reload()
-
-        site_ip = get_container_ip(self.checkmk)
+        site_ip = self.checkmk.ip
         assert site_ip and site_ip != "127.0.0.1", "Failed to detect IP of checkmk container!"
 
-        checkmk_install_agent(app=self.container, checkmk=self.checkmk)
+        self.checkmk.install_agent(app=self.container)
 
-        checkmk_install_agent_controller_daemon(app=self.container)
+        self.checkmk.install_agent_controller_daemon(app=self.container)
 
         self._install_oracle_plugin()
 
-        checkmk_docker_add_host(
-            checkmk=self.checkmk,
-            hostname=self.name,
-            ipv4=get_container_ip(self.container),
+        self.checkmk.openapi.hosts.create(
+            self.name,
+            folder="/",
+            attributes={
+                "ipaddress": self.ip,
+                "tag_address_family": "ip-v4-only",
+            },
+        )
+        self.checkmk.openapi.changes.activate_and_wait_for_completion()
+
+        # like tests.testlib.agent.register_controller(), but in the container
+        self.checkmk.register_agent(self.container, self.name)
+
+        logger.info("Waiting for controller to open TCP socket or push data")
+        # like tests.testlib.agent.wait_until_host_receives_data(), but in the container
+        wait_until(
+            lambda: self.checkmk.container.exec_run(
+                [f"{self.checkmk.site_root}/bin/cmk", "-d", self.name],
+            )[0]
+            == 0,
+            timeout=120,
+            interval=20,
         )
 
-        site_id = "cmk"
-        api_user = "automation"
-        api_secret = checkmk_docker_automation_secret(self.checkmk, site_id, api_user)
-        checkmk_register_agent(
-            self.container,
-            site_ip=site_ip,
-            site_id=site_id,
-            hostname=self.name,
-            api_user=api_user,
-            api_secret=api_secret,
-        )
+        self.checkmk.openapi.service_discovery.run_discovery_and_wait_for_completion(self.name)
+        self.checkmk.openapi.changes.activate_and_wait_for_completion()
 
-        checkmk_docker_wait_for_services(checkmk=self.checkmk, hostname=self.name, min_services=5)
+        logger.info("Wait until host %s has services...", self.name)
+        # TODO: refactor tests.testlib.agent.wait_until_host_has_services() to work w/o Site
+        wait_until(
+            lambda: len(self.checkmk.openapi.services.get_host_services(self.name, pending=False))
+            > 5,
+            timeout=120,
+            interval=20,
+        )
 
         self._create_oracle_wallet()
 
@@ -378,7 +389,7 @@ class OracleDatabase:
 @pytest.fixture(name="oracle", scope="session")
 def _oracle(
     client: docker.client.DockerClient,
-    checkmk: docker.models.containers.Container,
+    checkmk: CheckmkApp,
     tmp_path_session: Path,
 ) -> Iterator[OracleDatabase]:
     with OracleDatabase(
@@ -387,16 +398,13 @@ def _oracle(
         name="oracle",
         temp_dir=tmp_path_session,
     ) as oracle_db:
-        # Make use of the contextmanager logic to make sure that a teardown of
-        # the database happens after the tests end.
         yield oracle_db
 
 
-@pytest.mark.xfail(reason="Service discovery failure, investigating")
 @skip_if_not_enterprise_edition
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(
-    checkmk: docker.models.containers.Container,
+    checkmk: CheckmkApp,
     oracle: OracleDatabase,
     auth_mode: Literal["wallet", "credential"],
 ) -> None:
@@ -442,14 +450,13 @@ def test_docker_oracle(
             {"description": f"{oracle.SERVICE_PREFIX} Uptime"},
         ]
     ]
+
     actual_services = [
         _.get("extensions")
-        for _ in checkmk_docker_api_request(
-            checkmk,
-            "get",
-            f"/objects/host/{oracle.name}/collections/services?columns=state&columns=description",
-        ).json()["value"]
-        if _.get("title").upper().startswith(oracle.SERVICE_PREFIX)
+        for _ in checkmk.openapi.services.get_host_services(
+            oracle.name, columns=["state", "description"]
+        )
+        if _.get("title", "").upper().startswith(oracle.SERVICE_PREFIX)
     ]
 
     missing_services = [

@@ -167,16 +167,20 @@ def _get_url_prefix_setting(
                     ),
                 ),
             ],
-            migrate=_migrate_html_mail_url_prefix,
+            migrate=_migrate_url_prefix,
             prefill=DefaultValue(default_value),
         ),
         render_only=is_cse,
     )
 
 
-def _migrate_html_mail_url_prefix(p: object) -> tuple[str, str | None]:
+def _migrate_url_prefix(p: object) -> tuple[str, str | None]:
     if isinstance(p, tuple):
         return p
+
+    if isinstance(p, str):
+        return ("manual", p)
+
     if isinstance(p, dict):
         for key, value in p.items():
             if key == "manual":

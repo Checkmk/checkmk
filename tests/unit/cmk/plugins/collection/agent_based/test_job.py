@@ -117,9 +117,26 @@ SECTION_3: job.Section = {
 }
 
 STRING_TABLE_RUNNING = [
-    ["==>", "230-testing-running.113660running", "<=="],
-    ["start_time", "1730702681"],
+    ["==>", "230-testing-funning.113660running", "<=="],
+    ["start_time", "1730709681"],
 ]
+
+STRING_TABLE_RUNNING_FINISHED_PART = [
+    # be careful with the name here: if it ends with "running" everything is broken!
+    ["==>", "230-testing-funning", "<=="],
+    ["start_time", "1730702588"],
+    ["real", "0:02.00"],
+    ["user", "0.00"],
+    ["sys", "0.00"],
+    ["reads", "0"],
+    ["writes", "0"],
+    ["max_res_kbytes", "2304"],
+    ["avg_mem_kbytes", "0"],
+    ["invol_context_switches", "0"],
+    ["vol_context_switches", "2"],
+    ["exit_code", "0"],
+]
+
 
 TIME = 1594300620.0
 
@@ -592,5 +609,18 @@ def test_check_job(
 
 def test_discover():
     assert list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING))) == [
-        Service(item="230-testing-running")
+        Service(item="230-testing-funning")
     ]
+
+
+def test_parse_order():
+    section = job.parse_job(STRING_TABLE_RUNNING)
+    assert section["230-testing-funning"]["running"] is True
+
+    section = job.parse_job(STRING_TABLE_RUNNING + STRING_TABLE_RUNNING_FINISHED_PART)
+    assert section["230-testing-funning"]["running"] is True
+
+    section = job.parse_job(STRING_TABLE_RUNNING_FINISHED_PART + STRING_TABLE_RUNNING)
+    assert section["230-testing-funning"]["running"] is False
+    # TODO: this is a bug, ordering of the sub-sections should not matter, its defined by find which
+    # is probably not stable

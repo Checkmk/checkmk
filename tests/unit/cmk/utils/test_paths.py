@@ -12,6 +12,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.import_module_hack import import_module_hack
 
+import cmk.utils.paths
+
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
     "rrd_multiple_dir": "/opt%s",
@@ -94,5 +96,5 @@ def test_paths_in_omd_and_opt_root(monkeypatch: MonkeyPatch) -> None:
     omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:
         m.setitem(os.environ, "OMD_ROOT", omd_root)
-        test_paths = import_module_hack("cmk/utils/paths.py")
+        test_paths = import_module_hack(cmk.utils.paths.__file__)
         _check_paths(omd_root, test_paths.__dict__)

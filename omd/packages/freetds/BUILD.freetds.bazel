@@ -70,7 +70,7 @@ configure_make(
     set -x
     mkdir -p $BUILD_TMPDIR/tar/freetds/lib
     cp -a "$BUILD_TMPDIR/$INSTALL_PREFIX"/lib/libsybdb.so* "$BUILD_TMPDIR"/tar/freetds/lib/
-        tar -C $BUILD_TMPDIR/tar/ -cf "$INSTALLDIR"/tar/freedts.tar freetds
+        tar -C $BUILD_TMPDIR/tar/ -cf "$INSTALLDIR"/tar/freetds.tar freetds
     """,
     targets = [
         "all",

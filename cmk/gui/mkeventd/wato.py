@@ -5604,11 +5604,11 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                         elements=[
                             SingleChoiceElementExtended(
                                 title=Title("%s") % title,
-                                name=str(ident),
+                                name=ident,
                             )
                             for ident, title in syslog_facilities
                         ],
-                        type=str,
+                        type=int,
                     ),
                 ),
                 "remote": DictElement(

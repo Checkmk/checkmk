@@ -953,7 +953,7 @@ def notification_method() -> QuickSetupStage:
 
     return QuickSetupStage(
         title=_("Notification method (plug-in)"),
-        sub_title=_("What should be send out?"),
+        sub_title=_("What should be sent out?"),
         configure_components=_components,
         custom_validators=[],
         recap=[recaps.recaps_form_spec],

@@ -9,12 +9,12 @@ import { type VariantProps, cva } from 'class-variance-authority'
 const buttonVariants = cva('', {
   variants: {
     variant: {
-      primary: 'button--variant-primary',
-      secondary: 'button--variant-secondary',
-      tertiary: 'button--variant-tertiary',
-      transparent: 'button--variant-transparent',
-      minimal: 'button--variant-minimal',
-      info: 'button--variant-info'
+      primary: 'button--variant-primary', // high emphasis
+      secondary: 'button--variant-secondary', // less prominent
+      tertiary: 'button--variant-tertiary', // heightened attention
+      transparent: 'button--variant-transparent', // used only with icons
+      minimal: 'button--variant-minimal', // subtle styling
+      info: 'button--variant-info' // used only within info dialog
     },
     size: {
       small: 'button--size-small',

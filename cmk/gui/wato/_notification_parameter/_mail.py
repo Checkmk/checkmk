@@ -281,15 +281,6 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                 ),
             ),
         ),
-        "no_floating_graphs": DictElement(
-            group=DictGroup(
-                title=Title("Email body/content"),
-            ),
-            parameter_form=FixedValue(
-                label=Label(""),
-                value=True,
-            ),
-        ),
     }
 
 

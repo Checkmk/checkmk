@@ -180,7 +180,7 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <CmkButton size="small" @click.prevent="addElement">
+  <CmkButton variant="minimal" size="small" @click.prevent="addElement">
     <CmkIcon name="plus" />
     <CmkSpace size="small" />
     {{ spec.add_element_label }}

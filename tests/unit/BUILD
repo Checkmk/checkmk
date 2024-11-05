@@ -39,6 +39,7 @@ py_test(
     # Start the collection and load the conftests.  The complexity
     # of those warrants this target.
     name = "smoke",
+    size = "small",
     srcs = [
         "__test__.py",
         "test_cannot_fail.py",

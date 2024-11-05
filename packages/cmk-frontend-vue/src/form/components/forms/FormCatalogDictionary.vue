@@ -159,7 +159,6 @@ const componentId = useId()
 </script>
 
 <template>
-  {{ getElementsInGroupsFromProps().length }}
   <template v-if="getElementsInGroupsFromProps().length === 1">
     <tr v-for="element in elements" :key="element.name">
       <td class="legend">

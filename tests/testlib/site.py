@@ -1226,7 +1226,7 @@ class Site:
             sudo=True,
         )
 
-        if os.path.exists(self.path("var/check_mk/core/core")):
+        if self.file_exists("var/check_mk/core/core"):
             execute(
                 ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
                 sudo=True,

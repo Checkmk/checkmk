@@ -8,7 +8,6 @@
 #include <bitset>
 #include <chrono>
 #include <compare>
-#include <optional>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -348,27 +347,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Store hosts/services that we have filtered out here
     object_blacklist_t object_blacklist;
 
-    // Optimize time interval for the query. In log queries there should always
-    // be a time range in form of one or two filter expressions over time. We
-    // use that to limit the number of logfiles we need to scan and to find the
-    // optimal entry point into the logfile
-    auto glb = query.greatestLowerBoundFor("time");
-    if (!glb) {
-        query.invalidRequest(
-            "Start of timeframe required. e.g. Filter: time > 1234567890");
-        return;
-    }
-    // NOTE: Both time points are *inclusive*, i.e. we have a closed interval,
-    // which is quite awkward: Half-open intervals are the way to go!
-    auto since = std::chrono::system_clock::from_time_t(*glb);
-
-    auto lub = query.leastUpperBoundFor("time");
-    auto until = (lub ? std::chrono::system_clock::from_time_t(*lub)
-                      : std::chrono::system_clock::now()) +
-                 1s;
-
-    const LogPeriod period = {.since = since, .until = until};
-
+    auto period = LogPeriod::make(query);
     if (period.empty()) {
         Debug(core.loggerLivestatus()) << "empty query period " << period;
         return;

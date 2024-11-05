@@ -19,6 +19,7 @@
 #include "livestatus/Logfile.h"
 class ICore;
 class Logger;
+class Query;
 
 // We keep this on top level to make forward declarations possible.
 class LogFiles {
@@ -49,6 +50,7 @@ public:
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
 
+    static LogPeriod make(const Query &query);
     [[nodiscard]] bool empty() const { return since >= until; }
     [[nodiscard]] auto duration() const { return until - since; }
 };

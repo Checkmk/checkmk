@@ -163,21 +163,6 @@ LogRestrictions constructRestrictions(Query &query,
     };
 }
 
-LogPeriod constructPeriod(Query &query) {
-    // Figure out the time interval for the query: In log queries there should
-    // always be a time range in the form of one or two filter expressions for
-    // "time"". We use that to limit the number of log files we need to scan and
-    // to find the optimal entry point into the log file.
-    using sc = std::chrono::system_clock;
-    auto now = sc::to_time_t(std::chrono::system_clock::now());
-    return {
-        .since =
-            sc::from_time_t(query.greatestLowerBoundFor("time").value_or(0)),
-        .until =
-            sc::from_time_t(query.leastUpperBoundFor("time").value_or(now) + 1),
-    };
-}
-
 // Call the given callback for each log entry matching the filter in a
 // chronologically backwards fashion, until the callback returns false.
 void for_each_log_entry(
@@ -255,7 +240,7 @@ void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
         row_type row{entry, core};
         return !is_authorized(row) || query.processDataset(Row{&row});
     };
-    for_each_log_entry(*log_cache_, restrictions, constructPeriod(query),
+    for_each_log_entry(*log_cache_, restrictions, LogPeriod::make(query),
                        process);
 }
 

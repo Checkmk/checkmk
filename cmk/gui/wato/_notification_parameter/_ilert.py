@@ -19,6 +19,7 @@ from cmk.rulesets.v1.form_specs import (
     FieldSize,
     FixedValue,
     InputHint,
+    migrate_to_proxy,
     Password,
     Proxy,
     SingleChoice,
@@ -63,7 +64,9 @@ class NotificationParameterILert(NotificationParameter):
                     ),
                 ),
                 "proxy_url": DictElement(
-                    parameter_form=Proxy(),
+                    parameter_form=Proxy(
+                        migrate=migrate_to_proxy,
+                    ),
                 ),
                 "ilert_priority": DictElement(
                     parameter_form=SingleChoice(

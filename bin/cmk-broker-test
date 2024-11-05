@@ -17,6 +17,7 @@ It will respond to each message with a message of its own, containing the same U
 """
 
 import argparse
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -50,6 +51,12 @@ QUEUE_NAME = QueueName("debugging-test")
 ROUTING_KEY = RoutingKey(QUEUE_NAME.value)
 
 
+def write(message: str) -> None:
+    """We need to immediately flush, to know when pong is ready."""
+    sys.stdout.write(message)
+    sys.stdout.flush()
+
+
 @dataclass(frozen=True)
 class Arguments:
     site: str | None
@@ -69,7 +76,7 @@ def _callback_pong(
 ) -> None:
     """Upon receiving a message, publish a response"""
     response = TestMessage.new(received.uuid)
-    sys.stdout.write(
+    write(
         "===================================\n"
         "Received message:\n"
         f"  {received!r}\n"
@@ -82,11 +89,11 @@ def _callback_pong(
 
 
 def _command_pong() -> int:
-    sys.stdout.write("Establishing connection to local broker\n")
+    write("Establishing connection to local broker\n")
     with Connection(APP_NAME, omd_root) as conn:
         channel = conn.channel(TestMessage)
         channel.queue_declare(queue=QUEUE_NAME)
-        sys.stdout.write("Waiting for messages\n")
+        write("Waiting for messages\n")
         channel.consume(QUEUE_NAME, _callback_pong)
     return 42  # can't happen
 
@@ -98,7 +105,7 @@ def _make_callback_ping(
         channel: Channel[TestMessage], delivery_tag: DeliveryTag, received: TestMessage
     ) -> None:
         now = time.time()
-        sys.stdout.write(
+        write(
             "Received message:\n"
             f"  {received!r}\n"
             f"Received after {(now - received.timestamp)*1000:.3f} ms\n"
@@ -107,28 +114,28 @@ def _make_callback_ping(
         channel.acknowledge(delivery_tag)
 
         if not received.uuid == sent.uuid:
-            sys.stdout.write(
+            write(
                 "The received message was not sent in response to my message (the UUIDs don't match).\n"
             )
             sys.exit(1)
-        sys.stdout.write("UUIDs match\n")
+        write("UUIDs match.\n")
         sys.exit(0)
 
     return _callback_ping
 
 
 def _command_ping(site_id: str) -> int:
-    sys.stdout.write("Establishing connection to local broker\n")
+    write("Establishing connection to local broker\n")
     with Connection(APP_NAME, omd_root) as conn:
         channel = conn.channel(TestMessage)
         channel.queue_declare(queue=QUEUE_NAME)
 
         message = TestMessage.new()
 
-        sys.stdout.write("Sending message:\n" f"  {message!r}\n")
+        write("Sending message:\n" f"  {message!r}\n")
         channel.publish_for_site(site_id, message, routing=ROUTING_KEY)
 
-        sys.stdout.write("Waiting for response\n")
+        write("Waiting for response\n")
         channel.consume(QUEUE_NAME, _make_callback_ping(message))
 
     return 23  # can't happen
@@ -136,13 +143,14 @@ def _command_ping(site_id: str) -> int:
 
 def main() -> int:
     args = parse_arguments(sys.argv[1:])
+    write(f"cmk-broker-test [{os.getpid()}]\n")
     try:
         return _command_pong() if args.site is None else _command_ping(args.site)
     except KeyboardInterrupt:
         if args.site is None:
-            sys.stdout.write("\nExiting (interrupted)\n")
+            write("\nExiting (interrupted)\n")
             return 0
-        sys.stdout.write("\nGiving up (interrupted)\n")
+        write("\nGiving up (interrupted)\n")
         return 2
 
 

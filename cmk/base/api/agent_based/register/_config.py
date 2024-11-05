@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
@@ -23,7 +22,6 @@ from cmk.base.api.agent_based.plugin_classes import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
-from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
 
 registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}
@@ -36,9 +34,6 @@ registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
 # We provide separate API functions however, should the need arise to
 # separate them.
 stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
-
-# Lookup table for optimizing validate_check_ruleset_item_consistency()
-_check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]] = defaultdict(list)
 
 
 @dataclass(frozen=True)
@@ -64,9 +59,7 @@ def get_previously_loaded_plugins() -> AgentBasedPlugins:
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
-    validate_check_ruleset_item_consistency(check_plugin, _check_plugins_by_ruleset_name)
     registered_check_plugins[check_plugin.name] = check_plugin
-    _check_plugins_by_ruleset_name[check_plugin.check_ruleset_name].append(check_plugin)
 
 
 def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:

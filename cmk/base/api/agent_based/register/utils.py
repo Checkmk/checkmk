@@ -13,7 +13,6 @@ from typing import Final, get_args, Literal, NoReturn, Union
 from cmk.ccc.version import Edition
 
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -211,39 +210,6 @@ def validate_default_parameters(
 
     if ruleset_name is None and params_type != "check":
         raise TypeError(f"missing ruleset name for default {params_type} parameters")
-
-
-def validate_check_ruleset_item_consistency(
-    check_plugin: CheckPlugin,
-    check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]],
-) -> None:
-    """Validate check plug-ins sharing a check_ruleset_name have either all or none an item.
-
-    Mixed checkgroups lead to strange exceptions when processing the check parameters.
-    So it is much better to catch these errors in a central place with a clear error message.
-    """
-    if check_plugin.check_ruleset_name is None:
-        return
-
-    present_check_plugins = check_plugins_by_ruleset_name[check_plugin.check_ruleset_name]
-    if not present_check_plugins:
-        return
-
-    # Try to detect whether the check has an item. But this mechanism is not
-    # 100% reliable since Checkmk appends an item to the service_description when "%s"
-    # is not in the checks service_description template.
-    # Maybe we need to define a new rule which enforces the developer to use the %s in
-    # the service_description. At least for grouped checks.
-    item_present = ITEM_VARIABLE in check_plugin.service_name
-    item_expected = ITEM_VARIABLE in present_check_plugins[0].service_name
-
-    if item_present is not item_expected:
-        present_plugins = ", ".join(str(p.name) for p in present_check_plugins)
-        raise ValueError(
-            f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
-            "At least one of the checks in this group needs to be changed "
-            f"(offending plug-in: {check_plugin.name}, present plug-ins: {present_plugins})."
-        )
 
 
 def filter_relevant_raw_sections(

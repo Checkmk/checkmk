@@ -46,6 +46,7 @@ class NotificationParameterServiceNow(NotificationParameter):
     def _form_spec(self) -> Dictionary:
         return Dictionary(
             title=Title("Create notification with the following parameters"),
+            migrate=_migrate_auth_section,
             elements={
                 "url": DictElement(
                     parameter_form=String(
@@ -651,3 +652,13 @@ def _migrate_state_of(o: object) -> tuple[str, object]:
             return "integer", i
         case _:
             raise TypeError(f"Invalid state: {o}")
+
+
+def _migrate_auth_section(params):
+    if "auth" in params:
+        return params
+    username = params.pop("username")
+    password = params.pop("password")
+    params["auth"] = ("auth_basic", {"username": username, "password": ("password", password[1])})
+
+    return params

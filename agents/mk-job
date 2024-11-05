@@ -25,6 +25,22 @@ TMP_FILE="${TMPDIR}/${JOB_NAME}.$$"
 RUNNING_FILE="${JOB_DIR}/${JOB_NAME}.$$running"
 COMPLETED_FILE="${JOB_DIR}/${JOB_NAME}"
 
+cleanup_running_files() {
+    jobdir="$1"
+    jobname="$2"
+    # in some situations the trap is not executed and old running files pile up.
+    # here we check if the PID is actually still running and if the process
+    # name includes mk-job (another process might have the same PID by now)
+    for file in "${jobdir}/${jobname}."*running; do
+        [ -f "$file" ] || continue # skip if file does not exist (this might be the case if the folder is empty)
+        # shellcheck disable=SC2001 # can not replace subgroup with shell
+        suffix=${file##*.}    # remove largest matchin prefix
+        pid=${suffix%running} # remove smallest matching suffix
+        # keep the file if the process is running and mk-job is in the command, otherwise: remove
+        ps -p "$pid" -o command | grep "mk-job" >/dev/null || rm "$file"
+    done
+}
+
 main() {
 
     if [ $# -lt 2 ]; then
@@ -33,6 +49,8 @@ main() {
     fi
 
     shift
+
+    cleanup_running_files "$JOB_DIR" "$JOB_NAME"
 
     if [ ! -d "${JOB_DIR}" ]; then
         if [ "${CURRENT_USER}" = root ]; then

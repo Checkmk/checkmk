@@ -582,7 +582,7 @@ class CMKOpenApiSession(requests.Session):
                 )
                 if response.status_code == 204 and not response.content:
                     logger.info(
-                        "Wait for completion finished after %ss for %s", running_time, operation
+                        "Wait for completion finished after %0.2fs for %s", running_time, operation
                     )
                     break
 

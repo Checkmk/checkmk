@@ -36,8 +36,9 @@ def main():
         fallback_branch=current_base_branch_name,
     )
     logger.info(
-        "Version: %s, Edition: %s, Branch: %s",
+        "Version: %s (%s), Edition: %s, Branch: %s",
         version.version,
+        version.version_rc_aware,
         version.edition.long,
         version.branch,
     )
@@ -48,7 +49,7 @@ def main():
 
     manager = ABCPackageManager.factory()
     try:
-        manager.install(version.version, version.edition)
+        manager.install(version.version_rc_aware, version.edition)
     except subprocess.CalledProcessError as excp:
         excp.add_note(f"Failed to install {version.edition} {version.version}!")
         logger.exception(excp)

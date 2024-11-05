@@ -34,7 +34,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
-from cmk.base.api.agent_based.register import AgentBasedPlugins
+from cmk.base.api.agent_based.register import AgentBasedPlugins, get_check_plugin
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -389,7 +389,9 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     license_counter: Counter,
     ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
-    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+    check_mk_attrs = core_config.get_service_attributes(
+        hostname, "Check_MK", config_cache, extra_icon=None
+    )
 
     #   _____
     #  |___ /
@@ -459,8 +461,15 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
+        plugin = get_check_plugin(service.check_plugin_name)
         passive_service_attributes = core_config.get_cmk_passive_service_attributes(
-            config_cache, hostname, service, check_mk_attrs
+            config_cache,
+            hostname,
+            service,
+            check_mk_attrs,
+            extra_icon=None
+            if plugin is None
+            else config_cache.make_extra_icon(plugin.check_ruleset_name, service.parameters),
         )
 
         service_labels[service.description] = {
@@ -527,7 +536,9 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "active_checks_enabled": str(1),
         }
         service_spec.update(
-            core_config.get_service_attributes(hostname, service_data.description, config_cache)
+            core_config.get_service_attributes(
+                hostname, service_data.description, config_cache, extra_icon=None
+            )
         )
         service_spec.update(
             _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
@@ -628,7 +639,9 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             }
             service_spec.update(freshness)
             service_spec.update(
-                core_config.get_service_attributes(hostname, description, config_cache)
+                core_config.get_service_attributes(
+                    hostname, description, config_cache, extra_icon=None
+                )
             )
             service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
             cfg.write(format_nagios_object("service", service_spec))
@@ -647,7 +660,9 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "service_description": service_discovery_name,
         }
         service_spec.update(
-            core_config.get_service_attributes(hostname, service_discovery_name, config_cache)
+            core_config.get_service_attributes(
+                hostname, service_discovery_name, config_cache, extra_icon=None
+            )
         )
 
         service_spec.update(
@@ -744,7 +759,9 @@ def _add_ping_service(
         "service_description": descr,
         "check_command": f"{ping_command}!{arguments}",
     }
-    service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
+    service_spec.update(
+        core_config.get_service_attributes(host_name, descr, config_cache, extra_icon=None)
+    )
     service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
     cfg.write(format_nagios_object("service", service_spec))
     licensing_counter["services"] += 1

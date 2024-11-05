@@ -3274,12 +3274,22 @@ class ConfigCache:
 
         return attrs
 
+    def make_extra_icon(
+        self, check_ruleset_name: RuleSetName | None, params: TimespecificParameters | None
+    ) -> str | None:
+        # Some WATO rules might register icons on their own
+        if not isinstance(params, dict):
+            # Note: according to the typing this function will always return None,
+            # meaning the 'icon' parameters of the 'ps' and 'services' rulesets do not do anything.
+            # It seems like this last worked in 2.0.0. CMK-16562
+            return None
+        return str(params.get("icon")) if str(check_ruleset_name) in {"ps", "services"} else None
+
     def icons_and_actions_of_service(
         self,
         hostname: HostName,
         description: ServiceName,
-        check_plugin_name: CheckPluginName | None,
-        params: TimespecificParameters | None,
+        extra_icon: str | None,
     ) -> list[str]:
         actions = set(
             self.ruleset_matcher.service_extra_conf(
@@ -3287,22 +3297,8 @@ class ConfigCache:
             )
         )
 
-        # Note: according to the typing the rest of this function will
-        # never do anything, meaning the 'icon' parameters of the 'ps'
-        # and 'services' rulesets do not do anything.
-        # It seems like this last worked in 2.0.0.
-        # CMK-16562
-
-        # Some WATO rules might register icons on their own
-        if check_plugin_name:
-            plugin = agent_based_register.get_check_plugin(check_plugin_name)
-            if (
-                plugin is not None
-                and str(plugin.check_ruleset_name) in {"ps", "services"}
-                and isinstance(params, dict)
-            ):
-                if icon := params.get("icon"):
-                    actions.add(icon)
+        if extra_icon:
+            actions.add(extra_icon)
 
         return list(actions)
 

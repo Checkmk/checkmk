@@ -32,8 +32,7 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.checking import ConfiguredService, ServiceID
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
@@ -478,13 +477,13 @@ def get_cmk_passive_service_attributes(
     host_name: HostName,
     service: ConfiguredService,
     check_mk_attrs: ObjectAttributes,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
         host_name,
         service.description,
         config_cache,
-        service.check_plugin_name,
-        service.parameters,
+        extra_icon,
     )
 
     attrs["check_interval"] = check_mk_attrs["check_interval"]
@@ -496,11 +495,10 @@ def get_service_attributes(
     hostname: HostName,
     description: ServiceName,
     config_cache: ConfigCache,
-    check_plugin_name: CheckPluginName | None = None,
-    params: TimespecificParameters | None = None,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
-        hostname, description, config_cache, check_plugin_name, params
+        hostname, description, config_cache, extra_icon
     )
     attrs.update(
         ConfigCache._get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG")
@@ -525,8 +523,7 @@ def _extra_service_attributes(
     hostname: HostName,
     description: ServiceName,
     config_cache: ConfigCache,
-    check_plugin_name: CheckPluginName | None,
-    params: TimespecificParameters | None,
+    extra_icon: str | None,
 ) -> ObjectAttributes:
     attrs = {}  # ObjectAttributes
 
@@ -544,9 +541,7 @@ def _extra_service_attributes(
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(
-        hostname, description, check_plugin_name, params
-    )
+    actions = config_cache.icons_and_actions_of_service(hostname, description, extra_icon)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs

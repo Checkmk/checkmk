@@ -187,12 +187,12 @@ def test_automation_active_check(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
-    monkeypatch.setattr(core_config, "get_service_attributes", lambda *_: service_attrs)
-    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
+    monkeypatch.setattr(core_config, "get_service_attributes", lambda *a, **kw: service_attrs)
+    monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
     config_cache = config.reset_config_cache()
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
     assert active_check.execute(active_check_args) == expected_result
@@ -246,11 +246,11 @@ def test_automation_active_check_invalid_args(
     monkeypatch.setattr(
         config, config.lookup_ip_address.__name__, lambda *a, **kw: HostAddress("127.0.0.1")
     )
-    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
-    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
+    monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
 
     config_cache = config.reset_config_cache()
-    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 

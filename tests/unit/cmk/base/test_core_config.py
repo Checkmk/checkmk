@@ -220,7 +220,9 @@ def test_get_cmk_passive_service_attributes(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
+    check_mk_attrs = core_config.get_service_attributes(
+        hostname, "Check_MK", config_cache, extra_icon=None
+    )
 
     service = ConfiguredService(
         check_plugin_name=CheckPluginName("cpu_loads"),
@@ -232,7 +234,7 @@ def test_get_cmk_passive_service_attributes(
         is_enforced=False,
     )
     service_spec = core_config.get_cmk_passive_service_attributes(
-        config_cache, hostname, service, check_mk_attrs
+        config_cache, hostname, service, check_mk_attrs, extra_icon=None
     )
     assert service_spec == result
 

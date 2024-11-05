@@ -2600,7 +2600,9 @@ class AutomationActiveCheck(Automation):
         macros = ConfigCache.get_host_macros_from_attributes(
             hostname, config_cache.get_host_attributes(hostname, ip_address_of)
         )
-        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        service_attrs = core_config.get_service_attributes(
+            hostname, service_desc, config_cache, extra_icon=None
+        )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
         macros.update(config.get_resource_macros())
 
@@ -2610,7 +2612,9 @@ class AutomationActiveCheck(Automation):
         self, hostname: HostName, service_desc: str, commandline: str
     ) -> str:
         config_cache = config.get_config_cache()
-        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        service_attrs = core_config.get_service_attributes(
+            hostname, service_desc, config_cache, extra_icon=None
+        )
         service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in service_macros.items()})

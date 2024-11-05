@@ -18,6 +18,7 @@ from cmk.utils import paths
 from cmk.utils.certs import save_single_cert
 
 from cmk.gui.http import request as _request
+from cmk.gui.log import logger
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
@@ -101,8 +102,13 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         central_ca: CertificateWithPrivateKey,
         customer_ca: CertificateWithPrivateKey | None,
     ) -> None:
+        logger.debug("Start creating broker certificates for site %s", site_id)
         remote_broker_certs = create_remote_broker_certs(central_ca, site_id, settings)
+
+        logger.debug("Start syncing broker certificates for site %s", site_id)
         sync_remote_broker_certs(settings, remote_broker_certs)
+        logger.debug("Certificates synced")
+
         # the presence of the following cert is used to determine if the broker certificates need
         # to be created/synced, so only save it if the sync was successful
         save_single_cert(

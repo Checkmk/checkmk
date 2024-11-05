@@ -23,6 +23,15 @@ site_factory = get_site_factory(prefix="comp_")
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True, scope="session")
+def increase_background_job_logging_level():
+    logger_background = logging.getLogger("cmk.web.background-job")
+    original_level = logger_background.level
+    logger_background.setLevel(logging.DEBUG)
+    yield
+    logger_background.setLevel(original_level)
+
+
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     yield from site_factory.get_test_site(

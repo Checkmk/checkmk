@@ -2313,6 +2313,7 @@ def _create_broker_certificates_for_remote_sites(
             )
             site_activation_states_certs_synced.pop(site_id)
 
+    logger.debug("Start pool broker certificates creation")
     for result in task_pool.starmap(
         copy_request_context(func=create_broker_certificates),
         map_args,
@@ -2320,6 +2321,7 @@ def _create_broker_certificates_for_remote_sites(
         if result is None:
             continue
         site_activation_states_certs_synced[result["_site_id"]] = result
+    logger.debug("Broker certificates for remote sites created")
 
     broker_sync.update_trusted_cas()
     return site_activation_states_certs_synced

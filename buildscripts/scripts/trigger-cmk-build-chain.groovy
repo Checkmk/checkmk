@@ -73,7 +73,7 @@ def main() {
 
     def run_int_tests = true;
     def run_fips_tests = edition == "enterprise";
-    def run_comp_tests = !(edition in ["saas", "managed"]);
+    def run_comp_tests = !(edition in ["saas"]);
     def run_image_tests = !(edition in ["saas", "managed"]);
     def run_update_tests = (edition in ["enterprise", "cloud", "saas"]);
 

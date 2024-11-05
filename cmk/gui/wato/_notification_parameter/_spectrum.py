@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ipaddress
-from typing import cast
+from typing import cast, Literal
+from uuid import uuid4
 
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
@@ -15,7 +16,6 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
-    migrate_to_password,
     Password,
     String,
 )
@@ -49,7 +49,7 @@ class NotificationParameterSpectrum(NotificationParameter):
                     parameter_form=Password(
                         title=Title("SNMP community"),
                         help_text=Help("SNMP community for the SNMP trap"),
-                        migrate=migrate_to_password,
+                        migrate=_migrate_to_password,
                     ),
                 ),
                 "baseoid": DictElement(
@@ -69,3 +69,20 @@ def _validate_ip_address(value: str) -> None:
         ipaddress.ip_address(value)
     except ValueError:
         raise ValidationError(Message("Invalid IP address"))
+
+
+def _migrate_to_password(
+    model: object,
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
+    match model:
+        # old password format
+        case str(password):
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str(uuid4()), password),
+            )
+
+    raise TypeError(f"Could not migrate {model!r} to Password.")

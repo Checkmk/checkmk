@@ -25,7 +25,7 @@ fn test_signature_algorithm_sha256_with_rsa_encryption() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_eq!(
         coll.to_string(),
-        format!("OK\nSignature algorithm: sha256WithRSAEncryption")
+        format!("OK\nCertificate signature algorithm: sha256WithRSAEncryption")
     );
 }
 
@@ -43,7 +43,7 @@ fn test_signature_algorithm_ee_pss_sha256() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_eq!(
         coll.to_string(),
-        format!("OK\nSignature algorithm: rsassa-pss")
+        format!("OK\nCertificate signature algorithm: rsassa-pss")
     );
 }
 
@@ -63,7 +63,7 @@ fn test_signature_algorithm_ee_pss_sha256_wrong_alg() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "Signature algorithm is rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.3.4.5.6 (!)"
+            "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.3.4.5.6 (!)"
         )
     );
 }
@@ -82,7 +82,7 @@ fn test_signature_algorithm_ee_pss_sha1() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_eq!(
         coll.to_string(),
-        format!("OK\nSignature algorithm: rsassa-pss")
+        format!("OK\nCertificate signature algorithm: rsassa-pss")
     );
 }
 
@@ -102,7 +102,7 @@ fn test_signature_algorithm_ee_pss_sha1_wrong_alg() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "Signature algorithm is rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.840.113549.1.1.11 (!)"
+            "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.840.113549.1.1.11 (!)"
         )
     );
 }

@@ -28,10 +28,7 @@ fn check_response_time(
     levels.map(|levels| {
         levels.check(
             response_time,
-            OutputType::Summary(format!(
-                "Certificate obtained in {} ms",
-                response_time.as_millis()
-            )),
+            OutputType::Summary(format!("Response time: {} ms", response_time.as_millis())),
             LevelsCheckerArgs::builder()
                 .label("overall_response_time")
                 .uom("s".parse().unwrap())

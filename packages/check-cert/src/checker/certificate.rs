@@ -87,7 +87,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 )
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -102,7 +102,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -116,7 +116,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -131,7 +131,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -145,7 +145,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -159,7 +159,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -173,7 +173,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -187,7 +187,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
+                    "{}: {} but expected {}",
                     name,
                     handle_empty(value),
                     expected
@@ -195,13 +195,13 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             }
         }),
         config.signature_algorithm.map(|expected| {
-            let name = "Signature algorithm";
+            let name = "Certificate signature algorithm";
             let value = &cert.signature_algorithm.algorithm;
             if expected == value.to_string() {
                 SimpleCheckResult::notice(format!("{}: {}", name, format_oid(value)))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} ({}) but expected {}",
+                    "{}: {} ({}) but expected {}",
                     name,
                     handle_empty(&format_oid(value)),
                     value,
@@ -223,11 +223,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let name = "Serial";
+        let name = "Serial number";
         if serial.to_lowercase() == expected.to_lowercase() {
             SimpleCheckResult::notice(format!("{}: {}", name, serial))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, serial, expected))
+            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, serial, expected))
         }
     })
 }
@@ -236,13 +236,14 @@ fn check_subject_alt_names(
     alt_names: Result<Option<BasicExtension<&SubjectAlternativeName<'_>>>, X509Error>,
     expected: Option<Vec<String>>,
 ) -> Option<SimpleCheckResult> {
+    let name = "Certificate subject alternative names";
     expected.map(|expected| match alt_names {
-        Err(err) => SimpleCheckResult::crit(format!("Subject alt names: {}", err)),
+        Err(err) => SimpleCheckResult::crit(format!("{}: {}", name, err)),
         Ok(None) => {
             if expected.is_empty() {
-                SimpleCheckResult::notice("No subject alt names")
+                SimpleCheckResult::notice(format!("No {}", name.to_lowercase()))
             } else {
-                SimpleCheckResult::warn("No subject alt names")
+                SimpleCheckResult::warn(format!("No {}", name.to_lowercase()))
             }
         }
         Ok(Some(ext)) => {
@@ -252,13 +253,14 @@ fn check_subject_alt_names(
                     _ => None,
                 },
             ));
-            let expected = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
-            if found.is_superset(&expected) {
-                SimpleCheckResult::notice("Subject alt names present")
+            let expected_set = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
+            if found.is_superset(&expected_set) {
+                SimpleCheckResult::notice(format!("{}: {}", name, expected.join(", ")))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "Subject alt names: missing {}",
-                    expected
+                    "{}: missing {}",
+                    name,
+                    expected_set
                         .difference(&found)
                         .map(|s| format!(r#""{s}""#))
                         .collect::<Vec<_>>()
@@ -287,7 +289,7 @@ fn check_pubkey_algorithm(
         if expected == value {
             SimpleCheckResult::notice(format!("{}: {}", name, value))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, value, expected))
         }
     })
 }
@@ -311,7 +313,7 @@ fn check_pubkey_size(
         if expected == value {
             SimpleCheckResult::notice(format!("{}: {}", name, value))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, value, expected))
         }
     })
 }
@@ -326,7 +328,7 @@ fn check_validity_not_after(
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
             OutputType::Summary(format!(
-                "Certificate expires in {} day(s) ({})",
+                "Remaining validity: {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after
             )),
@@ -346,11 +348,11 @@ fn check_max_validity(
         if let Some(total_validity) = validity.not_after - validity.not_before {
             match total_validity <= max_validity {
                 true => SimpleCheckResult::notice(format!(
-                    "Max validity {} days",
+                    "Allowed validity: {} day(s)",
                     total_validity.whole_days()
                 )),
                 false => SimpleCheckResult::warn(format!(
-                    "Max validity is {} days but expected at most {}",
+                    "Allowed validity: {} day(s) but expected at most {}",
                     total_validity.whole_days(),
                     max_validity.whole_days(),
                 )),
@@ -373,19 +375,19 @@ mod test_check_serial {
     fn test_case_insensitive() {
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("aa:11:bb:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
+            Some(SimpleCheckResult::notice("Serial number: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:BB:22:CC"), Some(s("aa:11:bb:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: AA:11:BB:22:CC"))
+            Some(SimpleCheckResult::notice("Serial number: AA:11:BB:22:CC"))
         );
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("AA:11:BB:22:CC"))),
-            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
+            Some(SimpleCheckResult::notice("Serial number: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:bb:22:CC"), Some(s("aa:11:BB:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: AA:11:bb:22:CC"))
+            Some(SimpleCheckResult::notice("Serial number: AA:11:bb:22:CC"))
         );
     }
 }

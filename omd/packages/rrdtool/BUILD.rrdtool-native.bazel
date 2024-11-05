@@ -161,7 +161,7 @@ cc_binary(
         "-O2",
     ],
     visibility = ["//visibility:public"],
-    deps = [":rrd"],
+    deps = ["rrdgraph"],
 )
 
 cc_binary(
@@ -190,8 +190,8 @@ cc_library(
         "-O2",
     ],
     deps = [
-        ":rrd",
         ":rrd_config",
+        ":rrdgraph",
         "@rules_python//python/cc:current_py_cc_headers",
     ],
     alwayslink = True,

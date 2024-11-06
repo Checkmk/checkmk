@@ -424,23 +424,32 @@ function renderFolder(
 }
 
 function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
-  let color = 'var(--tag-color)'
+  let bgColor = 'var(--tag-color)'
+  let color = 'var(--black)'
+
   switch (formSpec.label_source) {
     case 'discovered':
-      color = 'var(--tag-discovered-color)'
+      bgColor = 'var(--tag-discovered-color)'
+      color = 'var(--white)'
       break
     case 'explicit':
-      color = 'var(--tag-explicit-color)'
+      bgColor = 'var(--tag-explicit-color)'
+      color = 'var(--black)'
       break
     case 'ruleset':
-      color = 'var(--tag-ruleset-color)'
+      bgColor = 'var(--tag-ruleset-color)'
+      color = 'var(--white)'
       break
   }
   return h(
     'div',
     { class: 'form-readonly__labels' },
     Object.entries(value).map(([key, value]) => {
-      return h('div', { class: 'label', style: { backgroundColor: color } }, `${key}: ${value}`)
+      return h(
+        'div',
+        { class: 'label', style: { backgroundColor: bgColor, color: color } },
+        `${key}: ${value}`
+      )
     })
   )
 }
@@ -516,10 +525,12 @@ export default defineComponent({
   flex-direction: row;
   justify-content: start;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 0;
 
   > .label {
     width: fit-content;
-    margin: 0 5px;
+    margin: 0 5px 0 0;
     padding: 1px 4px;
     border-radius: 5px;
 

@@ -9,6 +9,7 @@
   --success: rgb(19, 211, 137);
   --success-dimmed: rgb(17 188 122);
   --white: rgb(255, 255, 255);
+  --black: rgb(0, 0, 0);
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
   --form-readonly-error-bg-color: rgb(252, 85, 85);
   --tag-added-color-light: rgb(6, 103, 193);

@@ -4,20 +4,24 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue'
 import type { Labels, Autocompleter } from '@/form/components/vue_formspec_components'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 type StringMapping = Record<string, string>
+type LabelSources = 'explicit' | 'ruleset' | 'discovered'
+
+const labelSource = ref<LabelSources>('explicit')
 
 const autocompleter: Autocompleter = {
   data: { ident: 'label', params: { world: 'config' } },
   fetch_method: 'ajax_vs_autocomplete'
 }
 
-const spec: Labels = {
+const spec = computed<Labels>(() => ({
   type: 'labels',
   title: 'some title',
   help: 'some help',
@@ -29,8 +33,9 @@ const spec: Labels = {
   },
   validators: [],
   max_labels: 5,
+  label_source: labelSource.value,
   autocompleter: autocompleter
-}
+}))
 
 async function interceptor() {
   return HttpResponse.json({
@@ -81,4 +86,15 @@ const data = ref<StringMapping>({
     <FormLabels v-model:data="data" :spec="spec" :backend-validation="[]" />
     <pre>{{ data }}</pre>
   </span>
+
+  <label>
+    Label Source:
+    <select v-model="labelSource">
+      <option value="explicit">explicit</option>
+      <option value="ruleset">ruleset</option>
+      <option value="discovered">discovered</option>
+    </select>
+  </label>
+
+  <FormReadonly :spec="spec" :data="data" :backend-validation="[]" />
 </template>

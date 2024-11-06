@@ -53,6 +53,7 @@ function setSelectedOption(value: string) {
   min-width: 150px;
   border: none;
   background-color: transparent;
+  margin: 0 2px;
   padding: 3px;
 }
 

@@ -147,7 +147,7 @@ pyparsing = "*"
 redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "*"  # used for GUI 2fa webauthn
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
-protobuf = "~=4.24.4"  # Keep in synch with MODULE.bazel---will work automatically when we drop pipenv
+protobuf = "==5.28.3"  # Keep in synch with MODULE.bazel---will work automatically when we drop pipenv
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-crypto = {editable = true, path = "./packages/cmk-crypto"}

@@ -1258,9 +1258,9 @@ grpcio==1.67.1 ; python_version >= "3.8" \
     #   grpc-google-iam-v1
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
-grpcio-status==1.62.3 \
-    --hash=sha256:289bdd7b2459794a12cf95dc0cb727bd4a1742c37bd823f760236c937e53a485 \
-    --hash=sha256:f9049b762ba8de6b1086789d8315846e094edac2c50beaf462338b301a8fd4b8
+grpcio-status==1.67.1 \
+    --hash=sha256:16e6c085950bdacac97c779e6a502ea671232385e6e37f258884d6883392c2bd \
+    --hash=sha256:2bf38395e028ceeecfd8866b081f61628114b384da7d51ae064ddc8d766a5d11
     # via
     #   -r requirements_cmk.txt
     #   google-api-core
@@ -1382,9 +1382,9 @@ imagesize==1.4.1 ; python_version >= "2.7" and python_version not in "3.0, 3.1, 
     # via
     #   -r requirements_cmk.txt
     #   sphinx
-importlib-metadata==8.4.0 ; python_version >= "3.8" \
-    --hash=sha256:66f342cc6ac9818fc6ff340576acd24d65ba0b3efabb2b4ac08b598965a4a2f1 \
-    --hash=sha256:9a547d3bc3608b025f93d403fdd1aae741c24fbb8314df4b155675742ce303c5
+importlib-metadata==8.5.0 ; python_version >= "3.8" \
+    --hash=sha256:45e54197d28b7a7f1559e60b95e7c567032b602131fbd588f1497f47880aa68b \
+    --hash=sha256:71522656f0abace1d072b9e5481a48f07c138e00f079c38c8f883823f9c26bd7
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-api
@@ -2110,9 +2110,9 @@ mypy-extensions==1.0.0 ; python_version >= "3.5" \
     #   -r requirements_cmk.txt
     #   black
     #   mypy
-mypy-protobuf==3.5.0 ; python_version >= "3.8" \
-    --hash=sha256:0d0548c6b9a6faf14ce1a9ce2831c403a5c1f2a9363e85b1e2c51d5d57aa8393 \
-    --hash=sha256:21f270da0a9792a9dac76b0df463c027e561664ab6973c59be4e4d064dfe67dc
+mypy-protobuf==3.6.0 ; python_version >= "3.8" \
+    --hash=sha256:02f242eb3409f66889f2b1a3aa58356ec4d909cdd0f93115622e9e70366eca3c \
+    --hash=sha256:56176e4d569070e7350ea620262478b49b7efceba4103d468448f1d21492fd6c
     # via -r requirements_cmk.txt
 netapp-ontap==9.14.1.0 ; python_version >= "3.6" \
     --hash=sha256:495e679e10e61b9bb2cf5a432a5cdaf9f2ec56855540ba221c021d31a6b91eb7 \
@@ -2205,9 +2205,9 @@ openapi-spec-validator==0.7.1 ; python_full_version >= "3.8.0" and python_full_v
     --hash=sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959 \
     --hash=sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7
     # via -r requirements_cmk.txt
-opentelemetry-api==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:953d5871815e7c30c81b56d910c707588000fff7a3ca1c73e6531911d53065e7 \
-    --hash=sha256:ed673583eaa5f81b5ce5e86ef7cdaf622f88ef65f0b9aab40b843dcae5bef342
+opentelemetry-api==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:578610bcb8aa5cdcb11169d136cc752958548fb6ccffb0969c1036b0ee9e5353 \
+    --hash=sha256:8457cd2c59ea1bd0988560f021656cecd254ad7ef6be4ba09dbefeca2409ce52
     # via
     #   -r packages/cmk-livestatus-client/requirements.txt
     #   -r packages/cmk-trace/requirements.txt
@@ -2220,80 +2220,81 @@ opentelemetry-api==1.27.0 ; python_version >= "3.8" \
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-exporter-otlp==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:4a599459e623868cc95d933c301199c2367e530f089750e115599fccd67cb2a1 \
-    --hash=sha256:7688791cbdd951d71eb6445951d1cfbb7b6b2d7ee5948fac805d404802931145
+opentelemetry-exporter-otlp==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:1fd02d70f2c1b7ac5579c81e78de4594b188d3317c8ceb69e8b53900fb7b40fd \
+    --hash=sha256:31ae7495831681dd3da34ac457f6970f147465ae4b9aae3a888d7a581c7cd868
     # via
     #   -r packages/cmk-trace/requirements.txt
     #   -r requirements_cmk.txt
-opentelemetry-exporter-otlp-proto-common==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:159d27cf49f359e3798c4c3eb8da6ef4020e292571bd8c5604a2a573231dd5c8 \
-    --hash=sha256:675db7fffcb60946f3a5c43e17d1168a3307a94a930ecf8d2ea1f286f3d4f79a
+opentelemetry-exporter-otlp-proto-common==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:467e6437d24e020156dffecece8c0a4471a8a60f6a34afeda7386df31a092410 \
+    --hash=sha256:5fa0419b0c8e291180b0fc8430a20dd44a3f3236f8e0827992145914f273ec4f
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-grpc==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:56b5bbd5d61aab05e300d9d62a6b3c134827bbd28d0b12f2649c2da368006c9e \
-    --hash=sha256:af6f72f76bcf425dfb5ad11c1a6d6eca2863b91e63575f89bb7b4b55099d968f
+opentelemetry-exporter-otlp-proto-grpc==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:47a11c19dc7f4289e220108e113b7de90d59791cb4c37fc29f69a6a56f2c3735 \
+    --hash=sha256:edbdc53e7783f88d4535db5807cb91bd7b1ec9e9b9cdbfee14cd378f29a3b328
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:2103479092d8eb18f61f3fbff084f67cc7f2d4a7d37e75304b8b56c1d09ebef5 \
-    --hash=sha256:688027575c9da42e179a69fe17e2d1eba9b14d81de8d13553a21d3114f3b4d75
+opentelemetry-exporter-otlp-proto-http==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:d83a9a03a8367ead577f02a64127d827c79567de91560029688dd5cfd0152a8e \
+    --hash=sha256:e8f3f7961b747edb6b44d51de4901a61e9c01d50debd747b120a08c4996c7e7b
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-exporter-otlp
-opentelemetry-instrumentation==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:94929685d906380743a71c3970f76b5f07476eea1834abd5dd9d17abfe23cc35 \
-    --hash=sha256:a69750dc4ba6a5c3eb67986a337185a25b739966d80479befe37b546fc870b44
+opentelemetry-instrumentation==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:398a93e0b9dc2d11cc8627e1761665c506fe08c6b2df252a2ab3ade53d751c46 \
+    --hash=sha256:68364d73a1ff40894574cbc6138c5f98674790cae1f3b0865e21cf702f24dcb3
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-instrumentation-redis
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
-opentelemetry-instrumentation-redis==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:48c7f2e25cbb30bde749dc0d8b9c74c404c851f554af832956b9630b27f5bcb7 \
-    --hash=sha256:61e33e984b4120e1b980d9fba6e9f7ca0c8d972f9970654d8f6e9f27fa115a8c
+opentelemetry-instrumentation-redis==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:922542c3bd192ad4ba74e2c7e0a253c7c58a5cefbd6f89da2aba4d193a974703 \
+    --hash=sha256:b7d8f758bac53e77b7e7ca98ce80f91230577502dacb619ebe8e8b6058042067
     # via -r requirements_cmk.txt
-opentelemetry-instrumentation-requests==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:67ab9bd877a0352ee0db4616c8b4ae59736ddd700c598ed907482d44f4c9a2b3 \
-    --hash=sha256:d4f01852121d0bd4c22f14f429654a735611d4f7bf3cf93f244bdf1489b2233d
+opentelemetry-instrumentation-requests==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:b75a282b3641547272dc7d2fdc0dd68269d0c1e685e4d17579b7fbd34c19b6bb \
+    --hash=sha256:bb39803359e226b8eb0d4c8aaba6fd8a883a7f869fc331ff861743173b33d26d
     # via -r requirements_cmk.txt
-opentelemetry-instrumentation-wsgi==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:1a1e752367b0df4397e0b835839225ef5c2c3c053743a261551af13434fc4d51 \
-    --hash=sha256:c6051124d741972090fe94b2fa302555e1e2a22e9cdda32dd39ed49a5b34e0c6
+opentelemetry-instrumentation-wsgi==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:0812a02e132f8fc3d5c897bba84e530c37b85c315b199bb97ca6508279e7eb23 \
+    --hash=sha256:8869ccf96611827e4448417718920e9eec6d25bffb5bf72c7952c7346ec33fbc
     # via -r requirements_cmk.txt
-opentelemetry-proto==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:33c9345d91dafd8a74fc3d7576c5a38f18b7fdf8d02983ac67485386132aedd6 \
-    --hash=sha256:b133873de5581a50063e1e4b29cdcf0c5e253a8c2d8dc1229add20a4c3830ace
+opentelemetry-proto==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:4a45728dfefa33f7908b828b9b7c9f2c6de42a05d5ec7b285662ddae71c4c870 \
+    --hash=sha256:d5ad31b997846543b8e15504657d9a8cf1ad3c71dcbbb6c4799b1ab29e38f7f9
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.27.0 ; python_version >= "3.8" \
-    --hash=sha256:365f5e32f920faf0fd9e14fdfd92c086e317eaa5f860edba9cdc17a380d9197d \
-    --hash=sha256:d525017dea0ccce9ba4e0245100ec46ecdc043f2d7b8315d56b19aff0904fa6f
+opentelemetry-sdk==1.28.0 ; python_version >= "3.8" \
+    --hash=sha256:41d5420b2e3fb7716ff4981b510d551eff1fc60eb5a95cf7335b31166812a893 \
+    --hash=sha256:4b37da81d7fad67f6683c4420288c97f4ed0d988845d5886435f428ec4b8429a
     # via
     #   -r packages/cmk-trace/requirements.txt
     #   -r requirements_cmk.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-semantic-conventions==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:12d74983783b6878162208be57c9effcb89dc88691c64992d70bb89dc00daa1a \
-    --hash=sha256:a0de9f45c413a8669788a38569c7e0a11ce6ce97861a628cca785deecdc32a1f
+opentelemetry-semantic-conventions==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:0458117f6ead0b12e3221813e3e511d85698c31901cac84682052adb9c17c7cd \
+    --hash=sha256:dbc7b28339e5390b6b28e022835f9bac4e134a80ebf640848306d3c5192557e8
     # via
     #   -r packages/cmk-trace/requirements.txt
     #   -r requirements_cmk.txt
+    #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-redis
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
-opentelemetry-util-http==0.48b0 ; python_version >= "3.8" \
-    --hash=sha256:60312015153580cc20f322e5cdc3d3ecad80a71743235bdb77716e742814623c \
-    --hash=sha256:76f598af93aab50328d2a69c786beaedc8b6a7770f7a818cc307eb353debfffb
+opentelemetry-util-http==0.49b0 ; python_version >= "3.8" \
+    --hash=sha256:02928496afcffd58a7c15baf99d2cedae9b8325a8ac52b0d0877b2e8f936dd1b \
+    --hash=sha256:8661bbd6aea1839badc44de067ec9c15c05eab05f729f496c856c50a1203caf1
     # via
     #   -r requirements_cmk.txt
     #   opentelemetry-instrumentation-requests
@@ -2315,6 +2316,7 @@ packaging==24.1 ; python_version >= "3.8" \
     #   jira
     #   marshmallow
     #   msal-extensions
+    #   opentelemetry-instrumentation
     #   packaging-legacy
     #   pytest
     #   sphinx
@@ -2493,9 +2495,9 @@ ply==3.11 \
     #   jsonpath-rw
     #   pysmi-lextudio
     #   python-active-directory
-polyfactory==2.17.0 ; python_version >= "3.8" and python_version < "4.0" \
-    --hash=sha256:099d86f7c79c51a2caaf7c8598cc56e7b0a57c11b5918ddf699e82380735b6b7 \
-    --hash=sha256:71b677c17bb7cebad9a5631b1aca7718280bdcedc1c25278253717882d1ac294
+polyfactory==2.18.0 ; python_version >= "3.8" and python_version < "4.0" \
+    --hash=sha256:04d8b4d4986e406cd4c16cc01e8bb747083842d57a5c0dba63a21ee5ef75ba66 \
+    --hash=sha256:2d9163e5e3971a4e82fac5d37048b09ae26cfc4173ebcf0047370c288e339307
     # via -r requirements_cmk.txt
 portalocker==2.10.1 ; platform_system != "Windows" \
     --hash=sha256:53a5984ebc86a025552264b459b46a2086e269b21823cb572f8f28ee759e45bf \
@@ -2619,20 +2621,18 @@ proto-plus==1.25.0 ; python_version >= "3.7" \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-protobuf==4.24.4 ; python_version >= "3.7" \
-    --hash=sha256:02212557a76cd99574775a81fefeba8738d0f668d6abd0c6b1d3adcc75503dbe \
-    --hash=sha256:1badab72aa8a3a2b812eacfede5020472e16c6b2212d737cefd685884c191085 \
-    --hash=sha256:2fa3886dfaae6b4c5ed2730d3bf47c7a38a72b3a1f0acb4d4caf68e6874b947b \
-    --hash=sha256:5a70731910cd9104762161719c3d883c960151eea077134458503723b60e3667 \
-    --hash=sha256:6b7d2e1c753715dcfe9d284a25a52d67818dd43c4932574307daf836f0071e37 \
-    --hash=sha256:80797ce7424f8c8d2f2547e2d42bfbb6c08230ce5832d6c099a37335c9c90a92 \
-    --hash=sha256:8e61a27f362369c2f33248a0ff6896c20dcd47b5d48239cb9720134bef6082e4 \
-    --hash=sha256:9fee5e8aa20ef1b84123bb9232b3f4a5114d9897ed89b4b8142d81924e05d79b \
-    --hash=sha256:b493cb590960ff863743b9ff1452c413c2ee12b782f48beca77c8da3e2ffe9d9 \
-    --hash=sha256:b77272f3e28bb416e2071186cb39efd4abbf696d682cbb5dc731308ad37fa6dd \
-    --hash=sha256:bffa46ad9612e6779d0e51ae586fde768339b791a50610d85eb162daeb23661e \
-    --hash=sha256:dbbed8a56e56cee8d9d522ce844a1379a72a70f453bde6243e3c86c30c2a3d46 \
-    --hash=sha256:ec9912d5cb6714a5710e28e592ee1093d68c5ebfeda61983b3f40331da0b1ebb
+protobuf==5.28.3 ; python_version >= "3.8" \
+    --hash=sha256:0c4eec6f987338617072592b97943fdbe30d019c56126493111cf24344c1cc24 \
+    --hash=sha256:135658402f71bbd49500322c0f736145731b16fc79dc8f367ab544a17eab4535 \
+    --hash=sha256:27b246b3723692bf1068d5734ddaf2fccc2cdd6e0c9b47fe099244d80200593b \
+    --hash=sha256:3e6101d095dfd119513cde7259aa703d16c6bbdfae2554dfe5cfdbe94e32d548 \
+    --hash=sha256:3fa2de6b8b29d12c61911505d893afe7320ce7ccba4df913e2971461fa36d584 \
+    --hash=sha256:64badbc49180a5e401f373f9ce7ab1d18b63f7dd4a9cdc43c92b9f0b481cef7b \
+    --hash=sha256:70585a70fc2dd4818c51287ceef5bdba6387f88a578c86d47bb34669b5552c36 \
+    --hash=sha256:712319fbdddb46f21abb66cd33cb9e491a5763b2febd8f228251add221981135 \
+    --hash=sha256:91fba8f445723fcf400fdbe9ca796b19d3b1242cd873907979b9ed71e4afe868 \
+    --hash=sha256:a3f6857551e53ce35e60b403b8a27b0295f7d6eb63d10484f12bc6879c715687 \
+    --hash=sha256:cee1757663fa32a1ee673434fcf3bf24dd54763c79690201208bafec62f19eed
     # via
     #   -r requirements_cmk.txt
     #   google-api-core
@@ -4539,6 +4539,5 @@ setuptools==70.3.0 ; python_version >= "3.8" \
     #   -r requirements_cmk.txt
     #   check-manifest
     #   kubernetes
-    #   opentelemetry-instrumentation
     #   opsgenie-sdk
     #   setuptools-scm

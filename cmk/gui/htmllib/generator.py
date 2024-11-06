@@ -62,6 +62,15 @@ def maybecall(entry: FinalJavaScript) -> str:
     return entry
 
 
+def _dump_standard_compliant_json(data: object) -> str:
+    # default json.dumps produces non standard compliant output: NaN, Infinity, -Infinity are not
+    # part of the JSON spec. in case you still serialize such a value with pythons default
+    # json.dumps you see very confusing parsing errors in the frontend.
+    # this function will make sure that a backend error is thrown if one of the three values is
+    # serialized, which makes it more obvious whats going wrong.
+    return json.dumps(data, allow_nan=False)
+
+
 class HTMLWriter:
     """Usage Notes:
 
@@ -394,7 +403,10 @@ class HTMLWriter:
     def vue_app(self, app_name: str, data: dict[str, Any]) -> None:
         self.write_html(
             render_element(
-                "div", None, data_cmk_vue_app_name=app_name, data_cmk_vue_app_data=json.dumps(data)
+                "div",
+                None,
+                data_cmk_vue_app_name=app_name,
+                data_cmk_vue_app_data=_dump_standard_compliant_json(data),
             )
         )
 
@@ -680,7 +692,7 @@ class HTMLWriter:
         if arguments is None:
             json_arguments = "{}"
         else:
-            json_arguments = json.dumps(arguments)
+            json_arguments = _dump_standard_compliant_json(arguments)
         self.write_html(
             render_start_tag(
                 container,

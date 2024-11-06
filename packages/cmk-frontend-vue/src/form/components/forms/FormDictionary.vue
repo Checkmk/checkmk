@@ -220,7 +220,8 @@ const componentId = useId()
 }
 
 span.checkbox {
-  display: inline-block;
+  margin-bottom: 5px;
+  margin-right: 5px;
 }
 
 span.checkbox input + label {
@@ -262,24 +263,5 @@ span.checkbox input + label {
   display: flex;
   flex-direction: row;
   gap: 0.5em;
-}
-
-.form-dictionary__group_elem {
-  div.dictelement {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  /*
- When the checkbox is clicked and there is an extendable content for the
-checkbox (a span containing the extendable content should be diplayed),
-the margin of the extendable content should be adjusted to match the margin of the checkbox.
-*/
-  div.dictelement.indent {
-    span {
-      margin-top: 10px;
-      margin-bottom: 4px;
-    }
-  }
 }
 </style>

@@ -370,7 +370,15 @@ def get_url_raw(
     data: Mapping[str, str] | None = None,
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
+    add_headers: dict[str, str] | None = None,
 ) -> requests.Response:
+    headers_ = {
+        "x-checkmk-version": cmk_version.__version__,
+        "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
+        "x-checkmk-license-state": get_license_state().readable,
+    }
+    headers_.update(add_headers or {})
+
     response = requests.post(
         url,
         data=data,
@@ -378,11 +386,7 @@ def get_url_raw(
         auth=auth,
         files=files,
         timeout=timeout,
-        headers={
-            "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
-            "x-checkmk-license-state": get_license_state().readable,
-        },
+        headers=headers_,
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8
@@ -509,17 +513,6 @@ def get_url(
     timeout: float | None = None,
 ) -> str:
     return get_url_raw(url, insecure, auth, data, files, timeout).text
-
-
-def get_url_json(
-    url: str,
-    insecure: bool,
-    auth: tuple[str, str] | None = None,
-    data: Mapping[str, str] | None = None,
-    files: Mapping[str, BytesIO] | None = None,
-    timeout: float | None = None,
-) -> object:
-    return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
 def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:

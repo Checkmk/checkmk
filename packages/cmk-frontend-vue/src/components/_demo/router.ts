@@ -23,6 +23,7 @@ import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
 import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
+import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -130,6 +131,11 @@ const router = createRouter({
           path: 'formodictionary',
           name: 'FormDictionary',
           component: DemoFormDictionary
+        },
+        {
+          path: 'formcheckboxlistchoice',
+          name: 'FormCheckboxListChoice',
+          component: DemoFormCheckboxListChoice
         },
         {
           path: 'formlabels',

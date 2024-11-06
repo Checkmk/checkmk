@@ -13,8 +13,12 @@ const value3 = ref<boolean>(false)
 
 <template>
   <ul>
-    <li><CmkCheckbox v-model="value1" label="some checkbox" /></li>
-    <li><CmkCheckbox v-model="value2" label="some other checkbox" /></li>
+    <li>
+      <CmkCheckbox v-model="value1" label="some checkbox" /> <code>{{ value1 }}</code>
+    </li>
+    <li>
+      <CmkCheckbox v-model="value2" label="some other checkbox" /> <code>{{ value2 }}</code>
+    </li>
     <li>checkbox without label: <CmkCheckbox v-model="value3" /></li>
     <li>
       <!-- testing vertical alignment -->

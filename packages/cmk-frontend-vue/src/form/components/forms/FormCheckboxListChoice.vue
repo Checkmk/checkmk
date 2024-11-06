@@ -10,7 +10,7 @@ import type {
   CheckboxListChoice,
   MultipleChoiceElement
 } from '@/form/components/vue_formspec_components'
-import { useId } from '@/form/utils'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const props = defineProps<{
   spec: CheckboxListChoice
@@ -24,27 +24,24 @@ const [validation, value] = useValidation<string[]>(
   () => props.backendValidation
 )
 
-function addSelected(element: MultipleChoiceElement) {
-  value.value = [...value.value, element.name]
+function change(element: MultipleChoiceElement, newValue: boolean) {
+  if (newValue) {
+    value.value = [...value.value, element.name]
+  } else {
+    value.value = value.value.filter((entry) => entry !== element.name)
+  }
 }
-
-function removeSelected(element: MultipleChoiceElement) {
-  value.value = value.value.filter((entry) => entry !== element.name)
-}
-
-const componentId = useId()
 </script>
 
 <template>
   <div v-for="element in props.spec.elements" :key="element.name" class="container">
-    <input
-      :id="`${componentId}_${element.name}`"
-      :checked="value.includes(element.name)"
-      type="checkbox"
-      @change="value.includes(element.name) ? removeSelected(element) : addSelected(element)"
+    <CmkCheckbox
+      :label="element.title"
+      :model-value="value.includes(element.name)"
+      @update:model-value="(newValue) => change(element, newValue)"
     />
-    <label :for="`${componentId}_${element.name}`">{{ element.title }}</label>
   </div>
+
   <FormValidation :validation="validation"></FormValidation>
 </template>
 

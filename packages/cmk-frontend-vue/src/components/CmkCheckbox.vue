@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 import checkboxChecked from '@/assets/checkbox-x.svg'
 import CmkSpace from '@/components/CmkSpace.vue'
-const value = defineModel<boolean>({ required: true })
+const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
   label?: string

@@ -17,9 +17,15 @@ const spec = ref<BooleanChoice>({
   text_off: 'some text off',
   text_on: 'some text on'
 })
-const data = ref<boolean>(true)
+const dataTrue = ref<boolean>(true)
+const dataFalse = ref<boolean>(false)
 </script>
 
 <template>
-  <FormBooleanChoice v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <h2>checked</h2>
+  <FormBooleanChoice v-model:data="dataTrue" :spec="spec" :backend-validation="[]" />
+  <code>&nbsp;{{ dataTrue }}</code>
+  <h2>unchecked</h2>
+  <FormBooleanChoice v-model:data="dataFalse" :spec="spec" :backend-validation="[]" />
+  <code>&nbsp;{{ dataFalse }}</code>
 </template>

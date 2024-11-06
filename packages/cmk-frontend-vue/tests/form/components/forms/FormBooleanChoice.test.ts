@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { waitFor, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 
@@ -19,7 +19,7 @@ function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {
   }
 }
 
-test('FormBooleanChoice renders value: checked', () => {
+test('FormBooleanChoice renders value: checked', async () => {
   const spec = getBooleanChoice(false)
   render(FormBooleanChoice, {
     props: {
@@ -30,10 +30,10 @@ test('FormBooleanChoice renders value: checked', () => {
   })
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox')
-  expect(checkbox.checked).toBe(true)
+  await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('true'))
 })
 
-test('FormBooleanChoice renders value: unchecked', () => {
+test('FormBooleanChoice renders value: unchecked', async () => {
   const spec = getBooleanChoice(true)
   render(FormBooleanChoice, {
     props: {
@@ -44,10 +44,10 @@ test('FormBooleanChoice renders value: unchecked', () => {
   })
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox')
-  expect(checkbox.checked).toBe(false)
+  await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('false'))
 })
 
-test('FormBooleanChoice toggle checkbox', () => {
+test('FormBooleanChoice toggle checkbox', async () => {
   const spec = getBooleanChoice(true)
   render(FormBooleanChoice, {
     props: {
@@ -59,9 +59,9 @@ test('FormBooleanChoice toggle checkbox', () => {
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox')
   checkbox.click()
-  expect(checkbox.checked).toBe(true)
+  await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('true'))
   checkbox.click()
-  expect(checkbox.checked).toBe(false)
+  await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('false'))
 })
 
 test('FormBooleanChoice renders checkbox without label', () => {

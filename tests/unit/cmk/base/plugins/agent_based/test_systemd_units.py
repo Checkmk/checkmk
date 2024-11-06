@@ -466,6 +466,37 @@ def test_services_split(
             ),
             id="parse a socket instead of a service",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "wasServer@.service indirect disabled",
+                "[status]",
+                "× wasServer@blablu.service - The WAS Server blablu",
+                "Loaded: loaded (/etc/systemd/system/wasServer@.service; enabled; preset: disabled)",
+                "Active: failed (Result: exit-code) since Wed 2024-10-09 12:06:40 CEST; 1 week 6 days ago",
+                "Duration: 7h 28min 10.894s",
+                "Main PID: 2505 (code=exited, status=0/SUCCESS)",
+                "CPU: 3min 17.030s",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+                "wasServer@blablu.service loaded failed failed The WAS Server blablu",
+            ],
+            Section(
+                services={
+                    "wasServer@blablu": UnitEntry(
+                        name="wasServer@blablu",
+                        loaded_status="loaded",
+                        active_status="failed",
+                        current_state="failed",
+                        description="The WAS Server blablu",
+                        enabled_status="indirect",
+                        time_since_change=timedelta(days=13),
+                    )
+                },
+                sockets={},
+            ),
+            id="the enabled state is indirect, bc it comes from the unit-files. however status tells us 'enabled'",
+        ),
     ],
 )
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:

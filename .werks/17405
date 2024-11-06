@@ -1,0 +1,16 @@
+Title: Support Diagnostics: Checkmk server host parameter
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1732625825
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+This werk introduces a parameter "Checkmk server host".
+In many cases, the support diagnostics can automatically determine the
+host, that represents the Checkmk server. If that's not possible, the
+user can now manually select that host before creating the dump.
+
+This information is needed for the Performance Graphs and the Checkmk
+Overview.

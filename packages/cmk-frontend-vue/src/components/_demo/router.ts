@@ -14,6 +14,7 @@ import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoDropDown from './DemoDropDown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
+import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoFormList from './DemoFormList.vue'
 import DemoForm from './DemoForm.vue'
@@ -56,6 +57,11 @@ const router = createRouter({
       path: '/cmkicon',
       name: 'CmkIcon',
       component: DemoCmkIcon
+    },
+    {
+      path: '/cmklist',
+      name: 'CmkList',
+      component: DemoCmkList
     },
     {
       path: '/togglebuttongroup',

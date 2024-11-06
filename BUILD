@@ -3,7 +3,8 @@ load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("@rules_uv//uv:venv.bzl", "create_venv")
 
 exports_files([
     "Pipfile",
@@ -81,9 +82,8 @@ genrule(
     cmd = "cat $(location :requirements.txt) $(location //cmk:requirements.txt) > $@",
 )
 
-compile_pip_requirements(
+pip_compile(
     name = "requirements",
-    timeout = "moderate",
     data = [
         "//packages/cmk-agent-based:requirements.txt",
         "//packages/cmk-agent-receiver:requirements.txt",
@@ -98,14 +98,16 @@ compile_pip_requirements(
         "//packages/cmk-trace:requirements.txt",
         "//packages/cmk-werks:requirements.txt",
     ],
-    extra_args = [
-        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
-        "--quiet",
-    ],
     requirements_in = ":requirements_cmk.txt",
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
+)
+
+create_venv(
+    name = "create_venv",
+    destination_folder = ".venv_uv",
+    requirements_txt = "@//:requirements_lock.txt",
 )
 
 copy_file(

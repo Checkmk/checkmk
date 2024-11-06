@@ -36,6 +36,7 @@ class DiagnosticsParameters(TypedDict):
     timeout: int
     opt_info: DiagnosticsOptionalParameters | None
     comp_specific: DiagnosticsOptionalParameters | None
+    checkmk_server_host: str
 
 
 OPT_LOCAL_FILES = "local-files"
@@ -58,11 +59,14 @@ OPT_COMP_BUSINESS_INTELLIGENCE = "business-intelligence"
 OPT_COMP_CMC = "cmc"
 OPT_COMP_LICENSING = "licensing"
 
+_OPTS_WITH_HOST = [
+    OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_OVERVIEW,
+]
+
 _BOOLEAN_CONFIG_OPTS = [
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
-    OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_OVERVIEW,
     OPT_CHECKMK_CRASH_REPORTS,
 ]
 
@@ -91,6 +95,12 @@ def serialize_wato_parameters(  # pylint: disable=too-many-branches
 
     boolean_opts: list[str] = [
         k for k in sorted(parameters.keys()) if k in _BOOLEAN_CONFIG_OPTS and parameters[k]
+    ]
+
+    opt_checkmk_server_host = wato_parameters.get("checkmk_server_host", "")
+
+    opts_with_host: list[list[str]] = [
+        [k, opt_checkmk_server_host] for k in _OPTS_WITH_HOST if k in parameters
     ]
 
     config_files: set[str] = set()
@@ -127,6 +137,9 @@ def serialize_wato_parameters(  # pylint: disable=too-many-branches
     chunks: list[list[str]] = []
     if boolean_opts:
         chunks.append(boolean_opts)
+
+    for opt in opts_with_host:
+        chunks.append(opt)
 
     max_args: int = _get_max_args() - 1  # OPT will be appended in for loop
     for config_args in [
@@ -186,6 +199,9 @@ def deserialize_cl_parameters(
             if parameter in _BOOLEAN_CONFIG_OPTS:
                 deserialized_parameters[parameter] = True
 
+            elif parameter in _OPTS_WITH_HOST:
+                deserialized_parameters[parameter] = next(parameters)
+
             elif parameter in _FILES_OPTS:
                 deserialized_parameters[parameter] = next(parameters).split(",")
 
@@ -200,7 +216,7 @@ def deserialize_modes_parameters(
 ) -> DiagnosticsOptionalParameters:
     deserialized_parameters = {}
     for key, value in modes_parameters.items():
-        if key in _BOOLEAN_CONFIG_OPTS:
+        if key in _BOOLEAN_CONFIG_OPTS or key in _OPTS_WITH_HOST:
             deserialized_parameters[key] = value
 
         elif key in _FILES_OPTS:

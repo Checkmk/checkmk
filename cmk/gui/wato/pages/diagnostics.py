@@ -80,6 +80,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
     Integer,
+    MonitoredHostname,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import (
@@ -139,6 +140,7 @@ class ModeDiagnostics(WatoMode):
                 "general": params["general"],
                 "opt_info": params["opt_info"],
                 "comp_specific": params["comp_specific"],
+                "checkmk_server_host": params["checkmk_server_host"],
             }
         return None
 
@@ -286,6 +288,19 @@ class ModeDiagnostics(WatoMode):
                                 ),
                             ),
                         ],
+                    ),
+                ),
+                (
+                    "checkmk_server_host",
+                    MonitoredHostname(
+                        title=_("Checkmk server host"),
+                        help=_(
+                            "Some of the diagnostics data needs to be collected from the host "
+                            "that represents the Checkmk server of the related site. "
+                            "In case your Checkmk server is not monitored by itself, but from "
+                            "a different site (which is actually recommended), please enter "
+                            "the name of that host here."
+                        ),
                     ),
                 ),
                 (

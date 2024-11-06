@@ -182,8 +182,10 @@ class DiagnosticsDump:
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
 
-        if parameters.get(OPT_CHECKMK_OVERVIEW):
-            optional_elements.append(CheckmkOverviewDiagnosticsElement())
+        if OPT_CHECKMK_OVERVIEW in parameters:
+            optional_elements.append(
+                CheckmkOverviewDiagnosticsElement(parameters.get(OPT_CHECKMK_OVERVIEW, ""))
+            )
 
         if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
             optional_elements.append(CrashDumpsDiagnosticsElement())
@@ -203,8 +205,10 @@ class DiagnosticsDump:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
                 optional_elements.append(CMCDumpDiagnosticsElement())
 
-            if parameters.get(OPT_PERFORMANCE_GRAPHS):
-                optional_elements.append(PerformanceGraphsDiagnosticsElement())
+            if OPT_PERFORMANCE_GRAPHS in parameters:
+                optional_elements.append(
+                    PerformanceGraphsDiagnosticsElement(parameters.get(OPT_PERFORMANCE_GRAPHS, ""))
+                )
 
             rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
             if rel_checkmk_licensing_files:
@@ -294,14 +298,17 @@ def get_omd_config() -> site.OMDConfig:
 
 
 @cache
-def get_checkmk_server_name() -> HostName | None:
+def verify_checkmk_server_host(checkmk_server_host: str | None) -> HostName:
+    if checkmk_server_host:
+        return HostName(checkmk_server_host)
+
     result = livestatus.LocalConnection().query(
         f"GET services\nColumns: host_name\nFilter: service_description ~ OMD {omd_site()} performance\n"
     )
     try:
         return HostName(result[0][0])
     except IndexError:
-        return None
+        raise DiagnosticsElementError("No Checkmk server found")
 
 
 # .
@@ -861,6 +868,9 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, checkmk_server_host: str) -> None:
+        self.checkmk_server_host = checkmk_server_host
+
     @property
     def ident(self) -> str:
         return "checkmk_overview"
@@ -880,15 +890,12 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> SDRawTree:
-        checkmk_server_name = get_checkmk_server_name()
-        if checkmk_server_name is None:
-            raise DiagnosticsElementError("No Checkmk server found")
-
+        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         try:
-            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_name)
+            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_host)
         except FileNotFoundError:
             raise DiagnosticsElementError(
-                "No HW/SW inventory tree of '%s' found" % checkmk_server_name
+                "No HW/SW Inventory tree of '%s' found" % checkmk_server_host
             )
 
         if not (node := tree.get_tree(("software", "applications", "check_mk"))):
@@ -1061,6 +1068,9 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
+    def __init__(self, checkmk_server_host: str) -> None:
+        self.checkmk_server_host = checkmk_server_host
+
     @property
     def ident(self) -> str:
         return "performance_graphs"
@@ -1078,11 +1088,8 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        checkmk_server_name = get_checkmk_server_name()
-        if checkmk_server_name is None:
-            raise DiagnosticsElementError("No Checkmk server found")
-
-        response = self._get_response(checkmk_server_name, get_omd_config())
+        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
+        response = self._get_response(checkmk_server_host, get_omd_config())
 
         if response.status_code != 200:
             raise DiagnosticsElementError(
@@ -1104,7 +1111,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         yield filepath
 
     def _get_response(
-        self, checkmk_server_name: str, omd_config: site.OMDConfig
+        self, checkmk_server_host: str, omd_config: site.OMDConfig
     ) -> requests.Response:
         automation_secret = AutomationUserSecret(UserId("automation")).read()
 
@@ -1114,7 +1121,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             omd_site(),
         ) + urllib.parse.urlencode(
             [
-                ("host", checkmk_server_name),
+                ("host", checkmk_server_host),
                 ("name", "host_performance_graphs"),
             ]
         )

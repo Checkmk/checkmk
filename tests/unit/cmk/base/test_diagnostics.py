@@ -25,7 +25,7 @@ import cmk.base.diagnostics as diagnostics
 @pytest.fixture(autouse=True)
 def reset_collector_caches():
     diagnostics.get_omd_config.cache_clear()
-    diagnostics.get_checkmk_server_name.cache_clear()
+    diagnostics.verify_checkmk_server_host.cache_clear()
 
 
 @pytest.fixture()
@@ -515,7 +515,7 @@ CONFIG_TMPFS='on'"""
 
 
 def test_diagnostics_element_checkmk_overview() -> None:
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
     assert diagnostics_element.description == (
@@ -552,7 +552,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
 def test_diagnostics_element_checkmk_overview_error(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree, error
 ):
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -621,7 +621,7 @@ def test_diagnostics_element_checkmk_overview_error(
 def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -767,7 +767,7 @@ def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir
 
 
 def test_diagnostics_element_performance_graphs() -> None:
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
     assert diagnostics_element.ident == "performance_graphs"
     assert diagnostics_element.title == "Performance Graphs of Checkmk Server"
     assert diagnostics_element.description == (
@@ -813,7 +813,7 @@ def test_diagnostics_element_performance_graphs_error(
     content,
     error,
 ):
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -867,7 +867,7 @@ def test_diagnostics_element_performance_graphs_content(
     text,
     content,
 ):
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 

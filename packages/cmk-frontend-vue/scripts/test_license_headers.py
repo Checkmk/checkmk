@@ -52,7 +52,7 @@ ROOT_FOLDERS_IGNORED = set(
     ]
 )
 
-SUFFIX_IGNORED = set([".swp"])
+SUFFIX_IGNORED = set([".swp", ".pyc"])
 
 GLOB_IGNORED = [
     "*.log",  # added by ci

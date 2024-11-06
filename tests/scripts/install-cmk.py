@@ -29,9 +29,8 @@ def main():
         fallback_branch=current_base_branch_name,
     )
     logger.info(
-        "Version: %s (%s), Edition: %s, Branch: %s",
+        "Version: %s, Edition: %s, Branch: %s",
         version.version,
-        version.version_rc_aware,
         version.edition.long,
         version.branch,
     )
@@ -41,7 +40,7 @@ def main():
         return 0
 
     manager = ABCPackageManager.factory()
-    manager.install(version.version_rc_aware, version.edition)
+    manager.install(version.version, version.edition)
 
     if not version.is_installed():
         logger.error("Failed not install version")

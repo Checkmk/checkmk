@@ -150,8 +150,14 @@ def send_request(
     prepared_request = request_client.prepare_request(request)
     return request_client.send(
         prepared_request,
-        verify=client_config.verify_cert_api,
         timeout=client_config.requests_timeout(),
+        **request_client.merge_environment_settings(
+            url=request.url,
+            proxies={},
+            stream=None,
+            verify=client_config.verify_cert_api,
+            cert=None,
+        ),
     )
 
 

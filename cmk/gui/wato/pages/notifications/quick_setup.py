@@ -1169,7 +1169,7 @@ def sending_conditions() -> QuickSetupStage:
                                             elements=[
                                                 Integer(
                                                     label=Label(
-                                                        "starting with notification number"
+                                                        "Starting with notification number"
                                                     ),
                                                     prefill=DefaultValue(10),
                                                 ),

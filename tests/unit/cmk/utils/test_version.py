@@ -44,6 +44,10 @@ class TestVersion:
             Version("2.2.0rc1")
         with pytest.raises(ValueError):
             Version("2.2.0p5-rc")
+        with pytest.raises(ValueError):
+            Version("1.2.3-2023.12.24-rc1")
+        with pytest.raises(ValueError):
+            Version("2023.12.24-rc1")
 
     @pytest.mark.parametrize(
         "vers",
@@ -67,8 +71,14 @@ class TestVersion:
     def test_version_base_release(self) -> None:
         assert Version("4.5.6p8").version_base == "4.5.6"
 
+    def test_version_base_stable_daily(self) -> None:
+        assert Version("1.2.3-2023.12.24").version_base == "1.2.3"
+
     def test_version_release_candidate(self) -> None:
         assert Version("2.3.0b4-rc1").version.release_candidate == 1
+
+    def test_version_without_rc_master(self) -> None:
+        assert Version("1984.04.01").version_without_rc == "1984.04.01"
 
     def test_version_without_rc_stable(self) -> None:
         assert Version("1.2.3").version_without_rc == "1.2.3"
@@ -79,14 +89,26 @@ class TestVersion:
     def test_version_without_rc_release_candidate(self) -> None:
         assert Version("2.3.0b4-rc1").version_without_rc == "2.3.0b4"
 
+    def test_version_without_rc_stable_daily(self) -> None:
+        assert Version("1.2.3-2023.12.24").version_without_rc == "1.2.3-2023.12.24"
+
+    def test_version_rc_aware_master(self) -> None:
+        assert Version("1984.04.01").version_rc_aware == "1984.04.01"
+
     def test_version_rc_aware_stable(self) -> None:
         assert Version("1.2.3").version_rc_aware == "1.2.3"
+
+    def test_version_rc_aware_stable_release_candidate(self) -> None:
+        assert Version("1.2.3-rc1").version_rc_aware == "1.2.3-rc1"
 
     def test_version_rc_aware_release(self) -> None:
         assert Version("4.5.6p8").version_rc_aware == "4.5.6p8"
 
     def test_version_rc_aware_release_candidate(self) -> None:
         assert Version("2.3.0b4-rc1").version_rc_aware == "2.3.0b4-rc1"
+
+    def test_version_rc_aware_stable_daily(self) -> None:
+        assert Version("1.2.3-2023.12.24").version_rc_aware == "1.2.3-2023.12.24"
 
     def test_version_meta_data(self) -> None:
         assert Version("2.3.0p21+security").version.meta == "security"

@@ -215,6 +215,8 @@ class Version:
             suffix = f"{self.version.vtype}"
         if hasattr(self.version, "patch"):
             suffix = f"{suffix}{self.version.patch}"
+        if hasattr(self.version, "date"):
+            suffix = f"-{self.version.date.strftime('%Y.%m.%d')}{suffix}"
         return f"{'' if self.version_base is None else self.version_base}{suffix}".lstrip("-")
 
     @property

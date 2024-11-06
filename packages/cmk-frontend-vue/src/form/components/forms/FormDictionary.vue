@@ -17,6 +17,8 @@ import {
 import FormHelp from '../FormHelp.vue'
 import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -130,11 +132,7 @@ function getElementsInGroupsFromProps(): ElementsGroup[] {
   return groups
 }
 
-function toggleElement(event: MouseEvent, key: string) {
-  const target = event.target
-  if (!target) {
-    return
-  }
+function toggleElement(key: string) {
   if (key in data.value) {
     delete data.value[key]
   } else {
@@ -178,22 +176,16 @@ const componentId = useId()
                   "
                   class="checkbox"
                 >
-                  <input
-                    v-if="!dict_element.dict_config.required"
-                    :id="`${componentId}.${dict_element.dict_config.name}`"
-                    v-model="dict_element.is_active"
-                    :onclick="
-                      (event: MouseEvent) => toggleElement(event, dict_element.dict_config.name)
-                    "
-                    type="checkbox"
-                  />
-                  <label
-                    v-if="dict_element.dict_config.parameter_form.title"
-                    :for="`${componentId}.${dict_element.dict_config.name}`"
-                    class="form-dictionary__label"
-                  >
+                  <label v-if="dict_element.dict_config.required">
                     {{ dict_element.dict_config.parameter_form.title }}
                   </label>
+                  <CmkCheckbox
+                    v-else
+                    v-model="dict_element.is_active"
+                    :label="dict_element.dict_config.parameter_form.title"
+                    @update:model-value="toggleElement(dict_element.dict_config.name)"
+                  />
+                  <CmkSpace size="small" />
                   <HelpText :help="dict_element.dict_config.parameter_form.help" />
                 </span>
               </template>
@@ -233,10 +225,6 @@ span.checkbox {
   input + .form-dictionary__label {
     cursor: pointer;
   }
-}
-
-.form-dictionary__label {
-  margin-right: var(--spacing-half);
 }
 
 /* Variants */

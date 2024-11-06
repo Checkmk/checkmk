@@ -16,6 +16,7 @@ import DemoDropDown from './DemoDropDown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoCmkCheckbox from './DemoCmkCheckbox.vue'
 import DemoFormList from './DemoFormList.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
@@ -62,6 +63,11 @@ const router = createRouter({
       path: '/cmklist',
       name: 'CmkList',
       component: DemoCmkList
+    },
+    {
+      path: '/cmkcheckbox',
+      name: 'CmkCheckbox',
+      component: DemoCmkCheckbox
     },
     {
       path: '/togglebuttongroup',

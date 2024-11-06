@@ -57,7 +57,9 @@ defineProps<ButtonProps>()
   border: 1px solid var(--default-submit-button-border-color);
 }
 .button--variant-tertiary {
-  text-decoration: underline var(--success);
+  text-underline-offset: 2px;
+  text-decoration: underline var(--default-button-emphasis-color);
+  text-decoration-thickness: 1px;
 }
 .button--variant-tertiary,
 .button--variant-transparent {

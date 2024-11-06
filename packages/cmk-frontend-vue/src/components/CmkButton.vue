@@ -61,6 +61,10 @@ defineProps<ButtonProps>()
   text-decoration: underline var(--default-button-emphasis-color);
   text-decoration-thickness: 1px;
 }
+.button--variant-tertiary:hover {
+  font-weight: 600;
+  text-decoration-thickness: 3px;
+}
 .button--variant-tertiary,
 .button--variant-transparent {
   height: auto;

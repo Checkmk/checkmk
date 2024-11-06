@@ -17,6 +17,7 @@ import {
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import useDragging from '@/lib/useDragging'
 
 const props = defineProps<{
   spec: List
@@ -63,48 +64,15 @@ function setValidation(newBackendValidation: ValidationMessages) {
   elementValidation.value = _elementValidations
 }
 
-const tableRef = ref<HTMLTableElement | null>(null)
+const { tableRef, dragStart, dragEnd, dragging } = useDragging()
 
-function dragStart(event: DragEvent) {
-  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
-}
-
-function dragEnd(event: DragEvent) {
-  ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.remove('dragging')
-}
-
-function dragging(event: DragEvent) {
-  if (tableRef.value === null || event.clientY === 0) {
+function dragElement(event: DragEvent) {
+  const dragReturn = dragging(event)
+  if (dragReturn === null) {
     return
   }
-  const tableChildren = [...tableRef.value!.children]
-  const draggedRow = (event.target! as HTMLImageElement).closest('tr')!
-  const draggedIndex = tableChildren.indexOf(draggedRow)
-
-  const yCoords = event.clientY
-  function siblingMiddlePoint(sibling: Element) {
-    const siblingRect = sibling.getBoundingClientRect()
-    return siblingRect.top + siblingRect.height / 2
-  }
-
-  let targetIndex = -1
-  let previous: null | undefined | Element = draggedRow.previousElementSibling
-  while (previous && yCoords < siblingMiddlePoint(previous)) {
-    targetIndex = tableChildren.indexOf(previous)
-    previous = tableRef.value!.children[targetIndex - 1]
-  }
-
-  let next: null | undefined | Element = draggedRow.nextElementSibling
-  while (next && yCoords > siblingMiddlePoint(next)) {
-    targetIndex = tableChildren.indexOf(next)
-    next = tableRef.value!.children[targetIndex + 1]
-  }
-
-  if (draggedIndex === targetIndex || targetIndex === -1) {
-    return
-  }
-  const movedEntry = frontendOrder.value.splice(draggedIndex, 1)[0]!
-  frontendOrder.value.splice(targetIndex, 0, movedEntry)
+  const movedEntry = frontendOrder.value.splice(dragReturn.draggedIndex, 1)[0]!
+  frontendOrder.value.splice(dragReturn.targetIndex, 0, movedEntry)
   sendDataUpstream()
 }
 
@@ -154,7 +122,7 @@ function sendDataUpstream() {
             aria-label="Drag to reorder"
             :draggable="true"
             @dragstart="dragStart"
-            @drag="dragging"
+            @drag="dragElement"
             @dragend="dragEnd"
           >
             <CmkIcon name="drag" size="small" style="pointer-events: none" />

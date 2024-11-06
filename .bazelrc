@@ -101,5 +101,18 @@ build:iwyu --@bazel_iwyu//:iwyu_mappings=//omd/packages/bazel_iwyu:iwyu_mappings
 build:mypy --aspects //packages/cmk-agent-based:aspects.bzl%mypy_aspect
 build:mypy --output_groups=mypy
 
+# Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly
+# (see https://blog.aspect.build/bazelrc-flags)
+build --incompatible_strict_action_env
+
+# Set PATH manually (see above) for both action_env and host_action_env
+# Note: in the future PATH might not be needed at all as long as Bazel provides all the tools
+#       currently taken from system. For now we still need `/usr/bin` and `/bin` for stuff like
+#       `git`, etc.
+#       Also note that in some distro specific exceptions we force tools to be located in
+#       `/usr/bin` (by symlinking) when building the build images
+build --action_env=PATH="/usr/bin:/bin"
+build --host_action_env=PATH="/usr/bin:/bin"
+
 # Must be last
 try-import /etc/ci.bazelrc

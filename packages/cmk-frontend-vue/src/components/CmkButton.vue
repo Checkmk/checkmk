@@ -74,7 +74,7 @@ defineProps<ButtonProps>()
   font-weight: normal;
 }
 .button--variant-minimal:hover {
-  color: var(--default-button-hover-text-color);
+  color: var(--default-button-emphasis-color);
 }
 .button--variant-info {
   background-color: var(--default-help-icon-bg-color);

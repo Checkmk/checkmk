@@ -961,8 +961,10 @@ def notification_method() -> QuickSetupStage:
     )
 
 
-def _validate_parameter_choice(p):
-    if p[1] is None:
+def _validate_parameter_choice(script_config: tuple[str, object]) -> None:
+    parameter_choice = script_config[1]
+    assert isinstance(parameter_choice, dict)
+    if parameter_choice.get("parameter_id") is None:
         raise ValidationError(
             Message("Please choose a notification parameter or create one."),
         )

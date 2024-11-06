@@ -108,7 +108,7 @@ interface LayoutSettings {
 
 const layoutSettings = computed((): LayoutSettings => {
   return {
-    display_style: props.spec.layout === 'vertical' ? '' : 'inline-block',
+    display_style: props.spec.layout === 'vertical' ? 'inline' : 'inline-block',
     side_by_side: props.spec.layout === 'button_group'
   }
 })

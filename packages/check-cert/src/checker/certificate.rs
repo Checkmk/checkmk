@@ -66,7 +66,7 @@ fn handle_empty(s: &str) -> &str {
 fn format_oid(oid: &oid_registry::Oid) -> String {
     match oid2sn(oid, oid_registry()) {
         Ok(s) => s.to_owned(),
-        _ => format!("{}", oid),
+        _ => format!("{oid}"),
     }
 }
 
@@ -82,15 +82,13 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let value = first_of(&mut cert.subject().iter_common_name());
             if expected == value {
                 SimpleCheckResult::ok_with_details(
-                    format!("CN={}", value),
-                    format!("{}: {}", name, value),
+                    format!("{name}: {value}"),
+                    format!("{name}: {value}"),
                 )
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -99,13 +97,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Subject O";
             let value = first_of(&mut cert.subject().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -113,13 +109,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Subject OU";
             let value = first_of(&mut cert.subject().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -128,13 +122,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer CN";
             let value = first_of(&mut cert.issuer().iter_common_name());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -142,13 +134,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer O";
             let value = first_of(&mut cert.issuer().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -156,13 +146,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer OU";
             let value = first_of(&mut cert.issuer().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -170,13 +158,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer ST";
             let value = first_of(&mut cert.issuer().iter_state_or_province());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -184,13 +170,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer C";
             let value = first_of(&mut cert.issuer().iter_country());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -198,14 +182,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Certificate signature algorithm";
             let value = &cert.signature_algorithm.algorithm;
             if expected == value.to_string() {
-                SimpleCheckResult::notice(format!("{}: {}", name, format_oid(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", format_oid(value)))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: {} ({}) but expected {}",
-                    name,
+                    "{name}: {} ({value}) but expected {expected}",
                     handle_empty(&format_oid(value)),
-                    value,
-                    expected
                 ))
             }
         }),
@@ -225,9 +206,9 @@ fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckR
     expected.map(|expected| {
         let name = "Serial number";
         if serial.to_lowercase() == expected.to_lowercase() {
-            SimpleCheckResult::notice(format!("{}: {}", name, serial))
+            SimpleCheckResult::notice(format!("{name}: {serial}"))
         } else {
-            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, serial, expected))
+            SimpleCheckResult::warn(format!("{name}: {serial} but expected {expected}"))
         }
     })
 }
@@ -238,7 +219,7 @@ fn check_subject_alt_names(
 ) -> Option<SimpleCheckResult> {
     let name = "Certificate subject alternative names";
     expected.map(|expected| match alt_names {
-        Err(err) => SimpleCheckResult::crit(format!("{}: {}", name, err)),
+        Err(err) => SimpleCheckResult::crit(format!("{name}: {err}")),
         Ok(None) => {
             if expected.is_empty() {
                 SimpleCheckResult::notice(format!("No {}", name.to_lowercase()))
@@ -255,11 +236,10 @@ fn check_subject_alt_names(
             ));
             let expected_set = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
             if found.is_superset(&expected_set) {
-                SimpleCheckResult::notice(format!("{}: {}", name, expected.join(", ")))
+                SimpleCheckResult::notice(format!("{name}: {}", expected.join(", ")))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{}: missing {}",
-                    name,
+                    "{name}: missing {}",
                     expected_set
                         .difference(&found)
                         .map(|s| format!(r#""{s}""#))
@@ -287,9 +267,9 @@ fn check_pubkey_algorithm(
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
         if expected == value {
-            SimpleCheckResult::notice(format!("{}: {}", name, value))
+            SimpleCheckResult::notice(format!("{name}: {value}"))
         } else {
-            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{name}: {value} but expected {expected}"))
         }
     })
 }
@@ -311,9 +291,9 @@ fn check_pubkey_size(
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
         if expected == value {
-            SimpleCheckResult::notice(format!("{}: {}", name, value))
+            SimpleCheckResult::notice(format!("{name}: {value}"))
         } else {
-            SimpleCheckResult::warn(format!("{}: {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{name}: {value} but expected {expected}"))
         }
     })
 }
@@ -324,7 +304,7 @@ fn check_validity_not_after(
     not_after: ASN1Time,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
+        None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
             OutputType::Summary(format!(

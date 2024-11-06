@@ -35,7 +35,7 @@ fn test_cert_ok() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "CN=IGC/A\n\
+            "Subject CN: IGC/A\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
@@ -73,7 +73,7 @@ fn test_cert_wrong_serial() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "CN=IGC/A, \
+            "Subject CN: IGC/A, \
             Serial number: {SERIAL} but expected {serial} (!)\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\

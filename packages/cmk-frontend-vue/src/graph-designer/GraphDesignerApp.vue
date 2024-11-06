@@ -731,6 +731,7 @@ function dragElement(event: DragEvent) {
       >
         <td class="narrow nowrap">{{ graphLine.id }}</td>
         <td class="buttons">
+          <!-- TODO: use CmkCheckbox building block, see FormCheckboxListChoice how to utilize events!-->
           <input
             :id="graphLine.id.toString()"
             v-model="selectedGraphLines"

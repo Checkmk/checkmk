@@ -15,7 +15,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import AlertBox from '@/components/AlertBox.vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 
 export type Payload = Record<string, unknown>
 

@@ -9,7 +9,7 @@ import FormEdit from './components/FormEdit.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{

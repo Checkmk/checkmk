@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import router from './router'
 

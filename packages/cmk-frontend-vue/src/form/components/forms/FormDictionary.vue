@@ -8,7 +8,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { ref } from 'vue'
 
 import FormEdit from '../FormEdit.vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,

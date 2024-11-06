@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { DictionaryElement } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import {
   groupDictionaryValidations,
   requiresSomeInput,

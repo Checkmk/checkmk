@@ -9,7 +9,7 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { ref } from 'vue'
-import { immediateWatch } from '../utils/watch'
+import { immediateWatch } from '../../../lib/watch'
 import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
 

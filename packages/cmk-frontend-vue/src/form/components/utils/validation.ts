@@ -5,7 +5,7 @@
  */
 import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
 import type { ValidationMessage, Validator } from '@/form/components/vue_formspec_components'
-import { immediateWatch } from './watch'
+import { immediateWatch } from '@/lib/watch'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided

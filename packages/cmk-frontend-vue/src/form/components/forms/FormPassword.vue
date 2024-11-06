@@ -8,7 +8,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import type { Password } from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import DropDown from '@/components/DropDown.vue'
 
 const props = defineProps<{

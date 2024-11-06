@@ -77,6 +77,11 @@ VARIABLES:
     - NAME: CHANGED_WEBPACK_CONFIG
       SH: "echo '${CHANGED_FILES_REL}' | grep '^webpack.config.js' || true"
 
+    - NAME: CHANGED_AGENT_PACKAGE_CONSISTENCY
+      # tests/unit/cmk/base/cee/bakery/test_agent_package_consistency.py accesses those files
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/\\(mk-job\\|check_mk_agent\\)\\.\\(solaris\\|linux\\)' || true"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
       REPLACE_NEWLINES: true
@@ -208,7 +213,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 
     - NAME: 'Python Unit Tests'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_AGENT_PACKAGE_CONSISTENCY
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"

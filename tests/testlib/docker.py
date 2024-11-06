@@ -9,23 +9,25 @@ import logging
 import os
 import subprocess
 import tarfile
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
+from typing import Any
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
 import docker.models  # type: ignore[import-untyped]
 import docker.models.containers  # type: ignore[import-untyped]
+import docker.models.images  # type: ignore[import-untyped]
 import requests
 
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import ABCPackageManager, CMKVersion, version_from_env
 
 logger = logging.getLogger()
 
-build_path = str(repo_path() / "docker_image")
+build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
 distro_codename = "jammy"
 cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
@@ -33,7 +35,7 @@ cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 
 def cleanup_old_packages() -> None:
     """Cleanup files created by _prepare_package during previous job executions"""
-    for p in Path(build_path).glob("*.deb"):
+    for p in build_path.glob("*.deb"):
         logger.info("Cleaning up old package %s", p)
         p.unlink()
 
@@ -81,8 +83,13 @@ def prepare_build() -> None:
 
 def prepare_package(version: CMKVersion) -> None:
     """On Jenkins copies a previously built package to the build path."""
+    test_package_path = build_path / package_name(version)
     if "WORKSPACE" not in os.environ:
-        logger.info("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
+        if test_package_path.exists():
+            logger.info("Checkmk package already exists at %s!", test_package_path)
+        else:
+            # download CMK installation package for use in container
+            ABCPackageManager.factory().download(target_folder=build_path)
         return
 
     source_package_path = Path(
@@ -91,7 +98,6 @@ def prepare_package(version: CMKVersion) -> None:
         version.version,
         package_name(version),
     )
-    test_package_path = Path(build_path, package_name(version))
 
     logger.info("Executed on CI: Preparing package %s", test_package_path)
 
@@ -134,7 +140,7 @@ def build_checkmk(
     client: docker.client.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
-) -> tuple[docker.models.containers.Image, Mapping[str, str]]:
+) -> tuple[docker.models.containers.Image, Iterator[Mapping[str, Any]]]:
     prepare_build()
 
     if prepare_pkg:
@@ -142,10 +148,10 @@ def build_checkmk(
 
     logger.info("Building docker image (or reuse existing): %s", image_name(version))
     try:
-        image: docker.models.containers.Image
-        build_logs: Mapping[str, str]
+        image: docker.models.images.Image
+        build_logs: Iterator[Mapping[str, Any]]
         image, build_logs = client.images.build(
-            path=build_path,
+            path=build_path.as_posix(),
             tag=image_name(version),
             buildargs={
                 "CMK_VERSION": version.version,

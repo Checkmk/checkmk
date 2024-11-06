@@ -76,22 +76,14 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         Err(_) => check::abort("Failed to parse certificate"),
     };
 
+    let subject_cn = first_of(&mut cert.subject().iter_common_name());
+    let issuer_cn = first_of(&mut cert.issuer().iter_common_name());
+
     Collection::from(&mut unwrap_into!(
-        config.subject_cn.map(|expected| {
-            let name = "Subject CN";
-            let value = first_of(&mut cert.subject().iter_common_name());
-            if expected == value {
-                SimpleCheckResult::ok_with_details(
-                    format!("{name}: {value}"),
-                    format!("{name}: {value}"),
-                )
-            } else {
-                SimpleCheckResult::warn(format!(
-                    "{name}: {} but expected {expected}",
-                    handle_empty(value),
-                ))
-            }
-        }),
+        Some(check_subject_cn(subject_cn, config.subject_cn)),
+        Some(SimpleCheckResult::notice(format!(
+            "Subject CN: {subject_cn}"
+        ))),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
             let name = "Subject O";
@@ -118,18 +110,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             }
         }),
         check_serial(cert.raw_serial_as_string(), config.serial),
-        config.issuer_cn.map(|expected| {
-            let name = "Issuer CN";
-            let value = first_of(&mut cert.issuer().iter_common_name());
-            if expected == value {
-                SimpleCheckResult::notice(format!("{name}: {value}"))
-            } else {
-                SimpleCheckResult::warn(format!(
-                    "{name}: {} but expected {expected}",
-                    handle_empty(value),
-                ))
-            }
-        }),
+        Some(check_issuer_cn(issuer_cn, config.issuer_cn)),
         config.issuer_o.map(|expected| {
             let name = "Issuer O";
             let value = first_of(&mut cert.issuer().iter_organization());
@@ -209,6 +190,41 @@ fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckR
             SimpleCheckResult::notice(format!("{name}: {serial}"))
         } else {
             SimpleCheckResult::warn(format!("{name}: {serial} but expected {expected}"))
+        }
+    })
+}
+
+fn check_subject_cn(subject_cn: &str, expected: Option<String>) -> SimpleCheckResult {
+    let name = "Subject CN";
+    expected.map_or(
+        SimpleCheckResult::ok(format!("{name}: {subject_cn}")),
+        |expected| {
+            if expected == subject_cn {
+                SimpleCheckResult::ok(format!("{name}: {subject_cn}"))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{name}: {} but expected {expected}",
+                    handle_empty(subject_cn),
+                ))
+            }
+        },
+    )
+}
+
+fn check_issuer_cn(issuer_cn: &str, expected: Option<String>) -> SimpleCheckResult {
+    let name = "Issuer CN";
+    let details = format!("{name}: {issuer_cn}");
+    expected.map_or(SimpleCheckResult::notice(&details), |expected| {
+        if expected == issuer_cn {
+            SimpleCheckResult::notice(&details)
+        } else {
+            SimpleCheckResult::warn_with_details(
+                format!(
+                    "{name}: {} but expected {expected}",
+                    handle_empty(issuer_cn),
+                ),
+                &details,
+            )
         }
     })
 }

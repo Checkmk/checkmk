@@ -13,6 +13,7 @@ import FormEdit from '@/form/components/FormEdit.vue'
 import { ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import HelpText from '@/components/HelpText.vue'
+import { capitalizeFirstLetter } from '@/lib/utils'
 
 const props = defineProps<{
   spec: FormSpec.Tuple
@@ -41,10 +42,6 @@ function setValidation(newBackendValidation: ValidationMessages) {
   )
   validation.value = _tupleValidations
   elementValidation.value = _elementValidations
-}
-
-function capitalizeFirstLetter(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 </script>
 

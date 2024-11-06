@@ -9,6 +9,7 @@ import signal
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
+from types import FrameType
 from typing import IO
 
 import pytest
@@ -26,7 +27,7 @@ class Timeout(RuntimeError):
 def timeout(seconds: int, exc: Timeout) -> Iterator[None]:
     """Context manager to raise an exception after a timeout"""
 
-    def _raise_timeout(signum, frame):
+    def _raise_timeout(_: int, __: FrameType | None) -> None:
         raise exc
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)
@@ -80,7 +81,7 @@ def broker_pong(site: Site) -> Iterator[subprocess.Popen]:
         pong.wait(timeout=3)
 
 
-def check_broker_ping(site: Site, destination: str) -> None:
+def check_broker_ping(site: Site, destination: str, time_out_: int = 5) -> None:
     """Send a message to the site and wait for a response"""
     output = []
 
@@ -97,8 +98,9 @@ def check_broker_ping(site: Site, destination: str) -> None:
     assert ping.stdout
     pid = _get_broker_test_pid(ping.stdout.readline())
     try:
-        # timeout of 5 seconds should be plenty, we're observing oom ~10ms
-        with timeout(5, Timeout(f"`cmk-broker-test {destination}` timed out after 5s")):
+        with timeout(
+            time_out_, Timeout(f"`cmk-broker-test {destination}` timed out after {time_out_}s")
+        ):
             _collect_output_while_waiting(ping.stdout)
         if ping.stderr is not None and (error_output := ping.stderr.read()):
             logger.error("stderr: %s", error_output)
@@ -111,8 +113,19 @@ def check_broker_ping(site: Site, destination: str) -> None:
 
 
 def assert_message_exchange_working(site1: Site, site2: Site) -> None:
-    with broker_pong(site1):
-        check_broker_ping(site2, site1.id)
+    # There seems to be a race condition when rabbitmq is reloaded and a new connection is
+    # established where messages get lost.
+    # Checking for the binding, the queues or the shovels as well as check_port_connectivity
+    # did not help, but waiting for some time does
+    retries = 10
+    time_out_ = 2
+    for _ in range(retries):
+        with contextlib.suppress(Timeout):
+            with broker_pong(site1):
+                check_broker_ping(site2, site1.id, time_out_=time_out_)
+            break
+    else:
+        assert False, f"Message exchange not working after {retries} retries"
 
 
 def assert_message_exchange_not_working(site1: Site, site2: Site) -> None:

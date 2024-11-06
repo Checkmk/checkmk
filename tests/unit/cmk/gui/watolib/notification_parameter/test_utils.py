@@ -82,7 +82,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
         registry,
         "dummy_params",
         {
-            "general": {"description": "foo", "comment": "", "docu_url": ""},
+            "general": {"description": "foo"},
             "parameter_properties": {"test_param": "bar"},
         },
     )

@@ -90,7 +90,7 @@ function renderSimpleCatalog() {
   })
 }
 
-test.skip('FormCatalog open/close topic', async () => {
+test('FormCatalog open/close topic', async () => {
   renderSimpleCatalog()
 
   // just make sure that the string input is rendered
@@ -133,7 +133,7 @@ test.skip('FormCatalog collapse/open all - skipped until the toggle gets a bette
   expect(parent).not.toHaveClass('closed')
 })
 
-test.skip('FormCatalog default value', async () => {
+test('FormCatalog default value', async () => {
   function getDefinition(stringIdent: string) {
     return {
       spec: {
@@ -182,7 +182,7 @@ test.skip('FormCatalog default value', async () => {
   )
 })
 
-test.skip('FormCatalog backend validation', async () => {
+test('FormCatalog backend validation', async () => {
   const spec = {
     spec: {
       type: 'catalog',

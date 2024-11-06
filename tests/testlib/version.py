@@ -344,6 +344,20 @@ class ABCPackageManager(abc.ABC):
     def _is_debuntu(cls) -> bool:
         return Path("/etc/debian_version").exists()
 
+    def download(
+        self, version: CMKVersion | None = None, target_folder: Path | None = None
+    ) -> Path:
+        version = version or version_from_env()
+        package_name = self.package_name(version.edition, version.version)
+        package_url = self.package_url_internal(version.version, package_name)
+
+        target_path = (
+            target_folder / package_name if target_folder else self._temp_package_path(package_name)
+        )
+        if target_path.exists():
+            return target_path
+        return self._download_package(package_name, package_url, target_path)
+
     def install(self, version: str, edition: Edition) -> None:
         package_name = self.package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
@@ -389,19 +403,23 @@ class ABCPackageManager(abc.ABC):
         """On Jenkins inside a container the previous built packages get mounted into /packages."""
         return Path("/packages", version, package_name)
 
-    def _download_package(self, package_name: str, package_url: PackageUrl) -> Path:
-        temp_package_path = Path("/tmp", package_name)
+    def _temp_package_path(self, package_name: str) -> Path:
+        return Path("/tmp", package_name)
 
-        logger.info("Downloading from: %s to %s", package_url, temp_package_path)
+    def _download_package(
+        self, package_name: str, package_url: PackageUrl, package_path: Path | None = None
+    ) -> Path:
+        package_path = package_path or self._temp_package_path(package_name)
+        logger.info("Downloading from: %s to %s", package_url, package_path)
         response = requests.get(  # nosec
             package_url, auth=get_cmk_download_credentials(), verify=True
         )
         response.raise_for_status()
 
-        with open(temp_package_path, "wb") as f:
+        with open(package_path, "wb") as f:
             f.write(response.content)
 
-        return temp_package_path
+        return package_path
 
     def package_url_public(self, version: str, package_name: str) -> PackageUrl:
         return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")

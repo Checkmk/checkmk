@@ -8,9 +8,9 @@ import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
-import { ref } from 'vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import { watch, ref } from 'vue'
 import { immediateWatch } from '../../../lib/watch'
-import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
@@ -26,6 +26,7 @@ const [validation, value] = useValidation<unknown>(
 )
 
 const embeddedValidation = ref<ValidationMessages>([])
+const checkboxValue = ref<boolean>(value.value !== null)
 
 immediateWatch(
   () => props.backendValidation,
@@ -42,19 +43,17 @@ immediateWatch(
   }
 )
 
-const componentId = useId()
+watch(checkboxValue, (newValue: boolean) => {
+  if (newValue) {
+    value.value = props.spec.parameter_form_default_value
+  } else {
+    value.value = null
+  }
+})
 </script>
 
 <template>
-  <input
-    :id="`${componentId}_input`"
-    :checked="value !== null"
-    type="checkbox"
-    @change="value = value === null ? spec.parameter_form_default_value : null"
-  />
-  <label :for="`${componentId}_input`">
-    {{ spec.i18n.label }}
-  </label>
+  <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
   <HelpText :help="spec.help" />
   <div v-if="value !== null" class="embedded">
     <span v-if="spec.parameter_form.title" class="embedded_title">

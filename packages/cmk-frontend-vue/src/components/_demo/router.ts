@@ -21,6 +21,7 @@ import DemoFormList from './DemoFormList.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
+import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
@@ -118,6 +119,11 @@ const router = createRouter({
           path: 'formbooleanchoice',
           name: 'FormBoleanChoice',
           component: DemoFormBooleanChoice
+        },
+        {
+          path: 'formoptionalchoice',
+          name: 'FormOptionalChoice',
+          component: DemoFormOptionalChoice
         },
         {
           path: 'formlabels',

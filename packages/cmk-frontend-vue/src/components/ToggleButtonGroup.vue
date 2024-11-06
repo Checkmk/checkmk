@@ -57,6 +57,10 @@ function setSelectedOption(value: string) {
   padding: 3px;
 }
 
+.toggle_option:hover:not(.selected) {
+  background-color: rgb(from var(--default-form-element-bg-color) r g b / 0.6);
+}
+
 .selected {
   border: 1px solid var(--default-form-element-border-color);
   background-color: var(--default-form-element-bg-color);

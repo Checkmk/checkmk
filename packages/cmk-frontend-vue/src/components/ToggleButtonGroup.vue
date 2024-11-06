@@ -58,6 +58,7 @@ function setSelectedOption(value: string) {
 }
 
 .selected {
+  border: 1px solid var(--default-form-element-border-color);
   background-color: var(--default-form-element-bg-color);
 }
 </style>

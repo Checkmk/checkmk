@@ -68,6 +68,7 @@
     --default-bg-color: rgb(249, 249, 255);
     --default-table-th-color: rgb(232 232 238);
     --default-form-element-bg-color: rgb(224, 224, 228);
+    --default-form-element-border-color: rgb(183, 180, 180);
     --default-select-hover-color: var(--success);
     --default-button-emphasis-color: rgb(13, 141, 91);
     --default-border-color-green: rgb(21, 209, 160);
@@ -98,6 +99,7 @@
     --default-bg-color: rgb(28, 34, 40);
     --default-table-th-color: rgb(32, 39, 46);
     --default-form-element-bg-color: rgb(48, 57, 70);
+    --default-form-element-border-color: rgb(69, 77, 89);
     --default-select-hover-color: var(--success);
     --default-button-emphasis-color: rgb(19, 211, 137);
     --default-border-color-green: rgb(21, 209, 160);

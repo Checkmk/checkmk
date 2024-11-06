@@ -22,9 +22,6 @@ import tests.testlib as testlib
 from tests.testlib import get_cmk_download_credentials
 from tests.testlib.version import CMKVersion
 
-# Make the tests.testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
@@ -237,7 +234,6 @@ def _create_cmk_image(
             "com.checkmk.base_image_hash": base_image.short_id,
             "com.checkmk.cmk_edition_short": version.edition.short,
             "com.checkmk.cmk_version": version.version,
-            "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
             "com.checkmk.cmk_branch": version.branch,
             # override the base image label
             "com.checkmk.image_type": "cmk-image",
@@ -301,16 +297,13 @@ def _create_cmk_image(
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
-        if not version.is_release_candidate():
-            try:
-                logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
-                client.images.push(image_name_with_tag)
-                logger.info("  Upload complete")
-            except docker.errors.APIError as e:
-                logger.warning("  An error occurred")
-                _handle_api_error(e)
-        else:
-            logger.info("Skipping upload to registry (%s)", image.short_id)
+        try:
+            logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+            client.images.push(image_name_with_tag)
+            logger.info("  Upload complete")
+        except docker.errors.APIError as e:
+            logger.warning("  An error occurred")
+            _handle_api_error(e)
 
     return image_name_with_tag
 
@@ -363,7 +356,7 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) -> str:
     hash_file_name = f"{package_name}.hash"
     r = requests.get(
-        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version_rc_aware}/{hash_file_name}",
+        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version}/{hash_file_name}",
         auth=get_cmk_download_credentials(),
         timeout=30,
     )

@@ -47,10 +47,23 @@ class TestVersion:
             Version.from_str("2.2.0rc1")
         with pytest.raises(ValueError):
             Version.from_str("2.2.0p5-rc")
+        with pytest.raises(ValueError):
+            Version.from_str("1.2.3-2023.12.24-rc1")
+        with pytest.raises(ValueError):
+            Version.from_str("2023.12.24-rc1")
 
-    def test_roundtrip(self) -> None:
-        v = Version.from_str("2.3.0p34-rc42+security")
-        assert Version.from_str(str(v)) == v
+    @pytest.mark.parametrize(
+        "vers",
+        [
+            Version.from_str("2.3.0p34"),
+            Version.from_str("2.3.0p34-rc42"),
+            Version.from_str("2.3.0p34-rc42+security"),
+            Version.from_str("1.2.3-2023.12.24"),
+            Version.from_str("2023.12.24"),
+        ],
+    )
+    def test_roundtrip(self, vers: Version) -> None:
+        assert Version.from_str(str(vers)) == vers
 
     def test_version_base_master(self) -> None:
         assert Version.from_str("1984.04.01").version_base == ""
@@ -60,6 +73,9 @@ class TestVersion:
 
     def test_version_base_release(self) -> None:
         assert Version.from_str("4.5.6p8").version_base == "4.5.6"
+
+    def test_version_base_stable_daily(self) -> None:
+        assert Version.from_str("1.2.3-2023.12.24").version_base == "1.2.3"
 
     def test_version_release_candidate(self) -> None:
         assert Version.from_str("2.3.0b4-rc1").release_candidate.value == 1
@@ -79,17 +95,26 @@ class TestVersion:
     def test_version_without_rc_release_candidate(self) -> None:
         assert Version.from_str("2.3.0b4-rc1").version_without_rc == "2.3.0b4"
 
+    def test_version_without_rc_stable_daily(self) -> None:
+        assert Version.from_str("1.2.3-2023.12.24").version_without_rc == "1.2.3-2023.12.24"
+
     def test_version_rc_aware_master(self) -> None:
         assert Version.from_str("1984.04.01").version_rc_aware == "1984.04.01"
 
     def test_version_rc_aware_stable(self) -> None:
         assert Version.from_str("1.2.3").version_rc_aware == "1.2.3"
 
+    def test_version_rc_aware_stable_release_candidate(self) -> None:
+        assert Version.from_str("1.2.3-rc1").version_rc_aware == "1.2.3-rc1"
+
     def test_version_rc_aware_release(self) -> None:
         assert Version.from_str("4.5.6p8").version_rc_aware == "4.5.6p8"
 
     def test_version_rc_aware_release_candidate(self) -> None:
         assert Version.from_str("2.3.0b4-rc1").version_rc_aware == "2.3.0b4-rc1"
+
+    def test_version_rc_aware_stable_daily(self) -> None:
+        assert Version.from_str("1.2.3-2023.12.24").version_rc_aware == "1.2.3-2023.12.24"
 
     @pytest.mark.parametrize(
         "vers, expected",

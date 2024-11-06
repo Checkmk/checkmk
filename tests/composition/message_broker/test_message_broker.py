@@ -149,6 +149,26 @@ class TestCMKBrokerTest:
             assert pong.returncode is None  # it's running
 
 
+def _next_free_port(site: Site, key: str, port: str) -> int:
+    return int(site.run(["lib/omd/next_free_port", key, port]).stdout.strip())
+
+
+def _assert_message_exchange_working(site1: Site, site2: Site) -> None:
+    """Check that the two sites can exchange messages"""
+    with _broker_pong(site1):
+        _check_broker_ping(site2, site1.id)
+
+
+def _assert_message_exchange_not_working(site1: Site, site2: Site) -> None:
+    """Check that the two sites cannot exchange messages"""
+    with _broker_pong(site1):
+        with pytest.raises(_Timeout):
+            _check_broker_ping(site2, site1.id)
+    with _broker_pong(site2):
+        with pytest.raises(_Timeout):
+            _check_broker_ping(site1, site2.id)
+
+
 @skip_if_saas_edition
 class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
@@ -179,3 +199,23 @@ class TestMessageBroker:
             _broker_stopped(central_site),
         ):
             _check_broker_ping(remote_site_2, remote_site.id)
+
+    def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
+        """Ensure that sites can still communicate after the message broker port is changed"""
+        site_connection = central_site.openapi.show_site(remote_site.id)["extensions"]
+        site_connection_port = int(
+            site_connection["configuration_connection"]["message_broker_port"]
+        )
+        assert site_connection_port == remote_site.message_broker_port
+        next_port = _next_free_port(remote_site, "RABBITMQ_PORT", str(site_connection_port + 1))
+
+        remote_site.set_config("RABBITMQ_PORT", str(next_port), with_restart=True)
+
+        site_connection["configuration_connection"]["message_broker_port"] = str(next_port)
+        central_site.openapi.update_site(remote_site.id, site_connection)
+
+        # ensure changes are not in effect before activated
+        _assert_message_exchange_not_working(central_site, remote_site)
+        central_site.openapi.activate_changes_and_wait_for_completion()
+
+        _assert_message_exchange_working(central_site, remote_site)

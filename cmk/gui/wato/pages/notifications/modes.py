@@ -963,6 +963,7 @@ def _fallback_mail_contacts_configured() -> bool:
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
     return Notifications(
+        overview_title_i18n=_("Notification overview"),
         fallback_warning=(
             FallbackWarning(
                 i18n=FallbackWarningI18n(
@@ -977,7 +978,6 @@ def _get_vue_data() -> Notifications:
                     setup_link_title=_("Configure fallback email address"),
                     do_not_show_again_title=_("Do not show again"),
                 ),
-                user_id=str(user.id),
                 setup_link=makeuri_contextless(
                     request,
                     [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
@@ -1051,6 +1051,7 @@ def _get_vue_data() -> Notifications:
                 topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
             ),
         ],
+        user_id=str(user.id),
     )
 
 

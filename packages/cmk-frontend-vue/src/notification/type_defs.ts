@@ -14,14 +14,15 @@ export interface NotificationTypeDefs {
   notification_parameters_overview?: NotificationParametersOverview;
 }
 export interface Notifications {
+  overview_title_i18n: string;
   fallback_warning?: FallbackWarning;
   notification_stats: NotificationStats;
   core_stats: CoreStats;
   rule_sections: RuleSection[];
+  user_id: string;
 }
 export interface FallbackWarning {
   i18n: FallbackWarningI18N;
-  user_id: string;
   setup_link: string;
   do_not_show_again_link: string;
 }

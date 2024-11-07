@@ -11,21 +11,21 @@ import CmkButton from '@/components/CmkButton.vue'
 
 const props = defineProps<{
   properties: FallbackWarning
+  user_id: string
 }>()
 
 import { ref, onMounted } from 'vue'
 
 const isContentVisible = ref(true)
+const localStorageKey = (userId: string) => `${userId}-notificationFallbackVisibility`
 
 function hideContent() {
   isContentVisible.value = false
-  localStorage.setItem(`${props.properties.user_id}-notificationFallbackVisibility`, 'hidden')
+  localStorage.setItem(localStorageKey(props.user_id), 'hidden')
 }
 
 onMounted(() => {
-  const savedState = localStorage.getItem(
-    `${props.properties.user_id}-notificationFallbackVisibility`
-  )
+  const savedState = localStorage.getItem(localStorageKey(props.user_id))
   if (savedState === 'hidden') {
     isContentVisible.value = false
   }

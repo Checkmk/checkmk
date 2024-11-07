@@ -51,7 +51,6 @@ class Rule:
 @dataclass(kw_only=True)
 class FallbackWarning:
     i18n: FallbackWarningI18n
-    user_id: str
     setup_link: str
     do_not_show_again_link: str
 
@@ -85,9 +84,11 @@ class RuleSection:
 
 @dataclass(kw_only=True)
 class Notifications:
+    overview_title_i18n: str
     notification_stats: NotificationStats
     core_stats: CoreStats
     rule_sections: list[RuleSection]
+    user_id: str
     fallback_warning: Optional[FallbackWarning] = None
 
 

@@ -61,10 +61,12 @@ function setupVue() {
         }
         case 'notification_overview': {
           app = createApp(NotificationOverview, {
+            overview_title_i18n: appData.overview_title_i18n,
             fallback_warning: appData.fallback_warning,
             notification_stats: appData.notification_stats,
             core_stats: appData.core_stats,
-            rule_sections: appData.rule_sections
+            rule_sections: appData.rule_sections,
+            user_id: appData.user_id
           })
           break
         }

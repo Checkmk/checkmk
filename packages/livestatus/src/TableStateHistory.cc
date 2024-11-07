@@ -323,17 +323,21 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period,
     Debug(logger) << "starting state history computation at "
                   << *it_logs_->second;
 
-    // Determine initial logentry
+    // Determine initial log entry, setting entries_ and it_entries_
     entries_ = getEntries();
-    if (!entries_->empty() && it_logs_ != newest_log) {
-        it_entries_ = entries_->end();
-        // Check last entry. If it's younger than _since -> use this logfile too
-        if (--it_entries_ != entries_->begin()) {
-            if (it_entries_->second->time() >= period.since) {
-                it_entries_ = entries_->begin();
-            }
-        }
-    } else {
+    if (entries_->empty()) {
+        it_entries_ = entries_->begin();
+        return true;
+    }
+    if (it_logs_ == newest_log) {
+        it_entries_ = entries_->begin();
+        return true;
+    }
+    it_entries_ = entries_->end();
+    // If the last entry is younger than the start of the query period, then we
+    // use this log file, too.
+    if (--it_entries_ != entries_->begin() &&
+        it_entries_->second->time() >= period.since) {
         it_entries_ = entries_->begin();
     }
     return true;

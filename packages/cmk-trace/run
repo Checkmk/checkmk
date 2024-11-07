@@ -6,6 +6,7 @@
 set -e
 
 JOBS=6
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=mypy,ruff,bandit
 
 failure() {
@@ -109,25 +110,13 @@ parse_options() {
     readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
-run_pipenv() {
-    PIPENV_CACHE_DIR="$(pwd)/.cache" \
-    PIPENV_VENV_IN_PROJECT=true \
-    PIPENV_NOSPIN=true \
-    PIPENV_HIDE_EMOJIS=true \
-    PIPENV_NO_INHERIT=true \
-    PIPENV_PIPFILE="$(pwd)/Pipfile" \
-    PIPENV_IGNORE_VIRTUALENVS=1 \
-        pipenv "$@"
-}
-
 setup_venv() {
     test "${SETUP_VENV_RAN}" = "yes" && return
-    # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
-    # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
-    run_pipenv sync --dev >/dev/null
-    run_pipenv clean
-    # poor man's "activate", but without any danger of naming clashes
-    PATH="$(pwd)/.venv/bin:$PATH"
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv_uv/bin/activate
     hash -r
     SETUP_VENV_RAN=yes
 }

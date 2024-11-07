@@ -349,6 +349,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 element_template=String(
                                                     field_size=FieldSize.SMALL,
                                                 ),
+                                                editable_order=False,
                                                 prefill=DefaultValue([]),
                                             ),
                                         ),
@@ -563,6 +564,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "users": DictElement(
                                     parameter_form=ListExtended(
                                         title=Title("Users"),
+                                        editable_order=False,
                                         element_template=SingleChoice(
                                             prefill=InputHint(Title("Select user")),
                                             no_elements_text=Message(  # TODO:  Doesn't seem to do anything.
@@ -1015,6 +1017,7 @@ def recipient() -> QuickSetupStage:
                                 name="contact_group",
                                 parameter_form=ListExtended(
                                     prefill=DefaultValue([]),
+                                    editable_order=False,
                                     element_template=_contact_group_choice(),
                                 ),
                             ),
@@ -1040,6 +1043,7 @@ def recipient() -> QuickSetupStage:
                                             title=Title("Users of contact groups"),
                                             parameter_form=ListExtended(
                                                 prefill=DefaultValue([]),
+                                                editable_order=False,
                                                 element_template=_contact_group_choice(),
                                             ),
                                         ),
@@ -1048,6 +1052,7 @@ def recipient() -> QuickSetupStage:
                                             title=Title("Custom macros"),
                                             parameter_form=ListExtended(
                                                 prefill=DefaultValue([]),
+                                                editable_order=False,
                                                 element_template=Tuple(
                                                     title=Title("Custom macro"),
                                                     elements=[
@@ -1073,6 +1078,7 @@ def recipient() -> QuickSetupStage:
                                 name="specific_users",
                                 parameter_form=ListExtended(
                                     prefill=DefaultValue([]),
+                                    editable_order=False,
                                     element_template=SingleChoiceExtended(
                                         prefill=InputHint(Title("Select user")),
                                         type=str,

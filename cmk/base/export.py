@@ -12,6 +12,7 @@ from the configuration.
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
+from cmk.utils.paths import checks_dir, local_checks_dir
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.servicename import Item, ServiceName
 
@@ -20,6 +21,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base import config
 
 _config_loaded = False
+_checks_loaded = False
 
 
 # TODO: This should be solved in the config module / ConfigCache object
@@ -30,14 +32,28 @@ def _load_config() -> None:
         _config_loaded = True
 
 
+# TODO: This should be solved in the config module / ConfigCache object
+def _load_checks() -> None:
+    global _checks_loaded
+    if not _checks_loaded:
+        config.load_all_plugins(local_checks_dir=local_checks_dir, checks_dir=checks_dir)
+        _checks_loaded = True
+
+
 def reset_config() -> None:
     global _config_loaded
     _config_loaded = False
 
 
-def service_description(hostname: HostName, check_plugin_name: str, item: Item) -> str:
+def logwatch_service_description(hostname: HostName, item: Item) -> str:
+    # Note: We actually only need the logwatch plug-in here, but to be
+    # *absolutely* sure we get the real thing, we need to load all plug-ins
+    # (users might shadow/redefine the logwatch plug-in in unexpected places)
+    # Failing to load the right plug-in would result in a wrong service description,
+    # in turn leading to wrong service labels and ruleset matches.
+    _load_checks()
     return config.service_description(
-        get_ruleset_matcher(), hostname, CheckPluginName(check_plugin_name), item
+        get_ruleset_matcher(), hostname, CheckPluginName("logwatch"), item
     )
 
 

@@ -345,7 +345,7 @@ class ModePatternEditor(WatoMode):
     def _analyze_rule_matches(
         self, site_id: SiteId, host_name: HostName, item: Item, rules: Sequence[Rule]
     ) -> dict[str, bool]:
-        service_desc = self._get_service_description(host_name, "logwatch", item)
+        service_desc = self._get_service_description(host_name, item)
         service_labels = analyse_service(
             site_id,
             host_name,
@@ -362,10 +362,8 @@ class ModePatternEditor(WatoMode):
             for rule in rules
         }
 
-    def _get_service_description(
-        self, hostname: HostName, check_plugin_name: str, item: Item
-    ) -> ServiceName:
-        return cmk.base.export.service_description(hostname, check_plugin_name, item)
+    def _get_service_description(self, hostname: HostName, item: Item) -> ServiceName:
+        return cmk.base.export.logwatch_service_description(hostname, item)
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):

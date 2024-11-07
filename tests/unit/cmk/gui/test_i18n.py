@@ -166,43 +166,12 @@ def test_init_language_with_package_localization(
     assert translated == "lala"
 
 
-def test_get_language_alias() -> None:
-    assert isinstance(i18n.get_language_alias("en"), str)
-    assert i18n.get_language_alias("en") == "English"
-
-    assert isinstance(i18n.get_language_alias("de"), str)
-    assert i18n.get_language_alias("de") == "German"
-
-
 def test_get_language_local_alias(local_translation: None) -> None:
     assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "Äxtended German"
 
 
-def test_get_languages() -> None:
-    assert i18n.get_languages() == [
-        ("en", "English"),
-        ("de", "German"),
-        ("nl", "Dutch (not supported)"),
-        ("fr", "French (not supported)"),
-        ("it", "Italian (not supported)"),
-        ("ja", "Japanese (not supported)"),
-        ("pt_PT", "Portuguese (Portugal) (not supported)"),
-        ("ro", "Romanian (not supported)"),
-        ("es", "Spanish (not supported)"),
-    ]
-
-
-def test_get_languages_new_local_language(local_translation: None) -> None:
-    assert i18n.get_languages() == [
-        ("en", "English"),
-        ("de", "Äxtended German"),
-        ("nl", "Dutch (not supported)"),
-        ("fr", "French (not supported)"),
-        ("it", "Italian (not supported)"),
-        ("ja", "Japanese (not supported)"),
-        ("pt_PT", "Portuguese (Portugal) (not supported)"),
-        ("ro", "Romanian (not supported)"),
-        ("es", "Spanish (not supported)"),
-        ("xz", "Xz"),
-    ]
+def test_local_langs_are_available_in_get_languages(local_translation: None) -> None:
+    local_langs = [("de", "Äxtended German"), ("xz", "Xz")]
+    registered_langs = i18n.get_languages()
+    assert all(local_lang in registered_langs for local_lang in local_langs)

@@ -6,8 +6,7 @@
 
 import type {Dimension} from "crossfilter2";
 import type {ScaleBand, ScaleLinear, Selection} from "d3";
-import {axisRight, axisTop, max, scaleBand, scaleLinear} from "d3";
-import range from "lodash.range";
+import {axisRight, axisTop, max, range, scaleBand, scaleLinear} from "d3";
 
 import {FigureBase} from "@/modules/figures/cmk_figures";
 import {getIn, make_levels} from "@/modules/figures/cmk_figures_utils";

@@ -14,6 +14,7 @@ import type {
     ZoomTransform,
 } from "d3";
 import {
+    range,
     axisBottom,
     axisLeft,
     max,
@@ -25,7 +26,6 @@ import {
     zoom,
     zoomIdentity,
 } from "d3";
-import range from "lodash.range";
 
 import type {
     Domain,

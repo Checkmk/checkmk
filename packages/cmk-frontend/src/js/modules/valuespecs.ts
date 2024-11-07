@@ -8,7 +8,6 @@ import "select2";
 
 import {select} from "d3";
 import $ from "jquery";
-import set from "lodash.set";
 import type {QueryOptions} from "select2";
 
 import {call_ajax} from "./ajax";
@@ -62,14 +61,16 @@ const dynamicParamsCallbacks = {
     ) {
         // fetch metrics, filtered by hostname and service from another input field
         // DropdownChoiceWithHostAndServiceHints
-        const obj = {};
+        const obj: Record<string, Record<string, Record<string, string>>> = {};
         let hint = (
             document.getElementById(
                 `${elem.id}_hostname_hint`,
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            set(obj, "context.host.host", hint);
+            obj["context"] = {};
+            obj["context"]["host"] = {};
+            obj["context"]["host"]["host"] = hint;
         }
         hint = (
             document.getElementById(
@@ -77,7 +78,9 @@ const dynamicParamsCallbacks = {
             ) as HTMLInputElement
         ).value;
         if (hint) {
-            set(obj, "context.service.service", hint);
+            obj["context"] = {};
+            obj["context"]["service"] = {};
+            obj["context"]["service"]["service"] = hint;
         }
 
         return {

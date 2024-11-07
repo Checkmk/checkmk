@@ -143,9 +143,8 @@ def test_init_language_not_existing() -> None:
     assert i18n._init_language("xz") is None
 
 
-def test_init_language_with_local_modification(
-    local_translation: None, request_context: None
-) -> None:
+@pytest.mark.usefixtures("local_translation", "request_context")
+def test_init_language_with_local_modification() -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -156,9 +155,8 @@ def test_init_language_with_local_modification(
     assert translated == "blub"
 
 
-def test_init_language_with_package_localization(
-    local_translation: None, request_context: None
-) -> None:
+@pytest.mark.usefixtures("local_translation", "request_context")
+def test_init_language_with_package_localization() -> None:
     trans = i18n._init_language("de")
     assert trans is not None
     translated = trans.gettext("pkg1")
@@ -166,12 +164,14 @@ def test_init_language_with_package_localization(
     assert translated == "lala"
 
 
-def test_get_language_local_alias(local_translation: None) -> None:
+@pytest.mark.usefixtures("local_translation")
+def test_get_language_local_alias() -> None:
     assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "Äxtended German"
 
 
-def test_local_langs_are_available_in_get_languages(local_translation: None) -> None:
+@pytest.mark.usefixtures("local_translation")
+def test_local_langs_are_available_in_get_languages() -> None:
     local_langs = [("de", "Äxtended German"), ("xz", "Xz")]
     registered_langs = i18n.get_languages()
     assert all(local_lang in registered_langs for local_lang in local_langs)

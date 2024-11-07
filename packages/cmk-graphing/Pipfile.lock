@@ -105,13 +105,13 @@
         },
         "mypy": {
             "hashes": [
-                "sha256:6e7184632d89d677973a14d00ae4d03214c8bc301ceefcdaf5c474866814c987",
-                "sha256:7f9993ad3e0ffdc95c2a14b66dee63729f021968bff8ad911867579c65d13a79",
-                "sha256:b499bc07dbdcd3de92b0a8b29fdf592c111276f6a12fe29c30f6c417dd546d12"
+                "sha256:0291a61b6fbf3e6673e3405cfcc0e7650bebc7939659fdca2702958038bd835e",
+                "sha256:164f28cb9d6367439031f4c81e84d3ccaa1e19232d9d05d37cb0bd880d3f93c2",
+                "sha256:9c250883f9fd81d212e0952c92dbfcc96fc237f4b7c92f56ac81fd48460b3e5a"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.11.2"
+            "version": "==1.13.0"
         },
         "mypy-extensions": {
             "hashes": [
@@ -274,20 +274,20 @@
         },
         "rich": {
             "hashes": [
-                "sha256:51a2c62057461aaf7152b4d611168f93a9fc73068f8ded2790f29fe2b5366d0c",
-                "sha256:8c82a3d3f8dcfe9e734771313e606b39d8247bb6b826e196f4914b333b743cf1"
+                "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098",
+                "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"
             ],
             "markers": "python_full_version >= '3.8.0'",
-            "version": "==13.9.2"
+            "version": "==13.9.4"
         },
         "ruff": {
             "hashes": [
-                "sha256:a67267654edc23c97335586774790cde402fb6bbdb3c2314f1fc087dee320bfa",
-                "sha256:b076ef717a8e5bc819514ee1d602bbdca5b4420ae13a9cf61a0c0a4f53a2baa2"
+                "sha256:2b14e77293380e475b4e3a7a368e14549288ed2931fce259a6f99978669e844f",
+                "sha256:dba53ed84ac19ae4bfb4ea4bf0172550a2285fa27fbb13e3746f04c80f7fa088"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==0.6.9"
+            "version": "==0.7.2"
         },
         "stevedore": {
             "hashes": [

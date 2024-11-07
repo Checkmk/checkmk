@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -15,7 +15,9 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
     StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import Widget
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+
+from cmk.rulesets.v1.form_specs import FormSpec
 
 
 class QuickSetupActionMode(StrEnum):
@@ -23,6 +25,7 @@ class QuickSetupActionMode(StrEnum):
     EDIT = "edit"
 
 
+FormspecMap = Mapping[FormSpecId, FormSpec]
 CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
 CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], str]

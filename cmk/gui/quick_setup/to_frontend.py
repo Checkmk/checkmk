@@ -24,9 +24,11 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     stage_components,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    FormspecMap,
     QuickSetup,
     QuickSetupAction,
     QuickSetupActionMode,
+    QuickSetupStage,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -253,14 +255,23 @@ def quick_setup_guided_mode(
     )
 
 
+def get_stages_and_formspec_map(
+    quick_setup: QuickSetup,
+    stage_index: StageIndex,
+) -> tuple[Sequence[QuickSetupStage], FormspecMap]:
+    stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
+    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
+    return stages, quick_setup_formspec_map
+
+
 def validate_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
     stage_index: StageIndex,
+    stages: Sequence[QuickSetupStage],
+    quick_setup_formspec_map: FormspecMap,
 ) -> Errors | None:
     errors = Errors(stage_index=stage_index)
-    stages = [stage() for stage in quick_setup.stages]
-    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
 
     errors.stage_errors.extend(
         _stage_validate_all_form_spec_keys_existing(
@@ -291,37 +302,46 @@ def validate_stage(
 def validate_stages(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
+    stages: Sequence[QuickSetupStage],
+    quick_setup_formspec_map: FormspecMap,
 ) -> Sequence[Errors] | None:
     return [
         errors
         for stage_index in range(len(stages_raw_formspecs))
-        if (errors := validate_stage(quick_setup, stages_raw_formspecs, StageIndex(stage_index)))
+        if (
+            errors := validate_stage(
+                quick_setup=quick_setup,
+                stages_raw_formspecs=stages_raw_formspecs,
+                stage_index=StageIndex(stage_index),
+                stages=stages,
+                quick_setup_formspec_map=quick_setup_formspec_map,
+            )
+        )
     ] or None
 
 
 def retrieve_next_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
+    stages: Sequence[QuickSetupStage],
+    quick_setup_formspec_map: FormspecMap,
+    stage_index: StageIndex,
     prefill_data: ParsedFormData | None = None,
 ) -> Stage:
-    current_stage_index = StageIndex(len(stages_raw_formspecs) - 1)
-    stages = [stage() for stage in quick_setup.stages]
-    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
-
     current_stage_recap = [
         r
-        for recap_callable in stages[current_stage_index].recap
+        for recap_callable in stages[stage_index].recap
         for r in recap_callable(
             quick_setup.id,
-            current_stage_index,
+            stage_index,
             _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
         )
     ]
 
-    if current_stage_index == len(quick_setup.stages) - 1:
+    if stage_index == len(quick_setup.stages) - 1:
         return Stage(next_stage_structure=None, stage_recap=current_stage_recap)
 
-    next_stage = stages[current_stage_index + 1]
+    next_stage = quick_setup.stages[stage_index + 1]()
 
     return Stage(
         next_stage_structure=NextStageStructure(
@@ -349,18 +369,15 @@ def retrieve_next_stage(
 
 
 def complete_quick_setup(
-    quick_setup: QuickSetup,
     action: QuickSetupAction,
     mode: QuickSetupActionMode,
     stages_raw_formspecs: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
     object_id: str | None = None,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
         redirect_url=action.action(
-            _form_spec_parse(
-                stages_raw_formspecs,
-                build_quick_setup_formspec_map([stage() for stage in quick_setup.stages]),
-            ),
+            _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             mode,
             object_id,
         )
@@ -368,7 +385,8 @@ def complete_quick_setup(
 
 
 def quick_setup_overview_mode(
-    quick_setup: QuickSetup, prefill_data: ParsedFormData | None
+    quick_setup: QuickSetup,
+    prefill_data: ParsedFormData | None,
 ) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
     return QuickSetupAllStages(

@@ -28,6 +28,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     AllStageErrors,
     complete_quick_setup,
+    get_stages_and_formspec_map,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
@@ -160,11 +161,19 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
 
+    stage_index = StageIndex(len(body["stages"]) - 1)
+    stages, form_spec_map = get_stages_and_formspec_map(
+        quick_setup=quick_setup,
+        stage_index=stage_index,
+    )
+
     if (
         errors := validate_stage(
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-            stage_index=StageIndex(len(body["stages"]) - 1),
+            stage_index=stage_index,
+            stages=stages,
+            quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
         return _serve_data(Stage(errors=errors), status_code=400)
@@ -181,6 +190,9 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         data=retrieve_next_stage(
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+            stages=stages,
+            quick_setup_formspec_map=form_spec_map,
+            stage_index=stage_index,
             prefill_data=prefill_data,
         )
     )
@@ -229,10 +241,18 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
 
+    stage_index = StageIndex(len(body["stages"]) - 1)
+    stages, form_spec_map = get_stages_and_formspec_map(
+        quick_setup=quick_setup,
+        stage_index=stage_index,
+    )
+
     if (
         stage_errors := validate_stages(
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+            stages=stages,
+            quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
         return _serve_data(
@@ -246,12 +266,12 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         if action.id == button_id:
             return _serve_data(
                 complete_quick_setup(
-                    quick_setup=quick_setup,
                     action=action,
                     mode=mode,
                     stages_raw_formspecs=[
                         RawFormData(stage["form_data"]) for stage in body["stages"]
                     ],
+                    quick_setup_formspec_map=form_spec_map,
                     object_id=params.get("object_id"),
                 ),
                 status_code=201,

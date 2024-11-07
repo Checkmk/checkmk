@@ -46,6 +46,7 @@ class AzureParams(BaseModel):
     config: Config
     piggyback_vms: str | None = None
     import_tags: tuple[str, str | None] | None = None
+    connection_test: bool = False  # only used by quick setup
 
 
 def _tag_based_args(tag_based: list[TagBased]) -> list[str]:
@@ -79,7 +80,10 @@ def agent_azure_arguments(
         params.secret.unsafe(),
     ]
     if params.authority:
-        args += ["--authority", params.authority if params.authority != "global_" else "global"]
+        args += [
+            "--authority",
+            params.authority if params.authority != "global_" else "global",
+        ]
     if params.subscription:
         args += ["--subscription", params.subscription]
     if params.piggyback_vms:
@@ -109,6 +113,9 @@ def agent_azure_arguments(
         args += _explicit_args(config.explicit)
     if config.tag_based:
         args += _tag_based_args(config.tag_based)
+
+    if params.connection_test:
+        args += ["--connection-test"]
 
     yield SpecialAgentCommand(command_arguments=args)
 

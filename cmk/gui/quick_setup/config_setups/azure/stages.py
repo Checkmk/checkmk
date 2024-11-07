@@ -52,6 +52,18 @@ PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
 PREV_BUTTON_LABEL = _("Back")
 
 
+def _collect_params_for_connection_test(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Mapping[str, object]:
+    """For the quick setup validation of the Azure authentication we run a connection test only.
+    The agent option "--connection-test" is added, running only a connection via the Management API
+    client (none via the Graph API client)."""
+    return {
+        **collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form),
+        "connection_test": True,
+    }
+
+
 def configure_authentication() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Prepare Azure for Checkmk"),
@@ -103,7 +115,7 @@ def configure_authentication() -> QuickSetupStage:
             qs_validators.validate_test_connection_custom_collect_params(
                 rulespec_name=RuleGroup.SpecialAgents("azure"),
                 parameter_form=azure.formspec(),
-                custom_collect_params=collect_params_with_defaults_from_form_data,
+                custom_collect_params=_collect_params_for_connection_test,
                 error_message=_(
                     "Could not access your Azure account. Please check your credentials."
                 ),

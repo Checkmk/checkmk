@@ -356,6 +356,14 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         "for in the key of the tag.",
     )
     group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
+
+    parser.add_argument(
+        "--connection-test",
+        action="store_true",
+        help="Run a connection test through the Management API only. No further agent code is "
+        "executed.",
+    )
+
     args = parser.parse_args(argv)
 
     # LOGGING
@@ -1875,6 +1883,26 @@ def process_resource_health(
         yield section
 
 
+def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
+    """We test the connection only via the Management API client, not via the Graph API client.
+    The Graph API client is used for three specific services, which are disabled in the default
+    setup when configured via the UI.
+    The Management API client is used for all other services, so we assume here that this is the
+    connection that's essential for the vast majority of setups."""
+    mgmt_client = MgmtApiClient(
+        _get_mgmt_authority_urls(args.authority, subscription),
+        deserialize_http_proxy_config(args.proxy),
+        subscription,
+    )
+    try:
+        mgmt_client.login(args.tenant, args.client, args.secret)
+    except ValueError as exc:
+        error_msg = f"Management client login failed with: {exc}\n"
+        sys.stdout.write(error_msg)
+        return 2, error_msg
+    return 0
+
+
 def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
@@ -1884,7 +1912,6 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
-
         all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
@@ -1926,12 +1953,18 @@ def main(argv=None):
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
-        return
+        return 0
+
+    if args.connection_test:
+        for subscription in args.subscriptions:
+            if (test_result := test_connection(args, subscription)) != 0:
+                return test_result
 
     LOGGER.debug("%s", selector)
     main_graph_client(args)
     for subscription in args.subscriptions:
         main_subscription(args, selector, subscription)
+    return 0
 
 
 if __name__ == "__main__":

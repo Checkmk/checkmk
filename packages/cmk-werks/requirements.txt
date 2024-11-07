@@ -1,5 +1,6 @@
 GitPython
 lxml
 markdown
+types-markdown
 pydantic
 pytest

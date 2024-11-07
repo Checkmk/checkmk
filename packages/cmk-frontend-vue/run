@@ -136,7 +136,7 @@ setup_npm() {
 }
 
 run_clean() {
-    rm -rf dist node_packages
+    rm -rf dist node_modules
 }
 
 run_build() {

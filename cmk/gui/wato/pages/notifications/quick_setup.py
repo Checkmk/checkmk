@@ -1003,46 +1003,86 @@ def recipient() -> QuickSetupStage:
         return [
             FormSpecWrapper(
                 id=FormSpecId("recipient"),
-                form_spec=ListExtended(
-                    title=Title("Recipients"),
-                    prefill=DefaultValue([("all_contacts_affected", None)]),
-                    element_template=CascadingSingleChoiceExtended(
-                        prefill=DefaultValue("all_contacts_affected"),
-                        elements=[
-                            CascadingSingleChoiceElement(
-                                title=Title("All contacts of the affected object"),
-                                name="all_contacts_affected",
-                                parameter_form=FixedValue(value=None),
-                            ),
-                            CascadingSingleChoiceElement(
-                                title=Title("All users with an email address"),
-                                name="all_email_users",
-                                parameter_form=FixedValue(value=None),
-                            ),
-                            CascadingSingleChoiceElement(
-                                title=Title("Contact group"),
-                                name="contact_group",
-                                parameter_form=ListExtended(
-                                    prefill=DefaultValue([]),
-                                    editable_order=False,
-                                    element_template=_contact_group_choice(),
+                form_spec=DictionaryExtended(
+                    elements={
+                        "receive": DictElement(
+                            required=True,
+                            parameter_form=ListExtended(
+                                title=Title("Select recipient"),
+                                prefill=DefaultValue([("all_contacts_affected", None)]),
+                                element_template=CascadingSingleChoiceExtended(
+                                    elements=[
+                                        CascadingSingleChoiceElement(
+                                            title=Title("All contacts of the affected object"),
+                                            name="all_contacts_affected",
+                                            parameter_form=FixedValue(value=None),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            title=Title("All users with an email address"),
+                                            name="all_email_users",
+                                            parameter_form=FixedValue(value=None),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            title=Title("Contact group"),
+                                            name="contact_group",
+                                            parameter_form=ListExtended(
+                                                prefill=DefaultValue([]),
+                                                element_template=_contact_group_choice(),
+                                            ),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            title=Title("Explicit email addresses"),
+                                            name="explicit_email_addresses",
+                                            parameter_form=ListOfStrings(
+                                                layout=ListOfStringsLayout.vertical,
+                                                string_spec=String(
+                                                    custom_validate=[EmailAddress()]
+                                                ),
+                                            ),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            title=Title("Specific users"),
+                                            name="specific_users",
+                                            parameter_form=ListExtended(
+                                                prefill=DefaultValue([]),
+                                                element_template=SingleChoiceExtended(
+                                                    prefill=InputHint(Title("Select user")),
+                                                    type=str,
+                                                    elements=[
+                                                        SingleChoiceElementExtended(
+                                                            name=ident,
+                                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                                        )
+                                                        for ident, title in _get_sorted_users()
+                                                    ],
+                                                ),
+                                            ),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            title=Title("All users"),
+                                            name="all_users",
+                                            parameter_form=FixedValue(value=None),
+                                        ),
+                                    ],
+                                    layout=CascadingSingleChoiceLayout.horizontal,
                                 ),
+                                add_element_label=Label("Add recipient"),
+                                editable_order=False,
+                                custom_validate=[
+                                    not_empty(
+                                        error_msg=Message("Please add at least one recipient")
+                                    )
+                                ],
                             ),
-                            CascadingSingleChoiceElement(
-                                title=Title("Explicit email addresses"),
-                                name="explicit_email_addresses",
-                                parameter_form=ListOfStrings(
-                                    layout=ListOfStringsLayout.vertical,
-                                    string_spec=String(custom_validate=[EmailAddress()]),
-                                ),
-                            ),
-                            CascadingSingleChoiceElement(
+                        ),
+                        "restrict_previous": DictElement(
+                            required=False,
+                            parameter_form=ListExtended(
                                 title=Title("Restrict previous options to"),
-                                name="restrict_previous",
-                                parameter_form=CascadingSingleChoiceExtended(
-                                    help_text=Help(
-                                        "Only users who are in all the following contact groups will receive the notification"
-                                    ),
+                                prefill=DefaultValue([]),
+                                editable_order=False,
+                                add_element_label=Label("Add restriction"),
+                                element_template=CascadingSingleChoiceExtended(
                                     prefill=DefaultValue("contact_group"),
                                     elements=[
                                         CascadingSingleChoiceElement(
@@ -1080,38 +1120,8 @@ def recipient() -> QuickSetupStage:
                                     layout=CascadingSingleChoiceLayout.horizontal,
                                 ),
                             ),
-                            CascadingSingleChoiceElement(
-                                title=Title("Specific users"),
-                                name="specific_users",
-                                parameter_form=ListExtended(
-                                    prefill=DefaultValue([]),
-                                    editable_order=False,
-                                    element_template=SingleChoiceExtended(
-                                        prefill=InputHint(Title("Select user")),
-                                        type=str,
-                                        elements=[
-                                            SingleChoiceElementExtended(
-                                                name=ident,
-                                                title=Title(title),  # pylint: disable=localization-of-non-literal-string
-                                            )
-                                            for ident, title in _get_sorted_users()
-                                        ],
-                                    ),
-                                ),
-                            ),
-                            CascadingSingleChoiceElement(
-                                title=Title("All users"),
-                                name="all_users",
-                                parameter_form=FixedValue(value=None),
-                            ),
-                        ],
-                        layout=CascadingSingleChoiceLayout.horizontal,
-                    ),
-                    add_element_label=Label("Add recipient"),
-                    editable_order=False,
-                    custom_validate=[
-                        not_empty(error_msg=Message("Please add at least one recipient"))
-                    ],
+                        ),
+                    }
                 ),
             )
         ]

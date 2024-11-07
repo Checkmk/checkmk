@@ -67,16 +67,20 @@ QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
             ),
         ),
     },
-    "recipient": [
-        ("all_contacts_affected", None),
-        ("all_email_users", None),
-        ("all_users", None),
-        ("contact_group", ["cg1", "cg2", "cg3"]),
-        ("explicit_email_addresses", ["email1@checkmk.com", "email2@checkmk.com"]),
-        ("restrict_previous", ("contact_group", ["cg1"])),
-        ("restrict_previous", ("custom_macro", [("m1", "regex1"), ("m2", "regex2")])),
-        ("specific_users", ["admin_user", "guest_user", "monitoring_user"]),
-    ],
+    "recipient": {
+        "receive": [
+            ("all_contacts_affected", None),
+            ("all_email_users", None),
+            ("all_users", None),
+            ("contact_group", ["cg1", "cg2", "cg3"]),
+            ("explicit_email_addresses", ["email1@checkmk.com", "email2@checkmk.com"]),
+            ("specific_users", ["admin_user", "guest_user", "monitoring_user"]),
+        ],
+        "restrict_previous": [
+            ("contact_group", ["cg1"]),
+            ("custom_macro", [("m1", "regex1"), ("m2", "regex2")]),
+        ],
+    },
     "sending_conditions": {
         "frequency_and_timing": {
             "restrict_timeperiod": "24X7",

@@ -128,19 +128,19 @@ AllEmailUsers = tuple[Literal["all_email_users"], None]
 ContactGroup = tuple[Literal["contact_group"], list[str]]
 ExplicitEmail = tuple[Literal["explicit_email_addresses"], list[str]]
 CustomMacro = tuple[Literal["custom_macro"], list[tuple[str, str]]]
-RestrictPrevious = tuple[Literal["restrict_previous"], ContactGroup | CustomMacro]
 SpecificUsers = tuple[Literal["specific_users"], list[str]]
 AllUsers = tuple[Literal["all_users"], None]
 
-Recipient = (
-    AllContactsAffected
-    | AllEmailUsers
-    | ContactGroup
-    | ExplicitEmail
-    | RestrictPrevious
-    | SpecificUsers
-    | AllUsers
+
+RestrictPrevious = ContactGroup | CustomMacro
+Receive = (
+    AllContactsAffected | AllEmailUsers | ContactGroup | ExplicitEmail | SpecificUsers | AllUsers
 )
+
+
+class Recipient(TypedDict):
+    receive: list[Receive]
+    restrict_previous: NotRequired[list[RestrictPrevious]]
 
 
 class FrequencyAndTiming(TypedDict):
@@ -179,6 +179,6 @@ class NotificationQuickSetupSpec(TypedDict):
     assignee_filters: AssigneeFilters
     general_filters: GeneralFilters
     notification_method: NotificationMethod
-    recipient: list[Recipient]
+    recipient: Recipient
     sending_conditions: SendingConditions
     general_properties: GeneralProperties

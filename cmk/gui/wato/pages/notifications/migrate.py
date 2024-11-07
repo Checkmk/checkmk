@@ -36,7 +36,9 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationMethod,
     NotificationQuickSetupSpec,
     OtherTriggerEvent,
+    Receive,
     Recipient,
+    RestrictPrevious,
     SendingConditions,
     ServiceEvent,
     ServiceFilters,
@@ -252,37 +254,36 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
     return notify_method
 
 
-def _get_recipients(event_rule: EventRule) -> list[Recipient]:
-    recipients: list[Recipient] = []
+def _get_recipients(event_rule: EventRule) -> Recipient:
+    receivers: list[Receive] = []
+    restrict_previous: list[RestrictPrevious] = []
     if event_rule["contact_object"]:
-        recipients.append(("all_contacts_affected", None))
+        receivers.append(("all_contacts_affected", None))
 
     if event_rule["contact_all_with_email"]:
-        recipients.append(("all_email_users", None))
+        receivers.append(("all_email_users", None))
 
     if event_rule["contact_all"]:
-        recipients.append(("all_users", None))
+        receivers.append(("all_users", None))
 
     if "contact_groups" in event_rule:
-        recipients.append(("contact_group", event_rule["contact_groups"]))
+        receivers.append(("contact_group", event_rule["contact_groups"]))
 
     if "contact_emails" in event_rule:
-        recipients.append(("explicit_email_addresses", event_rule["contact_emails"]))
-
-    if "contact_match_groups" in event_rule:
-        recipients.append(
-            ("restrict_previous", ("contact_group", event_rule["contact_match_groups"]))
-        )
-
-    if "contact_match_macros" in event_rule:
-        recipients.append(
-            ("restrict_previous", ("custom_macro", event_rule["contact_match_macros"]))
-        )
+        receivers.append(("explicit_email_addresses", event_rule["contact_emails"]))
 
     if "contact_users" in event_rule:
-        recipients.append(("specific_users", event_rule["contact_users"]))
+        receivers.append(("specific_users", event_rule["contact_users"]))
 
-    return recipients
+    if "contact_match_groups" in event_rule:
+        restrict_previous.append(("contact_group", event_rule["contact_match_groups"]))
+
+    if "contact_match_macros" in event_rule:
+        restrict_previous.append(("custom_macro", event_rule["contact_match_macros"]))
+    recipient = Recipient(receive=receivers)
+    if restrict_previous:
+        recipient["restrict_previous"] = restrict_previous
+    return recipient
 
 
 def _get_sending_conditions(event_rule: EventRule) -> SendingConditions:
@@ -549,7 +550,7 @@ def _set_notification_effect_parameters(
 
 
 def _set_recipients(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:
-    for recipient in notification["recipient"]:
+    for recipient in notification["recipient"]["receive"]:
         match recipient:
             case ("all_contacts_affected", None):
                 event_rule["contact_object"] = True
@@ -563,12 +564,6 @@ def _set_recipients(event_rule: EventRule, notification: NotificationQuickSetupS
             case ("explicit_email_addresses", list() as emails):
                 event_rule["contact_emails"] = emails
 
-            case ("restrict_previous", ("contact_group", list() as r_contact_groups)):
-                event_rule["contact_match_groups"] = r_contact_groups
-
-            case ("restrict_previous", ("custom_macro", list() as custom_macros)):
-                event_rule["contact_match_macros"] = custom_macros
-
             case ("specific_users", list() as users):
                 event_rule["contact_users"] = users
 
@@ -577,6 +572,17 @@ def _set_recipients(event_rule: EventRule, notification: NotificationQuickSetupS
 
             case _:
                 raise ValueError(f"Invalid recipient: {recipient}")
+
+    for restriction in notification["recipient"].get("restrict_previous", []):
+        match restriction:
+            case ("contact_group", list() as r_contact_groups):
+                event_rule["contact_match_groups"] = r_contact_groups
+
+            case ("custom_macro", list() as custom_macros):
+                event_rule["contact_match_macros"] = custom_macros
+
+            case _:
+                raise ValueError(f"Invalid restriction: {restriction}")
 
 
 def _set_sending_conditions(

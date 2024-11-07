@@ -103,3 +103,15 @@ permission_registry.register(
         defaults=["user"],
     )
 )
+
+
+PermissionMapHTML = Permission(
+    section=PermissionSectionNagVis,
+    name="Map_editHtml_*",
+    title=_l("Allow to add or edit elements that contain HTML"),
+    description=_l(
+        "Grants the access to add or edit elements that contain HTML. "
+        "Enabling this for other users except admins is considered a security risk. "
+    ),
+    defaults=["admin"],
+)

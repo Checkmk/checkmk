@@ -1001,6 +1001,7 @@ def recipient() -> QuickSetupStage:
                     title=Title("Recipients"),
                     prefill=DefaultValue([("all_contacts_affected", None)]),
                     element_template=CascadingSingleChoiceExtended(
+                        prefill=DefaultValue("all_contacts_affected"),
                         elements=[
                             CascadingSingleChoiceElement(
                                 title=Title("All contacts of the affected object"),

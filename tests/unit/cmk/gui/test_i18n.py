@@ -143,18 +143,6 @@ def test_init_language_not_existing() -> None:
     assert i18n._init_language("xz") is None
 
 
-@pytest.mark.skip(reason="This test relies on an external translation file")
-def test_init_language_only_builtin(request_context: None) -> None:
-    trans = i18n._init_language("de")
-    assert isinstance(trans, gettext.GNUTranslations)
-    assert trans.info()["language"] == "de"
-    assert trans.info()["project-id-version"] == "Checkmk user interface translation 0.1"
-
-    translated = trans.gettext("bla")
-    assert isinstance(translated, str)
-    assert translated == "bla"
-
-
 def test_init_language_with_local_modification(
     local_translation: None, request_context: None
 ) -> None:
@@ -166,26 +154,6 @@ def test_init_language_with_local_modification(
     translated = trans.gettext("bla")
     assert isinstance(translated, str)
     assert translated == "blub"
-
-
-@pytest.mark.skip(reason="This test relies on an external translation file")
-def test_init_language_with_local_modification_fallback(
-    local_translation: None, request_context: None
-) -> None:
-    trans = i18n._init_language("de")
-    assert isinstance(trans, gettext.GNUTranslations)
-    assert trans.info()["language"] == "de"
-    assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
-
-    translated = trans.gettext("bla")
-    assert isinstance(translated, str)
-    assert translated == "blub"
-
-    # This string is localized in the standard file, not in the locally
-    # overridden file
-    translated = trans.gettext("Age")
-    assert isinstance(translated, str)
-    assert translated == "Alter"
 
 
 def test_init_language_with_package_localization(

@@ -26,9 +26,7 @@ from livestatus import SiteId
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
-from cmk.gui import i18n
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -248,40 +246,6 @@ def test_log_audit_with_html_message() -> None:
             user_id="calvin",
             action="bla",
             text=HTML.without_escaping("Message <b>bla</b>"),
-            diff_text=None,
-        ),
-    ]
-
-
-@pytest.mark.skip(reason="This test relies on an external translation file")
-@pytest.mark.usefixtures("request_context")
-def test_log_audit_with_lazystring() -> None:
-    with application_and_request_context():
-        lazy_str = i18n._l("Edit foreign %s") % "zeugs"
-        assert lazy_str == "Edit foreign zeugs"
-
-    # use localized lazy_str as input for log_audit and make sure that it is
-    # written unlocalized to audit log
-    with application_and_request_context():
-        i18n.localize("de")
-        assert lazy_str == "Fremde(n) zeugs editieren"
-
-        with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))):
-            log_audit(
-                object_ref=None,
-                user_id=UserId("calvin"),
-                action="bla",
-                message=lazy_str,
-            )
-
-    store = AuditLogStore()
-    assert store.read() == [
-        AuditLogStore.Entry(
-            time=1523811000,
-            object_ref=None,
-            user_id="calvin",
-            action="bla",
-            text="Edit foreign zeugs",
             diff_text=None,
         ),
     ]

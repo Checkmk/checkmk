@@ -11,8 +11,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr
-
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -223,7 +221,7 @@ class ModePatternEditor(WatoMode):
         service_labels: Labels = {}
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if self._hostname:
-            service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
+            service_desc = self._get_service_description(self._hostname, self._item)
             host = folder.host(self._hostname)
             if not host:
                 raise MKUserError("host", _("The given host does not exist"))
@@ -251,9 +249,7 @@ class ModePatternEditor(WatoMode):
                 for _folder, rulenr, rule in folder_rules:
                     # Check if this rule applies to the given host/service
                     if self._hostname:
-                        service_desc = self._get_service_description(
-                            self._hostname, "logwatch", self._item
-                        )
+                        service_desc = self._get_service_description(self._hostname, self._item)
 
                         # If hostname (and maybe filename) try match it
                         rule_matches = rule.matches_host_and_item(
@@ -361,10 +357,8 @@ class ModePatternEditor(WatoMode):
                     )
                     html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-    def _get_service_description(
-        self, hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
-    ) -> ServiceName:
-        return cmk.base.export.service_description(hostname, check_plugin_name, item)
+    def _get_service_description(self, hostname: HostName, item: Item) -> ServiceName:
+        return cmk.base.export.logwatch_service_description(hostname, item)
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):

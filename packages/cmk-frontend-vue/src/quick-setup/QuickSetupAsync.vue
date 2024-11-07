@@ -255,6 +255,10 @@ const save = async (buttonId: string) => {
 }
 
 const update = (index: number, value: StageData) => {
+  if (loading.value) {
+    return
+  }
+
   stages.value[index]!.user_input = value
   formData.value[index] = value
 }

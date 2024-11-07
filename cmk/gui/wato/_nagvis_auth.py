@@ -26,6 +26,7 @@ def register(
     permission_registry.register(PermissionMapView)
     permission_registry.register(PermissionMapEdit)
     permission_registry.register(PermissionMapDelete)
+    permission_registry.register(PermissionMapHTML)
 
 
 class PermissionSectionNagVis(PermissionSection):
@@ -100,4 +101,16 @@ PermissionMapDelete = Permission(
     title=_l("Delete permitted maps"),
     description=_l("Permits to delete all maps the user is contact for."),
     defaults=["user"],
+)
+
+
+PermissionMapHTML = Permission(
+    section=PermissionSectionNagVis,
+    name="Map_editHtml_*",
+    title=_l("Allow to add or edit elements that contain HTML"),
+    description=_l(
+        "Grants the access to add or edit elements that contain HTML. "
+        "Enabling this for other users except admins is considered a security risk. "
+    ),
+    defaults=["admin"],
 )

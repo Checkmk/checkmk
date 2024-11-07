@@ -21,6 +21,12 @@ import cmk.utils.paths
 from cmk.gui import i18n
 from cmk.gui.utils.script_helpers import application_and_request_context
 
+LOCAL_DE_TRANSLATIONS = {
+    "Age": "Alter",
+    "Edit foreign %s": "Fremde(n) %s editieren",
+    "bla": "blub",
+}
+
 
 @pytest.fixture(scope="session")
 def locale_base_dir() -> Path:
@@ -44,7 +50,7 @@ def compile_builtin_po_files(locale_base_dir):
 
 @pytest.fixture()
 def local_translation() -> None:
-    _add_local_translation("de", "Äxtended German", texts={"bla": "blub"})
+    _add_local_translation("de", "Äxtended German", texts=LOCAL_DE_TRANSLATIONS)
     _add_local_translation("xz", "Xz", texts={"bla": "blub"})
     # Add one package localization
     _add_local_translation("packages/pkg_name/de", "pkg_name German", texts={"pkg1": "lala"})
@@ -95,8 +101,8 @@ def test_underscore_without_localization(flask_app: flask.Flask) -> None:
         assert i18n._("") == ""
 
 
-@pytest.mark.skip(reason="This test relies on an external translation file")
-def test_underscore_localization(flask_app: flask.Flask) -> None:
+@pytest.mark.usefixtures("local_translation")
+def test_underscore_localization() -> None:
     with application_and_request_context():
         i18n.localize("de")
         assert i18n.get_current_language() == "de"
@@ -109,7 +115,7 @@ def test_underscore_localization(flask_app: flask.Flask) -> None:
         assert i18n.get_current_language() == "en"
 
 
-@pytest.mark.skip(reason="This test relies on an external translation file")
+@pytest.mark.usefixtures("local_translation")
 def test_lazy_localization() -> None:
     with application_and_request_context():
         lazy_str = i18n._l("Age")
@@ -124,7 +130,7 @@ def test_lazy_localization() -> None:
         assert lazy_str == "Age"
 
 
-@pytest.mark.skip(reason="This test relies on an external translation file")
+@pytest.mark.usefixtures("local_translation")
 def test_lazy_with_args() -> None:
     with application_and_request_context():
         lazy_str = i18n._l("Edit foreign %s") % "zeugs"

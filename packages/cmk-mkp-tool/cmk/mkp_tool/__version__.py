@@ -5,4 +5,6 @@
 
 import importlib.metadata
 
-__version__ = importlib.metadata.version("cmk.mkp_tool")
+__version__ = "0.2.0"
+# FIXME (TBC): switch back to the importlib mechanism
+# __version__ = importlib.metadata.version("cmk.mkp_tool")

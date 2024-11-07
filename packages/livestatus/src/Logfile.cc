@@ -9,10 +9,12 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"
 
@@ -41,6 +43,12 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     , _read_pos{}
     , _lineno(0)
     , _logclasses_read(0) {}
+
+std::ostream &operator<<(std::ostream &os, const Logfile &f) {
+    return os << "log file " << f.path() << " (starts at timestamp "
+              << std::chrono::system_clock::to_time_t(f.since()) << " = "
+              << FormattedTimePoint(f.since()) << ")";
+}
 
 void Logfile::load(const LogRestrictions &restrictions) {
     const unsigned missing_types = restrictions.log_entry_classes.to_ulong() &

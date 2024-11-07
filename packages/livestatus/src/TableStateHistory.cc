@@ -294,8 +294,10 @@ void handle_log_initial_states(
 }
 }  // namespace
 
-bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period) {
+bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period,
+                                              Logger *logger) {
     if (log_files_->begin() == log_files_->end()) {
+        Debug(logger) << "no log files found";
         return false;
     }
 
@@ -309,12 +311,17 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period) {
         --it_logs_;  // go back in history
     }
 
-    // Check if 'until' is within these logfiles
     if (it_logs_->second->since() >= period.until) {
-        // All logfiles are too new, invalid timeframe -> No data available.
-        // Return empty result.
+        Debug(logger) << "all log files are newer than " << period;
         return false;
     }
+
+    // Now it_logs points to the newest log file that starts strictly before the
+    // query period. If there is no such log file, it points to the first one.
+    // In other words, we are at the newest log file with the guarantee that
+    // older log files do not contain entries withing the query period.
+    Debug(logger) << "starting state history computation at "
+                  << *it_logs_->second;
 
     // Determine initial logentry
     entries_ = getEntries();
@@ -347,15 +354,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     // Store hosts/services that we have filtered out here
     object_blacklist_t object_blacklist;
 
+    auto *logger = core.loggerLivestatus();
     auto period = LogPeriod::make(query);
     if (period.empty()) {
-        Debug(core.loggerLivestatus()) << "empty query period " << period;
+        Debug(logger) << "empty query period " << period;
         return;
     }
 
-    if (!it.rewind_to_start(period)) {
-        Debug(core.loggerLivestatus())
-            << "no monitoring history for the query period " << period;
+    if (!it.rewind_to_start(period, logger)) {
         return;
     }
 

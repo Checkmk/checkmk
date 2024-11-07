@@ -24,6 +24,7 @@ class ICore;
 class IHost;
 class IService;
 class LogEntry;
+class Logger;
 class Query;
 class User;
 
@@ -36,7 +37,7 @@ public:
         , it_logs_{log_files.end()}
         , max_lines_per_log_file_{max_lines_per_log_file} {}
 
-    bool rewind_to_start(const LogPeriod &period);
+    bool rewind_to_start(const LogPeriod &period, Logger *logger);
     LogEntry *getNextLogentry();
 
 private:

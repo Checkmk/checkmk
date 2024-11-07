@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
@@ -76,5 +77,7 @@ private:
                    unsigned missing_types);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
 };
+
+std::ostream &operator<<(std::ostream &os, const Logfile &f);
 
 #endif  // Logfile_h

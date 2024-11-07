@@ -20,8 +20,12 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
+class _Timeout(RuntimeError):
+    pass
+
+
 @contextmanager
-def _timeout(seconds: int, exc: Exception) -> Iterator[None]:
+def _timeout(seconds: int, exc: _Timeout) -> Iterator[None]:
     """Context manager to raise an exception after a timeout"""
 
     def _raise_timeout(signum, frame):
@@ -45,7 +49,7 @@ def _get_broker_test_pid(line: str) -> int:
 
 def _wait_for_pong_ready(stdout: IO[str]) -> None:
     """Wait for the cmk-broker-test to be ready"""
-    with _timeout(3, RuntimeError("cmk-broker-test did not start in time")):
+    with _timeout(3, _Timeout("`cmk-broker-test` did not start in time")):
         for line in stdout:
             if "Waiting for messages" in line:
                 return
@@ -60,19 +64,37 @@ def _broker_pong(site: Site) -> Iterator[subprocess.Popen]:
     pid = _get_broker_test_pid(pong.stdout.readline())
 
     _wait_for_pong_ready(pong.stdout)
+    logger.info("`cmk-broker-test` found to be ready on %s", site.id)
 
     try:
         yield pong
     finally:
+        if pong.returncode is not None:
+            err = f"`cmk-broker-test` stopped unexpectedly on {site.id}"
+            logger.error(err)
+            logger.error("stdout: %s", pong.stdout)
+            logger.error("stderr: %s", pong.stderr)
+            raise RuntimeError(err)
         site.run(["kill", "-s", "SIGINT", str(pid)])
         pong.wait(timeout=3)
 
 
 def _check_broker_ping(site: Site, destination: str) -> None:
     """Send a message to the site and wait for a response"""
-    # timeout of 5 seconds should be plenty, we're observing oom ~10ms
-    result = site.run(["cmk-broker-test", destination], timeout=5)
-    logger.info(result.stdout)
+    output = []
+
+    def _collect_output_while_waiting(stream: IO[str]) -> None:
+        while line := stream.readline():
+            output.append(line)
+
+    try:
+        # timeout of 5 seconds should be plenty, we're observing oom ~10ms
+        with _timeout(5, _Timeout(f"`cmk-broker-test {destination}` timed out after 5s")):
+            ping = site.execute(["cmk-broker-test", destination], stdout=subprocess.PIPE, text=True)
+            assert ping.stdout
+            _collect_output_while_waiting(ping.stdout)
+    finally:
+        logger.info("".join(output))
 
 
 @skip_if_saas_edition
@@ -85,7 +107,7 @@ class TestCMKBrokerTest:
 
     def test_ping_fail(self, central_site: Site) -> None:
         """Test if we can't ping a non-existing site"""
-        with pytest.raises(subprocess.TimeoutExpired):
+        with pytest.raises(_Timeout):
             _check_broker_ping(central_site, "this-goes-nowhere")
 
     def test_pong(self, central_site: Site) -> None:

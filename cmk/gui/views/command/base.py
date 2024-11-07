@@ -97,8 +97,13 @@ class Command(abc.ABC):
     @property
     def confirm_title(self) -> str:
         if self._confirm_title:
-            return str(self._confirm_title)
-        return ("%s %s?") % (self.confirm_button, str(self.title).lower())
+            return str(
+                self._confirm_title() if callable(self._confirm_title) else self._confirm_title
+            )
+        return ("%s %s?") % (
+            self.confirm_button() if callable(self.confirm_button) else self.confirm_button,
+            str(self.title).lower(),
+        )
 
     def confirm_dialog_options(
         self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows

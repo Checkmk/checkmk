@@ -25,6 +25,14 @@ pub struct Section {
     sep: char,
     cache_age: Option<u32>,
     decorated: bool,
+    header_name: String,
+}
+
+fn to_header_name(name: &str) -> &str {
+    match name {
+        names::CLUSTERS => "cluster",
+        _ => name,
+    }
 }
 
 impl Section {
@@ -44,15 +52,19 @@ impl Section {
             sep: section.sep(),
             cache_age,
             decorated: !get_plain_section_names().contains(section.name()),
+            header_name: to_header_name(section.name()).into(),
         }
     }
 
     pub fn to_plain_header(&self) -> String {
-        header(&self.name, self.sep)
+        header(&self.header_name, self.sep)
     }
 
     pub fn to_work_header(&self) -> String {
-        header(&(self.name.clone() + &self.cached_header()), self.sep)
+        header(
+            &(self.header_name.clone() + &self.cached_header()),
+            self.sep,
+        )
     }
 
     fn cached_header(&self) -> String {
@@ -69,6 +81,10 @@ impl Section {
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    pub fn header_name(&self) -> &str {
+        &self.header_name
     }
 
     pub fn sep(&self) -> char {
@@ -338,5 +354,11 @@ mod tests {
             sqls::Id::Connections
         );
         assert!(get_sql_id("").is_none());
+    }
+
+    #[test]
+    fn test_header_name() {
+        assert_eq!(to_header_name(names::CLUSTERS), "cluster");
+        assert_eq!(to_header_name("xxx"), "xxx");
     }
 }

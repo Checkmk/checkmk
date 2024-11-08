@@ -154,41 +154,24 @@ def main() {
 
     shout("agents");
 
-    def win_project_name_id = -1;
-    def win_py_project_name_id = -1;
-    def win_project_name = "${jenkins_base_folder}/winagt-build";
-    def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
-
-    stage("Build agent artifacts fast") {
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
-            dir("${checkout_dir}") {
-                // Initialize our virtual environment before parallelization
-                sh("make .venv");
-
-                win_project_name_id = get_valid_build_id(win_project_name);
-                win_py_project_name_id = get_valid_build_id(win_py_project_name);
-
-                println("matching win_project_name_id: ${win_project_name_id}");
-                println("matching win_py_project_name_id: ${win_py_project_name_id}");
-            }
-        }
-    }
-
     // TODO iterate over all agent variants and put the condition per edition
     //      in the conditional_stage
     def agent_builds = agent_list.collectEntries { agent ->
         [("agent ${agent}") : {
                 conditional_stage("Build Agent for ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
                     if (agent == "windows") {
+                        def win_project_name = "${jenkins_base_folder}/winagt-build";
+                        def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
+
                         copyArtifacts(
                             projectName: win_project_name,
-                            selector: specific(win_project_name_id), // buildNumber shall be a string
+                            selector: specific(get_valid_build_id(win_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
                         );
                         copyArtifacts(
                             projectName: win_py_project_name,
-                            selector: specific(win_py_project_name_id), // buildNumber shall be a string
+                            selector: specific(get_valid_build_id(win_py_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
                         );
@@ -740,27 +723,42 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
 
 def get_valid_build_id(jobName) {
     /// In order to avoid unnessessary builds for the given job, we check if we
-    /// can use a completed or currently running build instead.
+    /// can use the last completed build instead.
     /// That's the case if the following requirements are met:
-    /// - there _is_ a completed build
+    /// - there _is_ a last completed build
     /// - it's been successful
     /// - it's from same day
     /// - VERSION parameter matches with current build's
     /// - and must be one of 'git' or 'daily'
-    /// Only in the special case if a job is triggered but still in the queue
-    /// upstream_build can not find that job and will thereby trigger a new job
+
+    def currentBuildVersion = params.VERSION;
+    def lastBuild = Jenkins.instance.getItemByFullName(jobName).lastCompletedBuild;
+    if (lastBuild) {
+        def currentBuildDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+
+        def lastBuildParameters = (
+            lastBuild.getAllActions().find{ it instanceof ParametersAction }?.parameters.collectEntries { entry ->
+                [(entry.name) : entry.value]});
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(lastBuild.getTime());
+        def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);
+
+        if (currentBuildVersion == "daily" &&
+            lastBuildParameters.VERSION == currentBuildVersion &&
+            lastBuildDay == currentBuildDay &&
+            lastBuild.result.toString().equals("SUCCESS")
+        ) {
+            return lastBuild.getId();
+        }
+        print("Some attributes of the last ${jobName} build force a rebuild.");
+    }
 
     show_duration("Build ${jobName}") {
-        def currentBuildVersion = params.VERSION;
-        def job = upstream_build(
-            download: false,
-            // force_build: currentBuildVersion in ["daily", "git"],
-            relative_job_name: jobName,
-            build_params: [
-                VERSION: currentBuildVersion,
-            ],
-        );
-        return "${job.number}";
+        return build(
+            job: jobName,
+            parameters: [string(name: "VERSION", value: currentBuildVersion)]
+        ).getId();
     }
 }
 

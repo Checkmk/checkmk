@@ -55,6 +55,20 @@ def _wait_for_pong_ready(stdout: IO[str]) -> None:
                 return
 
 
+def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
+    """Wait for the cmk-broker-test pong to receive a message"""
+    try:
+        with _timeout(
+            wait_for, _Timeout(f"`cmk-broker-test` did not receive anything within {wait_for}s")
+        ):
+            for line in stdout:
+                if "Received message" in line:
+                    return True
+    except _Timeout:
+        pass
+    return False
+
+
 @contextmanager
 def _broker_pong(site: Site) -> Iterator[subprocess.Popen]:
     """Make sure the site echoes messages"""
@@ -147,6 +161,17 @@ class TestCMKBrokerTest:
         """Test if we can pong"""
         with _broker_pong(central_site) as pong:
             assert pong.returncode is None  # it's running
+
+    def test_pong_received_message(self, central_site: Site, remote_site: Site) -> None:
+        """Test if the `pong_received_message` works as intended"""
+        with _broker_pong(central_site) as pong:
+            assert pong.stdout  # for mypy
+            # nothing received so far
+            assert not pong_received_message(pong.stdout, wait_for=1)
+            # we can't ping locally, that will bypass the pong
+            _check_broker_ping(remote_site, central_site.id)
+            # if the _check_broker_ping worked, the pong *must* have received a message
+            assert pong_received_message(pong.stdout, wait_for=1)
 
 
 @skip_if_saas_edition

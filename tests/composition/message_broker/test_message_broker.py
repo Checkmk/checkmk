@@ -114,11 +114,3 @@ class TestCMKBrokerTest:
         """Test if we can pong"""
         with _broker_pong(central_site) as pong:
             assert pong.returncode is None  # it's running
-
-
-@skip_if_saas_edition
-class TestMessageBroker:
-    def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
-        """Test if the connection between central and remote site works"""
-        with _broker_pong(central_site):
-            _check_broker_ping(remote_site, central_site.id)

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -151,7 +151,10 @@ def _parameter_valuespec_jenkins_jobs() -> Dictionary:
                         ),
                         "null": DictElement(
                             parameter_form=ServiceState(
-                                title=Title("State when last build result is: module not built"),
+                                title=Title(
+                                    "State when last build result is: module not built (legacy)"
+                                ),
+                                help_text=Help("Only valid in Jenkins versions <= 1.622."),
                                 prefill=DefaultValue(1),
                             )
                         ),

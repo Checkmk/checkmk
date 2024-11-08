@@ -20,7 +20,6 @@ from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.parameters import TimespecificParameters
 
 __all__ = [
     "AutocheckServiceWithNodes",
@@ -35,13 +34,9 @@ __all__ = [
 ]
 
 
-ComputeCheckParameters = Callable[
-    [HostName, CheckPluginName, Item, Mapping[str, object]],
-    TimespecificParameters,
-]
-GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-GetEffectiveHost = Callable[[HostName, str], HostName]
-GetEffectiveHostOfAc = Callable[[HostName, CheckPluginName, Item], HostName]
+_GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
+_GetEffectiveHost = Callable[[HostName, str], HostName]
+_GetEffectiveHostOfAc = Callable[[HostName, CheckPluginName, Item], HostName]
 
 
 class AutocheckServiceWithNodes(NamedTuple):
@@ -234,8 +229,8 @@ def set_autochecks_of_cluster(
     nodes: Iterable[HostName],
     hostname: HostName,
     new_services_with_nodes_by_host: Mapping[HostName, Sequence[AutocheckServiceWithNodes]],
-    get_effective_host: GetEffectiveHost,
-    get_service_description: GetServiceDescription,
+    get_effective_host: _GetEffectiveHost,
+    get_service_description: _GetServiceDescription,
 ) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
@@ -268,7 +263,7 @@ def set_autochecks_for_effective_host(
     autochecks_owner: HostName,
     effective_host: HostName,
     new_services: Iterable[AutocheckEntry],
-    get_effective_host: GetEffectiveHostOfAc,
+    get_effective_host: _GetEffectiveHostOfAc,
 ) -> None:
     """Set all services of an effective host, and leave all other services alone."""
     store = AutochecksStore(autochecks_owner)
@@ -306,8 +301,8 @@ def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntr
 def remove_autochecks_of_host(
     hostname: HostName,
     remove_hostname: HostName,
-    get_effective_host: GetEffectiveHost,
-    get_service_description: GetServiceDescription,
+    get_effective_host: _GetEffectiveHost,
+    get_service_description: _GetServiceDescription,
 ) -> int:
     """Remove all autochecks of a host while being cluster-aware
 
@@ -387,8 +382,8 @@ class DiscoveredLabelsCache:
         self,
         hostname: HostName,
         service_desc: ServiceName,
-        get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectiveHost,
+        get_service_description: _GetServiceDescription,
+        get_effective_host: _GetEffectiveHost,
     ) -> Labels:
         # NOTE: this returns an empty labels object for non-existing services
         if (hosts_service_labels := self._discovered_labels_of.get(hostname)) is None:
@@ -406,8 +401,8 @@ class DiscoveredLabelsCache:
     def _get_hosts_discovered_service_labels(
         self,
         host_name: HostName,
-        get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectiveHost,
+        get_service_description: _GetServiceDescription,
+        get_effective_host: _GetEffectiveHost,
     ) -> Mapping[ServiceName, Labels]:
         return (
             self._get_real_hosts_discovered_service_labels(host_name, get_service_description)
@@ -420,7 +415,7 @@ class DiscoveredLabelsCache:
     def _get_real_hosts_discovered_service_labels(
         self,
         node_name: HostName,
-        get_service_description: GetServiceDescription,
+        get_service_description: _GetServiceDescription,
     ) -> Mapping[ServiceName, Labels]:
         return {
             get_service_description(
@@ -433,8 +428,8 @@ class DiscoveredLabelsCache:
         self,
         cluster_name: HostName,
         nodes: Sequence[HostName],
-        get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectiveHost,
+        get_service_description: _GetServiceDescription,
+        get_effective_host: _GetEffectiveHost,
     ) -> Mapping[ServiceName, Labels]:
         return {
             get_service_description(

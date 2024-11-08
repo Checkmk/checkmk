@@ -225,10 +225,13 @@ def main() {
         }
     }
 
+    /*
+    /// see https://jira.lan.tribe29.com/browse/CMK-19571
     stage("Plot cache hits") {
         bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
         bazel_logs.try_plot_cache_hits(bazel_log_prefix, [distro]);
     }
+    */
 
     stage("Archive stuff") {
         dir("${checkout_dir}") {

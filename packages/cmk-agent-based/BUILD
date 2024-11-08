@@ -4,6 +4,12 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//omd/packages/rules:doctest.bzl", "py_doc_test")
+load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
+
+mypy_cli(
+    name = "mypy_cli",
+    mypy_requirement = requirement("mypy"),
+)
 
 exports_files([
     "pyproject.toml",
@@ -49,10 +55,12 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = ["cmk-agent-based"],
+    tags = ["no-mypy"],
 )
 
 py_pytest_main(
     name = "__test__",
+    tags = ["no-mypy"],
 )
 
 py_test(

@@ -37,6 +37,8 @@ ignore = [
 # see ruff.toml for the isort section
 
 [tool.mypy]
+follow_imports = "silent"
+follow_imports_for_stubs = true
 enable_error_code = [
   "explicit-override",
   "ignore-without-code",

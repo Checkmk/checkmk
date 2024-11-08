@@ -27,7 +27,24 @@ python.toolchain(
     python_version = PYTHON_VERSION,
 )
 
+bazel_dep(name = "rules_mypy", version = "0.11.0")
+
+# Switch to upstream as soon https://github.com/theoremlp/rules_mypy/pull/34 is merged
+git_override(
+    module_name = "rules_mypy",
+    commit = "5b0d3b12c55f06c683c366bd10357b980892783b",
+    remote = "https://github.com/TimotheusBachinger/rules_mypy",
+)
+
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+
+# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
+git_override(
+    module_name = "aspect_rules_py",
+    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
+    remote = "https://github.com/TimotheusBachinger/rules_py",
+)
+
 bazel_dep(name = "aspect_rules_lint", version = "1.0.2")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")

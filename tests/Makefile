@@ -38,6 +38,11 @@ SYSTEM_TESTS := \
     test-gui-crawl \
     test-xss-crawl \
     test-gui-e2e \
+    test-gui-e2e-non-free \
+    test-gui-e2e-cee \
+    test-gui-e2e-cce \
+    test-gui-e2e-cme \
+    test-gui-e2e-cse \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
@@ -239,8 +244,22 @@ test-gui-crawl: prepare-playwright
 test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
-test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
+	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+
+test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
+
+test-gui-e2e-cce:
+	EDITION=cce $(MAKE) test-gui-e2e-non-free
+
+test-gui-e2e-cme:
+	EDITION=cme $(MAKE) test-gui-e2e-non-free
+
+test-gui-e2e-cse:
+	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
 test-integration:
 	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)

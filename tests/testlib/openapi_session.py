@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 import time
 from collections.abc import Iterator, Mapping
@@ -585,12 +586,16 @@ class CMKOpenApiSession(requests.Session):
         redirect_url: str,
     ) -> None:
         response = None
-        while redirect_url:
+        for attempt in itertools.count():
             if (running_time := time.time() - start) > timeout:
-                msg = f"Wait for completion timed out after {running_time}s for {operation}; URL={redirect_url}!"
+                msg = (
+                    f"Wait for completion timed out after {running_time}s / {attempt} attempts"
+                    f" for {operation}; URL={redirect_url}!"
+                )
                 if response and response.content:
                     msg += f"; Last response: {response.status_code}; {response.content}"
                 raise TimeoutError(msg)
+
             logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
             response = self.request(
                 method=http_method_for_redirection,
@@ -599,9 +604,12 @@ class CMKOpenApiSession(requests.Session):
             )
             if response.status_code == 204 and not response.content:
                 logger.info(
-                    "Wait for completion finished after %0.2fs for %s", running_time, operation
+                    "Wait for completion finished after %0.2fs / %s attempts for %s",
+                    running_time,
+                    attempt,
+                    operation,
                 )
-                break
+                return
 
             if not 300 <= response.status_code < 400:
                 raise UnexpectedResponse.from_response(response)

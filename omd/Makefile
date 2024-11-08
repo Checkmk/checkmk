@@ -80,7 +80,6 @@ endif
 ifeq ($(EDITION),cloud)
 PACKAGES += enterprise
 PACKAGES += cloud
-PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),saas)
 PACKAGES += enterprise
@@ -107,7 +106,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(MKDIR) $(BUILD_BASE_DIR)
 	$(RM) $@
 	for P in $(PACKAGES); do \
-	  inc_path=$$(test -f "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" && echo "$(NON_FREE_PACKAGE_DIR)/$$P/$$P.make" || echo "$(PACKAGE_DIR)/$$P/$$P.make"); \
+	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
 	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \
@@ -183,19 +182,12 @@ $(INSTALL): $(INSTALL_LOG_TARGETS)
 $(SKEL_PERMISSIONS): $(INSTALL)
 # Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	set -e ; \
-	OUTPUT=""; \
-	cd packages ; for p in $(PACKAGES) ; do \
+	set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
+	        echo "# $$p" ; \
+	        cat $$p/skel.permissions ; \
 	    fi ; \
-	done ; \
-	cd ../../non-free/packages ; for p in $(PACKAGES) ; do \
-	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
-	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
-	    fi ; \
-	done ; \
-	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)
+	done > $(SKEL_PERMISSIONS)
 
 $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)
 	# Create link to default version

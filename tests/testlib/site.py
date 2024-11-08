@@ -16,7 +16,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
 from getpass import getuser
 from pathlib import Path
@@ -1478,6 +1478,15 @@ class SiteFactory:
         logger.debug("Created site %s", site.id)
         return site
 
+    def setup_customers(self, site: Site, customers: Sequence[str]) -> None:
+        if not self.version.is_managed_edition():
+            return
+        customer_content = "\n".join(
+            f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
+            for customer in customers
+        )
+        site.write_text_file("etc/check_mk/multisite.d/wato/customers.mk", customer_content)
+
     def get_existing_site(
         self,
         name: str,
@@ -1769,6 +1778,7 @@ class SiteFactory:
             site = self.get_site(name)
 
         try:
+            self.setup_customers(site, ["customer1", "customer2"])
             self.initialize_site(
                 site,
                 init_livestatus=init_livestatus,

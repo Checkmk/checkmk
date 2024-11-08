@@ -26,7 +26,13 @@ def main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
-    def make_target = "test-gui-e2e-docker";
+    short_editions = [
+        'enterprise': 'cee',
+        'cloud': 'cce',
+        'managed': 'cme',
+        'saas': 'cse',
+    ];
+    def make_target = "test-gui-e2e-${short_editions[edition]}-docker";
     def download_dir = "package_download";
 
     currentBuild.description += (

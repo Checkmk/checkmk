@@ -325,18 +325,12 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period,
 
     // Determine initial log entry, setting entries_ and it_entries_
     setEntries();
-    if (entries_->empty()) {
-        return true;
-    }
-    if (it_logs_ == newest_log) {
-        return true;
-    }
-    it_entries_ = entries_->end();
-    // If the last entry is younger than the start of the query period, then we
-    // use this log file, too.
-    if (--it_entries_ != entries_->begin() &&
-        it_entries_->second->time() >= period.since) {
-        it_entries_ = entries_->begin();
+    // If the last entry is older than the start of the query period, then
+    // ignore this log file. Well, almost...
+    if (!entries_->empty() && it_logs_ != newest_log &&
+        ((--entries_->end()) == entries_->begin() ||
+         (--entries_->end())->second->time() < period.since)) {
+        it_entries_ = --entries_->end();  // TODO(sp) Is the decrement an error?
     }
     return true;
 }

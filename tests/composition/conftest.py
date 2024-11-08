@@ -12,12 +12,16 @@ from typing import Any, Literal
 
 import pytest
 
-from tests.testlib.agent import agent_controller_daemon, install_agent_package
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    bake_agents,
+    download_and_install_agent_package,
+    install_agent_package,
+)
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import is_containerized, run
 
-from tests.composition.constants import TEST_HOST_1
-from tests.composition.utils import bake_agent, get_cre_agent_path
+from tests.composition.utils import get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
 
@@ -146,14 +150,11 @@ def _add_remote_site_to_central_site(
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(central_site: Site) -> Path:
-    return install_agent_package(_agent_package_path(central_site))
-
-
-def _agent_package_path(site: Site) -> Path:
-    if site.version.is_raw_edition():
-        return get_cre_agent_path(site)
-    return bake_agent(site, TEST_HOST_1)[1]
+def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) -> Path:
+    if central_site.version.is_raw_edition():
+        return install_agent_package(get_cre_agent_path(central_site))
+    bake_agents(central_site)
+    return download_and_install_agent_package(central_site, tmp_path)
 
 
 @pytest.fixture(name="agent_ctl", scope="function")

@@ -46,9 +46,11 @@ class TestMessage(BaseModel):
 
 APP_NAME = AppName(__doc__.split("\n", 1)[0])
 
-QUEUE_NAME = QueueName("debugging-test")
+QUEUE_PING = QueueName("debugging-test-ping")
+QUEUE_PONG = QueueName("debugging-test-pong")
 
-ROUTING_KEY = RoutingKey(QUEUE_NAME.value)
+ROUTING_KEY_PING = RoutingKey(QUEUE_PING.value)
+ROUTING_KEY_PONG = RoutingKey(QUEUE_PONG.value)
 
 
 def write(message: str) -> None:
@@ -74,7 +76,7 @@ def parse_arguments(args: list[str]) -> Arguments:
 def _callback_pong(
     channel: Channel[TestMessage], delivery_tag: DeliveryTag, received: TestMessage
 ) -> None:
-    """Upon receiving a message, publish a response"""
+    """Upon receiving a message (ping), publish a response (pong)"""
     response = TestMessage.new(received.uuid)
     write(
         "===================================\n"
@@ -84,7 +86,7 @@ def _callback_pong(
         "Responding with message:\n"
         f"  {response!r}\n"
     )
-    channel.publish_for_site(received.publisher_site, response, routing=ROUTING_KEY)
+    channel.publish_for_site(received.publisher_site, response, routing=ROUTING_KEY_PONG)
     channel.acknowledge(delivery_tag)
 
 
@@ -92,9 +94,9 @@ def _command_pong() -> int:
     write("Establishing connection to local broker\n")
     with Connection(APP_NAME, omd_root) as conn:
         channel = conn.channel(TestMessage)
-        channel.queue_declare(queue=QUEUE_NAME)
+        channel.queue_declare(queue=QUEUE_PING)
         write("Waiting for messages\n")
-        channel.consume(QUEUE_NAME, _callback_pong)
+        channel.consume(QUEUE_PING, _callback_pong)
     return 42  # can't happen
 
 
@@ -128,15 +130,15 @@ def _command_ping(site_id: str) -> int:
     write("Establishing connection to local broker\n")
     with Connection(APP_NAME, omd_root) as conn:
         channel = conn.channel(TestMessage)
-        channel.queue_declare(queue=QUEUE_NAME)
+        channel.queue_declare(queue=QUEUE_PONG)
 
         message = TestMessage.new()
 
         write("Sending message:\n" f"  {message!r}\n")
-        channel.publish_for_site(site_id, message, routing=ROUTING_KEY)
+        channel.publish_for_site(site_id, message, routing=ROUTING_KEY_PING)
 
         write("Waiting for response\n")
-        channel.consume(QUEUE_NAME, _make_callback_ping(message))
+        channel.consume(QUEUE_PONG, _make_callback_ping(message))
 
     return 23  # can't happen
 

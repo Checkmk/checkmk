@@ -46,6 +46,10 @@ ap_state_map = {
 def parse_huawei_wlc_aps(string_table):
     parsed = {}
 
+    # Filter Access Point Information from Offline Access Points
+    down_states = [key for key, value in ap_state_map.items() if value.value == 2]
+    string_table[0] = [line for line in string_table[0] if line[0] not in down_states]
+
     aps_info1, aps_info2 = string_table
 
     # Access-Points
@@ -56,10 +60,6 @@ def parse_huawei_wlc_aps(string_table):
         # aps_info1             aps_info2
         # [line]        -->     [2,4GHZ Info]
         #               -->     [5GHz Info]
-
-        # Skip Access Points Reported by the Controller which have no Channel Information
-        if 2 * idx + 1 >= len(aps_info2):
-            continue
         
         status, mem, cpu, temp, con_users = ap_info1
         ap_id, radio_state_2GHz, ch_usage_2GHz, users_online_2GHz = aps_info2[2 * idx]

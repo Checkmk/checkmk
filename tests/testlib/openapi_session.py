@@ -183,7 +183,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-        timeout: int = 120,
+        timeout: int = 300,
     ) -> bool:
         """Activate changes via REST API and wait for completion.
 

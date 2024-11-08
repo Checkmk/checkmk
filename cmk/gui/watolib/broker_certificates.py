@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
+import logging
 from collections import defaultdict
 from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
@@ -18,7 +19,6 @@ from cmk.utils import paths
 from cmk.utils.certs import save_single_cert
 
 from cmk.gui.http import request as _request
-from cmk.gui.log import logger
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
@@ -39,6 +39,8 @@ from cmk.messaging import (
     site_key_file,
     trusted_cas_file,
 )
+
+logger = logging.getLogger("cmk.web.background-job")
 
 
 class BrokerCertificateSync(abc.ABC):

@@ -2421,7 +2421,7 @@ def _handle_active_tasks(
 class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
-    housekeeping_max_count = 10
+    housekeeping_max_count = 20
 
     @classmethod
     def gui_title(cls):

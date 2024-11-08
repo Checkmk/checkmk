@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 from collections.abc import Iterator
 from pathlib import Path
 from shutil import which
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
@@ -23,13 +24,31 @@ site_factory = get_site_factory(prefix="comp_")
 logger = logging.getLogger(__name__)
 
 
+def _write_global_settings(site: Site, file_path: str, settings: dict[str, Any]) -> None:
+    new_global_settings = "".join(f"{key} = {repr(val)}\n" for key, val in settings.items())
+    site.write_text_file(file_path, new_global_settings)
+
+
+def _get_global_settings(site: Site, file_path: str) -> dict[str, Any]:
+    global_settings_text = site.read_file(file_path)
+    global_settings: dict[str, Any] = {}
+    exec(global_settings_text, {}, global_settings)
+    return global_settings
+
+
 @pytest.fixture(autouse=True, scope="session")
-def increase_background_job_logging_level():
-    logger_background = logging.getLogger("cmk.web.background-job")
-    original_level = logger_background.level
-    logger_background.setLevel(logging.DEBUG)
-    yield
-    logger_background.setLevel(original_level)
+def increase_background_job_logging_level(central_site: Site) -> Iterator[None]:
+    global_settings_rel_path = "etc/check_mk/multisite.d/wato/global.mk"
+    global_setting = _get_global_settings(central_site, global_settings_rel_path)
+    ori_global_setting = copy.deepcopy(global_setting)
+    try:
+        global_setting["log_levels"] = {"cmk.web.background-job": 10}
+        _write_global_settings(central_site, global_settings_rel_path, global_setting)
+        central_site.omd("restart", "apache")
+        yield
+    finally:
+        _write_global_settings(central_site, global_settings_rel_path, ori_global_setting)
+        central_site.omd("restart", "apache")
 
 
 @pytest.fixture(name="central_site", scope="session")

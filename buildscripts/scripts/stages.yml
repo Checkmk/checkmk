@@ -430,7 +430,7 @@ STAGES:
     - NAME: "Package cmk-ccc"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_CCC_FILES
       DIR: "packages/cmk-ccc"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-ccc.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-ccc.txt"
       TEXT_ON_SKIP: "No cmk-ccc files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
 

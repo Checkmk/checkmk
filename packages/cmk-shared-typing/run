@@ -116,30 +116,26 @@ parse_options() {
 }
 
 setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
     # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
     source "$(bazel info workspace)"/.venv_uv/bin/activate
+    SETUP_VENV_RAN=yes
+}
+
+setup_node_modules() {
+    test -d "node_modules" && return
+    ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
+    export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
+    export NODE_OPTIONS="--dns-result-order=ipv4first"
+    npm ci --yes --unsafe-perm --audit=false
 }
 
 setup() {
-    test "${SETUP_RAN}" = "yes" && return
     setup_venv
-    hash -r
-
-    if [ ! -d node_modules ]; then
-        ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
-        export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
-        export NODE_OPTIONS="--dns-result-order=ipv4first"
-        npm \
-            ci \
-            --yes \
-            --unsafe-perm \
-            --audit=false
-    fi
-
-    SETUP_RAN=yes
+    setup_node_modules
 }
 
 run_clean() {

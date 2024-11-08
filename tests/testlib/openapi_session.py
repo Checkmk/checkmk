@@ -564,36 +564,49 @@ class CMKOpenApiSession(requests.Session):
         try:
             yield None
         except Redirect as redirect:
-            if not redirect.redirect_url.startswith("http://"):
-                redirect_url = f"http://{self.host}:{self.port}{redirect.redirect_url}"
-            else:
-                redirect_url = redirect.redirect_url
-
-            response = None
-            while redirect_url:
-                if (running_time := time.time() - start) > timeout:
-                    msg = f"Wait for completion timed out after {running_time}s for {operation}; URL={redirect_url}!"
-                    if response and response.content:
-                        msg += f"; Last response: {response.status_code}; {response.content}"
-                    raise TimeoutError(msg)
-                logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
-                response = self.request(
-                    method=http_method_for_redirection,
-                    url=redirect_url,
-                    allow_redirects=False,
-                )
-                if response.status_code == 204 and not response.content:
-                    logger.info(
-                        "Wait for completion finished after %0.2fs for %s", running_time, operation
-                    )
-                    break
-
-                if not 300 <= response.status_code < 400:
-                    raise UnexpectedResponse.from_response(response)
-
-                time.sleep(0.5)
+            self._handle_wait_redirect(
+                start,
+                timeout,
+                http_method_for_redirection,
+                operation,
+                redirect.redirect_url
+                if redirect.redirect_url.startswith("http://")
+                else f"http://{self.host}:{self.port}{redirect.redirect_url}",
+            )
         else:
             logger.info("Wait for completion finished instantly for %s", operation)
+
+    def _handle_wait_redirect(
+        self,
+        start: float,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+        operation: str,
+        redirect_url: str,
+    ) -> None:
+        response = None
+        while redirect_url:
+            if (running_time := time.time() - start) > timeout:
+                msg = f"Wait for completion timed out after {running_time}s for {operation}; URL={redirect_url}!"
+                if response and response.content:
+                    msg += f"; Last response: {response.status_code}; {response.content}"
+                raise TimeoutError(msg)
+            logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
+            response = self.request(
+                method=http_method_for_redirection,
+                url=redirect_url,
+                allow_redirects=False,
+            )
+            if response.status_code == 204 and not response.content:
+                logger.info(
+                    "Wait for completion finished after %0.2fs for %s", running_time, operation
+                )
+                break
+
+            if not 300 <= response.status_code < 400:
+                raise UnexpectedResponse.from_response(response)
+
+            time.sleep(0.5)
 
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None

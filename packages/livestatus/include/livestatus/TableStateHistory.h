@@ -41,7 +41,7 @@ public:
     LogEntry *getNextLogentry();
 
 private:
-    const Logfile::map_type *getEntries();
+    void setEntries();
 
     const LogFiles *log_files_;
     LogFiles::const_iterator it_logs_;

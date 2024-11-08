@@ -183,8 +183,8 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-const Logfile::map_type *LogEntryForwardIterator::getEntries() {
-    return it_logs_->second->getEntriesFor({
+void LogEntryForwardIterator::setEntries() {
+    entries_ = it_logs_->second->getEntriesFor({
         .max_lines_per_log_file = max_lines_per_log_file_,
         .log_entry_classes =
             LogEntryClasses{}
@@ -192,6 +192,7 @@ const Logfile::map_type *LogEntryForwardIterator::getEntries() {
                 .set(static_cast<int>(LogEntry::Class::program))
                 .set(static_cast<int>(LogEntry::Class::state)),
     });
+    it_entries_ = entries_->begin();
 }
 
 LogEntry *LogEntryForwardIterator::getNextLogentry() {
@@ -205,8 +206,7 @@ LogEntry *LogEntryForwardIterator::getNextLogentry() {
             return nullptr;
         }
         ++it_logs_;
-        entries_ = getEntries();
-        it_entries_ = entries_->begin();
+        setEntries();
     }
     return it_entries_->second.get();
 }
@@ -324,13 +324,11 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period,
                   << *it_logs_->second;
 
     // Determine initial log entry, setting entries_ and it_entries_
-    entries_ = getEntries();
+    setEntries();
     if (entries_->empty()) {
-        it_entries_ = entries_->begin();
         return true;
     }
     if (it_logs_ == newest_log) {
-        it_entries_ = entries_->begin();
         return true;
     }
     it_entries_ = entries_->end();

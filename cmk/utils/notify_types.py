@@ -851,51 +851,51 @@ class _EventRuleMandatory(TypedDict):
     notify_plugin: NotifyPlugin
 
 
-class EventRule(_EventRuleMandatory, total=False):
+class EventRule(_EventRuleMandatory):
     """Event Rule
 
     used to be dict[str, Any], feel free to add stuff"""
 
-    user_id: str | None
-    comment: str
-    docu_url: str
-    alert_handler: tuple[HandlerName, HandlerParameters]
-    contact: str
-    contact_emails: list[str]
-    contact_groups: list[str]
-    contact_match_groups: list[str]
-    contact_match_macros: list[tuple[str, str]]
-    contact_users: list[str]
-    match_attempt: tuple[int, int]
-    match_checktype: list[str]
-    match_contactgroups: list[str]
-    match_contacts: list[str]
-    match_ec: ConditionEventConsoleAlertsType | Literal[False]
-    match_escalation: tuple[int, int]
-    match_escalation_throttle: tuple[int, int]
-    match_exclude_hosts: list[str]
-    match_exclude_servicegroups: list[str]
-    match_exclude_servicegroups_regex: MatchServiceGroupsRegex
-    match_exclude_services: list[str]
-    match_folder: str
-    match_host_event: Sequence[HostEventType]
-    match_hostgroups: list[str]
-    match_hostlabels: dict[str, str]
-    match_hosts: list[str]
-    match_hosttags: Mapping[TagGroupID, TagCondition]
-    match_notification_comment: str
-    match_plugin_output: str
-    match_service_event: Sequence[ServiceEventType]
-    match_servicegroups: list[str]
-    match_servicegroups_regex: MatchServiceGroupsRegex
-    match_servicelabels: dict[str, str]
-    match_services: list[str]
-    match_site: list[str]
-    match_sl: tuple[int, int]
-    match_timeperiod: TimeperiodName
-    bulk: NotifyBulkType
-    match_service_level: tuple[int, int]
-    match_only_during_timeperiod: str
+    user_id: NotRequired[str | None]
+    comment: NotRequired[str]
+    docu_url: NotRequired[str]
+    alert_handler: NotRequired[tuple[HandlerName, HandlerParameters]]
+    contact: NotRequired[str]
+    contact_emails: NotRequired[list[str]]
+    contact_groups: NotRequired[list[str]]
+    contact_match_groups: NotRequired[list[str]]
+    contact_match_macros: NotRequired[list[tuple[str, str]]]
+    contact_users: NotRequired[list[str]]
+    match_attempt: NotRequired[tuple[int, int]]
+    match_checktype: NotRequired[list[str]]
+    match_contactgroups: NotRequired[list[str]]
+    match_contacts: NotRequired[list[str]]
+    match_ec: NotRequired[ConditionEventConsoleAlertsType | Literal[False]]
+    match_escalation: NotRequired[tuple[int, int]]
+    match_escalation_throttle: NotRequired[tuple[int, int]]
+    match_exclude_hosts: NotRequired[list[str]]
+    match_exclude_servicegroups: NotRequired[list[str]]
+    match_exclude_servicegroups_regex: NotRequired[MatchServiceGroupsRegex]
+    match_exclude_services: NotRequired[list[str]]
+    match_folder: NotRequired[str]
+    match_host_event: NotRequired[Sequence[HostEventType]]
+    match_hostgroups: NotRequired[list[str]]
+    match_hostlabels: NotRequired[dict[str, str]]
+    match_hosts: NotRequired[list[str]]
+    match_hosttags: NotRequired[Mapping[TagGroupID, TagCondition]]
+    match_notification_comment: NotRequired[str]
+    match_plugin_output: NotRequired[str]
+    match_service_event: NotRequired[Sequence[ServiceEventType]]
+    match_servicegroups: NotRequired[list[str]]
+    match_servicegroups_regex: NotRequired[MatchServiceGroupsRegex]
+    match_servicelabels: NotRequired[dict[str, str]]
+    match_services: NotRequired[list[str]]
+    match_site: NotRequired[list[str]]
+    match_sl: NotRequired[tuple[int, int]]
+    match_timeperiod: NotRequired[TimeperiodName]
+    bulk: NotRequired[NotifyBulkType]
+    match_service_level: NotRequired[tuple[int, int]]
+    match_only_during_timeperiod: NotRequired[str]
 
 
 NotifyRuleInfo = tuple[str, EventRule, str]

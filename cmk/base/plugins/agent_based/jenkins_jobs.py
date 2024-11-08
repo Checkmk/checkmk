@@ -48,7 +48,9 @@ MAP_BUILD_STATES = {
     "unstable": 1,  # some errors but not fatal
     "failure": 2,  # fatal error
     "aborted": 0,  # manually aborted
-    "null": 1,  # module was not built
+    # The 'null' build state is only valid in Jenkins <= v1.622 - relevant commit:
+    # https://github.com/jenkinsci/jenkins/commit/90f29f8cbc68312cbdbef8d4101fa5b5e971e021
+    "null": State.WARN,  # module was not built (legacy)
     "none": 0,  # running
 }
 

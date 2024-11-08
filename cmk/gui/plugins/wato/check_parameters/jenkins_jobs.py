@@ -132,7 +132,10 @@ def _parameter_valuespec_jenkins_jobs():
                         (
                             "null",
                             MonitoringState(
-                                title=_("State when last build result is: module not built"),
+                                title=_(
+                                    "State when last build result is: module not built (legacy)"
+                                ),
+                                help=_("Only valid in Jenkins versions <= 1.622."),
                                 default_value=1,
                             ),
                         ),

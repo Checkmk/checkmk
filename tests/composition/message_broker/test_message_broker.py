@@ -66,6 +66,9 @@ def _broker_pong(site: Site) -> Iterator[subprocess.Popen]:
     _wait_for_pong_ready(pong.stdout)
     logger.info("`cmk-broker-test` found to be ready on %s", site.id)
 
+    # We had a race condition with not received messages. Maybe queue declaration returns too early?
+    site.run(["rabbitmqctl", "status"])  # collapse wave function of declared queue
+
     try:
         yield pong
     finally:
@@ -114,3 +117,11 @@ class TestCMKBrokerTest:
         """Test if we can pong"""
         with _broker_pong(central_site) as pong:
             assert pong.returncode is None  # it's running
+
+
+@skip_if_saas_edition
+class TestMessageBroker:
+    def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
+        """Test if the connection between central and remote site works"""
+        with _broker_pong(central_site):
+            _check_broker_ping(remote_site, central_site.id)

@@ -4,7 +4,7 @@
 IDP_URL="${1-http://localhost:5551}"
 BASE_URL="${2:-http://localhost:5000}"
 CLIENT_ID="${3:-notused}"
-TENANT_ID="${4:-123tenant567}"
+TENANT_ID="${4:-092fd467-0d2f-4e0a-90b8-4ee6494f7453}"
 
 # Create JSON object
 printf '{\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s"\n}' \

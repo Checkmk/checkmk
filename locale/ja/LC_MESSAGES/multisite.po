@@ -153,6 +153,10 @@ msgstr " および%s '%s'"
 msgid " and the %s '%s'."
 msgstr " および %s '%s'."
 
+#, fuzzy
+msgid " changes"
+msgstr "%d の変更"
+
 #, python-format
 msgid " for %d of %d recipients."
 msgstr " 受信者%dのうち%dに対して。"
@@ -455,6 +459,10 @@ msgstr "%d ロックされたサイト"
 #, python-format
 msgid "%d locked sites"
 msgstr "%d ロック済サイト"
+
+#, fuzzy, python-format
+msgid "%d notification rule(s) "
+msgstr "通知ルール"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -851,6 +859,10 @@ msgstr "(無効)"
 msgid "(don't send notifications to Event Console)"
 msgstr "(イベントコンソールに通知を送信しないでください)"
 
+#, fuzzy
+msgid "(finished)"
+msgstr "終了しました"
+
 msgid "(ignore)"
 msgstr "(無視)"
 
@@ -898,6 +910,10 @@ msgstr "(オーバーライド <b>ユーザー名</b>)"
 
 msgid "(please select)"
 msgstr "(選んでください)"
+
+#, fuzzy
+msgid "(running)"
+msgstr "稼働中"
 
 msgid "(select target folder)"
 msgstr "(対象フォルダを選択)"
@@ -2010,10 +2026,6 @@ msgstr ""
 msgid "A connection with the same sites already exists."
 msgstr "その名前のフォルダはすでに存在します。"
 
-#, fuzzy
-msgid "A connection with this ID already exists."
-msgstr "このIDのルールパックはすでに存在します。"
-
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
@@ -2033,6 +2045,11 @@ msgstr ""
 "ダッシュボードにはオプションのコンテキストを含めることができます。たとえば、"
 "単一のホストの情報のみを表示、または正規表現に一致する一連のサービスの情報の"
 "みを表示するように制限できます。"
+
+msgid ""
+"A deactivated rule is not effective. However, it remains in place so that it "
+"can be reactivated later, for example."
+msgstr ""
 
 msgid ""
 "A delay can be configured here so that multiple changes can be activated in "
@@ -3628,9 +3645,6 @@ msgstr "このホストのコメントまたは説明追加"
 
 msgid "Add a first row with column titles"
 msgstr "列タイトルを含む最初の行を追加します"
-
-msgid "Add a title or describe this rule"
-msgstr "このルールのタイトルまたは説明の追加"
 
 msgid "Add additional folder"
 msgstr "フォルダを追加します"
@@ -5453,6 +5467,11 @@ msgstr "すべてのページ"
 msgid "All parents are down"
 msgstr "すべての親がダウンしています"
 
+msgid ""
+"All passwords, secrets and other sensitive data are stored in the Password "
+"Store. Changes to the \"linked.secret\" entry can be made here."
+msgstr ""
+
 msgid "All pending hosts of customer"
 msgstr "顧客の保留中の全ホスト"
 
@@ -6119,6 +6138,10 @@ msgstr ""
 "リクエストの処理中に内部エラーが発生しました。この問題は、Checkmk管理者に報告"
 "できます。詳細情報は、クラッシュレポートページまたは<tt>var/log/web.log</tt>"
 "にあります。"
+
+#, fuzzy
+msgid "An old configuration is required for existing connections."
+msgstr "動的ホスト構成接続"
 
 #, python-format
 msgid ""
@@ -8186,6 +8209,10 @@ msgstr "Azure VMインスタンス"
 
 msgid "Azure VNet Gateway"
 msgstr "AzureVNetゲートウェイ"
+
+#, fuzzy
+msgid "Azure services found!"
+msgstr "ホスト/サービスが見つかりません。"
 
 msgid "Azure services to monitor"
 msgstr "監視するAzureサービス"
@@ -10530,11 +10557,6 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
-msgid ""
-"Cannot change the customer of this site because it is in a peer to peer "
-"broker connection."
-msgstr ""
-
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -12679,6 +12701,10 @@ msgstr "クラスターノードの定義"
 msgid "Cluster problems"
 msgstr "クラスターの問題"
 
+#, fuzzy
+msgid "Cluster resource aggregation"
+msgstr "集計をフィルタリングする"
+
 msgid "Cluster statistics"
 msgstr "クラスター統計"
 
@@ -13407,6 +13433,10 @@ msgid "Configure host"
 msgstr "設定"
 
 #, fuzzy
+msgid "Configure host and authority"
+msgstr "コンフィギュレーション"
+
+#, fuzzy
 msgid "Configure host and regions"
 msgstr "コンフィギュレーション"
 
@@ -13854,9 +13884,6 @@ msgstr ""
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
-msgid "Connecter and connectee sites must belong to the same customers."
-msgstr ""
-
 #, fuzzy
 msgid "Connecter:"
 msgstr "接続する"
@@ -13878,6 +13905,10 @@ msgstr "接続時間"
 
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "接続が確立されました。接続設定は問題ないようです。"
+
+#, fuzzy, python-format
+msgid "Connection id %s already exists."
+msgstr "このIDのルールパックはすでに存在します。"
 
 msgid "Connection is disabled"
 msgstr "接続が無効になっています"
@@ -14272,6 +14303,10 @@ msgstr "同期中に、インポートされたユーザーIDを小文字に変�
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "失敗したリモートまたはローカル配信を再試行する前のクールダウン"
+
+#, fuzzy
+msgid "Cooldown interval to update update "
+msgstr "更新チェックの間隔"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr "失敗後再接続を試みるまでのクールダウン時間"
@@ -15879,6 +15914,10 @@ msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
 #, fuzzy
 msgid "DCD Work State"
 msgstr "最悪の状態"
+
+#, fuzzy
+msgid "DCD batch history"
+msgstr "履歴を検索"
 
 msgid "DCD status"
 msgstr "DCDステータス"
@@ -20000,10 +20039,6 @@ msgstr "動的構成ロギング"
 msgid "Dynamic configuration site activate changes delay"
 msgstr "動的構成ロギング"
 
-#, fuzzy
-msgid "Dynamic configuration site update interval"
-msgstr "動的構成ロギング"
-
 msgid "Dynamic host configuration"
 msgstr "ダイナミックホスト構成"
 
@@ -20294,6 +20329,10 @@ msgstr "%sを編集する"
 msgid "Edit %s notification parameter #%s"
 msgstr "通知ルール %d を編集する"
 
+#, fuzzy, python-format
+msgid "Edit %s parameter"
+msgstr "モデルパラメータ"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "%s を編集: %s"
@@ -20457,10 +20496,6 @@ msgstr "モデルを編集する"
 
 msgid "Edit my view"
 msgstr "ビューを編集する"
-
-#, fuzzy
-msgid "Edit notification parameter"
-msgstr "この通知ルールを編集する"
 
 #, python-format
 msgid "Edit notification rule %d"
@@ -21385,6 +21420,9 @@ msgstr ""
 msgid "English"
 msgstr "English"
 
+msgid "Enrich with usage data"
+msgstr ""
+
 msgid "Ensure always-increasing .rpm and .deb versions."
 msgstr ".rpmと.debのバージョンを常に増やすようにする。"
 
@@ -21404,6 +21442,9 @@ msgid ""
 msgstr ""
 "通知するユーザーIDのリストをここに入力します。これらのユーザーは、通知を受け"
 "るために少なくとも1つの連絡先グループのメンバーである必要があります。"
+
+msgid "Enter a plugin output to define what to filter for."
+msgstr ""
 
 msgid "Enter address"
 msgstr "住所を入力してください"
@@ -21663,10 +21704,6 @@ msgstr "エラーレート"
 #, python-format
 msgid "Error showing view: %s"
 msgstr "ビューの表示中にエラーが発生しました: %s"
-
-#, fuzzy
-msgid "Error updating broker connections."
-msgstr "サイト接続 %sを編集する"
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -25752,6 +25789,10 @@ msgstr ""
 msgid "HW Information"
 msgstr "HW情報"
 
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Checkmkサーバーのハードウェア情報"
+
 msgid "HW containers"
 msgstr "HWコンテナ"
 
@@ -26167,6 +26208,14 @@ msgid ""
 msgstr ""
 "ここでは、特定の状態に対する背景色を設定できます。ダウンタイム中のホストの色"
 "は、他のすべての色付けより優先します。"
+
+#, fuzzy
+msgid ""
+"Here you can configure the credentials to be used. Keep in mind that the "
+"<tt>automation</tt> user needs to exist if you choose this option"
+msgstr ""
+"ここで、使用する資格情報を構成できます。このオプションを選択する場合は、<tt>"
+"自動化</tt>ユーザーが存在する必要があることに注意してください"
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -31291,9 +31340,6 @@ msgstr "特定のアラートルールグループ内のすべてのアラート
 msgid "Ignore certificate errors (insecure)"
 msgstr "証明書エラーを無視する(安全でない)"
 
-msgid "Ignore certificate errors (unsecure)"
-msgstr "証明書エラーを無視する(安全でない)"
-
 msgid "Ignore compliance state"
 msgstr "コンプライアンス状態を無視する"
 
@@ -31446,6 +31492,10 @@ msgstr "有効なアノテーションをすべてインポートする"
 #, fuzzy
 msgid "Import all valid tags"
 msgstr "有効なアノテーションをすべてインポートする"
+
+#, fuzzy
+msgid "Import annotations as host labels"
+msgstr "サービス名としてポート名を使用する"
 
 #, fuzzy
 msgid "Import hosts"
@@ -31928,6 +31978,17 @@ msgid ""
 msgstr ""
 "このディレクトリには、<tt> check_mk_agent </tt>、<tt> waitmax </tt>、および場"
 "合によってはエージェントが必要とするその他のバイナリがインストールされます。"
+
+msgid ""
+"In this field you can add a URL linking to a page with related, useful "
+"information. You can use:<br><ul><li>an absolute URL starting with the "
+"protocol (<tt>http(s)://</tt>)</li><li>or a relative URL either starting "
+"with a slash (<tt>/something</tt> will be resolved to <tt>https://"
+"mycheckmkserver/something</tt>) or without a slash (<tt>somethingelse</tt> "
+"will be resolved to <tt>https://mycheckmkserver/mysite/check_mk/"
+"somethingelse</tt>)</li></ul>The link will be displayed as an icon in the "
+"description on the overview page of the related rule set."
+msgstr ""
 
 msgid "In this folder"
 msgstr "このフォルダ内"
@@ -38820,6 +38881,10 @@ msgstr ""
 msgid "Metric not found"
 msgstr "メトリックが見つかりません"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "メトリクス"
+
 msgid "Metrics"
 msgstr "メトリクス"
 
@@ -40900,9 +40965,6 @@ msgstr "実行されたことはありません"
 msgid "Never install Python with the agent"
 msgstr "エージェントと一緒にPythonをインストールしないでください"
 
-msgid "Never logged in"
-msgstr "ログインしたことはありません"
-
 msgid "Never remove files newer than"
 msgstr "設定期間より新しいファイルは削除しない"
 
@@ -40911,6 +40973,10 @@ msgstr "ピギーバックデータは絶対に使用しないでください"
 
 msgid "New"
 msgstr "新しい"
+
+#, fuzzy, python-format
+msgid "New %s parameter"
+msgstr "モデルパラメータ"
 
 msgid "New Action"
 msgstr "新しいアクション"
@@ -40967,10 +41033,6 @@ msgstr "管理対象オブジェクト"
 
 msgid "New name"
 msgstr "新しい名前"
-
-#, fuzzy
-msgid "New notification parameter"
-msgstr "通知フェーズ"
 
 #, fuzzy, python-format
 msgid "New notification rule #%d successfully created!"
@@ -41045,9 +41107,6 @@ msgstr "通知プラグイン"
 msgid "Next step: Recipient"
 msgstr "受信者"
 
-msgid "Next step: Saving"
-msgstr ""
-
 #, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "保留中の接続"
@@ -41055,6 +41114,10 @@ msgstr "保留中の接続"
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "コメントタイプ(ホスト/サービス)"
+
+#, fuzzy
+msgid "Next step: Summary"
+msgstr "ホスト状態概要"
 
 msgid "Nginx Server"
 msgstr "Nginxサーバー"
@@ -41084,6 +41147,10 @@ msgstr "API統合なし、Checkmkエージェントなし"
 
 #, fuzzy
 msgid "No AWS services found."
+msgstr "ホスト/サービスが見つかりません。"
+
+#, fuzzy
+msgid "No Azure services found."
 msgstr "ホスト/サービスが見つかりません。"
 
 msgid "No CSRF token received"
@@ -43740,6 +43807,10 @@ msgstr "strとunicode値のみが許可される、%sを取得"
 msgid "Only time"
 msgstr "唯一の時間"
 
+#, fuzzy
+msgid "Only unused parameters can be deleted."
+msgstr "ターゲットが削除されました。"
+
 msgid "Only upper case letters are allowed"
 msgstr "大文字のみ使用できます"
 
@@ -43749,6 +43820,9 @@ msgstr "デバイスのレベルのみを使用し、自分のレベルは無視
 msgid ""
 "Only users who are in all the following contact groups will receive the "
 "notification"
+msgstr ""
+
+msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
@@ -46755,6 +46829,10 @@ msgstr "パフォーマンスの向上"
 msgid "Performance options"
 msgstr "パフォーマンスオプション"
 
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "パフォーマンスデータ"
+
 msgid "Period"
 msgstr "ピリオド"
 
@@ -48131,6 +48209,9 @@ msgstr "プレフィックス一致"
 
 msgid "Prefix text"
 msgstr "プレフィックスのテキスト"
+
+msgid "Prefix the comment with the current date and your user name."
+msgstr ""
 
 #, fuzzy
 msgid "Prepare AWS for Checkmk"
@@ -51521,8 +51602,8 @@ msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
 
 msgid ""
-"Return to Checkmk, define a unique AWS account name, and use the Access key "
-"ID and Secret access key below."
+"Return to Checkmk, define a unique configuration name, and use the Access "
+"key ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -52705,10 +52786,6 @@ msgstr "変更をアクティブにしないでください"
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
-#, fuzzy
-msgid "Save & go to service discovery"
-msgstr "サービスディスカバリの実行と保存"
-
 msgid "Save & run connection tests"
 msgstr "保存して接続テストを実行"
 
@@ -52734,6 +52811,9 @@ msgstr "応答を保存"
 
 msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
+
+msgid "Save your progress and go to the Activate Changes page to enable it."
+msgstr ""
 
 msgid ""
 "Save your progress and go to the Activate Changes page to enable it. EC2 "
@@ -53634,11 +53714,6 @@ msgid ""
 "configuration."
 msgstr "このオプションを選択すると、%sは無効になりますが、設定には残ります。"
 
-msgid ""
-"Selecting this option will disable the rule, but it will remain in the "
-"configuration."
-msgstr "このオプションを選択すると、ルールは無効になりますが設定には残ります。"
-
 msgid "Selection"
 msgstr "選択"
 
@@ -53954,6 +54029,10 @@ msgstr "サービス正規表現:"
 msgid "Service Speed-O-Meter"
 msgstr "サービス速度-O-Meter"
 
+#, fuzzy
+msgid "Service Tags"
+msgstr "サービスタグ"
+
 msgid "Service Type"
 msgstr "サービスの種類"
 
@@ -54254,12 +54333,48 @@ msgid "Service performance data (source code)"
 msgstr "サービスパフォーマンスデータ(ソースコード)"
 
 #, python-format
-msgid "Service performance data - value number %02d"
-msgstr "サービスパフォーマンスデータ - 値番号 %02d"
-
-#, python-format
 msgid "Service performance data - value number %2d"
 msgstr "サービスパフォーマンスデータ-値番号%2d"
+
+#, fuzzy
+msgid "Service performance data - value number 01"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 02"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 03"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 04"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 05"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 06"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 07"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 08"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 09"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 10"
+msgstr "サービスパフォーマンスデータ - 値番号 %02d"
 
 msgid "Service period for hosts"
 msgstr "ホストのサービス期間"
@@ -56263,6 +56378,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "このルールパックをスキップし、次のルールパックでルールの実行を続行します"
 
+#, fuzzy
+msgid "Skipped"
+msgstr "停止"
+
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "スキップされた%s: %s"
@@ -56793,6 +56912,9 @@ msgstr "アラートのソースフィールド。デフォルト値は、着信
 
 msgid "Source name"
 msgstr "ソース名"
+
+msgid "Source state can not be equal to target state."
+msgstr ""
 
 msgid "Sources"
 msgstr "ソース"
@@ -57755,6 +57877,10 @@ msgstr "起動"
 msgid "Starting with entry"
 msgstr "エントリーから"
 
+#, fuzzy
+msgid "Starting with notification number"
+msgstr "通知番号に制限する"
+
 #, python-format
 msgid ""
 "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
@@ -58318,6 +58444,10 @@ msgid "State when last build result is: failed"
 msgstr "最後のビルド結果が次の場合の状態: 失敗"
 
 msgid "State when last build result is: module not built"
+msgstr "最後のビルド結果が次の状態: モジュールがビルドされていません"
+
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
 msgstr "最後のビルド結果が次の状態: モジュールがビルドされていません"
 
 msgid "State when last build result is: success"
@@ -59521,10 +59651,6 @@ msgstr "Systemdソケットの概要"
 msgid "Systems larger than"
 msgstr "より大きいシステム"
 
-#, fuzzy
-msgid "TBD"
-msgstr "MiB"
-
 msgid "TCP"
 msgstr "TCP"
 
@@ -60230,6 +60356,11 @@ msgid ""
 msgstr ""
 "\"認証の有効期限\"属性 (%s) は、ユーザー %s のLDAPサーバーからフェッチできま"
 "せんでした。"
+
+msgid ""
+"The \"linked.rule\" rule set contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 #, python-format
 msgid "The %s does not exist."
@@ -61598,9 +61729,20 @@ msgstr ""
 "コネクションはこの特定のフォルダにホストを作成します。一度作成されたホストは"
 "別のフォルダに移動することができます。"
 
+#, fuzzy
+msgid ""
+"The connection id must consist only of letters, digit and the underscore."
+msgstr ""
+"サイトidは、文字、数字、およびアンダースコアのみで設定する必要があります。"
+
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
+msgstr ""
+
+msgid ""
+"The connection to Azure was successful, but no services were found. If this "
+"is unintentional, please verify your configuration."
 msgstr ""
 
 msgid ""
@@ -61723,6 +61865,18 @@ msgstr "カスタムロゴ%sが削除されました。"
 #, python-format
 msgid "The customer ID %s does not exist."
 msgstr "顧客ID %s は存在しません。"
+
+#, fuzzy
+msgid ""
+"The customer of the site cannot be changed because it is connected to other "
+"sites via broker connections."
+msgstr ""
+"パスワードは変更できません(ユーザーコネクタによってロックされています)。"
+
+msgid ""
+"The customer of the sites connected by the broker connection must be the "
+"same."
+msgstr ""
 
 msgid "The dashboard element does not exist."
 msgstr "ダッシュボード要素が存在しません。"
@@ -62142,9 +62296,6 @@ msgstr ""
 "指定されたファイルは有効なiCalendarファイルではないようです。ファイル拡張子"
 "は、<tt> .ics </tt>である必要があります。"
 
-msgid "The given host does not exist"
-msgstr "指定されたホストは存在しません"
-
 msgid "The given host does not exist."
 msgstr "指定されたホストは存在しません。"
 
@@ -62250,6 +62401,13 @@ msgid ""
 msgstr ""
 "ホスト<i>%s</i>は、サイト<i>%s</i>（顧客<i>%s</i>に属する）を明示的に設定して"
 "いるため、CMEのフォルダ階層に違反します。"
+
+msgid ""
+"The host contains all information about configured data source types, tags, "
+"labels, custom properties, and the folder in which the host is located. This "
+"is where you can associate the host with specific rules via labels or tags, "
+"and make similar customization."
+msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "ホストがアクティブなサイトで見つかりませんでした。"
@@ -62668,6 +62826,14 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
+
+msgid ""
+"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
+"The dynamic host configuration connection \"linked.connection\" holds the "
+"configuration for how these other hosts are created if they don't already "
+"exist. Customization of where these hosts are created and what properties, "
+"tags, and labels they get can be done here."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -63945,13 +64111,6 @@ msgstr ""
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
 msgstr "ルールセット \"%s\" は存在しません。"
-
-msgid ""
-"The ruleset name identifies the ruleset within Checkmk. Use this name when "
-"working with the rules and ruleset REST API calls."
-msgstr ""
-"ルールセット名は、Checkmk 内のルールセットを識別します。ルールおよびルール"
-"セット REST API コールを使用する場合は、この名前を使用します。"
 
 #, fuzzy
 msgid ""
@@ -65340,6 +65499,15 @@ msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
 
 #, fuzzy
+msgid ""
+"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
+"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
+"rule."
+msgstr ""
+"ルールセット名は、Checkmk 内のルールセットを識別します。ルールおよびルール"
+"セット REST API コールを使用する場合は、この名前を使用します。"
+
+#, fuzzy
 msgid "This Ruleset sets the threshold limits for battery sensors"
 msgstr "このルールセットは、湿度センサーのしきい値制限を設定します"
 
@@ -65961,6 +66129,17 @@ msgstr ""
 "でのデータが紹介され、6月1日～6月10日までのデータは考慮されません。そして6月1"
 "日～6月15日までの予測が計算されることになります。"
 
+msgid ""
+"This field is intended for a brief description of the rule's purpose. This "
+"description will be visible on the overview page of this rule set."
+msgstr ""
+
+msgid ""
+"This field is intended for additional information that may help other users "
+"(and your future self) to understand the rule's purpose and the configured "
+"attributes. This comment is only visible in this dialog."
+msgstr ""
+
 #, python-format
 msgid "This file cannot be uploaded: %s"
 msgstr "このファイルはアップロードできません: %s"
@@ -66371,6 +66550,15 @@ msgstr ""
 "この名前は、mk_filestatsコンフィギュレーションで定義されたセクションの名前と"
 "一致する必要があります。"
 
+#, fuzzy
+msgid ""
+"This name uniquely identifies the rule set in Checkmk. Use this name when "
+"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
+"new rule."
+msgstr ""
+"ルールセット名は、Checkmk 内のルールセットを識別します。ルールおよびルール"
+"セット REST API コールを使用する場合は、この名前を使用します。"
+
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
 
@@ -66389,6 +66577,12 @@ msgstr ""
 #, fuzzy
 msgid "This notification matches"
 msgstr "ユーザー通知"
+
+#, fuzzy
+msgid ""
+"This notification parameter is used by the following notification rule(s):"
+msgstr ""
+"この通知は一致しません。グローバル通知ルールリストの理由を参照してください。"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "この数の新しいチェックはすぐにスケジュールされます"
@@ -68699,11 +68893,6 @@ msgstr ""
 "す。"
 
 msgid ""
-"This setting decides how often the dynamic configuration daemon will get "
-"updates from the the site. Default is 5 minutes"
-msgstr ""
-
-msgid ""
 "This setting decides when the activate changes operation will be timed out. "
 "Default is 2 minutes"
 msgstr ""
@@ -68747,6 +68936,12 @@ msgid ""
 "tt>."
 msgstr ""
 "この設定は、Webログ<tt>%s</tt>にログインするメッセージのタイプを決定します。"
+
+msgid ""
+"This setting defines the interval during which the dynamic configuration "
+"daemon will wait for the next updates from the connector(s) if previous "
+"updates have been placed in the queue. Default is 5 minutes."
+msgstr ""
 
 msgid ""
 "This setting delays notifications about host problems by the specified "
@@ -73396,10 +73591,6 @@ msgstr "ユーザーIDのウムラウト(非推奨)"
 msgid "Un"
 msgstr "Un"
 
-#, fuzzy
-msgid "Unable to analyze matching, because \"host\" parameter is missing"
-msgstr "\"サービス\"パラメータがないため、一致を分析できません"
-
 msgid "Unable to analyze matching, because \"service\" parameter is missing"
 msgstr "\"サービス\"パラメータがないため、一致を分析できません"
 
@@ -73424,12 +73615,6 @@ msgstr ""
 
 msgid "Unable to create authentication request"
 msgstr "認証リクエスト作成不可"
-
-#, python-format
-msgid ""
-"Unable to delete connection id: %s. Connecter and connectee sites must be "
-"specified."
-msgstr ""
 
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
@@ -73993,10 +74178,6 @@ msgstr "変換を更新"
 
 msgid "Updated attributes: "
 msgstr "更新された属性: "
-
-#, fuzzy, python-format
-msgid "Updated broker connection for site %s"
-msgstr "サイト%sへの新しい接続を作成しました"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -77028,6 +77209,10 @@ msgid "Vendor"
 msgstr "ベンダー"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "ホスト情報"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "ベンダーとデバイスID"
 
@@ -77521,6 +77706,13 @@ msgstr ""
 "コピーが、引き継ぎの際に使用されます。グローバル設定でのイベントアクションも"
 "同様です。"
 
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
+
 msgid "WCU"
 msgstr "WCU"
 
@@ -77987,7 +78179,7 @@ msgstr "どんな機会ですか？"
 msgid "What is the purpose?"
 msgstr "目的は何ですか？"
 
-msgid "What should be send out?"
+msgid "What should be sent out?"
 msgstr ""
 
 msgid ""
@@ -81313,25 +81505,6 @@ msgstr ""
 "ただし、サブフォルダーに対するアクセス許可がある場合は、フォルダーに入ること"
 "ができます。"
 
-#, python-brace-format
-msgid ""
-"You may find that some Nodes don't add resources to the overall workload "
-"your Cluster can handle. This option allows you to remove Nodes from "
-"aggregations on the Cluster host based on their role. A node will be "
-"omitted, if any of the listed {role}s matches a label with name 'node-role."
-"kubernetes.io/{role}'.  This affects the following services: Memory "
-"resources, CPU resources, Pod resources. Only Services on the Cluster host "
-"are affected. By default, Nodes with role control-plane and infra are "
-"omitted."
-msgstr ""
-"一部のノードが、クラスタが処理できる全体的なワークロードにリソースを追加しな"
-"いことに気づくかもしれません。このオプションは、Cluster ホスト上のアグリゲー"
-"ションから、そのロールに基づいてノードを削除することができます。リストアップ"
-"された {role} のいずれかが 'node-role.kubernetes.io/{role}' という名前のラベ"
-"ルにマッチする場合、ノードは省略されます。 これは、以下のサービスに影響しま"
-"す:メモリ、CPU、Podリソース。Clusterホスト上のサービスのみが影響を受けます。"
-"デフォルトでは、control-planeとinfraのロールを持つNodeは省略されます。"
-
 msgid "You may only use paths relative to the report archive base directory"
 msgstr "レポートアーカイブのベースディレクトリからの相対パスのみを使用できます"
 
@@ -82536,7 +82709,7 @@ msgid "filesystem"
 msgstr "ファイルシステム"
 
 #, fuzzy
-msgid "finished"
+msgid "finished for "
 msgstr "終了しました"
 
 #, fuzzy
@@ -82575,6 +82748,10 @@ msgstr "強制コマンドのみ"
 
 msgid "forecast trend only"
 msgstr "予測トレンドのみ"
+
+#, fuzzy
+msgid "found "
+msgstr "円形"
 
 msgid "fourth week"
 msgstr "4週目"
@@ -83685,10 +83862,6 @@ msgstr "ソケットは、ネットワークに残っているパケットを閉
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
 
-#, fuzzy
-msgid "starting with notification number"
-msgstr "通知番号に制限する"
-
 msgid "status entries"
 msgstr "ステータスエントリ"
 
@@ -83977,6 +84150,10 @@ msgstr "コンテキスト付き"
 msgid "with duration"
 msgstr "期間あり"
 
+#, fuzzy
+msgid "without a description were found"
+msgstr "サービス%sの簡単な説明"
+
 msgid "without context"
 msgstr "文脈なし"
 
@@ -84041,6 +84218,76 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#, fuzzy
+#~ msgid "Save & go to service discovery"
+#~ msgstr "サービスディスカバリの実行と保存"
+
+#, fuzzy
+#~ msgid "TBD"
+#~ msgstr "MiB"
+
+#~ msgid "Add a title or describe this rule"
+#~ msgstr "このルールのタイトルまたは説明の追加"
+
+#, fuzzy
+#~ msgid "Error updating broker connections."
+#~ msgstr "サイト接続 %sを編集する"
+
+#~ msgid "Never logged in"
+#~ msgstr "ログインしたことはありません"
+
+#~ msgid ""
+#~ "Selecting this option will disable the rule, but it will remain in the "
+#~ "configuration."
+#~ msgstr ""
+#~ "このオプションを選択すると、ルールは無効になりますが設定には残ります。"
+
+#~ msgid "The given host does not exist"
+#~ msgstr "指定されたホストは存在しません"
+
+#, fuzzy
+#~ msgid "Unable to analyze matching, because \"host\" parameter is missing"
+#~ msgstr "\"サービス\"パラメータがないため、一致を分析できません"
+
+#, fuzzy, python-format
+#~ msgid "Updated broker connection for site %s"
+#~ msgstr "サイト%sへの新しい接続を作成しました"
+
+#, fuzzy
+#~ msgid "Dynamic configuration site update interval"
+#~ msgstr "動的構成ロギング"
+
+#, fuzzy
+#~ msgid "Edit notification parameter"
+#~ msgstr "この通知ルールを編集する"
+
+#~ msgid "Ignore certificate errors (unsecure)"
+#~ msgstr "証明書エラーを無視する(安全でない)"
+
+#, fuzzy
+#~ msgid "New notification parameter"
+#~ msgstr "通知フェーズ"
+
+#, python-brace-format
+#~ msgid ""
+#~ "You may find that some Nodes don't add resources to the overall workload "
+#~ "your Cluster can handle. This option allows you to remove Nodes from "
+#~ "aggregations on the Cluster host based on their role. A node will be "
+#~ "omitted, if any of the listed {role}s matches a label with name 'node-"
+#~ "role.kubernetes.io/{role}'.  This affects the following services: Memory "
+#~ "resources, CPU resources, Pod resources. Only Services on the Cluster "
+#~ "host are affected. By default, Nodes with role control-plane and infra "
+#~ "are omitted."
+#~ msgstr ""
+#~ "一部のノードが、クラスタが処理できる全体的なワークロードにリソースを追加し"
+#~ "ないことに気づくかもしれません。このオプションは、Cluster ホスト上のアグリ"
+#~ "ゲーションから、そのロールに基づいてノードを削除することができます。リスト"
+#~ "アップされた {role} のいずれかが 'node-role.kubernetes.io/{role}' という名"
+#~ "前のラベルにマッチする場合、ノードは省略されます。 これは、以下のサービス"
+#~ "に影響します:メモリ、CPU、Podリソース。Clusterホスト上のサービスのみが影響"
+#~ "を受けます。デフォルトでは、control-planeとinfraのロールを持つNodeは省略さ"
+#~ "れます。"
+
 #~ msgid ""
 #~ "If you specify an URL prefix here, then several parts of the email body "
 #~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
@@ -84090,10 +84337,6 @@ msgstr ""
 
 #~ msgid "Key from password store"
 #~ msgstr "パスワードストアからのキー"
-
-#, fuzzy
-#~ msgid "Configure host and authority"
-#~ msgstr "コンフィギュレーション"
 
 #, fuzzy, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."

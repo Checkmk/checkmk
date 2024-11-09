@@ -156,6 +156,10 @@ msgstr " și %s '%s'"
 msgid " and the %s '%s'."
 msgstr " și %s \"%s\"."
 
+#, fuzzy
+msgid " changes"
+msgstr "%d schimbări"
+
 #, python-format
 msgid " for %d of %d recipients."
 msgstr " pentru %d din %d destinatari."
@@ -459,6 +463,10 @@ msgstr "%d site blocat"
 #, python-format
 msgid "%d locked sites"
 msgstr "%d site-uri blocate"
+
+#, fuzzy, python-format
+msgid "%d notification rule(s) "
+msgstr "reguli de notificare"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -861,6 +869,10 @@ msgstr "(dezactivat)"
 msgid "(don't send notifications to Event Console)"
 msgstr "(nu trimite notificări câtre Event Console)"
 
+#, fuzzy
+msgid "(finished)"
+msgstr "Finalizat"
+
 msgid "(ignore)"
 msgstr "(ignoră)"
 
@@ -909,6 +921,10 @@ msgstr "(suprapune <b>username</b>)"
 
 msgid "(please select)"
 msgstr "(vă rugăm să selectați)"
+
+#, fuzzy
+msgid "(running)"
+msgstr "pornit"
 
 msgid "(select target folder)"
 msgstr "(selectați folderul țintă)"
@@ -2092,10 +2108,6 @@ msgstr ""
 msgid "A connection with the same sites already exists."
 msgstr "Un director cu acest nume deja există."
 
-#, fuzzy
-msgid "A connection with this ID already exists."
-msgstr "Există deja un pachet de reguli cu acest ID."
-
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
@@ -2115,6 +2127,11 @@ msgstr ""
 "Un tablou de bord poate avea un context opțional. De exemplu, acesta poate "
 "fi restricționat pentru a afișa numai informațiile unei singure gazde sau "
 "pentru un set de servicii care corespund unei expresii regulate."
+
+msgid ""
+"A deactivated rule is not effective. However, it remains in place so that it "
+"can be reactivated later, for example."
+msgstr ""
 
 msgid ""
 "A delay can be configured here so that multiple changes can be activated in "
@@ -3780,9 +3797,6 @@ msgstr "Adaugă un comentariu sau descrie această gazdă"
 
 msgid "Add a first row with column titles"
 msgstr "Adăugați un prim rând cu titluri de coloane"
-
-msgid "Add a title or describe this rule"
-msgstr "Adăugați un titlu sau descrieți această regulă"
 
 msgid "Add additional folder"
 msgstr "Adăugați un dosar suplimentar"
@@ -5696,6 +5710,11 @@ msgstr "Toate paginile"
 msgid "All parents are down"
 msgstr "Toți părinții sunt în jos"
 
+msgid ""
+"All passwords, secrets and other sensitive data are stored in the Password "
+"Store. Changes to the \"linked.secret\" entry can be made here."
+msgstr ""
+
 msgid "All pending hosts of customer"
 msgstr "Toate gazdele în așteptare ale clientului"
 
@@ -6406,6 +6425,10 @@ msgstr ""
 "Puteți raporta această problemă administratorului dumneavoastră Checkmk. "
 "Informații detaliate pot fi găsite pe pagina de raport de eroare sau în "
 "<tt>var/log/web.log</tt>."
+
+#, fuzzy
+msgid "An old configuration is required for existing connections."
+msgstr "Conexiuni de configurare dinamică a gazdei"
 
 #, python-format
 msgid ""
@@ -8535,6 +8558,10 @@ msgstr "Instanțe Azure VM"
 
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
+
+#, fuzzy
+msgid "Azure services found!"
+msgstr "Nu s-au găsit gazde/servicii."
 
 msgid "Azure services to monitor"
 msgstr "Servicii Azure de monitorizat"
@@ -11001,11 +11028,6 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
-msgid ""
-"Cannot change the customer of this site because it is in a peer to peer "
-"broker connection."
-msgstr ""
-
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -13265,6 +13287,10 @@ msgstr "Definiția nodului de cluster"
 msgid "Cluster problems"
 msgstr "Probleme de grup"
 
+#, fuzzy
+msgid "Cluster resource aggregation"
+msgstr "Agregări de filtre"
+
 msgid "Cluster statistics"
 msgstr "Statistici de grup"
 
@@ -14013,6 +14039,10 @@ msgid "Configure host"
 msgstr "Configurați"
 
 #, fuzzy
+msgid "Configure host and authority"
+msgstr "Configurație"
+
+#, fuzzy
 msgid "Configure host and regions"
 msgstr "Configurație"
 
@@ -14493,9 +14523,6 @@ msgstr ""
 msgid "Connecter and connectee sites must be specified."
 msgstr ""
 
-msgid "Connecter and connectee sites must belong to the same customers."
-msgstr ""
-
 #, fuzzy
 msgid "Connecter:"
 msgstr "Conectați-vă"
@@ -14518,6 +14545,10 @@ msgstr "Duratele de conectare"
 
 msgid "Connection established. The connection settings seem to be ok."
 msgstr "Conexiune stabilită. Setările de conectare par a fi în regulă."
+
+#, fuzzy, python-format
+msgid "Connection id %s already exists."
+msgstr "Există deja un pachet de reguli cu acest ID."
 
 msgid "Connection is disabled"
 msgstr "Conexiunea este dezactivată"
@@ -14933,6 +14964,10 @@ msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Perioada de răcire înainte de a încerca din nou o livrare locală sau la "
 "distanță eșuată"
+
+#, fuzzy
+msgid "Cooldown interval to update update "
+msgstr "Intervalul pentru verificarea actualizării"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr "Timp de răcire înainte de a încerca să se reconecteze după eșec"
@@ -16589,6 +16624,10 @@ msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 #, fuzzy
 msgid "DCD Work State"
 msgstr "cea mai rea stare"
+
+#, fuzzy
+msgid "DCD batch history"
+msgstr "Istoric de căutare"
 
 msgid "DCD status"
 msgstr "Starea DCD"
@@ -20966,10 +21005,6 @@ msgstr "Înregistrarea configurației dinamice"
 msgid "Dynamic configuration site activate changes delay"
 msgstr "Înregistrarea configurației dinamice"
 
-#, fuzzy
-msgid "Dynamic configuration site update interval"
-msgstr "Înregistrarea configurației dinamice"
-
 msgid "Dynamic host configuration"
 msgstr "Configurație dinamică a gazdei"
 
@@ -21271,6 +21306,10 @@ msgstr "Editare %s"
 msgid "Edit %s notification parameter #%s"
 msgstr "Editarea regulii de notificare %d"
 
+#, fuzzy, python-format
+msgid "Edit %s parameter"
+msgstr "Parametrii modelului"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "Editați %s: %s"
@@ -21437,10 +21476,6 @@ msgstr "Editați modelul"
 
 msgid "Edit my view"
 msgstr "Editați-mi punctul de vedere"
-
-#, fuzzy
-msgid "Edit notification parameter"
-msgstr "Editați această regulă de notificare"
 
 #, python-format
 msgid "Edit notification rule %d"
@@ -22390,6 +22425,9 @@ msgstr ""
 msgid "English"
 msgstr "Engleză"
 
+msgid "Enrich with usage data"
+msgstr ""
+
 msgid "Ensure always-increasing .rpm and .deb versions."
 msgstr "Asigurați versiuni .rpm și .deb în continuă creștere."
 
@@ -22409,6 +22447,9 @@ msgstr ""
 "Introduceți aici o listă de ID-uri de utilizator care urmează să fie "
 "notificate. Acești utilizatori trebuie să fie membri ai cel puțin unui grup "
 "de contacte pentru a fi notificați."
+
+msgid "Enter a plugin output to define what to filter for."
+msgstr ""
 
 msgid "Enter address"
 msgstr "Introduceți adresa"
@@ -22682,10 +22723,6 @@ msgstr "Ratele de eroare"
 #, python-format
 msgid "Error showing view: %s"
 msgstr "Eroare de afișare a vizualizării: %s."
-
-#, fuzzy
-msgid "Error updating broker connections."
-msgstr "Editați conexiunea site-ului %s"
 
 #, python-format
 msgid "Error while rendering element type '%s'"
@@ -26803,6 +26840,10 @@ msgstr ""
 msgid "HW Information"
 msgstr "Informații HW"
 
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Informații hardware ale serverului Checkmk"
+
 msgid "HW containers"
 msgstr "Containere HW"
 
@@ -27229,6 +27270,15 @@ msgstr ""
 "Aici puteți configura culoarea de fundal pentru anumite stări. Culoarea "
 "pentru gazda aflată în stare de nefuncționare prevalează asupra tuturor "
 "celorlalte culori."
+
+#, fuzzy
+msgid ""
+"Here you can configure the credentials to be used. Keep in mind that the "
+"<tt>automation</tt> user needs to exist if you choose this option"
+msgstr ""
+"Aici puteți configura acreditările care urmează să fie utilizate. Rețineți "
+"că utilizatorul <tt>automation</tt> trebuie să existe dacă alegeți această "
+"opțiune"
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -32490,9 +32540,6 @@ msgstr ""
 msgid "Ignore certificate errors (insecure)"
 msgstr "Ignoră erorile de certificat (nesigur)"
 
-msgid "Ignore certificate errors (unsecure)"
-msgstr "Ignoră erorile de certificat (nesigur)"
-
 msgid "Ignore compliance state"
 msgstr "Ignoră starea de conformitate"
 
@@ -32647,6 +32694,10 @@ msgstr "Importați toate adnotările valide"
 
 msgid "Import all valid tags"
 msgstr "Importați toate etichetele valide"
+
+#, fuzzy
+msgid "Import annotations as host labels"
+msgstr "Utilizați numele portului ca nume de serviciu"
 
 #, fuzzy
 msgid "Import hosts"
@@ -33160,6 +33211,17 @@ msgid ""
 msgstr ""
 "În acest director vor fi instalate <tt>check_mk_agent</tt>, <tt>waitmax</tt> "
 "și, eventual, alte binare de care are nevoie agentul."
+
+msgid ""
+"In this field you can add a URL linking to a page with related, useful "
+"information. You can use:<br><ul><li>an absolute URL starting with the "
+"protocol (<tt>http(s)://</tt>)</li><li>or a relative URL either starting "
+"with a slash (<tt>/something</tt> will be resolved to <tt>https://"
+"mycheckmkserver/something</tt>) or without a slash (<tt>somethingelse</tt> "
+"will be resolved to <tt>https://mycheckmkserver/mysite/check_mk/"
+"somethingelse</tt>)</li></ul>The link will be displayed as an icon in the "
+"description on the overview page of the related rule set."
+msgstr ""
 
 msgid "In this folder"
 msgstr "În acest dosar"
@@ -40135,6 +40197,10 @@ msgstr ""
 msgid "Metric not found"
 msgstr "Metric nu a fost găsit"
 
+#, fuzzy, python-format
+msgid "Metric: %s"
+msgstr "Metrici"
+
 msgid "Metrics"
 msgstr "Metrici"
 
@@ -42236,9 +42302,6 @@ msgstr "Niciodată executat"
 msgid "Never install Python with the agent"
 msgstr "Nu instalați niciodată Python cu agentul"
 
-msgid "Never logged in"
-msgstr "Niciodată conectat"
-
 msgid "Never remove files newer than"
 msgstr "Nu eliminați niciodată fișiere mai noi decât"
 
@@ -42247,6 +42310,10 @@ msgstr "Nu folosiți niciodată date piggyback"
 
 msgid "New"
 msgstr "Nou"
+
+#, fuzzy, python-format
+msgid "New %s parameter"
+msgstr "Parametrii modelului"
 
 msgid "New Action"
 msgstr "Acțiune nouă"
@@ -42305,10 +42372,6 @@ msgstr "Obiecte gestionate"
 
 msgid "New name"
 msgstr "Nume nou"
-
-#, fuzzy
-msgid "New notification parameter"
-msgstr "Faza de notificare"
 
 #, fuzzy, python-format
 msgid "New notification rule #%d successfully created!"
@@ -42382,9 +42445,6 @@ msgstr "Plugin-uri de notificare"
 msgid "Next step: Recipient"
 msgstr "Destinatarul"
 
-msgid "Next step: Saving"
-msgstr ""
-
 #, fuzzy
 msgid "Next step: Sending conditions"
 msgstr "conexiuni în așteptare"
@@ -42392,6 +42452,10 @@ msgstr "conexiuni în așteptare"
 #, fuzzy
 msgid "Next step: Specify host/services"
 msgstr "Tipul de comentariu (gazdă/serviciu)"
+
+#, fuzzy
+msgid "Next step: Summary"
+msgstr "Rezumat al statului gazdă"
 
 msgid "Nginx Server"
 msgstr "Server Nginx"
@@ -42421,6 +42485,10 @@ msgstr "Fără integrări API, fără agent Checkmk"
 
 #, fuzzy
 msgid "No AWS services found."
+msgstr "Nu s-au găsit gazde/servicii."
+
+#, fuzzy
+msgid "No Azure services found."
 msgstr "Nu s-au găsit gazde/servicii."
 
 msgid "No CSRF token received"
@@ -45126,6 +45194,10 @@ msgstr "Sunt permise doar valori str și unicode, a primit %s."
 msgid "Only time"
 msgstr "Doar timpul"
 
+#, fuzzy
+msgid "Only unused parameters can be deleted."
+msgstr "Ținta a fost ștearsă."
+
 msgid "Only upper case letters are allowed"
 msgstr "Sunt permise doar literele majuscule"
 
@@ -45135,6 +45207,9 @@ msgstr "Folosiți numai nivelurile dispozitivului, ignorați-le pe ale dvs."
 msgid ""
 "Only users who are in all the following contact groups will receive the "
 "notification"
+msgstr ""
+
+msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
@@ -48160,6 +48235,10 @@ msgstr "Îmbunătățiri de performanță"
 msgid "Performance options"
 msgstr "Opțiuni de performanță"
 
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "Date de performanță"
+
 msgid "Period"
 msgstr "Perioada"
 
@@ -49587,6 +49666,9 @@ msgstr "Prefixul se potrivește"
 
 msgid "Prefix text"
 msgstr "Prefix text"
+
+msgid "Prefix the comment with the current date and your user name."
+msgstr ""
 
 #, fuzzy
 msgid "Prepare AWS for Checkmk"
@@ -52980,8 +53062,8 @@ msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 
 msgid ""
-"Return to Checkmk, define a unique AWS account name, and use the Access key "
-"ID and Secret access key below."
+"Return to Checkmk, define a unique configuration name, and use the Access "
+"key ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -54171,10 +54253,6 @@ msgstr "Nu activați modificările"
 msgid "Save & go to host properties"
 msgstr "Salvați și mergeți la proprietățile gazdei"
 
-#, fuzzy
-msgid "Save & go to service discovery"
-msgstr "Salvați & rulați descoperirea serviciilor"
-
 msgid "Save & run connection tests"
 msgstr "Salvați & executați testele de conectare"
 
@@ -54199,6 +54277,9 @@ msgstr "Salvați răspunsul"
 
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
+
+msgid "Save your progress and go to the Activate Changes page to enable it."
+msgstr ""
 
 msgid ""
 "Save your progress and go to the Activate Changes page to enable it. EC2 "
@@ -55123,13 +55204,6 @@ msgid ""
 msgstr ""
 "Selectarea acestei opțiuni va dezactiva %s, dar va rămâne în configurație."
 
-msgid ""
-"Selecting this option will disable the rule, but it will remain in the "
-"configuration."
-msgstr ""
-"Selectarea acestei opțiuni va dezactiva regula, dar aceasta va rămâne în "
-"configurație."
-
 msgid "Selection"
 msgstr "Selecție"
 
@@ -55454,6 +55528,11 @@ msgstr "Serviciul Regex:"
 msgid "Service Speed-O-Meter"
 msgstr "Serviciul Speed-O-Meter"
 
+# georgem ##############
+#, fuzzy
+msgid "Service Tags"
+msgstr "Etichete de serviciu"
+
 msgid "Service Type"
 msgstr "Tipul de serviciu"
 
@@ -55770,12 +55849,48 @@ msgid "Service performance data (source code)"
 msgstr "Date privind performanța serviciului (cod sursă)"
 
 #, python-format
-msgid "Service performance data - value number %02d"
-msgstr "Date privind performanța serviciului - număr de valori %02d"
-
-#, python-format
 msgid "Service performance data - value number %2d"
 msgstr "Date privind performanța serviciului - număr de valori %2d"
+
+#, fuzzy
+msgid "Service performance data - value number 01"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 02"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 03"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 04"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 05"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 06"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 07"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 08"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 09"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
+
+#, fuzzy
+msgid "Service performance data - value number 10"
+msgstr "Date privind performanța serviciului - număr de valori %02d"
 
 msgid "Service period for hosts"
 msgstr "Perioada de service pentru gazde"
@@ -57841,6 +57956,10 @@ msgstr ""
 "Săriți acest pachet de reguli, continuați executarea regulilor cu următorul "
 "pachet de reguli"
 
+#, fuzzy
+msgid "Skipped"
+msgstr "S-a oprit"
+
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "A sărit %s: %s"
@@ -58384,6 +58503,9 @@ msgstr ""
 
 msgid "Source name"
 msgstr "Numele sursei"
+
+msgid "Source state can not be equal to target state."
+msgstr ""
 
 msgid "Sources"
 msgstr "Surse"
@@ -59400,6 +59522,10 @@ msgstr "Pornirea"
 msgid "Starting with entry"
 msgstr "Începând cu intrarea"
 
+#, fuzzy
+msgid "Starting with notification number"
+msgstr "Restricție la numărul de notificare"
+
 #, python-format
 msgid ""
 "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
@@ -59979,6 +60105,12 @@ msgid "State when last build result is: failed"
 msgstr "Starea atunci când ultimul rezultat al construirii este: eșuat"
 
 msgid "State when last build result is: module not built"
+msgstr ""
+"Stare atunci când ultimul rezultat al construirii este: modulul nu a fost "
+"construit"
+
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
 msgstr ""
 "Stare atunci când ultimul rezultat al construirii este: modulul nu a fost "
 "construit"
@@ -61198,10 +61330,6 @@ msgstr "Rezumatul socket-urilor Systemd"
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
 
-#, fuzzy
-msgid "TBD"
-msgstr "MiB"
-
 msgid "TCP"
 msgstr "TCP"
 
@@ -61919,6 +62047,11 @@ msgid ""
 msgstr ""
 "Atributul \"Authentication Expiration\" (%s) nu a putut fi preluat de pe "
 "serverul LDAP pentru utilizatorul %s."
+
+msgid ""
+"The \"linked.rule\" rule set contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 #, python-format
 msgid "The %s does not exist."
@@ -63373,9 +63506,20 @@ msgstr ""
 "Conexiunea creează gazde în acest dosar special. Odată creată, puteți alege "
 "să mutați gazda într-un alt dosar."
 
+#, fuzzy
+msgid ""
+"The connection id must consist only of letters, digit and the underscore."
+msgstr ""
+"ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
+
 msgid ""
 "The connection to AWS was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
+msgstr ""
+
+msgid ""
+"The connection to Azure was successful, but no services were found. If this "
+"is unintentional, please verify your configuration."
 msgstr ""
 
 msgid ""
@@ -63504,6 +63648,18 @@ msgstr "Logo-ul personalizat %s a fost șters."
 #, python-format
 msgid "The customer ID %s does not exist."
 msgstr "ID-ul clientului %s nu există."
+
+#, fuzzy
+msgid ""
+"The customer of the site cannot be changed because it is connected to other "
+"sites via broker connections."
+msgstr ""
+"Parola nu poate fi schimbată (este blocată de conectorul de utilizator)."
+
+msgid ""
+"The customer of the sites connected by the broker connection must be the "
+"same."
+msgstr ""
 
 msgid "The dashboard element does not exist."
 msgstr "Elementul de tablou de bord nu există."
@@ -63954,9 +64110,6 @@ msgstr ""
 "Fișierul dat nu pare a fi un fișier iCalendar valid. Acesta trebuie să aibă "
 "extensia de fișier <tt>.ics</tt>."
 
-msgid "The given host does not exist"
-msgstr "Gazda dată nu există"
-
 msgid "The given host does not exist."
 msgstr "Gazda dată nu există."
 
@@ -64067,6 +64220,13 @@ msgid ""
 msgstr ""
 "Gazda <i>%s</i> are setul explicit de site-uri <i>%s</i>, care aparține "
 "clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
+
+msgid ""
+"The host contains all information about configured data source types, tags, "
+"labels, custom properties, and the folder in which the host is located. This "
+"is where you can associate the host with specific rules via labels or tags, "
+"and make similar customization."
+msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "Gazda nu a putut fi găsită pe niciun site activ."
@@ -64512,6 +64672,14 @@ msgstr "Fișierul jurnal nu există pe site."
 
 msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
+
+msgid ""
+"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
+"The dynamic host configuration connection \"linked.connection\" holds the "
+"configuration for how these other hosts are created if they don't already "
+"exist. Customization of where these hosts are created and what properties, "
+"tags, and labels they get can be done here."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -65812,14 +65980,6 @@ msgstr ""
 #, python-format
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Setul de reguli \"%s\" nu există."
-
-msgid ""
-"The ruleset name identifies the ruleset within Checkmk. Use this name when "
-"working with the rules and ruleset REST API calls."
-msgstr ""
-"Numele setului de reguli identifică setul de reguli în cadrul Checkmk. "
-"Utilizați acest nume atunci când lucrați cu regulile și cu apelurile API "
-"REST pentru setul de reguli."
 
 msgid ""
 "The runtime-limit ratio (peak attempt) is the longest attempt runtime in "
@@ -67250,6 +67410,16 @@ msgstr ""
 "Acest ID este utilizat ca identificator unic al acestuia. Acesta nu poate fi "
 "modificat ulterior."
 
+#, fuzzy
+msgid ""
+"This ID uniquely identifies this rule in Checkmk. Use this ID when working "
+"with rules in Checkmk REST API calls, e.g., to show, modify or delete the "
+"rule."
+msgstr ""
+"Numele setului de reguli identifică setul de reguli în cadrul Checkmk. "
+"Utilizați acest nume atunci când lucrați cu regulile și cu apelurile API "
+"REST pentru setul de reguli."
+
 msgid "This Ruleset sets the threshold limits for battery sensors"
 msgstr ""
 "Acest set de reguli stabilește limitele de prag pentru senzorii de baterie"
@@ -67905,6 +68075,17 @@ msgstr ""
 "iar prognoza este calculată de la 1 iunie până la 15 iunie, fără a se lua în "
 "considerare datele de la 1 iunie până la 10 iunie."
 
+msgid ""
+"This field is intended for a brief description of the rule's purpose. This "
+"description will be visible on the overview page of this rule set."
+msgstr ""
+
+msgid ""
+"This field is intended for additional information that may help other users "
+"(and your future self) to understand the rule's purpose and the configured "
+"attributes. This comment is only visible in this dialog."
+msgstr ""
+
 #, python-format
 msgid "This file cannot be uploaded: %s"
 msgstr "Acest fișier nu poate fi încărcat: %s."
@@ -68339,6 +68520,16 @@ msgstr ""
 "Acest nume trebuie să se potrivească cu numele secțiunii definite în "
 "configurația mk_filestats."
 
+#, fuzzy
+msgid ""
+"This name uniquely identifies the rule set in Checkmk. Use this name when "
+"working with rule sets and rules in Checkmk REST API calls, e.g. to create a "
+"new rule."
+msgstr ""
+"Numele setului de reguli identifică setul de reguli în cadrul Checkmk. "
+"Utilizați acest nume atunci când lucrați cu regulile și cu apelurile API "
+"REST pentru setul de reguli."
+
 msgid "This name will be used in the description of the service"
 msgstr "Acest nume va fi utilizat în descrierea serviciului."
 
@@ -68357,6 +68548,13 @@ msgstr ""
 
 msgid "This notification matches"
 msgstr "Această notificare corespunde"
+
+#, fuzzy
+msgid ""
+"This notification parameter is used by the following notification rule(s):"
+msgstr ""
+"Această notificare nu se potrivește. Consultați motivele din lista de reguli "
+"de notificare globală."
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Acest număr de controale noi este programat imediat"
@@ -70823,11 +71021,6 @@ msgstr ""
 "Firewall."
 
 msgid ""
-"This setting decides how often the dynamic configuration daemon will get "
-"updates from the the site. Default is 5 minutes"
-msgstr ""
-
-msgid ""
 "This setting decides when the activate changes operation will be timed out. "
 "Default is 2 minutes"
 msgstr ""
@@ -70872,6 +71065,12 @@ msgid ""
 msgstr ""
 "Această setare decide ce tipuri de mesaje se înregistrează în jurnalul web "
 "<tt>%s</tt>."
+
+msgid ""
+"This setting defines the interval during which the dynamic configuration "
+"daemon will wait for the next updates from the connector(s) if previous "
+"updates have been placed in the queue. Default is 5 minutes."
+msgstr ""
 
 msgid ""
 "This setting delays notifications about host problems by the specified "
@@ -75490,11 +75689,6 @@ msgstr "Umlauts în ID-urile de utilizator (depreciat)"
 msgid "Un"
 msgstr "Un"
 
-#, fuzzy
-msgid "Unable to analyze matching, because \"host\" parameter is missing"
-msgstr ""
-"Nu se poate analiza potrivirea, deoarece parametrul \"service\" lipsește"
-
 msgid "Unable to analyze matching, because \"service\" parameter is missing"
 msgstr ""
 "Nu se poate analiza potrivirea, deoarece parametrul \"service\" lipsește"
@@ -75522,12 +75716,6 @@ msgstr ""
 
 msgid "Unable to create authentication request"
 msgstr "Nu se poate crea o cerere de autentificare"
-
-#, python-format
-msgid ""
-"Unable to delete connection id: %s. Connecter and connectee sites must be "
-"specified."
-msgstr ""
 
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
@@ -76096,10 +76284,6 @@ msgstr "Actualizarea transformării"
 
 msgid "Updated attributes: "
 msgstr "Atribute actualizate: "
-
-#, fuzzy, python-format
-msgid "Updated broker connection for site %s"
-msgstr "A fost creată o nouă conexiune la site %s"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -79217,6 +79401,10 @@ msgid "Vendor"
 msgstr "Furnizor"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "Informații despre Viewport"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "ID-ul furnizorului și al dispozitivului"
 
@@ -79714,6 +79902,13 @@ msgstr ""
 "Același lucru este valabil și pentru acțiunile de eveniment din setările "
 "globale."
 
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
+
 msgid "WCU"
 msgstr "WCU"
 
@@ -80181,7 +80376,7 @@ msgstr "Care este ocazia?"
 msgid "What is the purpose?"
 msgstr "Care este scopul?"
 
-msgid "What should be send out?"
+msgid "What should be sent out?"
 msgstr ""
 
 msgid ""
@@ -83667,27 +83862,6 @@ msgstr ""
 "Totuși, puteți introduce dosarul ca și cum ați avea permisiunea de a accesa "
 "un subdosar."
 
-#, python-brace-format
-msgid ""
-"You may find that some Nodes don't add resources to the overall workload "
-"your Cluster can handle. This option allows you to remove Nodes from "
-"aggregations on the Cluster host based on their role. A node will be "
-"omitted, if any of the listed {role}s matches a label with name 'node-role."
-"kubernetes.io/{role}'.  This affects the following services: Memory "
-"resources, CPU resources, Pod resources. Only Services on the Cluster host "
-"are affected. By default, Nodes with role control-plane and infra are "
-"omitted."
-msgstr ""
-"Este posibil să constatați că unele noduri nu adaugă resurse la volumul "
-"total de lucru pe care îl poate gestiona clusterul dvs. Această opțiune vă "
-"permite să eliminați Nodurile din agregările de pe gazda Clusterului în "
-"funcție de rolul lor. Un nod va fi omis, dacă oricare dintre nodurile "
-"listate {role}s se potrivește cu o etichetă cu numele 'node-role.kubernetes."
-"io/{role}'.  Acest lucru afectează următoarele servicii: Resurse de memorie, "
-"Resurse CPU, Resurse Pod. Sunt afectate doar serviciile de pe gazda "
-"Clusterului. În mod implicit, Nodurile cu rol control-plane și infra sunt "
-"omise."
-
 msgid "You may only use paths relative to the report archive base directory"
 msgstr ""
 "Puteți utiliza numai căi de acces relative la directorul de bază al arhivei "
@@ -84909,7 +85083,7 @@ msgid "filesystem"
 msgstr "sistem de fișiere"
 
 #, fuzzy
-msgid "finished"
+msgid "finished for "
 msgstr "Finalizat"
 
 msgid "firing"
@@ -84947,6 +85121,10 @@ msgstr "forced-commands-only"
 
 msgid "forecast trend only"
 msgstr "doar tendința de prognoză"
+
+#, fuzzy
+msgid "found "
+msgstr "Rotund"
 
 msgid "fourth week"
 msgstr "a patra săptămână"
@@ -86058,10 +86236,6 @@ msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 msgid "specify manually ->"
 msgstr "specificați manual ->"
 
-#, fuzzy
-msgid "starting with notification number"
-msgstr "Restricție la numărul de notificare"
-
 msgid "status entries"
 msgstr "intrări de stare"
 
@@ -86348,6 +86522,10 @@ msgstr "cu context"
 msgid "with duration"
 msgstr "cu durata"
 
+#, fuzzy
+msgid "without a description were found"
+msgstr "Scurtă descriere pentru serviciu %s"
+
 msgid "without context"
 msgstr "fara context"
 
@@ -86411,6 +86589,79 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy
+#~ msgid "Save & go to service discovery"
+#~ msgstr "Salvați & rulați descoperirea serviciilor"
+
+#, fuzzy
+#~ msgid "TBD"
+#~ msgstr "MiB"
+
+#~ msgid "Add a title or describe this rule"
+#~ msgstr "Adăugați un titlu sau descrieți această regulă"
+
+#, fuzzy
+#~ msgid "Error updating broker connections."
+#~ msgstr "Editați conexiunea site-ului %s"
+
+#~ msgid "Never logged in"
+#~ msgstr "Niciodată conectat"
+
+#~ msgid ""
+#~ "Selecting this option will disable the rule, but it will remain in the "
+#~ "configuration."
+#~ msgstr ""
+#~ "Selectarea acestei opțiuni va dezactiva regula, dar aceasta va rămâne în "
+#~ "configurație."
+
+#~ msgid "The given host does not exist"
+#~ msgstr "Gazda dată nu există"
+
+#, fuzzy
+#~ msgid "Unable to analyze matching, because \"host\" parameter is missing"
+#~ msgstr ""
+#~ "Nu se poate analiza potrivirea, deoarece parametrul \"service\" lipsește"
+
+#, fuzzy, python-format
+#~ msgid "Updated broker connection for site %s"
+#~ msgstr "A fost creată o nouă conexiune la site %s"
+
+#, fuzzy
+#~ msgid "Dynamic configuration site update interval"
+#~ msgstr "Înregistrarea configurației dinamice"
+
+#, fuzzy
+#~ msgid "Edit notification parameter"
+#~ msgstr "Editați această regulă de notificare"
+
+#~ msgid "Ignore certificate errors (unsecure)"
+#~ msgstr "Ignoră erorile de certificat (nesigur)"
+
+#, fuzzy
+#~ msgid "New notification parameter"
+#~ msgstr "Faza de notificare"
+
+#, python-brace-format
+#~ msgid ""
+#~ "You may find that some Nodes don't add resources to the overall workload "
+#~ "your Cluster can handle. This option allows you to remove Nodes from "
+#~ "aggregations on the Cluster host based on their role. A node will be "
+#~ "omitted, if any of the listed {role}s matches a label with name 'node-"
+#~ "role.kubernetes.io/{role}'.  This affects the following services: Memory "
+#~ "resources, CPU resources, Pod resources. Only Services on the Cluster "
+#~ "host are affected. By default, Nodes with role control-plane and infra "
+#~ "are omitted."
+#~ msgstr ""
+#~ "Este posibil să constatați că unele noduri nu adaugă resurse la volumul "
+#~ "total de lucru pe care îl poate gestiona clusterul dvs. Această opțiune "
+#~ "vă permite să eliminați Nodurile din agregările de pe gazda Clusterului "
+#~ "în funcție de rolul lor. Un nod va fi omis, dacă oricare dintre nodurile "
+#~ "listate {role}s se potrivește cu o etichetă cu numele 'node-role."
+#~ "kubernetes.io/{role}'.  Acest lucru afectează următoarele servicii: "
+#~ "Resurse de memorie, Resurse CPU, Resurse Pod. Sunt afectate doar "
+#~ "serviciile de pe gazda Clusterului. În mod implicit, Nodurile cu rol "
+#~ "control-plane și infra sunt omise."
+
 #~ msgid ""
 #~ "If you specify an URL prefix here, then several parts of the email body "
 #~ "are armed with hyperlinks to your Checkmk GUI, so that the recipient of "
@@ -86463,10 +86714,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Key from password store"
 #~ msgstr "Cheia din magazinul de parole"
-
-#, fuzzy
-#~ msgid "Configure host and authority"
-#~ msgstr "Configurație"
 
 #, fuzzy, python-format
 #~ msgid "No FormSpec implementation for method '%s' found."

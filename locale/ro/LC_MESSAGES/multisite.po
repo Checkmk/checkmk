@@ -11068,6 +11068,10 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Automatizare Checkmk"
 
+#, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Checkmk Logo"
+
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -19454,6 +19458,10 @@ msgid ""
 "have %s services after activating your changes."
 msgstr ""
 
+#, python-format
+msgid "During the development phase, the number of services is limited to %s."
+msgstr ""
+
 msgid "During this time period no monitoring data is available"
 msgstr "În această perioadă de timp nu sunt disponibile date de monitorizare"
 
@@ -21464,6 +21472,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "Excepție"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Excepție în pictograma '%s': %s."
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -24940,6 +24952,10 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "Informații HW"
+
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Informații hardware ale serverului Checkmk"
 
 msgid "HW containers"
 msgstr "Containere HW"
@@ -40813,6 +40829,14 @@ msgstr "Raportul între offline și rezervă"
 msgid "Offline verification"
 msgstr "Verificare offline"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "Procedura de verificare online nu a avut succes"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "Procedura de verificare online a avut succes"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -41266,6 +41290,9 @@ msgstr "Sunt permise doar literele majuscule"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "Folosiți numai nivelurile dispozitivului, ignorați-le pe ale dvs."
+
+msgid "Only valid in Jenkins versions <= 1.622."
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "Numai atunci când evenimentul anulat se află în faza OPEN"
@@ -43307,6 +43334,10 @@ msgstr "Îmbunătățiri de performanță"
 
 msgid "Performance options"
 msgstr "Opțiuni de performanță"
+
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "Date de performanță"
 
 msgid "Period"
 msgstr "Perioada"
@@ -54525,6 +54556,12 @@ msgstr ""
 "Stare atunci când ultimul rezultat al construirii este: modulul nu a fost "
 "construit"
 
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
+msgstr ""
+"Stare atunci când ultimul rezultat al construirii este: modulul nu a fost "
+"construit"
+
 msgid "State when last build result is: success"
 msgstr "Starea când ultimul rezultat al construirii este: succes"
 
@@ -57736,8 +57773,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "Elementul de conținut \"%s, %s\" nu poate fi redat: %s."
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "Conținutul acestui fișier nu a putut fi procesat cu succes: %s"
 
 msgid ""
@@ -69191,6 +69228,10 @@ msgstr "Date de performanță tendențială"
 msgid "Treshold"
 msgstr "Treshold"
 
+#, fuzzy
+msgid "Trial Phase"
+msgstr "Schimbare banală"
+
 msgid "Trial expired"
 msgstr "Procesul a expirat"
 
@@ -70006,10 +70047,6 @@ msgstr "Necunoscut"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Necunoscut %s grup: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Necunoscut (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Necunoscut - DUnknown"
@@ -72752,6 +72789,10 @@ msgid "Vendor"
 msgstr "Furnizor"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "Informații despre Viewport"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "ID-ul furnizorului și al dispozitivului"
 
@@ -73223,6 +73264,13 @@ msgstr ""
 "unei preluări, se utilizează o copie a regulilor de pe site-ul central. "
 "Același lucru este valabil și pentru acțiunile de eveniment din setările "
 "globale."
+
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
 
 msgid "WCU"
 msgstr "WCU"
@@ -79791,6 +79839,10 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Necunoscut (%s)"
 
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "

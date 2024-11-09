@@ -10941,6 +10941,10 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Automazione Checkmk"
 
+#, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Logo Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "File di configurazione di Checkmk"
 
@@ -19250,6 +19254,10 @@ msgid ""
 "have %s services after activating your changes."
 msgstr ""
 
+#, python-format
+msgid "During the development phase, the number of services is limited to %s."
+msgstr ""
+
 msgid "During this time period no monitoring data is available"
 msgstr ""
 "Durante questo periodo di tempo non sono disponibili dati di monitoraggio"
@@ -21234,6 +21242,10 @@ msgstr "Ecc."
 
 msgid "Exception"
 msgstr "Eccezione"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Eccezione nell'icona '%s': %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -24690,6 +24702,10 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "Informazioni HW"
+
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Informazioni sull'hardware del server Checkmk"
 
 msgid "HW containers"
 msgstr "Contenitori HW"
@@ -40374,6 +40390,14 @@ msgstr "Rapporto tra offline e ricambio"
 msgid "Offline verification"
 msgstr "Verifica offline"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "La procedura di verifica online non è andata a buon fine"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "La procedura di verifica online è andata a buon fine"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -40814,6 +40838,9 @@ msgstr "Sono ammesse solo lettere maiuscole"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "Usa solo i livelli del dispositivo, ignora i tuoi"
+
+msgid "Only valid in Jenkins versions <= 1.622."
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "Solo quando l'evento cancellato è in fase OPEN"
@@ -42849,6 +42876,10 @@ msgstr "Miglioramenti delle prestazioni"
 
 msgid "Performance options"
 msgstr "Opzioni di performance"
+
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "Dati sulle prestazioni"
 
 msgid "Period"
 msgstr "Periodo"
@@ -53889,6 +53920,11 @@ msgid "State when last build result is: module not built"
 msgstr ""
 "Stato quando l'ultimo risultato della compilazione è: modulo non costruito"
 
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
+msgstr ""
+"Stato quando l'ultimo risultato della compilazione è: modulo non costruito"
+
 msgid "State when last build result is: success"
 msgstr "Stato quando l'ultimo risultato della costruzione è: successo"
 
@@ -57073,8 +57109,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "L'elemento di contenuto \"%s, %s\" non può essere reso: %s"
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "Non è stato possibile elaborare il contenuto di questo file: %s"
 
 msgid ""
@@ -68374,6 +68410,10 @@ msgstr "Tendenza dei dati di performance"
 msgid "Treshold"
 msgstr "Treshold"
 
+#, fuzzy
+msgid "Trial Phase"
+msgstr "Cambiamento banale"
+
 msgid "Trial expired"
 msgstr "Prova scaduta"
 
@@ -69194,10 +69234,6 @@ msgstr "Sconosciuto"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Gruppo %s sconosciuto: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Sconosciuto (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Sconosciuto - DUnknown"
@@ -71901,6 +71937,10 @@ msgid "Vendor"
 msgstr "Venditore"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "Informazioni sulla finestra di visualizzazione"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "Vendor e ID del dispositivo"
 
@@ -72371,6 +72411,13 @@ msgstr ""
 "viene utilizzata una copia delle regole del sito centrale in caso di "
 "acquisizione. Lo stesso vale per le azioni degli eventi nelle impostazioni "
 "globali."
+
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
 
 msgid "WCU"
 msgstr "WCU"
@@ -78872,6 +78919,10 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Sconosciuto (%s)"
 
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "

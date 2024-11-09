@@ -11061,6 +11061,10 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Checkmk automatisering"
 
+#, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Checkmk Logo"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
 
@@ -19438,6 +19442,10 @@ msgid ""
 "have %s services after activating your changes."
 msgstr ""
 
+#, python-format
+msgid "During the development phase, the number of services is limited to %s."
+msgstr ""
+
 msgid "During this time period no monitoring data is available"
 msgstr "Gedurende deze periode zijn geen monitoringgegevens beschikbaar"
 
@@ -21438,6 +21446,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "Uitzondering"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "Uitzondering in pictogram '%s': %s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -24937,6 +24949,10 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "HW Informatie"
+
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Hardware-informatie van de Checkmk Server"
 
 msgid "HW containers"
 msgstr "HW containers"
@@ -40786,6 +40802,14 @@ msgstr "Offline/reserve verhouding"
 msgid "Offline verification"
 msgstr "Offline verificatie"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "De online verificatieprocedure was niet succesvol"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "De online verificatieprocedure was succesvol"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -41229,6 +41253,9 @@ msgstr "Alleen hoofdletters zijn toegestaan"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "Gebruik alleen de niveaus van het apparaat, negeer de jouwe"
+
+msgid "Only valid in Jenkins versions <= 1.622."
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "Alleen wanneer de geannuleerde gebeurtenis in fase OPEN is"
@@ -43282,6 +43309,10 @@ msgstr "Prestatieverbeteringen"
 
 msgid "Performance options"
 msgstr "Prestatie-opties"
+
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "Prestatiegegevens"
 
 msgid "Period"
 msgstr "Periode"
@@ -54400,6 +54431,10 @@ msgstr "Staat wanneer het laatste build resultaat is: mislukt"
 msgid "State when last build result is: module not built"
 msgstr "Toestand wanneer het laatste build resultaat is: module niet gebouwd"
 
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
+msgstr "Toestand wanneer het laatste build resultaat is: module niet gebouwd"
+
 msgid "State when last build result is: success"
 msgstr "Staat wanneer het laatste build resultaat is: succes"
 
@@ -57627,8 +57662,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "Het inhoudselement \"%s, %s\" kan niet worden gerenderd: %s"
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "De inhoud van dit bestand kon niet succesvol worden verwerkt: %s"
 
 msgid ""
@@ -69060,6 +69095,10 @@ msgstr "Trendgegevens over prestaties"
 msgid "Treshold"
 msgstr "Treshold"
 
+#, fuzzy
+msgid "Trial Phase"
+msgstr "Triviale verandering"
+
 msgid "Trial expired"
 msgstr "Proef vervallen"
 
@@ -69876,10 +69915,6 @@ msgstr "Onbekend"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "Onbekende %s groep: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "Onbekend (%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "Onbekend - DU Onbekend"
@@ -72609,6 +72644,10 @@ msgid "Vendor"
 msgstr "Verkoper"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "Informatie over de gastheer"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "Vendor en Device ID"
 
@@ -73085,6 +73124,13 @@ msgstr ""
 "een kopie van de regels van de centrale site gebruikt in het geval van een "
 "overname. Hetzelfde geldt voor de gebeurtenisacties in de globale "
 "instellingen."
+
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
 
 msgid "WCU"
 msgstr "WCU"
@@ -79661,6 +79707,10 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "Onbekend (%s)"
 
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "

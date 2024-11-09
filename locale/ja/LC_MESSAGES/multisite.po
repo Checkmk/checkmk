@@ -10555,6 +10555,10 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Checkmkの自動化"
 
+#, fuzzy
+msgid "Checkmk Cloud"
+msgstr "Checkmkロゴ"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -18476,6 +18480,10 @@ msgstr ""
 "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
 "と、%sのサービスを利用できるようになります。"
 
+#, fuzzy, python-format
+msgid "During the development phase, the number of services is limited to %s."
+msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
+
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
 
@@ -20432,6 +20440,10 @@ msgstr "Exc."
 
 msgid "Exception"
 msgstr "例外"
+
+#, fuzzy, python-format
+msgid "Exception (Crash ID: %s): %s"
+msgstr "例外 '%s' :%s"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
@@ -23886,6 +23898,10 @@ msgstr ""
 
 msgid "HW Information"
 msgstr "HW情報"
+
+#, fuzzy
+msgid "HW Vendor information of the Checkmk Server"
+msgstr "Checkmkサーバーのハードウェア情報"
 
 msgid "HW containers"
 msgstr "HWコンテナ"
@@ -39436,6 +39452,14 @@ msgstr "オフラインとスペアの比率"
 msgid "Offline verification"
 msgstr "オフライン検証"
 
+#, fuzzy
+msgid "Offline verification procedure was not successful"
+msgstr "オンライン認証に失敗しました"
+
+#, fuzzy
+msgid "Offline verification procedure was successful"
+msgstr "オンライン認証成功"
+
 msgid "Offset"
 msgstr "オフセット"
 
@@ -39877,6 +39901,9 @@ msgstr "大文字のみ使用できます"
 
 msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
+
+msgid "Only valid in Jenkins versions <= 1.622."
+msgstr ""
 
 msgid "Only when the cancelled event is in phase OPEN"
 msgstr "キャンセルされたイベントがOPENフェーズの場合のみ"
@@ -41899,6 +41926,10 @@ msgstr "パフォーマンスの向上"
 
 msgid "Performance options"
 msgstr "パフォーマンスオプション"
+
+#, fuzzy
+msgid "Performance: IO stats"
+msgstr "パフォーマンスデータ"
 
 msgid "Period"
 msgstr "ピリオド"
@@ -52873,6 +52904,10 @@ msgstr "最後のビルド結果が次の場合の状態: 失敗"
 msgid "State when last build result is: module not built"
 msgstr "最後のビルド結果が次の状態: モジュールがビルドされていません"
 
+#, fuzzy
+msgid "State when last build result is: module not built (legacy)"
+msgstr "最後のビルド結果が次の状態: モジュールがビルドされていません"
+
 msgid "State when last build result is: success"
 msgstr "最後のビルド結果が次の場合の状態: 成功"
 
@@ -55974,8 +56009,8 @@ msgstr ""
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "コンテンツ要素 \"%s, %s\" はレンダリングできません: %s"
 
-#, python-format
-msgid "The content of this file could not be processed successfully: %s"
+#, fuzzy, python-format
+msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "このファイルのコンテンツは正常に処理されませんでした:%s"
 
 msgid ""
@@ -67098,6 +67133,10 @@ msgstr "トレンドパフォーマンスデータ"
 msgid "Treshold"
 msgstr "しきい値"
 
+#, fuzzy
+msgid "Trial Phase"
+msgstr "ささいな変更"
+
 msgid "Trial expired"
 msgstr "試用期間満了"
 
@@ -67904,10 +67943,6 @@ msgstr "不明"
 #, python-format
 msgid "Unknown %s group: %s"
 msgstr "不明な %s グループ: %s"
-
-#, python-format
-msgid "Unknown (%s)"
-msgstr "不明(%s)"
 
 msgid "Unknown - DUnknown"
 msgstr "不明 - DUnknown"
@@ -70571,6 +70606,10 @@ msgid "Vendor"
 msgstr "ベンダー"
 
 #, fuzzy
+msgid "Vendor Information"
+msgstr "ホスト情報"
+
+#, fuzzy
 msgid "Vendor and device ID"
 msgstr "ベンダーとデバイスID"
 
@@ -71038,6 +71077,13 @@ msgstr ""
 "います。ここで編集したルールは使用されません。代わりに、中央サイトのルールの"
 "コピーが、引き継ぎの際に使用されます。グローバル設定でのイベントアクションも"
 "同様です。"
+
+msgid ""
+"WARNING: This section will increase the load of your Checkmk server and may "
+"increase load of your Database. To see results, you also have to active "
+"'Create additional service for IO stats bytes' or 'Create additional service "
+"for IO stats requests' in 'Oracle performance discovery'."
+msgstr ""
 
 msgid "WCU"
 msgstr "WCU"
@@ -77427,6 +77473,10 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid "Unknown (%s)"
+#~ msgstr "不明(%s)"
+
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "
 #~ "purposes only."
@@ -77448,10 +77498,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Checkmk Cloud (SaaS) Beta"
 #~ msgstr "Checkmk Cloud (SaaS) Beta"
-
-#, python-format
-#~ msgid "During the beta phase, the number of services is limited to %s. "
-#~ msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
 
 #~ msgid "Contact Groups"
 #~ msgstr "連絡先グループ"

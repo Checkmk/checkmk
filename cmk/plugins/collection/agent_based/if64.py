@@ -5,16 +5,19 @@
 
 import dataclasses
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
+    Result,
     RuleSetType,
     SimpleSNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 from cmk.plugins.lib import if64, interfaces, uptime
@@ -82,6 +85,25 @@ def discover_if64(
     )
 
 
+def _check_timestamp(timestamp: float, value_store: MutableMapping[str, Any]) -> CheckResult:
+    previous_timestamp: float | None = value_store.get("timestamp_previous")
+    value_store["timestamp_previous"] = timestamp
+    if previous_timestamp is None:
+        return
+    if previous_timestamp == timestamp:
+        yield Result(
+            state=State.OK,
+            notice="The uptime did not change since the last check cycle. "
+            "It is likely that no new data was collected.",
+        )
+    elif previous_timestamp > timestamp:
+        yield Result(
+            state=State.OK,
+            notice="The uptime has decreased since the last check cycle. "
+            "The device might have rebooted or its uptime counter overflowed.",
+        )
+
+
 def check_if64(
     item: str,
     params: Mapping[str, Any],
@@ -99,6 +121,42 @@ def check_if64(
         section_if64,
         timestamps=[timestamp] * len(section_if64),
     )
+    yield from _check_timestamp(timestamp, get_value_store())
+
+
+def _check_timestamps(
+    timestamps: Mapping[str, float], value_store: MutableMapping[str, Any]
+) -> CheckResult:
+    previous_timestamps: Mapping[str, float] = value_store.get("timestamps_previous", {})
+    value_store["timestamps_previous"] = timestamps
+    nodes_without_uptime_increase = [
+        node
+        for node, timestamp in timestamps.items()
+        if (previous_timestamp := previous_timestamps.get(node)) is not None
+        and previous_timestamp == timestamp
+    ]
+    if nodes_without_uptime_increase:
+        yield Result(
+            state=State.OK,
+            notice="The uptime did not change since the last check cycle for these node(s): "
+            ", ".join(nodes_without_uptime_increase)
+            + "\n"
+            "It is likely that no new data was collected.",
+        )
+    nodes_with_uptime_decrease = [
+        node
+        for node, timestamp in timestamps.items()
+        if (previous_timestamp := previous_timestamps.get(node)) is not None
+        and previous_timestamp > timestamp
+    ]
+    if nodes_with_uptime_decrease:
+        yield Result(
+            state=State.OK,
+            notice="The uptime has decreased since the last check cycle for these node(s): "
+            ", ".join(nodes_without_uptime_increase)
+            + "\n"
+            "The device might have rebooted or its uptime counter overflowed.",
+        )
 
 
 def cluster_check_if64(
@@ -115,9 +173,12 @@ def cluster_check_if64(
             sections_w_admin_status[node_name] = node_section_if64
 
     ifaces = []
-    timestamps = []
+    timestamp_per_iface = []
+    node_to_timestamp = {}
     now = time.time()
     for node, node_ifaces in sections_w_admin_status.items():
+        timestamp = _uptime_or_server_time(now, section_uptime[node])
+        node_to_timestamp[node] = timestamp
         for iface in node_ifaces or ():
             ifaces.append(
                 dataclasses.replace(
@@ -128,13 +189,14 @@ def cluster_check_if64(
                     ),
                 )
             )
-            timestamps.append(_uptime_or_server_time(now, section_uptime[node]))
+            timestamp_per_iface.append(timestamp)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
         ifaces,
-        timestamps=timestamps,
+        timestamps=timestamp_per_iface,
     )
+    yield from _check_timestamps(node_to_timestamp, get_value_store())
 
 
 check_plugin_if64 = CheckPlugin(

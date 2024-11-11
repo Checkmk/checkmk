@@ -134,8 +134,12 @@ def _command_ping(site_id: str) -> int:
 
         message = TestMessage.new()
 
-        write("Sending message:\n" f"  {message!r}\n")
-        channel.publish_for_site(site_id, message, routing=ROUTING_KEY_PING)
+        write(f"Sending message:\n  {message!r}\n")
+        channel.publish_for_site(
+            site_id,
+            message,
+            routing=ROUTING_KEY_PONG if site_id == omd_site() else ROUTING_KEY_PING,
+        )
 
         write("Waiting for response\n")
         channel.consume(QUEUE_PONG, _make_callback_ping(message))

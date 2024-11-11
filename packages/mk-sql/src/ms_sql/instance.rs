@@ -1094,7 +1094,7 @@ impl SqlInstance {
                         format!(
                             "{}{}",
                             section.first_line(Some(&self.name)),
-                            self.to_entries(rows, section.sep())
+                            self.to_entries(rows, section.sep(), section),
                         )
                     })
                     .unwrap_or_else(|e| format!("{} {}\n", self.name, prepare_error(&e)))
@@ -1121,7 +1121,7 @@ impl SqlInstance {
                                 format!(
                                     "{}{}",
                                     section.first_line(Some(&self.name)),
-                                    self.to_entries(rows, section.sep())
+                                    self.to_entries(rows, section.sep(), section)
                                 )
                             })
                             .unwrap_or_else(|e| format!("{} {}\n", self.name, prepare_error(&e))),
@@ -1135,7 +1135,7 @@ impl SqlInstance {
     }
 
     /// rows must be not empty
-    fn to_entries(&self, answers: Vec<UniAnswer>, sep: char) -> String {
+    fn to_entries(&self, answers: Vec<UniAnswer>, sep: char, section: &Section) -> String {
         // just a safety guard, the function should not get empty rows
         if answers.is_empty() {
             return String::new();
@@ -1143,16 +1143,23 @@ impl SqlInstance {
 
         let mut answers_copy = answers;
         let answer = answers_copy.remove(0);
+        // AVAILABILITY section should have a crlf after every row
+        let additional_row = if section.name() == names::AVAILABILITY_GROUPS {
+            "\n"
+        } else {
+            ""
+        };
+
         let result = match answer {
             UniAnswer::Rows(rows) => rows
                 .into_iter()
-                .map(|r| r.get_all(sep))
+                .map(|r| r.get_all(sep) + additional_row)
                 .collect::<Vec<String>>()
                 .join("\n"),
             UniAnswer::Block(block) => block
                 .rows
                 .iter()
-                .map(|r| r.join(&sep.to_string()))
+                .map(|r| r.join(&sep.to_string()) + additional_row)
                 .collect::<Vec<String>>()
                 .join("\n"),
         };

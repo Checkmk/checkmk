@@ -159,7 +159,7 @@ def main() {
     def win_project_name = "${jenkins_base_folder}/winagt-build";
     def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
 
-    stage("Build agent artifacts fast") {
+    conditional_stage("Build agent artifacts fast", !params.FAKE_WINDOWS_ARTIFACTS) {
         docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
             dir("${checkout_dir}") {
                 // Initialize our virtual environment before parallelization

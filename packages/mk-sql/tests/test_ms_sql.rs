@@ -1125,7 +1125,7 @@ const EXPECTED_START: &str = r"<<<mssql_instance:sep(124)>>>
 <<<mssql_counters:sep(124)>>>
 <<<mssql_blocked_sessions:sep(124)>>>
 <<<mssql_transactionlogs:sep(124)>>>
-<<<mssql_clusters:sep(124)>>>
+<<<mssql_cluster:sep(124)>>>
 <<<mssql_mirroring:sep(09)>>>
 <<<mssql_availability_groups:sep(09)>>>
 <<<mssql_connections>>>
@@ -1283,7 +1283,7 @@ async fn test_lack_of_sql_db() {
 <<<mssql_counters:sep(124)>>>
 <<<mssql_blocked_sessions:sep(124)>>>
 <<<mssql_transactionlogs:sep(124)>>>
-<<<mssql_clusters:sep(124)>>>
+<<<mssql_cluster:sep(124)>>>
 <<<mssql_mirroring:sep(09)>>>
 <<<mssql_availability_groups:sep(09)>>>
 <<<mssql_connections>>>

@@ -158,8 +158,11 @@ def _configure() -> Sequence[Widget]:
 
 def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Configure services to monitor"),
-        sub_title=_("Select and configure AWS services you would like to monitor"),
+        title=_("Configure services to monitor & other options"),
+        sub_title=_(
+            "Select and configure AWS services you would like to monitor, and set other "
+            "options such as AWS tags or a proxy server."
+        ),
         configure_components=_configure,
         custom_validators=[],
         recap=[

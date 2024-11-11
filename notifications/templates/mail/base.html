@@ -17,7 +17,8 @@
         {% else %}
             {% set elements = ["graph"] %}
         {% endif %}
-        {% set elements_without_graph = elements | reject("equalto", "graph") | list %}
+        {% set elements_to_ignore = ["graph", "abstime", "longoutput"] %}
+        {% set elements_without_graph = elements | reject("in", elements_to_ignore) | list %}
         {% set state_mapping = {
             "OK": "background-color: #13D389; color: #000000;",
             "UP": "background-color: #13D389; color: #000000;",
@@ -66,10 +67,7 @@
                                                                     &nbsp;
                                                                 </div>
                                                             <![endif]-->
-                                                            <span style="display: block;
-                                                                         width: 536px;
-                                                                         height: 1px;
-                                                                         line-height: 1px">&nbsp;</span>
+                                                            <span style="display: block; width: 536px; height: 1px; line-height: 1px">&nbsp;</span>
                                                         </td>
                                                     </tr>
                                                 </table>

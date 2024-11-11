@@ -134,9 +134,10 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
 
     pub const UTC_ENTRY: &str = "SELECT CONVERT(nvarchar, GETUTCDATE(), 20) as utc_date";
 
-    pub const COUNTERS_ENTRIES: &str = "SELECT cast(counter_name as NVARCHAR) as counter_name, \
-                cast(object_name as NVARCHAR) as object_name, \
-                cast(instance_name as NVARCHAR) as instance_name, \
+    pub const COUNTERS_ENTRIES: &str =
+        "SELECT cast(counter_name as NVARCHAR(100)) as counter_name, \
+                cast(object_name as NVARCHAR(100)) as object_name, \
+                cast(instance_name as NVARCHAR(100)) as instance_name, \
                 cntr_value \
      FROM sys.dm_os_performance_counters WHERE object_name NOT LIKE '%Deprecated%'";
 
@@ -199,7 +200,7 @@ BEGIN
       msdb.dbo.backupset
       LEFT OUTER JOIN sys.databases ON cast(sys.databases.name as nvarchar(max)) = cast(msdb.dbo.backupset.database_name as nvarchar(max))
     WHERE
-      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR))
+      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(max)))
     GROUP BY
       type,
       machine_name,
@@ -273,8 +274,8 @@ EXEC (@SQLCommand)
 FROM sys.database_files WHERE type_desc = 'ROWS'";
 
     pub const DATABASES: &str = "SELECT name, \
-cast(DATABASEPROPERTYEX(name, 'Status') as nvarchar) AS Status, \
-  cast(DATABASEPROPERTYEX(name, 'Recovery') as nvarchar) AS Recovery, \
+cast(DATABASEPROPERTYEX(name, 'Status') as nvarchar(max)) AS Status, \
+  cast(DATABASEPROPERTYEX(name, 'Recovery') as nvarchar(max)) AS Recovery, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoClose') as bigint) AS auto_close, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
 FROM master.dbo.sysdatabases";
@@ -292,12 +293,12 @@ FROM sys.databases";
 
     pub const JOBS: &str = "SELECT \
   sj.job_id AS job_id, \
-  cast(sj.name  as NVARCHAR) AS job_name, \
+  cast(sj.name  as NVARCHAR(max)) AS job_name, \
   sj.enabled AS job_enabled, \
   CAST(sjs.next_run_date AS NVARCHAR(8)) AS next_run_date, \
   CAST(sjs.next_run_time AS NVARCHAR(6)) AS next_run_time, \
   sjserver.last_run_outcome, \
-  CAST(sjserver.last_outcome_message as NVARCHAR) as last_outcome_message, \
+  CAST(sjserver.last_outcome_message as NVARCHAR(128)) as last_outcome_message, \
   CAST(sjserver.last_run_date AS NVARCHAR(8)) AS last_run_date, \
   CAST(sjserver.last_run_time AS NVARCHAR(6)) AS last_run_time, \
   sjserver.last_run_duration, \
@@ -338,12 +339,12 @@ FROM sys.dm_hadr_availability_group_states Groups \
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
     pub const INSTANCE_PROPERTIES: &str = "SELECT \
-    cast(SERVERPROPERTY( 'InstanceName' ) as nvarchar) as InstanceName, \
-    cast(SERVERPROPERTY( 'ProductVersion' ) as nvarchar) as ProductVersion, \
-    cast(SERVERPROPERTY( 'MachineName' ) as nvarchar) as MachineName, \
-    cast(SERVERPROPERTY( 'Edition' ) as nvarchar) as Edition, \
-    cast(SERVERPROPERTY( 'ProductLevel' ) as nvarchar) as ProductLevel, \
-    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as nvarchar) as NetBios";
+    cast(SERVERPROPERTY( 'InstanceName' ) as nvarchar(max)) as InstanceName, \
+    cast(SERVERPROPERTY( 'ProductVersion' ) as nvarchar(max)) as ProductVersion, \
+    cast(SERVERPROPERTY( 'MachineName' ) as nvarchar(max)) as MachineName, \
+    cast(SERVERPROPERTY( 'Edition' ) as nvarchar(max)) as Edition, \
+    cast(SERVERPROPERTY( 'ProductLevel' ) as nvarchar(max)) as ProductLevel, \
+    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as nvarchar(max)) as NetBios";
 
     #[allow(dead_code)]
     pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";

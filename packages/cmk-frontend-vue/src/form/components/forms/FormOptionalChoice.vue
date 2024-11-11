@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from '@/form/components/vue_formspec_components'
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
+import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
@@ -19,35 +19,35 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-const [validation, value] = useValidation<unknown>(
-  data,
-  props.spec.validators,
-  () => props.backendValidation
-)
 
 const embeddedValidation = ref<ValidationMessages>([])
-const checkboxValue = ref<boolean>(value.value !== null)
+const localValidation = ref<string[]>([])
+const checkboxValue = ref<boolean>(data.value !== null)
 
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    embeddedValidation.value = newValidation
-      .filter((msg) => msg.location.length > 1)
-      .map((msg) => {
-        return {
+    embeddedValidation.value = []
+    localValidation.value = []
+    newValidation.forEach((msg) => {
+      if (msg.location.length === 0) {
+        localValidation.value.push(msg.message)
+      } else {
+        embeddedValidation.value.push({
           location: msg.location.slice(1),
           message: msg.message,
           invalid_value: msg.invalid_value
-        }
-      })
+        })
+      }
+    })
   }
 )
 
 watch(checkboxValue, (newValue: boolean) => {
   if (newValue) {
-    value.value = props.spec.parameter_form_default_value
+    data.value = props.spec.parameter_form_default_value
   } else {
-    value.value = null
+    data.value = null
   }
 })
 </script>
@@ -55,17 +55,17 @@ watch(checkboxValue, (newValue: boolean) => {
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
   <HelpText :help="spec.help" />
-  <div v-if="value !== null" class="embedded">
+  <div v-if="data !== null" class="embedded">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}
     </span>
     <FormEdit
-      v-model:data="value"
+      v-model:data="data"
       :spec="spec.parameter_form"
       :backend-validation="embeddedValidation"
     />
   </div>
-  <FormValidation :validation="validation"></FormValidation>
+  <FormValidation :validation="localValidation"></FormValidation>
 </template>
 
 <style scoped>

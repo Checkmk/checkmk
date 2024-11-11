@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import CmkIcon from './CmkIcon.vue'
 
 const props = defineProps<{
   help: string
@@ -38,19 +39,21 @@ const closeHelp = () => {
     <Tooltip :open="open" disable-closing-trigger>
       <TooltipTrigger
         data-testid="help-tooltip-trigger"
-        class="trigger"
+        class="help-text__trigger"
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
-        <img
+        <CmkIcon
           ref="helpIcon"
+          name="info"
+          size="xsmall"
           :style="open ? 'transform: scale(1.1);background-color:var(--tag-added-color-light)' : ''"
-          class="help-text"
+          class="help-text__icon"
           data-testid="help-icon"
       /></TooltipTrigger>
       <TooltipContent
         side="top"
         align="start"
-        class="help-content"
+        class="help-text__content"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
@@ -62,43 +65,27 @@ const closeHelp = () => {
 </template>
 
 <style scoped>
-.help-text {
-  padding-left: 5px;
+body.show_help .help-text__trigger,
+body.show_help .help-text__icon {
   display: none;
 }
 
-.trigger {
-  display: none;
+.help-text__trigger {
   margin: 0;
+  margin-right: var(--spacing);
   padding: 0;
   border: none;
   background: none;
-  margin-left: 0.5rem;
 
-  img {
-    content: var(--icon-help);
-    width: 10px;
-    height: 10px;
+  .help-text__icon {
     background-color: var(--default-tooltip-icon-color);
     padding: 2px;
     border-radius: 50%;
-    cursor: pointer;
-    margin-bottom: -3px;
-  }
-}
-
-body:not(.show_help) {
-  .help-text {
-    display: inline;
-  }
-
-  .trigger {
-    display: inline;
   }
 }
 </style>
 <style>
-.help-content {
+.help-text__content {
   max-height: 10rem;
   overflow-y: auto;
   text-wrap: wrap;

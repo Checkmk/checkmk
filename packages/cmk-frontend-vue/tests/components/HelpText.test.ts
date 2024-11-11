@@ -15,7 +15,7 @@ describe('HelpText', () => {
     })
     const trigger = await screen.findByTestId('help-tooltip-trigger')
     expect(trigger).toBeTruthy()
-    expect(trigger).toHaveClass('trigger')
+    expect(trigger).toHaveClass('help-text__trigger')
     await fireEvent.click(trigger)
     const helpText = await screen.findAllByText('fooHelp')
     expect(helpText).toBeTruthy()

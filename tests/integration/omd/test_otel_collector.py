@@ -20,10 +20,25 @@ pytestmark = [
 ]
 
 
-def test_otelcol_exists(site: Site) -> None:
+def test_otel_collector_exists(site: Site) -> None:
     assert Path(site.root, "bin", "otelcol").exists()
 
 
-def test_otelcol_help(site: Site) -> None:
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["otelcol", "--help"],
+        ["otelcol", "components"],
+    ],
+)
+def test_otel_collector_command_availability(site: Site, command: list[str]) -> None:
     # Commands executed here should return with exit code 0
-    site.check_output(["otelcol", "--help"])
+    site.check_output(command)
+
+
+def test_otel_collector_version(site: Site) -> None:
+    cmd = [
+        "otelcol",
+        "--version",
+    ]
+    assert "0.113.0" in site.check_output(cmd)

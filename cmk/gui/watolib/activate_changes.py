@@ -29,6 +29,7 @@ from collections.abc import (
     MutableMapping,
     Sequence,
 )
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from itertools import filterfalse
@@ -1308,6 +1309,14 @@ def create_and_activate_central_rabbitmq_changes(
     store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
+@contextmanager
+def _debug_log_message(msg: str) -> Iterator[None]:
+    logger.debug(msg)
+    start = time.time()
+    yield
+    logger.debug(f"{msg} ... done (%ss)", round(time.time() - start, 2))
+
+
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1437,14 +1446,18 @@ class ActivateChangesManager(ActivateChanges):
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
-        activation_features = activation_features_registry[str(version.edition(paths.omd_root))]
-        rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
-            BrokerConnectionsConfigFile().load_for_reading()
-        )
 
-        self._site_snapshot_settings = self._get_site_snapshot_settings(
-            self._activation_id, self._sites, rabbitmq_definitions
-        )
+        activation_features = activation_features_registry[str(version.edition(paths.omd_root))]
+
+        with _debug_log_message("Compute rabbitmq definitions"):
+            rabbitmq_definitions = activation_features.get_rabbitmq_definitions(
+                BrokerConnectionsConfigFile().load_for_reading()
+            )
+
+        with _debug_log_message("Preparing site snapshot settings"):
+            self._site_snapshot_settings = self._get_site_snapshot_settings(
+                self._activation_id, self._sites, rabbitmq_definitions
+            )
         self._activate_until = (
             self._get_last_change_id() if activate_until is None else activate_until
         )
@@ -1453,36 +1466,42 @@ class ActivateChangesManager(ActivateChanges):
         self._prevent_activate = prevent_activate
         self._set_persisted_changes()
 
-        self._verify_valid_host_config()
+        with _debug_log_message("Verifying host config"):
+            self._verify_valid_host_config()
         self._save_activation()
 
         # Always do housekeeping. We chose to only delete activations older than one minute, as we
         # don't want to accidentally "clean up" our soon-to-be started activations.
         execute_activation_cleanup_background_job(maximum_age=60)
 
-        self._pre_activate_changes()
-        self._create_snapshots(activation_features.snapshot_manager_factory)
+        with _debug_log_message("Calling pre-activate changes"):
+            self._pre_activate_changes()
+
+        with _debug_log_message("Creating snapshots"):
+            self._create_snapshots(activation_features.snapshot_manager_factory)
         self._save_activation()
 
-        self._start_activation()
+        with _debug_log_message("Starting activation"):
+            self._start_activation()
 
-        create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
+        with _debug_log_message("Create and activate central rabbitmq changes"):
+            create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
-            logger.debug("Starting piggyback hub config distribution")
+            with _debug_log_message("Starting piggyback hub config distribution"):
+                activation_features.distribute_piggyback_hub_configs(
+                    load_configuration_settings(),
+                    configured_sites(),
+                    {site_id for site_id, _site_config in self.dirty_sites()},
+                    {
+                        host_name: host.site_id()
+                        for host_name, host in folder_tree()
+                        .root_folder()
+                        .all_hosts_recursively()
+                        .items()
+                    },
+                )
 
-            activation_features.distribute_piggyback_hub_configs(
-                load_configuration_settings(),
-                configured_sites(),
-                {site_id for site_id, _site_config in self.dirty_sites()},
-                {
-                    host_name: host.site_id()
-                    for host_name, host in folder_tree()
-                    .root_folder()
-                    .all_hosts_recursively()
-                    .items()
-                },
-            )
         return self._activation_id
 
     def _verify_valid_host_config(self):

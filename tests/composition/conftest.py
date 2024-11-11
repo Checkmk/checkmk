@@ -5,7 +5,7 @@
 
 import copy
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from shutil import which
@@ -29,6 +29,12 @@ site_factory = get_site_factory(prefix="comp_")
 logger = logging.getLogger(__name__)
 
 
+_TEST_SITES_LOGGING_LEVELS: Mapping[str, int] = {
+    "cmk.web.background-job": 10,
+    "cmk.web": 10,
+}
+
+
 def _write_global_settings(site: Site, file_path: str, settings: dict[str, Any]) -> None:
     new_global_settings = "".join(f"{key} = {repr(val)}\n" for key, val in settings.items())
     site.write_text_file(file_path, new_global_settings)
@@ -41,26 +47,28 @@ def _get_global_settings(site: Site, file_path: str) -> dict[str, Any]:
     return global_settings
 
 
-@pytest.fixture(autouse=True, scope="session")
-def increase_background_job_logging_level(central_site: Site) -> Iterator[None]:
+@contextmanager
+def _increased_logging_level(site: Site) -> Iterator[None]:
     global_settings_rel_path = "etc/check_mk/multisite.d/wato/global.mk"
-    global_setting = _get_global_settings(central_site, global_settings_rel_path)
+    global_setting = _get_global_settings(site, global_settings_rel_path)
     ori_global_setting = copy.deepcopy(global_setting)
     try:
-        global_setting["log_levels"] = {"cmk.web.background-job": 10}
-        _write_global_settings(central_site, global_settings_rel_path, global_setting)
-        central_site.omd("restart", "apache")
+        global_setting["log_levels"] = _TEST_SITES_LOGGING_LEVELS
+        _write_global_settings(site, global_settings_rel_path, global_setting)
+        site.omd("restart", "apache")
         yield
     finally:
-        _write_global_settings(central_site, global_settings_rel_path, ori_global_setting)
-        central_site.omd("restart", "apache")
+        _write_global_settings(site, global_settings_rel_path, ori_global_setting)
+        site.omd("restart", "apache")
 
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
-    yield from site_factory.get_test_site(
+    with site_factory.get_test_site_ctx(
         "central", description=request.node.name, auto_restart_httpd=True
-    )
+    ) as central_site:
+        with _increased_logging_level(central_site):
+            yield central_site
 
 
 @pytest.fixture(name="remote_site", scope="session")

@@ -53,9 +53,11 @@ defineProps<ButtonProps>()
   justify-content: center;
   letter-spacing: unset;
 }
+
 .button--variant-primary {
   border: 1px solid var(--default-submit-button-border-color);
 }
+
 .button--variant-tertiary {
   text-underline-offset: 2px;
   text-decoration: underline var(--default-button-emphasis-color);
@@ -65,27 +67,30 @@ defineProps<ButtonProps>()
   font-weight: 600;
   text-decoration-thickness: 3px;
 }
+
 .button--variant-tertiary,
-.button--variant-transparent {
+.button--variant-transparent,
+.button--variant-minimal {
   height: auto;
   background: none;
   border: none;
-  padding: 0;
-  margin: 0;
   font-weight: normal;
 }
-.button--variant-minimal {
-  border: none;
-  background: none;
-  font-weight: normal;
+
+.button--variant-tertiary,
+.button--variant-transparent {
+  padding: 0;
+  margin: 0;
 }
 .button--variant-minimal:hover {
   color: var(--default-button-emphasis-color);
 }
+
 .button--variant-info {
   background-color: var(--default-help-icon-bg-color);
   color: var(--white);
 }
+
 .button--size-small {
   height: 25px;
 }

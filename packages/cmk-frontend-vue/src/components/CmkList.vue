@@ -90,7 +90,7 @@ function getItemProps(dataIndex: number): SingleItemProps {
 </script>
 
 <template>
-  <table ref="tableRef" class="valuespec_listof">
+  <table v-show="localOrder.length > 0" ref="tableRef" class="valuespec_listof">
     <template v-for="dataIndex in localOrder" :key="dataIndex">
       <tr class="listof_element">
         <td class="vlof_buttons">
@@ -157,8 +157,14 @@ function getItemProps(dataIndex: number): SingleItemProps {
     &:first-child > .vlof_content {
       padding-top: 0;
     }
+
+    &:last-child > .vlof_buttons,
+    &:last-child > .vlof_content {
+      padding-bottom: 0;
+    }
   }
 }
+
 .vlof_buttons > * {
   display: flex;
 }

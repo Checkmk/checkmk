@@ -681,9 +681,16 @@ class SmsPluginModel(TypedDict):
     params: list[str]
 
 
+SNMPCommunity = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["stored_password", "explicit_password"],
+    tuple[str, str],
+]
+
+
 class SpectrumPluginModel(TypedDict):
     destination: str
-    community: str
+    community: SNMPCommunity
     baseoid: str
 
 

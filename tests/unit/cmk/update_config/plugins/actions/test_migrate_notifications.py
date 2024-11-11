@@ -77,7 +77,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "spectrum",
                         SpectrumPluginModel(
                             destination="1.1.1.1",
-                            community="gaergerag",
+                            community=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             baseoid="1.3.6.1.4.1.1234",
                         ),
                     ),
@@ -93,7 +97,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         },
                         "parameter_properties": {
                             "destination": "1.1.1.1",
-                            "community": "gaergerag",
+                            "community": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             "baseoid": "1.3.6.1.4.1.1234",
                         },
                     }

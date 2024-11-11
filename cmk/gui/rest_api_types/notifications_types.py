@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, cast, ClassVar, Literal, Protocol
+from uuid import uuid4
 
 from cmk.utils.notify_types import (
     AsciiMailPluginModel,
@@ -43,6 +44,7 @@ from cmk.utils.notify_types import (
     SmsApiPluginName,
     SmsPluginModel,
     SmsPluginName,
+    SNMPCommunity,
     SpectrumPluginModel,
     SpectrumPluginName,
     SplunkPluginModel,
@@ -1503,7 +1505,7 @@ class SpectrumPlugin:
     plugin_name: ClassVar[SpectrumPluginName] = "spectrum"
     option: PluginOptions = PluginOptions.CANCEL
     baseoid: str = ""
-    snmp_community: str = ""
+    snmp_community: SNMPCommunity | None = None
     destination_ip: str = ""
 
     @classmethod
@@ -1528,7 +1530,11 @@ class SpectrumPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             baseoid=params["base_oid"],
-            snmp_community=params["snmp_community"],
+            snmp_community=(
+                "cmk_postprocessed",
+                "explicit_password",
+                (str(uuid4()), params["snmp_community"]),
+            ),
             destination_ip=params["destination_ip"],
         )
 
@@ -1539,7 +1545,9 @@ class SpectrumPlugin:
                 {
                     "base_oid": self.baseoid,
                     "destination_ip": self.destination_ip,
-                    "snmp_community": self.snmp_community,
+                    "snmp_community": self.snmp_community[2][1]
+                    if self.snmp_community is not None
+                    else "",
                 }
             )
         return APINotifyPlugin(option=self.option, plugin_params=plugin_params)
@@ -1547,6 +1555,7 @@ class SpectrumPlugin:
     def to_mk_file_format(self) -> PluginNameWithParameters:
         if self.option == "cancel_previous_notifications":
             return (self.__class__.plugin_name, None)
+        assert self.snmp_community is not None
         return (
             self.__class__.plugin_name,
             SpectrumPluginModel(

@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
-    contains,
     DiscoveryResult,
     render,
     Result,
@@ -20,6 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+from .lib import DETECT_AUDIOCODES
 
 _READABLE_SEVERITY = {
     "0": "cleared",
@@ -86,7 +87,7 @@ def parse_audiocodes_alarms(string_table: Sequence[StringTable]) -> Section | No
 
 snmp_section_audiocodes_alarms = SNMPSection(
     name="audiocodes_alarms",
-    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5003.8.1.1"),
+    detect=DETECT_AUDIOCODES,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5003.11.1.1.1.1",

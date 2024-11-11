@@ -131,7 +131,7 @@ class OracleDatabase:
                 ]
             ),
         }
-        self.volumes = []
+        self.volumes: list[str] = []
 
         # CMK_ORADATA can be specified for (re-)using a local, pluggable database folder
         # be default, a temporary database is created in the container

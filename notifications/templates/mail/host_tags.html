@@ -1,61 +1,34 @@
 <!DOCTYPE html>
-<table
-    align="center"
-    width="536"
-    style="border-spacing: 0;"
->
+<table align="center" width="536" style="border-spacing: 0;">
     <tr>
-        <td
-            style="
-                height: 20px;
-                line-height: 20px;
-                font-size: 0;
-                mso-line-height-rule: exactly;
-            "
-        >
-            &nbsp;
-        </td>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
     </tr>
     <tr>
-        <th
-        style="
-            font-size: 18px;
-            font-weight: 600;
-            text-align: left;
-        "
-        colspan=2
-        >
-            <img
-                src="cid:vector.png"
-                style="width: 18px; height: 19px"
-            />
+        <th style="font-size: 18px;
+                   font-weight: 600;
+                   text-align: left"
+            colspan="2">
+            <img src="cid:vector.png" style="width: 18px; height: 19px" />
             Host tags
         </th>
     </tr>
     <tr>
-        <td
-            style="
-                padding: 10px 10px 30px 0;
-            "
-        >
+        <td style=" padding: 10px 10px 30px 0; ">
             {% for key, value in data.items() %}
-                {% if key.startswith('HOSTTAG_')%}
-                <span
-                    style="
-                        margin: 0px 5px 10px 0;
-                        display: inline-block;
-                        color: #2c3843;
-                        text-decoration: none;
-                        font-size: 14px;
-                        line-height: 24px;
-                        padding: 0 10px;
-                        border-radius: 8px;
-                        background-color: #dcdcdc;
-                        border: 1px solid #ccc;
-                    "
-                >
-                    {{ key[8:] }}:{{ value }}
-                </span>
+                {% if key.startswith('HOSTTAG_') %}
+                    <span style="margin: 0px 5px 10px 0;
+                                 display: inline-block;
+                                 color: #2c3843;
+                                 text-decoration: none;
+                                 font-size: 14px;
+                                 line-height: 24px;
+                                 padding: 0 10px;
+                                 border-radius: 8px;
+                                 background-color: #dcdcdc;
+                                 border: 1px solid #ccc">{{ key[8:] }}:{{ value }}</span>
                 {% endif %}
             {% endfor %}
         </td>

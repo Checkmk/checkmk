@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import config
+from ._config import Config, PiggybackTimeSettings
 from ._storage import (
     cleanup_piggyback_files,
     get_messages_for,
@@ -18,7 +18,8 @@ from ._storage import (
 
 __all__ = [
     "cleanup_piggyback_files",
-    "config",
+    "Config",
+    "PiggybackTimeSettings",
     "get_messages_for",
     "get_piggybacked_host_with_sources",
     "move_for_host_rename",

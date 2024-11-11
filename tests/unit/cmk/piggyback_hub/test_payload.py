@@ -10,12 +10,12 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
-from cmk.piggyback import (
+from cmk.piggyback.backend import (
     get_messages_for,
     PiggybackMessage,
     PiggybackMetaData,
 )
-from cmk.piggyback_hub.payload import PiggybackPayload, save_payload_on_message
+from cmk.piggyback.hub.payload import PiggybackPayload, save_payload_on_message
 
 
 def test__on_message() -> None:

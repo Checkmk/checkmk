@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel, CMKConnectionError, DeliveryTag, RoutingKey
-from cmk.piggyback import (
+from cmk.piggyback.backend import (
     PiggybackMessage,
     store_piggyback_raw_data,
     watch_new_messages,

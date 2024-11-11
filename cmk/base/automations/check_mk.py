@@ -182,9 +182,9 @@ from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
-import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
     ExecutableFinder,
     load_special_agents,
@@ -1170,9 +1170,7 @@ class AutomationRenameHosts(Automation):
             if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        actions.extend(
-            cmk.piggyback.move_for_host_rename(cmk.utils.paths.omd_root, oldname, newname)
-        )
+        actions.extend(move_piggyback_for_host_rename(cmk.utils.paths.omd_root, oldname, newname))
 
         # Logwatch
         if self._rename_host_dir(logwatch_dir, oldname, newname):

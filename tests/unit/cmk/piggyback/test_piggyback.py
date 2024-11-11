@@ -11,7 +11,7 @@ import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress
 
-from cmk import piggyback
+from cmk.piggyback import backend
 
 _TEST_HOST_NAME = HostAddress("test-host")
 
@@ -23,18 +23,18 @@ _PAYLOAD = (
 _REF_TIME = 1640000000.0
 
 
-def _get_only_raw_data_element(host_name: HostAddress) -> piggyback.PiggybackMessage:
-    first, *other = piggyback.get_messages_for(host_name, cmk.utils.paths.omd_root)
+def _get_only_raw_data_element(host_name: HostAddress) -> backend.PiggybackMessage:
+    first, *other = backend.get_messages_for(host_name, cmk.utils.paths.omd_root)
     assert not other
     return first
 
 
 def test_get_piggyback_raw_data_no_data() -> None:
-    assert not piggyback.get_messages_for(HostAddress("no-host"), cmk.utils.paths.omd_root)
+    assert not backend.get_messages_for(HostAddress("no-host"), cmk.utils.paths.omd_root)
 
 
 def test_store_piggyback_raw_data_simple() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source"),
         {_TEST_HOST_NAME: (b"line1", b"line2")},
         timestamp=_REF_TIME,
@@ -49,10 +49,10 @@ def test_store_piggyback_raw_data_simple() -> None:
 
 
 def test_get_piggyback_raw_data_not_updated() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"), {_TEST_HOST_NAME: _PAYLOAD}, _REF_TIME, cmk.utils.paths.omd_root
     )
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"),
         {HostAddress("some-other-host"): _PAYLOAD},
         _REF_TIME + 10,
@@ -67,10 +67,10 @@ def test_get_piggyback_raw_data_not_updated() -> None:
 
 
 def test_get_piggyback_raw_data_not_sending() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"), {_TEST_HOST_NAME: _PAYLOAD}, _REF_TIME, cmk.utils.paths.omd_root
     )
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"), {}, _REF_TIME, cmk.utils.paths.omd_root
     )
 
@@ -83,27 +83,26 @@ def test_get_piggyback_raw_data_not_sending() -> None:
 
 def test_remove_source_status_file_not_existing() -> None:
     assert (
-        piggyback.remove_source_status_file(HostAddress("nosource"), cmk.utils.paths.omd_root)
+        backend.remove_source_status_file(HostAddress("nosource"), cmk.utils.paths.omd_root)
         is False
     )
 
 
 def test_remove_source_status_file() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"), {_TEST_HOST_NAME: (b"",)}, _REF_TIME, cmk.utils.paths.omd_root
     )
     assert (
-        piggyback.remove_source_status_file(HostAddress("source1"), cmk.utils.paths.omd_root)
-        is True
+        backend.remove_source_status_file(HostAddress("source1"), cmk.utils.paths.omd_root) is True
     )
 
 
 def test_store_piggyback_raw_data_second_source() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"), {_TEST_HOST_NAME: _PAYLOAD}, _REF_TIME, cmk.utils.paths.omd_root
     )
 
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source2"),
         {_TEST_HOST_NAME: _PAYLOAD},
         _REF_TIME + 10.0,
@@ -112,7 +111,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
 
     raw_data_map = {
         rd.meta.source: rd.meta
-        for rd in piggyback.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+        for rd in backend.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
     }
     assert len(raw_data_map) == 2
 
@@ -123,7 +122,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
 
 
 def test_store_piggyback_raw_data_different_timestamp() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"),
         {_TEST_HOST_NAME: _PAYLOAD},
         _REF_TIME,
@@ -132,7 +131,7 @@ def test_store_piggyback_raw_data_different_timestamp() -> None:
     )
     raw_data_map = {
         rd.meta.source: rd.meta
-        for rd in piggyback.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+        for rd in backend.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
     }
 
     assert (raw1 := raw_data_map[HostAddress("source1")]).last_update == _REF_TIME
@@ -140,21 +139,21 @@ def test_store_piggyback_raw_data_different_timestamp() -> None:
 
 
 def test_get_source_and_piggyback_hosts() -> None:
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"),
         {HostAddress("test-host"): _PAYLOAD},
         _REF_TIME - 10.0,
         cmk.utils.paths.omd_root,
     )
 
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source1"),
         {HostAddress("test-host2"): _PAYLOAD},
         _REF_TIME,
         cmk.utils.paths.omd_root,
     )
 
-    piggyback.store_piggyback_raw_data(
+    backend.store_piggyback_raw_data(
         HostAddress("source2"),
         {
             HostAddress("test-host2"): _PAYLOAD,
@@ -164,18 +163,18 @@ def test_get_source_and_piggyback_hosts() -> None:
         cmk.utils.paths.omd_root,
     )
 
-    piggybacked = piggyback.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
+    piggybacked = backend.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
 
     pprint.pprint(piggybacked)  # pytest won't show it :-(
     assert piggybacked == {
         HostAddress("test-host"): [
-            piggyback.PiggybackMetaData(
+            backend.PiggybackMetaData(
                 source=HostAddress("source1"),
                 piggybacked=HostAddress("test-host"),
                 last_update=int(_REF_TIME - 10),
                 last_contact=int(_REF_TIME),
             ),
-            piggyback.PiggybackMetaData(
+            backend.PiggybackMetaData(
                 source=HostAddress("source2"),
                 piggybacked=HostAddress("test-host"),
                 last_update=int(_REF_TIME),
@@ -183,13 +182,13 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
         HostAddress("test-host2"): [
-            piggyback.PiggybackMetaData(
+            backend.PiggybackMetaData(
                 source=HostAddress("source1"),
                 piggybacked=HostAddress("test-host2"),
                 last_update=int(_REF_TIME),
                 last_contact=int(_REF_TIME),
             ),
-            piggyback.PiggybackMetaData(
+            backend.PiggybackMetaData(
                 source=HostAddress("source2"),
                 piggybacked=HostAddress("test-host2"),
                 last_update=int(_REF_TIME),
@@ -201,19 +200,19 @@ def test_get_source_and_piggyback_hosts() -> None:
 
 class TestPiggybackMetaData:
     def test_serialization_roundtrip(self) -> None:
-        pmd = piggyback.PiggybackMetaData(
+        pmd = backend.PiggybackMetaData(
             source=HostAddress("source1"),
             piggybacked=HostAddress("test-host"),
             last_update=int(_REF_TIME - 10),
             last_contact=int(_REF_TIME),
         )
-        assert piggyback.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
+        assert backend.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
 
     def test_serialization_roundtrip_with_none(self) -> None:
-        pmd = piggyback.PiggybackMetaData(
+        pmd = backend.PiggybackMetaData(
             source=HostAddress("source1"),
             piggybacked=HostAddress("test-host"),
             last_update=int(_REF_TIME - 10),
             last_contact=None,
         )
-        assert piggyback.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
+        assert backend.PiggybackMetaData.deserialize(pmd.serialize()) == pmd

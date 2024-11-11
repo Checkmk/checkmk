@@ -138,8 +138,9 @@ from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.sources import SNMPFetcherConfig
 
-from cmk import piggyback, trace
+from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
+from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
@@ -3202,14 +3203,16 @@ class ConfigCache:
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-        piggy_config = piggyback.config.Config(host_name, time_settings)
+        piggy_config = piggyback_backend.Config(host_name, time_settings)
 
         now = time.time()
 
-        def _is_usable(data: piggyback.PiggybackMessage) -> bool:
+        def _is_usable(data: piggyback_backend.PiggybackMessage) -> bool:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
-        return any(map(_is_usable, piggyback.get_messages_for(host_name, cmk.utils.paths.omd_root)))
+        return any(
+            map(_is_usable, piggyback_backend.get_messages_for(host_name, cmk.utils.paths.omd_root))
+        )
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):
@@ -3836,7 +3839,7 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName | None = None
     ) -> Sequence[tuple[str | None, str, int]]:
-        all_sources = piggyback.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
+        all_sources = piggyback_backend.get_piggybacked_host_with_sources(cmk.utils.paths.omd_root)
         used_sources = (
             {m.source for sources in all_sources.values() for m in sources}
             if piggybacked_hostname is None

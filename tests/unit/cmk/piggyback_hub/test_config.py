@@ -11,12 +11,12 @@ from unittest.mock import Mock
 from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
-from cmk.piggyback_hub.config import (
+from cmk.piggyback.hub.config import (
     load_config,
     PiggybackHubConfig,
     save_config_on_message,
 )
-from cmk.piggyback_hub.paths import create_paths
+from cmk.piggyback.hub.paths import create_paths
 
 
 def test_save_config_on_message(tmp_path: Path) -> None:

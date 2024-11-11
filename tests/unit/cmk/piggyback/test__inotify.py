@@ -6,7 +6,7 @@
 from pathlib import Path
 from unittest.mock import ANY
 
-from cmk.piggyback._inotify import Cookie, Event, INotify, Masks, Watchee
+from cmk.piggyback.backend._inotify import Cookie, Event, INotify, Masks, Watchee
 
 
 def test_basic_event_observing(tmp_path: Path) -> None:

@@ -12,7 +12,7 @@ from cmk.ccc import crash_reporting
 
 import cmk.utils.paths
 
-from cmk.piggyback_hub.main import main
+from cmk.piggyback.hub.main import main
 
 CrashReportStore = crash_reporting.CrashReportStore
 

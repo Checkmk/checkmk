@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
-from cmk import piggyback
+from cmk.piggyback.backend import store_piggyback_raw_data
 
 from .fetcher import HostKey, SourceType
 from .parser import HostSections
@@ -213,7 +213,7 @@ def store_piggybacked_sections(
             # management board (SNMP or IPMI) does not support piggybacking
             continue
 
-        piggyback.store_piggyback_raw_data(
+        store_piggyback_raw_data(
             host_key.hostname, host_sections.piggybacked_raw_data, time.time(), omd_root
         )
 

@@ -57,6 +57,7 @@ class OracleDatabase:
             [str(_).split("=", 1) for _ in self.image.attrs["Config"]["Env"]]
         )
         self.ORACLE_HOME: Final[str] = self.default_environment.get("ORACLE_HOME", "")
+        self.INIT_ORA: Final[str] = f"{self.ORACLE_HOME}/dbs/init.ora"
         assert self.ORACLE_HOME, "ORACLE_HOME is not defined in image!"
         self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
         self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!
@@ -194,16 +195,13 @@ class OracleDatabase:
                 raise docker.errors.NotFound(self.name)
         except docker.errors.NotFound:
             logger.info("Starting container %s from image %s", self.name, self.image.short_id)
+            run_cmds = [
+                f"rm -rf '{self.DATA}/'**",
+                f"sed -i -e 's/memory_target=.*/memory_target=2G/g' '{self.INIT_ORA}'",
+                "/opt/oracle/runOracle.sh",
+            ]
             container = self.docker_client.containers.run(
-                command=(
-                    None
-                    if self.reuse_db
-                    else [
-                        "/bin/bash",
-                        "-c",
-                        f"rm -rf '{self.DATA}/'**; /opt/oracle/runOracle.sh",
-                    ]
-                ),
+                command=(None if self.reuse_db else ["/bin/bash", "-c", ";".join(run_cmds)]),
                 image=self.image.id,
                 name=self.name,
                 volumes=self.volumes,
@@ -389,9 +387,6 @@ def _oracle(
         yield oracle_db
 
 
-@pytest.mark.xfail(
-    reason="Error in configuring Oracle listener when running in the CI. See CMK-19421."
-)
 @skip_if_not_enterprise_edition
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(

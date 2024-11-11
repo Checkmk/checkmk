@@ -286,6 +286,17 @@ def test_get_history() -> None:
         assert delta_cache_filename == expected_delta_cache_filename
 
 
+def test_get_history_corrupted_files() -> None:
+    hostname = "inv-host"
+    archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    (archive_dir / "foo").touch()
+
+    history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
+    assert not history
+    assert corrupted_history_files == ["var/check_mk/inventory_archive/inv-host/foo"]
+
+
 @pytest.mark.usefixtures("create_inventory_history")
 @pytest.mark.parametrize(
     "search_timestamp, expected_raw_delta_tree",

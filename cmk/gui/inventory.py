@@ -212,10 +212,6 @@ class InventoryHistoryPath(NamedTuple):
             timestamp=None,
         )
 
-    @property
-    def short(self) -> Path:
-        return self.path.relative_to(cmk.utils.paths.omd_root)
-
 
 class HistoryEntry(NamedTuple):
     timestamp: int | None
@@ -305,6 +301,12 @@ def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[st
     )
 
 
+def _sort_corrupted_history_files(corrupted_history_files: Sequence[Path]) -> Sequence[str]:
+    return sorted(
+        [str(fp.relative_to(cmk.utils.paths.omd_root)) for fp in set(corrupted_history_files)]
+    )
+
+
 def _get_history(
     hostname: HostName,
     *,
@@ -313,16 +315,16 @@ def _get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    if not (tree_paths := _get_inventory_history_paths(hostname)):
-        return [], []
+    tree_paths, corrupted_history_files = _get_inventory_history_paths(hostname)
+    if not tree_paths:
+        return [], _sort_corrupted_history_files(corrupted_history_files)
 
     try:
         filtered_tree_paths = filter_tree_paths(tree_paths)
     except FilterInventoryHistoryPathsError:
-        return [], []
+        return [], _sort_corrupted_history_files(corrupted_history_files)
 
     cached_tree_loader = _CachedTreeLoader()
-    corrupted_history_files: set[Path] = set()
     history: list[HistoryEntry] = []
     filters = (
         [make_filter(entry) for entry in permitted_paths if entry]
@@ -349,7 +351,7 @@ def _get_history(
             previous_tree = cached_tree_loader.get_tree(previous.path)
             current_tree = cached_tree_loader.get_tree(current.path)
         except LoadStructuredDataError:
-            corrupted_history_files.add(current.short)
+            corrupted_history_files.append(current.path)
             continue
 
         if (
@@ -359,23 +361,34 @@ def _get_history(
         ) is not None:
             history.append(history_entry)
 
-    return history, sorted([str(path) for path in corrupted_history_files])
+    return history, _sort_corrupted_history_files(corrupted_history_files)
 
 
-def _get_inventory_history_paths(hostname: HostName) -> Sequence[InventoryHistoryPath]:
+def _get_inventory_history_paths(
+    hostname: HostName,
+) -> tuple[Sequence[InventoryHistoryPath], list[Path]]:
     inventory_path = Path(cmk.utils.paths.inventory_output_dir, hostname)
     inventory_archive_dir = Path(cmk.utils.paths.inventory_archive_dir, hostname)
 
     try:
-        archived_tree_paths = [
-            InventoryHistoryPath(
-                path=filepath,
-                timestamp=int(filepath.name),
-            )
-            for filepath in sorted(inventory_archive_dir.iterdir())
-        ]
+        sorted_tree_paths = sorted(inventory_archive_dir.iterdir())
     except FileNotFoundError:
-        return []
+        return [], []
+
+    archived_tree_paths = []
+    corrupted_history_files = []
+    for file_path in sorted_tree_paths:
+        try:
+            archived_tree_paths.append(
+                InventoryHistoryPath(
+                    path=file_path,
+                    timestamp=int(file_path.name),
+                )
+            )
+        except FileNotFoundError:
+            pass
+        except ValueError:
+            corrupted_history_files.append(file_path)
 
     try:
         archived_tree_paths.append(
@@ -387,7 +400,7 @@ def _get_inventory_history_paths(hostname: HostName) -> Sequence[InventoryHistor
     except FileNotFoundError:
         pass
 
-    return archived_tree_paths
+    return archived_tree_paths, corrupted_history_files
 
 
 def _get_pairs(

@@ -1,0 +1,9 @@
+Title: HW/SW inventory history: Detect further corrupted files if they do not conform to be a timestamp
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1731334729
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+

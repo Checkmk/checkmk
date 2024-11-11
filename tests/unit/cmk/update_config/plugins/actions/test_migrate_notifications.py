@@ -11,15 +11,27 @@ from pytest import MonkeyPatch
 
 from cmk.utils.notify_types import (
     AsciiMailPluginModel,
+    BasicAuthCredentials,
     CiscoPluginModel,
     EventRule,
+    IlertPluginModel,
+    JiraIssuePluginModel,
     MailPluginModel,
+    MgmtTypeCase,
+    MicrosoftTeamsPluginModel,
     MKEventdPluginModel,
     NotificationParameterID,
     NotificationParameterSpecs,
     NotificationPluginNameStr,
     OpsGenieIssuesPluginModel,
+    PagerDutyPluginModel,
+    PushoverPluginModel,
+    ServiceNowPluginModel,
+    SignL4PluginModel,
+    SlackPluginModel,
+    SmsApiPluginModel,
     SpectrumPluginModel,
+    SplunkPluginModel,
 )
 
 from cmk.gui.utils.script_helpers import gui_context
@@ -148,7 +160,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             webhook_url=("webhook_url", "https://www.mywebhook.url"),
                             url_prefix={"automatic": "https"},
                             ignore_ssl=True,
-                            proxy_url=("no_proxy", None),
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
                 )
@@ -165,7 +177,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "webhook_url": ("webhook_url", "https://www.mywebhook.url"),
                             "url_prefix": {"automatic": "https"},
                             "ignore_ssl": True,
-                            "proxy_url": ("no_proxy", None),
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }
                 }
@@ -199,6 +211,399 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
             },
             [("mkeventd", "<uuid-1>")],
             id="Forward notification to Event Console",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "opsgenie_issues",
+                        OpsGenieIssuesPluginModel(
+                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                ),
+            ],
+            {
+                "opsgenie_issues": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "password": (
+                                "password",
+                                "zhfziuofoziudfozuidouizd",
+                            ),
+                            "proxy_url": (
+                                "cmk_postprocessed",
+                                "no_proxy",
+                                "",
+                            ),
+                        },
+                    }
+                }
+            },
+            [("opsgenie_issues", "<uuid-1>")],
+            id="OpsGenie Issues",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "ilert",
+                        IlertPluginModel(
+                            ilert_api_key=("ilert_api_key", "zhfziuofoziudfozuidouizd"),
+                            ilert_priority="HIGH",
+                            ilert_summary_host="",
+                            ilert_summary_service="",
+                            url_prefix={"automatic": "https"},
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                ),
+            ],
+            {
+                "ilert": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "ilert_api_key": ("ilert_api_key", "zhfziuofoziudfozuidouizd"),
+                            "ilert_priority": "HIGH",
+                            "ilert_summary_host": "",
+                            "ilert_summary_service": "",
+                            "url_prefix": {"automatic": "https"},
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("ilert", "<uuid-1>")],
+            id="Ilert",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "jira_issues",
+                        JiraIssuePluginModel(
+                            url="test_url",
+                            auth=(
+                                "auth_basic",
+                                BasicAuthCredentials(
+                                    username="username",
+                                    password=("store", "the_store_id"),
+                                ),
+                            ),
+                            project="project",
+                            issuetype="issuetype",
+                            host_customid="custom_id",
+                            service_customid="custom_id",
+                            monitoring="monitoring",
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "jira_issues": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "url": "test_url",
+                            "auth": (
+                                "auth_basic",
+                                {"username": "username", "password": ("store", "the_store_id")},
+                            ),
+                            "project": "project",
+                            "issuetype": "issuetype",
+                            "host_customid": "custom_id",
+                            "service_customid": "custom_id",
+                            "monitoring": "monitoring",
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("jira_issues", "<uuid-1>")],
+            id="Jira Issues",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "msteams",
+                        MicrosoftTeamsPluginModel(
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "msteams": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("msteams", "<uuid-1>")],
+            id="Microsoft teams",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "pagerduty",
+                        PagerDutyPluginModel(
+                            routing_key=("routing_key", "zhfziuofoziudfozuidouizd"),
+                            webhook_url="https://events.pagerduty.com/v2/enqueue",
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "pagerduty": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "routing_key": ("routing_key", "zhfziuofoziudfozuidouizd"),
+                            "webhook_url": "https://events.pagerduty.com/v2/enqueue",
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("pagerduty", "<uuid-1>")],
+            id="PagerDuty",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "pushover",
+                        PushoverPluginModel(
+                            api_key="api_key",
+                            recipient_key="recipient_key",
+                            url_prefix="url_prefix",
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "pushover": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "api_key": "api_key",
+                            "recipient_key": "recipient_key",
+                            "url_prefix": "url_prefix",
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("pushover", "<uuid-1>")],
+            id="PushOver",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "servicenow",
+                        ServiceNowPluginModel(
+                            url="url",
+                            auth=(
+                                "auth_basic",
+                                BasicAuthCredentials(
+                                    username="username",
+                                    password=("store", "the_store_id"),
+                                ),
+                            ),
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                            mgmt_type=("case", MgmtTypeCase(priority="low")),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "servicenow": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "url": "url",
+                            "auth": (
+                                "auth_basic",
+                                {"username": "username", "password": ("store", "the_store_id")},
+                            ),
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                            "mgmt_type": ("case", {"priority": "low"}),
+                        },
+                    }
+                }
+            },
+            [("servicenow", "<uuid-1>")],
+            id="ServiceNow",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "signl4",
+                        SignL4PluginModel(
+                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            url_prefix={"manual": "url_prefix"},
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "signl4": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "url_prefix": {"manual": "url_prefix"},
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("signl4", "<uuid-1>")],
+            id="Signl4",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "slack",
+                        SlackPluginModel(
+                            webhook_url=("webhook_url", "https://www.mywebhook.url"),
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "slack": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "webhook_url": ("webhook_url", "https://www.mywebhook.url"),
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("slack", "<uuid-1>")],
+            id="Slack",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "sms_api",
+                        SmsApiPluginModel(
+                            modem_type="trb140",
+                            url="url",
+                            username="username",
+                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "sms_api": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "modem_type": "trb140",
+                            "url": "url",
+                            "username": "username",
+                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("sms_api", "<uuid-1>")],
+            id="SMS API",
+        ),
+        pytest.param(
+            [
+                EventRuleFactory.build(
+                    notify_plugin=(
+                        "victorops",
+                        SplunkPluginModel(
+                            webhook_url=("webhook_url", "https://www.mywebhook.url"),
+                            url_prefix={"automatic": "https"},
+                            proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                        ),
+                    ),
+                )
+            ],
+            {
+                "victorops": {
+                    "<uuid-1>": {
+                        "general": {
+                            "description": "Migrated from notification rule #0",
+                            "comment": "Auto migrated on update",
+                            "docu_url": "",
+                        },
+                        "parameter_properties": {
+                            "webhook_url": ("webhook_url", "https://www.mywebhook.url"),
+                            "url_prefix": {"automatic": "https"},
+                            "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                        },
+                    }
+                }
+            },
+            [("victorops", "<uuid-1>")],
+            id="Splunk",
         ),
         pytest.param(
             [

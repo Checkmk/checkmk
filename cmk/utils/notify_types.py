@@ -468,12 +468,12 @@ AsciiMailPluginModel = TypedDict(
     },
 )
 
+EnvironmentProxy = tuple[Literal["cmk_postprocessed"], Literal["environment_proxy"], str]
+WithoutProxy = tuple[Literal["cmk_postprocessed"], Literal["no_proxy"], str]
+StoredProxy = tuple[Literal["cmk_postprocessed"], Literal["stored_proxy"], str]
+ExplicitProxy = tuple[Literal["cmk_postprocessed"], Literal["explicit_proxy"], str]
+ProxyUrl = EnvironmentProxy | WithoutProxy | StoredProxy | ExplicitProxy
 
-Environment = tuple[Literal["environment"], Literal["environment"]]
-WithoutProxy = tuple[Literal["no_proxy"], None]
-GlobalProxy = tuple[Literal["global"], str]
-ExplicitProxy = tuple[Literal["url"], str]
-ProxyUrl = Environment | WithoutProxy | GlobalProxy | ExplicitProxy
 WebhookURL = tuple[Literal["webhook_url", "store"], str]
 
 

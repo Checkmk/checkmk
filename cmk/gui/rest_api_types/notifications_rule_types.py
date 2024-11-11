@@ -1324,19 +1324,19 @@ class CheckboxHttpProxy:
     def from_api_request(cls, data: HttpProxyAPIValueType) -> CheckboxHttpProxy:
         match data:
             case {"state": "enabled", "value": {"option": "no_proxy"}}:
-                return cls(value=("no_proxy", None))
+                return cls(value=("cmk_postprocessed", "no_proxy", ""))
 
             case {"state": "enabled", "value": {"option": "url", "url": str() as url}}:
-                return cls(value=("url", url))
+                return cls(value=("cmk_postprocessed", "explicit_proxy", url))
 
             case {
                 "state": "enabled",
                 "value": {"option": "global", "global_proxy_id": str() as global_proxy_id},
             }:
-                return cls(value=("global", global_proxy_id))
+                return cls(value=("cmk_postprocessed", "stored_proxy", global_proxy_id))
 
             case {"state": "enabled", "value": {"option": "environment"}}:
-                return cls(value=("environment", "environment"))
+                return cls(value=("cmk_postprocessed", "environment_proxy", ""))
 
             case _:
                 return cls()
@@ -1347,17 +1347,17 @@ class CheckboxHttpProxy:
         if self.value is None:
             return r
 
-        option, value = self.value
+        _, option, value = self.value
         if option == "no_proxy":
-            r["value"] = {"option": option}
+            r["value"] = {"option": "no_proxy"}
 
-        if option == "environment":
-            r["value"] = {"option": option}
+        if option == "environment_proxy":
+            r["value"] = {"option": "environment"}
 
-        if option == "url" and value is not None:
+        if option == "explicit_proxy":
             r["value"] = {"option": "url", "url": value}
 
-        if option == "global" and value is not None:
+        if option == "stored_proxy":
             r["value"] = {"option": "global", "global_proxy_id": value}
 
         return r

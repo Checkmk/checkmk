@@ -92,29 +92,40 @@ $(INSTALL_TARGETS): $(BUILD_HELPER_DIR)/%-install: $(BUILD_HELPER_DIR)/%-skel-di
 $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel
 	set -e ; \
-	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
-	    PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME"; \
+	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')" ; \
+	    if [ -d "$(NON_FREE_PACKAGE_DIR)/$$PACKAGE_NAME" ]; then \
+	        PACKAGE_PATH="$(NON_FREE_PACKAGE_DIR)/$$PACKAGE_NAME" ; \
+	    elif [ -d "$(PACKAGE_DIR)/$$PACKAGE_NAME" ]; then \
+	        PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME" ; \
+	    else \
+	        echo "ERROR: Package directory does not exist" ; \
+	        exit 1 ; \
+	    fi ; \
 	    if [ ! -d "$$PACKAGE_PATH" ]; then \
-		echo "ERROR: Package directory does not exist" ; \
-		exit 1; \
+	        echo "ERROR: Package directory does not exist" ; \
+	        exit 1 ; \
 	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
-		tar cf - -C "$$PACKAGE_PATH/skel" \
-		    --exclude="BUILD" \
-		    --exclude="*~" \
-		    --exclude=".gitignore" \
-		    --exclude=".f12" \
-		    . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
-            fi
+	        tar cf - -C "$$PACKAGE_PATH/skel" \
+	            --exclude="BUILD" \
+	            --exclude="*~" \
+	            --exclude=".gitignore" \
+	            --exclude=".f12" \
+	            . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+	    fi
 
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack
-	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \
-	if [ ! -d "$(PACKAGE_DIR)/$$DIR" ]; then \
+	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//') ; \
+	if [ -d "$(NON_FREE_PACKAGE_DIR)/$$DIR" ]; then \
+	    DIR_PATH="$(NON_FREE_PACKAGE_DIR)/$$DIR" ; \
+	elif [ -d "$(PACKAGE_DIR)/$$DIR" ]; then \
+	    DIR_PATH="$(PACKAGE_DIR)/$$DIR" ; \
+	else \
 	    echo "ERROR: Package directory does not exist" ; \
-	    exit 1; \
+	    exit 1 ; \
 	fi ; \
-	for P in $$($(LS) $(PACKAGE_DIR)/$$DIR/patches/*.dif); do \
+	for P in $$($(LS) $(DIR_PATH)/patches/*.dif); do \
 	    $(ECHO) "applying $$P..." ; \
 	    $(PATCH) -p1 -b -d $(PACKAGE_BUILD_DIR)/$* < $$P ; \
 	done
@@ -162,7 +173,7 @@ $(BUILD_HELPER_DIR)/%-unpack: $(PACKAGE_DIR)/*/%.zip
 	$(TOUCH) $@
 
 debug:
-	echo $(PACKAGE_DIR)
+	echo "PACKAGE_DIR: $(PACKAGE_DIR), NON_FREE_PACKAGE_DIR: $(NON_FREE_PACKAGE_DIR)"
 
 # Include rules to make packages
 include \

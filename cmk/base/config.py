@@ -2334,12 +2334,12 @@ class ConfigCache:
 
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
-    def _is_waiting_for_discovery_host(self, host_name: HostName) -> bool:
+    def is_waiting_for_discovery_host(self, host_name: HostName) -> bool:
         with contextlib.suppress(KeyError):
             return self.__is_waiting_for_discovery_host[host_name]
 
         return self.__is_waiting_for_discovery_host.setdefault(
-            host_name, ConfigCache.is_waiting_for_discovery(host_name)
+            host_name, ConfigCache._is_waiting_for_discovery(host_name)
         )
 
     def is_ping_host(self, host_name: HostName) -> bool:
@@ -2366,7 +2366,7 @@ class ConfigCache:
         return not self.is_online(host_name)
 
     def is_online(self, host_name: HostName) -> bool:
-        return self._is_only_host(host_name) and not self._is_waiting_for_discovery_host(host_name)
+        return self._is_only_host(host_name)
 
     def is_active(self, host_name: HostName) -> bool:
         """Return True if host is active, else False."""
@@ -3123,7 +3123,7 @@ class ConfigCache:
         )
 
     @staticmethod
-    def is_waiting_for_discovery(hostname: HostName) -> bool:
+    def _is_waiting_for_discovery(hostname: HostName) -> bool:
         """Check custom attribute set by WATO to signal
         the host may be not discovered and should be ignore"""
         return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)

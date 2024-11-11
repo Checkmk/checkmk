@@ -605,7 +605,7 @@ def test_host_waiting_for_discovery(
     ts.set_option("host_attributes", {hostname: attrs})
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._is_waiting_for_discovery_host(hostname) == result
+    assert config_cache.is_waiting_for_discovery_host(hostname) == result
 
 
 def _management_config_ruleset() -> Sequence[RuleSpec[object]]:

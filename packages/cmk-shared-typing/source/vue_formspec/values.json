@@ -1,0 +1,72 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "$defs": {
+        "condition_choices_value": {
+            "type": "object",
+            "properties": {
+                "group_name": {
+                    "type": "string"
+                },
+                "value": {
+                    "oneOf": [
+                        {
+                            "title": "eq",
+                            "type": "object",
+                            "properties": {
+                                "eq": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["eq"]
+                        },
+                        {
+                            "title": "ne",
+                            "type": "object",
+                            "properties": {
+                                "ne": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["ne"]
+                        },
+                        {
+                            "title": "or",
+                            "type": "object",
+                            "properties": {
+                                "or": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": ["or"]
+                        },
+                        {
+                            "title": "nor",
+                            "type": "object",
+                            "properties": {
+                                "nor": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": ["nor"]
+                        }
+                    ]
+                }
+            },
+            "required": ["group_name", "value"]
+        },
+        "values": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/condition_choices_value"
+                }
+            ]
+        }
+    }
+}

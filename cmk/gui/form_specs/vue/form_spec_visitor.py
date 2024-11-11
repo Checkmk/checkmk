@@ -25,6 +25,7 @@ from cmk.gui.form_specs.private import (
     CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
+    ConditionChoices,
     DictionaryExtended,
     Folder,
     Labels,
@@ -38,6 +39,7 @@ from cmk.gui.form_specs.private import (
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
@@ -155,6 +157,7 @@ def register_form_specs():
     register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
     register_visitor_class(SimplePassword, SimplePasswordVisitor)
     register_visitor_class(StringAutocompleter, StringVisitor)
+    register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
     register_visitor_class(Folder, FolderVisitor)

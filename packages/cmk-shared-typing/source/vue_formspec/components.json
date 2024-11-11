@@ -1023,6 +1023,50 @@
                 }
             ]
         },
+        "condition_choices": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "condition_choices",
+                    "default": "condition_choices"
+                },
+                "condition_groups": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "title": "ConditionGroup",
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "conditions": {
+                                "type": "array",
+                                "items": {
+                                    "title": "Condition",
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": ["name", "title"]
+                                }
+                            }
+                        },
+                        "required": ["title", "conditions"]
+                    }
+                }
+            },
+            "required": ["type", "condition_groups"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "labels": {
             "type": "object",
             "properties": {
@@ -1147,6 +1191,9 @@
                 },
                 {
                     "$ref": "#/$defs/folder"
+                },
+                {
+                    "$ref": "#/$defs/condition_choices"
                 },
                 {
                     "$ref": "#/$defs/labels"

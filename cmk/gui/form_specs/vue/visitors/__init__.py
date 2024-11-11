@@ -8,6 +8,7 @@ from .boolean_choice import BooleanChoiceVisitor
 from .cascading_single_choice import CascadingSingleChoiceVisitor
 from .catalog import CatalogVisitor
 from .comment_text_area import CommentTextAreaVisitor
+from .condition_choices import ConditionChoicesVisitor
 from .data_size import DataSizeVisitor
 from .dictionary import DictionaryVisitor
 from .fixed_value import FixedValueVisitor
@@ -45,6 +46,7 @@ __all__ = [
     "FixedValueVisitor",
     "FloatVisitor",
     "FolderVisitor",
+    "ConditionChoicesVisitor",
     "IntegerVisitor",
     "LegacyValuespecVisitor",
     "ListVisitor",

@@ -33,6 +33,7 @@ import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
 import FormCheckboxListChoice from './forms/FormCheckboxListChoice.vue'
 import FormFolder from './forms/FormFolder.vue'
 import FormLabels from './forms/FormLabels.vue'
+import FormConditionChoices from './forms/form_condition_choices'
 
 const props = defineProps<{
   spec: FormSpec
@@ -67,6 +68,7 @@ const components: Record<Components['type'], unknown> = {
   simple_password: FormSimplePassword,
   list_of_strings: FormListOfStrings,
   folder: FormFolder,
+  condition_choices: FormConditionChoices,
   labels: FormLabels
 }
 

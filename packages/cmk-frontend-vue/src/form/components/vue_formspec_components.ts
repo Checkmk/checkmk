@@ -34,6 +34,7 @@ export type Components =
   | SimplePassword
   | ListOfStrings
   | Folder
+  | ConditionChoices
   | Labels;
 export type Integer = FormSpec & {
   type: "integer";
@@ -194,6 +195,12 @@ export type Folder = FormSpec & {
   type: "folder";
   input_hint?: string;
 };
+export type ConditionChoices = FormSpec & {
+  type: "condition_choices";
+  condition_groups: {
+    [k: string]: ConditionGroup;
+  };
+};
 export type Labels = FormSpec & {
   type: "labels";
   i18n: LabelsI18N;
@@ -201,10 +208,12 @@ export type Labels = FormSpec & {
   max_labels: number;
   label_source?: "explicit" | "ruleset" | "discovered";
 };
+export type Values = ConditionChoicesValue;
 
 export interface VueFormspecComponents {
   components?: Components;
   validation_message?: ValidationMessage;
+  values?: Values;
 }
 export interface FormSpec {
   type: string;
@@ -317,6 +326,14 @@ export interface I18NOptionalChoice {
   label: string;
   none_label: string;
 }
+export interface ConditionGroup {
+  title: string;
+  conditions: Condition[];
+}
+export interface Condition {
+  name: string;
+  title: string;
+}
 export interface LabelsI18N {
   add_some_labels: string;
   key_value_format_error: string;
@@ -327,4 +344,20 @@ export interface ValidationMessage {
   location: string[];
   message: string;
   invalid_value: unknown;
+}
+export interface ConditionChoicesValue {
+  group_name: string;
+  value: Eq | Ne | Or | Nor;
+}
+export interface Eq {
+  eq: string;
+}
+export interface Ne {
+  ne: string;
+}
+export interface Or {
+  or: string[];
+}
+export interface Nor {
+  nor: string[];
 }

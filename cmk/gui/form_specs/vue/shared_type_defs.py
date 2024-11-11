@@ -181,6 +181,18 @@ class ListOfStringsLayout(str, Enum):
 
 
 @dataclass(kw_only=True)
+class Condition:
+    name: str
+    title: str
+
+
+@dataclass(kw_only=True)
+class ConditionGroup:
+    title: str
+    conditions: list[Condition]
+
+
+@dataclass(kw_only=True)
 class LabelsI18n:
     add_some_labels: str
     key_value_format_error: str
@@ -199,6 +211,35 @@ class ValidationMessage:
     location: list[str]
     message: str
     invalid_value: Any
+
+
+@dataclass(kw_only=True)
+class Eq:
+    eq: str
+
+
+@dataclass(kw_only=True)
+class Ne:
+    ne: str
+
+
+@dataclass(kw_only=True)
+class Or:
+    or_: list[str]
+
+
+@dataclass(kw_only=True)
+class Nor:
+    nor: list[str]
+
+
+@dataclass(kw_only=True)
+class ConditionChoicesValue:
+    group_name: str
+    value: Union[Eq, Ne, Or, Nor]
+
+
+Values = ConditionChoicesValue
 
 
 @dataclass(kw_only=True)
@@ -422,6 +463,12 @@ class Folder(FormSpec):
 
 
 @dataclass(kw_only=True)
+class ConditionChoices(FormSpec):
+    condition_groups: dict[str, ConditionGroup]
+    type: str = "condition_choices"
+
+
+@dataclass(kw_only=True)
 class Labels(FormSpec):
     i18n: LabelsI18n
     max_labels: int
@@ -455,6 +502,7 @@ Components = Union[
     SimplePassword,
     ListOfStrings,
     Folder,
+    ConditionChoices,
     Labels,
 ]
 
@@ -463,3 +511,4 @@ Components = Union[
 class VueFormspecComponents:
     components: Optional[Components] = None
     validation_message: Optional[ValidationMessage] = None
+    values: Optional[Values] = None

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic
+from .condition_choices import ConditionChoices
 from .definitions import (
     CommentTextArea,
     LegacyValueSpec,
@@ -30,6 +31,7 @@ __all__ = [
     "CommentTextArea",
     "DictionaryExtended",
     "Folder",
+    "ConditionChoices",
     "LegacyValueSpec",
     "ListExtended",
     "ListOfStrings",

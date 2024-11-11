@@ -61,6 +61,8 @@ function renderForm(
         value as [string, unknown],
         backendValidation
       )
+    case 'condition_choices':
+      return h('div', 'WIP')
     case 'legacy_valuespec':
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':

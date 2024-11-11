@@ -2,12 +2,16 @@
 {% macro additional_tr(data, title, key) %}
     <tr>
         <td {{ macros.td_first_child(width="170px") }}>{{ title }}:
-        </td>
-        <td {{ macros.td_last_child() }}>{{ data[key] }}
+            <span style="font-weight: initial;" {{ macros.td_last_child() }}>{{ data[key] }}
+            </span>
         </td>
     </tr>
 {% endmacro %}
-<table align="center" width="536" style="border-spacing: 0;">
+<table align="center"
+       width="100%"
+       style="border-spacing: 0;
+              min-width: 220px;
+              max-width: 536px">
     <tr>
         <td style="height: 20px;
                    line-height: 20px;
@@ -25,7 +29,11 @@
     </tr>
     <tr>
         <td>
-            <table width="536" style="height: 54px;">
+            <table width="100%"
+                   style="height: 54px;
+                          min-width: 220px;
+                          max-width: 536px;
+                          table-layout: fixed">
                 {% for element in data.PARAMETER_ELEMENTSS.split(' ') %}
                     {% if element =="ack_author" %}
                         {% if service_notification %}
@@ -80,8 +88,11 @@
                         <tr>
                             <td>
                                 <table style="border: 1px solid #dfdfdf;
+                                              min-width: 220px;
+                                              max-width: 536px;
                                               width: 100%;
-                                              border-collapse: collapse">
+                                              border-collapse: collapse;
+                                              table-layout: fixed">
                                     {% for key, value in data.items() %}
                                         <tr style="border: 1px solid #dfdfdf;">
                                             <td style="border: 1px solid #dfdfdf;
@@ -96,6 +107,7 @@
                                                        padding-top: 8px;
                                                        font-size: 14px;
                                                        color: #2c3844;
+                                                       width: 40%;
                                                        word-wrap: break-word">
                                                 <!--[if mso]>
                                                     <style>

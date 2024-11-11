@@ -567,6 +567,7 @@ class ModeConfigurationBundle(WatoMode):
         assert self._bundle_references.rules and self._bundle_references.hosts
         host = self._bundle_references.hosts[0]
         rule = self._bundle_references.rules[0]
+
         bundle_entity_links = [
             MenuItem(
                 mode_or_url=ModeEditRule.mode_url(
@@ -577,8 +578,8 @@ class ModeConfigurationBundle(WatoMode):
                 icon="cloud",
                 permission="rulesets",
                 description=_(
-                    'The "linked.rule" rule set contains the special agent configuration. Credentials and other agent-specific data can be edited here'
-                ),
+                    'The rule set "{rule_title}" contains the special agent configuration. Credentials and other agent-specific data can be edited here'
+                ).format(rule_title=rule.ruleset.title()),
             ),
             MenuItem(
                 mode_or_url=ModeEditHost.mode_url(host=host.name()),
@@ -586,13 +587,13 @@ class ModeConfigurationBundle(WatoMode):
                 icon="folder",
                 permission="hosts",
                 description=_(
-                    "The host contains all information about configured data source types, tags, labels, custom properties, and the folder in which the host is located. This is where you can associate the host with specific rules via labels or tags, and make similar customization."
-                ),
+                    'The host "{host_name}" contains all configuration like general properties and the folder location. Adjust to modify labels, tags or similar customization.'
+                ).format(host_name=host.name()),
             ),
         ]
 
         if self._bundle_references.dcd_connections:
-            dcd_config_id, _dcd_config_spec = self._bundle_references.dcd_connections[0]
+            dcd_config_id, dcd_config_spec = self._bundle_references.dcd_connections[0]
             bundle_entity_links.append(
                 MenuItem(
                     mode_or_url=mode_url("edit_dcd_connection", ident=dcd_config_id),
@@ -600,13 +601,13 @@ class ModeConfigurationBundle(WatoMode):
                     icon="dcd_connections",
                     permission="dcd_connections",
                     description=_(
-                        'The main host "linked.host" can provide data to other hosts in Checkmk. The dynamic host configuration connection "linked.connection" holds the configuration for how these other hosts are created if they don\'t already exist. Customization of where these hosts are created and what properties, tags, and labels they get can be done here.'
-                    ),
+                        'Additional hosts are created automatically if they do not yet exist. Adjust the connection "{dcd_title}" to modify the folder or properties.'
+                    ).format(dcd_title=dcd_config_spec["title"]),
                 )
             )
 
         if self._bundle_references.passwords:
-            password_id, _password = self._bundle_references.passwords[0]
+            password_id, password = self._bundle_references.passwords[0]
             bundle_entity_links.append(
                 MenuItem(
                     mode_or_url=ModeEditPassword.mode_url(ident=password_id),
@@ -614,8 +615,8 @@ class ModeConfigurationBundle(WatoMode):
                     icon="passwords",
                     permission="passwords",
                     description=_(
-                        'All passwords, secrets and other sensitive data are stored in the Password Store. Changes to the "linked.secret" entry can be made here.'
-                    ),
+                        'All passwords, secrets and other sensitive data are stored in the Password Store. Changes to the entry "{password_title}" can be made here.'
+                    ).format(password_title=password["title"]),
                 )
             )
         TileMenuRenderer(bundle_entity_links).show()

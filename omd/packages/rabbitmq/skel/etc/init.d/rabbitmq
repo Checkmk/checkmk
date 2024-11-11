@@ -23,7 +23,7 @@ MALLOC_ARENA_MAX="1"
 INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 
 getpid() {
-    cat "${PIDFILE}" 2>/dev/null
+    cat "${1}" 2>/dev/null
 }
 
 process_is_running() {
@@ -190,7 +190,7 @@ case "$1" in
         exit_successfully "running"
         ;;
     *)
-        exit_failure "Usage: rabbitmq {start|stop|restart|reload|status}"
+        exit_failure "Usage: rabbitmq {start|stop|reload|status}"
         ;;
 
 esac

@@ -5,9 +5,13 @@
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Result, State
-from cmk.plugins.omd.agent_based.omd_broker_queue import check, parse
+from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.omd.agent_based.omd_broker_queue import (
+    check,
+    discover_omd_broker_queues,
+    parse,
+    Section,
+)
 
 STRINGTABLE: StringTable = [
     [
@@ -50,3 +54,31 @@ STRINGTABLE: StringTable = [
 )
 def test_check_broker_queue(item: str, expected: list[Result]) -> None:
     assert list(check(item, parse(STRINGTABLE))) == expected
+
+
+def test_no_output_for_missing_item() -> None:
+    """It's best practice, and the test below relies on it"""
+    assert not list(check("heute non-existing-app", parse(STRINGTABLE)))
+
+
+def _parse_with_cmk_broker_queue_info() -> Section:
+    return parse(
+        [
+            [
+                "heute "
+                '[{"name":"cmk.intersite.heute_remote_1","messages":1},{"name":"cmk.intersite.heute_remote_2","messages":2},{"name":"cmk.app.cmk-broker-test.some_queue","messages":3}]'
+            ]
+        ]
+    )
+
+
+def test_cmk_broker_test_not_discovered() -> None:
+    """Make sure our debuggin tool isn't discovered"""
+    assert "heute cmk-broker-test" not in {
+        s.item for s in discover_omd_broker_queues(_parse_with_cmk_broker_queue_info())
+    }
+
+
+def test_cmk_broker_test_enforcable() -> None:
+    """Make sure we get *some* result, if the item is enforced"""
+    assert list(check("heute cmk-broker-test", _parse_with_cmk_broker_queue_info()))

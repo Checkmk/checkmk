@@ -7,6 +7,7 @@
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Final
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,6 +19,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+# These could still be enforced, but don't autodiscover them
+_ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)
 
 
 @dataclass(frozen=True)
@@ -66,9 +70,12 @@ agent_section_omd_broker_queues = AgentSection(
 )
 
 
-def discovery(section: Section) -> DiscoveryResult:
-    for item in section:
-        yield Service(item=item)
+def discover_omd_broker_queues(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=site_application)
+        for site_application in section
+        if site_application.split(None, 1)[1] not in _ENFORCED_ONLY_APPS
+    )
 
 
 def check(item: str, section: Section) -> CheckResult:
@@ -82,6 +89,6 @@ def check(item: str, section: Section) -> CheckResult:
 check_plugin_omd_broker_queues = CheckPlugin(
     name="omd_broker_queues",
     service_name="OMD %s",
-    discovery_function=discovery,
+    discovery_function=discover_omd_broker_queues,
     check_function=check,
 )

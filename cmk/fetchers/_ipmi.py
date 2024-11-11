@@ -31,6 +31,7 @@ from ._abstract import Fetcher, Mode
 __all__ = ["IPMICredentials", "IPMIFetcher"]
 
 
+# Keep in sync with cmk.gui.watolib.host_attributes.IPMICredentials
 class IPMICredentials(TypedDict, total=False):
     username: str
     password: str

@@ -32,8 +32,6 @@ from cmk.utils.user import UserId
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-from cmk.fetchers import IPMICredentials
-
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformForLegacyData
@@ -62,6 +60,13 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
     host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard)
     host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes)
     host_attribute_topic_registry_.register(HostAttributeTopicMetaData)
+
+
+# Keep in sync with cmk.fetchers._ipmi.IPMICredentials
+# C&P to avoid the dependency which pulls in pyghmi
+class IPMICredentials(TypedDict, total=False):
+    username: str
+    password: str
 
 
 class HostContactGroupSpec(TypedDict):

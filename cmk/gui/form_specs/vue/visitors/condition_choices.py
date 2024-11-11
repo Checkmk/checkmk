@@ -11,6 +11,7 @@ from cmk.gui.form_specs.private.condition_choices import (
     Conditions,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
 
@@ -21,6 +22,7 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
+    localize,
 )
 
 _UNSUPPORTED_VALUE_FROM_FRONTEND = Literal["Unsupported value received from frontend"]
@@ -155,7 +157,17 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
 
         return (
             shared_type_defs.ConditionChoices(
-                title=title, help=help_text, condition_groups=conditions
+                title=title,
+                help=help_text,
+                condition_groups=conditions,
+                i18n=shared_type_defs.ConditionChoicesI18n(
+                    add_condition_label=localize(self.form_spec.add_condition_group_label),
+                    add_condition_group_label=localize(self.form_spec.add_condition_label),
+                    eq_operator=_("is"),
+                    ne_operator=_("is not"),
+                    or_operator=_("any of"),
+                    nor_operator=_("none of"),
+                ),
             ),
             value,
         )

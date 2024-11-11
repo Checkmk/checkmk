@@ -1058,9 +1058,41 @@
                         },
                         "required": ["title", "conditions"]
                     }
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "condition_choices_i18n",
+                    "properties": {
+                        "add_condition_label": {
+                            "type": "string"
+                        },
+                        "add_condition_group_label": {
+                            "type": "string"
+                        },
+                        "eq_operator": {
+                            "type": "string"
+                        },
+                        "ne_operator": {
+                            "type": "string"
+                        },
+                        "or_operator": {
+                            "type": "string"
+                        },
+                        "nor_operator": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "add_condition_label",
+                        "add_condition_group_label",
+                        "eq_operator",
+                        "ne_operator",
+                        "or_operator",
+                        "nor_operator"
+                    ]
                 }
             },
-            "required": ["type", "condition_groups"],
+            "required": ["type", "condition_groups", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"

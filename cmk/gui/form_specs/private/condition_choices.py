@@ -7,6 +7,7 @@ from typing import Callable, Literal, TypeAlias
 
 from cmk.gui.form_specs.vue.shared_type_defs import ConditionGroup
 
+from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import FormSpec
 
 ConditionID: TypeAlias = str
@@ -21,4 +22,6 @@ Conditions: TypeAlias = dict[ConditionGroupID, Condition]
 
 @dataclass(frozen=True, kw_only=True)
 class ConditionChoices(FormSpec[Conditions]):
+    add_condition_group_label: Label
+    add_condition_label: Label
     get_conditions: Callable[[], dict[str, ConditionGroup]]

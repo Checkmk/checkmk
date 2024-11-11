@@ -17,7 +17,11 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
+from cmk.rulesets.v1 import Label
+
 CONDITION_CHOICES_FS = ConditionChoices(
+    add_condition_label=Label("add"),
+    add_condition_group_label=Label("add"),
     get_conditions=lambda: {
         "address_family": ConditionGroup(
             title="foo",
@@ -38,7 +42,7 @@ CONDITION_CHOICES_FS = ConditionChoices(
             title="qux",
             conditions=[Condition(name="ip-v6", title="ip-v6")],
         ),
-    }
+    },
 )
 
 

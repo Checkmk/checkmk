@@ -200,6 +200,7 @@ export type ConditionChoices = FormSpec & {
   condition_groups: {
     [k: string]: ConditionGroup;
   };
+  i18n: ConditionChoicesI18N;
 };
 export type Labels = FormSpec & {
   type: "labels";
@@ -333,6 +334,14 @@ export interface ConditionGroup {
 export interface Condition {
   name: string;
   title: string;
+}
+export interface ConditionChoicesI18N {
+  add_condition_label: string;
+  add_condition_group_label: string;
+  eq_operator: string;
+  ne_operator: string;
+  or_operator: string;
+  nor_operator: string;
 }
 export interface LabelsI18N {
   add_some_labels: string;

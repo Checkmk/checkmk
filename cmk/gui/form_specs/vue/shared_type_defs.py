@@ -193,6 +193,16 @@ class ConditionGroup:
 
 
 @dataclass(kw_only=True)
+class ConditionChoicesI18n:
+    add_condition_label: str
+    add_condition_group_label: str
+    eq_operator: str
+    ne_operator: str
+    or_operator: str
+    nor_operator: str
+
+
+@dataclass(kw_only=True)
 class LabelsI18n:
     add_some_labels: str
     key_value_format_error: str
@@ -465,6 +475,7 @@ class Folder(FormSpec):
 @dataclass(kw_only=True)
 class ConditionChoices(FormSpec):
     condition_groups: dict[str, ConditionGroup]
+    i18n: ConditionChoicesI18n
     type: str = "condition_choices"
 
 

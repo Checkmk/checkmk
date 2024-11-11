@@ -171,7 +171,13 @@ const componentId = useId()
               class="form-dictionary__group_elem"
             >
               <template v-if="labelRequired(dict_element.dict_config)">
-                <span class="checkbox">
+                <span
+                  v-if="
+                    !dict_element.dict_config.required ||
+                    dict_element.dict_config.parameter_form.title
+                  "
+                  class="checkbox"
+                >
                   <input
                     v-if="!dict_element.dict_config.required"
                     :id="`${componentId}.${dict_element.dict_config.name}`"
@@ -184,6 +190,7 @@ const componentId = useId()
                   <label
                     v-if="dict_element.dict_config.parameter_form.title"
                     :for="`${componentId}.${dict_element.dict_config.name}`"
+                    class="form-dictionary__label"
                   >
                     {{ dict_element.dict_config.parameter_form.title }}
                   </label>
@@ -220,12 +227,16 @@ const componentId = useId()
 }
 
 span.checkbox {
-  margin-bottom: 5px;
-  margin-right: 5px;
+  display: inline-block;
+  margin: 0 var(--spacing-half) var(--spacing-half) 0;
+
+  input + .form-dictionary__label {
+    cursor: pointer;
+  }
 }
 
-span.checkbox input + label {
-  cursor: pointer;
+.form-dictionary__label {
+  margin-right: var(--spacing-half);
 }
 
 /* Variants */

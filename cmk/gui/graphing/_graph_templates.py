@@ -37,6 +37,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
+from ._graphs_order import GRAPHS_2_2
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
 from ._metric_expression import (
     Average,
@@ -72,7 +73,7 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _get_graph_plugins() -> (
+def _collect_graph_plugins() -> (
     Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
 ):
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
@@ -84,6 +85,18 @@ def _get_graph_plugins() -> (
     for template_id, template in graph_info.items():
         if template_id not in known_plugins:
             yield template_id, template
+
+
+def _get_sorted_graph_plugins() -> (
+    Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
+):
+    def _by_index(graph_name: str) -> int:
+        try:
+            return GRAPHS_2_2.index(graph_name)
+        except ValueError:
+            return -1
+
+    return sorted(list(_collect_graph_plugins()), key=lambda t: _by_index(t[0]))
 
 
 def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate) -> str:
@@ -104,7 +117,7 @@ def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _get_graph_plugins()],
+        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _collect_graph_plugins()],
         key=lambda c: c.title,
     )
 
@@ -325,7 +338,7 @@ def _create_graph_template_from_name(name: str) -> GraphTemplate:
 def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _create_graph_template_from_name(template_id)
-    for id_, graph_plugin in _get_graph_plugins():
+    for id_, graph_plugin in _get_sorted_graph_plugins():
         if template_id == id_:
             return _parse_graph_plugin(id_, graph_plugin)
     raise MKGeneralException(_("There is no graph plug-in with the id '%s'") % template_id)
@@ -357,7 +370,7 @@ def graph_and_single_metric_template_choices_for_metrics(
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for id_, graph_plugin in _get_graph_plugins():
+    for id_, graph_plugin in _get_sorted_graph_plugins():
         graph_template = _parse_graph_plugin(id_, graph_plugin)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
@@ -793,7 +806,7 @@ def _get_evaluated_graph_templates(
             ),
             translated_metrics,
         )
-        for id_, graph_plugin in _get_graph_plugins()
+        for id_, graph_plugin in _get_sorted_graph_plugins()
         for graph_template in [_parse_graph_plugin(id_, graph_plugin)]
         if (
             evaluated_metrics := evaluate_metrics(

@@ -879,11 +879,18 @@ def _create_notifications(
 
         bulk = rbn_get_bulk_params(rule)
 
+        # TODO CMK-20135 use old format for user notifications for now
+        plugin_parameters = (
+            parameters[plugin_name][plugin_parameter_id]["parameter_properties"]
+            if isinstance(plugin_parameter_id, str)
+            else plugin_parameter_id
+        )
+
         final_parameters = rbn_finalize_plugin_parameters(
             HostName(enriched_context["HOSTNAME"]),
             plugin_name,
             host_parameters_cb,
-            parameters[plugin_name][plugin_parameter_id]["parameter_properties"],
+            plugin_parameters,
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 

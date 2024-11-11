@@ -23,7 +23,6 @@ const props = defineProps<{
   onDelete: (index: number) => void
   i18n: {
     addElementLabel: string
-    deleteElementLabel: string
   }
   draggable?: { onReorder: (order: number[]) => void } | null
 }>()
@@ -106,11 +105,7 @@ function getItemProps(dataIndex: number): SingleItemProps {
             <CmkIcon name="drag" size="small" style="pointer-events: none" />
           </CmkButton>
           <CmkSpace v-if="props.draggable!!" direction="vertical" />
-          <CmkButton
-            variant="transparent"
-            :title="props.i18n.deleteElementLabel"
-            @click.prevent="() => removeElement(dataIndex)"
-          >
+          <CmkButton variant="transparent" @click.prevent="() => removeElement(dataIndex)">
             <CmkIcon name="close" size="small" />
           </CmkButton>
         </td>

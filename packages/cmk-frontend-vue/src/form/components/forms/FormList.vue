@@ -90,9 +90,7 @@ function reorderElements(order: number[]) {
     :on-add="addElement"
     :on-delete="deleteElement"
     :i18n="{
-      addElementLabel: props.spec.add_element_label,
-      // TODO: move this delete text to the backend to make it translatable (CMK-19020)
-      deleteElementLabel: 'Delete this entry'
+      addElementLabel: props.spec.add_element_label
     }"
   >
     <template #item="{ index, itemData, itemElementValidation }">

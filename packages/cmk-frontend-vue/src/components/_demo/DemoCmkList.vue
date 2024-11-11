@@ -35,8 +35,7 @@ function reorderElements(order: number[]) {
         :on-add="addElement"
         :on-delete="deleteElement"
         :i18n="{
-          addElementLabel: 'Add new entry',
-          deleteElementLabel: 'Delete this entry'
+          addElementLabel: 'Add new entry'
         }"
       >
         <template #item="{ itemData }">

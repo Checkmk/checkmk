@@ -1315,8 +1315,6 @@ mssql:
         endpoint.user, endpoint.pwd
     )
 }
-
-/// this is internal temporary test
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_check_special() {
@@ -1330,6 +1328,46 @@ async fn test_check_special() {
     assert!(output.contains("MSSQL_MSSQLSERVER|config|16"));
 }
 
+fn create_instance_config(endpoint: SqlDbEndpoint) -> String {
+    format!(
+        r#"
+---
+mssql:
+  main:
+    authentication:
+      username: bad
+      password: bad
+      type: sql_server
+    sections:
+      - instance:
+    discovery:
+      detect: no
+      include: ["MSSQLSERVER"]
+    instances:
+      - sid: 'MSSQLSERVER'
+        authentication:
+          username: {}
+          password: {}
+          type: sql_server
+        connection:
+          hostname: {}
+ "#,
+        endpoint.user, endpoint.pwd, endpoint.host
+    )
+}
+
+/// this is internal temporary test
+#[tokio::test(flavor = "multi_thread")]
+async fn test_instance_config() {
+    let dir = tools::create_temp_process_dir();
+    let content = create_instance_config(tools::get_remote_sql_from_env_var().unwrap());
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
+    let output = check_config.exec(&Env::default()).await.unwrap();
+    assert!(!output.is_empty());
+    assert!(output.contains("MSSQL_MSSQLSERVER|state|1"));
+    assert!(output.contains("MSSQL_MSSQLSERVER|config"));
+}
 fn create_remote_config_with_piggyback(endpoint: SqlDbEndpoint) -> String {
     format!(
         r#"

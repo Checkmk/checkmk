@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from contextlib import contextmanager
+from typing import Iterator
 
 from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import-untyped]
 from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import-untyped]
@@ -22,6 +24,7 @@ from opsgenie_sdk.exceptions import (  # type: ignore[import-untyped]
     AuthenticationException,
 )
 from requests.utils import get_environ_proxies
+from tenacity import RetryError
 from urllib3.util import parse_url
 
 from cmk.utils.http_proxy_config import (
@@ -34,6 +37,21 @@ from cmk.utils.paths import trusted_ca_file
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
+
+
+@contextmanager
+def _handle_api_exceptions(api_call_name: str, ignore_retry: bool = False) -> Iterator[None]:
+    try:
+        yield
+    except (ApiException, AuthenticationException) as err:
+        sys.stderr.write(f"Exception when calling AlertApi -> {api_call_name}: {err}\n")
+        sys.exit(2)
+    except Exception as e:
+        if not ignore_retry and isinstance(e, RetryError):
+            with _handle_api_exceptions(api_call_name, ignore_retry=True):
+                e.reraise()
+        sys.stderr.write(f"Unhandled exception when calling AlertApi -> {api_call_name}: {e}\n")
+        sys.exit(2)
 
 
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
@@ -79,14 +97,8 @@ class Connector:
             user=owner,
         )
 
-        try:
+        with _handle_api_exceptions("create_alert"):
             response = self.alert_api.create_alert(create_alert_payload=body)
-        except (ApiException, AuthenticationException) as err:
-            sys.stderr.write(f"Exception when calling AlertApi -> create_alert: {err}\n")
-            return 2
-        except Exception as e:
-            sys.stderr.write(f"Unhandled exception: {e}\n")
-            return 2
 
         sys.stdout.write(f"Request id: {response.request_id}, successfully created alert.\n")
         return 0
@@ -104,18 +116,12 @@ class Connector:
             note=note_closed,
         )
 
-        try:
+        with _handle_api_exceptions("close_alert"):
             response = self.alert_api.close_alert(
                 identifier=alias,
                 identifier_type="alias",
                 close_alert_payload=body,
             )
-        except (ApiException, AuthenticationException) as err:
-            sys.stderr.write(f"Exception when calling AlertApi -> close_alert: {err}\n")
-            return 2
-        except Exception as e:
-            sys.stderr.write(f"Unhandled exception: {e}\n")
-            return 2
 
         sys.stdout.write(f"Request id: {response.request_id}, successfully closed alert.\n")
         return 0
@@ -133,18 +139,12 @@ class Connector:
             note=ack_comment,
         )
 
-        try:
+        with _handle_api_exceptions("acknowledge_alert"):
             response = self.alert_api.acknowledge_alert(
                 identifier=alias,
                 identifier_type="alias",
                 acknowledge_alert_payload=body,
             )
-        except (ApiException, AuthenticationException) as err:
-            sys.stderr.write(f"Exception when calling AlertApi -> acknowledge_alert: {err}\n")
-            return 2
-        except Exception as e:
-            sys.stderr.write(f"Unhandled exception: {e}\n")
-            return 2
 
         sys.stdout.write(
             f"Request id: {response.request_id}, successfully added acknowledgedment.\n"

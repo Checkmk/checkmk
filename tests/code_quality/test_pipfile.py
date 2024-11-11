@@ -351,7 +351,6 @@ CEE_UNUSED_PACKAGES = [
     "s3transfer",
     "setuptools-scm",
     "snmpsim-lextudio",
-    "tenacity",
     "websocket-client",
     "wrapt",
     "yarl",

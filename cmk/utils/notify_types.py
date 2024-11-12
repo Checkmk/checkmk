@@ -483,10 +483,6 @@ class MKEventdPluginModel(TypedDict):
     remote: NotRequired[str]
 
 
-ExplicitPassword = tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], str]
-StoredPassword = tuple[Literal["cmk_postprocessed"], Literal["stored_password"], str]
-
-
 class IlertPluginModel(TypedDict):
     ilert_api_key: CheckmkPassword
     ilert_priority: Literal["HIGH", "LOW"]
@@ -498,16 +494,16 @@ class IlertPluginModel(TypedDict):
 
 
 class TokenAuthCredentials(TypedDict):
-    token: tuple[Literal["password", "store"], str]
+    token: CheckmkPassword
 
 
 class BasicAuthCredentials(TypedDict):
     username: str
-    password: tuple[Literal["password", "store"], str]
+    password: CheckmkPassword
 
 
-BasicAuth = tuple[Literal["auth_basic"], BasicAuthCredentials]
 TokenAuth = tuple[Literal["auth_token"], TokenAuthCredentials]
+BasicAuth = tuple[Literal["auth_basic"], BasicAuthCredentials]
 
 
 class JiraIssuePluginModel(TypedDict):

@@ -314,7 +314,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                                 "auth_basic",
                                 BasicAuthCredentials(
                                     username="username",
-                                    password=("store", "the_store_id"),
+                                    password=(
+                                        "cmk_postprocessed",
+                                        "explicit_password",
+                                        ("<uuid-a>", "gaergerag"),
+                                    ),
                                 ),
                             ),
                             project="project",
@@ -339,7 +343,14 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "url": "test_url",
                             "auth": (
                                 "auth_basic",
-                                {"username": "username", "password": ("store", "the_store_id")},
+                                {
+                                    "username": "username",
+                                    "password": (
+                                        "cmk_postprocessed",
+                                        "explicit_password",
+                                        ("<uuid-a>", "gaergerag"),
+                                    ),
+                                },
                             ),
                             "project": "project",
                             "issuetype": "issuetype",
@@ -459,7 +470,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                                 "auth_basic",
                                 BasicAuthCredentials(
                                     username="username",
-                                    password=("store", "the_store_id"),
+                                    password=(
+                                        "cmk_postprocessed",
+                                        "explicit_password",
+                                        ("<uuid-a>", "gaergerag"),
+                                    ),
                                 ),
                             ),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
@@ -480,7 +495,14 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "url": "url",
                             "auth": (
                                 "auth_basic",
-                                {"username": "username", "password": ("store", "the_store_id")},
+                                {
+                                    "username": "username",
+                                    "password": (
+                                        "cmk_postprocessed",
+                                        "explicit_password",
+                                        ("<uuid-a>", "gaergerag"),
+                                    ),
+                                },
                             ),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                             "mgmt_type": ("case", {"priority": "low"}),

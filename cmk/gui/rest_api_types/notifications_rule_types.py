@@ -2516,81 +2516,148 @@ class API_BasicAuthStore(TypedDict, total=False):
 
 @dataclass
 class BasicOrTokenAuth:
-    auth_option: (
-        API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore | None
-    ) = None
+    auth: BasicAuth | TokenAuth | None = None
 
     @classmethod
     def from_mk_file_format(cls, data: BasicAuth | TokenAuth | None) -> BasicOrTokenAuth:
         if data is None:
             return cls()
-
-        if data[0] == "auth_basic":
-            if data[1]["password"][0] == "password":
-                return cls(
-                    auth_option=API_BasicAuthExplicit(
-                        option="explicit_password",
-                        username=data[1]["username"],
-                        password=data[1]["password"][1],
-                    )
-                )
-            return cls(
-                auth_option=API_BasicAuthStore(
-                    option="password_store_id",
-                    username=data[1]["username"],
-                    store_id=data[1]["password"][1],
-                )
-            )
-
-        if data[1]["token"][0] == "password":
-            return cls(
-                auth_option=API_ExplicitToken(
-                    option="explicit_token",
-                    token=data[1]["token"][1],
-                )
-            )
-
-        return cls(
-            auth_option=API_StoreToken(
-                option="token_store_id",
-                store_id=data[1]["token"][1],
-            ),
-        )
+        return cls(auth=data)
 
     @classmethod
     def from_api_request(
         cls,
         incoming: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore,
     ) -> BasicOrTokenAuth:
-        return cls(auth_option=incoming)
+        match incoming:
+            case {
+                "option": "explicit_token",
+                "token": str() as token,
+            }:
+                return cls(
+                    auth=(
+                        "auth_token",
+                        TokenAuthCredentials(
+                            token=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (password_store.ad_hoc_password_id(), token),
+                            ),
+                        ),
+                    )
+                )
+
+            case {
+                "option": "token_store_id",
+                "store_id": str() as store_id,
+            }:
+                return cls(
+                    auth=(
+                        "auth_token",
+                        TokenAuthCredentials(
+                            token=(
+                                "cmk_postprocessed",
+                                "stored_password",
+                                (store_id, ""),
+                            ),
+                        ),
+                    )
+                )
+            case {
+                "option": "explicit_password",
+                "username": str() as username,
+                "password": str() as password,
+            }:
+                return cls(
+                    auth=(
+                        "auth_basic",
+                        BasicAuthCredentials(
+                            username=username,
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (password_store.ad_hoc_password_id(), password),
+                            ),
+                        ),
+                    )
+                )
+            case {
+                "option": "password_store_id",
+                "username": str() as username,
+                "store_id": str() as store_id,
+            }:
+                return cls(
+                    auth=(
+                        "auth_basic",
+                        BasicAuthCredentials(
+                            username=username,
+                            password=(
+                                "cmk_postprocessed",
+                                "stored_password",
+                                (store_id, ""),
+                            ),
+                        ),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid auth")
 
     def api_response(
         self,
     ) -> API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore:
-        if self.auth_option is None:
-            return {}
-        return self.auth_option
+        match self.auth:
+            case None:
+                return {}
+
+            case (
+                "auth_basic",
+                {
+                    "password": (
+                        "cmk_postprocessed",
+                        explicit_or_stored,
+                        (str() as password_store_id, str() as password),
+                    ),
+                    "username": str() as username,
+                },
+            ):
+                if explicit_or_stored == "explicit_password":
+                    return API_BasicAuthExplicit(
+                        option="explicit_password",
+                        username=username,
+                        password=password,
+                    )
+                return API_BasicAuthStore(
+                    option="password_store_id",
+                    username=username,
+                    store_id=password_store_id,
+                )
+
+            case (
+                "auth_token",
+                {
+                    "token": (
+                        "cmk_postprocessed",
+                        explicit_or_stored,
+                        (str() as password_store_id, str() as token),
+                    )
+                },
+            ):
+                if explicit_or_stored == "explicit_password":
+                    return API_ExplicitToken(
+                        option="explicit_token",
+                        token=token,
+                    )
+                return API_StoreToken(
+                    option="token_store_id",
+                    store_id=password_store_id,
+                )
+            case _:
+                raise TypeError("Invalid auth")
 
     def to_mk_file_format(self) -> BasicAuth | TokenAuth | None:
-        if self.auth_option is None:
+        if self.auth is None:
             return None
-
-        if self.auth_option["option"] == "explicit_password":
-            return "auth_basic", BasicAuthCredentials(
-                username=self.auth_option["username"],
-                password=("password", self.auth_option["password"]),
-            )
-
-        if self.auth_option["option"] == "password_store_id":
-            return "auth_basic", BasicAuthCredentials(
-                username=self.auth_option["username"],
-                password=("store", self.auth_option["store_id"]),
-            )
-
-        if self.auth_option["option"] == "explicit_token":
-            return "auth_token", TokenAuthCredentials(token=("password", self.auth_option["token"]))
-
-        return "auth_token", TokenAuthCredentials(token=("store", self.auth_option["store_id"]))
+        return self.auth
 
 
 # ----------------------------------------------------------------

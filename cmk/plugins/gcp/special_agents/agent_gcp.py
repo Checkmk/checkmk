@@ -103,7 +103,10 @@ class Client:
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
-        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'  # nosec should be parameterized for better safety
+        if "`" in tableid:
+            raise ValueError("tableid contains invalid character")
+
+        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'  # nosec B608 # BNS:d840de
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()

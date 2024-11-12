@@ -88,7 +88,8 @@ def parse_oracle_sql(string_table):
             instance[key] = int(line[1])
 
         elif key == "elapsed":
-            instance[key] = float(line[1])
+            if line[1] != "":
+                instance[key] = float(line[1])
 
         else:
             instance["parsing_error"].setdefault(

@@ -11,6 +11,7 @@ from collections.abc import Iterator
 import pytest
 from playwright.sync_api import BrowserContext, Page
 
+from tests.testlib.emails import EmailManager
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
@@ -64,3 +65,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Store updated rule output as static references: rules already stored as reference"
         "are updated and new ones are added.",
     )
+
+
+@pytest.fixture(name="email_manager", scope="session")
+def _email_manager() -> Iterator[EmailManager]:
+    """Create EmailManager instance.
+
+    EmailManager handles setting up and tearing down Postfix SMTP-server, which is configured
+    to redirect emails to a local Maildir. It also provides methods to check and wait for emails.
+    """
+    with EmailManager() as email_manager:
+        yield email_manager

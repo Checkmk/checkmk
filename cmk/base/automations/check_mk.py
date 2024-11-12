@@ -2017,7 +2017,6 @@ def get_special_agent_commandline(
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
         load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
-        {},
         host_config.host_name,
         host_config.ip_address,
         config.get_ssc_host_config(

@@ -5,7 +5,7 @@
 
 from . import config_processing
 from ._active_checks import ActiveCheck, ActiveServiceData
-from ._commons import ConfigSet, ExecutableFinder, SpecialAgentInfoFunctionResult, SSCRules
+from ._commons import ConfigSet, ExecutableFinder, SSCRules
 from ._loading import load_active_checks, load_special_agents
 from ._special_agents import SpecialAgent, SpecialAgentCommandLine
 
@@ -16,7 +16,6 @@ __all__ = [
     "load_special_agents",
     "SpecialAgent",
     "SpecialAgentCommandLine",
-    "SpecialAgentInfoFunctionResult",
     "SSCRules",
     "ConfigSet",
     "config_processing",

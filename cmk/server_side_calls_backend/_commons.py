@@ -6,10 +6,8 @@
 import shlex
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Protocol
 
 from cmk.utils import config_warnings, password_store
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.server_side_calls.v1 import Secret
@@ -19,83 +17,6 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 ConfigSet = Mapping[str, object]
 SSCRules = tuple[str, Sequence[ConfigSet]]
-
-
-class SpecialAgentLegacyConfiguration(Protocol):
-    args: Sequence[str]
-    # None makes the stdin of subprocess /dev/null
-    stdin: str | None
-
-
-SpecialAgentInfoFunctionResult = (  # or check.
-    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentLegacyConfiguration
-)
-
-InfoFunc = Callable[[object, HostName, HostAddress | None], SpecialAgentInfoFunctionResult]
-
-
-class ActiveCheckError(Exception):  # or agent
-    pass
-
-
-def legacy_commandline_arguments(
-    hostname: HostName,
-    commandline_args: SpecialAgentInfoFunctionResult,
-    passwords: Mapping[str, str],
-    password_store_file: Path,
-) -> str:
-    """Commandline arguments for special agents or active checks."""
-
-    if isinstance(commandline_args, str):
-        return commandline_args
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_args, "args", commandline_args)
-
-    if not isinstance(args, list):
-        raise ActiveCheckError(  # Agent :-(
-            "The agent argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments."
-        )
-
-    return _prepare_check_command(args, hostname, passwords, password_store_file)
-
-
-def _prepare_check_command(
-    command_spec: CheckCommandArguments,
-    hostname: HostName,
-    passwords: Mapping[str, str],
-    password_store_file: Path,
-) -> str:
-    """Prepares a check command for execution by Checkmk
-
-    In case a list is given it quotes element if necessary. It also prepares password store entries
-    for the command line. These entries will be completed by the executed program later to get the
-    password from the password store.
-    """
-    formatted: list[str | tuple[str, str, str]] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formatted.append(str(arg))
-
-        elif isinstance(arg, str):
-            formatted.append(shlex.quote(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            formatted.append(arg)
-
-        else:
-            raise ActiveCheckError(f"Invalid argument for command line: {arg!r}")
-
-    return " ".join(
-        password_store.hack.apply_password_hack(
-            formatted,
-            passwords,
-            password_store_file,
-            config_warnings.warn,
-            _make_log_label(hostname),
-        ),
-    )
 
 
 def replace_passwords(
@@ -164,12 +85,6 @@ def _make_helpful_exception(index: int, arguments: Sequence[str | Secret]) -> Ty
         f"Got invalid argument list from SSC plugin: {arguments[index]!r} at index {index} in {arguments!r}. "
         "Expected either `str` or `Secret`."
     )
-
-
-def replace_macros(string: str, macros: Mapping[str, str]) -> str:
-    for macro, replacement in macros.items():
-        string = string.replace(macro, str(replacement))
-    return string
 
 
 ExecutableFinderProtocol = Callable[[str, str | None], str]

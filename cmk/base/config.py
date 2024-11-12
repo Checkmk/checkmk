@@ -2583,7 +2583,6 @@ class ConfigCache:
         host_attrs = self.get_host_attributes(host_name, ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
-            {},
             host_name,
             ip_address,
             get_ssc_host_config(

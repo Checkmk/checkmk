@@ -13,14 +13,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
 
-from ._commons import (
-    ExecutableFinderProtocol,
-    InfoFunc,
-    legacy_commandline_arguments,
-    replace_macros,
-    replace_passwords,
-    SpecialAgentInfoFunctionResult,
-)
+from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
     process_configuration_to_parameters,
     ProxyConfig,
@@ -44,7 +37,6 @@ class SpecialAgent:
     def __init__(
         self,
         plugins: Mapping[PluginLocation, SpecialAgentConfig],
-        legacy_plugins: Mapping[str, InfoFunc],  # TODO CMK-20165
         host_name: HostName,
         host_address: HostAddress | None,
         host_config: HostConfig,
@@ -56,7 +48,6 @@ class SpecialAgent:
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
-        self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_address = host_address
         self.host_config = host_config
@@ -68,33 +59,6 @@ class SpecialAgent:
 
     def _make_source_path(self, agent_name: str) -> str:
         return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
-
-    def _make_legacy_special_agent_cmdline(
-        self,
-        agent_name: str,
-        agent_configuration: SpecialAgentInfoFunctionResult,
-    ) -> str:
-        path = self._make_source_path(agent_name)
-        args = legacy_commandline_arguments(
-            self.host_name,
-            agent_configuration,
-            self.stored_passwords,
-            self.password_store_file,
-        )
-        return replace_macros(f"{path} {args}", self.host_config.macros)
-
-    def _iter_legacy_commands(
-        self, agent_name: str, info_func: InfoFunc, params: object
-    ) -> Iterator[SpecialAgentCommandLine]:
-        agent_configuration = info_func(params, self.host_name, self.host_address)
-
-        cmdline = self._make_legacy_special_agent_cmdline(
-            agent_name,
-            agent_configuration,
-        )
-        stdin = getattr(agent_configuration, "stdin", None)
-
-        yield SpecialAgentCommandLine(cmdline, stdin)
 
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
@@ -122,9 +86,6 @@ class SpecialAgent:
     def iter_special_agent_commands(
         self, agent_name: str, params: Mapping[str, object] | object
     ) -> Iterator[SpecialAgentCommandLine]:
-        if (info_func := self._legacy_plugins.get(agent_name)) is not None:
-            yield from self._iter_legacy_commands(agent_name, info_func, params)
-
         if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
             params = _ensure_mapping_str_object(params)
             yield from self._iter_commands(special_agent, params)

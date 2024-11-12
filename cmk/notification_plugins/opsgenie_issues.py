@@ -68,6 +68,10 @@ class Connector:
         if proxy_url is not None:
             sys.stdout.write(f"Using proxy: {proxy_url}\n")
             conf.proxy = proxy_url
+
+        url = parse_url(conf.host)
+        if proxy_url or url.host is None or url.host.endswith(".opsgenie.com"):
+            sys.stdout.write(f"Using trust store: {trusted_ca_file}\n")
             conf.ssl_ca_cert = trusted_ca_file
 
         api_client: ApiClient = ApiClient(configuration=conf)

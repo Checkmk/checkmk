@@ -195,8 +195,7 @@ inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 # WATO variant for datasource_programs
 # WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-special_agents: dict[str, list[RuleSpec[object]]] = {}
+special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 
 # WATO variant for free-form custom checks without formalization

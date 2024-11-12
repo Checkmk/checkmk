@@ -197,13 +197,6 @@ ObjectMacros = dict[str, AnyStr]
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-LegacySSCConfigModel = object  # TODO CMK-20165
-
-LegacySSCRules = Sequence[tuple[str, Sequence[LegacySSCConfigModel]]]
-
-MixedSSCRules = LegacySSCRules | Sequence[SSCRules]
-
-
 class FilterMode(enum.Enum):
     NONE = enum.auto()
     INCLUDE_CLUSTERED = enum.auto()
@@ -1725,7 +1718,7 @@ class ConfigCache:
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, Sequence[SSCRules]] = {}
-        self.__special_agents: dict[HostName, MixedSSCRules] = {}
+        self.__special_agents: dict[HostName, Sequence[SSCRules]] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
@@ -2550,9 +2543,9 @@ class ConfigCache:
             }.values()
         )
 
-    def special_agents(self, host_name: HostName) -> MixedSSCRules:
-        def special_agents_impl() -> MixedSSCRules:
-            matched: list[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]] = []
+    def special_agents(self, host_name: HostName) -> Sequence[SSCRules]:
+        def special_agents_impl() -> Sequence[SSCRules]:
+            matched: list[tuple[str, Sequence[Mapping[str, object]]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
             # for a single host a "random" one was picked (depending on the iteration
@@ -2621,26 +2614,11 @@ class ConfigCache:
     def collect_passwords(self) -> Mapping[str, str]:
         # consider making the hosts an argument. Sometimes we only need one.
 
-        def _filter_newstyle_ssc_rule(
-            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
-        ) -> Sequence[Mapping[str, object]]:
-            """Filter out all configuration sets that we know to come from a legacy ruleset
-
-            They don't contain passwords that we're looking for.
-            """
-            return [
-                r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
-            ]
-
         def _compose_filtered_ssc_rules(
-            ssc_config: Mapping[str, Sequence[RuleSpec[object]]]
-            | Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+            ssc_config: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
-            return [
-                (name, _filter_newstyle_ssc_rule([r["value"] for r in ruleset]))
-                for name, ruleset in ssc_config.items()
-            ]
+            return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config.items()]
 
         return {
             **password_store.load(password_store.password_store_path()),

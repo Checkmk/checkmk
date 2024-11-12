@@ -26,13 +26,6 @@ class SpecialAgentCommandLine:
     stdin: str | None = None
 
 
-def _ensure_mapping_str_object(value: object) -> Mapping[str, object]:
-    # for the new API, we can be sure that there are only Mappings.
-    if not isinstance(value, dict):
-        raise TypeError(value)
-    return value
-
-
 class SpecialAgent:
     def __init__(
         self,
@@ -84,8 +77,7 @@ class SpecialAgent:
             yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
 
     def iter_special_agent_commands(
-        self, agent_name: str, params: Mapping[str, object] | object
+        self, agent_name: str, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
-            params = _ensure_mapping_str_object(params)
+        if (special_agent := self._plugins.get(agent_name.removeprefix("agent_"))) is not None:
             yield from self._iter_commands(special_agent, params)

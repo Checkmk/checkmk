@@ -3,14 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from functools import partial
-
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
 from cmk.gui import cron
 
-print(
-    "x"
-    in [f.func.__name__ if isinstance(f, partial) else f.__name__ for f in cron.multisite_cronjobs]
-)
+print("x" in [j.name for j in cron.cron_job_registry.values()])

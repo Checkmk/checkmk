@@ -13,12 +13,3 @@ def test_load_cron_plugin(site: Site) -> None:
         assert (
             site.python_helper("helper_test_load_cron_plugin.py").check_output().rstrip() == "True"
         )
-
-
-def test_load_legacy_cron_plugin(site: Site) -> None:
-    with site.copy_file(
-        "legacy_cron_plugin.py", "local/share/check_mk/web/plugins/cron/test_plugin.py"
-    ):
-        assert (
-            site.python_helper("helper_test_load_cron_plugin.py").check_output().rstrip() == "True"
-        )

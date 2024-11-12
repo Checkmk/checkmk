@@ -70,3 +70,6 @@ class Registry(Mapping[str, _VT]):
 
     def __iter__(self) -> Iterator[str]:
         return self._entries.__iter__()
+
+    def clear(self) -> None:
+        self._entries.clear()

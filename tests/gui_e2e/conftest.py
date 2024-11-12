@@ -6,7 +6,7 @@
 """some fixtures related to e2e tests and playwright"""
 
 import logging
-from collections.abc import Generator
+from collections.abc import Iterator
 
 import pytest
 from playwright.sync_api import BrowserContext, Page
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator[Site, None, None]:
+def get_site() -> Iterator[Site]:
     yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 

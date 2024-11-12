@@ -2599,6 +2599,7 @@ class Folder(FolderProtocol):
         if not changed:
             return False
 
+        self.attributes["parents"] = [HostName(h) for h in new_parents]
         add_change(
             "rename-parent",
             _l('Renamed parent from %s to %s in folder "%s"')

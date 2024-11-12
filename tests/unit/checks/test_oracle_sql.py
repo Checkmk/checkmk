@@ -64,6 +64,25 @@ INFO_4 = [
     ["elapsed", "0.29444"],
 ]
 
+# In SUP-21227 it was reported that the line 'elapsed:' shows up in the agent output. We did not
+# obtain an agent output, but this could happen if `perl -MTime::HiRes=time -wle 'print time'`
+# fails. This table was copied from INFO_4 and modified to match the ticket.
+INFO_5 = [
+    ["[[[yoble1|NBA SESSIONS]]]"],
+    ["long", "Avara SEP_ID", " 301"],
+    [
+        "details",
+        "Active sessions",
+        " 0 (warn/crit at 10/20) / Inactive sessions",
+        " 0 (warn/crit at 10/40)",
+    ],
+    ["perfdata", "sessions_active=0;10;20"],
+    ["perfdata", "sessions_inactive=0;10;40"],
+    ["perfdata", "sessions_maxage=0"],
+    ["exit", "0"],
+    ["elapsed", ""],
+]
+
 
 @pytest.mark.parametrize(
     "info,expected",
@@ -148,6 +167,27 @@ INFO_4 = [
                         "0 (warn/crit at 10/40)"
                     ],
                     elapsed=0.29444,
+                    exit=0,
+                    long=["Avara SEP_ID: 301"],
+                    parsing_error={},
+                    metrics=[
+                        Metric(name="sessions_active", value=0, levels=(10, 20), boundaries=None),
+                        Metric(name="sessions_inactive", value=0, levels=(10, 40), boundaries=None),
+                        Metric(name="sessions_maxage", value=0, levels=None, boundaries=None),
+                    ],
+                )
+            },
+        ),
+        (
+            INFO_5,
+            {
+                "YOBLE1 SQL NBA SESSIONS": Instance(
+                    details=[
+                        "Active sessions: 0 (warn/crit "
+                        "at 10/20) / Inactive sessions: "
+                        "0 (warn/crit at 10/40)"
+                    ],
+                    elapsed=None,
                     exit=0,
                     long=["Avara SEP_ID: 301"],
                     parsing_error={},

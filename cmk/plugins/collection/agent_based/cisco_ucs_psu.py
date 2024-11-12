@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.cisco_ucs import DETECT, Operability
+from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,18 +53,20 @@ snmp_section_cisco_ucs_psu = SimpleSNMPSection(
 
 
 def discover_cisco_ucs_psu(
-    section: Mapping[str, PSUModule] | None,
+    section_cisco_ucs_psu: Mapping[str, PSUModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
 ) -> DiscoveryResult:
-    if not section:
+    if not section_cisco_ucs_psu:
         return
-    yield from (Service(item=name) for name in section)
+    yield from (Service(item=name) for name in section_cisco_ucs_psu)
 
 
 def check_cisco_ucs_psu(
     item: str,
-    section: Mapping[str, PSUModule] | None,
+    section_cisco_ucs_psu: Mapping[str, PSUModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
 ) -> CheckResult:
-    if not (psu_module := (section or {}).get(item)):
+    if not (psu_module := (section_cisco_ucs_psu or {}).get(item)):
         return
 
     yield Result(
@@ -72,10 +74,13 @@ def check_cisco_ucs_psu(
         summary=f"Status: {psu_module.operability.name}, Model: {psu_module.model}, SN: {psu_module.serial}",
     )
 
+    yield from check_cisco_fault((section_cisco_ucs_fault or {}).get(psu_module.id, []))
+
 
 check_plugin_cisco_ucs_psu = CheckPlugin(
     name="cisco_ucs_psu",
     service_name="psu %s",
+    sections=["cisco_ucs_psu", "cisco_ucs_fault"],
     discovery_function=discover_cisco_ucs_psu,
     check_function=check_cisco_ucs_psu,
 )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -46,7 +46,7 @@ def fixture_section_ucs_fault() -> dict[str, list[Fault]]:
 def test_discover_cisco_ucs_psu(
     section_cisco_ucs_psu: Mapping[str, PSUModule],
 ) -> None:
-    assert list(discover_cisco_ucs_psu(section_cisco_ucs_psu)) == [
+    assert list(discover_cisco_ucs_psu(section_cisco_ucs_psu, None)) == [
         Service(item="psu-1"),
         Service(item="psu-2"),
     ]
@@ -63,6 +63,7 @@ def test_discover_cisco_ucs_psu(
                     state=State.OK,
                     summary="Status: operable, Model: 700-014160-0000, SN: ART2323FCB4",
                 ),
+                Result(state=State.OK, notice="No faults"),
             ],
             id="Last item in data",
         ),
@@ -73,6 +74,10 @@ def test_discover_cisco_ucs_psu(
                     state=State.CRIT,
                     summary="Status: degraded, Model: 700-014160-0000, SN: ART2322F7NZ",
                 ),
+                Result(
+                    state=State.CRIT,
+                    notice="Fault: 374 - PSU2_STATUS: Power Supply 2 has lost input or input is out of range : Check input to PS or replace PS 2",
+                ),
             ],
             id="Faulty item in data",
         ),
@@ -80,7 +85,11 @@ def test_discover_cisco_ucs_psu(
 )
 def test_check_cisco_ucs_mem(
     section_cisco_ucs_psu: Mapping[str, PSUModule],
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]],
     item: str,
     expected_output: CheckResult,
 ) -> None:
-    assert list(check_cisco_ucs_psu(item, section_cisco_ucs_psu)) == expected_output
+    assert (
+        list(check_cisco_ucs_psu(item, section_cisco_ucs_psu, section_cisco_ucs_fault))
+        == expected_output
+    )

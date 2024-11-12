@@ -31,7 +31,7 @@ snmp_section_cisco_ucs_fault = SimpleSNMPSection(
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.1.1.1",
         oids=[
-            "5",  # .1.3.6.1.4.1.9.9.719.1.1.1.1.5 cucsFaultAffectedObjectId
+            "5",  # .1.3.6.1.4.1.9.9.719.1.1.1.1.5 cucsFaultAffectedObjectDn
             "6",  # .1.3.6.1.4.1.9.9.719.1.1.1.1.6 cucsFaultAck
             "9",  # .1.3.6.1.4.1.9.9.719.1.1.1.1.9 cucsFaultCode
             "11",  # .1.3.6.1.4.1.9.9.719.1.1.1.1.11 cucsFaultDescription

@@ -1194,10 +1194,26 @@ section_mailqueue() {
     fi
 }
 
+_omd_broker() {
+    local section_name="$1"
+    local site_name="$2"
+    local command_name="$3"
+    printf "<<<omd_broker_%s:sep(0)>>>\n" "$section_name"
+    printf "%s %s\n" "$site_name" "$(su - "$site_name" -c "rabbitmq-diagnostics \"$command_name\" --formatter json" | tr -d \\n)"
+}
+
 section_omd() {
     if inpath omd; then
         # 60 is _probably_ the agents polling interval. Why would you use that??
         _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
+
+        export -f _omd_broker
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            _run_cached_internal "omd_broker_status_$site" 1 150 180 50 "_omd_broker status $site status"
+            _run_cached_internal "omd_broker_queues_$site" 1 150 180 50 "_omd_broker queues $site list_queues"
+            _run_cached_internal "omd_broker_shovels_$site" 1 150 180 50 "_omd_broker shovels $site shovel_status"
+        done
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -1283,36 +1299,6 @@ section_omd() {
             echo "${site};${used_version};${autostart}"
         done
     fi
-
-    #
-    # This currently way to slow. Disable this to see if it stabilizes our CI.
-    #
-    # sites_rabbitmq_diagnostics() {
-    #     su - "${1}" -c "/omd/sites/${1}/lib/rabbitmq/sbin/rabbitmq-diagnostics \
-    #     --node 'rabbit-${1}@localhost' \
-    #     '${2}' \
-    #     --formatter json \
-    #     --erlang-cookie '$(cat /omd/sites/"${1}"/.erlang.cookie)'"
-    # }
-
-    # echo '<<<omd_broker_status:sep(0)>>>'
-    # for sitedir in /omd/sites/*; do
-    #     site=${sitedir#/omd/sites/}
-    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" status | tr -d '\n')"
-    # done
-
-    # echo '<<<omd_broker_queues:sep(0)>>>'
-    # for sitedir in /omd/sites/*; do
-    #     site=${sitedir#/omd/sites/}
-    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" list_queues | tr -d '\n')"
-    # done
-
-    # echo '<<<omd_broker_shovels:sep(0)>>>'
-    # for sitedir in /omd/sites/*; do
-    #     site=${sitedir#/omd/sites/}
-    #     printf "%s %s\n" "${site}" "$(sites_rabbitmq_diagnostics "${site}" shovel_status | tr -d '\n')"
-    # done
-
 }
 
 section_zpool() {

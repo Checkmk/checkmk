@@ -44,7 +44,7 @@ class SpecialAgent:
     def __init__(
         self,
         plugins: Mapping[PluginLocation, SpecialAgentConfig],
-        legacy_plugins: Mapping[str, InfoFunc],
+        legacy_plugins: Mapping[str, InfoFunc],  # TODO CMK-20165
         host_name: HostName,
         host_address: HostAddress | None,
         host_config: HostConfig,

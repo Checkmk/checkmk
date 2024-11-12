@@ -197,7 +197,7 @@ ObjectMacros = dict[str, AnyStr]
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-LegacySSCConfigModel = object
+LegacySSCConfigModel = object  # TODO CMK-20165
 
 LegacySSCRules = Sequence[tuple[str, Sequence[LegacySSCConfigModel]]]
 
@@ -432,13 +432,6 @@ CheckIncludes = list[str]
 class CheckmkCheckParameters(NamedTuple):
     enabled: bool
 
-
-# Note: being more specific here makes no sense,
-# as it prevents us from typing the individual
-# parameters as what we actually know them to be.
-# I rather have a meaningless type here than suppressions in every argument thingy.
-# We're building a proper API for 2.3 anyway.
-SpecialAgentInfoFunction = Callable
 
 HostCheckCommand = None | str | tuple[str, int | str]
 PingLevels = dict[str, int | tuple[float, float]]
@@ -1382,11 +1375,6 @@ ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
 
 
-# BE AWARE: sync this global data structure with
-#           _initialize_data_structures()
-# The following data structure will be filled by the checks
-special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
-
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
 service_rule_groups = {"temperature"}
@@ -1410,8 +1398,6 @@ def load_all_plugins(
     local_checks_dir: Path,
     checks_dir: str,
 ) -> list[str]:
-    _initialize_data_structures()
-
     with tracer.start_as_current_span("load_legacy_check_plugins"):
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
@@ -1427,11 +1413,6 @@ def load_all_plugins(
     return errors + legacy_errors
 
 
-def _initialize_data_structures() -> None:
-    """Initialize some data structures which are populated while loading the checks"""
-    special_agent_info.clear()
-
-
 @tracer.start_as_current_span("load_and_convert_legacy_checks")
 def load_and_convert_legacy_checks(
     filelist: Iterable[str],
@@ -1443,7 +1424,6 @@ def load_and_convert_legacy_checks(
             local_path=str(cmk.utils.paths.local_checks_dir),
             makedirs=store.makedirs,
         ),
-        new_check_context,
         raise_errors=cmk.ccc.debug.enabled(),
     )
 
@@ -1460,13 +1440,6 @@ def load_and_convert_legacy_checks(
     )
 
     return (section_errors + check_errors, sections, checks)
-
-
-def new_check_context() -> CheckContext:
-    # Add the data structures where the checks register with Checkmk
-    return {
-        "special_agent_info": special_agent_info,
-    }
 
 
 # .
@@ -2610,7 +2583,7 @@ class ConfigCache:
         host_attrs = self.get_host_attributes(host_name, ip_address_of)
         special_agent = SpecialAgent(
             load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
-            special_agent_info,
+            {},
             host_name,
             ip_address,
             get_ssc_host_config(

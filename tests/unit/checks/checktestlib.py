@@ -39,7 +39,6 @@ class Check:
                 local_path="/not_relevant_for_test",
                 makedirs=store.makedirs,
             ),
-            dict,  # we don't need the special agents here.
             raise_errors=True,
         ).sane_check_info:
             cls._LEGACY_CHECKS[legacy_check.name] = legacy_check
@@ -76,20 +75,6 @@ class Check:
         if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
         return self.info.check_function(item, params, info)
-
-
-class SpecialAgent:
-    def __init__(self, name: str) -> None:
-        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-
-        super().__init__()
-        self.name = name
-        assert self.name.startswith(
-            "agent_"
-        ), "Specify the full name of the active check, e.g. agent_3par"
-        self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
 
 
 class Tuploid:

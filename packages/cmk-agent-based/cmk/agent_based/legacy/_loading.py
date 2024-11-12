@@ -126,10 +126,6 @@ class DiscoveredLegacyChecks:
 def discover_legacy_checks(
     filelist: Iterable[str],
     loader: FileLoader,
-    # this is only needed because we have to load the special agent info
-    # into the configs global data structure.
-    # As soon as the migration is finished, this can go.
-    new_check_context: Callable[[], dict[str, object]],
     *,
     raise_errors: bool,
 ) -> DiscoveredLegacyChecks:
@@ -148,8 +144,7 @@ def discover_legacy_checks(
             continue  # skip already loaded files (e.g. from local)
 
         try:
-            check_context = new_check_context()
-
+            check_context: dict[str, object] = {}
             did_compile |= loader.load_into(f, check_context)
 
             loaded_files.add(file_name)

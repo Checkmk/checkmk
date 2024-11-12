@@ -3,22 +3,20 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script setup generic="ItemsProps extends Record<string, unknown[]>" lang="ts">
 import { ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import useDragging from '@/lib/useDragging'
-import { capitalizeFirstLetter } from '@/lib/utils'
+import { type UnpackedArray } from '@/lib/typeUtils'
 import { immediateWatch } from '@/lib/watch'
 
-type ItemProps = Record<string, unknown[]>
-type SingleItemProps = Record<string, unknown>
-type SlotProps = SingleItemProps & { index: number }
+type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 
 const props = defineProps<{
-  itemProps: ItemProps
+  itemsProps: ItemsProps
   onAdd: (index: number) => void
   onDelete: (index: number) => void
   i18n: {
@@ -30,7 +28,7 @@ const props = defineProps<{
 const localOrder = ref<number[]>([])
 
 immediateWatch(
-  () => props.itemProps,
+  () => props.itemsProps,
   (itemProps) => {
     let length: number | undefined
     Object.values(itemProps).forEach((value) => {
@@ -79,12 +77,11 @@ function addElement() {
   localOrder.value.push(localOrder.value.length)
 }
 
-function getItemProps(dataIndex: number): SingleItemProps {
-  return Object.entries(props.itemProps).reduce((newItemProps, [key, value]) => {
-    const newKey = `item${capitalizeFirstLetter(key)}`
-    newItemProps[newKey] = value[dataIndex]
-    return newItemProps
-  }, {} as SingleItemProps)
+function getItemProps(dataIndex: number) {
+  return Object.entries(props.itemsProps).reduce((singleItemProps, [key, value]) => {
+    singleItemProps[key as keyof ItemProps] = value[dataIndex] as ItemProps[keyof ItemsProps]
+    return singleItemProps
+  }, {} as ItemProps)
 }
 </script>
 
@@ -93,27 +90,25 @@ function getItemProps(dataIndex: number): SingleItemProps {
     <template v-for="dataIndex in localOrder" :key="dataIndex">
       <tr class="listof_element">
         <td class="vlof_buttons">
-          <CmkButton
-            v-if="props.draggable!!"
-            variant="transparent"
-            aria-label="Drag to reorder"
-            :draggable="true"
-            @dragstart="dragStart"
-            @drag="dragging"
-            @dragend="dragEnd"
-          >
-            <CmkIcon name="drag" size="small" style="pointer-events: none" />
-          </CmkButton>
-          <CmkSpace v-if="props.draggable!!" direction="vertical" />
+          <template v-if="props.draggable!!">
+            <CmkButton
+              variant="transparent"
+              aria-label="Drag to reorder"
+              :draggable="true"
+              @dragstart="dragStart"
+              @drag="dragging"
+              @dragend="dragEnd"
+            >
+              <CmkIcon name="drag" size="small" style="pointer-events: none" />
+            </CmkButton>
+            <CmkSpace direction="vertical" />
+          </template>
           <CmkButton variant="transparent" @click.prevent="() => removeElement(dataIndex)">
             <CmkIcon name="close" size="small" />
           </CmkButton>
         </td>
         <td class="vlof_content">
-          <slot
-            name="item"
-            v-bind="{ index: dataIndex, ...getItemProps(dataIndex) } as SlotProps"
-          />
+          <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
         </td>
       </tr>
     </template>

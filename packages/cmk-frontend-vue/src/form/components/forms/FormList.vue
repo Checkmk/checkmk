@@ -85,7 +85,7 @@ function reorderElements(order: number[]) {
 
 <template>
   <CmkList
-    :item-props="{ data, elementValidation }"
+    :items-props="{ data, elementValidation }"
     :draggable="props.spec.editable_order ? { onReorder: reorderElements } : null"
     :on-add="addElement"
     :on-delete="deleteElement"
@@ -93,11 +93,11 @@ function reorderElements(order: number[]) {
       addElementLabel: props.spec.add_element_label
     }"
   >
-    <template #item="{ index, itemData, itemElementValidation }">
+    <template #item-props="{ index, data: itemData, elementValidation: itemElementValidation }">
       <FormEdit
         :data="itemData"
         :spec="spec.element_template"
-        :backend-validation="itemElementValidation as ValidationMessages"
+        :backend-validation="itemElementValidation"
         @update:data="(new_value: unknown) => updateElementData(new_value, index)"
       ></FormEdit>
     </template>

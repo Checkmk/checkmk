@@ -30,7 +30,7 @@ function reorderElements(order: number[]) {
     </dt>
     <dd>
       <CmkList
-        :item-props="{ data }"
+        :items-props="{ data }"
         :draggable="{ onReorder: reorderElements }"
         :on-add="addElement"
         :on-delete="deleteElement"
@@ -38,7 +38,7 @@ function reorderElements(order: number[]) {
           addElementLabel: 'Add new entry'
         }"
       >
-        <template #item="{ itemData }">
+        <template #item-props="{ data: itemData }">
           {{ itemData }}
         </template>
       </CmkList>

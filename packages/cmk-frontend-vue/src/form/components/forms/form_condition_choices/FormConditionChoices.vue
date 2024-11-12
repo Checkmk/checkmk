@@ -46,16 +46,16 @@ function updateElementData(newValue: typing.ConditionChoicesValue, index: number
 
 <template>
   <CmkList
-    :item-props="{ data }"
+    :items-props="{ data }"
     :on-add="addElement"
     :on-delete="deleteElement"
     :i18n="{
       addElementLabel: props.spec.i18n.add_condition_group_label
     }"
   >
-    <template #item="{ index, itemData }">
+    <template #item-props="{ index, data: itemData }">
       <ConditionChoice
-        :data="itemData as typing.ConditionChoicesValue"
+        :data="itemData"
         :group="spec.condition_groups[data[index]!.group_name]!"
         :i18n="{
           eq: props.spec.i18n.eq_operator,

@@ -102,6 +102,7 @@ class SendingPayloadProcess(multiprocessing.Process):
                     try:
                         channel = conn.channel(PiggybackPayload)
                         for piggyback_message in watch_new_messages(self.omd_root):
+                            config = self._check_for_config_reload(config)
                             self._handle_message(channel, config, piggyback_message)
                     except CMKConnectionError as exc:
                         self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
@@ -119,8 +120,6 @@ class SendingPayloadProcess(multiprocessing.Process):
         config: PiggybackHubConfig,
         message: PiggybackMessage,
     ) -> None:
-        config = self._check_for_config_reload(config)
-
         if (site_id := config.targets.get(message.meta.piggybacked, self.site)) == self.site:
             return
 
@@ -138,7 +137,7 @@ class SendingPayloadProcess(multiprocessing.Process):
     def _check_for_config_reload(self, current_config: PiggybackHubConfig) -> PiggybackHubConfig:
         if not self.reload_config.is_set():
             return current_config
-        self.logger.debug("Reloading configuration")
+        self.logger.info("Reloading configuration")
         config = load_config(self.paths)
         self.reload_config.clear()
         return config

@@ -229,6 +229,7 @@ include \
     packages/enterprise/enterprise.make \
     packages/cloud/cloud.make \
     packages/managed/managed.make
+    ../non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)
 include \

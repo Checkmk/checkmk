@@ -76,6 +76,7 @@ ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += managed
+PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)
 PACKAGES += enterprise

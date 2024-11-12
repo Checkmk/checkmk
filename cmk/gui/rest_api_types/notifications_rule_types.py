@@ -8,6 +8,7 @@ from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import cast, Literal, NotRequired, Required, TypedDict
 
+from cmk.utils import password_store
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
     AsciiMailPluginName,
@@ -15,6 +16,7 @@ from cmk.utils.notify_types import (
     BasicAuthCredentials,
     CaseState,
     CaseStateStr,
+    CheckmkPassword,
     CiscoPluginName,
     ConditionEventConsoleAlertsType,
     CustomPluginName,
@@ -23,7 +25,6 @@ from cmk.utils.notify_types import (
     EventConsoleOption,
     GroupbyType,
     HostEventType,
-    IlertAPIKey,
     IlertPluginName,
     IncidentState,
     IncidentStateStr,
@@ -2272,44 +2273,60 @@ class APIKey(API_ExplicitOrStore, total=False):
 
 
 @dataclass
-class APIIlertKeyOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    key: str = ""
+class APICheckmkPassword_FromKey:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: APIKey) -> APIIlertKeyOption:
-        if "key" in incoming:
-            return cls(option="explicit", key=incoming["key"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: APIKey) -> APICheckmkPassword_FromKey:
+        match incoming:
+            case {"option": "explicit", "key": str() as key}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), key),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid APIKey")
 
     def api_response(self) -> APIKey:
-        if self.option is None:
-            return {}
-
-        r: APIKey = {"option": self.option}
-        if self.option == "explicit":
-            r["key"] = self.key
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str() as password_id, str() as password),
+            ):
+                return {"option": "explicit", "key": password}
+            case (
+                "cmk_postprocessed",
+                "stored_password",
+                (str() as password_id, str() as password),
+            ):
+                return {"option": "store", "store_id": password_id}
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: IlertAPIKey | None) -> APIIlertKeyOption:
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromKey:
         if data is None:
             return cls()
+        return cls(checkmk_password=data)
 
-        if "ilert_api_key" in data:
-            return cls(option="explicit", key=data[1])
-        return cls(option="store", key=data[1])
-
-    def to_mk_file_format(self) -> IlertAPIKey | None:
-        if self.option is None:
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        if self.checkmk_password is None:
             return None
-
-        if self.option == "explicit":
-            return "ilert_api_key", self.key
-        return "store", self.store_id
+        return self.checkmk_password
 
 
 @dataclass

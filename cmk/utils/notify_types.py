@@ -415,6 +415,13 @@ PluginNotificationContext = dict[str, str]
 NotificationRuleID = NewType("NotificationRuleID", str)
 
 
+CheckmkPassword = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["stored_password", "explicit_password"],
+    tuple[str, str],
+]
+
+
 class EmailFromOrTo(TypedDict):
     display_name: NotRequired[str]
     address: NotRequired[str]
@@ -476,8 +483,12 @@ class MKEventdPluginModel(TypedDict):
     remote: NotRequired[str]
 
 
+ExplicitPassword = tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], str]
+StoredPassword = tuple[Literal["cmk_postprocessed"], Literal["stored_password"], str]
+
+
 class IlertPluginModel(TypedDict):
-    ilert_api_key: tuple[Literal["ilert_api_key", "store"], str]
+    ilert_api_key: CheckmkPassword
     ilert_priority: Literal["HIGH", "LOW"]
     ilert_summary_host: str
     ilert_summary_service: str
@@ -668,16 +679,9 @@ class SmsPluginModel(TypedDict):
     params: list[str]
 
 
-SNMPCommunity = tuple[
-    Literal["cmk_postprocessed"],
-    Literal["stored_password", "explicit_password"],
-    tuple[str, str],
-]
-
-
 class SpectrumPluginModel(TypedDict):
     destination: str
-    community: SNMPCommunity
+    community: CheckmkPassword
     baseoid: str
 
 

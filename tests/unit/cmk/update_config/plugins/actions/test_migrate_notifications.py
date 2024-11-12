@@ -263,7 +263,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     notify_plugin=(
                         "ilert",
                         IlertPluginModel(
-                            ilert_api_key=("ilert_api_key", "zhfziuofoziudfozuidouizd"),
+                            ilert_api_key=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             ilert_priority="HIGH",
                             ilert_summary_host="",
                             ilert_summary_service="",
@@ -282,7 +286,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "docu_url": "",
                         },
                         "parameter_properties": {
-                            "ilert_api_key": ("ilert_api_key", "zhfziuofoziudfozuidouizd"),
+                            "ilert_api_key": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             "ilert_priority": "HIGH",
                             "ilert_summary_host": "",
                             "ilert_summary_service": "",

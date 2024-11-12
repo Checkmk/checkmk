@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, cast, ClassVar, Literal, Protocol
-from uuid import uuid4
 
+from cmk.utils import password_store
 from cmk.utils.notify_types import (
     AsciiMailPluginModel,
     AsciiMailPluginName,
+    CheckmkPassword,
     CiscoPluginModel,
     CiscoPluginName,
     CustomPluginName,
@@ -44,7 +45,6 @@ from cmk.utils.notify_types import (
     SmsApiPluginName,
     SmsPluginModel,
     SmsPluginName,
-    SNMPCommunity,
     SpectrumPluginModel,
     SpectrumPluginName,
     SplunkPluginModel,
@@ -69,7 +69,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     API_SmsData,
     API_SpectrumData,
     API_VictorOpsData,
-    APIIlertKeyOption,
+    APICheckmkPassword_FromKey,
     APINotifyPlugin,
     APIOpenGenieKeyOption,
     APIPagerDutyKeyOption,
@@ -568,7 +568,7 @@ class MkEventDPlugin:
 class IlertPlugin:
     plugin_name: ClassVar[IlertPluginName] = "ilert"
     option: PluginOptions = PluginOptions.CANCEL
-    ilert_key: APIIlertKeyOption = field(default_factory=APIIlertKeyOption)
+    ilert_key: APICheckmkPassword_FromKey = field(default_factory=APICheckmkPassword_FromKey)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     ilert_priority: Literal["HIGH", "LOW"] = "HIGH"
     ilert_summary_host: str = ""
@@ -583,7 +583,7 @@ class IlertPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            ilert_key=APIIlertKeyOption.from_mk_file_format(pluginparams["ilert_api_key"]),
+            ilert_key=APICheckmkPassword_FromKey.from_mk_file_format(pluginparams["ilert_api_key"]),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl")
             ),
@@ -605,7 +605,7 @@ class IlertPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            ilert_key=APIIlertKeyOption.from_api_request(params["api_key"]),
+            ilert_key=APICheckmkPassword_FromKey.from_api_request(params["api_key"]),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
@@ -1503,7 +1503,7 @@ class SpectrumPlugin:
     plugin_name: ClassVar[SpectrumPluginName] = "spectrum"
     option: PluginOptions = PluginOptions.CANCEL
     baseoid: str = ""
-    snmp_community: SNMPCommunity | None = None
+    snmp_community: CheckmkPassword | None = None
     destination_ip: str = ""
 
     @classmethod
@@ -1531,7 +1531,7 @@ class SpectrumPlugin:
             snmp_community=(
                 "cmk_postprocessed",
                 "explicit_password",
-                (str(uuid4()), params["snmp_community"]),
+                (password_store.ad_hoc_password_id(), params["snmp_community"]),
             ),
             destination_ip=params["destination_ip"],
         )

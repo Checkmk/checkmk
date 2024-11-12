@@ -1,0 +1,19 @@
+Title: oracle_sql: Fix ValueError: could not convert string to float: ''
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731419724
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+The agent plugin <code>mk_oracle</code> reports <code>elapsed:' for the elapsed time, if the</code>perl<code>or</code>bc<code>call fail.
+In the past, the plugin</code>oracle_sql` crashes with
+
+C+:
+  elif key == "elapsed":
+    instance.elapsed = float(line[1])
+ValueError: could not convert string to float: ''
+C-:
+
+With this Werk, the crash is fixed. The missing metric <code>elapsed_time</code> will be omitted.

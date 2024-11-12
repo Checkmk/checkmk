@@ -5,7 +5,7 @@
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
@@ -30,14 +30,25 @@ def register(
     job_registry: BackgroundJobRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     user_attributes.register(user_attribute_registry)
 
     register_post_config_load_hook(fix_user_connections)
     register_post_config_load_hook(update_config_based_user_attributes)
-    register_job(execute_userdb_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_userdb_job",
+            callable=execute_userdb_job,
+        )
+    )
 
-    register_job(execute_user_profile_cleanup_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_user_profile_cleanup_job",
+            callable=execute_user_profile_cleanup_job,
+        )
+    )
     job_registry.register(UserProfileCleanupBackgroundJob)
 
     page_registry.register_page_handler("ajax_userdb_sync", ajax_sync)

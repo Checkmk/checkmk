@@ -25,7 +25,7 @@ from cmk.utils.structured_data import SDRawTree, serialize_tree
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -90,9 +90,15 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
     icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
-    register_job(execute_inventory_housekeeping_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_inventory_housekeeping_job",
+            callable=execute_inventory_housekeeping_job,
+        )
+    )
     visual_info_registry.register(VisualInfoInventoryHistory)
     filter_registry.register(FilterHasInv())
     filter_registry.register(FilterInvHasSoftwarePackage())

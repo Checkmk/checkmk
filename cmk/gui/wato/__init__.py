@@ -35,7 +35,6 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui import background_job, forms, gui_background_job, sites, userdb, utils, watolib, weblib
-from cmk.gui.cron import register_job
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _

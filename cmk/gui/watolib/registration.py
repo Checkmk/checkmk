@@ -14,7 +14,7 @@ from cmk.utils import paths
 
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
@@ -116,6 +116,7 @@ def register(
     match_item_generator_registry: MatchItemGeneratorRegistry,
     replication_path_registry: ReplicationPathRegistry,
     folder_validators_registry: FolderValidatorsRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -126,7 +127,7 @@ def register(
     activate_changes.register(replication_path_registry)
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
-    _register_cronjobs()
+    _register_cronjobs(cron_job_registry)
     folder_validators_registry.register(
         FolderValidators(
             str(edition),
@@ -138,7 +139,7 @@ def register(
             validate_move_subfolder_to=lambda f, t: None,
         )
     )
-    _sync_remote_sites.register(automation_command_registry, job_registry)
+    _sync_remote_sites.register(automation_command_registry, job_registry, cron_job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
     automation_command_registry.register(PushUserProfilesToSite)
@@ -256,9 +257,34 @@ def _register_nagvis_hooks() -> None:
         hooks.register_builtin(name, func)
 
 
-def _register_cronjobs() -> None:
-    register_job(execute_activation_cleanup_background_job)
-    register_job(execute_network_scan_job)
-    register_job(rebuild_folder_lookup_cache)
-    register_job(automatic_host_removal.execute_host_removal_background_job)
-    register_job(autodiscovery.execute_autodiscovery)
+def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
+    cron_job_registry.register(
+        CronJob(
+            name="execute_activation_cleanup_background_job",
+            callable=execute_activation_cleanup_background_job,
+        )
+    )
+    cron_job_registry.register(
+        CronJob(
+            name="execute_network_scan_job",
+            callable=execute_network_scan_job,
+        )
+    )
+    cron_job_registry.register(
+        CronJob(
+            name="rebuild_folder_lookup_cache",
+            callable=rebuild_folder_lookup_cache,
+        )
+    )
+    cron_job_registry.register(
+        CronJob(
+            name="execute_host_removal_background_job",
+            callable=automatic_host_removal.execute_host_removal_background_job,
+        )
+    )
+    cron_job_registry.register(
+        CronJob(
+            name="execute_autodiscovery",
+            callable=autodiscovery.execute_autodiscovery,
+        )
+    )

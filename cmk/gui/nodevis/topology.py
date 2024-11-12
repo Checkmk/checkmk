@@ -26,7 +26,7 @@ from cmk.utils.user import UserId
 import cmk.gui.visuals
 from cmk.gui import sites
 from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, make_topic_breadcrumb
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.dashboard import get_topology_context_and_filters
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.header import make_header
@@ -94,13 +94,19 @@ def register(
     page_registry: PageRegistry,
     filter_registry: FilterRegistry,
     icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     page_registry.register_page("parent_child_topology")(ParentChildTopologyPage)
     page_registry.register_page("network_topology")(NetworkTopologyPage)
     page_registry.register_page("ajax_initial_topology_filters")(AjaxInitialTopologyFilters)
     page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
     icon_and_action_registry.register(NetworkTopology)
-    register_job(cleanup_topology_layouts)
+    cron_job_registry.register(
+        CronJob(
+            name="cleanup_topology_layouts",
+            callable=cleanup_topology_layouts,
+        )
+    )
     filter_registry.register(FilterTopologyMeshDepth())
     filter_registry.register(FilterTopologyMaxNodes())
     topology_layer_registry.register(ParentChildDataGenerator)

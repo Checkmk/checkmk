@@ -24,13 +24,3 @@ class CronJobRegistry(Registry[CronJob]):
 
 
 cron_job_registry = CronJobRegistry()
-
-
-# TODO: Remove this wrapper
-def register_job(cron_job: Callable[[], Any]) -> None:
-    cron_job_registry.register(
-        CronJob(
-            name=cron_job.func.__name__ if isinstance(cron_job, partial) else cron_job.__name__,
-            callable=cron_job,
-        )
-    )

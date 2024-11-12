@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -16,6 +16,12 @@ def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
-    register_job(execute_housekeeping_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_housekeeping_job",
+            callable=execute_housekeeping_job,
+        )
+    )
     _modes.register(page_registry, mode_registry, main_module_registry)

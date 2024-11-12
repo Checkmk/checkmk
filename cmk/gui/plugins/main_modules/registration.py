@@ -41,6 +41,7 @@ from cmk.gui.background_job import job_registry
 from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.cron import cron_job_registry
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
@@ -121,6 +122,7 @@ def register() -> None:
         rulespec_group_registry,
         rulespec_registry,
         icon_and_action_registry,
+        cron_job_registry,
     )
     dashboard_registration.register(
         permission_section_registry,
@@ -155,6 +157,7 @@ def register() -> None:
         match_item_generator_registry,
         replication_path_registry,
         folder_validators_registry,
+        cron_job_registry,
     )
     piggyback_hub.register(
         config_domain_registry,
@@ -170,6 +173,7 @@ def register() -> None:
         job_registry,
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
+        cron_job_registry,
     )
 
     bi_registration.register(
@@ -190,7 +194,7 @@ def register() -> None:
         command_registry,
         command_group_registry,
     )
-    nodevis.register(page_registry, filter_registry, icon_and_action_registry)
+    nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)
     valuespec.register(page_registry)
@@ -203,7 +207,12 @@ def register() -> None:
     logwatch.register(page_registry)
     prediction.register(page_registry)
     quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)
-    background_job_registration.register(page_registry, mode_registry, main_module_registry)
+    background_job_registration.register(
+        page_registry,
+        mode_registry,
+        main_module_registry,
+        cron_job_registry,
+    )
     gui_background_job.register(permission_section_registry, permission_registry)
     graphing.register(page_registry, config_variable_registry, autocompleter_registry)
     agent_registration.register(permission_section_registry)

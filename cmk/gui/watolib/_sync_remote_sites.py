@@ -22,7 +22,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
 )
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -41,9 +41,16 @@ LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
 
 
 def register(
-    automation_command_registry: AutomationCommandRegistry, job_registry: BackgroundJobRegistry
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
-    register_job(execute_sync_remote_sites)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_sync_remote_sites",
+            callable=execute_sync_remote_sites,
+        )
+    )
     job_registry.register(SyncRemoteSitesBackgroundJob)
 
     automation_command_registry.register(AutomationSyncRemoteSites)

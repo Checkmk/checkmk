@@ -28,8 +28,6 @@ from cmk.utils.notify_types import (
     IncidentState,
     IncidentStateStr,
     is_always_bulk,
-    is_auto_urlprefix,
-    is_manual_urlprefix,
     is_timeperiod_bulk,
     JiraPluginName,
     MailPluginName,
@@ -1234,14 +1232,23 @@ class CheckboxSysLogPriority:
 
 
 # ----------------------------------------------------------------
-class UrlPrefixAPIAttrs(TypedDict, total=False):
-    option: Literal["automatic", "manual"]
-    schema: Literal["http", "https"]
+class HTTPUrlPrefixAPI(TypedDict):
+    option: Literal["automatic"]
+    schema: Literal["http"]
+
+
+class HTTPSUrlPrefixAPI(TypedDict):
+    option: Literal["automatic"]
+    schema: Literal["https"]
+
+
+class ManualUrlPrefixAPI(TypedDict):
+    option: Literal["manual"]
     url: str
 
 
 class CheckboxURLPrefixAPIValueType(CheckboxStateType, total=False):
-    value: UrlPrefixAPIAttrs
+    value: HTTPUrlPrefixAPI | HTTPSUrlPrefixAPI | ManualUrlPrefixAPI
 
 
 @dataclass
@@ -1254,30 +1261,44 @@ class CheckboxURLPrefix:
 
     @classmethod
     def from_api_request(cls, data: CheckboxURLPrefixAPIValueType) -> CheckboxURLPrefix:
-        if data["state"] == "disabled":
-            return cls()
+        match data:
+            case {"state": "disabled"}:
+                return cls()
 
-        value = data["value"]
+            case {"state": "enabled", "value": {"option": "automatic", "schema": "http"}}:
+                return cls(value=("automatic_http", None))
 
-        match value["option"]:
-            case "automatic":
-                return cls(value={"automatic": value["schema"]})
-            case "manual":
-                return cls(value={"manual": value["url"]})
+            case {"state": "enabled", "value": {"option": "automatic", "schema": "https"}}:
+                return cls(value=("automatic_https", None))
+
+            case {"state": "enabled", "value": {"option": "manual", "url": str() as url}}:
+                return cls(value=("manual", url))
+
+            case _:
+                raise ValueError("Invalid CheckboxURLPrefixAPIValueType")
 
     def api_response(self) -> CheckboxURLPrefixAPIValueType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: CheckboxURLPrefixAPIValueType = {"state": state}
-        if self.value is None:
-            return r
+        match self.value:
+            case None:
+                return CheckboxURLPrefixAPIValueType(state="disabled")
 
-        if is_auto_urlprefix(self.value):
-            r["value"] = {"option": "automatic", "schema": self.value["automatic"]}
-
-        if is_manual_urlprefix(self.value):
-            r["value"] = {"option": "manual", "url": self.value["manual"]}
-
-        return r
+            case ("automatic_http", None):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "automatic", "schema": "http"},
+                )
+            case ("automatic_https", None):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "automatic", "schema": "https"},
+                )
+            case ("manual", str() as url):
+                return CheckboxURLPrefixAPIValueType(
+                    state="enabled",
+                    value={"option": "manual", "url": url},
+                )
+            case _:
+                raise ValueError("Invalid URLPrefix")
 
     def to_mk_file_format(self) -> URLPrefix | None:
         return self.value
@@ -2666,7 +2687,7 @@ class API_PushOverData(TypedDict, total=False):
     plugin_name: Required[PushoverPluginName]
     api_key: str
     user_group_key: str
-    url_prefix_for_links_to_checkmk: CheckboxStrAPIType
+    url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
     http_proxy: HttpProxyAPIValueType
     priority: CheckboxPushoverPriorityAPIType
     sound: CheckboxPushoverSoundAPIType

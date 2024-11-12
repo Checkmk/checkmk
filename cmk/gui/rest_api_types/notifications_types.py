@@ -1059,9 +1059,7 @@ class PushOverPlugin:
     option: PluginOptions = PluginOptions.CANCEL
     api_key: str | None = None
     user_group_key: str | None = None
-    url_prefix_for_links_to_checkmk: CheckboxWithStrValue = field(
-        default_factory=CheckboxWithStrValue
-    )
+    url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     priority: CheckboxPushoverPriority = field(default_factory=CheckboxPushoverPriority)
     sound: CheckboxPushoverSound = field(default_factory=CheckboxPushoverSound)
@@ -1075,7 +1073,7 @@ class PushOverPlugin:
             option=PluginOptions.WITH_PARAMS,
             api_key=pluginparams["api_key"],
             user_group_key=pluginparams["recipient_key"],
-            url_prefix_for_links_to_checkmk=CheckboxWithStrValue.from_mk_file_format(
+            url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix")
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -1100,7 +1098,7 @@ class PushOverPlugin:
             option=PluginOptions.WITH_PARAMS,
             api_key=params["api_key"],
             user_group_key=params["user_group_key"],
-            url_prefix_for_links_to_checkmk=CheckboxWithStrValue.from_api_request(
+            url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),

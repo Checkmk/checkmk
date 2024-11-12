@@ -1661,11 +1661,7 @@ class PushOverPluginCreate(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(
-        StrValueOneOfSchema,
-        required=True,
-        description="If you specify an URL prefix here, then several parts of the email body are armed with hyperlinks to your Check_MK GUI, so that the recipient of the email can directly visit the host or service in question in Check_MK. Specify an absolute URL including the .../check_mk/",
-    )
+    url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     priority = fields.Nested(
         PushOverOneOfSchema,
         required=True,

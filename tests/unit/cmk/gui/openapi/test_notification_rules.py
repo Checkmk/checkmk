@@ -1039,7 +1039,7 @@ plugin_test_data: list[PluginType] = [
         "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
         "http_proxy": {
             "state": "enabled",
@@ -1439,7 +1439,7 @@ def test_pushover_key_regex(
         "user_group_key": invalid_key,
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "automatic", "schema": "http"},
         },
         "http_proxy": {
             "state": "enabled",

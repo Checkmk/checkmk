@@ -361,23 +361,10 @@ MatchRegex = tuple[
 ]
 
 
-class AutomaticUrlPrefix(TypedDict):
-    automatic: Literal["http", "https"]
-
-
-class ManualUrlPrefix(TypedDict):
-    manual: str
-
-
-URLPrefix = AutomaticUrlPrefix | ManualUrlPrefix
-
-
-def is_auto_urlprefix(url_prefix: URLPrefix) -> TypeGuard[AutomaticUrlPrefix]:
-    return "automatic" in url_prefix
-
-
-def is_manual_urlprefix(url_prefix: URLPrefix) -> TypeGuard[ManualUrlPrefix]:
-    return "manual" in url_prefix
+HTTPPrefixURL = tuple[Literal["automatic_http"], None]
+HTTPSPrefixURL = tuple[Literal["automatic_https"], None]
+ManualPrefixURL = tuple[Literal["manual"], str]
+URLPrefix = HTTPPrefixURL | HTTPSPrefixURL | ManualPrefixURL
 
 
 class SMTPAuthAttrs(TypedDict):
@@ -593,7 +580,7 @@ class PagerDutyPluginModel(TypedDict):
 class PushoverPluginModel(TypedDict):
     api_key: str
     recipient_key: str
-    url_prefix: str
+    url_prefix: URLPrefix
     proxy_url: NotRequired[ProxyUrl]
     priority: NotRequired[PushOverPriorityNumType]
     sound: NotRequired[SoundType]

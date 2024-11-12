@@ -817,7 +817,7 @@ class PushOverPluginResponse(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(CheckboxWithStrValueOutput)
+    url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE
     priority = fields.Nested(PushOverPriority)
     sound = fields.Nested(Sounds)
     http_proxy = HTTP_PROXY_RESPONSE

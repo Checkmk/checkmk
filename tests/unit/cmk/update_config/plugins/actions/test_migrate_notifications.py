@@ -166,7 +166,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "cisco_webex_teams",
                         CiscoPluginModel(
                             webhook_url=("webhook_url", "https://www.mywebhook.url"),
-                            url_prefix={"automatic": "https"},
+                            url_prefix=("automatic_https", None),
                             ignore_ssl=True,
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
@@ -183,7 +183,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         },
                         "parameter_properties": {
                             "webhook_url": ("webhook_url", "https://www.mywebhook.url"),
-                            "url_prefix": {"automatic": "https"},
+                            "url_prefix": ("automatic_https", None),
                             "ignore_ssl": True,
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
@@ -267,7 +267,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             ilert_priority="HIGH",
                             ilert_summary_host="",
                             ilert_summary_service="",
-                            url_prefix={"automatic": "https"},
+                            url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -286,7 +286,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "ilert_priority": "HIGH",
                             "ilert_summary_host": "",
                             "ilert_summary_service": "",
-                            "url_prefix": {"automatic": "https"},
+                            "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }
@@ -414,7 +414,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         PushoverPluginModel(
                             api_key="api_key",
                             recipient_key="recipient_key",
-                            url_prefix="url_prefix",
+                            url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -431,7 +431,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "parameter_properties": {
                             "api_key": "api_key",
                             "recipient_key": "recipient_key",
-                            "url_prefix": "url_prefix",
+                            "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }
@@ -490,7 +490,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "signl4",
                         SignL4PluginModel(
                             password=("password", "zhfziuofoziudfozuidouizd"),
-                            url_prefix={"manual": "url_prefix"},
+                            url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -506,7 +506,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         },
                         "parameter_properties": {
                             "password": ("password", "zhfziuofoziudfozuidouizd"),
-                            "url_prefix": {"manual": "url_prefix"},
+                            "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }
@@ -588,7 +588,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "victorops",
                         SplunkPluginModel(
                             webhook_url=("webhook_url", "https://www.mywebhook.url"),
-                            url_prefix={"automatic": "https"},
+                            url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -604,7 +604,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         },
                         "parameter_properties": {
                             "webhook_url": ("webhook_url", "https://www.mywebhook.url"),
-                            "url_prefix": {"automatic": "https"},
+                            "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }
@@ -631,7 +631,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "mail",
                         MailPluginModel(
                             {
-                                "url_prefix": {"automatic": "https"},
+                                "url_prefix": ("automatic_https", None),
                                 "disable_multiplexing": True,
                             }
                         ),
@@ -642,7 +642,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         "mail",
                         MailPluginModel(
                             {
-                                "url_prefix": {"automatic": "https"},
+                                "url_prefix": ("automatic_https", None),
                                 "from": {"address": "from@me.com"},
                                 "disable_multiplexing": True,
                             }
@@ -698,7 +698,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "docu_url": "",
                         },
                         "parameter_properties": {
-                            "url_prefix": {"automatic": "https"},
+                            "url_prefix": ("automatic_https", None),
                             "disable_multiplexing": True,
                         },
                     },
@@ -709,7 +709,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "docu_url": "",
                         },
                         "parameter_properties": {
-                            "url_prefix": {"automatic": "https"},
+                            "url_prefix": ("automatic_https", None),
                             "from": {"address": "from@me.com"},
                             "disable_multiplexing": True,
                         },

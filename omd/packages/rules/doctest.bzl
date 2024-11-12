@@ -1,7 +1,7 @@
 # Adapted from https://github.com/1e100/bazel_doctest/tree/master
 """Implements Python doctest support for Bazel."""
 
-load("@rules_python//python:defs.bzl", "PyInfo", "py_test")
+load("@rules_python//python:defs.bzl", "py_test")
 
 DOCTEST_TPL = r"""
 import doctest, unittest
@@ -48,7 +48,7 @@ _runner = rule(
     attrs = {
         "srcs": attr.label_list(
             mandatory = True,
-            providers = [PyInfo],
+            providers = [DefaultInfo],
             doc = "List of Python targets potentially containing doctests.",
         ),
     },

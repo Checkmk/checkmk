@@ -1616,9 +1616,58 @@ class PagerDutyPluginCreate(PluginName):
 # PushOver ----------------------------------------------------------
 
 
-class PushOverPriority(Checkbox):
-    value = fields.String(
+class PushOverPriorityBase(BaseSchema):
+    level = fields.String(
         enum=list(get_args(PushOverPriorityStringType)),
+        required=True,
+        description="The pushover priority level",
+        example="normal",
+    )
+
+
+class PushOverPriorityEmergency(BaseSchema):
+    level = fields.String(
+        enum=["emergency"],
+        required=True,
+        description="The pushover priority level",
+        example="emergency",
+    )
+    retry = fields.Integer(
+        required=True,
+        description="The retry interval in seconds",
+        example=60,
+    )
+    expire = fields.Integer(
+        required=True,
+        description="The expiration time in seconds",
+        example=3600,
+    )
+    receipt = fields.String(
+        required=True,
+        description="The receipt of the message",
+        example="The receipt can be used to periodically poll receipts API to get "
+        "the status of the notification. "
+        'See <a href="https://pushover.net/api#receipt" target="_blank">'
+        "Pushover receipts and callbacks</a> for more information.",
+        pattern="^[a-zA-Z0-9]{30,40}$",
+    )
+
+
+class PushOverPrioritySelector(OneOfSchema):
+    type_field = "level"
+    type_field_remove = False
+    type_schemas = {
+        "lowest": PushOverPriorityBase,
+        "low": PushOverPriorityBase,
+        "normal": PushOverPriorityBase,
+        "high": PushOverPriorityBase,
+        "emergency": PushOverPriorityEmergency,
+    }
+
+
+class PushOverPriority(Checkbox):
+    value = fields.Nested(
+        PushOverPrioritySelector,
         required=True,
         description="The pushover priority level",
         example="normal",

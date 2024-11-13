@@ -134,18 +134,6 @@ OpsGeniePriorityPValueType = Literal[
     "P4",
     "P5",
 ]
-PushOverPriorityNumType = Literal[
-    "-2",
-    "-1",
-    "0",
-    "1",
-]
-PushOverPriorityStringType = Literal[
-    "lowest",
-    "low",
-    "normal",
-    "high",
-]
 GroupbyType = Literal[
     "folder",
     "host",
@@ -584,12 +572,36 @@ class PagerDutyPluginModel(TypedDict):
     url_prefix: NotRequired[URLPrefix]
 
 
+PushOverPriorityNumType = Literal[
+    "-2",
+    "-1",
+    "0",
+    "1",
+]
+PushOverPriorityStringType = Literal[
+    "lowest",
+    "low",
+    "normal",
+    "high",
+]
+
+
+class PushOverEmergencyType(TypedDict):
+    priority: Literal["2"]
+    retry: int
+    expire: int
+    receipts: str
+
+
+PushOverPriorityType = PushOverPriorityNumType | PushOverEmergencyType
+
+
 class PushoverPluginModel(TypedDict):
     api_key: str
     recipient_key: str
     url_prefix: URLPrefix
     proxy_url: NotRequired[ProxyUrl]
-    priority: NotRequired[PushOverPriorityNumType]
+    priority: NotRequired[PushOverPriorityType]
     sound: NotRequired[SoundType]
 
 

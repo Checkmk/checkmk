@@ -46,9 +46,11 @@ from cmk.utils.notify_types import (
     PasswordType,
     PluginOptions,
     ProxyUrl,
+    PushOverEmergencyType,
     PushoverPluginName,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
+    PushOverPriorityType,
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
@@ -421,16 +423,27 @@ PRIORITY_VALUES: Mapping[PushOverPriorityNumType, PushOverPriorityStringType] = 
 }
 
 
+class CheckboxPushoverPriorityOther(TypedDict):
+    level: Literal["lowest", "low", "normal", "high"]
+
+
+class CheckboxPushoverPriorityEmergency(TypedDict):
+    level: Literal["emergency"]
+    retry: int
+    expire: int
+    receipt: str
+
+
 class CheckboxPushoverPriorityAPIType(CheckboxStateType, total=False):
-    value: PushOverPriorityStringType
+    value: CheckboxPushoverPriorityOther | CheckboxPushoverPriorityEmergency
 
 
 @dataclass
 class CheckboxPushoverPriority:
-    value: PushOverPriorityNumType | None = None
+    value: PushOverPriorityType | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: PushOverPriorityNumType | None) -> CheckboxPushoverPriority:
+    def from_mk_file_format(cls, data: PushOverPriorityType | None) -> CheckboxPushoverPriority:
         return cls(value=data)
 
     @classmethod
@@ -438,19 +451,40 @@ class CheckboxPushoverPriority:
         if data["state"] == "disabled":
             return cls()
 
+        if data["value"]["level"] == "emergency":
+            return cls(
+                value=PushOverEmergencyType(
+                    priority="2",
+                    retry=data["value"]["retry"],
+                    expire=data["value"]["expire"],
+                    receipts=data["value"]["receipt"],
+                )
+            )
+
         values: Mapping[PushOverPriorityStringType, PushOverPriorityNumType] = {
             v: k for k, v in PRIORITY_VALUES.items()
         }
-        return cls(value=values[data["value"]])
+        return cls(value=values[data["value"]["level"]])
 
     def api_response(self) -> CheckboxPushoverPriorityAPIType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
         r: CheckboxPushoverPriorityAPIType = {"state": state}
-        if self.value is not None:
-            r["value"] = PRIORITY_VALUES[self.value]
+        if self.value is None:
+            return r
+
+        if isinstance(self.value, dict):
+            r["value"] = CheckboxPushoverPriorityEmergency(
+                level="emergency",
+                retry=self.value["retry"],
+                expire=self.value["expire"],
+                receipt=self.value["receipts"],
+            )
+            return r
+
+        r["value"] = CheckboxPushoverPriorityOther(level=PRIORITY_VALUES[self.value])
         return r
 
-    def to_mk_file_format(self) -> PushOverPriorityNumType | None:
+    def to_mk_file_format(self) -> PushOverPriorityType | None:
         return self.value
 
 

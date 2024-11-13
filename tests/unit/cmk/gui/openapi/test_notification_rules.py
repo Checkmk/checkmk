@@ -1047,7 +1047,7 @@ plugin_test_data: list[PluginType] = [
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "high"},
         },
         "sound": {
             "state": "enabled",
@@ -1372,6 +1372,32 @@ plugin_test_data: list[PluginType] = [
             "url": "http://abc.com",
         },
     },
+    {
+        "plugin_name": "pushover",
+        "api_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "environment"},
+        },
+        "priority": {
+            "state": "enabled",
+            "value": {
+                "level": "emergency",
+                "retry": 60,
+                "expire": 3600,
+                "receipt": "abcdefghijklmnopqrst0123456789",
+            },
+        },
+        "sound": {
+            "state": "enabled",
+            "value": "cosmic",
+        },
+    },
 ]
 
 
@@ -1447,7 +1473,7 @@ def test_pushover_key_regex(
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "low"},
         },
         "sound": {
             "state": "enabled",

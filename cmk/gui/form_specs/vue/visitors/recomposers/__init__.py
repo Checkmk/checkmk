@@ -6,6 +6,7 @@
 from .cascading_single_choice import recompose as recompose_cascading_single_choice
 from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
+from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
 from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
@@ -18,6 +19,7 @@ from .unknown_form_spec import recompose as recompose_unknown_form_spec
 __all__ = [
     "recompose_cascading_single_choice",
     "recompose_dictionary",
+    "recompose_levels",
     "recompose_list",
     "recompose_percentage",
     "recompose_regular_expression",

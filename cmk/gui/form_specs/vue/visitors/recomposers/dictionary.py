@@ -16,7 +16,7 @@ from cmk.rulesets.v1.form_specs import Dictionary, FormSpec
 def recompose(form_spec: FormSpec[Any]) -> DictionaryExtended:
     if not isinstance(form_spec, Dictionary):
         raise MKGeneralException(
-            f"Cannot decompose form spec. Expected a Percentage form spec, got {type(form_spec)}"
+            f"Cannot  form spec. Expected a Percentage form spec, got {type(form_spec)}"
         )
 
     return DictionaryExtended(

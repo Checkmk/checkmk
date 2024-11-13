@@ -44,6 +44,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
+    recompose_levels,
     recompose_list,
     recompose_multiple_choice,
     recompose_percentage,
@@ -68,6 +69,7 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     HostState,
     Integer,
+    Levels,
     List,
     MultilineText,
     MultipleChoice,
@@ -75,6 +77,7 @@ from cmk.rulesets.v1.form_specs import (
     Percentage,
     RegularExpression,
     ServiceState,
+    SimpleLevels,
     SingleChoice,
     String,
     TimeSpan,
@@ -170,6 +173,8 @@ def register_form_specs():
     register_recomposer_function(HostState, recompose_host_state)
     register_recomposer_function(ServiceState, recompose_service_state)
     register_recomposer_function(SingleChoice, recompose_single_choice)
+    register_recomposer_function(Levels, recompose_levels)
+    register_recomposer_function(SimpleLevels, recompose_levels)
     register_recomposer_function(List, recompose_list)
     register_recomposer_function(Percentage, recompose_percentage)
     register_recomposer_function(UnknownFormSpec, recompose_unknown_form_spec)

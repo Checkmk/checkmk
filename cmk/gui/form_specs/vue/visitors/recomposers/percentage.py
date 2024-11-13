@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import Float, FormSpec, Percentage
 def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
     if not isinstance(form_spec, Percentage):
         raise MKGeneralException(
-            f"Cannot decompose form spec. Expected a Percentage form spec, got {type(form_spec)}"
+            f"Cannot recompose form spec. Expected a Percentage form spec, got {type(form_spec)}"
         )
 
     return Float(

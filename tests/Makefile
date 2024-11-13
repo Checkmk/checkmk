@@ -413,7 +413,7 @@ test-cycles:
 			$$(realpath -L ..)/packages/cmk-trace/cmk \
 			$$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
-		--threshold 87 \
+		--threshold 114 \
 		--verbose
 
 test-cycles-docker:

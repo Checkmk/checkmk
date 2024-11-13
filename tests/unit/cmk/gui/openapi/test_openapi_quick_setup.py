@@ -18,8 +18,10 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetup,
     QuickSetupAction,
     QuickSetupStage,
+    QuickSetupStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
@@ -51,12 +53,12 @@ def register_quick_setup(
             stages=setup_stages if setup_stages is not None else [],
             actions=[
                 QuickSetupAction(
-                    id="save",
+                    id=ActionId("save"),
                     label="Complete",
                     action=lambda stages, mode, object_id: "http://save/url",
                 ),
                 QuickSetupAction(
-                    id="other_save",
+                    id=ActionId("other_save"),
                     label="Complete2: The Sequel",
                     action=lambda stages, mode, object_id: "http://other_save",
                 ),
@@ -74,9 +76,14 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
@@ -85,7 +92,7 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
     )
     assert len(resp.json["overviews"]) == 1
     assert len(resp.json["stage"]["next_stage_structure"]["components"]) == 1
-    assert resp.json["stage"]["next_stage_structure"]["next_button"]["label"] == "Next"
+    assert resp.json["stage"]["next_stage_structure"]["actions"][0]["button"]["label"] == "Next"
 
 
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
@@ -96,26 +103,37 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[recaps.recaps_form_spec],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[recaps.recaps_form_spec],
+                        next_button_label="Next",
+                    )
+                ],
             ),
             lambda: QuickSetupStage(
                 title="stage2",
                 configure_components=[],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
+        stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
     )
     assert resp.json["errors"] is None
     assert len(resp.json["stage_recap"]) == 1
-    assert resp.json["next_stage_structure"]["next_button"]["label"] == "Next"
+    assert resp.json["next_stage_structure"]["actions"][0]["button"]["label"] == "Next"
 
 
 def _form_spec_extra_validate(
@@ -132,14 +150,20 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[_form_spec_extra_validate],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[_form_spec_extra_validate],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
+        stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}}}],
         expect_ok=False,
     )
@@ -184,14 +208,20 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
                         ),
                     ),
                 ],
-                custom_validators=[_form_spec_extra_validate],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[_form_spec_extra_validate],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
+        stage_action_id="action",
         stages=[{"form_data": {"host_data": {"host_path": "#invalid_host_path#"}}}],
         expect_ok=False,
     )
@@ -220,9 +250,14 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
@@ -240,9 +275,14 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
             lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
@@ -266,14 +306,20 @@ def test_unique_id_must_be_unique(
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[qs_validators.validate_unique_id],
-                recap=[recaps.recaps_form_spec],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[qs_validators.validate_unique_id],
+                        recap=[recaps.recaps_form_spec],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
+        stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I should be unique"}}}],
         expect_ok=False,
     )
@@ -290,17 +336,27 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
             lambda: QuickSetupStage(
                 title="stage2",
                 sub_title="2",
                 configure_components=[],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
@@ -312,9 +368,8 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
         "title",
         "sub_title",
         "components",
-        "next_button",
+        "actions",
         "prev_button",
-        "load_wait_label",
     }
 
 
@@ -333,9 +388,14 @@ def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
         load_data=load_data,
@@ -370,9 +430,14 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )
@@ -477,9 +542,14 @@ def test_validation_on_save_all(
                         ),
                     ),
                 ],
-                custom_validators=[_form_spec_extra_validate],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[_form_spec_extra_validate],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
             lambda: QuickSetupStage(
                 title="stage2",
@@ -492,9 +562,14 @@ def test_validation_on_save_all(
                         ),
                     ),
                 ],
-                custom_validators=[_form_spec_extra_validate],
-                recap=[],
-                next_button_label="Next",
+                actions=[
+                    QuickSetupStageAction(
+                        id=ActionId("action"),
+                        custom_validators=[_form_spec_extra_validate],
+                        recap=[],
+                        next_button_label="Next",
+                    )
+                ],
             ),
         ],
     )

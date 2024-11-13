@@ -37,23 +37,6 @@ class Errors(BaseSchema):
     )
 
 
-class QuickSetupCompleteButton(BaseSchema):
-    id = fields.String(
-        example="save",
-        description="The button id",
-    )
-    label = fields.String(
-        example="Save configuration",
-        description="The label of the complete button of the overall Quick setup",
-    )
-
-    aria_label = fields.String(
-        example="Save configuration",
-        description="The aria label of the complete button of the overall Quick setup",
-        allow_none=True,
-    )
-
-
 class QuickSetupButton(BaseSchema):
     id = fields.String(
         example="next",
@@ -71,30 +54,38 @@ class QuickSetupButton(BaseSchema):
     )
 
 
+class Action(BaseSchema):
+    id = fields.String(
+        example="action",
+        description="The action id",
+    )
+    button = fields.Nested(
+        QuickSetupButton,
+        example={"label": "Next", "aria_label": "Next"},
+        description="Definition of the action button",
+    )
+    load_wait_label = fields.String(
+        example="Please wait...",
+        description="A string to display while waiting for the next stage",
+    )
+
+
 class QuickSetupNextStageStructure(BaseSchema):
     components = fields.List(
         fields.Dict,
         example=[],
         description="A collection of stage components",
     )
-
-    next_button = fields.Nested(
-        QuickSetupButton,
-        example={"label": "Next", "aria_label": "Next"},
-        description="Definition of the `go to next stage` button",
-        allow_none=True,
+    actions = fields.List(
+        fields.Nested(Action),
+        example=[],
+        description="A collection of stage actions",
     )
-
     prev_button = fields.Nested(
         QuickSetupButton,
         example={"id": "prev", "label": "Back"},
         description="Definition of the `go to previous stage` button",
         allow_none=True,
-    )
-
-    load_wait_label = fields.String(
-        example="Please wait...",
-        description="A string to display while waiting for the next stage",
     )
 
 
@@ -132,22 +123,16 @@ class QuickSetupCompleteStageResponse(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
-    next_button = fields.Nested(
-        QuickSetupButton,
-        example={"label": "Next", "aria_label": "Next"},
-        description="Definition of the `go to next stage` button",
-        allow_none=True,
+    actions = fields.List(
+        fields.Nested(Action),
+        example=[],
+        description="A collection of stage actions",
     )
-
     prev_button = fields.Nested(
         QuickSetupButton,
         example={"id": "prev", "label": "Back"},
         description="Definition of the `go to previous stage` button",
         allow_none=True,
-    )
-    load_wait_label = fields.String(
-        example="Please wait...",
-        description="A string to display while waiting for the next stage",
     )
 
 
@@ -156,10 +141,10 @@ class QuickSetupBaseResponse(BaseSchema):
         example="aws_quicksetup",
         description="The quicksetup id",
     )
-    complete_buttons = fields.List(
-        fields.Nested(QuickSetupCompleteButton),
+    actions = fields.List(
+        fields.Nested(Action),
         example=[{"id": "save", "label": "Save configuration"}],
-        description="A list of all complete buttons",
+        description="A list of all complete actions",
     )
 
     prev_button = fields.Nested(

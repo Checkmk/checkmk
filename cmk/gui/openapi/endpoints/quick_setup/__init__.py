@@ -154,6 +154,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     """Validate the current stage and retrieve the next"""
     body = params["body"]
     quick_setup_id = body["quick_setup_id"]
+    stage_action_id = body["stage_action_id"]
 
     if (quick_setup := quick_setup_registry.get(quick_setup_id)) is None:
         return _serve_error(
@@ -172,6 +173,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             quick_setup=quick_setup,
             stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
             stage_index=stage_index,
+            stage_action_id=stage_action_id,
             stages=stages,
             quick_setup_formspec_map=form_spec_map,
         )
@@ -193,6 +195,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             stages=stages,
             quick_setup_formspec_map=form_spec_map,
             stage_index=stage_index,
+            stage_action_id=stage_action_id,
             prefill_data=prefill_data,
         )
     )

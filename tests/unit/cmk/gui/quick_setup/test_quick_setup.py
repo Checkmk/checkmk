@@ -8,8 +8,8 @@ from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 from cmk.gui.quick_setup.to_frontend import get_stages_and_formspec_map, retrieve_next_stage
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData, StageIndex
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction
+from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData, StageIndex
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper
 
 from cmk.rulesets.v1 import Title
@@ -37,9 +37,14 @@ def test_form_spec_recap() -> None:
                     ),
                 ),
             ],
-            custom_validators=[],
-            recap=[recaps_form_spec],
-            next_button_label="Next",
+            actions=[
+                QuickSetupStageAction(
+                    id=ActionId("action"),
+                    custom_validators=[],
+                    recap=[recaps_form_spec],
+                    next_button_label="Next",
+                )
+            ],
         ),
     ]
     quick_setup = QuickSetupFactory.build(stages=setup_stages)
@@ -58,6 +63,7 @@ def test_form_spec_recap() -> None:
         stages=stages,
         quick_setup_formspec_map=form_spec_map,
         stage_index=StageIndex(0),
+        stage_action_id=ActionId("action"),
     )
 
     assert len(stage.stage_recap) == 1
@@ -86,9 +92,14 @@ def test_retrieve_next_following_last_stage() -> None:
                     ),
                 ),
             ],
-            custom_validators=[],
-            recap=[recaps_form_spec],
-            next_button_label="Next",
+            actions=[
+                QuickSetupStageAction(
+                    id=ActionId("action"),
+                    custom_validators=[],
+                    recap=[recaps_form_spec],
+                    next_button_label="Next",
+                )
+            ],
         ),
     ]
     quick_setup = QuickSetupFactory.build(stages=setup_stages)
@@ -105,5 +116,6 @@ def test_retrieve_next_following_last_stage() -> None:
         stages=stages,
         quick_setup_formspec_map=form_spec_map,
         stage_index=StageIndex(0),
+        stage_action_id=ActionId("action"),
     )
     assert stage.next_stage_structure is None

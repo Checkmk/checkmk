@@ -12,14 +12,23 @@ from dataclasses import dataclass
 
 from polyfactory.factories.dataclass_factory import DataclassFactory
 
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupStage,
+    QuickSetupStageAction,
+)
+
+
+@dataclass(frozen=True)
+class StageActionForTest(QuickSetupStageAction):
+    recap: Sequence
+    custom_validators: Sequence
 
 
 @dataclass(frozen=True)
 class QuickSetupStageForTest(QuickSetupStage):
-    recap: Sequence
     configure_components: Sequence
-    custom_validators: Sequence
 
 
 @dataclass(frozen=True)

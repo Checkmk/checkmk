@@ -25,8 +25,10 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupAction,
     QuickSetupActionMode,
     QuickSetupStage,
+    QuickSetupStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
     ParsedFormData,
     QuickSetupId,
     ServiceInterest,
@@ -110,19 +112,24 @@ def configure_authentication() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[
-            qs_validators.validate_unique_id,
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("azure"),
-                parameter_form=azure.formspec(),
-                custom_collect_params=_collect_params_for_connection_test,
-                error_message=_(
-                    "Could not access your Azure account. Please check your credentials."
-                ),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[
+                    qs_validators.validate_unique_id,
+                    qs_validators.validate_test_connection_custom_collect_params(
+                        rulespec_name=RuleGroup.SpecialAgents("azure"),
+                        parameter_form=azure.formspec(),
+                        custom_collect_params=_collect_params_for_connection_test,
+                        error_message=_(
+                            "Could not access your Azure account. Please check your credentials."
+                        ),
+                    ),
+                ],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure host and authority"),
             ),
         ],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Configure host and authority"),
     )
 
 
@@ -136,9 +143,14 @@ def configure_host_and_authority() -> QuickSetupStage:
             widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="azure"),
             widgets.site_formspec_wrapper(),
         ],
-        custom_validators=[qs_validators.validate_host_name_doesnt_exists],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Configure services to monitor"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[qs_validators.validate_host_name_doesnt_exists],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure services to monitor"),
+            ),
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -172,11 +184,16 @@ def configure_services_to_monitor() -> QuickSetupStage:
         title=_("Configure services to monitor"),
         sub_title=_("Select and configure the Microsoft Azure services you would like to monitor"),
         configure_components=_configure,
-        custom_validators=[],
-        recap=[
-            recaps.recaps_form_spec,
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recaps.recaps_form_spec,
+                ],
+                next_button_label=_("Review and test configuration"),
+            )
         ],
-        next_button_label=_("Review and test configuration"),
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -217,13 +234,18 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         title=_("Review and run preview service discovery"),
         sub_title=_("Review your configuration and run preview service discovery"),
         configure_components=[],
-        custom_validators=[],
-        recap=[
-            recap_found_services,
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recap_found_services,
+                ],
+                next_button_label=_("Test configuration"),
+                load_wait_label=_("This process may take several minutes, please wait..."),
+            )
         ],
-        next_button_label=_("Test configuration"),
         prev_button_label=PREV_BUTTON_LABEL,
-        load_wait_label=_("This process may take several minutes, please wait..."),
     )
 
 
@@ -261,7 +283,7 @@ quick_setup_azure = QuickSetup(
     ],
     actions=[
         QuickSetupAction(
-            id="activate_changes",
+            id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
         ),

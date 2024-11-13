@@ -41,8 +41,10 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupAction,
     QuickSetupActionMode,
     QuickSetupStage,
+    QuickSetupStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
@@ -276,9 +278,14 @@ def triggering_events() -> QuickSetupStage:
         title=_("Triggering events"),
         sub_title=_("Define any events you want to be notified about."),
         configure_components=_components,
-        custom_validators=[_validate_at_least_one_event],
-        recap=[custom_recap_formspec_triggering_events],
-        next_button_label=_("Next step: Specify host/services"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[_validate_at_least_one_event],
+                recap=[custom_recap_formspec_triggering_events],
+                next_button_label=_("Next step: Specify host/services"),
+            ),
+        ],
     )
 
 
@@ -689,9 +696,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
             "notification rule."
         ),
         configure_components=_components,
-        custom_validators=[],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Next step: Notification method (plug-in)"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Next step: Notification method (plug-in)"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -958,9 +970,14 @@ def notification_method() -> QuickSetupStage:
         title=_("Notification method (plug-in)"),
         sub_title=_("What should be sent out?"),
         configure_components=_components,
-        custom_validators=[],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Next step: Recipient"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Next step: Recipient"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -1125,9 +1142,14 @@ def recipient() -> QuickSetupStage:
         title=_("Recipient"),
         sub_title=_("Who should receive the notification?"),
         configure_components=_components,
-        custom_validators=[],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Next step: Sending conditions"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Next step: Sending conditions"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -1244,9 +1266,14 @@ def sending_conditions() -> QuickSetupStage:
             "content criteria."
         ),
         configure_components=_components,
-        custom_validators=[],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Next step: General properties"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Next step: General properties"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -1320,9 +1347,14 @@ def general_properties() -> QuickSetupStage:
             'away without "Activate changes".'
         ),
         configure_components=_components,
-        custom_validators=[],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Next step: Summary"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Next step: Summary"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -1404,12 +1436,12 @@ quick_setup_notifications = QuickSetup(
     ],
     actions=[
         QuickSetupAction(
-            id="apply_and_test",
+            id=ActionId("apply_and_test"),
             label=_("Apply & test notification rule"),
             action=save_and_test_action,
         ),
         QuickSetupAction(
-            id="apply_and_create_new",
+            id=ActionId("apply_and_create_new"),
             label=_("Apply & create another rule"),
             action=save_and_new_action,
         ),

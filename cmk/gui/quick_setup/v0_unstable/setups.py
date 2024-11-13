@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
@@ -26,6 +27,8 @@ class QuickSetupActionMode(StrEnum):
 
 
 FormspecMap = Mapping[FormSpecId, FormSpec]
+# TODO: Validator should be refactored so during complete action, overlapping validations can be
+#  skipped
 CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
 CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], str]
@@ -33,22 +36,78 @@ WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
 @dataclass(frozen=True)
-class QuickSetupAction:
-    id: str
-    label: str
-    action: CallableAction
+class QuickSetupStageAction:
+    """Data class representing an action that can be triggered in a quick setup stage when
+    proceeding to the next stage.
+
+        Notes:
+            * An action is triggered when the user clicks the action button.
+            * An successful action conditions that all validators (custom and built-in) pass.
+            * Passing of all validations will result in a summarized view of the stage data defined
+            by the recap callables.
+
+        Attributes:
+            id:
+                The unique identifier of the action. Ids only need to be unique within the stage.
+
+            custom_validators:
+                A list of custom validators that are executed when the action is triggered. Custom
+                validators are executed alongside the formspec validation
+
+            recap:
+                A list of recap callables with each callable returning a list of widgets that are
+                displayed in the recap section of the stage. The recap section conditions that all
+                validators have passed.
+
+            next_button_label:
+                The label of the action button. If not set, the default label is used.
+
+            load_wait_label:
+                The label of the loading spinner. If not set, the default label is used.
+
+    """
+
+    id: ActionId
+    custom_validators: Iterable[CallableValidator]
+    recap: Iterable[CallableRecap]
+    next_button_label: str | None = None
+    load_wait_label: str | None = None
 
 
 @dataclass(frozen=True)
 class QuickSetupStage:
+    """Quick setup stage definition
+
+    Attributes:
+        title:
+            The title of the stage
+
+        configure_components:
+            A callable that returns a sequence of widgets that are displayed in the stage body
+            (only visible if the stage is on focus)
+
+        actions:
+            A sequence of mutually exclusive stage actions that can be triggered in the stage
+
+        sub_title:
+            The sub-title description of the stage
+
+        prev_button_label:
+            The label of the previous button. If not set, the default label is used.
+    """
+
     title: str
     configure_components: WidgetConfigurator | Sequence[Widget]
-    custom_validators: Iterable[CallableValidator]
-    recap: Iterable[CallableRecap]
+    actions: Sequence[QuickSetupStageAction]
     sub_title: str | None = None
-    next_button_label: str | None = None
     prev_button_label: str | None = None
-    load_wait_label: str | None = None
+
+
+@dataclass(frozen=True)
+class QuickSetupAction:
+    id: ActionId
+    label: str
+    action: CallableAction
 
 
 @dataclass(frozen=True)

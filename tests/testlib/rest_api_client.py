@@ -3023,6 +3023,7 @@ class QuickSetupClient(RestApiClient):
     def send_stage_retrieve_next(
         self,
         quick_setup_id: str,
+        stage_action_id: str,
         stages: list[dict[str, Any]],
         object_id: str | None = None,
         expect_ok: bool = True,
@@ -3030,7 +3031,11 @@ class QuickSetupClient(RestApiClient):
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            body={"quick_setup_id": quick_setup_id, "stages": stages},
+            body={
+                "quick_setup_id": quick_setup_id,
+                "stages": stages,
+                "stage_action_id": stage_action_id,
+            },
             query_params=_only_set_keys({"object_id": object_id}),
             expect_ok=expect_ok,
         )

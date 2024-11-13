@@ -27,8 +27,10 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     QuickSetupAction,
     QuickSetupActionMode,
     QuickSetupStage,
+    QuickSetupStageAction,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
     ParsedFormData,
     QuickSetupId,
     ServiceInterest,
@@ -89,19 +91,24 @@ def prepare_aws() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[
-            qs_validators.validate_unique_id,
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                custom_collect_params=aws_collect_params_with_defaults,
-                error_message=_(
-                    "Could not access your AWS account. Please check your Access and Secret key and try again."
-                ),
-            ),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("connection_test"),
+                custom_validators=[
+                    qs_validators.validate_unique_id,
+                    qs_validators.validate_test_connection_custom_collect_params(
+                        rulespec_name=RuleGroup.SpecialAgents("aws"),
+                        parameter_form=quick_setup_aws_form_spec(),
+                        custom_collect_params=aws_collect_params_with_defaults,
+                        error_message=_(
+                            "Could not access your AWS account. Please check your Access and Secret key and try again."
+                        ),
+                    ),
+                ],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure host and regions"),
+            )
         ],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Configure host and regions"),
     )
 
 
@@ -122,9 +129,14 @@ def configure_host_and_regions() -> QuickSetupStage:
             ),
             widgets.site_formspec_wrapper(),
         ],
-        custom_validators=[qs_validators.validate_host_name_doesnt_exists],
-        recap=[recaps.recaps_form_spec],
-        next_button_label=_("Configure services to monitor"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("host_name"),
+                custom_validators=[qs_validators.validate_host_name_doesnt_exists],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure services to monitor"),
+            )
+        ],
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -163,11 +175,16 @@ def configure_services_to_monitor() -> QuickSetupStage:
             "options such as AWS tags or a proxy server."
         ),
         configure_components=_configure,
-        custom_validators=[],
-        recap=[
-            recaps.recaps_form_spec,
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recaps.recaps_form_spec,
+                ],
+                next_button_label=_("Review and test configuration"),
+            )
         ],
-        next_button_label=_("Review and test configuration"),
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -212,12 +229,17 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         title=_("Review and test configuration"),
         sub_title=_("Test the AWS connection based on your configuration settings"),
         configure_components=[],
-        custom_validators=[],
-        recap=[
-            recap_found_services,
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recap_found_services,
+                ],
+                load_wait_label=_("This process may take several minutes, please wait..."),
+                next_button_label=_("Test configuration"),
+            )
         ],
-        load_wait_label=_("This process may take several minutes, please wait..."),
-        next_button_label=_("Test configuration"),
         prev_button_label=PREV_BUTTON_LABEL,
     )
 
@@ -286,7 +308,8 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "secret_access_key": params["secret_access_key"],
         "global_services": {k: _migrate_aws_service(k) for k in global_services},
         "regions": [region.replace("_", "-") for region in regions_to_monitor],
-        "access": {},  # TODO required key but not yet implemented. It's part of quick_setup_advanced()
+        "access": {},
+        # TODO required key but not yet implemented. It's part of quick_setup_advanced()
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
     }
@@ -310,7 +333,7 @@ quick_setup_aws = QuickSetup(
     ],
     actions=[
         QuickSetupAction(
-            id="activate_changes",
+            id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
             action=action,
         ),

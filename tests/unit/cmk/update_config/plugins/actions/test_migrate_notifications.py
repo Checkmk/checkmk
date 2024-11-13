@@ -440,6 +440,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             recipient_key="recipient_key",
                             url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
+                            priority=("normal", None),
                         ),
                     ),
                 )
@@ -457,6 +458,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "recipient_key": "recipient_key",
                             "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
+                            "priority": ("normal", None),
                         },
                     }
                 }

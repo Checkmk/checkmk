@@ -46,9 +46,7 @@ from cmk.utils.notify_types import (
     PasswordType,
     PluginOptions,
     ProxyUrl,
-    PushOverEmergencyType,
     PushoverPluginName,
-    PushOverPriorityNumType,
     PushOverPriorityStringType,
     PushOverPriorityType,
     RegexModes,
@@ -415,16 +413,8 @@ class ContactMatchMacros:
 
 
 # ----------------------------------------------------------------
-PRIORITY_VALUES: Mapping[PushOverPriorityNumType, PushOverPriorityStringType] = {
-    "-2": "lowest",
-    "-1": "low",
-    "0": "normal",
-    "1": "high",
-}
-
-
 class CheckboxPushoverPriorityOther(TypedDict):
-    level: Literal["lowest", "low", "normal", "high"]
+    level: PushOverPriorityStringType
 
 
 class CheckboxPushoverPriorityEmergency(TypedDict):
@@ -448,41 +438,53 @@ class CheckboxPushoverPriority:
 
     @classmethod
     def from_api_request(cls, data: CheckboxPushoverPriorityAPIType) -> CheckboxPushoverPriority:
-        if data["state"] == "disabled":
-            return cls()
+        match data:
+            case {"state": "disabled"}:
+                return cls()
 
-        if data["value"]["level"] == "emergency":
-            return cls(
-                value=PushOverEmergencyType(
-                    priority="2",
-                    retry=data["value"]["retry"],
-                    expire=data["value"]["expire"],
-                    receipts=data["value"]["receipt"],
-                )
-            )
+            case {
+                "state": "enabled",
+                "value": {
+                    "level": "emergency",
+                    "retry": int() as retry,
+                    "expire": int() as expire,
+                    "receipt": str() as receipt,
+                },
+            }:
+                return cls(value=("emergency", (float(retry), float(expire), receipt)))
 
-        values: Mapping[PushOverPriorityStringType, PushOverPriorityNumType] = {
-            v: k for k, v in PRIORITY_VALUES.items()
-        }
-        return cls(value=values[data["value"]["level"]])
+            case {
+                "state": "enabled",
+                "value": {
+                    "level": "lowest" | "low" | "normal" | "high" as level,
+                },
+            }:
+                return cls(value=(level, None))
+
+            case _:
+                raise ValueError("Invalid CheckboxPushoverPriorityAPIType")
 
     def api_response(self) -> CheckboxPushoverPriorityAPIType:
-        state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: CheckboxPushoverPriorityAPIType = {"state": state}
-        if self.value is None:
-            return r
-
-        if isinstance(self.value, dict):
-            r["value"] = CheckboxPushoverPriorityEmergency(
-                level="emergency",
-                retry=self.value["retry"],
-                expire=self.value["expire"],
-                receipt=self.value["receipts"],
-            )
-            return r
-
-        r["value"] = CheckboxPushoverPriorityOther(level=PRIORITY_VALUES[self.value])
-        return r
+        match self.value:
+            case None:
+                return CheckboxPushoverPriorityAPIType(state="disabled")
+            case ("emergency", (float() as retry, float() as expire, str() as receipt)):
+                return CheckboxPushoverPriorityAPIType(
+                    state="enabled",
+                    value=CheckboxPushoverPriorityEmergency(
+                        level="emergency",
+                        retry=int(retry),
+                        expire=int(expire),
+                        receipt=receipt,
+                    ),
+                )
+            case ("lowest" | "low" | "normal" | "high" as level, None):
+                return CheckboxPushoverPriorityAPIType(
+                    state="enabled",
+                    value=CheckboxPushoverPriorityOther(level=level),
+                )
+            case _:
+                raise ValueError("Invalid CheckboxPushoverPriority")
 
     def to_mk_file_format(self) -> PushOverPriorityType | None:
         return self.value

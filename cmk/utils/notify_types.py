@@ -572,28 +572,9 @@ class PagerDutyPluginModel(TypedDict):
     url_prefix: NotRequired[URLPrefix]
 
 
-PushOverPriorityNumType = Literal[
-    "-2",
-    "-1",
-    "0",
-    "1",
-]
-PushOverPriorityStringType = Literal[
-    "lowest",
-    "low",
-    "normal",
-    "high",
-]
-
-
-class PushOverEmergencyType(TypedDict):
-    priority: Literal["2"]
-    retry: int
-    expire: int
-    receipts: str
-
-
-PushOverPriorityType = PushOverPriorityNumType | PushOverEmergencyType
+PushOverPriorityStringType = Literal["lowest", "low", "normal", "high"]
+PushOverEmergencyType = tuple[Literal["emergency"], tuple[float, float, str]]
+PushOverPriorityType = tuple[PushOverPriorityStringType, None] | PushOverEmergencyType
 
 
 class PushoverPluginModel(TypedDict):

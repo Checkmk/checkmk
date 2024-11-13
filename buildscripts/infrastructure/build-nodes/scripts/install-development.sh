@@ -351,7 +351,6 @@ install_for_rust_dev() {
 
 strip_for_rust() {
     # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
 }
 

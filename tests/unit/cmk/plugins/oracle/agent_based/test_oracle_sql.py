@@ -2,7 +2,12 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import datetime
+from zoneinfo import ZoneInfo
+
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.oracle.agent_based.oracle_sql import (
@@ -314,3 +319,32 @@ def test_oracle_sql_discovery(info, expected):
 def test_oracle_sql_check(info, item, expected):
     result = list(check_oracle_sql(item, {}, parse_oracle_sql(info)))
     assert result == expected
+
+
+def test_check_oracle_sql_cached() -> None:
+    with time_machine.travel(datetime.datetime.fromtimestamp(10, tz=ZoneInfo("UTC"))):
+        assert list(
+            check_oracle_sql(
+                item="SID SQL SQL",
+                params={},
+                section=parse_oracle_sql(
+                    [
+                        ["[[[sid|sql|cached(1,2)]]]"],
+                        ["details", "DETAILS"],
+                        ["perfdata", "metric_name=1;2;3;0;5"],
+                        ["long", "LONG"],
+                        ["exit", "0"],
+                        ["elapsed", "123"],
+                    ]
+                ),
+            )
+        ) == [
+            Result(state=State.OK, summary="DETAILS"),
+            Metric("metric_name", 1.0, levels=(2.0, 3.0), boundaries=(0.0, 5.0)),
+            Metric("elapsed_time", 123.0),
+            Result(state=State.OK, summary="LONG"),
+            Result(
+                state=State.OK,
+                summary="Cache generated 9 seconds ago, cache interval: 2 seconds, elapsed cache lifespan: 450.00%",
+            ),
+        ]

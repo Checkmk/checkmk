@@ -296,7 +296,6 @@ strip_for_cpp() {
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "valgrind-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "cmake-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "protobuf-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
 }
 
 install_for_gdb() {

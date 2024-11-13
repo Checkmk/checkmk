@@ -48,11 +48,6 @@ const router = createRouter({
       component: DemoSlideIn
     },
     {
-      path: '/formeditasync',
-      name: 'FormEditAsync',
-      component: DemoFormEditAsync
-    },
-    {
       path: '/cmkspace',
       name: 'CmkSpace',
       component: DemoCmkSpace
@@ -141,6 +136,11 @@ const router = createRouter({
           path: 'formlabels',
           name: 'FormLabels',
           component: DemoFormLabels
+        },
+        {
+          path: 'formeditasync',
+          name: 'FormEditAsync',
+          component: DemoFormEditAsync
         }
       ]
     }

@@ -4,9 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="ObjectIdent, Result">
-// TODO: this is a strange hyprid: on the one hand its a building block, on the other hand its dependent on FormEdit, but not part of the form namespace.
-// maybe we should move this into src/form/components ? or we rename it to AsyncEditForm and keep it were it is? but the Form prefix is a bit confusing.
-// don't forget to adapt the demo!
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'

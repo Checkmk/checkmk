@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormEditAsync from '@/components/FormEditAsync.vue'
+import FormEditAsync from '@/form/components/FormEditAsync.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'

@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, toRaw } from 'vue'
-import type { API, SetDataResult } from '@/components/FormEditAsync.vue'
-import FormEditAsync from '@/components/FormEditAsync.vue'
+import type { API, SetDataResult } from '@/form/components/FormEditAsync.vue'
+import FormEditAsync from '@/form/components/FormEditAsync.vue'
 import type {
   Dictionary,
   FormSpec,

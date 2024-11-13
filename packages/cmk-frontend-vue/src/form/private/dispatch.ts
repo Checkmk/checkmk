@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import type { IComponent } from '@/types'
+import { type Component } from 'vue'
 import type { Components } from '@/form/components/vue_formspec_components'
 
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
@@ -35,7 +35,7 @@ import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
-const components: Record<Components['type'], unknown> = {
+const components: Record<Components['type'], Component> = {
   boolean_choice: FormBooleanChoice,
   cascading_single_choice: FormCascadingSingleChoice,
   catalog: FormCatalog,
@@ -64,10 +64,10 @@ const components: Record<Components['type'], unknown> = {
   tuple: FormTuple
 }
 
-export function getComponent(type: string): IComponent {
+export function getComponent(type: string): Component {
   const result = components[type as Components['type']]
   if (result !== undefined) {
-    return result as IComponent
+    return result
   }
   throw new Error(`Could not find Component for type=${type}`)
 }

@@ -15,13 +15,18 @@ import CmkListAddButton from './CmkListAddButton.vue'
 
 type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 
-const { orientation = 'vertical', ...props } = defineProps<{
+const {
+  orientation = 'vertical',
+  showAddButton = true,
+  ...props
+} = defineProps<{
   itemsProps: ItemsProps
   onAdd: (index: number) => void
   onDelete: (index: number) => void
   i18n: {
     addElementLabel: string
   }
+  showAddButton?: boolean
   draggable?: { onReorder: (order: number[]) => void } | null
   orientation?: 'vertical' | 'horizontal'
 }>()
@@ -92,15 +97,7 @@ function getStyle(index: number, length: number) {
 
 <template>
   <div :class="{ cmk_list__container: true, horizontal: orientation === 'horizontal' }">
-    <template v-if="orientation === 'horizontal'">
-      <CmkListAddButton
-        class="cmk_list__add_button"
-        :add-element-label="props.i18n.addElementLabel"
-        :add-element="addElement"
-      />
-      <CmkSpace />
-    </template>
-    <table v-show="localOrder.length > 0" ref="tableRef" class="cmk_list__table">
+    <table ref="tableRef" class="cmk_list__table">
       <template v-if="orientation === 'vertical'">
         <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
           <td>
@@ -116,18 +113,26 @@ function getStyle(index: number, length: number) {
       </template>
       <template v-else>
         <tr>
-          <td v-for="dataIndex in localOrder" :key="dataIndex">
-            <CmkListItem :remove-element="() => removeElement(dataIndex)">
+          <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
+            <CmkListItem :button-padding="'4px'" :remove-element="() => removeElement(dataIndex)">
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
               <CmkSpace direction="horizontal" />
-              <CmkSpace direction="horizontal" />
+              <CmkSpace v-if="listIndex !== localOrder.length - 1" direction="horizontal" />
             </CmkListItem>
+          </td>
+          <td>
+            <CmkListAddButton
+              v-if="showAddButton"
+              class="cmk_list__add_button"
+              :add-element-label="props.i18n.addElementLabel"
+              :add-element="addElement"
+            />
           </td>
         </tr>
       </template>
     </table>
     <CmkListAddButton
-      v-if="orientation === 'vertical'"
+      v-if="showAddButton && orientation === 'vertical'"
       class="cmk_list__add_button"
       :add-element-label="props.i18n.addElementLabel"
       :add-element="addElement"
@@ -162,6 +167,10 @@ function getStyle(index: number, length: number) {
   }
   .cmk_list__table td {
     display: inline-block;
+    vertical-align: top;
+  }
+  .cmk_list__add_button {
+    padding-top: 4px;
   }
 }
 </style>

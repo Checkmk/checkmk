@@ -8,9 +8,10 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
-const props = defineProps<{
+const { buttonPadding = '16px', ...props } = defineProps<{
   removeElement: () => void
   style?: 'first' | 'last' | null
+  buttonPadding?: '16px' | '8px'
   draggable?: {
     dragStart: (event: DragEvent) => void
     dragEnd: (event: DragEvent) => void
@@ -70,7 +71,7 @@ const props = defineProps<{
 
   .cmk_list__content {
     padding-top: calc(var(--spacing) - var(--button-padding-top));
-    padding-left: 16px;
+    padding-left: v-bind(buttonPadding);
   }
 
   .cmk_list__buttons.first {

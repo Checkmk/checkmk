@@ -114,7 +114,7 @@ function getStyle(index: number, length: number) {
       <template v-else>
         <tr>
           <td v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
-            <CmkListItem :button-padding="'4px'" :remove-element="() => removeElement(dataIndex)">
+            <CmkListItem :button-padding="'8px'" :remove-element="() => removeElement(dataIndex)">
               <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
               <CmkSpace direction="horizontal" />
               <CmkSpace v-if="listIndex !== localOrder.length - 1" direction="horizontal" />

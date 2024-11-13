@@ -5,6 +5,7 @@
  */
 import { fireEvent, waitFor, render, screen } from '@testing-library/vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -83,7 +84,7 @@ test('FormDictionary displays dictelement data', async () => {
 })
 
 test('FormDictionary checking non-required element fills default', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: {},
@@ -99,7 +100,7 @@ test('FormDictionary checking non-required element fills default', async () => {
 })
 
 test('FormDictionary enable element, check frontend validators', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: {},
@@ -117,7 +118,7 @@ test('FormDictionary enable element, check frontend validators', async () => {
 })
 
 test('FormDictionary render backend validation message', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: { bar: 'some_value' },
@@ -180,7 +181,7 @@ test('FormDictionary appends default of required element if missing in data', as
 })
 
 test('FormDictionary checks frontend validators on existing element', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: { bar: 'some_value' },

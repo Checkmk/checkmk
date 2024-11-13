@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { mount } from '@vue/test-utils'
 import FormList from '@/form/components/forms/FormList.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import FormDataVisualizer from '../FormDataVisualizer.vue'
@@ -109,7 +110,7 @@ test.skip('FormList updated backend child validation shows validation error', as
 })
 
 test('FormList local child validation overwrites backend validation', async () => {
-  render(FormList, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some value'],
@@ -127,7 +128,7 @@ test('FormList local child validation overwrites backend validation', async () =
 })
 
 test('FormList shows frontend validation on existing element', async () => {
-  render(FormList, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some_value'],

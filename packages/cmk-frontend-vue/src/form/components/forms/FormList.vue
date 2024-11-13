@@ -5,8 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-
-import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
@@ -15,6 +13,7 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import CmkList from '@/components/CmkList'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: List
@@ -81,6 +80,9 @@ function reorderElements(order: number[]) {
   data.value = order.map((index) => data.value[index])
   elementValidation.value = order.map((index) => elementValidation.value[index]!)
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -94,12 +96,12 @@ function reorderElements(order: number[]) {
     }"
   >
     <template #item-props="{ index, data: itemData, elementValidation: itemElementValidation }">
-      <FormEdit
+      <FormEditDispatcher
         :data="itemData"
         :spec="spec.element_template"
         :backend-validation="itemElementValidation"
         @update:data="(new_value: unknown) => updateElementData(new_value, index)"
-      ></FormEdit>
+      />
     </template>
   </CmkList>
   <FormValidation :validation="validation"></FormValidation>

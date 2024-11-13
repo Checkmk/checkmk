@@ -6,9 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
-import FormEditDispatcher from './FormEditDispatcher.vue'
-import { dispatcherKey } from '@/form/private'
-import { provide } from 'vue'
+import FormHelp from '@/form/components/FormHelp.vue'
+import { getComponent } from '@/form/private/dispatch'
 
 defineProps<{
   spec: FormSpec
@@ -16,10 +15,16 @@ defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-
-provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>
-  <FormEditDispatcher v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+  <span>
+    <FormHelp :help="spec.help" />
+    <component
+      :is="getComponent(spec.type)"
+      v-model:data="data"
+      :backend-validation="backendValidation"
+      :spec="spec"
+    />
+  </span>
 </template>

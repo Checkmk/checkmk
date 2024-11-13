@@ -9,11 +9,11 @@ import {
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
-import FormEdit from '@/form/components/FormEdit.vue'
 import { ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import HelpText from '@/components/HelpText.vue'
 import { capitalizeFirstLetter } from '@/lib/utils'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: FormSpec.Tuple
@@ -43,6 +43,9 @@ function setValidation(newBackendValidation: ValidationMessages) {
   validation.value = _tupleValidations
   elementValidation.value = _elementValidations
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -62,7 +65,7 @@ function setValidation(newBackendValidation: ValidationMessages) {
               v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'"
             />
             <span v-else> </span>
-            <FormEdit
+            <FormEditDispatcher
               v-model:data="data[index]"
               :spec="element"
               :backend-validation="elementValidation[index]!"
@@ -83,7 +86,7 @@ function setValidation(newBackendValidation: ValidationMessages) {
           }}</span>
         </td>
         <td :class="{ tuple_right: true, has_title: element.title }">
-          <FormEdit
+          <FormEditDispatcher
             v-model:data="data[index]"
             :spec="element"
             :backend-validation="elementValidation[index]!"
@@ -96,7 +99,7 @@ function setValidation(newBackendValidation: ValidationMessages) {
 
   <template v-if="spec.layout === 'float'">
     <template v-for="(element, index) in spec.elements" :key="index">
-      <FormEdit
+      <FormEditDispatcher
         v-model:data="data[index]"
         :spec="element"
         :backend-validation="elementValidation[index]!"

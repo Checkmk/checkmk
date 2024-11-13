@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
@@ -138,7 +139,7 @@ test('FormCascadingSingleChoice keeps previously inserted data', async () => {
 })
 
 test('FormCascadingSingleChoice checks validators', async () => {
-  render(FormCascadingSingleChoice, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['stringChoice', 'some_value'],
@@ -216,7 +217,7 @@ test('FormCascadingSingleChoice does not poisen the template value', async () =>
       }
     ]
   }
-  render(FormCascadingSingleChoice, {
+  render(FormEdit, {
     props: {
       spec,
       // the current data does not match, so when...

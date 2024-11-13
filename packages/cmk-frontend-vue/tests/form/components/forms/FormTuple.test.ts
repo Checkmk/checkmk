@@ -5,7 +5,7 @@
  */
 import { render, screen, within } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
-import FormTuple from '@/form/components/forms/FormTuple.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 const stringSpec1: FormSpec.String = {
   type: 'string',
@@ -38,7 +38,7 @@ const spec: FormSpec.Tuple = {
 }
 
 test('FormTuple renders element validation message', async () => {
-  render(FormTuple, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['foo', 'bar'],
@@ -52,7 +52,7 @@ test('FormTuple renders element validation message', async () => {
 })
 
 test('FormTuple renders own validation message', async () => {
-  render(FormTuple, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['foo', 'bar'],
@@ -64,7 +64,7 @@ test('FormTuple renders own validation message', async () => {
 })
 
 test('FormTuple renders value', async () => {
-  render(FormTuple, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some value', 'other value'],
@@ -78,7 +78,7 @@ test('FormTuple renders value', async () => {
 })
 
 test('FormTuple renders updated validation', async () => {
-  const { rerender } = render(FormTuple, {
+  const { rerender } = render(FormEdit, {
     props: {
       spec,
       data: ['some value', 'other value'],

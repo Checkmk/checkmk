@@ -6,13 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts" generic="ObjectIdent, Result">
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/lib/watch'
+import { useFormEditDispatcher } from '@/form/private'
 
 export type Payload = Record<string, unknown>
 
@@ -98,6 +98,9 @@ async function reloadAll({
 }
 
 immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -122,7 +125,11 @@ immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
     </AlertBox>
     <div class="edit-object__content">
       <div v-if="schema !== undefined && !error && data !== undefined">
-        <FormEdit v-model:data="data" :spec="schema" :backend-validation="backendValidation" />
+        <FormEditDispatcher
+          v-model:data="data"
+          :spec="schema"
+          :backend-validation="backendValidation"
+        />
       </div>
       <div v-if="schema === undefined && !error">
         <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}

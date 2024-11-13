@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { ref } from 'vue'
+import { useFormEditDispatcher } from '@/form/private'
 
-import FormEdit from '../FormEdit.vue'
 import { immediateWatch } from '@/lib/watch'
 import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
 import {
@@ -153,6 +153,9 @@ function labelRequired(element: DictionaryElement): boolean {
 }
 
 const componentId = useId()
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -196,7 +199,7 @@ const componentId = useId()
                   'group-with-more-items': group.elems.length > 1
                 }"
               >
-                <FormEdit
+                <FormEditDispatcher
                   v-if="dict_element.is_active"
                   v-model:data="data[dict_element.dict_config.name]"
                   :spec="dict_element.dict_config.parameter_form"

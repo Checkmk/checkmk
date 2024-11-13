@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
-import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -37,7 +37,7 @@ const spec: FormSpec.ListOfStrings = {
 }
 
 test('FormListOfStrings renders backend validation messages', async () => {
-  render(FormListOfStrings, {
+  render(FormEdit, {
     props: {
       spec,
       data: [],
@@ -49,7 +49,7 @@ test('FormListOfStrings renders backend validation messages', async () => {
 })
 
 test('FormListOfStrings updated backend child validation shows validation error', async () => {
-  const { rerender } = render(FormListOfStrings, {
+  const { rerender } = render(FormEdit, {
     props: {
       spec,
       data: ['some value'],
@@ -73,7 +73,7 @@ test('FormListOfStrings updated backend child validation shows validation error'
 })
 
 test('FormListOfStrings local child validation overwrites backend validation', async () => {
-  render(FormListOfStrings, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some value'],
@@ -91,7 +91,7 @@ test('FormListOfStrings local child validation overwrites backend validation', a
 })
 
 test('FormListOfStrings shows frontend validation on existing element', async () => {
-  render(FormListOfStrings, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some_value'],
@@ -106,7 +106,7 @@ test('FormListOfStrings shows frontend validation on existing element', async ()
 })
 
 test('FormListOfStrings check autoextend', async () => {
-  render(FormListOfStrings, {
+  render(FormEdit, {
     props: {
       spec: spec,
       data: [],

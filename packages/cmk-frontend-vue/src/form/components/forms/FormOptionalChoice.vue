@@ -6,12 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'
-import FormEdit from '@/form/components/FormEdit.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import { watch, ref } from 'vue'
 import { immediateWatch } from '../../../lib/watch'
 import HelpText from '@/components/HelpText.vue'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice
@@ -50,6 +50,8 @@ watch(checkboxValue, (newValue: boolean) => {
     data.value = null
   }
 })
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -59,7 +61,7 @@ watch(checkboxValue, (newValue: boolean) => {
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}
     </span>
-    <FormEdit
+    <FormEditDispatcher
       v-model:data="data"
       :spec="spec.parameter_form"
       :backend-validation="embeddedValidation"

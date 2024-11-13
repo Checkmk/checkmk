@@ -12,7 +12,7 @@ import SlideIn from '@/components/slidein/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
 import DropDown from '@/components/DropDown.vue'
@@ -32,7 +32,9 @@ const [validation, selectedObjectId] = useValidation<string | null>(
   () => props.backendValidation
 )
 
-const choices = ref<Array<{ title: string; name: string }>>(structuredClone(props.spec.elements))
+const choices = ref<Array<{ title: string; name: string }>>(
+  structuredClone(toRaw(props.spec.elements))
+)
 
 const error = ref<string | undefined>()
 

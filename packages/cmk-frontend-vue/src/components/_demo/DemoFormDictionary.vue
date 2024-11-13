@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
 import type { Dictionary, String } from '@/form/components/vue_formspec_components'
-import FormDictionary from '@/form/components/forms/FormDictionary.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 const embeddedSpec: String = {
   type: 'string',
@@ -50,8 +50,8 @@ const dataRequired = ref<Record<string, string>>({ some_name: 'some_value' })
 <template>
   <h2>optional key:</h2>
   <pre>{{ JSON.stringify(data) }}</pre>
-  <FormDictionary v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
   <h2>required key:</h2>
   <pre>{{ JSON.stringify(dataRequired) }}</pre>
-  <FormDictionary v-model:data="dataRequired" :spec="specRequired" :backend-validation="[]" />
+  <FormEdit v-model:data="dataRequired" :spec="specRequired" :backend-validation="[]" />
 </template>

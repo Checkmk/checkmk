@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DictionaryElement } from '@/form/components/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/lib/watch'
 import {
   groupDictionaryValidations,
@@ -14,6 +13,7 @@ import {
 } from '@/form/components/utils/validation'
 import { ref } from 'vue'
 import HelpText from '@/components/HelpText.vue'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   elements: Array<DictionaryElement>
@@ -45,6 +45,9 @@ immediateWatch(
 function isRequired(element: DictionaryElement): boolean {
   return requiresSomeInput(element.parameter_form.validators)
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -64,7 +67,7 @@ function isRequired(element: DictionaryElement): boolean {
       </div>
     </td>
     <td class="content">
-      <FormEdit
+      <FormEditDispatcher
         v-model:data="data[element.name]!"
         :backend-validation="elementValidation[element.name]!"
         :spec="element.parameter_form"

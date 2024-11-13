@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -39,7 +40,7 @@ const spec: FormSpec.OptionalChoice = {
 }
 
 test('FormOptionalChoice renders element validation message', async () => {
-  render(FormOptionalChoice, {
+  render(FormEdit, {
     props: {
       spec,
       data: 42,
@@ -79,7 +80,7 @@ test('FormOptionalChoice renders None/null value', async () => {
 })
 
 test('FormOptionalChoice renders parameter_form(Integer) value', async () => {
-  render(FormOptionalChoice, {
+  render(FormEdit, {
     props: {
       spec,
       data: 23,
@@ -93,7 +94,7 @@ test('FormOptionalChoice renders parameter_form(Integer) value', async () => {
 })
 
 test('FormOptionalChoice updates validation', async () => {
-  const { rerender } = render(FormOptionalChoice, {
+  const { rerender } = render(FormEdit, {
     props: {
       spec,
       data: 23,
@@ -122,7 +123,7 @@ test('FormOptionalChoice updates validation', async () => {
 })
 
 test('FormOptionalChoice enables/disables option', async () => {
-  render(FormOptionalChoice, {
+  render(FormEdit, {
     props: {
       spec,
       data: null,

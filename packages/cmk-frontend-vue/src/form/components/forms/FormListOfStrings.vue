@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
+import { useFormEditDispatcher } from '@/form/private'
 import type { ListOfStrings } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
@@ -89,6 +89,8 @@ function onPaste(e: ClipboardEvent, index: number) {
   }
   checkAutoextend()
 }
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -101,13 +103,13 @@ function onPaste(e: ClipboardEvent, index: number) {
         >
           <td class="vlof_content">
             <HelpText :help="spec.help" />
-            <FormEdit
+            <FormEditDispatcher
               v-model:data="backendData[index]"
               :spec="spec.string_spec"
               :backend-validation="elementValidation[index]!"
               @update:data="checkAutoextend"
               @paste="(event: ClipboardEvent) => onPaste(event, index)"
-            ></FormEdit>
+            />
           </td>
         </tr>
       </template>

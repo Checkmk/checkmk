@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref, watch, toRaw } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/lib/watch'
 import type {
   CascadingSingleChoice,
@@ -18,6 +17,7 @@ import { validateValue, type ValidationMessages } from '@/form/components/utils/
 import HelpText from '@/components/HelpText.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import DropDown from '@/components/DropDown.vue'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -120,6 +120,8 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
     return { label: element.title, value: element.name }
   })
 })
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -140,12 +142,12 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
   <span class="form-cascading-single-choice__cascade">
     <template v-if="activeElement !== null">
       <HelpText :help="activeElement.spec.help" />
-      <FormEdit
+      <FormEditDispatcher
         :key="data[0]"
         v-model:data="data[1]"
         :spec="activeElement.spec"
         :backend-validation="elementValidation"
-      ></FormEdit>
+      />
 
       <FormValidation :validation="validation"></FormValidation>
     </template>

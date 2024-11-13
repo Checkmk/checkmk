@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { ref, toRaw } from 'vue'
+import { ref, toRaw, provide } from 'vue'
 import type { API, SetDataResult } from '@/form/components/FormEditAsync.vue'
 import FormEditAsync from '@/form/components/FormEditAsync.vue'
+import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   Dictionary,
   FormSpec,
@@ -85,6 +86,9 @@ const api: API<ObjectId, ObjectId> = {
     return dict as FormSpec
   }
 }
+// this is a hack to use FormEditAsync outside a FormEdit context:
+// if you need this in production code, we should think about a better solution
+provide('dispatcher', FormEditDispatcher)
 </script>
 
 <template>

@@ -1261,6 +1261,15 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
             # and not edited here.
             if mode in ("edit", "clone"):
                 page_dict.update(new_page_dict)
+                # TODO this is done in a similar way with visuals but there the
+                # VS is a Dictionary. Maybe we should change the format to
+                # dict for both cases. But this would need a big adjustement of
+                # the publish logic.
+                #
+                # This is needed because the Optional VS will be checked if value
+                # is False (see the other way around in the form underneath)
+                if page_dict["public"] is None:
+                    page_dict["public"] = False
             else:
                 page_dict = new_page_dict
                 page_dict["owner"] = str(user.id)  # because is not in vs elements
@@ -1295,6 +1304,10 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
 
         with html.form_context("edit", method="POST"):
             html.help(vs.help())
+            # This is needed because the Optional VS will be checked if value
+            # is False (see the other way around in the save phase above)
+            if page_dict.get("public", False) is False:
+                page_dict["public"] = None
             vs.render_input(varprefix, page_dict)
             # Should be ignored by hidden_fields, but I do not dare to change it there
             request.del_var("filled_in")

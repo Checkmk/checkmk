@@ -84,7 +84,7 @@ share_symlinks = [
 
 symlinks = bin_symlinks + lib_symlinks + pkgconfig_symlinks + share_symlinks
 
-# Deployable means binaries are modified to be pacakged.
+# Deployable means binaries are prepared to be packaged.
 genrule(
     name = "python_bin_deployable",
     srcs = ["@python//:gen_dir"],

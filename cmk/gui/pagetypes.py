@@ -1234,6 +1234,15 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             # and not edited here.
             if mode in ("edit", "clone"):
                 page_dict.update(new_page_dict)
+                # TODO this is done in a similar way with visuals but there the
+                # VS is a Dictionary. Maybe we should change the format to
+                # dict for both cases. But this would need a big adjustement of
+                # the publish logic.
+                #
+                # This is needed because the Optional VS will be checked if value
+                # is False (see the other way around in the form underneath)
+                if page_dict["public"] is None:
+                    page_dict["public"] = False  # type: ignore[assignment]
             else:
                 page_dict = new_page_dict
                 page_dict["owner"] = str(user.id)  # because is not in vs elements

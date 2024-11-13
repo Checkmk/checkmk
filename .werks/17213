@@ -7,8 +7,8 @@ Edition: cre
 Level: 1
 Version: 2.2.0p37
 
-The agent plugin <code>mk_oracle</code> reports <code>elapsed:' for the elapsed time, if the</code>perl<code>or</code>bc<code>call fail.
-In the past, the plugin</code>oracle_sql` crashes with
+The agent plugin <code>mk_oracle</code> reports <code>'elapsed:'</code> for the elapsed time, if the <code>perl<code> or <code>bc</code> call fail.
+In the past, the plugin <code>oracle_sql</code> crashes with
 
 C+:
   elif key == "elapsed":

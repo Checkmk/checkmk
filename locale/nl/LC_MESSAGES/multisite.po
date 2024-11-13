@@ -3376,6 +3376,10 @@ msgstr ""
 msgid "Activate automatic locking of user accounts"
 msgstr "Automatisch vergrendelen van gebruikersaccounts activeren"
 
+#, fuzzy
+msgid "Activate changes"
+msgstr "Activeerde de veranderingen"
+
 #, python-format
 msgid ""
 "Activate changes error. Unable to prepare site snapshots. Failed command: "
@@ -4217,6 +4221,10 @@ msgstr "Bronnengroep toevoegen"
 msgid "Add resource tag"
 msgstr "Bron tag toevoegen"
 
+#, fuzzy
+msgid "Add restriction"
+msgstr "Beperking van de locatie"
+
 msgid "Add role rule"
 msgstr "Rolregel toevoegen"
 
@@ -4458,6 +4466,12 @@ msgstr "Extra opties"
 
 msgid "Additional header lines"
 msgstr "Extra kopregels"
+
+#, python-brace-format
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
 
 msgid "Additional information"
 msgstr "Aanvullende informatie"
@@ -5713,9 +5727,10 @@ msgstr "Alle pagina's"
 msgid "All parents are down"
 msgstr "Alle ouders zijn beneden"
 
+#, python-brace-format
 msgid ""
 "All passwords, secrets and other sensitive data are stored in the Password "
-"Store. Changes to the \"linked.secret\" entry can be made here."
+"Store. Changes to the entry \"{password_title}\" can be made here."
 msgstr ""
 
 msgid "All pending hosts of customer"
@@ -9036,10 +9051,6 @@ msgid "Batch Requests/sec"
 msgstr "Batch verzoeken/sec"
 
 #, fuzzy
-msgid "Batch num"
-msgstr "Schakelaarnummer"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Wedstrijd"
 
@@ -9485,6 +9496,10 @@ msgstr "Bulk hernoemen"
 
 msgid "Bulk renaming of hosts"
 msgstr "Bulk hernoemen van hosts"
+
+#, fuzzy
+msgid "Bulk service discovery batch size"
+msgstr "Bulkdienstontdekking uitvoeren"
 
 msgid "Bulk up to"
 msgstr "Bulk tot"
@@ -11671,6 +11686,10 @@ msgstr "Wijzigingen"
 
 #, fuzzy
 msgid "Changes activated"
+msgstr "Is nooit geactiveerd geweest"
+
+#, fuzzy
+msgid "Changes activated on"
 msgstr "Is nooit geactiveerd geweest"
 
 msgid "Changes since last dump"
@@ -14624,10 +14643,6 @@ msgstr "Verbindingen per seconde"
 msgid "Connectivity"
 msgstr "Connectiviteit"
 
-#, fuzzy
-msgid "Connector Id"
-msgstr "Verbinding ID"
-
 msgid "Connector outlets"
 msgstr "Connector uitgangen"
 
@@ -14955,6 +14970,9 @@ msgstr "Hostnamen omzetten naar hoofdletters"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converteer geïmporteerde User-IDs naar kleine letters tijdens synchronisatie."
+
+msgid "Cool down after host a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -17931,6 +17949,10 @@ msgstr "Hosts verwijderen"
 msgid "Delete hosts"
 msgstr "Hosts verwijderen"
 
+#, fuzzy
+msgid "Delete hosts automatically"
+msgstr "automatisch detecteren"
+
 #, python-format
 msgid "Delete icon #%d"
 msgstr "Pictogram verwijderen #%d"
@@ -19310,10 +19332,6 @@ msgstr "Ontdekte procesnaam"
 #, fuzzy
 msgid "Discovered service labels"
 msgstr "Ontdekte service labels tonen"
-
-#, fuzzy
-msgid "Discovering"
-msgstr "Ontdek"
 
 msgid "Discovery"
 msgstr "Ontdekking"
@@ -26186,6 +26204,14 @@ msgstr ""
 msgid "Go to the Saas Admin Panel"
 msgstr ""
 
+#, fuzzy
+msgid "Go to the next stage"
+msgstr "Ga naar de rapport winkel"
+
+#, fuzzy
+msgid "Go to the previous stage"
+msgstr "Ga naar de rapport winkel"
+
 msgid "Go to the report store"
 msgstr "Ga naar de rapport winkel"
 
@@ -26603,6 +26629,10 @@ msgstr "Gast-besturingssystemen"
 
 msgid "Guest user"
 msgstr "Gastgebruiker"
+
+#, fuzzy
+msgid "Guided mode"
+msgstr "Open mode"
 
 msgid "H.Down"
 msgstr "H.Down"
@@ -29617,6 +29647,10 @@ msgstr "Host opzoek element"
 msgid "Host management"
 msgstr "Beheer van de gastheer"
 
+#, fuzzy
+msgid "Host manager settings"
+msgstr "Host instellingen"
+
 msgid "Host memory usage"
 msgstr "Host geheugengebruik"
 
@@ -29787,6 +29821,10 @@ msgstr "Host Problemen (niet afgehandeld)"
 
 msgid "Host problems for NagStaMon"
 msgstr "Host problemen voor NagStaMon"
+
+#, fuzzy
+msgid "Host processing"
+msgstr "RRD-verwerking"
 
 msgid "Host properties"
 msgstr "Gastheer-eigenschappen"
@@ -39641,6 +39679,10 @@ msgstr "Maximale spoelgrootte"
 msgid "Maximum test runtime"
 msgstr "Procesruntime"
 
+#, fuzzy
+msgid "Maximum time between batch start and forced activation of changes"
+msgstr "Commentaar voor activering van wijzigingen"
+
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale tijd sinds de laatste start van de taakuitvoering"
 
@@ -45142,11 +45184,6 @@ msgstr "Alleen hoofdletters zijn toegestaan"
 msgid "Only use device's levels, ignore yours"
 msgstr "Gebruik alleen de niveaus van het apparaat, negeer de jouwe"
 
-msgid ""
-"Only users who are in all the following contact groups will receive the "
-"notification"
-msgstr ""
-
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
@@ -46761,6 +46798,10 @@ msgid "Oversubscribed"
 msgstr "Overschreven"
 
 msgid "Overview"
+msgstr "Overzicht"
+
+#, fuzzy
+msgid "Overview mode"
 msgstr "Overzicht"
 
 msgid "Owned by other users"
@@ -49176,6 +49217,10 @@ msgstr ""
 "worden gebruikt als prefix voor de probleem ID bij het aanmaken van het "
 "incident."
 
+#, fuzzy
+msgid "Please wait..."
+msgstr "Wacht even"
+
 msgid "Plesk Backups"
 msgstr "Plesk Back-ups"
 
@@ -49915,10 +49960,6 @@ msgstr "Processen"
 
 msgid "Processes performance data"
 msgstr "Verwerkt prestatiegegevens"
-
-#, fuzzy
-msgid "Processing"
-msgstr "Procesovereenstemming"
 
 #, fuzzy, python-format
 msgid "Processing (%s)"
@@ -51137,6 +51178,10 @@ msgstr "Site is uitgeschakeld"
 msgid "Recent event history"
 msgstr "Recente gebeurtenissen"
 
+#, fuzzy
+msgid "Recent processing batches"
+msgstr "Verwerkingstijd van gebeurtenissen"
+
 msgid "Recently changed services"
 msgstr "Onlangs gewijzigde diensten"
 
@@ -51146,10 +51191,6 @@ msgstr "Ontvanger"
 #, fuzzy
 msgid "Recipient email address"
 msgstr "Emailadres van de ontvanger"
-
-#, fuzzy
-msgid "Recipients"
-msgstr "Ontvanger"
 
 #, python-format
 msgid "Recipients: %s"
@@ -54902,6 +54943,10 @@ msgstr "Selecteer metrieken om naar InfluxDB te sturen"
 msgid "Select packages"
 msgstr "Kies pakketten"
 
+#, fuzzy
+msgid "Select recipient"
+msgstr "Ontvanger"
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -55542,6 +55587,10 @@ msgstr "Ontdekken van diensten"
 
 msgid "Service discovery details"
 msgstr "Details over het zoeken naar een dienst"
+
+#, fuzzy
+msgid "Service discovery ran on"
+msgstr "Dienst ontdekking: "
 
 msgid "Service discovery rules"
 msgstr "Regels voor het opsporen van diensten"
@@ -56830,6 +56879,10 @@ msgstr "Toon alle"
 #, python-format
 msgid "Show all %s topics"
 msgstr "Toon alle %s onderwerpen"
+
+#, fuzzy
+msgid "Show all batches"
+msgstr "Toon alle onderwerpen"
 
 msgid "Show all hosts"
 msgstr "Toon alle gastheren"
@@ -61903,11 +61956,6 @@ msgstr ""
 "Het kenmerk \"Authentication Expiration\" (%s) kon niet van de LDAP-server "
 "worden opgehaald voor gebruiker %s."
 
-msgid ""
-"The \"linked.rule\" rule set contains the special agent configuration. "
-"Credentials and other agent-specific data can be edited here"
-msgstr ""
-
 #, python-format
 msgid "The %s does not exist."
 msgstr "De %s bestaat niet."
@@ -64058,6 +64106,17 @@ msgstr ""
 "De geschiedenis voor veranderingen in hardware- en software-inventaris van "
 "een host"
 
+#, python-brace-format
+msgid ""
+"The host \"{host_name}\" contains all configuration like general properties "
+"and the folder location. Adjust to modify labels, tags or similar "
+"customization."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The host %s is not monitored on this site"
+msgstr "Inloggen is niet toegestaan op deze site."
+
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "De host '%s' bestaat niet"
@@ -64069,13 +64128,6 @@ msgid ""
 msgstr ""
 "De host <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
-
-msgid ""
-"The host contains all information about configured data source types, tags, "
-"labels, custom properties, and the folder in which the host is located. This "
-"is where you can associate the host with specific rules via labels or tags, "
-"and make similar customization."
-msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "De host kon op geen enkele actieve site worden gevonden."
@@ -64512,14 +64564,6 @@ msgstr "Het logbestand bestaat niet op de site."
 
 msgid "The login is currently locked"
 msgstr "De login is momenteel vergrendeld"
-
-msgid ""
-"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
-"The dynamic host configuration connection \"linked.connection\" holds the "
-"configuration for how these other hosts are created if they don't already "
-"exist. Customization of where these hosts are created and what properties, "
-"tags, and labels they get can be done here."
-msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -65778,6 +65822,12 @@ msgstr ""
 
 msgid "The rule pack you are trying to edit does not exist."
 msgstr "Het regelpakket dat u probeert te bewerken bestaat niet."
+
+#, python-brace-format
+msgid ""
+"The rule set \"{rule_title}\" contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 msgid "The rule you are trying to edit does not exist."
 msgstr "De regel die u probeert te bewerken bestaat niet."
@@ -69323,6 +69373,9 @@ msgstr "Dit probleem is erkend"
 
 msgid "This problem has been acknowledged."
 msgstr "Dit probleem is erkend."
+
+msgid "This process may take several minutes, please wait..."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -85067,6 +85120,10 @@ msgid "hosts in total"
 msgstr "hosts in totaal"
 
 #, fuzzy
+msgid "hosts per batch"
+msgstr "MSSQL Sloten per Batch"
+
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] "uur"
@@ -86414,6 +86471,26 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "Batch num"
+#~ msgstr "Schakelaarnummer"
+
+#, fuzzy
+#~ msgid "Connector Id"
+#~ msgstr "Verbinding ID"
+
+#, fuzzy
+#~ msgid "Discovering"
+#~ msgstr "Ontdek"
+
+#, fuzzy
+#~ msgid "Processing"
+#~ msgstr "Procesovereenstemming"
+
+#, fuzzy
+#~ msgid "Recipients"
+#~ msgstr "Ontvanger"
+
+#, fuzzy
 #~ msgid "Save & go to service discovery"
 #~ msgstr "Save & run service discovery"
 
@@ -87179,9 +87256,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Meer informatie is te vinden in ~/var/log/web.log"
-
-#~ msgid "Activated the changes"
-#~ msgstr "Activeerde de veranderingen"
 
 #~ msgid "NetApp via WebAPI"
 #~ msgstr "NetApp via WebAPI"

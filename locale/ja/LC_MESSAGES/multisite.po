@@ -3248,6 +3248,10 @@ msgstr ""
 msgid "Activate automatic locking of user accounts"
 msgstr "ユーザーアカウントの自動ロックを有効にする"
 
+#, fuzzy
+msgid "Activate changes"
+msgstr "変更を有効にしました"
+
 #, python-format
 msgid ""
 "Activate changes error. Unable to prepare site snapshots. Failed command: "
@@ -4064,6 +4068,10 @@ msgstr "リソースグループを追加する"
 msgid "Add resource tag"
 msgstr "リソースタグを追加する"
 
+#, fuzzy
+msgid "Add restriction"
+msgstr "サイト制限"
+
 msgid "Add role rule"
 msgstr "役割ルールを追加する"
 
@@ -4299,6 +4307,12 @@ msgstr "追加オプション"
 
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
+
+#, python-brace-format
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
 
 msgid "Additional information"
 msgstr "追加情報"
@@ -5467,9 +5481,10 @@ msgstr "すべてのページ"
 msgid "All parents are down"
 msgstr "すべての親がダウンしています"
 
+#, python-brace-format
 msgid ""
 "All passwords, secrets and other sensitive data are stored in the Password "
-"Store. Changes to the \"linked.secret\" entry can be made here."
+"Store. Changes to the entry \"{password_title}\" can be made here."
 msgstr ""
 
 msgid "All pending hosts of customer"
@@ -8669,10 +8684,6 @@ msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
 
 #, fuzzy
-msgid "Batch num"
-msgstr "スイッチ番号"
-
-#, fuzzy
 msgid "Batches"
 msgstr "一致"
 
@@ -9092,6 +9103,10 @@ msgstr "一括名前変更"
 
 msgid "Bulk renaming of hosts"
 msgstr "ホストの一括名前変更"
+
+#, fuzzy
+msgid "Bulk service discovery batch size"
+msgstr "サービス一括検出の実行"
 
 msgid "Bulk up to"
 msgstr "バルクまで"
@@ -11207,6 +11222,10 @@ msgstr "変更"
 
 #, fuzzy
 msgid "Changes activated"
+msgstr "アクティベートされたことがない"
+
+#, fuzzy
+msgid "Changes activated on"
 msgstr "アクティベートされたことがない"
 
 msgid "Changes since last dump"
@@ -13989,10 +14008,6 @@ msgstr "1秒あたりの接続数"
 msgid "Connectivity"
 msgstr "接続性"
 
-#, fuzzy
-msgid "Connector Id"
-msgstr "接続ID"
-
 msgid "Connector outlets"
 msgstr "コネクタアウトレット"
 
@@ -14300,6 +14315,9 @@ msgstr "ホスト名を大文字に変換する"
 
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr "同期中に、インポートされたユーザーIDを小文字に変換します。"
+
+msgid "Cool down after host a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "失敗したリモートまたはローカル配信を再試行する前のクールダウン"
@@ -17180,6 +17198,10 @@ msgstr "ホストを削除"
 msgid "Delete hosts"
 msgstr "ホストを削除する"
 
+#, fuzzy
+msgid "Delete hosts automatically"
+msgstr "自動検出"
+
 #, python-format
 msgid "Delete icon #%d"
 msgstr "アイコン#%dを削除"
@@ -18467,10 +18489,6 @@ msgstr "検出されたプロセス名"
 
 msgid "Discovered service labels"
 msgstr "発見されたサービスラベル"
-
-#, fuzzy
-msgid "Discovering"
-msgstr "発見"
 
 msgid "Discovery"
 msgstr "発見"
@@ -25159,6 +25177,14 @@ msgstr ""
 msgid "Go to the Saas Admin Panel"
 msgstr "Saasの管理パネルに移動する"
 
+#, fuzzy
+msgid "Go to the next stage"
+msgstr "レポートストアに移動します"
+
+#, fuzzy
+msgid "Go to the previous stage"
+msgstr "レポートストアに移動します"
+
 msgid "Go to the report store"
 msgstr "レポートストアに移動します"
 
@@ -25573,6 +25599,10 @@ msgstr "ゲストオペレーティングシステム"
 
 msgid "Guest user"
 msgstr "ゲストユーザー"
+
+#, fuzzy
+msgid "Guided mode"
+msgstr "オープンモード"
 
 msgid "H.Down"
 msgstr "H.ダウン"
@@ -28551,6 +28581,10 @@ msgstr "ホストルックアップエレメント"
 msgid "Host management"
 msgstr "ホスト管理"
 
+#, fuzzy
+msgid "Host manager settings"
+msgstr "ホスト設定"
+
 msgid "Host memory usage"
 msgstr "ホストのメモリ使用量"
 
@@ -28721,6 +28755,10 @@ msgstr "ホストの問題(未処理)"
 
 msgid "Host problems for NagStaMon"
 msgstr "NagStaMonのホストの問題"
+
+#, fuzzy
+msgid "Host processing"
+msgstr "RRD処理"
 
 msgid "Host properties"
 msgstr "ホストのプロパティ"
@@ -38381,6 +38419,10 @@ msgstr "最大スプールサイズ"
 msgid "Maximum test runtime"
 msgstr "テストランタイム"
 
+#, fuzzy
+msgid "Maximum time between batch start and forced activation of changes"
+msgstr "変更のアクティブ化に関するコメント"
+
 msgid "Maximum time since last start of job execution"
 msgstr "ssssssssssssssssssssssssssssssssssssssssssssssssssss"
 
@@ -43817,11 +43859,6 @@ msgstr "大文字のみ使用できます"
 msgid "Only use device's levels, ignore yours"
 msgstr "デバイスのレベルのみを使用し、自分のレベルは無視してください"
 
-msgid ""
-"Only users who are in all the following contact groups will receive the "
-"notification"
-msgstr ""
-
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
@@ -45417,6 +45454,10 @@ msgid "Oversubscribed"
 msgstr "オーバーサブスクライブ"
 
 msgid "Overview"
+msgstr "概要"
+
+#, fuzzy
+msgid "Overview mode"
 msgstr "概要"
 
 msgid "Owned by other users"
@@ -47797,6 +47838,10 @@ msgstr ""
 "ある場合、このオプションを使用してください。サイトIDは、インシデント作成時に"
 "問題IDのプレフィックスとして使用されます。"
 
+#, fuzzy
+msgid "Please wait..."
+msgstr "読む待機"
+
 msgid "Plesk Backups"
 msgstr "Pleskバックアップ"
 
@@ -48520,10 +48565,6 @@ msgstr "プロセス"
 
 msgid "Processes performance data"
 msgstr "プロセスパフォーマンスデータ"
-
-#, fuzzy
-msgid "Processing"
-msgstr "プロセスマッチング"
 
 #, fuzzy, python-format
 msgid "Processing (%s)"
@@ -49748,6 +49789,10 @@ msgstr "サイトが無効になっています"
 msgid "Recent event history"
 msgstr "最近のイベント履歴"
 
+#, fuzzy
+msgid "Recent processing batches"
+msgstr "イベント処理時間"
+
 msgid "Recently changed services"
 msgstr "最近変更されたサービス"
 
@@ -49757,10 +49802,6 @@ msgstr "受信者"
 #, fuzzy
 msgid "Recipient email address"
 msgstr "受信者のメールアドレス"
-
-#, fuzzy
-msgid "Recipients"
-msgstr "受信者"
 
 #, python-format
 msgid "Recipients: %s"
@@ -53488,6 +53529,10 @@ msgstr "InfluxDBに送信するメトリクスを選択する"
 msgid "Select packages"
 msgstr "選択したパッケージ"
 
+#, fuzzy
+msgid "Select recipient"
+msgstr "受信者"
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -54128,6 +54173,10 @@ msgstr "サービスディスカバリ"
 
 msgid "Service discovery details"
 msgstr "サービスディスカバリーの詳細"
+
+#, fuzzy
+msgid "Service discovery ran on"
+msgstr "サービスディスカバリ: "
 
 msgid "Service discovery rules"
 msgstr "サービス検出ルール"
@@ -55397,6 +55446,10 @@ msgstr "すべて表示する"
 #, python-format
 msgid "Show all %s topics"
 msgstr "すべての %s トピックを表示"
+
+#, fuzzy
+msgid "Show all batches"
+msgstr "全てのトピックを表示"
 
 msgid "Show all hosts"
 msgstr "すべてのホストを表示"
@@ -60357,11 +60410,6 @@ msgstr ""
 "\"認証の有効期限\"属性 (%s) は、ユーザー %s のLDAPサーバーからフェッチできま"
 "せんでした。"
 
-msgid ""
-"The \"linked.rule\" rule set contains the special agent configuration. "
-"Credentials and other agent-specific data can be edited here"
-msgstr ""
-
 #, python-format
 msgid "The %s does not exist."
 msgstr "%s は存在しません。"
@@ -62390,6 +62438,17 @@ msgstr ""
 msgid "The history for changes in hardware- and software inventory of a host"
 msgstr "ホストのハードウェアおよびソフトウェアインベントリの変更の履歴"
 
+#, python-brace-format
+msgid ""
+"The host \"{host_name}\" contains all configuration like general properties "
+"and the folder location. Adjust to modify labels, tags or similar "
+"customization."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The host %s is not monitored on this site"
+msgstr "このサイトへのログインは許可されていません。"
+
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "ホスト '%s' は存在しません"
@@ -62401,13 +62460,6 @@ msgid ""
 msgstr ""
 "ホスト<i>%s</i>は、サイト<i>%s</i>（顧客<i>%s</i>に属する）を明示的に設定して"
 "いるため、CMEのフォルダ階層に違反します。"
-
-msgid ""
-"The host contains all information about configured data source types, tags, "
-"labels, custom properties, and the folder in which the host is located. This "
-"is where you can associate the host with specific rules via labels or tags, "
-"and make similar customization."
-msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "ホストがアクティブなサイトで見つかりませんでした。"
@@ -62826,14 +62878,6 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
-
-msgid ""
-"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
-"The dynamic host configuration connection \"linked.connection\" holds the "
-"configuration for how these other hosts are created if they don't already "
-"exist. Customization of where these hosts are created and what properties, "
-"tags, and labels they get can be done here."
-msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -64086,6 +64130,12 @@ msgstr ""
 
 msgid "The rule pack you are trying to edit does not exist."
 msgstr "編集しようとしているルールパックが存在しません。"
+
+#, python-brace-format
+msgid ""
+"The rule set \"{rule_title}\" contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 msgid "The rule you are trying to edit does not exist."
 msgstr "編集しようとしているルールが存在しません。"
@@ -67514,6 +67564,9 @@ msgstr "この問題は認められています"
 
 msgid "This problem has been acknowledged."
 msgstr "この問題は承認済みです。"
+
+msgid "This process may take several minutes, please wait..."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -82877,6 +82930,10 @@ msgstr "ホストは稼働していますが、サービスは警告状態にあ
 msgid "hosts in total"
 msgstr "ホスト全体の問題"
 
+#, fuzzy
+msgid "hosts per batch"
+msgstr "バッチごとのMSSQLロック"
+
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] "時間"
@@ -84219,6 +84276,26 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, fuzzy
+#~ msgid "Batch num"
+#~ msgstr "スイッチ番号"
+
+#, fuzzy
+#~ msgid "Connector Id"
+#~ msgstr "接続ID"
+
+#, fuzzy
+#~ msgid "Discovering"
+#~ msgstr "発見"
+
+#, fuzzy
+#~ msgid "Processing"
+#~ msgstr "プロセスマッチング"
+
+#, fuzzy
+#~ msgid "Recipients"
+#~ msgstr "受信者"
+
+#, fuzzy
 #~ msgid "Save & go to service discovery"
 #~ msgstr "サービスディスカバリの実行と保存"
 
@@ -84987,9 +85064,6 @@ msgstr ""
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "詳細については、~/var/log/web.logをご覧ください"
-
-#~ msgid "Activated the changes"
-#~ msgstr "変更を有効にしました"
 
 #~ msgid "NetApp via WebAPI"
 #~ msgstr "WebAPIを介したNetApp"

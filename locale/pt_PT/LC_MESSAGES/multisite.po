@@ -3373,6 +3373,10 @@ msgstr ""
 msgid "Activate automatic locking of user accounts"
 msgstr "Activar o bloqueio automático das contas de utilizador"
 
+#, fuzzy
+msgid "Activate changes"
+msgstr "Activou as alterações"
+
 #, python-format
 msgid ""
 "Activate changes error. Unable to prepare site snapshots. Failed command: "
@@ -4214,6 +4218,10 @@ msgstr "Adicionar grupo de recursos"
 msgid "Add resource tag"
 msgstr "Adicionar etiqueta de recurso"
 
+#, fuzzy
+msgid "Add restriction"
+msgstr "Restrição do sítio"
+
 msgid "Add role rule"
 msgstr "Adicionar regra de papéis"
 
@@ -4456,6 +4464,12 @@ msgstr "Opções adicionais"
 
 msgid "Additional header lines"
 msgstr "Linhas de cabeçalho adicionais"
+
+#, python-brace-format
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
 
 msgid "Additional information"
 msgstr "Informações adicionais"
@@ -5711,9 +5725,10 @@ msgstr "Todas as páginas"
 msgid "All parents are down"
 msgstr "Todos os pais estão em baixo"
 
+#, python-brace-format
 msgid ""
 "All passwords, secrets and other sensitive data are stored in the Password "
-"Store. Changes to the \"linked.secret\" entry can be made here."
+"Store. Changes to the entry \"{password_title}\" can be made here."
 msgstr ""
 
 msgid "All pending hosts of customer"
@@ -9045,10 +9060,6 @@ msgid "Batch Requests/sec"
 msgstr "Pedidos de lote/segundo"
 
 #, fuzzy
-msgid "Batch num"
-msgstr "número de comutação"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Jogo"
 
@@ -9490,6 +9501,10 @@ msgstr "Renomeação a granel"
 
 msgid "Bulk renaming of hosts"
 msgstr "Renomeação em massa dos anfitriões"
+
+#, fuzzy
+msgid "Bulk service discovery batch size"
+msgstr "Executar a descoberta de serviços em massa"
 
 msgid "Bulk up to"
 msgstr "A granel até"
@@ -11676,6 +11691,10 @@ msgstr "Mudanças"
 
 #, fuzzy
 msgid "Changes activated"
+msgstr "Nunca foi ativado"
+
+#, fuzzy
+msgid "Changes activated on"
 msgstr "Nunca foi ativado"
 
 msgid "Changes since last dump"
@@ -14618,10 +14637,6 @@ msgstr "Conexões por segundo"
 msgid "Connectivity"
 msgstr "Conectividade"
 
-#, fuzzy
-msgid "Connector Id"
-msgstr "ID de conexão"
-
 msgid "Connector outlets"
 msgstr "Tomadas de ligação"
 
@@ -14943,6 +14958,9 @@ msgstr "Converter hostnames em maiúsculas"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converter os User-IDs importados para minúsculas durante a sincronização."
+
+msgid "Cool down after host a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -17924,6 +17942,10 @@ msgstr "Eliminar o anfitrião"
 msgid "Delete hosts"
 msgstr "Eliminar anfitriões"
 
+#, fuzzy
+msgid "Delete hosts automatically"
+msgstr "detectar automaticamente"
+
 #, python-format
 msgid "Delete icon #%d"
 msgstr "Apagar ícone #%d"
@@ -19298,10 +19320,6 @@ msgstr "Nome do processo descoberto"
 #, fuzzy
 msgid "Discovered service labels"
 msgstr "Mostrar as etiquetas de serviço descobertas"
-
-#, fuzzy
-msgid "Discovering"
-msgstr "Descobrir"
 
 msgid "Discovery"
 msgstr "Discovery"
@@ -26185,6 +26203,14 @@ msgstr ""
 msgid "Go to the Saas Admin Panel"
 msgstr "Aceder ao painel de administração do Saas"
 
+#, fuzzy
+msgid "Go to the next stage"
+msgstr "Ir para a loja de relatórios"
+
+#, fuzzy
+msgid "Go to the previous stage"
+msgstr "Ir para a loja de relatórios"
+
 msgid "Go to the report store"
 msgstr "Ir para a loja de relatórios"
 
@@ -26603,6 +26629,10 @@ msgstr "Sistemas operacionais convidados"
 
 msgid "Guest user"
 msgstr "Usuário convidado"
+
+#, fuzzy
+msgid "Guided mode"
+msgstr "Modo aberto"
 
 msgid "H.Down"
 msgstr "H.Down"
@@ -29614,6 +29644,10 @@ msgstr "Elemento de pesquisa do anfitrião"
 msgid "Host management"
 msgstr "Gestão do anfitrião"
 
+#, fuzzy
+msgid "Host manager settings"
+msgstr "Configurações do anfitrião"
+
 msgid "Host memory usage"
 msgstr "Utilização da memória do anfitrião"
 
@@ -29788,6 +29822,10 @@ msgstr "Problemas com o anfitrião (sem manuseio)"
 
 msgid "Host problems for NagStaMon"
 msgstr "Problemas de hospedagem para o NagStaMon"
+
+#, fuzzy
+msgid "Host processing"
+msgstr "processamento do DRR"
 
 msgid "Host properties"
 msgstr "Propriedades anfitriãs"
@@ -39630,6 +39668,10 @@ msgstr "Tamanho máximo da bobina"
 msgid "Maximum test runtime"
 msgstr "Tempo de execução do teste"
 
+#, fuzzy
+msgid "Maximum time between batch start and forced activation of changes"
+msgstr "Comentário para ativação das mudanças"
+
 msgid "Maximum time since last start of job execution"
 msgstr "Tempo máximo desde o último início da execução do trabalho"
 
@@ -45110,11 +45152,6 @@ msgstr "Somente letras maiúsculas são permitidas"
 msgid "Only use device's levels, ignore yours"
 msgstr "Use apenas os níveis do dispositivo, ignore os seus"
 
-msgid ""
-"Only users who are in all the following contact groups will receive the "
-"notification"
-msgstr ""
-
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
@@ -46730,6 +46767,10 @@ msgid "Oversubscribed"
 msgstr "Excesso de inscritos"
 
 msgid "Overview"
+msgstr "Visão geral"
+
+#, fuzzy
+msgid "Overview mode"
 msgstr "Visão geral"
 
 msgid "Owned by other users"
@@ -49155,6 +49196,10 @@ msgstr ""
 "identificação do site será usada como prefixo para a identificação do "
 "problema na criação do incidente."
 
+#, fuzzy
+msgid "Please wait..."
+msgstr "Ler espera"
+
 msgid "Plesk Backups"
 msgstr "Plesk Backups"
 
@@ -49887,10 +49932,6 @@ msgstr "Processos"
 
 msgid "Processes performance data"
 msgstr "Processa dados de desempenho"
-
-#, fuzzy
-msgid "Processing"
-msgstr "Correspondência de processos"
 
 #, fuzzy, python-format
 msgid "Processing (%s)"
@@ -51106,6 +51147,10 @@ msgstr "O site está desativado"
 msgid "Recent event history"
 msgstr "Histórico de eventos recentes"
 
+#, fuzzy
+msgid "Recent processing batches"
+msgstr "Tempo de processamento de eventos"
+
 msgid "Recently changed services"
 msgstr "Serviços alterados recentemente"
 
@@ -51115,10 +51160,6 @@ msgstr "Destinatário"
 #, fuzzy
 msgid "Recipient email address"
 msgstr "Endereço de e-mail do destinatário"
-
-#, fuzzy
-msgid "Recipients"
-msgstr "Destinatário"
 
 #, python-format
 msgid "Recipients: %s"
@@ -54896,6 +54937,10 @@ msgstr "Seleccionar métricas a enviar para o InfluxDB"
 msgid "Select packages"
 msgstr "Seleccionar pacotes"
 
+#, fuzzy
+msgid "Select recipient"
+msgstr "Destinatário"
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -55530,6 +55575,10 @@ msgstr "Descoberta de serviços"
 
 msgid "Service discovery details"
 msgstr "Detalhes da descoberta do serviço"
+
+#, fuzzy
+msgid "Service discovery ran on"
+msgstr "Descoberta de serviços: "
 
 msgid "Service discovery rules"
 msgstr "Regras de descoberta de serviços"
@@ -56818,6 +56867,10 @@ msgstr "Mostrar tudo"
 #, python-format
 msgid "Show all %s topics"
 msgstr "Mostrar todos os %s tópicos"
+
+#, fuzzy
+msgid "Show all batches"
+msgstr "Mostrar todos os tópicos"
 
 msgid "Show all hosts"
 msgstr "Mostrar todos os anfitriões"
@@ -61895,11 +61948,6 @@ msgstr ""
 "O atributo \"Authentication Expiration\" (%s) não pôde ser buscado no "
 "servidor LDAP para %s de usuário."
 
-msgid ""
-"The \"linked.rule\" rule set contains the special agent configuration. "
-"Credentials and other agent-specific data can be edited here"
-msgstr ""
-
 #, python-format
 msgid "The %s does not exist."
 msgstr "As %s não existem."
@@ -64034,6 +64082,17 @@ msgid "The history for changes in hardware- and software inventory of a host"
 msgstr ""
 "O histórico de mudanças no inventário de hardware e software de um host"
 
+#, python-brace-format
+msgid ""
+"The host \"{host_name}\" contains all configuration like general properties "
+"and the folder location. Adjust to modify labels, tags or similar "
+"customization."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The host %s is not monitored on this site"
+msgstr "O login não é permitido neste site."
+
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "O \"%s\" anfitrião não existe"
@@ -64045,13 +64104,6 @@ msgid ""
 msgstr ""
 "O anfitrião <i>%s</i> tem o site explícito <i>%s</i> conjunto, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
-
-msgid ""
-"The host contains all information about configured data source types, tags, "
-"labels, custom properties, and the folder in which the host is located. This "
-"is where you can associate the host with specific rules via labels or tags, "
-"and make similar customization."
-msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "O anfitrião não pôde ser encontrado em nenhum site ativo."
@@ -64492,14 +64544,6 @@ msgstr "O logfile não existe no site."
 
 msgid "The login is currently locked"
 msgstr "O login está actualmente bloqueado"
-
-msgid ""
-"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
-"The dynamic host configuration connection \"linked.connection\" holds the "
-"configuration for how these other hosts are created if they don't already "
-"exist. Customization of where these hosts are created and what properties, "
-"tags, and labels they get can be done here."
-msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -65753,6 +65797,12 @@ msgstr ""
 
 msgid "The rule pack you are trying to edit does not exist."
 msgstr "O pacote de regras que você está tentando editar não existe."
+
+#, python-brace-format
+msgid ""
+"The rule set \"{rule_title}\" contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 msgid "The rule you are trying to edit does not exist."
 msgstr "A regra que você está tentando editar não existe."
@@ -69276,6 +69326,9 @@ msgstr "Este problema foi reconhecido"
 
 msgid "This problem has been acknowledged."
 msgstr "Este problema foi reconhecido."
+
+msgid "This process may take several minutes, please wait..."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -84970,6 +85023,10 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
+msgid "hosts per batch"
+msgstr "Bloqueios MSSQL por Lote"
+
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -86311,6 +86368,26 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
 #, fuzzy
+#~ msgid "Batch num"
+#~ msgstr "número de comutação"
+
+#, fuzzy
+#~ msgid "Connector Id"
+#~ msgstr "ID de conexão"
+
+#, fuzzy
+#~ msgid "Discovering"
+#~ msgstr "Descobrir"
+
+#, fuzzy
+#~ msgid "Processing"
+#~ msgstr "Correspondência de processos"
+
+#, fuzzy
+#~ msgid "Recipients"
+#~ msgstr "Destinatário"
+
+#, fuzzy
 #~ msgid "Save & go to service discovery"
 #~ msgstr "Guardar & executar a descoberta de serviços"
 
@@ -87081,9 +87158,6 @@ msgstr "Use SSL para a conexão."
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Mais informações podem ser encontradas em ~/var/log/web.log"
-
-#~ msgid "Activated the changes"
-#~ msgstr "Activou as alterações"
 
 #~ msgid "NetApp via WebAPI"
 #~ msgstr "NetApp via WebAPI"

@@ -3389,6 +3389,10 @@ msgstr ""
 msgid "Activate automatic locking of user accounts"
 msgstr "Activați blocarea automată a conturilor de utilizator"
 
+#, fuzzy
+msgid "Activate changes"
+msgstr "A activat modificările"
+
 #, python-format
 msgid ""
 "Activate changes error. Unable to prepare site snapshots. Failed command: "
@@ -4221,6 +4225,10 @@ msgstr "Adăugați un grup de resurse"
 msgid "Add resource tag"
 msgstr "Adăugați eticheta resursă"
 
+#, fuzzy
+msgid "Add restriction"
+msgstr "Restricție de amplasare"
+
 msgid "Add role rule"
 msgstr "Adaugă o regulă de rol"
 
@@ -4462,6 +4470,12 @@ msgstr "Opțiuni adiționale"
 
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
+
+#, python-brace-format
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
 
 msgid "Additional information"
 msgstr "Informații suplimentare"
@@ -5710,9 +5724,10 @@ msgstr "Toate paginile"
 msgid "All parents are down"
 msgstr "Toți părinții sunt în jos"
 
+#, python-brace-format
 msgid ""
 "All passwords, secrets and other sensitive data are stored in the Password "
-"Store. Changes to the \"linked.secret\" entry can be made here."
+"Store. Changes to the entry \"{password_title}\" can be made here."
 msgstr ""
 
 msgid "All pending hosts of customer"
@@ -9028,10 +9043,6 @@ msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
 
 #, fuzzy
-msgid "Batch num"
-msgstr "Numărul de comutator"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Potriviri"
 
@@ -9472,6 +9483,10 @@ msgstr "Nume AP"
 
 msgid "Bulk renaming of hosts"
 msgstr "Redenumirea în masă a gazdelor"
+
+#, fuzzy
+msgid "Bulk service discovery batch size"
+msgstr "Rulați descoperirea serviciilor în masă"
 
 msgid "Bulk up to"
 msgstr "Încărcați până la"
@@ -11697,6 +11712,10 @@ msgstr "Modificări"
 
 #, fuzzy
 msgid "Changes activated"
+msgstr "Nu a fost niciodată activat"
+
+#, fuzzy
+msgid "Changes activated on"
 msgstr "Nu a fost niciodată activat"
 
 msgid "Changes since last dump"
@@ -14633,10 +14652,6 @@ msgstr "Conexiuni pe secundă"
 msgid "Connectivity"
 msgstr "Conectivitate"
 
-#, fuzzy
-msgid "Connector Id"
-msgstr "ID-ul conexiunii"
-
 msgid "Connector outlets"
 msgstr "Prizele de conectare"
 
@@ -14959,6 +14974,9 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Conversia ID-urilor de utilizator importate în minuscule în timpul "
 "sincronizării."
+
+msgid "Cool down after host a change batch has been processed"
+msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
@@ -17945,6 +17963,10 @@ msgstr "Ștergeți gazda"
 msgid "Delete hosts"
 msgstr "Ștergeți gazdele"
 
+#, fuzzy
+msgid "Delete hosts automatically"
+msgstr "detectează automat"
+
 #, python-format
 msgid "Delete icon #%d"
 msgstr "Pictograma de ștergere #%d"
@@ -19325,10 +19347,6 @@ msgstr "Numele procesului descoperit"
 
 msgid "Discovered service labels"
 msgstr "Etichete de serviciu descoperite"
-
-#, fuzzy
-msgid "Discovering"
-msgstr "Descoperiți"
 
 msgid "Discovery"
 msgstr "Descoperire"
@@ -26220,6 +26238,14 @@ msgstr ""
 msgid "Go to the Saas Admin Panel"
 msgstr "Mergeți la panoul de administrare Saas"
 
+#, fuzzy
+msgid "Go to the next stage"
+msgstr "Mergeți la magazinul de rapoarte"
+
+#, fuzzy
+msgid "Go to the previous stage"
+msgstr "Mergeți la magazinul de rapoarte"
+
 msgid "Go to the report store"
 msgstr "Mergeți la magazinul de rapoarte"
 
@@ -26638,6 +26664,10 @@ msgstr "Sisteme de operare invitate"
 
 msgid "Guest user"
 msgstr "Utilizator invitat"
+
+#, fuzzy
+msgid "Guided mode"
+msgstr "Modul deschis"
 
 msgid "H.Down"
 msgstr "H.Down"
@@ -29642,6 +29672,10 @@ msgstr "Element de căutare a gazdei"
 msgid "Host management"
 msgstr "Gestionarea gazdei"
 
+#, fuzzy
+msgid "Host manager settings"
+msgstr "Setări gazdă"
+
 msgid "Host memory usage"
 msgstr "Utilizarea memoriei gazdă"
 
@@ -29816,6 +29850,10 @@ msgstr "Probleme ale gazdei (netransferate)"
 
 msgid "Host problems for NagStaMon"
 msgstr "Probleme cu gazdele pentru NagStaMon"
+
+#, fuzzy
+msgid "Host processing"
+msgstr "Prelucrarea RRD"
 
 msgid "Host properties"
 msgstr "Proprietăți gazdă"
@@ -39688,6 +39726,10 @@ msgstr "Dimensiunea maximă a bobinei"
 msgid "Maximum test runtime"
 msgstr "Durata maximă de funcționare a testului"
 
+#, fuzzy
+msgid "Maximum time between batch start and forced activation of changes"
+msgstr "Comentariu pentru activarea modificărilor"
+
 msgid "Maximum time since last start of job execution"
 msgstr "Timpul maxim de la ultima pornire a execuției sarcinii"
 
@@ -45204,11 +45246,6 @@ msgstr "Sunt permise doar literele majuscule"
 msgid "Only use device's levels, ignore yours"
 msgstr "Folosiți numai nivelurile dispozitivului, ignorați-le pe ale dvs."
 
-msgid ""
-"Only users who are in all the following contact groups will receive the "
-"notification"
-msgstr ""
-
 msgid "Only valid in Jenkins versions <= 1.622."
 msgstr ""
 
@@ -46827,6 +46864,10 @@ msgid "Oversubscribed"
 msgstr "Suprasubscris"
 
 msgid "Overview"
+msgstr "Prezentare generală"
+
+#, fuzzy
+msgid "Overview mode"
 msgstr "Prezentare generală"
 
 msgid "Owned by other users"
@@ -49247,6 +49288,10 @@ msgstr ""
 "ServiceNow. ID-ul site-ului va fi utilizat ca prefix pentru ID-ul problemei "
 "la crearea incidentului."
 
+#, fuzzy
+msgid "Please wait..."
+msgstr "Citiți așteptați"
+
 msgid "Plesk Backups"
 msgstr "Copii de rezervă Plesk"
 
@@ -49982,10 +50027,6 @@ msgstr "Procese"
 
 msgid "Processes performance data"
 msgstr "Procesează datele de performanță"
-
-#, fuzzy
-msgid "Processing"
-msgstr "Potrivirea proceselor"
 
 #, fuzzy, python-format
 msgid "Processing (%s)"
@@ -51203,6 +51244,10 @@ msgstr "Site-ul este dezactivat"
 msgid "Recent event history"
 msgstr "Istoricul evenimentelor recente"
 
+#, fuzzy
+msgid "Recent processing batches"
+msgstr "Timpul de procesare a evenimentelor"
+
 msgid "Recently changed services"
 msgstr "Servicii schimbate recent"
 
@@ -51212,10 +51257,6 @@ msgstr "Destinatarul"
 #, fuzzy
 msgid "Recipient email address"
 msgstr "Destinatarul Adresa de e-mail"
-
-#, fuzzy
-msgid "Recipients"
-msgstr "Destinatarul"
 
 #, python-format
 msgid "Recipients: %s"
@@ -54966,6 +55007,10 @@ msgstr "Selectați metricile pentru a trimite la InfluxDB"
 msgid "Select packages"
 msgstr "Selectați pachetele"
 
+#, fuzzy
+msgid "Select recipient"
+msgstr "Destinatarul"
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -55627,6 +55672,10 @@ msgstr "Descoperirea serviciilor"
 
 msgid "Service discovery details"
 msgstr "Detalii de descoperire a serviciului"
+
+#, fuzzy
+msgid "Service discovery ran on"
+msgstr "Descoperirea serviciilor: "
 
 msgid "Service discovery rules"
 msgstr "Reguli de descoperire a serviciilor"
@@ -56962,6 +57011,10 @@ msgstr "Arată tot"
 #, python-format
 msgid "Show all %s topics"
 msgstr "Afișați toate subiectele %s"
+
+#, fuzzy
+msgid "Show all batches"
+msgstr "Afișați toate subiectele"
 
 msgid "Show all hosts"
 msgstr "Afișați toate gazdele"
@@ -62048,11 +62101,6 @@ msgstr ""
 "Atributul \"Authentication Expiration\" (%s) nu a putut fi preluat de pe "
 "serverul LDAP pentru utilizatorul %s."
 
-msgid ""
-"The \"linked.rule\" rule set contains the special agent configuration. "
-"Credentials and other agent-specific data can be edited here"
-msgstr ""
-
 #, python-format
 msgid "The %s does not exist."
 msgstr "%s nu există."
@@ -64209,6 +64257,17 @@ msgid "The history for changes in hardware- and software inventory of a host"
 msgstr ""
 "Istoricul modificărilor în inventarul hardware și software al unei gazde"
 
+#, python-brace-format
+msgid ""
+"The host \"{host_name}\" contains all configuration like general properties "
+"and the folder location. Adjust to modify labels, tags or similar "
+"customization."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The host %s is not monitored on this site"
+msgstr "Autentificarea nu este permisă pe acest site."
+
 #, python-format
 msgid "The host '%s' does not exist"
 msgstr "Gazda \"%s\" nu există"
@@ -64220,13 +64279,6 @@ msgid ""
 msgstr ""
 "Gazda <i>%s</i> are setul explicit de site-uri <i>%s</i>, care aparține "
 "clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
-
-msgid ""
-"The host contains all information about configured data source types, tags, "
-"labels, custom properties, and the folder in which the host is located. This "
-"is where you can associate the host with specific rules via labels or tags, "
-"and make similar customization."
-msgstr ""
 
 msgid "The host could not be found on any active site."
 msgstr "Gazda nu a putut fi găsită pe niciun site activ."
@@ -64672,14 +64724,6 @@ msgstr "Fișierul jurnal nu există pe site."
 
 msgid "The login is currently locked"
 msgstr "Conectarea este blocată în prezent"
-
-msgid ""
-"The main host \"linked.host\" can provide data to other hosts in Checkmk. "
-"The dynamic host configuration connection \"linked.connection\" holds the "
-"configuration for how these other hosts are created if they don't already "
-"exist. Customization of where these hosts are created and what properties, "
-"tags, and labels they get can be done here."
-msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -65952,6 +65996,12 @@ msgstr ""
 
 msgid "The rule pack you are trying to edit does not exist."
 msgstr "Pachetul de reguli pe care încercați să îl editați nu există."
+
+#, python-brace-format
+msgid ""
+"The rule set \"{rule_title}\" contains the special agent configuration. "
+"Credentials and other agent-specific data can be edited here"
+msgstr ""
 
 msgid "The rule you are trying to edit does not exist."
 msgstr "Regula pe care încercați să o modificați nu există."
@@ -69541,6 +69591,9 @@ msgstr "Această problemă a fost recunoscută"
 
 msgid "This problem has been acknowledged."
 msgstr "Această problemă a fost recunoscută."
+
+msgid "This process may take several minutes, please wait..."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -85252,6 +85305,10 @@ msgstr "gazdele sunt în funcțiune, dar au servicii în stare de avertizare"
 msgid "hosts in total"
 msgstr "gazde în total"
 
+#, fuzzy
+msgid "hosts per batch"
+msgstr "Blocaje MSSQL pe lot"
+
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] "oră"
@@ -86590,6 +86647,26 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy
+#~ msgid "Batch num"
+#~ msgstr "Numărul de comutator"
+
+#, fuzzy
+#~ msgid "Connector Id"
+#~ msgstr "ID-ul conexiunii"
+
+#, fuzzy
+#~ msgid "Discovering"
+#~ msgstr "Descoperiți"
+
+#, fuzzy
+#~ msgid "Processing"
+#~ msgstr "Potrivirea proceselor"
+
+#, fuzzy
+#~ msgid "Recipients"
+#~ msgstr "Destinatarul"
+
+#, fuzzy
 #~ msgid "Save & go to service discovery"
 #~ msgstr "Salvați & rulați descoperirea serviciilor"
 
@@ -87369,9 +87446,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "More information can be found in ~/var/log/web.log"
 #~ msgstr "Mai multe informații pot fi găsite în ~/var/log/web.log"
-
-#~ msgid "Activated the changes"
-#~ msgstr "A activat modificările"
 
 #~ msgid "NetApp via WebAPI"
 #~ msgstr "NetApp prin WebAPI"

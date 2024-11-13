@@ -215,9 +215,12 @@ class Crawler:
         with Progress() as progress:
             tasks: set = set()
             while tasks or self._todos and self._find_more_urls:
-                while len(tasks) < max_tasks and self._todos:
+                while len(tasks) < max_tasks and self._todos and self._find_more_urls:
                     urls = [self._todos.popleft() for _ in range(max_url_batch_size) if self._todos]
                     tasks.add(asyncio.create_task(self.batch_test_urls(urls)))
+                    # ensure rate of URL collection in `self._todos` > rate of new tasks added
+                    time.sleep(0.1)
+
                 if len(tasks) >= max_tasks:
                     logger.debug("Maximum tasks assigned. Waiting for tasks to be completed ...")
                 done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)

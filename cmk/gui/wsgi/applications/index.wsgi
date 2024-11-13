@@ -63,8 +63,13 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
 
 
 init_span_processor(
-    trace.init_tracing(omd_site(), "gui"),
-    exporter_from_config(trace.trace_send_config(get_omd_config(paths.omd_root))),
+    trace.init_tracing(
+        trace.service_namespace_from_config(
+            omd_site(), omd_config := get_omd_config(paths.omd_root)
+        ),
+        "gui",
+    ),
+    exporter_from_config(trace.trace_send_config(omd_config)),
 )
 
 Application = OpenTelemetryMiddleware(  # type: ignore[no-untyped-call]

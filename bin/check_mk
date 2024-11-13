@@ -60,8 +60,13 @@ help_function = modes.get("help").handler_function
 # (https://github.com/open-telemetry/opentelemetry-python/issues/4043).
 if trace_context := trace.extract_context_from_environment(dict(os.environ)):
     init_span_processor(
-        trace.init_tracing(omd_site(), "cmk"),
-        exporter_from_config(trace.trace_send_config(get_omd_config(cmk.utils.paths.omd_root))),
+        trace.init_tracing(
+            trace.service_namespace_from_config(
+                omd_site(), omd_config := get_omd_config(cmk.utils.paths.omd_root)
+            ),
+            "cmk",
+        ),
+        exporter_from_config(trace.trace_send_config(omd_config)),
     )
 
 

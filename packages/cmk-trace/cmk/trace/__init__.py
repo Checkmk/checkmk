@@ -13,6 +13,9 @@ from opentelemetry.sdk import trace as sdk_trace
 from opentelemetry.sdk.resources import Resource
 
 from ._config import LocalTarget as LocalTarget  # pylint: disable=useless-import-alias
+from ._config import (
+    service_namespace_from_config as service_namespace_from_config,  # pylint: disable=useless-import-alias
+)
 from ._config import trace_send_config as trace_send_config  # pylint: disable=useless-import-alias
 from ._config import TraceSendConfig as TraceSendConfig  # pylint: disable=useless-import-alias
 from ._propagate import (  # pylint: disable=useless-import-alias

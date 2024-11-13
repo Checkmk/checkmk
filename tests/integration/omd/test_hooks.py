@@ -32,6 +32,7 @@ def test_hooks(site: Site) -> None:
         "TMPFS",
         "TRACE_SEND",
         "TRACE_SEND_TARGET",
+        "TRACE_SERVICE_NAMESPACE",
         "RABBITMQ_PORT",
         "RABBITMQ_ONLY_FROM",
         "RABBITMQ_DIST_PORT",

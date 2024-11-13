@@ -47,6 +47,7 @@ from cmk.trace import (
     get_tracer_provider,
     init_tracing,
     INVALID_SPAN,
+    service_namespace_from_config,
     set_span_in_context,
     trace_send_config,
     TracerProvider,
@@ -82,8 +83,13 @@ def run_process(job_parameters: JobParameters) -> None:
     try:
         job_status = jobstatus_store.read()
         init_span_processor_callback(
-            init_tracing(omd_site(), "gui"),
-            exporter_from_config(trace_send_config(get_omd_config(paths.omd_root))),
+            init_tracing(
+                service_namespace_from_config(
+                    omd_site(), omd_config := get_omd_config(paths.omd_root)
+                ),
+                "gui",
+            ),
+            exporter_from_config(trace_send_config(omd_config)),
         )
         instrument_app_dependencies()
         _initialize_environment(

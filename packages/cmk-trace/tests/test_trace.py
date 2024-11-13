@@ -16,6 +16,75 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from cmk import trace
 from cmk.trace import export, logs
 
+_UNRELATED_OPTIONS = {
+    "CONFIG_ADMIN_MAIL": "",
+    "CONFIG_AGENT_RECEIVER": "on",
+    "CONFIG_AGENT_RECEIVER_PORT": "8000",
+    "CONFIG_APACHE_MODE": "own",
+    "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
+    "CONFIG_APACHE_TCP_PORT": "5002",
+    "CONFIG_AUTOSTART": "off",
+    "CONFIG_CORE": "cmc",
+    "CONFIG_LIVEPROXYD": "on",
+    "CONFIG_LIVESTATUS_TCP": "off",
+    "CONFIG_LIVESTATUS_TCP_ONLY_FROM": "0.0.0.0 ::/0",
+    "CONFIG_LIVESTATUS_TCP_PORT": "6557",
+    "CONFIG_LIVESTATUS_TCP_TLS": "on",
+    "CONFIG_MKEVENTD": "on",
+    "CONFIG_MKEVENTD_SNMPTRAP": "off",
+    "CONFIG_MKEVENTD_SYSLOG": "on",
+    "CONFIG_MKEVENTD_SYSLOG_TCP": "off",
+    "CONFIG_MULTISITE_AUTHORISATION": "on",
+    "CONFIG_MULTISITE_COOKIE_AUTH": "on",
+    "CONFIG_NSCA": "off",
+    "CONFIG_NSCA_TCP_PORT": "5667",
+    "CONFIG_PNP4NAGIOS": "on",
+    "CONFIG_RABBITMQ_PORT": "5672",
+    "CONFIG_RABBITMQ_ONLY_FROM": "0.0.0.0 ::",
+    "CONFIG_TMPFS": "on",
+}
+
+
+def test_trace_service_namespace_from_config_not_set() -> None:
+    assert (
+        trace.service_namespace_from_config(
+            "mysite",
+            {
+                **_UNRELATED_OPTIONS,
+                "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",
+                "CONFIG_TRACE_JAEGER_UI_PORT": "13333",
+                "CONFIG_TRACE_RECEIVE": "off",
+                "CONFIG_TRACE_RECEIVE_ADDRESS": "[::1]",
+                "CONFIG_TRACE_RECEIVE_PORT": "4321",
+                "CONFIG_TRACE_SEND": "on",
+                "CONFIG_TRACE_SEND_TARGET": "local_site",
+                "CONFIG_TRACE_SERVICE_NAMESPACE": "",
+            },
+        )
+        == "mysite"
+    )
+
+
+def test_trace_service_namespace_from_config_set() -> None:
+    assert (
+        trace.service_namespace_from_config(
+            "mysite",
+            {
+                **_UNRELATED_OPTIONS,
+                "CONFIG_TMPFS": "on",
+                "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",
+                "CONFIG_TRACE_JAEGER_UI_PORT": "13333",
+                "CONFIG_TRACE_RECEIVE": "off",
+                "CONFIG_TRACE_RECEIVE_ADDRESS": "[::1]",
+                "CONFIG_TRACE_RECEIVE_PORT": "4321",
+                "CONFIG_TRACE_SEND": "on",
+                "CONFIG_TRACE_SEND_TARGET": "local_site",
+                "CONFIG_TRACE_SERVICE_NAMESPACE": "my.super.namespace",
+            },
+        )
+        == "my.super.namespace"
+    )
+
 
 @pytest.mark.parametrize(
     "trace_enabled, expected_target", [(True, trace.LocalTarget(4321)), (False, "")]
@@ -23,31 +92,7 @@ from cmk.trace import export, logs
 def test_trace_send_config(trace_enabled: bool, expected_target: trace.LocalTarget | str) -> None:
     assert trace.trace_send_config(
         {
-            "CONFIG_ADMIN_MAIL": "",
-            "CONFIG_AGENT_RECEIVER": "on",
-            "CONFIG_AGENT_RECEIVER_PORT": "8000",
-            "CONFIG_APACHE_MODE": "own",
-            "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
-            "CONFIG_APACHE_TCP_PORT": "5002",
-            "CONFIG_AUTOSTART": "off",
-            "CONFIG_CORE": "cmc",
-            "CONFIG_LIVEPROXYD": "on",
-            "CONFIG_LIVESTATUS_TCP": "off",
-            "CONFIG_LIVESTATUS_TCP_ONLY_FROM": "0.0.0.0 ::/0",
-            "CONFIG_LIVESTATUS_TCP_PORT": "6557",
-            "CONFIG_LIVESTATUS_TCP_TLS": "on",
-            "CONFIG_MKEVENTD": "on",
-            "CONFIG_MKEVENTD_SNMPTRAP": "off",
-            "CONFIG_MKEVENTD_SYSLOG": "on",
-            "CONFIG_MKEVENTD_SYSLOG_TCP": "off",
-            "CONFIG_MULTISITE_AUTHORISATION": "on",
-            "CONFIG_MULTISITE_COOKIE_AUTH": "on",
-            "CONFIG_NSCA": "off",
-            "CONFIG_NSCA_TCP_PORT": "5667",
-            "CONFIG_PNP4NAGIOS": "on",
-            "CONFIG_RABBITMQ_PORT": "5672",
-            "CONFIG_RABBITMQ_ONLY_FROM": "0.0.0.0 ::",
-            "CONFIG_TMPFS": "on",
+            **_UNRELATED_OPTIONS,
             "CONFIG_TRACE_JAEGER_ADMIN_PORT": "14269",
             "CONFIG_TRACE_JAEGER_UI_PORT": "13333",
             "CONFIG_TRACE_RECEIVE": "off",
@@ -55,6 +100,7 @@ def test_trace_send_config(trace_enabled: bool, expected_target: trace.LocalTarg
             "CONFIG_TRACE_RECEIVE_PORT": "4321",
             "CONFIG_TRACE_SEND": "on" if trace_enabled else "off",
             "CONFIG_TRACE_SEND_TARGET": "local_site",
+            "CONFIG_TRACE_SERVICE_NAMESPACE": "",
         }
     ) == trace.TraceSendConfig(enabled=trace_enabled, target=expected_target)
 

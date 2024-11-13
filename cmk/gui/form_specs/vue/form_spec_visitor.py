@@ -105,6 +105,7 @@ from .visitors import (
     MultipleChoiceVisitor,
     OptionalChoiceVisitor,
     PasswordVisitor,
+    register_recomposer_function,
     register_visitor_class,
     SimplePasswordVisitor,
     SingleChoiceEditableVisitor,
@@ -145,11 +146,9 @@ def register_form_specs():
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
-    register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)
-
     register_visitor_class(TimeSpan, TimeSpanVisitor)
     register_visitor_class(TransformDataForLegacyFormatOrRecomposeFunction, TransformVisitor)
     register_visitor_class(Tuple, TupleVisitor)
@@ -158,22 +157,21 @@ def register_form_specs():
     register_visitor_class(StringAutocompleter, StringVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
-    register_visitor_class(MultipleChoice, MultipleChoiceVisitor, recompose_multiple_choice)
     register_visitor_class(Folder, FolderVisitor)
     register_visitor_class(Labels, LabelsVisitor)
 
     # Recomposed
-    register_visitor_class(String, StringVisitor, recompose_string)
-    register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
-    register_visitor_class(ServiceState, SingleChoiceVisitor, recompose_service_state)
-    register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)
-    register_visitor_class(List, ListVisitor, recompose_list)
-    register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
-    register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
-    register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
-    register_visitor_class(
-        CascadingSingleChoice, CascadingSingleChoiceVisitor, recompose_cascading_single_choice
-    )
+    register_recomposer_function(RegularExpression, recompose_regular_expression)
+    register_recomposer_function(MultipleChoice, recompose_multiple_choice)
+    register_recomposer_function(String, recompose_string)
+    register_recomposer_function(HostState, recompose_host_state)
+    register_recomposer_function(ServiceState, recompose_service_state)
+    register_recomposer_function(SingleChoice, recompose_single_choice)
+    register_recomposer_function(List, recompose_list)
+    register_recomposer_function(Percentage, recompose_percentage)
+    register_recomposer_function(UnknownFormSpec, recompose_unknown_form_spec)
+    register_recomposer_function(Dictionary, recompose_dictionary)
+    register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
 
 
 def register_validators():

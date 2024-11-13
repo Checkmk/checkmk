@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 # <<<oracle_sql:sep(58)>>>
-# [[[SID-1|SQL-A]]]
+# [[[SID-1|SQL-A|cached(123,456)]]]
 # details:DETAILS
 # perfdata:NAME=VAL;WARN;CRIT;MIN;MAX NAME=VAL;WARN;CRIT;MIN;MAX ...
 # perfdata:NAME=VAL;WARN;CRIT;MIN;MAX ...
@@ -21,12 +23,27 @@
 # ...
 # exit:CODE
 # elapsed:TS
-
-
 # mypy: disable-error-code="var-annotated"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.plugins.lib.cache_helper import CacheInfo, render_cache_info
+
+
+def _prepare_instance(line: str, now: float) -> tuple[str, str, dict]:
+    sid, item, *rest = line.split("|")
+    instance = {
+        "details": [],
+        "perfdata": [],
+        "long": [],
+        "exit": 0,
+        "elapsed": None,
+        "parsing_error": {},
+        "cache_info": None,
+    }
+    if rest:
+        instance["cache_info"] = CacheInfo.from_raw(rest[0], now)
+    return sid, item, instance
 
 
 def parse_oracle_sql(string_table):
@@ -45,22 +62,13 @@ def parse_oracle_sql(string_table):
             perfdata.append(tuple(perf_entry))
         return perfdata
 
+    now = time.time()
     parsed = {}
     instance = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            item_name = tuple(line[0][3:-3].split("|"))
-            instance = parsed.setdefault(
-                ("%s SQL %s" % item_name).upper(),
-                {
-                    "details": [],
-                    "perfdata": [],
-                    "long": [],
-                    "exit": 0,
-                    "elapsed": None,
-                    "parsing_error": {},
-                },
-            )
+            sid, item, inst = _prepare_instance(line[0][3:-3], now)
+            instance = parsed.setdefault((f"{sid} SQL {item}").upper(), inst)
             continue
 
         if instance is None:
@@ -123,6 +131,9 @@ def check_oracle_sql(item, params, parsed):
 
     if long := data["long"]:
         yield 0, "\n%s" % "\n".join(long)
+
+    if cache_info := data["cache_info"]:
+        yield 0, render_cache_info(cache_info)
 
 
 check_info["oracle_sql"] = LegacyCheckDefinition(

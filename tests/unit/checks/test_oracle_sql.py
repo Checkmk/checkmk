@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import freezegun
 import pytest
 
 from tests.testlib import Check
@@ -78,6 +80,15 @@ INFO_5 = [
     ["elapsed", ""],
 ]
 
+INFO_6 = [
+    ["[[[sid|sql|cached(1,2)]]]"],
+    ["details", "DETAILS"],
+    ["perfdata", "metric_name=1;2;3;0;5"],
+    ["long", "LONG"],
+    ["exit", "0"],
+    ["elapsed", "123"],
+]
+
 
 @pytest.mark.parametrize(
     "info,expected",
@@ -86,6 +97,7 @@ INFO_5 = [
             INFO_1,
             {
                 "FOOBAR1 SQL YOLBE AFS RABAT REPL ERROR STMT": {
+                    "cache_info": None,
                     "details": [],
                     "elapsed": None,
                     "exit": 0,
@@ -123,6 +135,7 @@ INFO_5 = [
             INFO_2,
             {
                 "FOOBAR1 SQL NBA SESSION LEVEL": {
+                    "cache_info": None,
                     "details": ["Session Level: 5"],
                     "elapsed": 0.26815,
                     "exit": 0,
@@ -136,6 +149,7 @@ INFO_5 = [
             INFO_3,
             {
                 "BULU SQL BLABLI NBA SHA FILE": {
+                    "cache_info": None,
                     "details": [],
                     "elapsed": 0.29285,
                     "exit": 2,
@@ -156,6 +170,7 @@ INFO_5 = [
             INFO_4,
             {
                 "YOBLE1 SQL NBA SESSIONS": {
+                    "cache_info": None,
                     "details": [
                         "Active sessions: 0 (warn/crit at "
                         "10/20) / Inactive sessions: 0 "
@@ -177,6 +192,7 @@ INFO_5 = [
             INFO_5,
             {
                 "YOBLE1 SQL NBA SESSIONS": {
+                    "cache_info": None,
                     "details": [
                         "Active sessions: 0 (warn/crit at "
                         "10/20) / Inactive sessions: 0 "
@@ -273,4 +289,33 @@ def test_oracle_sql_discovery(info, expected):
 def test_oracle_sql_check(info, item, expected):
     oracle_sql = Check(check_name)
     result = list(oracle_sql.run_check(item, {}, oracle_sql.run_parse(info)))
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "info, item, expected",
+    [
+        (
+            INFO_6,
+            "SID SQL SQL",
+            [
+                (
+                    0,
+                    "DETAILS",
+                    [("metric_name", 1, 2, 3, 0, 5), ("elapsed_time", 123.0)],
+                ),
+                (0, "\nLONG"),
+                (
+                    0,
+                    "Cache generated 9 seconds ago, cache interval: 2 seconds, elapsed"
+                    " cache lifespan: 450.00%",
+                ),
+            ],
+        ),
+    ],
+)
+def test_oracle_sql_check_cached(info, item, expected):
+    oracle_sql = Check(check_name)
+    with freezegun.freeze_time("1970-01-01 00:00:10"):
+        result = list(oracle_sql.run_check(item, {}, oracle_sql.run_parse(info)))
     assert result == expected

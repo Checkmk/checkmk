@@ -158,7 +158,6 @@ class Crawler:
         self.site = test_site
         self.report_file = Path(report_file or self.site.result_dir()) / "crawl.xml"
         self.requests_session = requests.Session()
-        self._find_more_urls: bool = True
         self._ignored_content_types: set[str] = {
             "application/json",
             "application/pdf",
@@ -207,6 +206,16 @@ class Crawler:
         return num_done
 
     async def crawl(self, max_tasks: int, max_url_batch_size: int = 100) -> None:
+        """Crawl through URLs using simultaneously running tasks / coroutines.
+
+        New task / coroutine is added every `rate_create_crawl_task` seconds.
+        Crawling URLs stop when URLs are not found for last `memory_size_urls_exist` iterations
+        (`rate_create_crawl_task` x `memory_size_urls_exist` seconds).
+
+        debug-mode: Crawling URLs stop when at least `--max-urls` number of URLs have been crawled.
+        """
+        rate_create_crawl_task = 0.1  # seconds
+        memory_size_urls_exist = 100  # iterations
         search_limited_urls: bool = self._max_urls > 0
         # special-case
         if search_limited_urls and self._max_urls < max_tasks:
@@ -214,26 +223,39 @@ class Crawler:
         # ----
         with Progress() as progress:
             tasks: set = set()
-            while tasks or self._todos and self._find_more_urls:
-                while len(tasks) < max_tasks and self._todos and self._find_more_urls:
-                    urls = [self._todos.popleft() for _ in range(max_url_batch_size) if self._todos]
-                    tasks.add(asyncio.create_task(self.batch_test_urls(urls)))
-                    # ensure rate of URL collection in `self._todos` > rate of new tasks added
-                    time.sleep(0.1)
+            find_more_urls = True
+            track_todo_status = deque([True] * memory_size_urls_exist)
+            while find_more_urls:
+                # condition
+                track_todo_status.popleft()
+                track_todo_status.append(bool(self._todos))
+                find_more_urls = (
+                    progress.done_total < self._max_urls
+                    if search_limited_urls
+                    else any(track_todo_status)
+                )
+                await_task_strategy = (
+                    asyncio.FIRST_COMPLETED if find_more_urls else asyncio.ALL_COMPLETED
+                )
+                # ----
 
-                if len(tasks) >= max_tasks:
-                    logger.debug("Maximum tasks assigned. Waiting for tasks to be completed ...")
-                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                progress.done(done=sum(task.result() for task in done))
-                if search_limited_urls:
-                    self._find_more_urls = progress.done_total < self._max_urls
-                self.duration = progress.duration
-            # Finish remaining tasks, if any.
-            if tasks:
-                done, tasks = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
-                progress.done(done=sum(task.result() for task in done))
-                self.duration = progress.duration
-            # ----
+                # body
+                urls = [self._todos.popleft() for _ in range(max_url_batch_size) if self._todos]
+                tasks.add(asyncio.create_task(self.batch_test_urls(urls)))
+                if len(tasks) >= max_tasks or not find_more_urls:
+                    msg = (
+                        "Maximum tasks assigned. Waiting for tasks to be completed ..."
+                        if find_more_urls
+                        else "No more URLs to crawl. Finish running tasks ..."
+                    )
+                    getattr(logger, "debug" if find_more_urls else "info")(msg)
+                    done, tasks = await asyncio.wait(tasks, return_when=await_task_strategy)
+                    progress.done(done=sum(task.result() for task in done))
+                    self.duration = progress.duration
+                # ----
+
+                # ensure rate of URL collection in `self._todos` > rate of new tasks added
+                time.sleep(rate_create_crawl_task)
 
     async def setup_checkmk_context(
         self, browser: playwright.async_api.Browser
@@ -290,7 +312,7 @@ class Crawler:
     def handle_page_done(self, url: Url, duration: float) -> bool:
         self._ensure_result(url)
         self.results[url.url].duration = duration
-        logger.info("page done in %.2f secs (%s)", duration, url.url)
+        logger.debug("page done in %.2f secs (%s)", duration, url.url)
         return self.results[url.url].skipped is None and len(self.results[url.url].errors) == 0
 
     def handle_crash_reports(self) -> None:

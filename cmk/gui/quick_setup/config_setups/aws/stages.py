@@ -11,6 +11,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+from cmk.gui.htmllib.html import html
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -41,9 +42,11 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     FormSpecWrapper,
     ListOfWidgets,
+    NoteText,
     Text,
     Widget,
 )
+from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -79,6 +82,16 @@ def prepare_aws() -> QuickSetupStage:
                     ),
                 ],
                 list_type="ordered",
+            ),
+            NoteText(
+                text=_(
+                    "Note: For access options like AssumeRole or a custom IAM region, please use "
+                    "the %s."
+                )
+                % html.render_a(
+                    _("advanced configuration"),
+                    href=doc_reference_url(DocReference.AWS),
+                )
             ),
             widgets.unique_id_formspec_wrapper(
                 title=Title("Configuration name"), prefill_template="aws_config"

@@ -5,12 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type NoteTextWidgetProps } from './widget_types'
+import CmkHtml from '@/components/CmkHtml.vue'
 
 defineProps<NoteTextWidgetProps>()
 </script>
 
 <template>
-  <p>{{ text }}</p>
+  <p class="qs-note-text-widget"><CmkHtml :html="text" /></p>
 </template>
 
-<style scoped></style>
+<style scoped>
+.qs-note-text-widget {
+  font-style: italic;
+}
+</style>

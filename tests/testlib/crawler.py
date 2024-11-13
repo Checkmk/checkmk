@@ -207,10 +207,11 @@ class Crawler:
         return num_done
 
     async def crawl(self, max_tasks: int, max_url_batch_size: int = 100) -> None:
-        # special-case
         search_limited_urls: bool = self._max_urls > 0
+        # special-case
         if search_limited_urls and self._max_urls < max_tasks:
             max_tasks = self._max_urls
+        # ----
         with Progress() as progress:
             tasks: set = set()
             while tasks or self._todos and self._find_more_urls:
@@ -224,6 +225,12 @@ class Crawler:
                 if search_limited_urls:
                     self._find_more_urls = progress.done_total < self._max_urls
                 self.duration = progress.duration
+            # Finish remaining tasks, if any.
+            if tasks:
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
+                progress.done(done=sum(task.result() for task in done))
+                self.duration = progress.duration
+            # ----
 
     async def setup_checkmk_context(
         self, browser: playwright.async_api.Browser

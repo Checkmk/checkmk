@@ -1880,6 +1880,9 @@ def fetch_virtual_machines(
         if vm_data.get("summary.config.ftInfo.role") == "2":
             continue  # This response coming from the passive fault-tolerance node
 
+        if vm_data.get("config.template") == "true":
+            continue
+
         if "runtime.host" in vm_data:
             vm_data["runtime.host"] = hostsystems.get(
                 vm_data["runtime.host"], vm_data["runtime.host"]

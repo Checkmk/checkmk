@@ -651,21 +651,12 @@ class ModeNotifications(ABCNotificationsMode):
                             title=_("Add new"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("New notification setup"),
+                                    title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [("mode", "notification_rule_quick_setup")]
                                         )
-                                    ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
-                                ),
-                                PageMenuEntry(
-                                    title=_("Add notification rule"),
-                                    icon_name="new",
-                                    item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,

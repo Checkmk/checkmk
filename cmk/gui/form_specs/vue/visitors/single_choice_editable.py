@@ -75,7 +75,7 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
                     validation_error=_("Could not validate form, errors are shown in the form"),
                     fatal_error=_("An fatal error occured:"),
                     fatal_error_reload=_("reload"),
-                    no_objects=_("No elements available, create one"),
+                    no_objects=_("No options available"),
                     no_selection=_("Please select an element"),
                 ),
             ),

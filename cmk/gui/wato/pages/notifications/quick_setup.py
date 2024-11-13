@@ -924,7 +924,13 @@ def notification_method() -> QuickSetupStage:
                                                             "parameter_id": DictElement(
                                                                 required=True,
                                                                 parameter_form=SingleChoiceEditable(
-                                                                    title=Title("Parameters"),
+                                                                    title=Title(
+                                                                        "Select parameters"
+                                                                    ),
+                                                                    help_text=Help(
+                                                                        "Parameters define the look, content, "
+                                                                        "and connection details of the notification and are reusable."
+                                                                    ),
                                                                     entity_type=ConfigEntityType.notification_parameter,
                                                                     entity_type_specifier=script_name,
                                                                 ),

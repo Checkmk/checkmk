@@ -102,13 +102,15 @@ const activeElement = computed((): ActiveElement | null => {
 const componentId = useId()
 
 interface LayoutSettings {
-  display_style: string
+  cascade_display_style: string
+  cascade_margin_top: string
   side_by_side: boolean
 }
 
 const layoutSettings = computed((): LayoutSettings => {
   return {
-    display_style: props.spec.layout === 'vertical' ? 'inline' : 'inline-block',
+    cascade_display_style: props.spec.layout === 'vertical' ? 'block' : 'inline-block',
+    cascade_margin_top: props.spec.layout === 'vertical' ? '4px' : '0',
     side_by_side: props.spec.layout === 'button_group'
   }
 })
@@ -161,6 +163,7 @@ span.form-cascading-single-choice__choice {
 }
 
 span.form-cascading-single-choice__cascade {
-  display: v-bind('layoutSettings.display_style');
+  display: v-bind('layoutSettings.cascade_display_style');
+  margin-top: v-bind('layoutSettings.cascade_margin_top');
 }
 </style>

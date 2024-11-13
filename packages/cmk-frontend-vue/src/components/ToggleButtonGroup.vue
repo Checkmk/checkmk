@@ -42,6 +42,7 @@ function setSelectedOption(value: string) {
 <style scoped>
 .toggle_buttons_container {
   width: max-content;
+  margin-bottom: 8px;
   padding: 5px;
   border-radius: 5px;
   border: 2px solid var(--default-border-color);

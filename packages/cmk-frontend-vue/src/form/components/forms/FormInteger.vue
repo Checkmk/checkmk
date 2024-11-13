@@ -45,6 +45,10 @@ const componentId = useId()
   margin: 0;
 }
 
+input.number {
+  width: 5.8ex;
+}
+
 .no-spinner[type='number'] {
   -moz-appearance: textfield;
 }

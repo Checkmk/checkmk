@@ -25,6 +25,7 @@ from typing import Any, Final, Literal, overload
 
 import pytest
 import pytest_check  # type: ignore[import-untyped]
+import requests
 
 from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
     create_cse_initial_config,
@@ -1146,6 +1147,18 @@ class Site:
         r = web.get("user_profile.py", allow_redirect_to_login=True)
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
+    def send_traces_to_central_collector(self) -> None:
+        """Configure the site to send traces to our central collector"""
+        # Before enabling this feature, do some test to see whether the collector is available
+        collector = "http://tracing.lan.checkmk.net"
+        if requests.head(f"{collector}:8080/", timeout=5).status_code != 200:
+            logger.warning("Central collector is not available. Skip enabling trace sending.")
+            return
+
+        logger.info("Send traces to central collector (collector: %s:9123)", collector)
+        self.set_config("TRACE_SEND", "on")
+        self.set_config("TRACE_SEND_TARGET", f"{collector}:9123")
+
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
@@ -1451,9 +1464,12 @@ class SiteFactory:
         prepare_for_tests: bool = True,
         activate_changes: bool = True,
         auto_restart_httpd: bool = False,
+        collect_traces: bool = False,
     ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
+        if collect_traces:
+            site.send_traces_to_central_collector()
 
         if not start:
             return site
@@ -1737,6 +1753,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
         report_crashes: bool = True,
+        collect_traces: bool = False,
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -1746,6 +1763,7 @@ class SiteFactory:
             init_livestatus=init_livestatus,
             save_results=save_results,
             report_crashes=report_crashes,
+            collect_traces=collect_traces,
         )
 
     def get_test_site(
@@ -1757,6 +1775,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
         report_crashes: bool = True,
+        collect_traces: bool = False,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1783,6 +1802,7 @@ class SiteFactory:
                 site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
+                collect_traces=collect_traces,
             )
             site.start()
             if auto_restart_httpd:

@@ -65,7 +65,10 @@ def _increased_logging_level(site: Site) -> Iterator[None]:
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
     with site_factory.get_test_site_ctx(
-        "central", description=request.node.name, auto_restart_httpd=True
+        "central",
+        description=request.node.name,
+        auto_restart_httpd=True,
+        collect_traces=True,
     ) as central_site:
         with _increased_logging_level(central_site):
             yield central_site
@@ -91,7 +94,10 @@ def _make_connected_remote_site(
     site_description: str,
 ) -> Iterator[Site]:
     with site_factory.get_test_site_ctx(
-        site_name, description=site_description, auto_restart_httpd=True
+        site_name,
+        description=site_description,
+        auto_restart_httpd=True,
+        collect_traces=True,
     ) as remote_site:
         with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site

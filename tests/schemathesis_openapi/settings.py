@@ -52,7 +52,7 @@ schemathesis.register_string_format(
 )
 
 # hypothesis settings
-current_profile = settings._current_profile if hasattr(settings, "_current_profile") else "default"
+current_profile = getattr(settings, "_current_profile", "default")
 
 # default settings profile
 default_settings = {

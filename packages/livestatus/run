@@ -136,7 +136,7 @@ run_build() {
 
 run_unit_tests() {
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
-        VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
+        VALGRIND="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42"
     fi
     "${BAZEL_CMD}" test ${VALGRIND:+--run_under="${VALGRIND}"} //packages/livestatus:all
 }

@@ -10,8 +10,9 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import useDragging from '@/lib/useDragging'
-import { type UnpackedArray } from '@/lib/typeUtils'
 import { immediateWatch } from '@/lib/watch'
+import { type UnpackedArray } from '@/lib/typeUtils'
+import CmkListItem from './CmkListItem.vue'
 
 type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 
@@ -29,19 +30,19 @@ const localOrder = ref<number[]>([])
 
 immediateWatch(
   () => props.itemsProps,
-  (itemProps) => {
+  (itemsProps) => {
     let length: number | undefined
-    Object.values(itemProps).forEach((value) => {
+    Object.values(itemsProps).forEach((value) => {
       if (length === undefined) {
         length = value.length
         return
       }
       if (length !== value.length) {
-        throw new Error('All itemProps must have the same length')
+        throw new Error('All itemsProps must have the same length')
       }
     })
     if (length === undefined) {
-      throw new Error('itemProps must not be empty')
+      throw new Error('itemsProps must not be empty')
     }
     localOrder.value = Array.from({ length }, (_, i) => i)
   }
@@ -86,29 +87,17 @@ function getItemProps(dataIndex: number) {
 </script>
 
 <template>
-  <table v-show="localOrder.length > 0" ref="tableRef" class="valuespec_listof">
-    <template v-for="dataIndex in localOrder" :key="dataIndex">
-      <tr class="listof_element">
-        <td class="vlof_buttons">
-          <template v-if="props.draggable!!">
-            <CmkButton
-              variant="transparent"
-              aria-label="Drag to reorder"
-              :draggable="true"
-              @dragstart="dragStart"
-              @drag="dragging"
-              @dragend="dragEnd"
-            >
-              <CmkIcon name="drag" size="small" style="pointer-events: none" />
-            </CmkButton>
-            <CmkSpace direction="vertical" />
-          </template>
-          <CmkButton variant="transparent" @click.prevent="() => removeElement(dataIndex)">
-            <CmkIcon name="close" size="small" />
-          </CmkButton>
-        </td>
-        <td class="vlof_content">
-          <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
+  <table v-show="localOrder.length > 0" ref="tableRef" class="cmk_list__table">
+    <template v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
+      <tr>
+        <td>
+          <CmkListItem
+            :remove-element="() => removeElement(dataIndex)"
+            :style="listIndex === 0 ? 'first' : listIndex === localOrder.length - 1 ? 'last' : null"
+            :draggable="draggable ? { dragStart, dragEnd, dragging } : null"
+          >
+            <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
+          </CmkListItem>
         </td>
       </tr>
     </template>
@@ -121,41 +110,9 @@ function getItemProps(dataIndex: number) {
 </template>
 
 <style scoped>
-.valuespec_listof {
+.cmk_list__table {
+  width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing);
-
-  > tbody > .listof_element,
-  > .listof_element {
-    --button-padding-top: 4px;
-
-    > .vlof_buttons,
-    > .vlof_content {
-      vertical-align: top;
-      padding: var(--spacing) 0;
-    }
-
-    > .vlof_content {
-      padding-top: calc(var(--spacing) - var(--button-padding-top));
-      padding-left: 8px;
-    }
-
-    &:first-child > .vlof_buttons {
-      padding-top: var(--button-padding-top);
-    }
-
-    &:first-child > .vlof_content {
-      padding-top: 0;
-    }
-
-    &:last-child > .vlof_buttons,
-    &:last-child > .vlof_content {
-      padding-bottom: 0;
-    }
-  }
-}
-
-.vlof_buttons > * {
-  display: flex;
 }
 </style>

@@ -14,7 +14,7 @@ import {
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
-import CmkList from '@/components/CmkList.vue'
+import CmkList from '@/components/CmkList'
 
 const props = defineProps<{
   spec: List

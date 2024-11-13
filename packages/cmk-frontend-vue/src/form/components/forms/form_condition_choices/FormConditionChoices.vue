@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkList from '@/components/CmkList.vue'
+import CmkList from '@/components/CmkList'
 import ConditionChoice from './ConditionChoice.vue'
 import type * as typing from '@/form/components/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'

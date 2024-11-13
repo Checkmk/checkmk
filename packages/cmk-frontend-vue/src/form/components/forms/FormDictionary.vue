@@ -236,6 +236,7 @@ span.checkbox {
 
   > span.checkbox {
     display: inline-block;
+    flex-shrink: 0;
     width: 160px;
     margin: 0;
     padding-top: 3px;

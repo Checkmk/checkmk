@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkList from '@/components/CmkList.vue'
+import CmkList from '@/components/CmkList'
 import { ref } from 'vue'
 
 const data = ref(['element 1', 'element 2', 'element 3'])

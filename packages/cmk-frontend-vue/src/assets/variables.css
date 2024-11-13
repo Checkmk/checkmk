@@ -42,7 +42,6 @@
   /* Icons that are only defined for facelift, so without dark variant */
   --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
   --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
-  --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
   --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
   --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
   --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
@@ -55,9 +54,13 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
+
+  /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
   --icon-plus: url('~cmk-frontend/src/themes/facelift/images/icon_plus.svg');
   --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
+
+  --icon-help-activated: url('~cmk-frontend/src/themes/facelift/images/icon_help_activated.svg');
 }
 
 @layer theme {
@@ -84,6 +87,8 @@
     --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/src/themes/facelift/images/icon_folder_blue.svg');
     --icon-drag: url('~cmk-frontend/src/themes/facelift/images/icon_drag.svg');
+
+    --icon-info-circle: url('~cmk-frontend/src/themes/facelift/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/facelift/images/tree_closed.svg');
 
     /* Colors */
@@ -132,6 +137,8 @@
     --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/src/themes/modern-dark/images/icon_folder_blue.svg');
     --icon-drag: url('~cmk-frontend/src/themes/modern-dark/images/icon_drag.svg');
+
+    --icon-info-circle: url('~cmk-frontend/src/themes/modern-dark/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/modern-dark/images/tree_closed.svg');
 
     /* Colors */

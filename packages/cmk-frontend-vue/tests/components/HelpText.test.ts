@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import HelpText from '@/components/HelpText.vue'
 
 describe('HelpText', () => {
@@ -13,9 +13,7 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-tooltip-trigger')
-    expect(trigger).toBeTruthy()
-    expect(trigger).toHaveClass('help-text__trigger')
+    const trigger = await screen.findByTestId('help-icon')
     await fireEvent.click(trigger)
     const helpText = await screen.findAllByText('fooHelp')
     expect(helpText).toBeTruthy()
@@ -27,12 +25,11 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-tooltip-trigger')
+    const trigger = await screen.findByTestId('help-icon')
     await fireEvent.click(trigger)
     const helpTooltip = await screen.findByRole('tooltip')
-    expect(helpTooltip).toBeTruthy()
     await fireEvent.click(helpTooltip)
-    expect(helpTooltip).toBeTruthy()
+    await screen.findByRole('tooltip')
   })
 
   test('close tooltip when pressing escape key', async () => {
@@ -41,13 +38,13 @@ describe('HelpText', () => {
         help: 'fooHelp'
       }
     })
-    const trigger = await screen.findByTestId('help-tooltip-trigger')
+    const trigger = await screen.findByTestId('help-icon')
     await fireEvent.click(trigger)
-    let helpTooltip = await screen.findByRole('tooltip')
-    expect(helpTooltip).toBeTruthy()
+    await screen.findByRole('tooltip')
 
     await fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
-    helpTooltip = await screen.findByRole('tooltip')
-    expect(helpTooltip).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    })
   })
 })

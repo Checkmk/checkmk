@@ -38,15 +38,14 @@ const closeHelp = () => {
   <TooltipProvider v-if="!!props.help">
     <Tooltip :open="open" disable-closing-trigger>
       <TooltipTrigger
-        data-testid="help-tooltip-trigger"
         class="help-text__trigger"
+        as-child
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
         <CmkIcon
           ref="helpIcon"
-          name="info"
-          size="xsmall"
-          :style="open ? 'transform: scale(1.1);background-color:var(--tag-added-color-light)' : ''"
+          :name="open ? 'icon_help_activated' : 'icon_info_circle'"
+          size="medium"
           class="help-text__icon"
           data-testid="help-icon"
       /></TooltipTrigger>
@@ -54,6 +53,7 @@ const closeHelp = () => {
         side="top"
         align="start"
         class="help-text__content"
+        as-child
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
@@ -71,37 +71,36 @@ body.show_help .help-text__icon {
 }
 
 .help-text__trigger {
-  margin: 0;
-  margin-right: var(--spacing);
-  padding: 0;
+  margin-bottom: -2px;
   border: none;
   background: none;
+  outline: none;
+  cursor: pointer;
 
-  .help-text__icon {
-    background-color: var(--default-tooltip-icon-color);
-    padding: 2px;
-    border-radius: 50%;
+  &:focus,
+  &:active {
+    outline: none;
+    box-shadow: none;
   }
 }
-</style>
-<style>
+
 .help-text__content {
-  max-height: 10rem;
+  max-height: 160px;
   overflow-y: auto;
   text-wrap: wrap;
 
   background-color: var(--default-tooltip-background-color);
-  border-radius: 0.375rem;
+  border-radius: var(--border-radius);
 
-  min-width: 50rem;
-  max-width: 50rem;
+  min-width: 200px;
+  max-width: 600px;
+  width: 100%;
 
   color: var(--default-tooltip-text-color);
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.1),
     0 2px 4px rgba(0, 0, 0, 0.06);
-  margin-left: 0.2rem;
-  padding: 1rem;
+  padding: 16px;
 
   .text {
     line-height: 1.2;

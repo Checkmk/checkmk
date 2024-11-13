@@ -27,7 +27,7 @@ test('CollapsibleWidget renders values and label', async () => {
   })
 
   expect(screen.queryByText('I am a label')).toBeTruthy()
-  const trigger = await screen.findByTestId('help-tooltip-trigger')
+  const trigger = await screen.findByTestId('help-icon')
   expect(trigger).toBeTruthy()
   expect(trigger).toHaveClass('help-text__trigger')
   await fireEvent.click(trigger)

@@ -34,7 +34,7 @@ from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformForLegacyData
+from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -1132,8 +1132,8 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: self._tag_value() if s is True else None,
         )
 
-    def form_spec(self) -> TransformForLegacyData:
-        return TransformForLegacyData(
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
+        return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=BooleanChoice(
                 title=Title(  # pylint: disable=localization-of-non-literal-string
                     self._tag_group.title

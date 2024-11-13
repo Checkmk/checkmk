@@ -14,7 +14,7 @@ from cmk.utils.user import UserId
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformForLegacyData
+from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.host_autocompleters import create_config_host_autocompleter
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
@@ -427,7 +427,7 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             default_value=None,
         )
 
-    def form_spec(self) -> TransformForLegacyData:
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             help_text=Help(
                 "Configure the community to be used when contacting this host "
@@ -1071,7 +1071,7 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
             allow_none=True,
         )
 
-    def form_spec(self) -> TransformForLegacyData:
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             default_value=None,
             allow_none=True,

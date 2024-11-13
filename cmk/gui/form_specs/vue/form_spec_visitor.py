@@ -15,7 +15,11 @@ from cmk.ccc.exceptions import MKGeneralException
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
+from cmk.gui.form_specs.converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.form_specs.private import (
     AdaptiveMultipleChoice,
     CascadingSingleChoiceExtended,
@@ -147,7 +151,7 @@ def register_form_specs():
     register_visitor_class(ListExtended, ListVisitor)
 
     register_visitor_class(TimeSpan, TimeSpanVisitor)
-    register_visitor_class(TransformForLegacyData, TransformVisitor)
+    register_visitor_class(TransformDataForLegacyFormatOrRecomposeFunction, TransformVisitor)
     register_visitor_class(Tuple, TupleVisitor)
     register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
     register_visitor_class(SimplePassword, SimplePasswordVisitor)

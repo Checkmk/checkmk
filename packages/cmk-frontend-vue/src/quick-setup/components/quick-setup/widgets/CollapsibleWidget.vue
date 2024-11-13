@@ -30,7 +30,12 @@ const updateData = (id: string, value: object) => {
 </script>
 
 <template>
-  <CollapsibleTitle :title="props.title" :open="isOpen" @toggle-open="toggleOpen" />
+  <CollapsibleTitle
+    :title="props.title"
+    :help_text="props.help_text"
+    :open="isOpen"
+    @toggle-open="toggleOpen"
+  />
   <div v-show="isOpen">
     <CompositeWidget
       :items="props.items"

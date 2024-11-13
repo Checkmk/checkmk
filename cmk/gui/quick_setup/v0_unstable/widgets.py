@@ -52,3 +52,4 @@ class Collapsible(Widget):
     widget_type: str = field(default="collapsible", init=False)
     title: str
     items: list[Widget] = field(default_factory=list)
+    help_text: str | None = None

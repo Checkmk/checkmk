@@ -543,15 +543,15 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 ],
             ),
             Collapsible(
-                title="Assignee filters",
+                title=_("Assignee filters"),
+                help_text=_(
+                    "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
+                ),
                 items=[
                     FormSpecWrapper(
                         id=FormSpecId("assignee_filters"),
                         form_spec=DictionaryExtended(
                             layout=DictionaryLayout.two_columns,
-                            help_text=Help(
-                                "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
-                            ),
                             elements={
                                 "contact_groups": DictElement(
                                     parameter_form=AdaptiveMultipleChoice(

@@ -4,13 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import CollapsibleWidget from '@/quick-setup/components/quick-setup/widgets/CollapsibleWidget.vue'
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 
 test('CollapsibleWidget renders values and label', async () => {
   render(CollapsibleWidget, {
     props: {
       open: true,
       title: 'I am a label',
+      help_text: 'I am a super helpful help text',
       items: [
         { widget_type: 'text', text: 'Welcome' },
         { widget_type: 'text', text: 'to Jurassic Park' }
@@ -19,6 +20,12 @@ test('CollapsibleWidget renders values and label', async () => {
   })
 
   expect(screen.queryByText('I am a label')).toBeTruthy()
+  const trigger = await screen.findByTestId('help-tooltip-trigger')
+  expect(trigger).toBeTruthy()
+  expect(trigger).toHaveClass('help-text__trigger')
+  await fireEvent.click(trigger)
+  const helpText = await screen.findAllByText('I am a super helpful help text')
+  expect(helpText).toBeTruthy()
   expect(screen.queryByText('Welcome')).toBeTruthy()
   expect(screen.queryByText('to Jurassic Park')).toBeTruthy()
 })

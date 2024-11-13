@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import InlineChevron from './InlineChevron.vue'
+import HelpText from '@/components/HelpText.vue'
 
 interface CollapsibleTitleProps {
   /**@property {string} title - Text to display next to the chevron */
@@ -14,6 +15,9 @@ interface CollapsibleTitleProps {
    * otherwise it will be rendered closed
    */
   open: boolean
+
+  /**@property {string} help_text - Help text to display next to the title */
+  help_text: string
 }
 
 defineProps<CollapsibleTitleProps>()
@@ -23,7 +27,10 @@ defineEmits(['toggleOpen'])
 <template>
   <button class="qs-collapsible-title" @click="$emit('toggleOpen')">
     <InlineChevron :variant="open ? 'bottom' : 'right'" />
-    <span class="qs-collapsible-title__text">{{ title }}</span>
+    <span class="qs-collapsible-title__text">
+      {{ title }}
+    </span>
+    <HelpText :help="help_text" />
   </button>
 </template>
 
@@ -43,5 +50,9 @@ defineEmits(['toggleOpen'])
 .qs-collapsible-title__text {
   color: var(--default-text-color);
   font-weight: var(--font-weight-bold);
+}
+
+.qs-collapsible-title ::v-deep(.help-text__trigger) {
+  margin-left: var(--spacing);
 }
 </style>

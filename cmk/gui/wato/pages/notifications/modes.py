@@ -1004,6 +1004,7 @@ def _get_vue_data() -> Notifications:
                     ("is_log_notification_phase", "0"),
                     ("filled_in", "filter"),
                     ("logtime_from", "7"),
+                    ("_show_filter_form", "0"),
                 ],
                 filename="view.py",
             ),

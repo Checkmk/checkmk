@@ -27,7 +27,7 @@ defineProps<{
         </p>
         <a
           v-if="notification_stats['num_failed_notifications'] !== 0"
-          :href="notification_stats['i18n']['sent_notifications_link_title']"
+          :href="notification_stats['failed_notification_link']"
           >{{ notification_stats['i18n']['failed_notifications_link_title'] }}</a
         >
       </div>
@@ -40,7 +40,7 @@ defineProps<{
         </p>
         <a
           v-if="notification_stats['num_sent_notifications'] !== 0"
-          :href="notification_stats['i18n']['sent_notifications_link_title']"
+          :href="notification_stats['sent_notification_link']"
           >{{ notification_stats['i18n']['sent_notifications_link_title'] }}</a
         >
       </div>

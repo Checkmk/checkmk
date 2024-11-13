@@ -52,7 +52,7 @@ def test_central_site_version_is_stored(site: Site) -> None:
 def test_wrong_central_site_version(site: Site) -> None:
     """Make sure that a malformed version does not make it to disk"""
 
-    site.delete_file("var/check_mk/central_site_info.json")
+    site.delete_file("var/check_mk/last_known_site_version.json")
     web = CMKWebSession(site)
 
     r = web.post(

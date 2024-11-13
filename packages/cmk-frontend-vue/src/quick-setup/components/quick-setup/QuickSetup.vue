@@ -4,11 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
 
 import QuickSetupStage from './QuickSetupStage.vue'
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
 import type { QuickSetupProps } from './quick_setup_types'
+
+import { getWidget } from './widgets/utils'
+import { quickSetupGetWidgetKey } from './utils'
+provide(quickSetupGetWidgetKey, getWidget)
 
 const props = defineProps<QuickSetupProps>()
 

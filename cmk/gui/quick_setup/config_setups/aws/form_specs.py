@@ -192,6 +192,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        **formspec_aws_proxy_details(),
     }
 
 
@@ -288,7 +289,6 @@ def formspec_aws_overall_tags() -> Mapping[str, DictElement]:
 
 def quick_setup_advanced() -> Mapping[str, DictElement]:
     return {
-        **formspec_aws_proxy_details(),
         **_formspec_aws_api_access(),
         **_formspec_aws_piggyback_naming_convention(),
         **formspec_aws_overall_tags(),

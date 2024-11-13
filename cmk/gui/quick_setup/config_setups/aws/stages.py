@@ -146,7 +146,6 @@ def _configure() -> Sequence[Widget]:
                     form_spec=DictionaryExtended(
                         elements={
                             **aws.formspec_aws_overall_tags(),
-                            **aws.formspec_aws_proxy_details(),
                         },
                         layout=DictionaryLayout.two_columns,
                     ),

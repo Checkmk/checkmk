@@ -31,6 +31,7 @@ from cmk.utils.notify_types import (
     NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterSpecs,
+    NotificationPluginNameStr,
     NotifyAnalysisInfo,
 )
 from cmk.utils.statename import host_state_name, service_state_name
@@ -433,17 +434,29 @@ class ABCNotificationsMode(ABCEventsMode):
                 else:
                     html.empty_icon_button()
 
-                notify_method = rule["notify_plugin"]
-                # Catch rules with empty notify_plugin key
-                # Maybe this should be avoided somewhere else (e.g. rule editor)
-                if not notify_method:
-                    notify_method = (None, [])
-                notify_plugin = notify_method[0]
+                notify_plugin_name, notify_method = rule["notify_plugin"]
 
-                table.cell(_("Method"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
+                parameter_url = makeuri(
+                    request,
+                    [
+                        ("mode", "notification_parameters"),
+                        ("method", notify_plugin_name),
+                    ],
+                    filename="wato.py",
+                )
+                table.cell(
+                    _("Method"),
+                    HTMLWriter.render_a(
+                        self._method_name(notify_plugin_name),
+                        parameter_url,
+                        target="_blank",
+                        title=_("Go to parameters of this method"),
+                    ),
+                    css=["narrow nowrap"],
+                )
 
                 table.cell(_("Effect"), css=["narrow"])
-                if notify_method[1] is None:
+                if notify_method is None:
                     html.icon(
                         "cancel_notifications", _("Cancel notifications for this plug-in type")
                     )
@@ -493,6 +506,16 @@ class ABCNotificationsMode(ABCEventsMode):
                         html.write_text_permissive(vs_match_conditions.value_to_html(rule))
                 else:
                     html.i(_("(no conditions)"))
+
+    def _method_name(self, notify_plugin_name: NotificationPluginNameStr) -> str:
+        try:
+            return [
+                entry[1]
+                for entry in notification_script_choices()
+                if entry[0] == notify_plugin_name
+            ][0]
+        except IndexError:
+            return _("Plain email")
 
     def _add_change(self, log_what, log_text):
         _changes.add_change(log_what, log_text, need_restart=False)

@@ -104,7 +104,7 @@ def validate_unique_id(
 ) -> GeneralStageErrors:
     bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
-        return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
+        return [f"Expected the key '{UniqueBundleIDStr}' in the form data."]
 
     if bundle_id in ConfigBundleStore().load_for_reading():
         return [f'Configuration bundle "{bundle_id}" already exists.']

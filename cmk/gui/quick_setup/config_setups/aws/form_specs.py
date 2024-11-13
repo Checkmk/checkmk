@@ -174,7 +174,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Access key ID cannot be empty"),
+                        error_msg=Message("Access key ID is required but not specified."),
                     ),
                 ),
             ),
@@ -186,7 +186,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Secret access key cannot be empty"),
+                        error_msg=Message("Secret access key is required but not specified."),
                     ),
                 ),
             ),
@@ -210,7 +210,7 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Please choose one or more regions to continue"),
+                        error_msg=Message("Please choose one or more regions to continue."),
                     ),
                 ),
             ),
@@ -258,7 +258,7 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
                                 validators.NumberInRange(
                                     0,
                                     65535,
-                                    Message("Port must be between 0 and 65535"),
+                                    Message("Port must be between 0 and 65535."),
                                 )
                             ],
                         )

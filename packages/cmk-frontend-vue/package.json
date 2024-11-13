@@ -24,7 +24,6 @@
     "core-js": "^3.38.1",
     "lucide-vue-next": "^0.454.0",
     "radix-vue": "^1.9.8",
-    "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5"

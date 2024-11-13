@@ -278,7 +278,7 @@ class CheckboxSortOrder:
 
 # ----------------------------------------------------------------
 class CheckboxUseSiteIDPrefixAPIType(CheckboxStateType, total=False):
-    value: Literal["deactivated", "use_site_id_prefix"]
+    value: Literal["deactivated", "use_site_id"]
 
 
 @dataclass
@@ -294,7 +294,7 @@ class CheckboxUseSiteIDPrefix:
         if data["state"] == "disabled":
             return cls()
 
-        if data["value"] == "use_site_id_prefix":
+        if data["value"] == "use_site_id":
             return cls(value=True)
         return cls(value=False)
 
@@ -303,7 +303,7 @@ class CheckboxUseSiteIDPrefix:
         r: CheckboxUseSiteIDPrefixAPIType = {"state": state}
 
         if self.value is not None:
-            r["value"] = "use_site_id_prefix" if self.value else "deactivated"
+            r["value"] = "use_site_id" if self.value else "deactivated"
 
         return r
 

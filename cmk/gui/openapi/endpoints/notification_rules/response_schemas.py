@@ -848,7 +848,7 @@ class PushOverPluginResponse(PluginName):
 
 class CheckBoxUseSiteIDPrefix(CheckboxOutput):
     value = fields.String(
-        enum=["use_site_id_prefix", "deactivated"],
+        enum=["use_site_id", "deactivated"],
         description="",
         example="use_site_id",
     )

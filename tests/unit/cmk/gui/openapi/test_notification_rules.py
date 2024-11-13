@@ -1068,7 +1068,7 @@ plugin_test_data: list[PluginType] = [
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1121,7 +1121,7 @@ plugin_test_data: list[PluginType] = [
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1511,7 +1511,7 @@ service_now: API_ServiceNowData = {
     },
     "use_site_id_prefix": {
         "state": "enabled",
-        "value": "use_site_id_prefix",
+        "value": "use_site_id",
     },
     "optional_timeout": {
         "state": "enabled",

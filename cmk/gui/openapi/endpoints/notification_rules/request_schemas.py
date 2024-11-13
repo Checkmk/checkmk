@@ -1725,7 +1725,7 @@ class PushOverPluginCreate(PluginName):
 # ServiceNow --------------------------------------------------------
 class CheckBoxUseSiteIDPrefix(Checkbox):
     value = fields.String(
-        enum=["use_site_id_prefix", "deactivated"],
+        enum=["use_site_id", "deactivated"],
         required=True,
         description="",
         example="use_site_id",

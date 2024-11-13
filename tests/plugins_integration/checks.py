@@ -516,15 +516,15 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
         ).returncode
         == 0
     )
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(source_host_name)
 
     try:
-        logger.info("Activating changes & reloading core...")
-        site.activate_changes_and_wait_for_core_reload()
-
         _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
-        _wait_for_dcd_pend_changes(site)
+        wait_for_dcd_pend_changes(site)
 
         hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
         for hostname in hostnames:
@@ -561,10 +561,10 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
             assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
 
             logger.info("Activating changes & reloading core...")
-            site.activate_changes_and_wait_for_core_reload()
+            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
             _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
-            _wait_for_dcd_pend_changes(site)
+            wait_for_dcd_pend_changes(site)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -669,7 +669,7 @@ def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: boo
         assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
 
 
-def _wait_for_dcd_pend_changes(site: Site) -> None:
+def wait_for_dcd_pend_changes(site: Site) -> None:
     """Changes activation by DCD should take up to 30 seconds."""
     max_count = 30
     count = 0

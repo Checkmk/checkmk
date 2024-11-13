@@ -19,6 +19,7 @@ from tests.plugins_integration.checks import (
     read_cmk_dump,
     read_disk_dump,
     setup_source_host_piggyback,
+    wait_for_dcd_pend_changes,
 )
 
 logger = logging.getLogger(__name__)
@@ -115,3 +116,4 @@ def test_plugin_piggyback(
         ), f"Host {pb_host_to_rm} was not removed from the agent dump."
 
         _wait_for_pb_host_deletion(test_site_piggyback, source_host_name, pb_host_to_rm)
+        wait_for_dcd_pend_changes(test_site_piggyback)

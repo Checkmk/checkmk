@@ -206,8 +206,11 @@ class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
         )
         store.save_bytes_to_file(site_cert_file(paths.omd_root), api_request.cert)
         store.save_bytes_to_file(site_key_file(paths.omd_root), api_request.key)
+
+        # Remove local CA files to avoid confusion. They have no use anymore.
         cacert_file(paths.omd_root).unlink(missing_ok=True)
         ca_key_file(paths.omd_root).unlink(missing_ok=True)
+
         clear_brokers_certs_cache()
 
         return True

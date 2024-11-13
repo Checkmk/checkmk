@@ -37,11 +37,16 @@ export default defineConfig(({ command }) => {
       rollupOptions: {
         onwarn: function (message: string | RollupLog) {
           if (typeof message === 'object') {
-            console.warn(message.message)
             if (message.code === 'CIRCULAR_DEPENDENCY') {
-              // TODO: resolve them, and enable this CMK-19654
-              return
+              const external_circular_dependency = message.ids!.filter((id) =>
+                id.includes('/node_modules/')
+              )
+              if (external_circular_dependency.length === message.ids!.length) {
+                // its a circular dependency completely in node_modules folder, so we ignore it
+                return
+              }
             }
+            console.warn(message.message)
           } else {
             console.warn(message)
           }

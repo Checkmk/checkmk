@@ -71,6 +71,7 @@ from cmk.utils.notify_types import (
     TokenAuth,
     TokenAuthCredentials,
     URLPrefix,
+    UseSiteIDType,
     WebHookUrl,
 )
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -278,36 +279,32 @@ class CheckboxSortOrder:
 
 # ----------------------------------------------------------------
 class CheckboxUseSiteIDPrefixAPIType(CheckboxStateType, total=False):
-    value: Literal["deactivated", "use_site_id"]
+    value: UseSiteIDType
 
 
 @dataclass
 class CheckboxUseSiteIDPrefix:
-    value: bool | None = None
+    value: UseSiteIDType | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: bool | None) -> CheckboxUseSiteIDPrefix:
+    def from_mk_file_format(cls, data: UseSiteIDType | None) -> CheckboxUseSiteIDPrefix:
         return cls(value=data)
 
     @classmethod
     def from_api_request(cls, data: CheckboxUseSiteIDPrefixAPIType) -> CheckboxUseSiteIDPrefix:
         if data["state"] == "disabled":
             return cls()
-
-        if data["value"] == "use_site_id":
-            return cls(value=True)
-        return cls(value=False)
+        return cls(value=data["value"])
 
     def api_response(self) -> CheckboxUseSiteIDPrefixAPIType:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: CheckboxUseSiteIDPrefixAPIType = {"state": state}
 
         if self.value is not None:
-            r["value"] = "use_site_id" if self.value else "deactivated"
-
+            r["value"] = self.value
         return r
 
-    def to_mk_file_format(self) -> bool | None:
+    def to_mk_file_format(self) -> UseSiteIDType | None:
         return self.value
 
 

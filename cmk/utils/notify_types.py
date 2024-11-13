@@ -631,10 +631,13 @@ class MgmtTypeCase(MgmtTypeBase):
     recovery_state: NotRequired[CaseRecoveryState]
 
 
+UseSiteIDType = Literal["use_site_id", "deactivated"]
+
+
 class ServiceNowPluginModel(TypedDict):
     url: str
     auth: BasicAuth | TokenAuth
-    use_site_id: NotRequired[bool]
+    use_site_id: NotRequired[UseSiteIDType]
     timeout: NotRequired[str]
     proxy_url: NotRequired[ProxyUrl]
     mgmt_type: tuple[Literal["incident"], MgmtTypeIncident] | tuple[Literal["case"], MgmtTypeCase]

@@ -486,6 +486,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             ),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                             mgmt_type=("case", MgmtTypeCase(priority="low")),
+                            use_site_id="deactivated",
                         ),
                     ),
                 )
@@ -513,6 +514,7 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             ),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                             "mgmt_type": ("case", {"priority": "low"}),
+                            "use_site_id": "deactivated",
                         },
                     }
                 }

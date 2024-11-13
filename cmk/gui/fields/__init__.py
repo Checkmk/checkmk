@@ -12,7 +12,7 @@
 # warnings.simplefilter("error", RemovedInMarshmallow4Warning)
 
 
-from marshmallow.fields import (  # type: ignore[attr-defined]
+from marshmallow.fields import (
     Field,
     missing_,
 )

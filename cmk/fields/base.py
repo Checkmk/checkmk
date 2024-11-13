@@ -337,7 +337,7 @@ class Nested(OpenAPIAttributes, fields.Nested, UniqueFields):
 
     def _deserialize(self, value, attr, data, partial=None, **kwargs):
         self._validate_missing(value)
-        if value is fields.missing_:  # type: ignore[attr-defined]
+        if value is fields.missing_:
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)

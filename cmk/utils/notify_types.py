@@ -557,7 +557,7 @@ OpsgenieElement = Literal[
 
 
 class OpsGenieIssuesPluginModel(TypedDict, total=False):
-    password: Required[tuple[Literal["password", "store"], str]]
+    password: CheckmkPassword
     url: str
     proxy_url: ProxyUrl
     owner: str

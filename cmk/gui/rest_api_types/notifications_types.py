@@ -71,7 +71,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     API_VictorOpsData,
     APICheckmkPassword_FromKey,
     APINotifyPlugin,
-    APIOpenGenieKeyOption,
     APIPagerDutyKeyOption,
     APIPasswordOption,
     APIPluginDict,
@@ -807,7 +806,7 @@ class JiraIssuePlugin:
 class OpsGenieIssuePlugin:
     plugin_name: ClassVar[OpsGeniePluginName] = "opsgenie_issues"
     option: PluginOptions = PluginOptions.CANCEL
-    api_key: APIOpenGenieKeyOption = field(default_factory=APIOpenGenieKeyOption)
+    api_key: APICheckmkPassword_FromKey = field(default_factory=APICheckmkPassword_FromKey)
     domain: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     owner: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
@@ -836,7 +835,7 @@ class OpsGenieIssuePlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            api_key=APIOpenGenieKeyOption.from_mk_file_format(
+            api_key=APICheckmkPassword_FromKey.from_mk_file_format(
                 pluginparams["password"],
             ),
             domain=CheckboxWithStrValue.from_mk_file_format(
@@ -898,7 +897,7 @@ class OpsGenieIssuePlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            api_key=APIOpenGenieKeyOption.from_api_request(params["api_key"]),
+            api_key=APICheckmkPassword_FromKey.from_api_request(params["api_key"]),
             domain=CheckboxWithStrValue.from_api_request(params["domain"]),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
             owner=CheckboxWithStrValue.from_api_request(params["owner"]),

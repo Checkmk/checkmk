@@ -226,7 +226,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     notify_plugin=(
                         "opsgenie_issues",
                         OpsGenieIssuesPluginModel(
-                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-b>", "zhfziuofoziudfozuidouizd"),
+                            ),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -242,8 +246,9 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                         },
                         "parameter_properties": {
                             "password": (
-                                "password",
-                                "zhfziuofoziudfozuidouizd",
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-b>", "zhfziuofoziudfozuidouizd"),
                             ),
                             "proxy_url": (
                                 "cmk_postprocessed",
@@ -649,7 +654,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     notify_plugin=(
                         "opsgenie_issues",
                         OpsGenieIssuesPluginModel(
-                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-b>", "zhfziuofoziudfozuidouizd"),
+                            ),
                             host_desc="Host: $HOSTNAME$\nEvent:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
                             actions=["MY_ACTION"],
                             tags=["MY_TAG"],
@@ -713,7 +722,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "docu_url": "",
                         },
                         "parameter_properties": {
-                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-b>", "zhfziuofoziudfozuidouizd"),
+                            ),
                             "host_desc": "Host: $HOSTNAME$\nEvent:    $EVENT_TXT$\nOutput:   $HOSTOUTPUT$\nPerfdata: $HOSTPERFDATA$\n$LONGHOSTOUTPUT$\n",
                             "actions": ["MY_ACTION"],
                             "tags": ["MY_TAG"],

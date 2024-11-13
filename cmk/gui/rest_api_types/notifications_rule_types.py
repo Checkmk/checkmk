@@ -2370,47 +2370,6 @@ class APIPagerDutyKeyOption:
         return "store", self.store_id
 
 
-@dataclass
-class APIOpenGenieKeyOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    key: str = ""
-
-    @classmethod
-    def from_api_request(cls, incoming: APIKey) -> APIOpenGenieKeyOption:
-        if "key" in incoming:
-            return cls(option="explicit", key=incoming["key"])
-        return cls(option="store", store_id=incoming["store_id"])
-
-    def api_response(self) -> APIKey:
-        if self.option is None:
-            return {}
-
-        r: APIKey = {"option": self.option}
-        if self.option == "explicit":
-            r["key"] = self.key
-            return r
-        r["store_id"] = self.store_id
-        return r
-
-    @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APIOpenGenieKeyOption:
-        if data is None:
-            return cls()
-
-        if "password" in data:
-            return cls(option="explicit", key=data[1])
-        return cls(option="store", key=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "password", self.key
-        return "store", self.store_id
-
-
 # ----------------------------------------------------------------
 class API_WebhookURL(API_ExplicitOrStore, total=False):
     url: str

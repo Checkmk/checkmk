@@ -6,17 +6,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup generic="ItemsProps extends Record<string, unknown[]>" lang="ts">
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import useDragging from '@/lib/useDragging'
 import { immediateWatch } from '@/lib/watch'
 import { type UnpackedArray } from '@/lib/typeUtils'
 import CmkListItem from './CmkListItem.vue'
+import CmkListAddButton from './CmkListAddButton.vue'
 
 type ItemProps = { [K in keyof ItemsProps]: UnpackedArray<ItemsProps[K]> }
 
-const props = defineProps<{
+const { orientation = 'vertical', ...props } = defineProps<{
   itemsProps: ItemsProps
   onAdd: (index: number) => void
   onDelete: (index: number) => void
@@ -24,6 +23,7 @@ const props = defineProps<{
     addElementLabel: string
   }
   draggable?: { onReorder: (order: number[]) => void } | null
+  orientation?: 'vertical' | 'horizontal'
 }>()
 
 const localOrder = ref<number[]>([])
@@ -84,35 +84,84 @@ function getItemProps(dataIndex: number) {
     return singleItemProps
   }, {} as ItemProps)
 }
+
+function getStyle(index: number, length: number) {
+  return index === 0 ? 'first' : index === length - 1 ? 'last' : null
+}
 </script>
 
 <template>
-  <table v-show="localOrder.length > 0" ref="tableRef" class="cmk_list__table">
-    <template v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
-      <tr>
-        <td>
-          <CmkListItem
-            :remove-element="() => removeElement(dataIndex)"
-            :style="listIndex === 0 ? 'first' : listIndex === localOrder.length - 1 ? 'last' : null"
-            :draggable="draggable ? { dragStart, dragEnd, dragging } : null"
-          >
-            <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
-          </CmkListItem>
-        </td>
-      </tr>
+  <div :class="{ cmk_list__container: true, horizontal: orientation === 'horizontal' }">
+    <template v-if="orientation === 'horizontal'">
+      <CmkListAddButton
+        class="cmk_list__add_button"
+        :add-element-label="props.i18n.addElementLabel"
+        :add-element="addElement"
+      />
+      <CmkSpace />
     </template>
-  </table>
-  <CmkButton variant="minimal" size="small" @click.prevent="addElement">
-    <CmkIcon name="plus" />
-    <CmkSpace size="small" />
-    {{ props.i18n.addElementLabel }}
-  </CmkButton>
+    <table v-show="localOrder.length > 0" ref="tableRef" class="cmk_list__table">
+      <template v-if="orientation === 'vertical'">
+        <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
+          <td>
+            <CmkListItem
+              :remove-element="() => removeElement(dataIndex)"
+              :style="getStyle(listIndex, localOrder.length)"
+              :draggable="draggable ? { dragStart, dragEnd, dragging } : null"
+            >
+              <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
+            </CmkListItem>
+          </td>
+        </tr>
+      </template>
+      <template v-else>
+        <tr>
+          <td v-for="dataIndex in localOrder" :key="dataIndex">
+            <CmkListItem :remove-element="() => removeElement(dataIndex)">
+              <slot name="item-props" v-bind="{ index: dataIndex, ...getItemProps(dataIndex) }" />
+              <CmkSpace direction="horizontal" />
+              <CmkSpace direction="horizontal" />
+            </CmkListItem>
+          </td>
+        </tr>
+      </template>
+    </table>
+    <CmkListAddButton
+      v-if="orientation === 'vertical'"
+      class="cmk_list__add_button"
+      :add-element-label="props.i18n.addElementLabel"
+      :add-element="addElement"
+    />
+  </div>
 </template>
 
 <style scoped>
+.cmk_list__container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 .cmk_list__table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--spacing);
+
+  td {
+    height: 100%;
+  }
+}
+.cmk_list__add_button {
+  flex-shrink: 0;
+}
+.cmk_list__container.horizontal {
+  flex-direction: row;
+
+  .cmk_list__table {
+    white-space: normal;
+    margin-bottom: 0;
+  }
+  .cmk_list__table td {
+    display: inline-block;
+  }
 }
 </style>

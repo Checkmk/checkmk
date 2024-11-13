@@ -32,7 +32,6 @@ from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationECAlertStageWidget,
-    ConditionalNotificationHostEventStageWidget,
     ConditionalNotificationServiceEventStageWidget,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
@@ -413,62 +412,58 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                     )
                 ],
             ),
-            ConditionalNotificationHostEventStageWidget(
+            Collapsible(
+                title=_("Host filters"),
                 items=[
-                    Collapsible(
-                        title=_("Host filters"),
-                        items=[
-                            FormSpecWrapper(
-                                id=FormSpecId("host_filters"),
-                                form_spec=DictionaryExtended(
-                                    layout=DictionaryLayout.two_columns,
-                                    elements={
-                                        "host_tags": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
-                                                title=Title("Host tags"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
-                                        ),
-                                        "host_labels": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
-                                                title=Title("Host labels"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
-                                        ),
-                                        "match_host_groups": DictElement(
-                                            parameter_form=AdaptiveMultipleChoice(
-                                                title=Title("Match host groups"),
-                                                elements=[
-                                                    MultipleChoiceElement(
-                                                        name=group_name,
-                                                        title=Title("%s") % group_name,
-                                                    )
-                                                    for group_name in load_host_group_information().keys()
-                                                ],
-                                                show_toggle_all=True,
-                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
-                                            ),
-                                        ),
-                                        "match_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
-                                                title=Title("Match hosts"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
-                                        ),
-                                        "exclude_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
-                                                title=Title("Exclude hosts"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
-                                        ),
-                                    },
+                    FormSpecWrapper(
+                        id=FormSpecId("host_filters"),
+                        form_spec=DictionaryExtended(
+                            layout=DictionaryLayout.two_columns,
+                            elements={
+                                "host_tags": DictElement(  # TODO: Waiting on team engelbart
+                                    parameter_form=FixedValue(
+                                        title=Title("Host tags"),
+                                        help_text=Help("Waiting on team Engelbart"),
+                                        value=None,
+                                    ),
                                 ),
-                            )
-                        ],
+                                "host_labels": DictElement(  # TODO: Waiting on team engelbart
+                                    parameter_form=FixedValue(
+                                        title=Title("Host labels"),
+                                        help_text=Help("Waiting on team Engelbart"),
+                                        value=None,
+                                    ),
+                                ),
+                                "match_host_groups": DictElement(
+                                    parameter_form=AdaptiveMultipleChoice(
+                                        title=Title("Match host groups"),
+                                        elements=[
+                                            MultipleChoiceElement(
+                                                name=group_name,
+                                                title=Title("%s") % group_name,
+                                            )
+                                            for group_name in load_host_group_information().keys()
+                                        ],
+                                        show_toggle_all=True,
+                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                    ),
+                                ),
+                                "match_hosts": DictElement(  # TODO: Waiting on team engelbart
+                                    parameter_form=FixedValue(
+                                        title=Title("Match hosts"),
+                                        help_text=Help("Waiting on team Engelbart"),
+                                        value=None,
+                                    ),
+                                ),
+                                "exclude_hosts": DictElement(  # TODO: Waiting on team engelbart
+                                    parameter_form=FixedValue(
+                                        title=Title("Exclude hosts"),
+                                        help_text=Help("Waiting on team Engelbart"),
+                                        value=None,
+                                    ),
+                                ),
+                            },
+                        ),
                     )
                 ],
             ),

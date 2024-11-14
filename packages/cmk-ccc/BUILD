@@ -42,6 +42,7 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = ["cmk-ccc"],
+    tags = ["no-mypy"],
 )
 
 py_pytest_main(
@@ -59,6 +60,7 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-ccc",
+        requirement("pytest"),
     ],
 )
 

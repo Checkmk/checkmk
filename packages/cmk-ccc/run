@@ -136,10 +136,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    # TODO
-    exit 0
-    # setup_venv
-    # mypy
+    "${BAZEL_CMD}" build --config=mypy //packages/cmk-ccc:all
 }
 
 run_ruff() {

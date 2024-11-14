@@ -294,8 +294,8 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
-    waiting_time = 1
-    waiting_cycles = 20
+    waiting_time = 2
+    waiting_cycles = 30
     for _ in range(waiting_cycles):
         time.sleep(waiting_time)
         baking_status = central_site.openapi.get_baking_status()

@@ -11,15 +11,20 @@ use openssl::rsa::Rsa;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
+use rustls::client::danger::{
+    DangerousClientConfigBuilder, HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier,
+};
+use rustls::client::WebPkiServerVerifier;
+use rustls::crypto::{verify_tls12_signature, verify_tls13_signature, CryptoProvider};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName, UnixTime};
 use rustls::{
-    client::ServerCertVerified, client::ServerCertVerifier, client::ServerName,
-    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, CertificateError,
-    Error as RusttlsError, PrivateKey as RustlsPrivateKey, RootCertStore,
+    CertificateError, ClientConfig, DigitallySignedStruct, Error as RusttlsError, RootCertStore,
+    SignatureScheme,
 };
 use rustls_pemfile::Item;
 use std::net::TcpStream;
 use std::sync::Arc;
-use x509_parser::traits::FromDer;
+use x509_parser::prelude::FromDer;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
@@ -47,7 +52,7 @@ pub fn root_cert_store<'a>(
     let mut cert_store = RootCertStore::empty();
 
     for root_cert in root_certs {
-        cert_store.add(&rustls_certificate(root_cert)?)?;
+        cert_store.add(rustls_certificate(root_cert)?)?;
     }
 
     Ok(cert_store)
@@ -67,10 +72,10 @@ impl CNCheckerUUID {
     }
 }
 
-impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
+impl std::convert::TryFrom<&CertificateDer<'_>> for CNCheckerUUID {
     type Error = RusttlsError;
 
-    fn try_from(certificate: &Certificate) -> Result<Self, RusttlsError> {
+    fn try_from(certificate: &CertificateDer) -> Result<Self, RusttlsError> {
         let (_rem, cert) =
             x509_parser::certificate::X509Certificate::from_der(certificate.as_ref())
                 .map_err(|_e| RusttlsError::InvalidCertificate(CertificateError::BadEncoding))?;
@@ -91,14 +96,24 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
     }
 }
 
+#[derive(Debug)]
 struct CnIsNoUuidAcceptAnyHostname {
-    verifier: Box<dyn ServerCertVerifier>,
+    crypto_provider: Arc<CryptoProvider>,
+    verifier: Arc<dyn ServerCertVerifier>,
 }
 
 impl CnIsNoUuidAcceptAnyHostname {
-    pub fn from_roots(roots: RootCertStore) -> Arc<dyn ServerCertVerifier> {
-        Arc::new(Self {
-            verifier: Box::new(WebPkiVerifier::new(roots, None)),
+    pub fn from_roots_and_crypto_provider(
+        roots: RootCertStore,
+        crypto_provider: &Arc<CryptoProvider>,
+    ) -> AnyhowResult<Self> {
+        Ok(Self {
+            crypto_provider: crypto_provider.clone(),
+            verifier: WebPkiServerVerifier::builder_with_provider(
+                Arc::new(roots),
+                crypto_provider.clone(),
+            )
+            .build()?,
         })
     }
 }
@@ -106,12 +121,11 @@ impl CnIsNoUuidAcceptAnyHostname {
 impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
     fn verify_server_cert(
         &self,
-        end_entity: &Certificate,
-        intermediates: &[Certificate],
+        end_entity: &CertificateDer,
+        intermediates: &[CertificateDer],
         _server_name: &ServerName,
-        scts: &mut dyn Iterator<Item = &[u8]>,
         ocsp_response: &[u8],
-        now: std::time::SystemTime,
+        now: UnixTime,
     ) -> Result<ServerCertVerified, RusttlsError> {
         let cn_checker = CNCheckerUUID::try_from(end_entity)?;
         if cn_checker.cn_is_uuid() {
@@ -129,16 +143,48 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
                     "CN in server certificate cannot be used as server name: {e}"
                 ))
             })?,
-            scts,
             ocsp_response,
             now,
         )
     }
+
+    fn verify_tls12_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, RusttlsError> {
+        verify_tls12_signature(
+            message,
+            cert,
+            dss,
+            &self.crypto_provider.signature_verification_algorithms,
+        )
+    }
+    fn verify_tls13_signature(
+        &self,
+        message: &[u8],
+        cert: &CertificateDer<'_>,
+        dss: &DigitallySignedStruct,
+    ) -> Result<HandshakeSignatureValid, RusttlsError> {
+        verify_tls13_signature(
+            message,
+            cert,
+            dss,
+            &self.crypto_provider.signature_verification_algorithms,
+        )
+    }
+
+    fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
+        self.crypto_provider
+            .signature_verification_algorithms
+            .supported_schemes()
+    }
 }
 
 pub struct TLSIdentity {
-    pub cert_chain: Vec<rustls::Certificate>,
-    pub key_der: rustls::PrivateKey,
+    pub cert_chain: Vec<CertificateDer<'static>>,
+    pub key_der: PrivateKeyDer<'static>,
 }
 
 pub struct HandshakeCredentials<'a> {
@@ -146,12 +192,19 @@ pub struct HandshakeCredentials<'a> {
     pub client_identity: Option<TLSIdentity>,
 }
 
-fn tls_config(handshake_credentials: HandshakeCredentials) -> AnyhowResult<rustls::ClientConfig> {
-    let builder = rustls::ClientConfig::builder()
-        .with_safe_defaults()
-        .with_custom_certificate_verifier(CnIsNoUuidAcceptAnyHostname::from_roots(
+fn tls_config(
+    handshake_credentials: HandshakeCredentials,
+    crypto_provider: &Arc<CryptoProvider>,
+) -> AnyhowResult<ClientConfig> {
+    let builder = DangerousClientConfigBuilder {
+        cfg: ClientConfig::builder(),
+    }
+    .with_custom_certificate_verifier(Arc::new(
+        CnIsNoUuidAcceptAnyHostname::from_roots_and_crypto_provider(
             root_cert_store([handshake_credentials.server_root_cert].into_iter())?,
-        ));
+            crypto_provider,
+        )?,
+    ));
     Ok(match handshake_credentials.client_identity {
         Some(identity) => builder.with_client_auth_cert(identity.cert_chain, identity.key_der)?,
         None => builder.with_no_client_auth(),
@@ -165,7 +218,10 @@ pub fn client(
     let mut client_builder = ClientBuilder::new();
 
     client_builder = if let Some(handshake_credentials) = handshake_credentials {
-        client_builder.use_preconfigured_tls(tls_config(handshake_credentials)?)
+        client_builder.use_preconfigured_tls(tls_config(
+            handshake_credentials,
+            CryptoProvider::get_default().ok_or(anyhow!("No default crypto provider set"))?,
+        )?)
     } else {
         client_builder.danger_accept_invalid_certs(true)
     };
@@ -214,22 +270,29 @@ pub fn common_names<'a>(x509_name: &'a x509_parser::x509::X509Name) -> AnyhowRes
         .collect::<AnyhowResult<Vec<_>>>()
 }
 
-pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<RustlsPrivateKey> {
-    if let Item::PKCS8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
+pub fn render_asn1_time(asn1_tine: &x509_parser::time::ASN1Time) -> String {
+    match asn1_tine.to_rfc2822() {
+        Ok(s) => s,
+        Err(s) => s,
+    }
+}
+
+pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<PrivateKeyDer<'static>> {
+    if let Item::Pkcs8Key(it) = rustls_pemfile::read_one(&mut key_pem.to_owned().as_bytes())?
         .context("Could not load private key")?
     {
-        Ok(RustlsPrivateKey(it))
+        Ok(PrivateKeyDer::Pkcs8(it))
     } else {
         bail!("Could not process private key")
     }
 }
 
-pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
+pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<CertificateDer<'static>> {
     if let Item::X509Certificate(it) =
         rustls_pemfile::read_one(&mut cert_pem.to_owned().as_bytes())?
             .context("Could not load certificate")?
     {
-        Ok(RustlsCertificate(it))
+        Ok(it)
     } else {
         bail!("Could not process certificate")
     }
@@ -239,6 +302,7 @@ pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
 mod test_cn_no_uuid {
     use super::super::constants;
     use super::*;
+    use rustls::crypto::ring::default_provider;
 
     #[test]
     fn test_csr_version() {
@@ -274,22 +338,23 @@ mod test_cn_no_uuid {
         assert!(cn_checker.cn_is_uuid());
     }
 
-    fn verifier() -> Arc<dyn ServerCertVerifier> {
-        CnIsNoUuidAcceptAnyHostname::from_roots(
-            root_cert_store([constants::TEST_ROOT_CERT].into_iter()).unwrap(),
+    fn verifier() -> AnyhowResult<CnIsNoUuidAcceptAnyHostname> {
+        CnIsNoUuidAcceptAnyHostname::from_roots_and_crypto_provider(
+            root_cert_store([constants::TEST_ROOT_CERT].into_iter())?,
+            &Arc::new(default_provider()),
         )
     }
 
     #[test]
     fn test_verify_server_cert_ok() {
         assert!(verifier()
+            .unwrap()
             .verify_server_cert(
                 &rustls_certificate(constants::TEST_CERT_OK).unwrap(),
                 &[],
                 &ServerName::try_from("lsdafhgldfhg").unwrap(),
-                &mut [].into_iter(),
                 &[],
-                std::time::SystemTime::now(),
+                UnixTime::now(),
             )
             .is_ok());
     }
@@ -298,13 +363,13 @@ mod test_cn_no_uuid {
     fn test_verify_server_cert_cn_is_uuid() {
         assert_eq!(
             match verifier()
+                .unwrap()
                 .verify_server_cert(
                     &rustls_certificate(constants::TEST_CERT_CN_UUID).unwrap(),
                     &[],
                     &ServerName::try_from("lsdafhgldfhg").unwrap(),
-                    &mut [].into_iter(),
                     &[],
-                    std::time::SystemTime::now(),
+                    UnixTime::now(),
                 )
                 .unwrap_err()
             {
@@ -318,13 +383,13 @@ mod test_cn_no_uuid {
     #[test]
     fn test_verify_server_cert_invalid_signature() {
         assert!(verifier()
+            .unwrap()
             .verify_server_cert(
                 &rustls_certificate(constants::TEST_CERT_INVALID_SIGNATURE).unwrap(),
                 &[],
                 &ServerName::try_from("lsdafhgldfhg").unwrap(),
-                &mut [].into_iter(),
                 &[],
-                std::time::SystemTime::now(),
+                UnixTime::now(),
             )
             .is_err());
     }

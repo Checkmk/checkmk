@@ -34,8 +34,8 @@ impl InteractiveTrust {
         );
         eprintln!(
             "Validity:\n\tFrom {}\n\tTo   {}",
-            validity.not_before.to_rfc2822(),
-            validity.not_after.to_rfc2822(),
+            certs::render_asn1_time(&validity.not_before),
+            certs::render_asn1_time(&validity.not_after),
         );
         Ok(())
     }

@@ -30,9 +30,7 @@ anyhow = "1.0.75"
 # tokio-macros = "2.1.0"
 flexi_logger = { version = "0.27", default-features = false } # extension for log to allow log redirection
 log = { version = "0.4" }
-clap = { version = "4.1.*", features = [
-  "derive",
-] } # replace with 4.4.2 if rutsc >= 1.70
+clap = { version = "4.5.22", features = ["derive"] }
 yaml-rust2 = "0.8.0"
 lazy_static = { version = "1.4" }
 futures = { version = "0.3.25" }

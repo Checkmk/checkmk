@@ -21,7 +21,7 @@ const selectedConditionGroup = ref<string | null>(null)
 
 function addElement() {
   if (selectedConditionGroup.value === null) {
-    return
+    return false
   }
 
   const group = props.spec.condition_groups[selectedConditionGroup.value]
@@ -33,6 +33,7 @@ function addElement() {
     value: { eq: group.conditions[0]!.name }
   })
   selectedConditionGroup.value = null
+  return true
 }
 
 function deleteElement(index: number) {

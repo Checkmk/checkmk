@@ -21,8 +21,8 @@ const {
   ...props
 } = defineProps<{
   itemsProps: ItemsProps
-  onAdd: (index: number) => void
-  onDelete: (index: number) => void
+  onAdd: (index: number) => boolean | void
+  onDelete: (index: number) => boolean | void
   i18n: {
     addElementLabel: string
   }
@@ -70,7 +70,9 @@ function dragEnd(event: DragEvent) {
 }
 
 function removeElement(dataIndex: number) {
-  props.onDelete(dataIndex)
+  if (props.onDelete(dataIndex) === false) {
+    return
+  }
   const localIndex = localOrder.value.indexOf(dataIndex)
   localOrder.value = localOrder.value.map((_dataIndex, _localIndex) =>
     _localIndex > localIndex ? _dataIndex - 1 : _dataIndex
@@ -79,7 +81,9 @@ function removeElement(dataIndex: number) {
 }
 
 function addElement() {
-  props.onAdd(localOrder.value.length)
+  if (props.onAdd(localOrder.value.length) === false) {
+    return
+  }
   localOrder.value.push(localOrder.value.length)
 }
 

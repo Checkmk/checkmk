@@ -647,7 +647,7 @@ class ServiceNowPluginModel(TypedDict):
 
 
 class SignL4PluginModel(TypedDict):
-    password: tuple[Literal["password", "store"], str]
+    password: CheckmkPassword
     url_prefix: URLPrefix
     proxy_url: NotRequired[ProxyUrl]
     ignore_ssl: NotRequired[Literal[True]]

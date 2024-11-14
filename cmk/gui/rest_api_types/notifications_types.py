@@ -70,11 +70,11 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     API_SpectrumData,
     API_VictorOpsData,
     APICheckmkPassword_FromKey,
+    APICheckmkPassword_FromSecret,
     APINotifyPlugin,
     APIPagerDutyKeyOption,
     APIPasswordOption,
     APIPluginDict,
-    APISignL4SecretOption,
     BasicOrTokenAuth,
     CheckboxEmailBodyInfo,
     CheckboxHttpProxy,
@@ -1222,7 +1222,9 @@ class ServiceNowPlugin:
 class SignL4Plugin:
     plugin_name: ClassVar[Signl4PluginName] = "signl4"
     option: PluginOptions = PluginOptions.CANCEL
-    team_secret: APISignL4SecretOption = field(default_factory=APISignL4SecretOption)
+    team_secret: APICheckmkPassword_FromSecret = field(
+        default_factory=APICheckmkPassword_FromSecret
+    )
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
@@ -1234,7 +1236,7 @@ class SignL4Plugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            team_secret=APISignL4SecretOption.from_mk_file_format(pluginparams["password"]),
+            team_secret=APICheckmkPassword_FromSecret.from_mk_file_format(pluginparams["password"]),
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix")
             ),
@@ -1255,7 +1257,7 @@ class SignL4Plugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            team_secret=APISignL4SecretOption.from_api_request(params["team_secret"]),
+            team_secret=APICheckmkPassword_FromSecret.from_api_request(params["team_secret"]),
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),

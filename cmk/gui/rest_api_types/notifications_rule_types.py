@@ -2361,44 +2361,52 @@ class APISecret(API_ExplicitOrStore, total=False):
 
 
 @dataclass
-class APISignL4SecretOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    secret: str = ""
+class APICheckmkPassword_FromSecret:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: APISecret) -> APISignL4SecretOption:
-        if "secret" in incoming:
-            return cls(option="explicit", secret=incoming["secret"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: APISecret) -> APICheckmkPassword_FromSecret:
+        match incoming:
+            case {"option": "explicit", "secret": str() as secret}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), secret),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid APISecret")
 
     def api_response(self) -> APISecret:
-        if self.option is None:
-            return {}
-
-        r: APISecret = {"option": self.option}
-        if self.option == "explicit":
-            r["secret"] = self.secret
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case ("cmk_postprocessed", "explicit_password", (_, str() as password)):
+                return APISecret(option="explicit", secret=password)
+            case ("cmk_postprocessed", "stored_password", (str() as password_id, _)):
+                return APISecret(option="store", store_id=password_id)
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APISignL4SecretOption:
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromSecret:
         if data is None:
             return cls()
+        return cls(checkmk_password=data)
 
-        if "password" in data:
-            return cls(option="explicit", secret=data[1])
-        return cls(option="store", secret=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        if self.checkmk_password is None:
             return None
-
-        if self.option == "explicit":
-            return "password", self.secret
-        return "store", self.store_id
+        return self.checkmk_password
 
 
 # ----------------------------------------------------------------

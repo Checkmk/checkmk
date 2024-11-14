@@ -540,7 +540,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                     notify_plugin=(
                         "signl4",
                         SignL4PluginModel(
-                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             url_prefix=("automatic_https", None),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
@@ -556,7 +560,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "docu_url": "",
                         },
                         "parameter_properties": {
-                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             "url_prefix": ("automatic_https", None),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },

@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 
+#include "livestatus/Filter.h"
 #include "livestatus/HostServiceState.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logfile.h"
@@ -19,7 +20,6 @@
 
 class Column;
 class ColumnOffsets;
-class Filter;
 class ICore;
 class IHost;
 class IService;
@@ -50,6 +50,22 @@ private:
     size_t max_lines_per_log_file_;
 };
 
+class ObjectBlacklist {
+public:
+    ObjectBlacklist(const Query &query, const User &user);
+    // TODO(sp) Fix the signature mismatch below: The key can be derived from
+    // the state. When this is done, insert() can be merged into accepts().
+    [[nodiscard]] bool accepts(const HostServiceState &hss) const;
+    [[nodiscard]] bool contains(HostServiceKey key) const;
+    void insert(HostServiceKey key);
+
+private:
+    const Query *query_;
+    const User *user_;
+    std::unique_ptr<Filter> filter_;
+    std::set<HostServiceKey> blacklist_;
+};
+
 class TableStateHistory : public Table {
 public:
     TableStateHistory(ICore *mc, LogCache *log_cache);
@@ -63,14 +79,12 @@ public:
                      const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
-    static std::unique_ptr<Filter> createPartialFilter(const Query &query);
 
     using state_info_t =
         std::map<HostServiceKey, std::unique_ptr<HostServiceState>>;
 
 private:
     using notification_periods_t = std::map<std::string, int>;
-    using object_blacklist_t = std::set<HostServiceKey>;
 
     LogCache *log_cache_;
     bool abort_query_;
@@ -84,17 +98,15 @@ private:
                             const LogEntry *entry, bool only_update,
                             const notification_periods_t &notification_periods,
                             bool is_host_entry, state_info_t &state_info,
-                            object_blacklist_t &object_blacklist,
-                            const Filter &object_filter,
+                            ObjectBlacklist &blacklist,
                             const LogPeriod &period);
 
     static void insert_new_state(
-        Query &query, const User &user, const LogEntry *entry, bool only_update,
+        const LogEntry *entry, bool only_update,
         const notification_periods_t &notification_periods,
-        state_info_t &state_info, object_blacklist_t &object_blacklist,
-        const Filter &object_filter, const LogPeriod &period,
-        const IHost *entry_host, const IService *entry_service,
-        HostServiceKey key);
+        state_info_t &state_info, ObjectBlacklist &blacklist,
+        const LogPeriod &period, const IHost *entry_host,
+        const IService *entry_service, HostServiceKey key);
 
     void handle_timeperiod_transition(
         Query &query, const User &user, const ICore &core,

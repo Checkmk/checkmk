@@ -15,11 +15,9 @@
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
-#include "livestatus/Filter.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
-#include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Query.h"
@@ -235,25 +233,6 @@ private:
 };
 }  // namespace
 
-// static
-std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
-    const Query &query) {
-    return query.partialFilter(
-        "current host/service columns", [](const std::string &columnName) {
-            // NOTE: This is quite brittle and must be kept in sync with its
-            // usage in TableStateHistory::insert_new_state()!
-            return (
-                // joined via HostServiceState::_host
-                columnName.starts_with("current_host_") ||
-                // joined via HostServiceState::_service
-                columnName.starts_with("current_service_") ||
-                // HostServiceState::_host_name
-                columnName == "host_name" ||
-                // HostServiceState::_service_description
-                columnName == "service_description");
-        });
-}
-
 void TableStateHistory::answerQuery(Query &query, const User &user,
                                     const ICore &core) {
     log_cache_->apply(
@@ -339,16 +318,13 @@ bool LogEntryForwardIterator::rewind_to_start(const LogPeriod &period,
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                             const ICore &core,
                                             LogEntryForwardIterator &it) {
-    auto object_filter = createPartialFilter(query);
+    ObjectBlacklist blacklist{query, user};
 
     // This flag might be set to true by the return value of processDataset(...)
     abort_query_ = false;
 
     // Keep track of the historic state of services/hosts here
     state_info_t state_info;
-
-    // Store hosts/services that we have filtered out here
-    object_blacklist_t object_blacklist;
 
     auto *logger = core.loggerLivestatus();
     auto period = LogPeriod::make(query);
@@ -397,7 +373,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service_initial:
                 handle_state_entry(query, user, core, entry, only_update,
                                    notification_periods, false, state_info,
-                                   object_blacklist, *object_filter, period);
+                                   blacklist, period);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
@@ -407,13 +383,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                            state_info);
                 handle_state_entry(query, user, core, entry, only_update,
                                    notification_periods, false, state_info,
-                                   object_blacklist, *object_filter, period);
+                                   blacklist, period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(query, user, core, entry, only_update,
                                    notification_periods, true, state_info,
-                                   object_blacklist, *object_filter, period);
+                                   blacklist, period);
                 break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
@@ -423,7 +399,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                                            state_info);
                 handle_state_entry(query, user, core, entry, only_update,
                                    notification_periods, true, state_info,
-                                   object_blacklist, *object_filter, period);
+                                   blacklist, period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
@@ -451,8 +427,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core, const LogEntry *entry,
     bool only_update, const notification_periods_t &notification_periods,
-    bool is_host_entry, state_info_t &state_info,
-    object_blacklist_t &object_blacklist, const Filter &object_filter,
+    bool is_host_entry, state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
@@ -469,16 +444,15 @@ void TableStateHistory::handle_state_entry(
         return;
     }
 
-    if (object_blacklist.contains(key)) {
+    if (blacklist.contains(key)) {
         // Host/Service is not needed for this query and has already been
         // filtered out.
         return;
     }
 
     if (!state_info.contains(key)) {
-        insert_new_state(query, user, entry, only_update, notification_periods,
-                         state_info, object_blacklist, object_filter, period,
-                         entry_host, entry_service, key);
+        insert_new_state(entry, only_update, notification_periods, state_info,
+                         blacklist, period, entry_host, entry_service, key);
     }
     update(query, user, core, period, entry, *state_info[key], only_update,
            notification_periods);
@@ -487,12 +461,11 @@ void TableStateHistory::handle_state_entry(
 // static
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::insert_new_state(
-    Query &query, const User &user, const LogEntry *entry, bool only_update,
+    const LogEntry *entry, bool only_update,
     const notification_periods_t &notification_periods,
-    state_info_t &state_info, object_blacklist_t &object_blacklist,
-    const Filter &object_filter, const LogPeriod &period,
-    const IHost *entry_host, const IService *entry_service,
-    HostServiceKey key) {
+    state_info_t &state_info, ObjectBlacklist &blacklist,
+    const LogPeriod &period, const IHost *entry_host,
+    const IService *entry_service, HostServiceKey key) {
     auto state = std::make_unique<HostServiceState>();
     state->_is_host = entry->service_description().empty();
     state->_host = entry_host;
@@ -506,8 +479,8 @@ void TableStateHistory::insert_new_state(
     if (!entry->service_description().empty()) {
         // NOTE: The filter is only allowed to inspect those fields of state
         // which are set by now, see createPartialFilter()!
-        if (!object_filter.accepts(Row{&state}, user, query.timezoneOffset())) {
-            object_blacklist.insert(key);
+        if (!blacklist.accepts(*state)) {
+            blacklist.insert(key);
             return;
         }
     }
@@ -872,3 +845,31 @@ std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {
         return Table::column("current_" + colname);
     }
 }
+
+ObjectBlacklist::ObjectBlacklist(const Query &query, const User &user)
+    : query_{&query}
+    , user_{&user}
+    , filter_{query.partialFilter(
+          "current host/service columns", [](const std::string &columnName) {
+              // NOTE: This is quite brittle and must be kept in sync with its
+              // usage in TableStateHistory::insert_new_state()!
+              return (
+                  // joined via HostServiceState::_host
+                  columnName.starts_with("current_host_") ||
+                  // joined via HostServiceState::_service
+                  columnName.starts_with("current_service_") ||
+                  // HostServiceState::_host_name
+                  columnName == "host_name" ||
+                  // HostServiceState::_service_description
+                  columnName == "service_description");
+          })} {}
+
+bool ObjectBlacklist::accepts(const HostServiceState &hss) const {
+    return filter_->accepts(Row{&hss}, *user_, query_->timezoneOffset());
+}
+
+bool ObjectBlacklist::contains(HostServiceKey key) const {
+    return blacklist_.contains(key);
+}
+
+void ObjectBlacklist::insert(HostServiceKey key) { blacklist_.insert(key); }

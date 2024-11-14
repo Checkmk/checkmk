@@ -665,7 +665,7 @@ class SmsApiPluginModel(TypedDict):
     url: str
     proxy_url: ProxyUrl
     username: str
-    password: tuple[Literal["password", "store"], str]
+    password: CheckmkPassword
     ignore_ssl: NotRequired[Literal[True]]
     timeout: NotRequired[str]
 

@@ -48,7 +48,6 @@ from cmk.utils.notify_types import (
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PagerdutyPluginName,
-    PasswordType,
     PluginOptions,
     ProxyUrl,
     PushoverPluginName,
@@ -2310,49 +2309,53 @@ class API_ExplicitOrStore(TypedDict, total=False):
     store_id: str
 
 
-class API_Password(API_ExplicitOrStore, total=False):  # ServiceNowPlugin, SMSAPIPlugin
+class API_Password(API_ExplicitOrStore, total=False):
     password: str
 
 
 @dataclass
-class APIPasswordOption:
-    option: Literal["explicit", "store"] | None = None
-    store_id: str = ""
-    password: str = ""
+class APICheckmkPassword_FromPassword:
+    checkmk_password: CheckmkPassword | None = None
 
     @classmethod
-    def from_api_request(cls, incoming: API_Password) -> APIPasswordOption:
-        if "password" in incoming:
-            return cls(option="explicit", password=incoming["password"])
-        return cls(option="store", store_id=incoming["store_id"])
+    def from_api_request(cls, incoming: API_Password) -> APICheckmkPassword_FromPassword:
+        match incoming:
+            case {"option": "explicit", "password": str() as password}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "explicit_password",
+                        (password_store.ad_hoc_password_id(), password),
+                    )
+                )
+            case {"option": "store", "store_id": str() as store_id}:
+                return cls(
+                    checkmk_password=(
+                        "cmk_postprocessed",
+                        "stored_password",
+                        (store_id, ""),
+                    )
+                )
+            case _:
+                raise TypeError("Invalid API_Password")
 
     def api_response(self) -> API_Password:
-        if self.option is None:
-            return {}
-
-        r: API_Password = {"option": self.option}
-        if self.option == "explicit":
-            r["password"] = self.password
-            return r
-        r["store_id"] = self.store_id
-        return r
+        match self.checkmk_password:
+            case None:
+                return {}
+            case ("cmk_postprocessed", "explicit_password", (_, str() as password)):
+                return API_Password(option="explicit", password=password)
+            case ("cmk_postprocessed", "stored_password", (str() as password_id, _)):
+                return API_Password(option="store", store_id=password_id)
+            case _:
+                raise TypeError("Invalid checkmk_password")
 
     @classmethod
-    def from_mk_file_format(cls, data: PasswordType | None) -> APIPasswordOption:
-        if data is None:
-            return cls()
+    def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromPassword:
+        return cls(checkmk_password=data)
 
-        if "password" in data:
-            return cls(option="explicit", password=data[1])
-        return cls(option="store", password=data[1])
-
-    def to_mk_file_format(self) -> PasswordType | None:
-        if self.option is None:
-            return None
-
-        if self.option == "explicit":
-            return "password", self.password
-        return "store", self.store_id
+    def to_mk_file_format(self) -> CheckmkPassword | None:
+        return self.checkmk_password
 
 
 # ----------------------------------------------------------------
@@ -2399,13 +2402,9 @@ class APICheckmkPassword_FromSecret:
 
     @classmethod
     def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromSecret:
-        if data is None:
-            return cls()
         return cls(checkmk_password=data)
 
     def to_mk_file_format(self) -> CheckmkPassword | None:
-        if self.checkmk_password is None:
-            return None
         return self.checkmk_password
 
 
@@ -2461,13 +2460,9 @@ class APICheckmkPassword_FromKey:
 
     @classmethod
     def from_mk_file_format(cls, data: CheckmkPassword | None) -> APICheckmkPassword_FromKey:
-        if data is None:
-            return cls()
         return cls(checkmk_password=data)
 
     def to_mk_file_format(self) -> CheckmkPassword | None:
-        if self.checkmk_password is None:
-            return None
         return self.checkmk_password
 
 

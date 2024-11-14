@@ -70,10 +70,10 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     API_SpectrumData,
     API_VictorOpsData,
     APICheckmkPassword_FromKey,
+    APICheckmkPassword_FromPassword,
     APICheckmkPassword_FromSecret,
     APINotifyPlugin,
     APIPagerDutyKeyOption,
-    APIPasswordOption,
     APIPluginDict,
     BasicOrTokenAuth,
     CheckboxEmailBodyInfo,
@@ -1382,7 +1382,9 @@ class SMSAPIPlugin:
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     username: str | None = None
-    user_password: APIPasswordOption = field(default_factory=APIPasswordOption)
+    user_password: APICheckmkPassword_FromPassword = field(
+        default_factory=APICheckmkPassword_FromPassword
+    )
     timeout: str | None = None
 
     @classmethod
@@ -1400,7 +1402,9 @@ class SMSAPIPlugin:
                 pluginparams.get("proxy_url"),
             ),
             username=pluginparams.get("username"),
-            user_password=APIPasswordOption.from_mk_file_format(pluginparams["password"]),
+            user_password=APICheckmkPassword_FromPassword.from_mk_file_format(
+                pluginparams["password"]
+            ),
             timeout=pluginparams.get("timeout"),
         )
 
@@ -1419,7 +1423,7 @@ class SMSAPIPlugin:
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
             username=params["username"],
-            user_password=APIPasswordOption.from_api_request(params["user_password"]),
+            user_password=APICheckmkPassword_FromPassword.from_api_request(params["user_password"]),
             timeout=params["timeout"],
         )
 

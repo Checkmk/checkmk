@@ -613,7 +613,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             modem_type="trb140",
                             url="url",
                             username="username",
-                            password=("password", "zhfziuofoziudfozuidouizd"),
+                            password=(
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             proxy_url=("cmk_postprocessed", "no_proxy", ""),
                         ),
                     ),
@@ -631,7 +635,11 @@ def patch_new_notification_parameter_id(monkeypatch: MonkeyPatch) -> None:
                             "modem_type": "trb140",
                             "url": "url",
                             "username": "username",
-                            "password": ("password", "zhfziuofoziudfozuidouizd"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                ("<uuid-a>", "gaergerag"),
+                            ),
                             "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
                         },
                     }

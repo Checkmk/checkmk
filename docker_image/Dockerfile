@@ -3,6 +3,19 @@ ARG IMAGE_CMK_BASE
 FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
+# Ports:
+# 5000 - Serves the Checkmk GUI
+# 6557 - Serves Livestatus (if enabled via "omd config")
+EXPOSE 5000 6557
+
+# When all processes of the site are running everything should be fine
+HEALTHCHECK --interval=1m --timeout=5s \
+    CMD omd status || exit 1
+
+COPY docker-entrypoint.sh /
+# Starts the entrypoint script and hands over CMD by default
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="2.5.0b1"
 ARG CMK_EDITION
@@ -98,16 +111,3 @@ LABEL \
     org.opencontainers.image.vendor="Checkmk GmbH" \
     org.opencontainers.image.source="https://github.com/checkmk/checkmk" \
     org.opencontainers.image.url="https://checkmk.com/"
-
-# Ports:
-# 5000 - Serves the Checkmk GUI
-# 6557 - Serves Livestatus (if enabled via "omd config")
-EXPOSE 5000 6557
-
-# When all processes of the site are running everything should be fine
-HEALTHCHECK --interval=1m --timeout=5s \
-    CMD omd status || exit 1
-
-COPY docker-entrypoint.sh /
-# Starts the entrypoint script and hands over CMD by default
-ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -167,6 +167,7 @@ class CMKOpenApiSession(requests.Session):
             allow_redirects=False,
         )
         if response.status_code == 200:
+            logger.info("Activation id: %s", response.json()["id"])
             return  # changes are activated
         if response.status_code == 422:
             raise NoActiveChanges  # there are no changes

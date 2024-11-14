@@ -15,7 +15,7 @@ from cmk.agent_based.v1._checking_classes import _EvalableFloat
 
 def test_evalable_float() -> None:
     inf = _EvalableFloat("inf")
-    assert literal_eval(f"{inf!r}") == float("inf")  # type: ignore[misc]
+    assert literal_eval(f"{inf!r}") == float("inf")
 
 
 def test_service_label() -> None:
@@ -93,7 +93,7 @@ def test_state() -> None:
     assert State["UNKNOWN"] is State.UNKNOWN
 
     with pytest.raises(TypeError):
-        _ = State.OK < State.WARN  # type: ignore[operator,misc]
+        _ = State.OK < State.WARN  # type: ignore[operator]
 
 
 @pytest.mark.parametrize(

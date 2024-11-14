@@ -327,7 +327,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     state_info_t state_info;
 
     auto *logger = core.loggerLivestatus();
-    auto period = LogPeriod::make(query);
+    const auto period = LogPeriod::make(query);
     if (period.empty()) {
         Debug(logger) << "empty query period " << period;
         return;
@@ -336,6 +336,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     if (!it.rewind_to_start(period, logger)) {
         return;
     }
+
+    Processor processor{query, user, period};
 
     // From now on use getNextLogentry()
     bool only_update = true;
@@ -371,7 +373,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_service_initial:
-                handle_state_entry(query, user, core, entry, only_update,
+                handle_state_entry(processor, core, entry, only_update,
                                    time_periods, false, state_info, blacklist,
                                    period);
                 break;
@@ -381,13 +383,13 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::flapping_service:
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
-                handle_state_entry(query, user, core, entry, only_update,
+                handle_state_entry(processor, core, entry, only_update,
                                    time_periods, false, state_info, blacklist,
                                    period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
-                handle_state_entry(query, user, core, entry, only_update,
+                handle_state_entry(processor, core, entry, only_update,
                                    time_periods, true, state_info, blacklist,
                                    period);
                 break;
@@ -397,7 +399,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::flapping_host:
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
-                handle_state_entry(query, user, core, entry, only_update,
+                handle_state_entry(processor, core, entry, only_update,
                                    time_periods, true, state_info, blacklist,
                                    period);
                 in_nagios_initial_states = false;
@@ -405,7 +407,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::timeperiod_transition:
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
-                handle_timeperiod_transition(query, user, core, period, entry,
+                handle_timeperiod_transition(processor, core, entry,
                                              only_update, time_periods,
                                              state_info);
                 in_nagios_initial_states = false;
@@ -420,12 +422,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     if (!abort_query_) {
-        final_reports(query, user, state_info, period);
+        final_reports(processor, state_info, period);
     }
 }
 
 void TableStateHistory::handle_state_entry(
-    Query &query, const User &user, const ICore &core, const LogEntry *entry,
+    Processor &processor, const ICore &core, const LogEntry *entry,
     bool only_update, const TimePeriods &time_periods, bool is_host_entry,
     state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period) {
@@ -454,8 +456,7 @@ void TableStateHistory::handle_state_entry(
         insert_new_state(entry, only_update, time_periods, state_info,
                          blacklist, period, entry_host, entry_service, key);
     }
-    update(query, user, core, period, entry, *state_info[key], only_update,
-           time_periods);
+    update(processor, core, entry, *state_info[key], only_update, time_periods);
 }
 
 // static
@@ -542,14 +543,14 @@ void TableStateHistory::insert_new_state(
 }
 
 void TableStateHistory::handle_timeperiod_transition(
-    Query &query, const User &user, const ICore &core, const LogPeriod &period,
-    const LogEntry *entry, bool only_update, TimePeriods &time_periods,
+    Processor &processor, const ICore &core, const LogEntry *entry,
+    bool only_update, TimePeriods &time_periods,
     const state_info_t &state_info) {
     try {
         time_periods.update(entry->options());
         for (const auto &[key, hss] : state_info) {
-            updateHostServiceState(query, user, core, period, entry, *hss,
-                                   only_update, time_periods);
+            updateHostServiceState(processor, core, entry, *hss, only_update,
+                                   time_periods);
         }
     } catch (const std::logic_error &e) {
         Warning(core.loggerLivestatus())
@@ -558,7 +559,7 @@ void TableStateHistory::handle_timeperiod_transition(
     }
 }
 
-void TableStateHistory::final_reports(Query &query, const User &user,
+void TableStateHistory::final_reports(Processor &processor,
                                       const state_info_t &state_info,
                                       const LogPeriod &period) {
     for (const auto &[key, hss] : state_info) {
@@ -568,7 +569,7 @@ void TableStateHistory::final_reports(Query &query, const User &user,
             // Log last known state up to nagios restart
             hss->_time = hss->_last_known_time;
             hss->_until = hss->_last_known_time;
-            process(query, user, period, *hss);
+            abort_query_ = processor.process(*hss);
 
             // Set absent state
             hss->_state = -1;
@@ -584,24 +585,23 @@ void TableStateHistory::final_reports(Query &query, const User &user,
         hss->_time = period.until - 1s;
         hss->_until = hss->_time;
 
-        process(query, user, period, *hss);
+        abort_query_ = processor.process(*hss);
     }
 }
 
-void TableStateHistory::update(Query &query, const User &user,
-                               const ICore &core, const LogPeriod &period,
+void TableStateHistory::update(Processor &processor, const ICore &core,
                                const LogEntry *entry, HostServiceState &state,
                                bool only_update,
                                const TimePeriods &time_periods) {
-    auto state_changed = updateHostServiceState(
-        query, user, core, period, entry, state, only_update, time_periods);
+    auto state_changed = updateHostServiceState(processor, core, entry, state,
+                                                only_update, time_periods);
     // Host downtime or state changes also affect its services
     if (entry->kind() == LogEntryKind::alert_host ||
         entry->kind() == LogEntryKind::state_host ||
         entry->kind() == LogEntryKind::downtime_alert_host) {
         if (state_changed == ModificationStatus::changed) {
             for (auto &svc : state._services) {
-                updateHostServiceState(query, user, core, period, entry, *svc,
+                updateHostServiceState(processor, core, entry, *svc,
                                        only_update, time_periods);
             }
         }
@@ -610,9 +610,8 @@ void TableStateHistory::update(Query &query, const User &user,
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Query &query, const User &user, const ICore &core, const LogPeriod &period,
-    const LogEntry *entry, HostServiceState &hss, bool only_update,
-    const TimePeriods &time_periods) {
+    Processor &processor, const ICore &core, const LogEntry *entry,
+    HostServiceState &hss, bool only_update, const TimePeriods &time_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored
@@ -621,7 +620,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         hss._time = hss._last_known_time;
         hss._until = hss._last_known_time;
         if (!only_update) {
-            process(query, user, period, hss);
+            abort_query_ = processor.process(hss);
         }
 
         hss._may_no_longer_exist = false;
@@ -669,7 +668,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             if (hss._is_host) {
                 if (hss._state != entry->state()) {
                     if (!only_update) {
-                        process(query, user, period, hss);
+                        abort_query_ = processor.process(hss);
                     }
                     hss._state = entry->state();
                     hss._host_down = static_cast<int>(entry->state() > 0);
@@ -679,7 +678,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 }
             } else if (hss._host_down != static_cast<int>(entry->state() > 0)) {
                 if (!only_update) {
-                    process(query, user, period, hss);
+                    abort_query_ = processor.process(hss);
                 }
                 hss._host_down = static_cast<int>(entry->state() > 0);
                 hss._debug_info = "SVC HOST STATE";
@@ -691,7 +690,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::alert_service: {
             if (hss._state != entry->state()) {
                 if (!only_update) {
-                    process(query, user, period, hss);
+                    abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "SVC ALERT";
                 hss._state = entry->state();
@@ -704,7 +703,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 
             if (hss._in_host_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, user, period, hss);
+                    abort_query_ = processor.process(hss);
                 }
                 hss._debug_info =
                     hss._is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
@@ -722,7 +721,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 entry->state_type().starts_with("STARTED") ? 1 : 0;
             if (hss._in_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, user, period, hss);
+                    abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "DOWNTIME SERVICE";
                 hss._in_downtime = downtime_active;
@@ -735,7 +734,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 entry->state_type().starts_with("STARTED") ? 1 : 0;
             if (hss._is_flapping != flapping_active) {
                 if (!only_update) {
-                    process(query, user, period, hss);
+                    abort_query_ = processor.process(hss);
                 }
                 hss._debug_info = "FLAPPING ";
                 hss._is_flapping = flapping_active;
@@ -753,7 +752,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     tpt.name() == hss._notification_period) {
                     if (tpt.to() != hss._in_notification_period) {
                         if (!only_update) {
-                            process(query, user, period, hss);
+                            abort_query_ = processor.process(hss);
                         }
                         hss._debug_info = "TIMEPERIOD ";
                         hss._in_notification_period = tpt.to();
@@ -763,7 +762,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                 if (hss._host != nullptr && tpt.name() == hss._service_period) {
                     if (tpt.to() != hss._in_service_period) {
                         if (!only_update) {
-                            process(query, user, period, hss);
+                            abort_query_ = processor.process(hss);
                         }
                         hss._debug_info = "TIMEPERIOD ";
                         hss._in_service_period = tpt.to();
@@ -790,20 +789,6 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     return state_changed;
 }
 
-void TableStateHistory::process(Query &query, const User &user,
-                                const LogPeriod &period,
-                                HostServiceState &hss) {
-    hss._duration = hss._until - hss._from;
-    hss.computePerStateDurations(period.duration());
-
-    // if (hss._duration > 0)
-    abort_query_ =
-        user.is_authorized_for_object(hss._host, hss._service, false) &&
-        !query.processDataset(Row{&hss});
-
-    hss._from = hss._until;
-}
-
 std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {
     try {
         // First try to find column in the usual way
@@ -815,6 +800,23 @@ std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {
         // with the same name.
         return Table::column("current_" + colname);
     }
+}
+
+TableStateHistory::Processor::Processor(Query &query, const User &user,
+                                        const LogPeriod &period)
+    : query_{&query}, user_{&user}, period_{&period} {}
+
+bool TableStateHistory::Processor::process(HostServiceState &hss) const {
+    hss._duration = hss._until - hss._from;
+    hss.computePerStateDurations(period_->duration());
+
+    // if (hss._duration > 0)
+    auto abort_query =
+        user_->is_authorized_for_object(hss._host, hss._service, false) &&
+        !query_->processDataset(Row{&hss});
+
+    hss._from = hss._until;
+    return abort_query;
 }
 
 ObjectBlacklist::ObjectBlacklist(const Query &query, const User &user)

@@ -96,12 +96,24 @@ private:
     LogCache *log_cache_;
     bool abort_query_;
 
+    class Processor {
+    public:
+        Processor(Query &query, const User &user, const LogPeriod &period);
+
+        [[nodiscard]] bool process(HostServiceState &hss) const;
+
+        // private:
+        Query *query_;
+        const User *user_;
+        const LogPeriod *period_;
+    };
+
     enum class ModificationStatus { unchanged, changed };
 
     void answerQueryInternal(Query &query, const User &user, const ICore &core,
                              LogEntryForwardIterator &it);
 
-    void handle_state_entry(Query &query, const User &user, const ICore &core,
+    void handle_state_entry(Processor &processor, const ICore &core,
                             const LogEntry *entry, bool only_update,
                             const TimePeriods &time_periods, bool is_host_entry,
                             state_info_t &state_info,
@@ -117,28 +129,24 @@ private:
                                  const IService *entry_service,
                                  HostServiceKey key);
 
-    void handle_timeperiod_transition(Query &query, const User &user,
-                                      const ICore &core,
-                                      const LogPeriod &period,
+    void handle_timeperiod_transition(Processor &processor, const ICore &core,
                                       const LogEntry *entry, bool only_update,
                                       TimePeriods &time_periods,
                                       const state_info_t &state_info);
 
-    void final_reports(Query &query, const User &user,
-                       const state_info_t &state_info, const LogPeriod &period);
+    void final_reports(Processor &processor, const state_info_t &state_info,
+                       const LogPeriod &period);
 
-    void process(Query &query, const User &user, const LogPeriod &period,
-                 HostServiceState &hss);
-
-    void update(Query &query, const User &user, const ICore &core,
-                const LogPeriod &period, const LogEntry *entry,
+    void update(Processor &processor, const ICore &core, const LogEntry *entry,
                 HostServiceState &state, bool only_update,
                 const TimePeriods &time_periods);
 
-    ModificationStatus updateHostServiceState(
-        Query &query, const User &user, const ICore &core,
-        const LogPeriod &period, const LogEntry *entry, HostServiceState &hss,
-        bool only_update, const TimePeriods &time_periods);
+    ModificationStatus updateHostServiceState(Processor &processor,
+                                              const ICore &core,
+                                              const LogEntry *entry,
+                                              HostServiceState &hss,
+                                              bool only_update,
+                                              const TimePeriods &time_periods);
 };
 
 #endif  // TableStateHistory_h

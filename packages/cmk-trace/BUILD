@@ -24,6 +24,7 @@ py_library(
         requirement("opentelemetry-api"),
         requirement("opentelemetry-sdk"),
         requirement("opentelemetry-exporter-otlp"),
+        requirement("opentelemetry-exporter-otlp-proto-grpc"),
         requirement("opentelemetry-semantic-conventions"),
     ],
 )

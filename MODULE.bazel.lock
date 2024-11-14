@@ -6602,7 +6602,7 @@
       "general": {
         "bzlTransitiveDigest": "ekRywDjPf3rZVSrZ7AuNQFcwEkkP3fYMP1Rp/yFzeTs=",
         "recordedFileInputs": {
-          "@@//requirements_lock.txt": "919a741045c70d92a574f4976dad3408d2ea5f3897fb5f2343ca6f609534f3ee",
+          "@@//requirements_lock.txt": "74b2069a70778d2f33babb7ebacc7517071eb3507a0cb524f80c00b7a8024202",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_mypy~//mypy/private/requirements.txt": "a0b7ea010c6cc5d5577d91ec9789d59c9a83ca1425bae6a84d7c88f2c582acf9",
           "@@protobuf~//python/requirements.txt": "2e925031e9c1de6b673ed19858dee0af57a7c06d5c4f94ffefd6822ccda584ea"

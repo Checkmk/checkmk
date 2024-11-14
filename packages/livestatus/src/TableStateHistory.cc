@@ -210,9 +210,9 @@ LogEntry *LogEntryForwardIterator::getNextLogentry() {
 }
 
 namespace {
-class TimeperiodTransition {
+class TimePeriodTransition {
 public:
-    explicit TimeperiodTransition(const std::string &str) {
+    explicit TimePeriodTransition(const std::string &str) {
         auto fields = mk::split(str, ';');
         if (fields.size() != 3) {
             throw std::invalid_argument("expected 3 arguments");
@@ -342,7 +342,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     bool in_nagios_initial_states = false;
 
     // Notification periods information, name: active(1)/inactive(0)
-    time_periods_t time_periods;
+    TimePeriods time_periods;
 
     while (LogEntry *entry = it.getNextLogentry()) {
         if (abort_query_ || entry->time() >= period.until) {
@@ -426,7 +426,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
 void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core, const LogEntry *entry,
-    bool only_update, const time_periods_t &time_periods, bool is_host_entry,
+    bool only_update, const TimePeriods &time_periods, bool is_host_entry,
     state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period) {
     const auto *entry_host = core.find_host(entry->host_name());
@@ -461,7 +461,7 @@ void TableStateHistory::handle_state_entry(
 // static
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::insert_new_state(
-    const LogEntry *entry, bool only_update, const time_periods_t &time_periods,
+    const LogEntry *entry, bool only_update, const TimePeriods &time_periods,
     state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period, const IHost *entry_host,
     const IService *entry_service, HostServiceKey key) {
@@ -515,21 +515,9 @@ void TableStateHistory::insert_new_state(
         : state->_host != nullptr  ? state->_host->servicePeriodName()
                                    : "";
 
-    // Determine initial in_notification_period status
-    auto tmp_period = time_periods.find(state->_notification_period);
-    if (tmp_period != time_periods.end()) {
-        state->_in_notification_period = tmp_period->second;
-    } else {
-        state->_in_notification_period = 1;
-    }
-
-    // Same for service period
-    tmp_period = time_periods.find(state->_service_period);
-    if (tmp_period != time_periods.end()) {
-        state->_in_service_period = tmp_period->second;
-    } else {
-        state->_in_service_period = 1;
-    }
+    state->_in_notification_period =
+        time_periods.find(state->_notification_period);
+    state->_in_service_period = time_periods.find(state->_service_period);
 
     // If this key is a service try to find its host and apply its
     // _in_host_downtime and _host_down parameters
@@ -555,11 +543,10 @@ void TableStateHistory::insert_new_state(
 
 void TableStateHistory::handle_timeperiod_transition(
     Query &query, const User &user, const ICore &core, const LogPeriod &period,
-    const LogEntry *entry, bool only_update, time_periods_t &time_periods,
+    const LogEntry *entry, bool only_update, TimePeriods &time_periods,
     const state_info_t &state_info) {
     try {
-        const TimeperiodTransition tpt(entry->options());
-        time_periods[tpt.name()] = tpt.to();
+        time_periods.update(entry->options());
         for (const auto &[key, hss] : state_info) {
             updateHostServiceState(query, user, core, period, entry, *hss,
                                    only_update, time_periods);
@@ -605,7 +592,7 @@ void TableStateHistory::update(Query &query, const User &user,
                                const ICore &core, const LogPeriod &period,
                                const LogEntry *entry, HostServiceState &state,
                                bool only_update,
-                               const time_periods_t &time_periods) {
+                               const TimePeriods &time_periods) {
     auto state_changed = updateHostServiceState(
         query, user, core, period, entry, state, only_update, time_periods);
     // Host downtime or state changes also affect its services
@@ -625,7 +612,7 @@ void TableStateHistory::update(Query &query, const User &user,
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     Query &query, const User &user, const ICore &core, const LogPeriod &period,
     const LogEntry *entry, HostServiceState &hss, bool only_update,
-    const time_periods_t &time_periods) {
+    const TimePeriods &time_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored
@@ -651,23 +638,9 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
-        auto it_status = time_periods.find(hss._notification_period);
-        if (it_status != time_periods.end()) {
-            hss._in_notification_period = it_status->second;
-        } else {
-            // No notification period information available -> within
-            // notification period
-            hss._in_notification_period = 1;
-        }
-
-        // Same for service period
-        it_status = time_periods.find(hss._service_period);
-        if (it_status != time_periods.end()) {
-            hss._in_service_period = it_status->second;
-        } else {
-            // No service period information available -> within service period
-            hss._in_service_period = 1;
-        }
+        hss._in_notification_period =
+            time_periods.find(hss._notification_period);
+        hss._in_service_period = time_periods.find(hss._service_period);
     }
 
     // Update basic information
@@ -773,7 +746,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::timeperiod_transition: {
             try {
-                const TimeperiodTransition tpt(entry->options());
+                const TimePeriodTransition tpt{entry->options()};
                 // if no _host pointer is available the initial status of
                 // _in_notification_period (1) never changes
                 if (hss._host != nullptr &&
@@ -871,3 +844,14 @@ bool ObjectBlacklist::contains(HostServiceKey key) const {
 }
 
 void ObjectBlacklist::insert(HostServiceKey key) { blacklist_.insert(key); }
+
+int TimePeriods::find(const std::string &name) const {
+    auto it = time_periods_.find(name);
+    // no info => defaults to "within period"
+    return it == time_periods_.end() ? 1 : it->second;
+}
+
+void TimePeriods::update(const std::string &options) {
+    const TimePeriodTransition tpt{options};
+    time_periods_[tpt.name()] = tpt.to();
+}

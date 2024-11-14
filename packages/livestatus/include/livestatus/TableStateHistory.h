@@ -66,6 +66,15 @@ private:
     std::set<HostServiceKey> blacklist_;
 };
 
+class TimePeriods {
+public:
+    [[nodiscard]] int find(const std::string &name) const;
+    void update(const std::string &options);
+
+private:
+    std::map<std::string, int> time_periods_;
+};
+
 class TableStateHistory : public Table {
 public:
     TableStateHistory(ICore *mc, LogCache *log_cache);
@@ -84,8 +93,6 @@ public:
         std::map<HostServiceKey, std::unique_ptr<HostServiceState>>;
 
 private:
-    using time_periods_t = std::map<std::string, int>;
-
     LogCache *log_cache_;
     bool abort_query_;
 
@@ -96,13 +103,13 @@ private:
 
     void handle_state_entry(Query &query, const User &user, const ICore &core,
                             const LogEntry *entry, bool only_update,
-                            const time_periods_t &time_periods,
-                            bool is_host_entry, state_info_t &state_info,
+                            const TimePeriods &time_periods, bool is_host_entry,
+                            state_info_t &state_info,
                             ObjectBlacklist &blacklist,
                             const LogPeriod &period);
 
     static void insert_new_state(const LogEntry *entry, bool only_update,
-                                 const time_periods_t &time_periods,
+                                 const TimePeriods &time_periods,
                                  state_info_t &state_info,
                                  ObjectBlacklist &blacklist,
                                  const LogPeriod &period,
@@ -114,7 +121,7 @@ private:
                                       const ICore &core,
                                       const LogPeriod &period,
                                       const LogEntry *entry, bool only_update,
-                                      time_periods_t &time_periods,
+                                      TimePeriods &time_periods,
                                       const state_info_t &state_info);
 
     void final_reports(Query &query, const User &user,
@@ -126,12 +133,12 @@ private:
     void update(Query &query, const User &user, const ICore &core,
                 const LogPeriod &period, const LogEntry *entry,
                 HostServiceState &state, bool only_update,
-                const time_periods_t &time_periods);
+                const TimePeriods &time_periods);
 
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
         const LogPeriod &period, const LogEntry *entry, HostServiceState &hss,
-        bool only_update, const time_periods_t &time_periods);
+        bool only_update, const TimePeriods &time_periods);
 };
 
 #endif  // TableStateHistory_h

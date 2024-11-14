@@ -1,0 +1,6 @@
+---
+extensions:
+    jaeger_query:
+        http:
+            # Updated by TRACE_JAEGER_UI_PORT
+            endpoint: "[::1]:0"

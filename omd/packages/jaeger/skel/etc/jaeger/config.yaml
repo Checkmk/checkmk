@@ -1,0 +1,44 @@
+---
+# The ports exposed with [::1]:0 are not used by us. Unfortunately
+# there is currently no way to disable them completely. We assign a
+# random free port to prevent conflicts with other sites on the same
+# host.
+
+service:
+    extensions: [jaeger_storage, jaeger_query]
+    pipelines:
+        traces:
+            receivers: [otlp]
+            processors: [batch]
+            exporters: [jaeger_storage_exporter]
+    telemetry:
+        resource:
+            service.name: jaeger
+
+extensions:
+    jaeger_query:
+        base_path: "/###SITE###/jaeger"
+        storage:
+            traces: in_memory_store
+            traces_archive: in_memory_archive_store
+        grpc:
+            endpoint: "[::1]:0"
+
+    jaeger_storage:
+        backends:
+            # We use the memory backend which is by default uncapped. To prevent excessive memory
+            # consumption, we apply a default limit. This can be increased if needed and enough
+            # memory is available.
+            in_memory_store:
+                memory:
+                    max_traces: 50000
+            in_memory_archive_store:
+                memory:
+                    max_traces: 50000
+
+processors:
+    batch:
+
+exporters:
+    jaeger_storage_exporter:
+        trace_storage: in_memory_store

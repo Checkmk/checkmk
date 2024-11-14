@@ -221,7 +221,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
 
 def test_all_agents_tested() -> None:
     agents = load_special_agents(raise_errors=True)
-    migrated = {agent.name for agent in agents.values()}
+    # TODO CMK-20557 Quickfix: otel is part of cce
+    migrated = {agent.name for agent in agents.values()} - set(["otel"])
     assert not migrated & UNMIGRATED
     assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)
 

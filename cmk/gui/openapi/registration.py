@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.version import Edition, edition
+
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
@@ -47,7 +49,6 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
-    autocomplete.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     comment.register(endpoint_registry)
@@ -74,3 +75,5 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     user_role.register(endpoint_registry)
     version.register(endpoint_registry)
     spec_generator_job.register(job_registry)
+    if edition() is not Edition.CSE:
+        autocomplete.register(endpoint_registry)

@@ -46,7 +46,7 @@ const cmkIconVariants = cva('', {
 })
 export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 
-interface CmkIconProps {
+export interface CmkIconProps {
   /** @property {string} name - Name of the icon */
   name: string
 

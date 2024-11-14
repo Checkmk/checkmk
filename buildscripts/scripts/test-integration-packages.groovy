@@ -4,6 +4,8 @@
 
 /// Run integration tests for the Checkmk Docker image
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def main() {
     check_job_parameters([
         "EDITION",
@@ -24,6 +26,7 @@ def main() {
     // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
+    def all_distros = versioning.get_distros(override: "all");
     def distros = versioning.get_distros(edition: EDITION, use_case: use_case, override: OVERRIDE_DISTROS);
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -58,24 +61,63 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    stage('test integration') {  // TODO should not be needed
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            // TODO: don't run make test-integration-docker but use docker.inside() instead
-            testing_helper.run_make_targets(
-                // Get the ID of the docker group from the node(!). This must not be
-                // executed inside the container (as long as the IDs are different)
-                DOCKER_GROUP_ID: get_docker_group_id(),
-                DISTRO_LIST: distros,
-                EDITION: EDITION,
-                VERSION: VERSION,
-                DOCKER_TAG: docker_tag,
-                MAKE_TARGET: "test-integration-docker",
-                BRANCH: branch_name,
-                cmk_version: cmk_version_rc_aware,
-                OTEL_EXPORTER_OTLP_ENDPOINT: "",
-            );
+    def build_for_parallel = [:];
+    def parallel_stages_states = [];
+    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
+    def relative_job_name = "${base_folder}/builders/test-integration-single-f12less";
+
+    all_distros.each { item ->
+        def distro = item;
+        def stepName = "Integration test for ${distro}";
+
+        build_for_parallel[stepName] = { ->
+            def run_condition = distro in distros;
+            println("Should ${distro} be tested? ${run_condition}");
+
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                def this_exit_successfully = false;
+                def job = build(
+                    job: relative_job_name,
+                    propagate: false,   // do not raise here, continue, get status via result property later
+                    parameters: [
+                        string(name: "DISTRO", value: item),
+                        string(name: "EDITION", value: EDITION),
+                        string(name: "VERSION", value: VERSION),
+                        string(name: "DOCKER_TAG", value: docker_tag),
+                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
+                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                    ],
+                );
+                println("job result is: ${job.result}");
+                // be really really sure if it is a success
+                if (job.result == "SUCCESS") {
+                    this_exit_successfully = true;
+                } else {
+                    error("${item.NAME} failed");
+                }
+                parallel_stages_states.add(this_exit_successfully);
+            }
+
         }
     }
+
+    stage('Run integration tests') {
+        parallel build_for_parallel;
+    }
+
+    println("All stages results: ${parallel_stages_states}");
+    all_true = parallel_stages_states.every { it == true } == true;
+    currentBuild.result = all_true ? "SUCCESS" : "FAILED";
 }
 
 return this;

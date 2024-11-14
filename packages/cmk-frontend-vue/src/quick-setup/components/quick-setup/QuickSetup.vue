@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, provide } from 'vue'
+import { computed, provide, onMounted, onBeforeUnmount } from 'vue'
 
 import QuickSetupStage from './QuickSetupStage.vue'
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
@@ -20,6 +20,27 @@ const numberOfStages = computed(() => props.regularStages.length)
 const showSaveStage = computed(
   () => props.currentStage === numberOfStages.value || props.mode.value === 'overview'
 )
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBrowserDialog)
+  // The "old" world sets the title to "Reloading..." if a reload is
+  // triggered. This would lead to a wrong title in case the user clicks
+  // "Cancel" in the browser dialog
+  document.querySelectorAll('a.title').forEach((link) => {
+    link.setAttribute('onclick', 'document.location.reload();')
+  })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBrowserDialog)
+})
+
+function handleBrowserDialog(event: BeforeUnloadEvent) {
+  if (props.preventLeaving) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
 </script>
 
 <template>

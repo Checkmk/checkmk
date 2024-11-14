@@ -28,6 +28,9 @@ export interface QuickSetupProps {
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
   mode: Ref<WizardMode>
+
+  /** @property {boolean} prevent-leaving - this and that */
+  preventLeaving: boolean
 }
 
 /**

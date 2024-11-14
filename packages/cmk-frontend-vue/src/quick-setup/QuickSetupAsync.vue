@@ -67,6 +67,7 @@ const props = withDefaults(defineProps<QuickSetupAppProps>(), {
 
 const loadedAllStages = ref(false)
 const showQuickSetup = ref(false)
+const preventLeaving = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
@@ -294,6 +295,7 @@ const save = async (buttonId: string) => {
         props.objectId,
         userInput
       )
+      preventLeaving.value = false
       window.location.href = redirectUrl
     } else {
       const { redirect_url: redirectUrl } = await saveQuickSetup(
@@ -301,6 +303,7 @@ const save = async (buttonId: string) => {
         buttonId,
         userInput
       )
+      preventLeaving.value = false
       window.location.href = redirectUrl
     }
   } catch (err) {
@@ -316,6 +319,7 @@ const update = (index: number, value: StageData) => {
 
   stages.value[index]!.user_input = value
   formData.value[index] = value
+  preventLeaving.value = true
 }
 
 //
@@ -404,6 +408,7 @@ switch (props.mode) {
 }
 const quickSetupHook = useWizard(stages.value.length, props.mode)
 showQuickSetup.value = true
+preventLeaving.value = false
 </script>
 
 <template>
@@ -422,6 +427,7 @@ showQuickSetup.value = true
     :save-stage="saveStage"
     :current-stage="quickSetupHook.stage.value"
     :mode="quickSetupHook.mode"
+    :prevent-leaving="preventLeaving"
   />
 </template>
 

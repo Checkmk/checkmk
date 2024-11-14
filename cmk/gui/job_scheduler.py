@@ -27,6 +27,8 @@ from cmk import trace
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 
+tracer = trace.get_tracer()
+
 
 def _pid_file(omd_root: Path) -> Path:
     return omd_root / "tmp" / "run" / "cmk-ui-job-scheduler.pid"
@@ -85,14 +87,18 @@ def _run_scheduler() -> None:
             )
 
 
+@tracer.start_as_current_span("_run_scheduled_jobs")
 def _run_scheduled_jobs() -> None:
     logger.debug("Starting cron jobs")
 
     for job in cron_job_registry.values():
         try:
-            logger.debug("Starting [%s]", job.name)
-            job.callable()
-            logger.debug("Finished [%s]", job.name)
+            with tracer.start_as_current_span(
+                f"run_cron_job[{job.name}]", attributes={"cmk.gui.job_name": job.name}
+            ):
+                logger.debug("Starting [%s]", job.name)
+                job.callable()
+                logger.debug("Finished [%s]", job.name)
         except Exception:
             crash = create_gui_crash_report()
             logger.error(

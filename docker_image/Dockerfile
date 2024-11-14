@@ -19,6 +19,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="2.5.0b1"
 ARG CMK_EDITION
+ARG DISTRO_CODENAME="jammy"
 
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID
@@ -36,8 +37,6 @@ ENV MAIL_RELAY_HOST=""
 
 # Set a timezone
 ENV TZ=""
-
-ARG DISTRO_CODENAME="jammy"
 
 # Add helper variable to better detect when running inside container.
 # Used e.g. for omd update

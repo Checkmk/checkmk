@@ -36,6 +36,11 @@ const spec = computed<Labels>(() => ({
   label_source: labelSource.value,
   autocompleter: autocompleter
 }))
+const data = ref<StringMapping>({
+  'cmk/check_mk_server': 'yes',
+  'cmk/os_family': 'linux',
+  'cmk/os_name': 'Ubuntu'
+})
 
 async function interceptor() {
   return HttpResponse.json({
@@ -48,7 +53,7 @@ async function interceptor() {
         ['cmk/os_type:linux', 'cmk/os_type:linux'],
         ['cmk/os_version:22.04', 'cmk/os_version:22.04'],
         ['cmk/site:heute_cl', 'cmk/site:heute_cl']
-      ]
+      ].filter((key) => key[0] !== data.value.ident)
     },
     result_code: 0,
     severity: 'success'
@@ -73,12 +78,6 @@ onBeforeUnmount(() => {
 })
 
 const mockLoaded = ref<boolean>(false)
-
-const data = ref<StringMapping>({
-  'cmk/check_mk_server': 'yes',
-  'cmk/os_family': 'linux',
-  'cmk/os_name': 'Ubuntu'
-})
 </script>
 
 <template>

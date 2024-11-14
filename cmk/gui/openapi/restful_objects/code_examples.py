@@ -17,7 +17,9 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
+from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore]
+    resolve_schema_instance,
+)
 from marshmallow import Schema
 
 from cmk.ccc.site import omd_site

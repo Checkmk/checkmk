@@ -110,41 +110,6 @@ cmk_notification_plugins = ["cmk.notification_plugins"]
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
-# Global options.
-# Add per-module options as [[tool.mypy.overrides]].
-explicit_package_bases = true
-# TODO: `mypy_path` shouldn't be required with Bazel.
-mypy_path = """\
-    $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
-    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
-    $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
-    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
-    $MYPY_CONFIG_FILE_DIR/packages/cmk-trace\
-    """
-plugins = ["pydantic.mypy"]
-python_version = "3.12"
-scripts_are_modules = true
-
-# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
-disable_bytearray_promotion = true
-disable_memoryview_promotion = true
-
-# global options enabled with strict
-check_untyped_defs = true
-warn_redundant_casts = true
-warn_unused_configs = true
-
-[[tool.mypy.overrides]]
-module = [
-    "active_checks.*",
-    "agents.plugins.*",
-    "buildscripts.*",
-    "doc.*",
-    "tests.*",
-    "cmk.*",
-]
 enable_error_code = [
   # "explicit-override",   # 9999 errors in 762 files
   "ignore-without-code",
@@ -158,8 +123,21 @@ enable_error_code = [
   "unused-awaitable",
   "unused-ignore",
 ]
-
+explicit_package_bases = true
+mypy_path = """\
+    $MYPY_CONFIG_FILE_DIR:\
+    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
+    $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
+    $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
+    $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
+    $MYPY_CONFIG_FILE_DIR/tests/typeshed:\
+    $MYPY_CONFIG_FILE_DIR/packages/cmk-trace\
+    """
+plugins = ["pydantic.mypy"]
+python_version = "3.12"
+scripts_are_modules = true
 # When all of these are true, we can enable --strict
+check_untyped_defs = true
 disallow_any_generics = false      # 1904 errors in 507 files
 disallow_incomplete_defs = true
 disallow_subclassing_any = true
@@ -169,9 +147,10 @@ disallow_untyped_defs = false      # 6738 errors in 1571
 extra_checks = true
 no_implicit_reexport = true
 strict_equality = true
+warn_redundant_casts = true
 warn_return_any = false            # 622 errors in 267 files
+warn_unused_configs = true
 warn_unused_ignores = true
-
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false   # 2854 errors in 836 files
@@ -180,6 +159,9 @@ disallow_any_unimported = false # 291 errors in 46 files
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = false        # 240 errors in 133 files
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
 
 [[tool.mypy.overrides]]
 module = [

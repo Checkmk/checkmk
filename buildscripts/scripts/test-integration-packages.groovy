@@ -2,7 +2,9 @@
 
 /// file: test-integration-packages.groovy
 
-/// Run integration tests for the Checkmk Docker image
+/// Run integration tests for checkmk OS packages
+
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def main() {
     check_job_parameters([
@@ -13,15 +15,19 @@ def main() {
         "USE_CASE",
     ]);
 
-    check_environment_variables([
-        "BRANCH",
-    ]);
-
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
+    // TODO: we should always use USE_CASE directly from the job parameters
+    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests"
+    test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
     def all_distros = versioning.get_distros(override: "all");
-    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_tests", override: OVERRIDE_DISTROS);
+    def selected_distros = versioning.get_distros(
+        edition: EDITION,
+        use_case: use_case,
+        override: OVERRIDE_DISTROS
+    );
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
@@ -30,7 +36,7 @@ def main() {
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
+        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
@@ -39,14 +45,13 @@ def main() {
         |Run integration tests for packages<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
-        |distros: ${distros}<br>
+        |selected_distros: ${selected_distros}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |all_distros:.............. │${all_distros}│
-        |distros:.................  │${distros}│
+        |selected_distros:........  │${selected_distros}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:........  │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -56,20 +61,65 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    stage('test integration') {  // TODO should not be needed
-        // TODO: don't run make test-integration-docker but use docker.inside() instead
-        testing_helper.run_make_targets(
-            // Get the ID of the docker group from the node(!). This must not be
-            // executed inside the container (as long as the IDs are different)
-            DOCKER_GROUP_ID: get_docker_group_id(),
-            DISTRO_LIST: distros,
-            EDITION: EDITION,
-            VERSION: VERSION,
-            DOCKER_TAG: docker_tag,
-            MAKE_TARGET: "test-integration-docker",
-            BRANCH: branch_name,
-            cmk_version: cmk_version_rc_aware,
-        );
+    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
+    def relative_job_name = "${base_folder}/builders/test-integration-single-f12less";
+
+    /// avoid failures due to leftover artifacts from prior runs
+    sh("rm -rf ${checkout_dir}/test-results");
+
+    def test_stages = all_distros.collectEntries { distro -> [
+        ("Test ${distro}") : {
+            def run_condition = distro in selected_distros;
+
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional("Test ${distro}");
+            }
+
+            smart_stage(
+                name: "Test ${distro}",
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                def build_instance = smart_build(
+                    job: relative_job_name,
+                    parameters: [
+                        stringParam(name: "DISTRO", value: distro),
+                        stringParam(name: "EDITION", value: EDITION),
+                        stringParam(name: "VERSION", value: VERSION),
+                        stringParam(name: "DOCKER_TAG", value: docker_tag),
+                        stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
+                        stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                    ],
+                );
+                copyArtifacts(
+                    projectName: build_instance.getFullProjectName(),
+                    selector: specific(build_instance.getId()), // buildNumber shall be a string
+                    target: "${checkout_dir}/test-results",
+                    fingerprintArtifacts: true
+                );
+                return build_instance.getResult();
+            }
+        }]
+    }
+
+    currentBuild.result = parallel(test_stages).values().every { it } ? "SUCCESS" : "FAILURE";
+
+    stage("Archive / process test reports") {
+        dir("${checkout_dir}") {
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(allowEmptyArchive: true, artifacts: "test-results/**");
+            }
+            xunit([Custom(
+                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: "**/junit.xml",
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )]);
+        }
     }
 }
 

@@ -7,8 +7,6 @@
 // see https://github.com/vuejs/eslint-plugin-vue/issues/2201
 /* eslint-disable vue/one-component-per-file */
 
-import 'core-js/stable'
-
 import { createApp } from 'vue'
 
 import QuickSetup from './quick-setup/QuickSetupApp.vue'

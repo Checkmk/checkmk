@@ -360,7 +360,10 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 
 const handleError = (err: RestApiError) => {
   if (err.type === 'general') {
-    globalError.value = (err as GeneralError).general_error
+    globalError.value = `An error occurred while trying to proceed to the next step.
+The underlying call raised the following error: ${(err as GeneralError).general_error}
+Please try again to confirm this is not a one-time occurrence.
+Please verify the logs if this error persists.`
   } else {
     stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors
     stages.value[quickSetupHook.stage.value]!.form_spec_errors = (

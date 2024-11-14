@@ -16,6 +16,10 @@ RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
+# Control number of Erlang schedulers and amount of memory allocated for constant data
+RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 2:2 +MIscs 32"
+# Control the number of arenas that the erlang memory allocator can use for multi-threaded applications
+MALLOC_ARENA_MAX="1"
 INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 
 getpid() {
@@ -114,6 +118,8 @@ case "$1" in
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
             RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
             ERL_EPMD_ADDRESS="${ERL_EPMD_ADDRESS}" \
+            RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS}" \
+            MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;

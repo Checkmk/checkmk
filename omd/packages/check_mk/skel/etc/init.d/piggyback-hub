@@ -6,7 +6,7 @@
 PIDFILE=$OMD_ROOT/tmp/run/piggyback-hub.pid
 LOGFILE=$OMD_ROOT/var/log/piggyback-hub.log
 CONFDIR=$OMD_ROOT/etc/check_mk/piggyback_hub.d/wato
-DAEMON=$OMD_ROOT/bin/piggyback_hub
+DAEMON=$OMD_ROOT/bin/cmk-piggyback-hub
 PID=$(cat "$PIDFILE" 2>/dev/null)
 
 process_is_running() {

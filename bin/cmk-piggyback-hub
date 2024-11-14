@@ -20,8 +20,8 @@ CrashReportStore = crash_reporting.CrashReportStore
 @crash_reporting.crash_report_registry.register
 class PiggybackHubCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
-    def type(cls) -> Literal["piggyback_hub"]:
-        return "piggyback_hub"
+    def type(cls) -> Literal["piggyback-hub"]:
+        return "piggyback-hub"
 
 
 def create_crash_report_callback() -> str:

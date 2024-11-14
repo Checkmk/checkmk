@@ -12,27 +12,14 @@ EXPOSE 5000 6557
 HEALTHCHECK --interval=1m --timeout=5s \
     CMD omd status || exit 1
 
-COPY docker-entrypoint.sh /
-# Starts the entrypoint script and hands over CMD by default
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-# Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.5.0b1"
-ARG CMK_EDITION
-ARG DISTRO_CODENAME="jammy"
-
 # The following variables can be set during container init (docker run -e KEY=val)
-ARG CMK_SITE_ID
 ENV CMK_SITE_ID="cmk"
 # Set this to "on" to enable livestatus via network
-ARG CMK_LIVESTATUS_TCP
 ENV CMK_LIVESTATUS_TCP=""
 # A random password will be generated in case you don't set this
-ARG CMK_PASSWORD
 ENV CMK_PASSWORD=""
 
 # Specify the FQDN of your relay mail server to sent mails to
-ARG MAIL_RELAY_HOST
 ENV MAIL_RELAY_HOST=""
 
 # Set a timezone
@@ -41,6 +28,15 @@ ENV TZ=""
 # Add helper variable to better detect when running inside container.
 # Used e.g. for omd update
 ENV CMK_CONTAINERIZED="TRUE"
+
+COPY docker-entrypoint.sh /
+# Starts the entrypoint script and hands over CMD by default
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Pure build time variable declarations (docker build --build-arg KEY=val)
+ARG CMK_VERSION="2.5.0b1"
+ARG CMK_EDITION
+ARG DISTRO_CODENAME="jammy"
 
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages

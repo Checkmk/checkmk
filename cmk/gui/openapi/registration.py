@@ -10,7 +10,6 @@ from cmk.gui.openapi.endpoints import (
     activate_changes,
     agent,
     audit_log,
-    autocomplete,
     aux_tags,
     broker_connection,
     cert,
@@ -51,7 +50,6 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
-    autocomplete.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     comment.register(endpoint_registry)

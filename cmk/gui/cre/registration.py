@@ -26,6 +26,7 @@ from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
+from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
@@ -103,6 +104,7 @@ def register_painters() -> None:
 
 
 def register(edition: Edition) -> None:
+    autocomplete.register(endpoint_registry)
     common_registration(
         mega_menu_registry,
         job_registry,
@@ -150,6 +152,7 @@ def register(edition: Edition) -> None:
         user_attribute_registry,
         quick_setup_registry,
     )
+
     features_registry.register(
         Features(
             edition,

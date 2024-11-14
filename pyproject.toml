@@ -127,6 +127,10 @@ plugins = ["pydantic.mypy"]
 python_version = "3.12"
 scripts_are_modules = true
 
+# do not descend into 3rd party dependencies
+follow_imports = "silent"
+follow_imports_for_stubs = true
+
 # hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
 disable_bytearray_promotion = true
 disable_memoryview_promotion = true
@@ -300,6 +304,34 @@ module = ["cmk.ec.*"]
 disallow_any_generics = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "cmk.agent_based.*"
+strict = true
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  # Needs to be investigated
+  # "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
 warn_unreachable = true
 
 [tool.pydantic-mypy]

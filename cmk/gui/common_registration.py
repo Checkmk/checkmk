@@ -5,7 +5,7 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-from cmk.ccc.crash_reporting import crash_report_registry
+from cmk.ccc.crash_reporting import CrashReportRegistry
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
@@ -37,40 +37,41 @@ from cmk.gui import (
     weblib,
     werks,
 )
-from cmk.gui.background_job import job_registry
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.background_job import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.cron import cron_job_registry
-from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.cron import CronJobRegistry
+from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
-from cmk.gui.data_source import data_source_registry
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.nodevis import nodevis
-from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
-from cmk.gui.pages import page_registry
-from cmk.gui.painter.v0.base import painter_registry
-from cmk.gui.painter_options import painter_option_registry
-from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.pages import PageRegistry
+from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter_options import PainterOptionRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
-from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.sidebar import snapin_registry
+from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
-from cmk.gui.userdb import user_attribute_registry, user_connector_registry
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.userdb import UserConnectorRegistry
+from cmk.gui.userdb._user_attribute._registry import UserAttributeRegistry
+from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views import registration as views_registration
-from cmk.gui.views.command import command_group_registry, command_registry
-from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.views.layout import layout_registry
-from cmk.gui.views.row_post_processing import row_post_processor_registry
-from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.views.command import CommandGroupRegistry, CommandRegistry
+from cmk.gui.views.icon import IconRegistry
+from cmk.gui.views.layout import LayoutRegistry
+from cmk.gui.views.row_post_processing import RowPostProcessorRegistry
+from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.visuals.filter import filter_registry
-from cmk.gui.visuals.info import visual_info_registry
-from cmk.gui.visuals.type import visual_type_registry
+from cmk.gui.visuals.filter import FilterRegistry
+from cmk.gui.visuals.info import VisualInfoRegistry
+from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
@@ -79,27 +80,73 @@ from cmk.gui.watolib import rulesets as rule_config
 from cmk.gui.watolib import sites as sites_config
 from cmk.gui.watolib import tags as tag_config
 from cmk.gui.watolib import users as user_config
-from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.config_domain_name import (
-    config_domain_registry,
-    config_variable_group_registry,
-    config_variable_registry,
-    sample_config_generator_registry,
+    ConfigDomainRegistry,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
+    SampleConfigGeneratorRegistry,
 )
-from cmk.gui.watolib.config_sync import replication_path_registry
-from cmk.gui.watolib.groups import contact_group_usage_finder_registry
-from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
-from cmk.gui.watolib.host_rename import rename_host_hook_registry
-from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
-from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
-from cmk.gui.watolib.mode import mode_registry
-from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
-from cmk.gui.watolib.search import match_item_generator_registry
-from cmk.gui.watolib.simple_config_file import config_file_registry
-from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
+from cmk.gui.watolib.config_sync import ReplicationPathRegistry
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.host_attributes import HostAttributeRegistry, HostAttributeTopicRegistry
+from cmk.gui.watolib.host_rename import RenameHostHookRegistry
+from cmk.gui.watolib.hosts_and_folders import FolderValidatorsRegistry
+from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
+from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry
+from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 
-def register() -> None:
+def register(
+    mega_menu_registry: MegaMenuRegistry,
+    job_registry: BackgroundJobRegistry,
+    crash_report_registry: CrashReportRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
+    sorter_registry: SorterRegistry,
+    painter_option_registry: PainterOptionRegistry,
+    painter_registry: PainterRegistry,
+    page_registry: PageRegistry,
+    command_registry: CommandRegistry,
+    visual_type_registry: VisualTypeRegistry,
+    row_post_processor_registry: RowPostProcessorRegistry,
+    visual_info_registry: VisualInfoRegistry,
+    filter_registry: FilterRegistry,
+    rulespec_registry: RulespecRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
+    mode_registry: ModeRegistry,
+    main_module_registry: MainModuleRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,
+    icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
+    dashlet_registry: DashletRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+    data_source_registry: DataSourceRegistry,
+    config_domain_registry: ConfigDomainRegistry,
+    timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    main_module_topic_registry: MainModuleTopicRegistry,
+    snapin_registry: SnapinRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+    sample_config_generator_registry: SampleConfigGeneratorRegistry,
+    host_attribute_registry: HostAttributeRegistry,
+    host_attribute_topic_registry: HostAttributeTopicRegistry,
+    replication_path_registry: ReplicationPathRegistry,
+    endpoint_registry: EndpointRegistry,
+    user_connector_registry: UserConnectorRegistry,
+    layout_registry: LayoutRegistry,
+    config_file_registry: ConfigFileRegistry,
+    rename_host_hook_registry: RenameHostHookRegistry,
+    command_group_registry: CommandGroupRegistry,
+    folder_validators_registry: FolderValidatorsRegistry,
+    user_attribute_registry: UserAttributeRegistry,
+    quick_setup_registry: QuickSetupRegistry,
+) -> None:
     pagetypes.register(mega_menu_registry)
     help_menu.register(mega_menu_registry)
     crash_handler.register(crash_report_registry)
@@ -230,6 +277,3 @@ def register() -> None:
     user_config.register(config_file_registry)
     rule_config.register(config_file_registry)
     configuration_bundles.register(config_file_registry)
-
-
-register()

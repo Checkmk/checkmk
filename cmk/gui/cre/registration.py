@@ -5,6 +5,7 @@
 
 """Raw edition and only raw edition specific registrations"""
 
+from cmk.ccc.crash_reporting import crash_report_registry
 from cmk.ccc.version import Edition
 
 import cmk.gui.graphing._graph_images as graph_images
@@ -13,6 +14,8 @@ import cmk.gui.pages
 from cmk.gui import sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
+from cmk.gui.common_registration import register as common_registration
+from cmk.gui.cron import cron_job_registry
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.customer import customer_api_registry, CustomerAPIStub
 from cmk.gui.dashboard import dashlet_registry
@@ -25,18 +28,23 @@ from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
+from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
-from cmk.gui.views.command import command_registry
+from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.icon import icon_and_action_registry
+from cmk.gui.views.layout import layout_registry
+from cmk.gui.views.row_post_processing import row_post_processor_registry
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals import default_site_filter_heading_info
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import (
     default_user_menu_topics,
     NotificationParameterMail,
@@ -58,12 +66,16 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
+from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
+from cmk.gui.watolib.host_rename import rename_host_hook_registry
+from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.piggyback_hub import distribute_piggyback_hub_configs
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.sites import site_management_registry, SiteManagement
 from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
@@ -91,6 +103,53 @@ def register_painters() -> None:
 
 
 def register(edition: Edition) -> None:
+    common_registration(
+        mega_menu_registry,
+        job_registry,
+        crash_report_registry,
+        permission_section_registry,
+        permission_registry,
+        sorter_registry,
+        painter_option_registry,
+        painter_registry,
+        page_registry,
+        command_registry,
+        visual_type_registry,
+        row_post_processor_registry,
+        visual_info_registry,
+        filter_registry,
+        rulespec_registry,
+        config_variable_group_registry,
+        mode_registry,
+        main_module_registry,
+        config_variable_registry,
+        rulespec_group_registry,
+        icon_and_action_registry,
+        cron_job_registry,
+        dashlet_registry,
+        contact_group_usage_finder_registry,
+        autocompleter_registry,
+        data_source_registry,
+        config_domain_registry,
+        timeperiod_usage_finder_registry,
+        automation_command_registry,
+        main_module_topic_registry,
+        snapin_registry,
+        match_item_generator_registry,
+        sample_config_generator_registry,
+        host_attribute_registry,
+        host_attribute_topic_registry,
+        replication_path_registry,
+        endpoint_registry,
+        user_connector_registry,
+        layout_registry,
+        config_file_registry,
+        rename_host_hook_registry,
+        command_group_registry,
+        folder_validators_registry,
+        user_attribute_registry,
+        quick_setup_registry,
+    )
     features_registry.register(
         Features(
             edition,

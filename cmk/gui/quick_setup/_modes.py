@@ -421,7 +421,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
 
     @property
     def icon(self) -> Icon:
-        return "quick_setup_azure"
+        return "azure_vms"
 
     @property
     def description(self) -> str:
@@ -450,7 +450,7 @@ class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
 
     @property
     def icon(self) -> Icon:
-        return "quick_setup_gcp"
+        return "gcp"
 
     @property
     def description(self) -> str:

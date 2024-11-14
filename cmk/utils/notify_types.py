@@ -587,10 +587,10 @@ class PushoverPluginModel(TypedDict):
 
 
 CaseStateStr = Literal["none", "new", "closed", "resolved", "open", "awaiting_info"]
-CaseState = CaseStateStr | int
+CaseState = tuple[Literal["predefined"], CaseStateStr] | tuple[Literal["integer"], int]
 
 IncidentStateStr = Literal["none", "new", "progress", "closed", "resolved", "hold", "canceled"]
-IncidentState = IncidentStateStr | int
+IncidentState = tuple[Literal["predefined"], IncidentStateStr] | tuple[Literal["integer"], int]
 
 
 class IncidentRecoveryState(TypedDict):
@@ -631,6 +631,9 @@ class MgmtTypeCase(MgmtTypeBase):
     recovery_state: NotRequired[CaseRecoveryState]
 
 
+MgmtTypeCaseType = tuple[Literal["case"], MgmtTypeCase]
+MgmtTypeIncidentType = tuple[Literal["incident"], MgmtTypeIncident]
+
 UseSiteIDType = Literal["use_site_id", "deactivated"]
 
 
@@ -640,7 +643,7 @@ class ServiceNowPluginModel(TypedDict):
     use_site_id: NotRequired[UseSiteIDType]
     timeout: NotRequired[str]
     proxy_url: NotRequired[ProxyUrl]
-    mgmt_type: tuple[Literal["incident"], MgmtTypeIncident] | tuple[Literal["case"], MgmtTypeCase]
+    mgmt_type: MgmtTypeCaseType | MgmtTypeIncidentType
 
 
 class SignL4PluginModel(TypedDict):

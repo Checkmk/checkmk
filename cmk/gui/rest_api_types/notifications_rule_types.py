@@ -10,10 +10,12 @@ from typing import cast, Literal, NotRequired, Required, TypedDict
 
 from cmk.utils import password_store
 from cmk.utils.notify_types import (
+    AckState,
     AlwaysBulkParameters,
     AsciiMailPluginName,
     BasicAuth,
     BasicAuthCredentials,
+    CaseRecoveryState,
     CaseState,
     CaseStateStr,
     CheckmkPassword,
@@ -26,6 +28,7 @@ from cmk.utils.notify_types import (
     GroupbyType,
     HostEventType,
     IlertPluginName,
+    IncidentRecoveryState,
     IncidentState,
     IncidentStateStr,
     is_always_bulk,
@@ -35,6 +38,8 @@ from cmk.utils.notify_types import (
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
+    MgmtTypeCaseType,
+    MgmtTypeIncidentType,
     MkeventdPluginName,
     MSTeamsPluginName,
     NotifyBulkType,
@@ -1434,28 +1439,24 @@ class AckStateAPI(CheckboxStateType, total=False):
     value: AckStateValue
 
 
-class AckStateMk(TypedDict):
-    start: IncidentState
-
-
 @dataclass
-class AckState:
-    value: AckStateMk | None = None
+class AcknowledgeState:
+    value: AckState | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: AckStateMk | None) -> AckState:
+    def from_mk_file_format(cls, data: AckState | None) -> AcknowledgeState:
         return cls(value=data)
 
     @classmethod
-    def from_api_request(cls, data: AckStateAPI) -> AckState:
+    def from_api_request(cls, data: AckStateAPI) -> AcknowledgeState:
         if data["state"] == "disabled":
             return cls()
 
         value = data["value"]
 
         if "start_predefined" in value:
-            return cls(value={"start": value["start_predefined"]})
-        return cls(value={"start": value["start_integer"]})
+            return cls(value={"start": ("predefined", value["start_predefined"])})
+        return cls(value={"start": ("integer", value["start_integer"])})
 
     def api_response(self) -> AckStateAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
@@ -1463,64 +1464,116 @@ class AckState:
         if self.value is None:
             return r
 
-        if isinstance(self.value["start"], int):
-            r["value"] = {"start_integer": self.value["start"]}
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
             return r
 
-        r["value"] = {"start_predefined": self.value["start"]}
+        r["value"] = {"start_predefined": self.value["start"][1]}
         return r
 
-    def to_mk_file_format(self) -> AckStateMk | None:
+    def to_mk_file_format(self) -> AckState | None:
         return self.value
 
 
 # ----------------------------------------------------------------
-class RecoveryStateValue(TypedDict, total=False):
-    start_predefined: CaseStateStr | IncidentStateStr
+class RecoveryStateIncidentValue(TypedDict, total=False):
+    start_predefined: IncidentStateStr
     start_integer: int
 
 
-class RecoveryStateAPI(CheckboxStateType, total=False):
-    value: RecoveryStateValue
-
-
-class RecoveryStateMk(TypedDict):
-    start: CaseState | IncidentState
+class RecoveryStateIncidentAPI(CheckboxStateType, total=False):
+    value: RecoveryStateIncidentValue
 
 
 @dataclass
-class RecoveryState:
-    value: RecoveryStateMk | None = None
+class RecoveryStateIncident:
+    value: IncidentRecoveryState | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: RecoveryStateMk | None) -> RecoveryState:
+    def from_mk_file_format(cls, data: IncidentRecoveryState | None) -> RecoveryStateIncident:
         return cls(value=data)
 
     @classmethod
-    def from_api_request(cls, data: RecoveryStateAPI) -> RecoveryState:
+    def from_api_request(cls, data: RecoveryStateIncidentAPI) -> RecoveryStateIncident:
         if data["state"] == "disabled":
             return cls()
 
         value = data["value"]
 
+        state: IncidentState
         if value.get("start_predefined") is not None:
-            return cls(value={"start": value["start_predefined"]})
-        return cls(value={"start": value["start_integer"]})
+            state = ("predefined", value["start_predefined"])
+            return cls(value={"start": state})
 
-    def api_response(self) -> RecoveryStateAPI:
+        state = ("integer", value["start_integer"])
+        return cls(value={"start": state})
+
+    def api_response(self) -> RecoveryStateIncidentAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
-        r: RecoveryStateAPI = {"state": state}
+        r: RecoveryStateIncidentAPI = {"state": state}
         if self.value is None:
             return r
 
-        if isinstance(self.value["start"], int):
-            r["value"] = {"start_integer": self.value["start"]}
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
             return r
 
-        r["value"] = {"start_predefined": self.value["start"]}
+        r["value"] = {"start_predefined": self.value["start"][1]}
         return r
 
-    def to_mk_file_format(self) -> RecoveryStateMk | None:
+    def to_mk_file_format(self) -> IncidentRecoveryState | None:
+        return self.value
+
+
+class RecoveryStateCaseValue(TypedDict, total=False):
+    start_predefined: CaseStateStr
+    start_integer: int
+
+
+class RecoveryStateCaseAPI(CheckboxStateType, total=False):
+    value: RecoveryStateCaseValue
+
+
+@dataclass
+class RecoveryStateCase:
+    value: CaseRecoveryState | None = None
+
+    @classmethod
+    def from_mk_file_format(
+        cls,
+        data: CaseRecoveryState | None,
+    ) -> RecoveryStateCase:
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(cls, data: RecoveryStateCaseAPI) -> RecoveryStateCase:
+        if data["state"] == "disabled":
+            return cls()
+
+        value = data["value"]
+
+        state: CaseState
+        if value.get("start_predefined") is not None:
+            state = ("predefined", value["start_predefined"])
+            return cls(value={"start": state})
+
+        state = ("integer", value["start_integer"])
+        return cls(value={"start": state})
+
+    def api_response(self) -> RecoveryStateCaseAPI:
+        state: CheckboxState = "disabled" if not self.value else "enabled"
+        r: RecoveryStateCaseAPI = {"state": state}
+        if self.value is None:
+            return r
+
+        if self.value["start"][0] == "integer":
+            r["value"] = {"start_integer": self.value["start"][1]}
+            return r
+
+        r["value"] = {"start_predefined": self.value["start"][1]}
+        return r
+
+    def to_mk_file_format(self) -> CaseRecoveryState | None:
         return self.value
 
 
@@ -1558,16 +1611,16 @@ class DowntimeState:
         value: DowntimeStateMk = {}
 
         if "start_predefined" in v:
-            value["start"] = v["start_predefined"]
+            value["start"] = ("predefined", v["start_predefined"])
 
         if "start_integer" in v:
-            value["start"] = v["start_integer"]
+            value["start"] = ("integer", v["start_integer"])
 
         if "end_predefined" in v:
-            value["end"] = v["end_predefined"]
+            value["end"] = ("predefined", v["end_predefined"])
 
         if "end_integer" in v:
-            value["end"] = v["end_integer"]
+            value["end"] = ("integer", v["end_integer"])
 
         return cls(value=value)
 
@@ -1578,16 +1631,16 @@ class DowntimeState:
             return r
 
         v: DowntimeStateValue = {}
-        if isinstance(self.value["start"], int):
-            v["start_integer"] = self.value["start"]
+        if self.value["start"][0] == "integer":
+            v["start_integer"] = self.value["start"][1]
         else:
-            v["start_predefined"] = self.value["start"]
+            v["start_predefined"] = self.value["start"][1]
 
         if "end" in self.value:
-            if isinstance(self.value["end"], int):
-                v["end_integer"] = self.value["end"]
+            if self.value["end"][0] == "integer":
+                v["end_integer"] = self.value["end"][1]
             else:
-                v["end_predefined"] = self.value["end"]
+                v["end_predefined"] = self.value["end"][1]
 
         r["value"] = v
         return r
@@ -1605,23 +1658,35 @@ class MgmntUrgencyAPIValueType(CheckboxStateType, total=False):
     value: MgmntUrgencyType
 
 
-class MgmtTypeParamsAPI(TypedDict, total=False):
+class MgmtTypeParams(TypedDict, total=False):
     host_short_description: CheckboxStrAPIType
     service_short_description: CheckboxStrAPIType
     service_description: CheckboxStrAPIType
     host_description: CheckboxStrAPIType
-    urgency: MgmntUrgencyAPIValueType
-    impact: CheckboxStrAPIType
-    caller: str
-    state_recovery: RecoveryStateAPI
-    state_acknowledgement: AckStateAPI
-    state_downtime: DowntimeStateAPI
+
+
+class MgmtTypeCaseParamsAPI(MgmtTypeParams, total=False):
+    state_recovery: RecoveryStateCaseAPI
     priority: MgmntPriorityAPIValueType
 
 
-class MgmtTypeAPI(TypedDict, total=False):
-    option: Literal["case", "incident"]
-    params: MgmtTypeParamsAPI
+class MgmtTypeCaseAPI(TypedDict, total=False):
+    option: Literal["case"]
+    params: MgmtTypeCaseParamsAPI
+
+
+class MgmtTypeIncidentParamsAPI(MgmtTypeParams, total=False):
+    urgency: MgmntUrgencyAPIValueType
+    impact: CheckboxStrAPIType
+    caller: str
+    state_recovery: RecoveryStateIncidentAPI
+    state_acknowledgement: AckStateAPI
+    state_downtime: DowntimeStateAPI
+
+
+class MgmtTypeIncidentAPI(TypedDict, total=False):
+    option: Literal["incident"]
+    params: MgmtTypeIncidentParamsAPI
 
 
 @dataclass
@@ -1685,134 +1750,170 @@ class ManagementType:
     urgency: ManagementTypeUrgency = field(default_factory=ManagementTypeUrgency)
     impact: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     caller: str | None = None
-    state_recovery: RecoveryState = field(default_factory=RecoveryState)
-    state_acknowledgement: AckState = field(default_factory=AckState)
+    case_state_recovery: RecoveryStateCase = field(default_factory=RecoveryStateCase)
+    incident_state_recovery: RecoveryStateIncident = field(default_factory=RecoveryStateIncident)
+    state_acknowledgement: AcknowledgeState = field(default_factory=AcknowledgeState)
     state_downtime: DowntimeState = field(default_factory=DowntimeState)
 
     @classmethod
     def from_mk_file_format(
-        cls, config: tuple[Literal["case", "incident"], Mapping] | None
+        cls, config: MgmtTypeCaseType | MgmtTypeIncidentType | None
     ) -> ManagementType:
         if config is None:
             return cls()
 
-        mgmt_type, params = config
-
-        if mgmt_type == "case":
+        if config[0] == "case":
+            case_params = config[1]
             return cls(
-                mgmt_type=mgmt_type,
+                mgmt_type="case",
                 host_short_desc=CheckboxWithStrValue.from_mk_file_format(
-                    params.get("host_short_desc")
+                    case_params.get("host_short_desc")
                 ),
                 svc_short_desc=CheckboxWithStrValue.from_mk_file_format(
-                    params.get("svc_short_desc")
+                    case_params.get("svc_short_desc")
                 ),
-                host_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_desc")),
-                svc_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_desc")),
-                state_recovery=RecoveryState.from_mk_file_format(params.get("recovery_state")),
-                priority=ManagementTypePriority.from_mk_file_format(params.get("priority")),
+                host_desc=CheckboxWithStrValue.from_mk_file_format(case_params.get("host_desc")),
+                svc_desc=CheckboxWithStrValue.from_mk_file_format(case_params.get("svc_desc")),
+                case_state_recovery=RecoveryStateCase.from_mk_file_format(
+                    case_params.get("recovery_state")
+                ),
+                priority=ManagementTypePriority.from_mk_file_format(case_params.get("priority")),
             )
 
+        incident_params = config[1]
         return cls(
-            mgmt_type=mgmt_type,
-            host_short_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_short_desc")),
-            svc_short_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_short_desc")),
-            host_desc=CheckboxWithStrValue.from_mk_file_format(params.get("host_desc")),
-            svc_desc=CheckboxWithStrValue.from_mk_file_format(params.get("svc_desc")),
-            state_recovery=RecoveryState.from_mk_file_format(params.get("recovery_state")),
-            caller=params.get("caller", ""),
-            urgency=ManagementTypeUrgency.from_mk_file_format(params.get("urgency")),
-            impact=CheckboxWithStrValue.from_mk_file_format(params.get("impact")),
-            state_acknowledgement=AckState.from_mk_file_format(params.get("ack_state")),
-            state_downtime=DowntimeState.from_mk_file_format(params.get("dt_state")),
+            mgmt_type="incident",
+            host_short_desc=CheckboxWithStrValue.from_mk_file_format(
+                incident_params.get("host_short_desc")
+            ),
+            svc_short_desc=CheckboxWithStrValue.from_mk_file_format(
+                incident_params.get("svc_short_desc")
+            ),
+            host_desc=CheckboxWithStrValue.from_mk_file_format(incident_params.get("host_desc")),
+            svc_desc=CheckboxWithStrValue.from_mk_file_format(incident_params.get("svc_desc")),
+            incident_state_recovery=RecoveryStateIncident.from_mk_file_format(
+                incident_params.get("recovery_state")
+            ),
+            caller=incident_params.get("caller", ""),
+            urgency=ManagementTypeUrgency.from_mk_file_format(incident_params.get("urgency")),
+            impact=CheckboxWithStrValue.from_mk_file_format(incident_params.get("impact")),
+            state_acknowledgement=AcknowledgeState.from_mk_file_format(
+                incident_params.get("ack_state")
+            ),
+            state_downtime=DowntimeState.from_mk_file_format(incident_params.get("dt_state")),
         )
 
     @classmethod
-    def from_api_request(cls, data: MgmtTypeAPI) -> ManagementType:
+    def from_api_request(cls, data: MgmtTypeIncidentAPI | MgmtTypeCaseAPI) -> ManagementType:
         option = data["option"]
-        params = data["params"]
 
-        if option == "incident":
+        if data["option"] == "incident":
+            incident_params = data["params"]
             return cls(
                 mgmt_type=option,
                 host_short_desc=CheckboxWithStrValue.from_api_request(
-                    params["host_short_description"]
+                    incident_params["host_short_description"]
                 ),
                 svc_short_desc=CheckboxWithStrValue.from_api_request(
-                    params["service_short_description"]
+                    incident_params["service_short_description"]
                 ),
-                svc_desc=CheckboxWithStrValue.from_api_request(params["service_description"]),
-                host_desc=CheckboxWithStrValue.from_api_request(params["host_description"]),
-                urgency=ManagementTypeUrgency.from_api_request(params["urgency"]),
-                impact=CheckboxWithStrValue.from_api_request(params["impact"]),
-                caller=params["caller"],
-                state_recovery=RecoveryState.from_api_request(
-                    params["state_recovery"],
+                svc_desc=CheckboxWithStrValue.from_api_request(
+                    incident_params["service_description"]
                 ),
-                state_acknowledgement=AckState.from_api_request(params["state_acknowledgement"]),
-                state_downtime=DowntimeState.from_api_request(params["state_downtime"]),
+                host_desc=CheckboxWithStrValue.from_api_request(
+                    incident_params["host_description"]
+                ),
+                urgency=ManagementTypeUrgency.from_api_request(incident_params["urgency"]),
+                impact=CheckboxWithStrValue.from_api_request(incident_params["impact"]),
+                caller=incident_params["caller"],
+                incident_state_recovery=RecoveryStateIncident.from_api_request(
+                    incident_params["state_recovery"],
+                ),
+                state_acknowledgement=AcknowledgeState.from_api_request(
+                    incident_params["state_acknowledgement"]
+                ),
+                state_downtime=DowntimeState.from_api_request(incident_params["state_downtime"]),
             )
 
+        case_params = data["params"]
         return cls(
             mgmt_type=option,
-            host_short_desc=CheckboxWithStrValue.from_api_request(params["host_short_description"]),
-            svc_short_desc=CheckboxWithStrValue.from_api_request(
-                params["service_short_description"]
+            host_short_desc=CheckboxWithStrValue.from_api_request(
+                case_params["host_short_description"]
             ),
-            svc_desc=CheckboxWithStrValue.from_api_request(params["service_description"]),
-            host_desc=CheckboxWithStrValue.from_api_request(params["host_description"]),
-            priority=ManagementTypePriority.from_api_request(params["priority"]),
-            state_recovery=RecoveryState.from_api_request(
-                params["state_recovery"],
+            svc_short_desc=CheckboxWithStrValue.from_api_request(
+                case_params["service_short_description"]
+            ),
+            svc_desc=CheckboxWithStrValue.from_api_request(case_params["service_description"]),
+            host_desc=CheckboxWithStrValue.from_api_request(case_params["host_description"]),
+            priority=ManagementTypePriority.from_api_request(case_params["priority"]),
+            case_state_recovery=RecoveryStateCase.from_api_request(
+                case_params["state_recovery"],
             ),
         )
 
-    def api_response(self) -> MgmtTypeAPI:
-        r: MgmtTypeAPI = {"option": self.mgmt_type}
-        params: MgmtTypeParamsAPI = {
+    def api_response(self) -> MgmtTypeIncidentAPI | MgmtTypeCaseAPI:
+        if self.mgmt_type == "case":
+            case_params: MgmtTypeCaseParamsAPI = {
+                "host_description": self.host_desc.api_response(),
+                "service_description": self.svc_desc.api_response(),
+                "host_short_description": self.host_short_desc.api_response(),
+                "service_short_description": self.svc_short_desc.api_response(),
+                "state_recovery": self.case_state_recovery.api_response(),
+                "priority": self.priority.api_response(),
+            }
+
+            return MgmtTypeCaseAPI(option="case", params=case_params)
+
+        incident_params: MgmtTypeIncidentParamsAPI = {
             "host_description": self.host_desc.api_response(),
             "service_description": self.svc_desc.api_response(),
             "host_short_description": self.host_short_desc.api_response(),
             "service_short_description": self.svc_short_desc.api_response(),
-            "state_recovery": self.state_recovery.api_response(),
+            "state_recovery": self.incident_state_recovery.api_response(),
+            "caller": "" if self.caller is None else self.caller,
+            "urgency": self.urgency.api_response(),
+            "impact": self.impact.api_response(),
+            "state_acknowledgement": self.state_acknowledgement.api_response(),
+            "state_downtime": self.state_downtime.api_response(),
         }
 
-        if self.mgmt_type == "case":
-            params["priority"] = self.priority.api_response()
-            r["params"] = params
-            return r
+        return MgmtTypeIncidentAPI(option="incident", params=incident_params)
 
-        params.update(
-            {
-                "caller": "" if self.caller is None else self.caller,
-                "urgency": self.urgency.api_response(),
-                "impact": self.impact.api_response(),
-                "state_acknowledgement": self.state_acknowledgement.api_response(),
-                "state_downtime": self.state_downtime.api_response(),
-            }
-        )
-        r["params"] = params
-        return r
-
-    def to_mk_file_format(self) -> tuple[Literal["case", "incident"], Mapping] | None:
+    def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
         if self.mgmt_type is None:
             return None
 
-        r = {
-            "ack_state": self.state_acknowledgement.to_mk_file_format(),
-            "caller": self.caller,
-            "dt_state": self.state_downtime.to_mk_file_format(),
-            "host_desc": self.host_desc.to_mk_file_format(),
-            "host_short_desc": self.host_short_desc.to_mk_file_format(),
-            "impact": self.impact.to_mk_file_format(),
-            "recovery_state": self.state_recovery.to_mk_file_format(),
-            "svc_desc": self.svc_desc.to_mk_file_format(),
-            "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
-            "urgency": self.urgency.to_mk_file_format(),
-            "priority": self.priority.to_mk_file_format(),
-        }
+        if self.mgmt_type == "case":
+            r_case = {
+                "host_short_desc": self.host_short_desc.to_mk_file_format(),
+                "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
+                "host_desc": self.host_desc.to_mk_file_format(),
+                "svc_desc": self.svc_desc.to_mk_file_format(),
+                "priority": self.priority.to_mk_file_format(),
+                "recovery_state": self.case_state_recovery.to_mk_file_format(),
+            }
+            return cast(
+                MgmtTypeCaseType,
+                ("case", {k: v for k, v in r_case.items() if v is not None}),
+            )
 
-        return (self.mgmt_type, {k: v for k, v in r.items() if v is not None})
+        r_incident = {
+            "host_short_desc": self.host_short_desc.to_mk_file_format(),
+            "svc_short_desc": self.svc_short_desc.to_mk_file_format(),
+            "host_desc": self.host_desc.to_mk_file_format(),
+            "svc_desc": self.svc_desc.to_mk_file_format(),
+            "caller": self.caller,
+            "urgency": self.urgency.to_mk_file_format(),
+            "impact": self.impact.to_mk_file_format(),
+            "ack_state": self.state_acknowledgement.to_mk_file_format(),
+            "dt_state": self.state_downtime.to_mk_file_format(),
+            "recovery_state": self.incident_state_recovery.to_mk_file_format(),
+        }
+        return cast(
+            MgmtTypeIncidentType,
+            ("incident", {k: v for k, v in r_incident.items() if v is not None}),
+        )
 
 
 # ----------------------------------------------------------------
@@ -2776,7 +2877,7 @@ class API_ServiceNowData(TypedDict, total=False):
     auth: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
     use_site_id_prefix: CheckboxUseSiteIDPrefixAPIType
     optional_timeout: CheckboxStrAPIType
-    management_type: MgmtTypeAPI
+    management_type: MgmtTypeIncidentAPI | MgmtTypeCaseAPI
 
 
 class API_SignL4Data(TypedDict, total=False):

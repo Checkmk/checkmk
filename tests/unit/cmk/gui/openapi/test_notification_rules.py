@@ -24,6 +24,7 @@ from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    AckStateAPI,
     API_BasicAuthExplicit,
     API_BasicAuthStore,
     API_ExplicitToken,
@@ -37,13 +38,18 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIPluginDict,
     APIPluginList,
     APIRuleProperties,
+    DowntimeStateAPI,
     MatchHostEventsAPIType,
     MatchServiceEventsAPIType,
-    MgmtTypeAPI,
-    MgmtTypeParamsAPI,
+    MgmtTypeCaseAPI,
+    MgmtTypeCaseParamsAPI,
+    MgmtTypeIncidentAPI,
+    MgmtTypeIncidentParamsAPI,
     NotificationBulkingAPIAttrs,
     NotificationBulkingAPIValueType,
     PluginType,
+    RecoveryStateCaseAPI,
+    RecoveryStateIncidentAPI,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
 from cmk.gui.watolib.notification_parameter import (
@@ -1520,7 +1526,7 @@ service_now: API_ServiceNowData = {
     "management_type": {},
 }
 
-service_now_incident: MgmtTypeAPI = {
+service_now_incident: MgmtTypeIncidentAPI = {
     "option": "incident",
     "params": {
         "caller": "",
@@ -1549,59 +1555,59 @@ service_now_incident: MgmtTypeAPI = {
 }
 
 
-def incident_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
+def incident_states() -> list[MgmtTypeIncidentParamsAPI]:
+    d: list[MgmtTypeIncidentParamsAPI] = []
     for n, predefined_state in enumerate(list(get_args(IncidentStateStr))):
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={
                         "start_predefined": predefined_state,
                         "end_predefined": predefined_state,
                     },
-                },
-            },
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {"start_integer": n, "end_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={"start_integer": n, "end_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1609,10 +1615,10 @@ def incident_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", incident_states())
 def test_service_now_management_incident_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeIncidentParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_incident
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
@@ -1622,7 +1628,7 @@ def test_service_now_management_incident_types_200(
     assert r1.json["extensions"] == {"rule_config": config}
 
 
-service_now_case: MgmtTypeAPI = {
+service_now_case: MgmtTypeCaseAPI = {
     "option": "case",
     "params": {
         "host_description": {
@@ -1645,24 +1651,24 @@ service_now_case: MgmtTypeAPI = {
 }
 
 
-def case_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
+def case_states() -> list[MgmtTypeCaseParamsAPI]:
+    d: list[MgmtTypeCaseParamsAPI] = []
     for n, predefined_state in enumerate(list(get_args(CaseStateStr))):
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1670,10 +1676,10 @@ def case_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", case_states())
 def test_service_now_management_case_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeCaseParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_case
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,

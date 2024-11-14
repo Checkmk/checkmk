@@ -342,7 +342,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     bool in_nagios_initial_states = false;
 
     // Notification periods information, name: active(1)/inactive(0)
-    notification_periods_t notification_periods;
+    time_periods_t time_periods;
 
     while (LogEntry *entry = it.getNextLogentry()) {
         if (abort_query_ || entry->time() >= period.until) {
@@ -372,8 +372,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 break;
             case LogEntryKind::state_service_initial:
                 handle_state_entry(query, user, core, entry, only_update,
-                                   notification_periods, false, state_info,
-                                   blacklist, period);
+                                   time_periods, false, state_info, blacklist,
+                                   period);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
@@ -382,14 +382,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
                 handle_state_entry(query, user, core, entry, only_update,
-                                   notification_periods, false, state_info,
-                                   blacklist, period);
+                                   time_periods, false, state_info, blacklist,
+                                   period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(query, user, core, entry, only_update,
-                                   notification_periods, true, state_info,
-                                   blacklist, period);
+                                   time_periods, true, state_info, blacklist,
+                                   period);
                 break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
@@ -398,15 +398,15 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
                 handle_state_entry(query, user, core, entry, only_update,
-                                   notification_periods, true, state_info,
-                                   blacklist, period);
+                                   time_periods, true, state_info, blacklist,
+                                   period);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
                 handle_timeperiod_transition(query, user, core, period, entry,
-                                             only_update, notification_periods,
+                                             only_update, time_periods,
                                              state_info);
                 in_nagios_initial_states = false;
                 break;
@@ -426,8 +426,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
 void TableStateHistory::handle_state_entry(
     Query &query, const User &user, const ICore &core, const LogEntry *entry,
-    bool only_update, const notification_periods_t &notification_periods,
-    bool is_host_entry, state_info_t &state_info, ObjectBlacklist &blacklist,
+    bool only_update, const time_periods_t &time_periods, bool is_host_entry,
+    state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
@@ -451,18 +451,17 @@ void TableStateHistory::handle_state_entry(
     }
 
     if (!state_info.contains(key)) {
-        insert_new_state(entry, only_update, notification_periods, state_info,
+        insert_new_state(entry, only_update, time_periods, state_info,
                          blacklist, period, entry_host, entry_service, key);
     }
     update(query, user, core, period, entry, *state_info[key], only_update,
-           notification_periods);
+           time_periods);
 }
 
 // static
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void TableStateHistory::insert_new_state(
-    const LogEntry *entry, bool only_update,
-    const notification_periods_t &notification_periods,
+    const LogEntry *entry, bool only_update, const time_periods_t &time_periods,
     state_info_t &state_info, ObjectBlacklist &blacklist,
     const LogPeriod &period, const IHost *entry_host,
     const IService *entry_service, HostServiceKey key) {
@@ -517,16 +516,16 @@ void TableStateHistory::insert_new_state(
                                    : "";
 
     // Determine initial in_notification_period status
-    auto tmp_period = notification_periods.find(state->_notification_period);
-    if (tmp_period != notification_periods.end()) {
+    auto tmp_period = time_periods.find(state->_notification_period);
+    if (tmp_period != time_periods.end()) {
         state->_in_notification_period = tmp_period->second;
     } else {
         state->_in_notification_period = 1;
     }
 
     // Same for service period
-    tmp_period = notification_periods.find(state->_service_period);
-    if (tmp_period != notification_periods.end()) {
+    tmp_period = time_periods.find(state->_service_period);
+    if (tmp_period != time_periods.end()) {
         state->_in_service_period = tmp_period->second;
     } else {
         state->_in_service_period = 1;
@@ -556,15 +555,14 @@ void TableStateHistory::insert_new_state(
 
 void TableStateHistory::handle_timeperiod_transition(
     Query &query, const User &user, const ICore &core, const LogPeriod &period,
-    const LogEntry *entry, bool only_update,
-    notification_periods_t &notification_periods,
+    const LogEntry *entry, bool only_update, time_periods_t &time_periods,
     const state_info_t &state_info) {
     try {
         const TimeperiodTransition tpt(entry->options());
-        notification_periods[tpt.name()] = tpt.to();
+        time_periods[tpt.name()] = tpt.to();
         for (const auto &[key, hss] : state_info) {
             updateHostServiceState(query, user, core, period, entry, *hss,
-                                   only_update, notification_periods);
+                                   only_update, time_periods);
         }
     } catch (const std::logic_error &e) {
         Warning(core.loggerLivestatus())
@@ -603,13 +601,13 @@ void TableStateHistory::final_reports(Query &query, const User &user,
     }
 }
 
-void TableStateHistory::update(
-    Query &query, const User &user, const ICore &core, const LogPeriod &period,
-    const LogEntry *entry, HostServiceState &state, bool only_update,
-    const notification_periods_t &notification_periods) {
-    auto state_changed =
-        updateHostServiceState(query, user, core, period, entry, state,
-                               only_update, notification_periods);
+void TableStateHistory::update(Query &query, const User &user,
+                               const ICore &core, const LogPeriod &period,
+                               const LogEntry *entry, HostServiceState &state,
+                               bool only_update,
+                               const time_periods_t &time_periods) {
+    auto state_changed = updateHostServiceState(
+        query, user, core, period, entry, state, only_update, time_periods);
     // Host downtime or state changes also affect its services
     if (entry->kind() == LogEntryKind::alert_host ||
         entry->kind() == LogEntryKind::state_host ||
@@ -617,7 +615,7 @@ void TableStateHistory::update(
         if (state_changed == ModificationStatus::changed) {
             for (auto &svc : state._services) {
                 updateHostServiceState(query, user, core, period, entry, *svc,
-                                       only_update, notification_periods);
+                                       only_update, time_periods);
             }
         }
     }
@@ -627,7 +625,7 @@ void TableStateHistory::update(
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     Query &query, const User &user, const ICore &core, const LogPeriod &period,
     const LogEntry *entry, HostServiceState &hss, bool only_update,
-    const notification_periods_t &notification_periods) {
+    const time_periods_t &time_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored
@@ -653,8 +651,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
-        auto it_status = notification_periods.find(hss._notification_period);
-        if (it_status != notification_periods.end()) {
+        auto it_status = time_periods.find(hss._notification_period);
+        if (it_status != time_periods.end()) {
             hss._in_notification_period = it_status->second;
         } else {
             // No notification period information available -> within
@@ -663,8 +661,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
 
         // Same for service period
-        it_status = notification_periods.find(hss._service_period);
-        if (it_status != notification_periods.end()) {
+        it_status = time_periods.find(hss._service_period);
+        if (it_status != time_periods.end()) {
             hss._in_service_period = it_status->second;
         } else {
             // No service period information available -> within service period

@@ -84,7 +84,7 @@ public:
         std::map<HostServiceKey, std::unique_ptr<HostServiceState>>;
 
 private:
-    using notification_periods_t = std::map<std::string, int>;
+    using time_periods_t = std::map<std::string, int>;
 
     LogCache *log_cache_;
     bool abort_query_;
@@ -96,23 +96,26 @@ private:
 
     void handle_state_entry(Query &query, const User &user, const ICore &core,
                             const LogEntry *entry, bool only_update,
-                            const notification_periods_t &notification_periods,
+                            const time_periods_t &time_periods,
                             bool is_host_entry, state_info_t &state_info,
                             ObjectBlacklist &blacklist,
                             const LogPeriod &period);
 
-    static void insert_new_state(
-        const LogEntry *entry, bool only_update,
-        const notification_periods_t &notification_periods,
-        state_info_t &state_info, ObjectBlacklist &blacklist,
-        const LogPeriod &period, const IHost *entry_host,
-        const IService *entry_service, HostServiceKey key);
+    static void insert_new_state(const LogEntry *entry, bool only_update,
+                                 const time_periods_t &time_periods,
+                                 state_info_t &state_info,
+                                 ObjectBlacklist &blacklist,
+                                 const LogPeriod &period,
+                                 const IHost *entry_host,
+                                 const IService *entry_service,
+                                 HostServiceKey key);
 
-    void handle_timeperiod_transition(
-        Query &query, const User &user, const ICore &core,
-        const LogPeriod &period, const LogEntry *entry, bool only_update,
-        notification_periods_t &notification_periods,
-        const state_info_t &state_info);
+    void handle_timeperiod_transition(Query &query, const User &user,
+                                      const ICore &core,
+                                      const LogPeriod &period,
+                                      const LogEntry *entry, bool only_update,
+                                      time_periods_t &time_periods,
+                                      const state_info_t &state_info);
 
     void final_reports(Query &query, const User &user,
                        const state_info_t &state_info, const LogPeriod &period);
@@ -123,12 +126,12 @@ private:
     void update(Query &query, const User &user, const ICore &core,
                 const LogPeriod &period, const LogEntry *entry,
                 HostServiceState &state, bool only_update,
-                const notification_periods_t &notification_periods);
+                const time_periods_t &time_periods);
 
     ModificationStatus updateHostServiceState(
         Query &query, const User &user, const ICore &core,
         const LogPeriod &period, const LogEntry *entry, HostServiceState &hss,
-        bool only_update, const notification_periods_t &notification_periods);
+        bool only_update, const time_periods_t &time_periods);
 };
 
 #endif  // TableStateHistory_h

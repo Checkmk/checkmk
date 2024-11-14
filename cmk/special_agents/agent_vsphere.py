@@ -937,6 +937,15 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="""Skip placeholder virtualmachines. These backup vms are created by the Site
         Recovery Manager (SRM) and are identified by not having any assigned virtual disks.""",
     )
+    parser.add_argument(
+        "-T",
+        "--ignore-templates",
+        action="store_true",
+        help="""Ignore Template VMs. A Template is created by converting a stopped VM.
+        It cannot be started or modified without converting or cloning it back to a VM.
+        
+        This option suppresses all agent output of Template VMs.""",
+    )
 
     # optional arguments
     parser.add_argument(
@@ -1880,7 +1889,7 @@ def fetch_virtual_machines(
         if vm_data.get("summary.config.ftInfo.role") == "2":
             continue  # This response coming from the passive fault-tolerance node
 
-        if vm_data.get("config.template") == "true":
+        if opt.ignore_templates and vm_data.get("config.template") == "true":
             continue
 
         if "runtime.host" in vm_data:

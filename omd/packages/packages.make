@@ -218,13 +218,11 @@ include \
     packages/enterprise/enterprise.make \
     packages/cloud/cloud.make \
     packages/managed/managed.make
-    ../non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)
 include \
     packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make \
-    ../non-free/packages/otel-collector/otel-collector.make
+    packages/cloud/cloud.make
 endif
 ifeq ($(EDITION),saas)
 include \

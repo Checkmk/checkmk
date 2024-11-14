@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
-import checkboxChecked from '@/assets/checkbox-x.svg'
 import CmkSpace from '@/components/CmkSpace.vue'
 const value = defineModel<boolean>({ required: false, default: false })
 
@@ -20,7 +19,11 @@ const props = defineProps<CmkCheckboxProps>()
   <label class="cmk-checkbox">
     <CheckboxRoot v-model:checked="value" class="cmk-checkbox__button">
       <CheckboxIndicator class="cmk-checkbox__indicator">
-        <img :src="checkboxChecked" />
+        <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <g transform="rotate(45,9,9)">
+            <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
+          </g>
+        </svg>
       </CheckboxIndicator>
     </CheckboxRoot>
     <span v-if="props.label"><CmkSpace size="small" />{{ label }}</span>
@@ -52,7 +55,7 @@ const props = defineProps<CmkCheckboxProps>()
   justify-content: center;
   align-items: center;
 }
-.cmk-checkbox .cmk-checkbox__indicator img {
+.cmk-checkbox .cmk-checkbox__indicator svg {
   width: 8px;
 }
 </style>

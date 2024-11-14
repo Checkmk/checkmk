@@ -122,8 +122,11 @@ class AggregationData:
                 self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
         for pattern, target_host in self._assignments.get("regex", []):
-            if regex(pattern).match(aggr_name):
-                self._aggregation_targets.setdefault(target_host, {})[aggr_name] = aggr_data
+            if mo := regex(pattern).match(aggr_name):
+                target_name = target_host
+                for nr, text in enumerate(mo.groups("")):
+                    target_name = target_name.replace("\\%d" % (nr + 1), text)
+                self._aggregation_targets.setdefault(target_name, {})[aggr_name] = aggr_data
 
 
 class RawdataException(MKException):
@@ -201,7 +204,7 @@ class AggregationRawdataGenerator:
 class AggregationOutputRenderer:
     def render(self, aggregation_data_results) -> None:  # type: ignore[no-untyped-def]
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}  #
+        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}
 
         output = []
         for aggregation_result in aggregation_data_results:

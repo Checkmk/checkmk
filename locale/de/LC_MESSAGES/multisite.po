@@ -13626,6 +13626,10 @@ msgstr "Einschränkungen manuell konfigurieren"
 msgid "Configure services to monitor"
 msgstr "Zu überwachende Dienste konfigurieren"
 
+#, fuzzy
+msgid "Configure services to monitor & other options"
+msgstr "Zu überwachende Dienste konfigurieren"
+
 msgid "Configure sidebar"
 msgstr "Konfiguriere Seitenleiste"
 
@@ -40769,9 +40773,6 @@ msgstr "Die neue Benachrichtigungsregel #%d wurde erfolgreich erstellt!"
 msgid "New notification rule successfully created!"
 msgstr "Die neue Benachrichtigungsregel wurde erfolgreich erstellt!"
 
-msgid "New notification setup"
-msgstr "Neue Benachrichtigungseinstellung"
-
 msgid "New password"
 msgstr "Neues Passwort"
 
@@ -41907,6 +41908,10 @@ msgstr "Benachrichtigungsmethode '%s' existiert nicht"
 
 msgid "Notification method (plug-in)"
 msgstr "Benachrichtigungsmethode (Plugin)"
+
+#, fuzzy
+msgid "Notification overview"
+msgstr "Benachrichtigungsperiode"
 
 msgid "Notification parameter"
 msgstr "Benachrichtigungsparameter"
@@ -52673,7 +52678,10 @@ msgstr "Wählen Sie ein Symbol aus"
 msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Wählen Sie eine iCalender-Datei (<tt>*.ics</tt>) von Ihrem Rechner"
 
-msgid "Select and configure AWS services you would like to monitor"
+#, fuzzy
+msgid ""
+"Select and configure AWS services you would like to monitor, and set other "
+"options such as AWS tags or a proxy server."
 msgstr ""
 "Wählen und konfigurieren Sie die AWS-Services, die Sie überwachen möchten"
 
@@ -83319,6 +83327,9 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "New notification setup"
+#~ msgstr "Neue Benachrichtigungseinstellung"
 
 #~ msgid ""
 #~ "The host contains all information about configured data source types, "

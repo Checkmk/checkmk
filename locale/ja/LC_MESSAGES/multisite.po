@@ -13503,6 +13503,10 @@ msgstr "制限を手動で設定する"
 msgid "Configure services to monitor"
 msgstr "監視するAzureサービス"
 
+#, fuzzy
+msgid "Configure services to monitor & other options"
+msgstr "監視するAzureサービス"
+
 msgid "Configure sidebar"
 msgstr "サイドバーの設定"
 
@@ -41085,10 +41089,6 @@ msgid "New notification rule successfully created!"
 msgstr "ホスト作成に成功しました"
 
 #, fuzzy
-msgid "New notification setup"
-msgstr "次の通知"
-
-#, fuzzy
 msgid "New password"
 msgstr "新しいパスワード"
 
@@ -42248,6 +42248,10 @@ msgstr "グラフコレクション '%s'は存在しません"
 #, fuzzy
 msgid "Notification method (plug-in)"
 msgstr "通知プラグイン"
+
+#, fuzzy
+msgid "Notification overview"
+msgstr "通知期間"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -53452,7 +53456,9 @@ msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "PCからiCalendarファイル (<tt>*.ics</tt>) を選択します"
 
 #, fuzzy
-msgid "Select and configure AWS services you would like to monitor"
+msgid ""
+"Select and configure AWS services you would like to monitor, and set other "
+"options such as AWS tags or a proxy server."
 msgstr "監視するAzureサービス"
 
 #, fuzzy
@@ -84274,6 +84280,10 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "New notification setup"
+#~ msgstr "次の通知"
 
 #, fuzzy
 #~ msgid "Batch num"

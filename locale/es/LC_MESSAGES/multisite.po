@@ -14219,6 +14219,10 @@ msgstr "Configurar las restricciones manualmente"
 msgid "Configure services to monitor"
 msgstr "Servicios Azure a supervisar"
 
+#, fuzzy
+msgid "Configure services to monitor & other options"
+msgstr "Servicios Azure a supervisar"
+
 msgid "Configure sidebar"
 msgstr "Configurar la barra lateral"
 
@@ -42704,10 +42708,6 @@ msgid "New notification rule successfully created!"
 msgstr "Anfitrión creado con éxito"
 
 #, fuzzy
-msgid "New notification setup"
-msgstr "Siguiente notificación"
-
-#, fuzzy
 msgid "New password"
 msgstr "Nueva contraseña"
 
@@ -43894,6 +43894,10 @@ msgstr "La colección de gráficos '%s' no existe"
 #, fuzzy
 msgid "Notification method (plug-in)"
 msgstr "Plugins de notificación"
+
+#, fuzzy
+msgid "Notification overview"
+msgstr "Período de notificación"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -55347,7 +55351,9 @@ msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Seleccione un archivo iCalendar (<tt>*.ics</tt>) de su PC"
 
 #, fuzzy
-msgid "Select and configure AWS services you would like to monitor"
+msgid ""
+"Select and configure AWS services you would like to monitor, and set other "
+"options such as AWS tags or a proxy server."
 msgstr "Servicios Azure a supervisar"
 
 #, fuzzy
@@ -87191,6 +87197,10 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "New notification setup"
+#~ msgstr "Siguiente notificación"
 
 #, fuzzy
 #~ msgid "Batch num"

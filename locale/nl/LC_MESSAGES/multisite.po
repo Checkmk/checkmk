@@ -14104,6 +14104,10 @@ msgstr "Beperkingen handmatig configureren"
 msgid "Configure services to monitor"
 msgstr "Te controleren Azure diensten"
 
+#, fuzzy
+msgid "Configure services to monitor & other options"
+msgstr "Te controleren Azure diensten"
+
 msgid "Configure sidebar"
 msgstr "Zijbalk configureren"
 
@@ -42354,10 +42358,6 @@ msgid "New notification rule successfully created!"
 msgstr "Host succesvol aangemaakt"
 
 #, fuzzy
-msgid "New notification setup"
-msgstr "Volgende kennisgeving"
-
-#, fuzzy
 msgid "New password"
 msgstr "Nieuw wachtwoord"
 
@@ -43537,6 +43537,10 @@ msgstr "Grafiekverzameling '%s' bestaat niet"
 #, fuzzy
 msgid "Notification method (plug-in)"
 msgstr "Plugins voor kennisgeving"
+
+#, fuzzy
+msgid "Notification overview"
+msgstr "Kennisgevingsperiode"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -54864,7 +54868,9 @@ msgid "Select an iCalendar file (<tt>*.ics</tt>) from your PC"
 msgstr "Selecteer een iCalendar bestand (<tt>*.ics</tt>) van uw PC"
 
 #, fuzzy
-msgid "Select and configure AWS services you would like to monitor"
+msgid ""
+"Select and configure AWS services you would like to monitor, and set other "
+"options such as AWS tags or a proxy server."
 msgstr "Te controleren Azure diensten"
 
 #, fuzzy
@@ -86469,6 +86475,10 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "New notification setup"
+#~ msgstr "Volgende kennisgeving"
 
 #, fuzzy
 #~ msgid "Batch num"

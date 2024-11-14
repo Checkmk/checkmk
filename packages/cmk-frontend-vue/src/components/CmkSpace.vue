@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-const cmkSpaceVariants = cva('', {
+const cmkSpaceVariants = cva('cmk-space', {
   variants: {
     direction: {
       horizontal: 'cmk-space--direction-horizontal',
@@ -35,6 +35,10 @@ defineProps<CmkSpaceProps>()
 </template>
 
 <style scoped>
+.cmk-space {
+  flex-shrink: 0;
+}
+
 .cmk-space--direction-horizontal {
   display: inline-block;
 

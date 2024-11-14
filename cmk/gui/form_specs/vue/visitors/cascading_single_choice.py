@@ -40,7 +40,12 @@ class CascadingSingleChoiceVisitor(
             return (prefill_default, DEFAULT_VALUE)
         if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
             return EMPTY_VALUE
-        assert isinstance(raw_value[0], str)
+
+        name = raw_value[0]
+        if not any(name == element.name for element in self.form_spec.elements):
+            return EMPTY_VALUE
+
+        assert isinstance(name, str)
         assert len(raw_value) == 2
         return tuple(raw_value)
 

@@ -18,19 +18,19 @@ _EstimatedLevels = tuple[float, float]
 _ONE_DAY = 24 * 3600
 
 
-class PredictionParameters(BaseModel, frozen=True):
+class PredictionParameters(BaseModel, frozen=True):  # type: ignore[misc]  # hidden Any
     period: Literal["wday", "day", "hour", "minute"]
     horizon: int
     levels: tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
     bound: tuple[float, float] | None = None
 
 
-class InjectedParameters(BaseModel, frozen=True):
+class InjectedParameters(BaseModel, frozen=True):  # type: ignore[misc]  # hidden Any
     meta_file_path_template: str
     predictions: Mapping[int, tuple[_Prediction | None, _EstimatedLevels | None]]
 
 
-class PredictionInfo(BaseModel, frozen=True):
+class PredictionInfo(BaseModel, frozen=True):  # type: ignore[misc]  # hidden Any
     valid_interval: tuple[int, int]
     metric: str
     direction: _Direction

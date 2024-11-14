@@ -36,9 +36,39 @@ ignore = [
 #[tool.ruff.lint.isort]
 # see ruff.toml for the isort section
 
-# [tool.mypy]
-# Configure under the corresponding [[tool.mypy.overrides]] array
-# in the root `pyproject.toml`.
+[tool.mypy]
+follow_imports = "silent"
+follow_imports_for_stubs = true
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  # Neeeds to be investigated
+  #"redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+explicit_package_bases = true
+packages = ["cmk", "tests"]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
 
 [tool.pytest.ini_options]
 consider_namespace_packages = true

@@ -133,6 +133,7 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
 )
+from cmk.gui.watolib.tags import load_tag_config
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -493,6 +494,13 @@ def _add_doc_references(page_menu: PageMenu, doc_references: dict[DocReference, 
         page_menu.add_doc_reference(title, reference)
 
 
+def _is_tag_group_with_single_choice(group_name: str) -> bool:
+    group_config = load_tag_config().get_tag_group(TagGroupID(group_name))
+    if group_config is None:
+        return False
+    return len(group_config.tags) == 1
+
+
 def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     """
     Example for hosttags:
@@ -513,10 +521,15 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
         return False
 
     if "_hosttags_tag_" in varname and value != "ignore":
+        taggroup_name = varname.split("_hosttags_tag_")[1]
+        if _is_tag_group_with_single_choice(taggroup_name):
+            return False
+
         tagvalue_varname = "{}_hosttags_tagvalue_{}".format(
             form_prefix,
-            varname.split("_hosttags_tag_")[1],
+            taggroup_name,
         )
+
         if request.var(tagvalue_varname):
             return False
 

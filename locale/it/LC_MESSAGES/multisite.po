@@ -19102,6 +19102,10 @@ msgstr "Tempi di inattività dell'host"
 msgid "Downtimes of service"
 msgstr "Tempi di inattività del servizio"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Log: Informazioni sullo stato"
+
 msgid "Drive"
 msgstr "Guida"
 
@@ -41621,6 +41625,13 @@ msgstr "Ottetti non unicast in uscita"
 msgid "Output non-unicast packets"
 msgstr "Uscita dei pacchetti non-unicast"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Output di `sestatus`. Per maggiori dettagli, consultare la guida alla riga "
+"di comando corrispondente."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -41641,6 +41652,13 @@ msgid ""
 msgstr ""
 "Risultato di `mkp show-all --json`. Per maggiori dettagli, vedere la guida "
 "alla riga di comando corrispondente."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Output di `sestatus`. Per maggiori dettagli, consultare la guida alla riga "
+"di comando corrispondente."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -47576,6 +47594,10 @@ msgstr "Percorsi"
 
 msgid "Rows"
 msgstr "Righe"
+
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automazione Checkmk"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"

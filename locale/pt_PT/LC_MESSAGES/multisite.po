@@ -19277,6 +19277,10 @@ msgstr "Tempos de inactividade do anfitrião"
 msgid "Downtimes of service"
 msgstr "Tempos de paragem do serviço"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Diário de bordo: Informação do Estado"
+
 msgid "Drive"
 msgstr "Condução"
 
@@ -42001,6 +42005,13 @@ msgstr "Octetos não unicastos de saída"
 msgid "Output non-unicast packets"
 msgstr "Saída de pacotes não unicastos"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Saída do `sestatus`. Veja a ajuda da linha de comando correspondente para "
+"mais detalhes."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -42021,6 +42032,13 @@ msgid ""
 msgstr ""
 "Saída de `mkp show-all --json`. Veja a ajuda da linha de comando "
 "correspondente para mais detalhes."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Saída do `sestatus`. Veja a ajuda da linha de comando correspondente para "
+"mais detalhes."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -48021,6 +48039,10 @@ msgstr "Rotas"
 
 msgid "Rows"
 msgstr "Linhas"
+
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automação Checkmk"
 
 msgid "Ruckus Spot"
 msgstr "Ponto de Ruckus"

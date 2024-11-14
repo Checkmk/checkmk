@@ -19460,6 +19460,10 @@ msgid "Downtimes of service"
 msgstr "Temps d'arrêt du service"
 
 #, fuzzy
+msgid "Dpkg packages information"
+msgstr "Journal : Informations sur l'état"
+
+#, fuzzy
 msgid "Drive"
 msgstr "Conducteur"
 
@@ -42432,6 +42436,13 @@ msgstr "Sortie d'octets non-unicast"
 msgid "Output non-unicast packets"
 msgstr "Sortie des paquets non-unicast"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Sortie de `mkp list --json`. Voir l'aide en ligne de la commande "
+"correspondante pour plus de détails."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -42451,6 +42462,13 @@ msgid ""
 "more details."
 msgstr ""
 "Sortie de `mkp show-all --json`. Voir l'aide en ligne de la commande "
+"correspondante pour plus de détails."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Sortie de `mkp list --json`. Voir l'aide en ligne de la commande "
 "correspondante pour plus de détails."
 
 #, fuzzy
@@ -48518,6 +48536,10 @@ msgstr "Routes"
 
 msgid "Rows"
 msgstr "Rangs"
+
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automatisation de Checkmk"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"

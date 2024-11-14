@@ -19305,6 +19305,10 @@ msgstr "Timpii de întrerupere a gazdei"
 msgid "Downtimes of service"
 msgstr "Întreruperi de serviciu"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Jurnal: Informații de stat"
+
 msgid "Drive"
 msgstr "Conducere"
 
@@ -42081,6 +42085,13 @@ msgstr "Ieșire octeți non-unicast"
 msgid "Output non-unicast packets"
 msgstr "Ieșire pachete non-unicast"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Ieșirea lui `sestatus`. Pentru mai multe detalii, consultați ajutorul "
+"corespunzător din linia de comandă."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -42101,6 +42112,13 @@ msgid ""
 msgstr ""
 "Ieșirea din `mkp show-all --json`. Pentru mai multe detalii, consultați "
 "ajutorul corespunzător din linia de comandă."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Ieșirea lui `sestatus`. Pentru mai multe detalii, consultați ajutorul "
+"corespunzător din linia de comandă."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -48079,6 +48097,10 @@ msgstr "Rute"
 
 msgid "Rows"
 msgstr "Rânduri"
+
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automatizare Checkmk"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"

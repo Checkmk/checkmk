@@ -18317,6 +18317,10 @@ msgstr "ホストのダウンタイム"
 msgid "Downtimes of service"
 msgstr "サービスのダウンタイム"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "ログ:状態情報"
+
 msgid "Drive"
 msgstr "ドライバ"
 
@@ -40677,6 +40681,12 @@ msgstr "ユニキャスト以外のオクテットを出力する"
 msgid "Output non-unicast packets"
 msgstr "ユニキャスト以外のパケットを出力する"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"「sestatus」の出力。詳細は対応するコマンドラインヘルプを参照してください。"
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -40697,6 +40707,12 @@ msgid ""
 msgstr ""
 "「mkp show-all --json」の出力。詳細は対応するコマンドラインヘルプを参照してく"
 "ださい。"
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"「sestatus」の出力。詳細は対応するコマンドラインヘルプを参照してください。"
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -46616,6 +46632,10 @@ msgstr "ルート"
 
 msgid "Rows"
 msgstr "行"
+
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Checkmkの自動化"
 
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"

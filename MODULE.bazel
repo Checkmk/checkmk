@@ -32,11 +32,11 @@ python.toolchain(
 
 bazel_dep(name = "rules_mypy", version = "0.11.0")
 
-# Switch to upstream as soon https://github.com/theoremlp/rules_mypy/pull/34 is merged
+# Switch to upstream as soon https://github.com/theoremlp/rules_mypy/pull/54 is merged
 git_override(
     module_name = "rules_mypy",
-    commit = "5b0d3b12c55f06c683c366bd10357b980892783b",
-    remote = "https://github.com/TimotheusBachinger/rules_mypy",
+    commit = "9a8ddd0a166830ea89f7d05311030df708762272",
+    remote = "https://github.com/Synss/rules_mypy",
 )
 
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")

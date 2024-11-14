@@ -2499,6 +2499,7 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
     store.save_object_to_file(state_path, state)
 
 
+@tracer.start_as_current_span("execute_activate_changes")
 def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     domain_names = [x.name for x in domain_requests]
 
@@ -2512,8 +2513,15 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
-        results[domain_request.name] = warnings or []
+        with tracer.start_as_current_span(
+            f"activate[{domain_request.name}]",
+            attributes={
+                "cmk.activate_changes.domain.name": domain_request.name,
+                "cmk.activate_changes.domain.settings": repr(domain_request.settings),
+            },
+        ):
+            warnings = get_config_domain(domain_request.name).activate(domain_request.settings)
+            results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()
     _update_links_for_agent_receiver()
@@ -2545,6 +2553,7 @@ def _reload_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_has
         process.check_returncode()
 
 
+@tracer.start_as_current_span("_activate_local_rabbitmq_changes")
 def _activate_local_rabbitmq_changes():
     old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
     new_definitions_hash = _create_folder_content_hash(

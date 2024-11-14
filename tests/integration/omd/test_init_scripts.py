@@ -33,7 +33,7 @@ def test_init_scripts(site: Site) -> None:
             "liveproxyd",
             "mknotifyd",
         }
-    if site.version.is_cloud_edition():
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
         scripts |= {"otel-collector"}
 
     installed_scripts = set(site.listdir("etc/init.d"))

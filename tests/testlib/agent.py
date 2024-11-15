@@ -361,3 +361,18 @@ def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_tim
         count += 1
 
     logger.info("Agent cache not matching the current OMD status")
+
+
+@contextlib.contextmanager
+def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        deleted = False
+        if site.openapi.get_host(hostname):
+            logger.info("Delete created host %s", hostname)
+            site.openapi.delete_host(hostname)
+            deleted = True
+
+        if deleted:
+            site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

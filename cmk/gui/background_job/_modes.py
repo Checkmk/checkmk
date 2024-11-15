@@ -93,9 +93,6 @@ class ModeBackgroundJobsOverview(WatoMode):
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
-        if any(job_manager.get_running_job_ids(c) for c in job_registry.values()):
-            html.immediate_browser_redirect(0.8, "")
-
     # Mypy requires the explicit return, pylint does not like it.
     def action(self) -> ActionResult:  # pylint: disable=useless-return
         action_handler = gui_background_job.ActionHandler(self.breadcrumb())

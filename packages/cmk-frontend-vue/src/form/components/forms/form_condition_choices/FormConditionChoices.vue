@@ -77,10 +77,10 @@ const remainingGroups = computed(() =>
         :data="itemData"
         :group="spec.condition_groups[data[index]!.group_name]!"
         :i18n="{
-          eq: props.spec.i18n.eq_operator,
-          ne: props.spec.i18n.ne_operator,
-          or: props.spec.i18n.or_operator,
-          nor: props.spec.i18n.nor_operator,
+          eq_operator: props.spec.i18n.eq_operator,
+          ne_operator: props.spec.i18n.ne_operator,
+          or_operator: props.spec.i18n.or_operator,
+          nor_operator: props.spec.i18n.nor_operator,
           add_condition_label: props.spec.i18n.add_condition_label
         }"
         @update="(new_value: typing.ConditionChoicesValue) => updateElementData(new_value, index)"

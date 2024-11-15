@@ -14,25 +14,19 @@ import {
 } from '@/form/components/vue_formspec_components'
 import { immediateWatch } from '@/lib/watch'
 import { computed, ref, watch } from 'vue'
+import { type OperatorI18n, type Operator } from './utils'
 
 const props = defineProps<{
   data: ConditionChoicesValue
   group: ConditionGroup
   i18n: {
-    eq: string
-    ne: string
-    or: string
-    nor: string
     add_condition_label: string
-  }
+  } & OperatorI18n
 }>()
 
 if (props.group.conditions.length === 0) {
   throw new Error('Invalid group')
 }
-
-type KeysOfUnion<T> = T extends T ? keyof T : never
-type Operator = KeysOfUnion<ConditionChoicesValue['value']>
 const operatorIsMultiSelect = (operator: Operator) =>
   operator === 'oper_or' || operator === 'oper_nor'
 
@@ -63,15 +57,15 @@ immediateWatch(
 const operatorChoices = computed<{ name: Operator; title: string }[]>(() => {
   if (props.group.conditions.length > 1) {
     return [
-      { name: 'oper_eq', title: props.i18n.eq },
-      { name: 'oper_ne', title: props.i18n.ne },
-      { name: 'oper_or', title: props.i18n.or },
-      { name: 'oper_nor', title: props.i18n.nor }
+      { name: 'oper_eq', title: props.i18n.eq_operator },
+      { name: 'oper_ne', title: props.i18n.ne_operator },
+      { name: 'oper_or', title: props.i18n.or_operator },
+      { name: 'oper_nor', title: props.i18n.nor_operator }
     ]
   }
   return [
-    { name: 'oper_eq', title: props.i18n.eq },
-    { name: 'oper_ne', title: props.i18n.ne }
+    { name: 'oper_eq', title: props.i18n.eq_operator },
+    { name: 'oper_ne', title: props.i18n.ne_operator }
   ]
 })
 

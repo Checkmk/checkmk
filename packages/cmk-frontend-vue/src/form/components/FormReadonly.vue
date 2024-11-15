@@ -25,7 +25,10 @@ import type {
   DualListChoice,
   CheckboxListChoice,
   Folder,
-  Labels
+  Labels,
+  ConditionChoices,
+  ConditionChoicesValue,
+  ConditionGroup
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -33,6 +36,11 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
+import {
+  translateOperator,
+  type Operator,
+  type OperatorI18n
+} from './forms/form_condition_choices/utils'
 
 function renderForm(
   formSpec: FormSpec,
@@ -62,7 +70,7 @@ function renderForm(
         backendValidation
       )
     case 'condition_choices':
-      return h('div', 'WIP')
+      return renderConditionChoices(formSpec as ConditionChoices, value as ConditionChoicesValue[])
     case 'legacy_valuespec':
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':
@@ -417,6 +425,43 @@ function renderLegacyValuespec(
   ])
 }
 
+function renderConditionChoiceGroup(
+  group: ConditionGroup,
+  value: ConditionChoicesValue,
+  i18n: OperatorI18n
+): VNode {
+  const condition = Object.values(value.value)[0] as string | string[]
+  const conditionList = condition instanceof Array ? condition : [condition]
+  const operator = translateOperator(i18n, Object.keys(value.value)[0] as Operator)
+  return h('tr', [
+    h('td', group.title),
+    h('td', [
+      h('table', [
+        h('tbody', [
+          h('th', h('b', operator)),
+          ...conditionList.map((cValue) =>
+            h('tr', h('td', group.conditions.find((cGroup) => cGroup.name === cValue)?.title))
+          )
+        ])
+      ])
+    ])
+  ])
+}
+
+function renderConditionChoices(formSpec: ConditionChoices, value: ConditionChoicesValue[]): VNode {
+  return h('table', { class: 'form-readonly__table' }, [
+    h('tbody', [
+      value.map((v) => {
+        const group = formSpec.condition_groups[v.group_name]
+        if (group === undefined) {
+          throw new Error('Invalid group')
+        }
+        return renderConditionChoiceGroup(group, v, formSpec.i18n)
+      })
+    ])
+  ])
+}
+
 function renderFolder(
   formSpec: Folder,
   value: string,
@@ -471,6 +516,27 @@ export default defineComponent({
 <style scoped>
 .form-readonly__error {
   background-color: var(--form-readonly-error-bg-color);
+}
+
+table.form-readonly__table {
+  margin-top: 3px;
+  border-collapse: collapse;
+
+  td,
+  th {
+    background: var(--default-table-th-color);
+  }
+
+  td {
+    height: 14px;
+    padding: 1px 5px;
+    border: 1px solid grey;
+  }
+
+  table {
+    border-collapse: collapse;
+    padding: 1px 5px;
+  }
 }
 
 .form-readonly__simple-value {

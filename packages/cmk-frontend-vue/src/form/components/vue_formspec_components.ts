@@ -337,7 +337,8 @@ export interface Condition {
 }
 export interface ConditionChoicesI18N {
   add_condition_label: string;
-  add_condition_group_label: string;
+  select_condition_group_to_add: string;
+  no_more_condition_groups_to_add: string;
   eq_operator: string;
   ne_operator: string;
   or_operator: string;

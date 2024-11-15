@@ -162,7 +162,12 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
                 condition_groups=conditions,
                 i18n=shared_type_defs.ConditionChoicesI18n(
                     add_condition_label=localize(self.form_spec.add_condition_group_label),
-                    add_condition_group_label=localize(self.form_spec.add_condition_label),
+                    select_condition_group_to_add=localize(
+                        self.form_spec.select_condition_group_to_add
+                    ),
+                    no_more_condition_groups_to_add=localize(
+                        self.form_spec.no_more_condition_groups_to_add
+                    ),
                     eq_operator=_("is"),
                     ne_operator=_("is not"),
                     or_operator=_("any of"),

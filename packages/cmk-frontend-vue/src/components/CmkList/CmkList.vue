@@ -23,8 +23,8 @@ const {
   itemsProps: ItemsProps
   onAdd: (index: number) => boolean | void
   onDelete: (index: number) => boolean | void
-  i18n: {
-    addElementLabel: string
+  i18n?: {
+    addElementLabel?: string
   }
   showAddButton?: boolean
   draggable?: { onReorder: (order: number[]) => void } | null
@@ -100,7 +100,13 @@ function getStyle(index: number, length: number) {
 </script>
 
 <template>
-  <div :class="{ cmk_list__container: true, horizontal: orientation === 'horizontal' }">
+  <div
+    :class="{
+      cmk_list__container: true,
+      horizontal: orientation === 'horizontal',
+      hidden: localOrder.length === 0 && !showAddButton
+    }"
+  >
     <table ref="tableRef" class="cmk_list__table">
       <template v-if="orientation === 'vertical'">
         <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
@@ -149,6 +155,9 @@ function getStyle(index: number, length: number) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+.cmk_list__container.hidden {
+  display: none;
 }
 .cmk_list__table {
   width: 100%;

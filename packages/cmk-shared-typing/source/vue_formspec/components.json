@@ -1066,7 +1066,10 @@
                         "add_condition_label": {
                             "type": "string"
                         },
-                        "add_condition_group_label": {
+                        "select_condition_group_to_add": {
+                            "type": "string"
+                        },
+                        "no_more_condition_groups_to_add": {
                             "type": "string"
                         },
                         "eq_operator": {
@@ -1084,7 +1087,8 @@
                     },
                     "required": [
                         "add_condition_label",
-                        "add_condition_group_label",
+                        "select_condition_group_to_add",
+                        "no_more_condition_groups_to_add",
                         "eq_operator",
                         "ne_operator",
                         "or_operator",

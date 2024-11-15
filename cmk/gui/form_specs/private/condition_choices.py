@@ -23,5 +23,6 @@ Conditions: TypeAlias = dict[ConditionGroupID, Condition]
 @dataclass(frozen=True, kw_only=True)
 class ConditionChoices(FormSpec[Conditions]):
     add_condition_group_label: Label
-    add_condition_label: Label
+    select_condition_group_to_add: Label
+    no_more_condition_groups_to_add: Label
     get_conditions: Callable[[], dict[str, ConditionGroup]]

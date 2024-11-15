@@ -195,7 +195,8 @@ class ConditionGroup:
 @dataclass(kw_only=True)
 class ConditionChoicesI18n:
     add_condition_label: str
-    add_condition_group_label: str
+    select_condition_group_to_add: str
+    no_more_condition_groups_to_add: str
     eq_operator: str
     ne_operator: str
     or_operator: str

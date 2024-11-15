@@ -9,7 +9,7 @@ import ConditionChoice from './ConditionChoice.vue'
 import type * as typing from '@/form/components/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import DropDown from '@/components/DropDown.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
   spec: typing.ConditionChoices
@@ -19,21 +19,20 @@ const props = defineProps<{
 const data = defineModel<typing.ConditionChoicesValue[]>('data', { required: true })
 const selectedConditionGroup = ref<string | null>(null)
 
-function addElement() {
-  if (selectedConditionGroup.value === null) {
-    return false
+function addElement(selected: string | null) {
+  if (selected === null) {
+    return
   }
 
-  const group = props.spec.condition_groups[selectedConditionGroup.value]
+  const group = props.spec.condition_groups[selected]
   if (group === undefined || group.conditions.length === 0) {
     throw new Error('Invalid group')
   }
   data.value.push({
-    group_name: selectedConditionGroup.value,
+    group_name: selected,
     value: { eq: group.conditions[0]!.name }
   })
   selectedConditionGroup.value = null
-  return true
 }
 
 function deleteElement(index: number) {
@@ -43,16 +42,20 @@ function deleteElement(index: number) {
 function updateElementData(newValue: typing.ConditionChoicesValue, index: number) {
   data.value[index] = newValue
 }
+
+const remainingGroups = computed(() =>
+  Object.entries(props.spec.condition_groups).filter(
+    ([name, _]) => data.value.find((v) => v.group_name === name) === undefined
+  )
+)
 </script>
 
 <template>
   <CmkList
     :items-props="{ data }"
-    :on-add="addElement"
+    :show-add-button="false"
+    :on-add="() => {}"
     :on-delete="deleteElement"
-    :i18n="{
-      addElementLabel: props.spec.i18n.add_condition_group_label
-    }"
   >
     <template #item-props="{ index, data: itemData }">
       <ConditionChoice
@@ -71,10 +74,13 @@ function updateElementData(newValue: typing.ConditionChoicesValue, index: number
   </CmkList>
   <DropDown
     v-model:selected-option="selectedConditionGroup"
-    :options="
-      Object.entries(spec.condition_groups)
-        .filter(([name, _]) => data.find((v) => v.group_name === name) === undefined)
-        .map(([name, value]) => ({ name, title: value.title }))
+    :options="remainingGroups.map(([name, value]) => ({ name, title: value.title }))"
+    :input_hint="
+      remainingGroups.length === 0
+        ? spec.i18n.no_more_condition_groups_to_add
+        : spec.i18n.select_condition_group_to_add
     "
+    :disabled="remainingGroups.length === 0"
+    @update:selected-option="addElement"
   />
 </template>

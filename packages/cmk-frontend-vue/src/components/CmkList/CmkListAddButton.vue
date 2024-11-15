@@ -9,7 +9,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 defineProps<{
-  addElementLabel: string
+  addElementLabel?: string | undefined
   addElement: () => void
 }>()
 </script>
@@ -17,7 +17,9 @@ defineProps<{
 <template>
   <CmkButton variant="minimal" size="small" @click.prevent="addElement">
     <CmkIcon name="plus" />
-    <CmkSpace size="small" />
-    {{ addElementLabel }}
+    <template v-if="addElementLabel!!">
+      <CmkSpace size="small" />
+      {{ addElementLabel }}
+    </template>
   </CmkButton>
 </template>

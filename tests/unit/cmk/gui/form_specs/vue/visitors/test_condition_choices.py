@@ -20,8 +20,9 @@ from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 from cmk.rulesets.v1 import Label
 
 CONDITION_CHOICES_FS = ConditionChoices(
-    add_condition_label=Label("add"),
+    select_condition_group_to_add=Label("add"),
     add_condition_group_label=Label("add"),
+    no_more_condition_groups_to_add=Label("no more"),
     get_conditions=lambda: {
         "address_family": ConditionGroup(
             title="foo",

@@ -737,28 +737,39 @@ class CMKOpenApiSession(requests.Session):
         return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
 
     def create_broker_connection(
-        self, connection_id: str, connection_config: BrokerConnectionInfo
+        self, connection_id: str, *, connecter: str, connectee: str
     ) -> Mapping[str, object]:
         response = self.post(
             "/domain-types/broker_connection/collections/all",
             headers={
                 "Content-Type": "application/json",
             },
-            json={"connection_id": connection_id, "connection_config": connection_config},
+            json={
+                "connection_id": connection_id,
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
     def edit_broker_connection(
-        self, connection_id: str, connection_config: BrokerConnectionInfo
+        self, connection_id: str, *, connecter: str, connectee: str
     ) -> Mapping[str, object]:
         response = self.put(
             f"/objects/broker_connection/{connection_id}",
             headers={
                 "Content-Type": "application/json",
             },
-            json={"connection_config": connection_config},
+            json={
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

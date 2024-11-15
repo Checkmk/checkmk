@@ -162,6 +162,8 @@ def _connection(
     try:
         yield
     finally:
+        hostnames = {h["id"] for h in central_site.openapi.get_hosts()}
+        logger.warning("Hosts left: %s", hostnames)
         central_site.openapi.delete_site(remote_site.id)
         central_site.openapi.activate_changes_and_wait_for_completion(
             # this seems to be necessary to avoid sporadic CI failures

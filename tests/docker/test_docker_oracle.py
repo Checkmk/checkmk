@@ -387,6 +387,7 @@ def _oracle(
         yield oracle_db
 
 
+@pytest.mark.xfail(reason="Service discovery failure, investigating")
 @skip_if_not_enterprise_edition
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(

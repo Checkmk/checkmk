@@ -270,7 +270,7 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
             space_size=element_data["space"]["size"],
             space_used=element_data["space"].get("used"),
             enabled=element_data["enabled"],
-            read_only=element_data["status"]["read_only"],
+            read_only=element_data.get("status", {}).get("read_only"),
             svm_name=element_data["svm"]["name"],
             volume_name=element_data["location"]["volume"]["name"],
         )

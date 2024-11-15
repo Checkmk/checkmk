@@ -5,7 +5,7 @@
 
 from logging import Logger
 from pathlib import Path
-from typing import cast
+from typing import Any
 
 from cmk.utils import tty
 from cmk.utils.notify_types import (
@@ -17,7 +17,15 @@ from cmk.utils.notify_types import (
 )
 from cmk.utils.paths import check_mk_config_dir, omd_root
 
+from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
+from cmk.gui.form_specs.vue.visitors import (
+    DataOrigin,
+    get_visitor,
+    VisitorOptions,
+)
+from cmk.gui.form_specs.vue.visitors._type_defs import DataForDisk
 from cmk.gui.watolib import sample_config
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
     NotificationRuleConfigFile,
@@ -33,9 +41,9 @@ class MigrateNotifications(UpdateAction):
         self._notifications_mk_backup_path: Path = omd_root / "notifications_backup.mk"
 
     def __call__(self, logger: Logger) -> None:
+        notification_rules = NotificationRuleConfigFile().load_for_reading()
         if all(
-            isinstance(event_rule["notify_plugin"][1], str)
-            for event_rule in NotificationRuleConfigFile().load_for_reading()
+            isinstance(event_rule["notify_plugin"][1], str) for event_rule in notification_rules
         ):
             logger.debug("       Already migrated")
             return
@@ -46,7 +54,7 @@ class MigrateNotifications(UpdateAction):
 
         parameters_per_method: NotificationParameterSpecs = {}
         updated_notification_rules: list[EventRule] = []
-        for nr, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
+        for nr, rule in enumerate(notification_rules):
             method, parameter = rule["notify_plugin"]
 
             if parameter is None:
@@ -74,13 +82,10 @@ class MigrateNotifications(UpdateAction):
 
                 parameters_per_method[method].update(
                     {
-                        parameter_id[0]: NotificationParameterItem(
-                            general=NotificationParameterGeneralInfos(
-                                description="Migrated from notification rule #%d" % nr,
-                                comment="Auto migrated on update",
-                                docu_url="",
-                            ),
-                            parameter_properties=cast(dict, parameter),
+                        parameter_id[0]: self._get_visitor_data(
+                            method=method,
+                            parameter=parameter,  # type: ignore[arg-type]
+                            nr=nr,
                         )
                     }
                 )
@@ -90,6 +95,7 @@ class MigrateNotifications(UpdateAction):
 
         NotificationParameterConfigFile().save(parameters_per_method)
         logger.debug("       Saved migrated notification parameters")
+
         NotificationRuleConfigFile().save(updated_notification_rules)
         logger.debug("       Saved migrated notification rules")
 
@@ -104,6 +110,28 @@ class MigrateNotifications(UpdateAction):
             f"       {str(self._notifications_mk_path)}.\n"
             "       If everything works as expected you can remove the backup.\n"
         )
+
+    def _get_visitor_data(
+        self,
+        method: NotificationParameterMethod,
+        parameter: dict[str, Any],
+        nr: int,
+    ) -> DataForDisk:
+        data = NotificationParameterItem(
+            general=NotificationParameterGeneralInfos(
+                description="Migrated from notification rule #%d" % nr,
+                comment="Auto migrated on update",
+                docu_url="",
+            ),
+            parameter_properties=parameter,
+        )
+        form_spec = notification_parameter_registry.form_spec(method)
+        visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
+
+        validation_errors = visitor.validate(data)
+        process_validation_messages(validation_errors)
+
+        return visitor.to_disk(data)
 
 
 update_action_registry.register(

@@ -162,7 +162,7 @@ pub async fn run_custom_query<T: AsRef<str>>(
     }
     let start = Instant::now();
     let result = exec_sql(client, query).await;
-    log_query(start, &result, make_short_query(query));
+    log_query(start, &result, &make_short_query(query));
     result
 }
 
@@ -209,10 +209,12 @@ async fn exec_sql(client: &mut UniClient, query: &str) -> Result<Vec<UniAnswer>>
     }
 }
 
-fn make_short_query(query: &str) -> &str {
+fn make_short_query(query: &str) -> String {
     query
         .get(0..std::cmp::min(16, query.len() - 1))
         .unwrap_or_default()
+        .to_string()
+        + "..."
 }
 
 pub async fn obtain_computer_name(client: &mut UniClient) -> Result<Option<ComputerName>> {

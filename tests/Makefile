@@ -398,15 +398,21 @@ test-shellcheck-docker:
 test-cycles:
 	$(CYCLES) \
 		--packages \
-		    cmk \
-		    omd/packages/omd/omdlib \
-		    packages/cmk-agent-based/cmk/agent_based \
-		    packages/cmk-agent-receiver/cmk/agent_receiver \
-		    packages/cmk-graphing/cmk/graphing \
-		    packages/cmk-werks/cmk/werks \
-		    packages/cmk-werks/cmk/trace \
-		--project-path $$(realpath -L ..) \
+			$$(realpath -L ..)/cmk \
+			$$(realpath -L ..)/packages/cmk-agent-based/cmk \
+			$$(realpath -L ..)/packages/cmk-agent-receiver/cmk \
+			$$(realpath -L ..)/packages/cmk-crypto/cmk \
+			$$(realpath -L ..)/packages/cmk-graphing/cmk \
+			$$(realpath -L ..)/packages/cmk-livestatus-client/cmk \
+			$$(realpath -L ..)/packages/cmk-messaging/cmk \
+			$$(realpath -L ..)/packages/cmk-mkp-tool/cmk \
+			$$(realpath -L ..)/packages/cmk-rulesets/cmk \
+			$$(realpath -L ..)/packages/cmk-server-side-calls/cmk \
+			$$(realpath -L ..)/packages/cmk-werks/cmk \
+			$$(realpath -L ..)/packages/cmk-trace/cmk \
+			$$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
+		--threshold 87 \
 		--verbose
 
 test-cycles-docker:

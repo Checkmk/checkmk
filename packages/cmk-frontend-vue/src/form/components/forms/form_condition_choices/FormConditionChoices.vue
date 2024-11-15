@@ -7,9 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkList from '@/components/CmkList'
 import ConditionChoice from './ConditionChoice.vue'
 import type * as typing from '@/form/components/vue_formspec_components'
-import { type ValidationMessages } from '@/form/components/utils/validation'
+import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
+import FormValidation from '@/form/components/FormValidation.vue'
 import DropDown from '@/components/DropDown.vue'
 import { computed, ref } from 'vue'
+import { immediateWatch } from '@/lib/watch'
 
 const props = defineProps<{
   spec: typing.ConditionChoices
@@ -18,6 +20,17 @@ const props = defineProps<{
 
 const data = defineModel<typing.ConditionChoicesValue[]>('data', { required: true })
 const selectedConditionGroup = ref<string | null>(null)
+
+const validation = ref<Array<string>>([])
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    validation.value = newValidation.map((m) => m.message)
+    newValidation.forEach((message) => {
+      data.value = message.invalid_value as typing.ConditionChoicesValue[]
+    })
+  }
+)
 
 function addElement(selected: string | null) {
   if (selected === null) {
@@ -32,11 +45,13 @@ function addElement(selected: string | null) {
     group_name: selected,
     value: { eq: group.conditions[0]!.name }
   })
+  validation.value = validateValue(data.value, props.spec.validators)
   selectedConditionGroup.value = null
 }
 
 function deleteElement(index: number) {
   data.value.splice(index, 1)
+  validation.value = validateValue(data.value, props.spec.validators)
 }
 
 function updateElementData(newValue: typing.ConditionChoicesValue, index: number) {
@@ -83,4 +98,5 @@ const remainingGroups = computed(() =>
     :disabled="remainingGroups.length === 0"
     @update:selected-option="addElement"
   />
+  <FormValidation :validation="validation"></FormValidation>
 </template>

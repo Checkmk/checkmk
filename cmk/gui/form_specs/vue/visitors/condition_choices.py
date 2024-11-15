@@ -11,6 +11,7 @@ from cmk.gui.form_specs.private.condition_choices import (
     Conditions,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
@@ -160,6 +161,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
                 title=title,
                 help=help_text,
                 condition_groups=conditions,
+                validators=build_vue_validators(self.form_spec.custom_validate or []),
                 i18n=shared_type_defs.ConditionChoicesI18n(
                     add_condition_label=localize(self.form_spec.add_condition_group_label),
                     select_condition_group_to_add=localize(

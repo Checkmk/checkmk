@@ -374,8 +374,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 break;
             case LogEntryKind::state_service_initial:
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, false, state_info, blacklist,
-                                   period);
+                                   time_periods, false, state_info, blacklist);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
@@ -384,14 +383,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, false, state_info, blacklist,
-                                   period);
+                                   time_periods, false, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, true, state_info, blacklist,
-                                   period);
+                                   time_periods, true, state_info, blacklist);
                 break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
@@ -400,8 +397,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 set_unknown_to_unmonitored(in_nagios_initial_states,
                                            state_info);
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, true, state_info, blacklist,
-                                   period);
+                                   time_periods, true, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
@@ -422,15 +418,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     if (!abort_query_) {
-        final_reports(processor, state_info, period);
+        final_reports(processor, state_info);
     }
 }
 
 void TableStateHistory::handle_state_entry(
     Processor &processor, const ICore &core, const LogEntry *entry,
     bool only_update, const TimePeriods &time_periods, bool is_host_entry,
-    state_info_t &state_info, ObjectBlacklist &blacklist,
-    const LogPeriod &period) {
+    state_info_t &state_info, ObjectBlacklist &blacklist) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
         core.find_service(entry->host_name(), entry->service_description());
@@ -454,7 +449,8 @@ void TableStateHistory::handle_state_entry(
 
     if (!state_info.contains(key)) {
         insert_new_state(entry, only_update, time_periods, state_info,
-                         blacklist, period, entry_host, entry_service, key);
+                         blacklist, processor.period(), entry_host,
+                         entry_service, key);
     }
     update(processor, core, entry, *state_info[key], only_update, time_periods);
 }
@@ -560,8 +556,7 @@ void TableStateHistory::handle_timeperiod_transition(
 }
 
 void TableStateHistory::final_reports(Processor &processor,
-                                      const state_info_t &state_info,
-                                      const LogPeriod &period) {
+                                      const state_info_t &state_info) {
     for (const auto &[key, hss] : state_info) {
         // No trace since the last two nagios startup -> host/service has
         // vanished
@@ -582,7 +577,7 @@ void TableStateHistory::final_reports(Processor &processor,
         // the end of the query period. Conceptually, they are exactly at
         // period.until, but rows with such a timestamp would get filtered out:
         // The query period is a half-open interval.
-        hss->_time = period.until - 1s;
+        hss->_time = processor.period().until - 1s;
         hss->_until = hss->_time;
 
         abort_query_ = processor.process(*hss);
@@ -804,11 +799,13 @@ std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {
 
 TableStateHistory::Processor::Processor(Query &query, const User &user,
                                         const LogPeriod &period)
-    : query_{&query}, user_{&user}, period_{&period} {}
+    : query_{&query}, user_{&user}, period_{period} {}
+
+LogPeriod TableStateHistory::Processor::period() const { return period_; }
 
 bool TableStateHistory::Processor::process(HostServiceState &hss) const {
     hss._duration = hss._until - hss._from;
-    hss.computePerStateDurations(period_->duration());
+    hss.computePerStateDurations(period_.duration());
 
     // if (hss._duration > 0)
     auto abort_query =

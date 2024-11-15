@@ -100,12 +100,13 @@ private:
     public:
         Processor(Query &query, const User &user, const LogPeriod &period);
 
+        [[nodiscard]] LogPeriod period() const;
         [[nodiscard]] bool process(HostServiceState &hss) const;
 
-        // private:
+    private:
         Query *query_;
         const User *user_;
-        const LogPeriod *period_;
+        const LogPeriod period_;
     };
 
     enum class ModificationStatus { unchanged, changed };
@@ -117,8 +118,7 @@ private:
                             const LogEntry *entry, bool only_update,
                             const TimePeriods &time_periods, bool is_host_entry,
                             state_info_t &state_info,
-                            ObjectBlacklist &blacklist,
-                            const LogPeriod &period);
+                            ObjectBlacklist &blacklist);
 
     static void insert_new_state(const LogEntry *entry, bool only_update,
                                  const TimePeriods &time_periods,
@@ -134,8 +134,7 @@ private:
                                       TimePeriods &time_periods,
                                       const state_info_t &state_info);
 
-    void final_reports(Processor &processor, const state_info_t &state_info,
-                       const LogPeriod &period);
+    void final_reports(Processor &processor, const state_info_t &state_info);
 
     void update(Processor &processor, const ICore &core, const LogEntry *entry,
                 HostServiceState &state, bool only_update,

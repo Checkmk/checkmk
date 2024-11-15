@@ -15,6 +15,9 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk",
         "bin/omd",
         "bin/stunnel",
+        "bin/cmk-broker-test",
+        "bin/cmk-piggyback",
+        "bin/cmk-piggyback-hub",
         "bin/cmk-update-config",
         "bin/cmk-validate-plugins",
     ]

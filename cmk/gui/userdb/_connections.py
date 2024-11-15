@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, cast, Literal, NotRequired, TypedDict
+from typing import Any, cast, Literal, Mapping, NewType, NotRequired, Sequence, TypedDict
 
 from cmk.ccc import store
-
-from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, PublicKeyPath
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -145,30 +143,45 @@ class LDAPUserConnectionConfig(UserConnectionConfig):
     type: Literal["ldap"]
 
 
-class SAMLUserConnectionConfig(UserConnectionConfig):
+# these need to be written to a .mk file, so a more complex type like Path will lead to problems
+PrivateKeyPath = NewType("PrivateKeyPath", str)
+PublicKeyPath = NewType("PublicKeyPath", str)
+
+
+class ContactGroupMapping(TypedDict):
+    attribute_match_value: str
+    contact_group_ids: Sequence[str]
+
+
+# TODO: This type is horrible, one can't even dispatch to the right alternative at runtime without
+#  looking at the *values*. This must be done differently, so dispatching can be done on the *types*
+ContactGroupMappingSpec = (
+    str | tuple[str, dict[str, str]] | tuple[str, dict[str, str | Sequence[ContactGroupMapping]]]
+)
+SerializedCertificateSpec = (
+    Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+)
+ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
+
+
+class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     name: str
     description: str
     comment: str
     docu_url: str
-    idp_metadata: Any
+    idp_metadata: tuple[str, str] | tuple[str, tuple[str, str, bytes]]
     checkmk_entity_id: str
     checkmk_metadata_endpoint: str
     checkmk_assertion_consumer_service_endpoint: str
     checkmk_server_url: str
-    connection_timeout: tuple[int, int]
-    signature_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    )
-    encryption_certificate: NotRequired[
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    ]
+    connection_timeout: tuple[int, int]  # connection timeout, read timeout
+    signature_certificate: SerializedCertificateSpec
+    encryption_certificate: NotRequired[SerializedCertificateSpec]
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str
-    contactgroups_mapping: str
-    role_membership_mapping: (
-        Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
-    )
+    contactgroups_mapping: ContactGroupMappingSpec
+    role_membership_mapping: ROLE_MAPPING
     type: Literal["saml2"]
     version: Literal["1.0.0"]
     owned_by_site: str

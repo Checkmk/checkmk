@@ -13,7 +13,8 @@ import {
   type ValidationError,
   type QSResponseComplete,
   type QSRequestComplete,
-  type QSAllStagesResponse
+  type QSAllStagesResponse,
+  type AllStagesValidationError
 } from './rest_api_types'
 import type { StageData } from './components/quick-setup/widgets/widget_types'
 
@@ -37,7 +38,7 @@ const EDIT_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/a
  * @returns ValidationError | GeneralError
  */
 
-const processError = (err: unknown): ValidationError | GeneralError => {
+const processError = (err: unknown): ValidationError | AllStagesValidationError | GeneralError => {
   if (!axios.isAxiosError(err)) {
     return { type: 'general', general_error: 'Unknown error has occurred' } as GeneralError
   }
@@ -48,6 +49,11 @@ const processError = (err: unknown): ValidationError | GeneralError => {
         type: 'validation',
         ...(err.response.data?.errors || err.response.data?.detail)
       } as ValidationError
+    } else if (err.response.data?.all_stage_errors) {
+      return {
+        type: 'validation_all_stages',
+        all_stage_errors: err.response.data.all_stage_errors
+      } as AllStagesValidationError
     } else {
       return { type: 'validation', stage_errors: err.response.data?.detail } as ValidationError
     }
@@ -107,6 +113,7 @@ export const getAllStages = async (
 export const validateStage = async (
   quickSetupId: string,
   formData: StageData[],
+  actionId: string | null = null,
   objectId: string | null = null
 ): Promise<QSStageResponse> => {
   return new Promise((resolve, reject) => {
@@ -116,6 +123,9 @@ export const validateStage = async (
     const payload: QSValidateStagesRequest = {
       quick_setup_id: quickSetupId,
       stages: formData.map((stage) => ({ form_data: stage }))
+    }
+    if (actionId) {
+      payload.stage_action_id = actionId
     }
 
     axios

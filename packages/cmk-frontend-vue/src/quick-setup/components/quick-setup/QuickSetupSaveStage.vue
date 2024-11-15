@@ -18,9 +18,8 @@ defineProps<QuickSetupSaveStageProps>()
       :loading="loading"
       :errors="errors"
       :mode="mode"
-      :buttons="buttons"
+      :actions="actions"
       :content="content || null"
-      :load-wait-label="loadWaitLabel"
     />
   </div>
 </template>

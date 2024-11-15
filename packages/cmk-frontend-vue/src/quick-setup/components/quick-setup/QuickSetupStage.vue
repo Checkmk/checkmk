@@ -48,9 +48,8 @@ const onClickGoTo = computed(() =>
             :loading="loading"
             :mode="mode"
             :errors="errors"
-            :buttons="buttons"
+            :actions="actions"
             :content="content || null"
-            :load-wait-label="loadWaitLabel"
           />
         </CollapsibleContent>
       </Collapsible>

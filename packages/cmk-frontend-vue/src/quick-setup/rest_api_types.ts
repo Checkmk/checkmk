@@ -6,41 +6,38 @@
 import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { ValidationMessages } from '@/form'
 
-/**
- * Common stage structure
- */
-export interface QSStageStructure {
-  components: ComponentSpec[]
-  load_wait_label: string
-  next_button?: QSStageButton
-  prev_button?: QSStageButton
-}
-
-/**
- * Regular buttons
- */
 export interface QSStageButton {
   label: string
   aria_label?: string | null
 }
 
+export interface QSActionButton extends QSStageButton {
+  id?: string | null
+}
+
+export interface QSAction {
+  id?: string
+  button: QSStageButton
+  load_wait_label: string
+}
+
 /**
- * Save button
+ * Common stage structure
  */
-export interface QSCompleteButton {
-  id: string
-  label: string
-  ariaLabel?: string | null
+export interface QSStageStructure {
+  components: ComponentSpec[]
+  actions: QSAction[]
+  prev_button?: QSActionButton
 }
 
 interface QSCommonInitializationResponse {
   quick_setup_id: string
   guided_mode_string: string
   overview_mode_string: string
-  complete_buttons: QSCompleteButton[]
+  actions: QSAction[]
 
   /** previous stage button for save stage */
-  prev_button: QSStageButton
+  prev_button: QSActionButton
 }
 
 /**
@@ -84,6 +81,7 @@ interface QSStageRequest {
  */
 export interface QSValidateStagesRequest {
   quick_setup_id: string
+  stage_action_id?: string
   stages: QSStageRequest[]
 }
 
@@ -104,6 +102,10 @@ export interface QsStageValidationError {
   stage_errors: string[]
 }
 
+interface QsStageValidationIndexError extends QsStageValidationError {
+  stage_index: number
+}
+
 export interface RestApiError {
   type: string
 }
@@ -111,6 +113,12 @@ export interface RestApiError {
 export interface ValidationError extends RestApiError, QsStageValidationError {
   type: 'validation'
 }
+
+export interface AllStagesValidationError extends RestApiError, QsStageValidationError {
+  type: 'validation_all_stages'
+  all_stage_errors: QsStageValidationIndexError[]
+}
+
 export interface GeneralError extends RestApiError {
   type: 'general'
   general_error: string

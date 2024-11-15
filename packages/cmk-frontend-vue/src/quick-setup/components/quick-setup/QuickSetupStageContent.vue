@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import AlertBox from '@/components/AlertBox.vue'
@@ -12,13 +12,19 @@ import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()
 
+const loadWaitLabel = ref('')
+
 const isSaveOverview = computed(
   () => props.index === props.numberOfStages && props.mode === 'overview'
 )
 const showButtons = computed(() => props.mode === 'guided' || isSaveOverview.value)
-const filteredButtons = computed(() =>
-  props.buttons.filter((b) => !isSaveOverview.value || b.variant === 'save')
-)
+
+const filteredActions = computed(() => {
+  if (!props.actions) {
+    return []
+  }
+  return props.actions.filter((b) => !isSaveOverview.value || b.variant === 'save')
+})
 
 function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
   icon: { name: string; rotate: number }
@@ -38,6 +44,11 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
   }
   return { icon: { name: '', rotate: 0 } }
 }
+
+const invokeAction = (waitLabel: string, action: () => void) => {
+  loadWaitLabel.value = waitLabel
+  action()
+}
 </script>
 
 <template>
@@ -51,21 +62,21 @@ function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
     <div v-if="showButtons">
       <div v-if="!loading" class="qs-stage-content__action">
         <CmkButton
-          v-for="{ button, buttonConfig } in filteredButtons.map((btn) => {
-            return { button: btn, buttonConfig: getButtonConfig(btn.variant) }
+          v-for="{ action, buttonConfig } in filteredActions.map((act) => {
+            return { action: act, buttonConfig: getButtonConfig(act.variant) }
           })"
-          :key="button.label"
-          :aria-label="button.ariaLabel"
+          :key="action.label"
+          :aria-label="action.ariaLabel"
           :variant="
-            button.variant === 'next' || button.variant === 'save' ? 'primary' : 'secondary'
+            action.variant === 'next' || action.variant === 'save' ? 'primary' : 'secondary'
           "
-          @click="button.action"
+          @click="invokeAction(action.waitLabel, action.action)"
         >
           <CmkIcon
             :name="buttonConfig.icon.name"
             :rotate="buttonConfig.icon.rotate"
             variant="inline"
-          />{{ button.label }}
+          />{{ action.label }}
         </CmkButton>
       </div>
       <div v-else class="qs-stage-content__loading">

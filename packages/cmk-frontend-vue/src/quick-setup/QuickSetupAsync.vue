@@ -17,11 +17,11 @@ import {
 import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
-import { renderContent, renderRecap, defineButtons } from './render_utils'
+import { ActionType, processActionData, renderContent, renderRecap } from './render_utils'
 import type {
   QuickSetupSaveStageSpec,
-  QuickSetupStageSpec,
-  StageButtonSpec
+  QuickSetupStageAction,
+  QuickSetupStageSpec
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
 import type {
@@ -29,7 +29,8 @@ import type {
   ValidationError,
   GeneralError,
   RestApiError,
-  QSStageResponse
+  QSStageResponse,
+  AllStagesValidationError
 } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
@@ -38,6 +39,7 @@ import type {
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import usePersistentRef from '@/lib/usePersistentRef'
+
 /**
  * Type definition for internal stage storage
  */
@@ -49,8 +51,7 @@ interface QSStageStore {
   user_input: Ref<StageData>
   form_spec_errors?: AllValidationMessages
   errors?: string[]
-  buttons?: StageButtonSpec[]
-  load_wait_label: string
+  actions: QuickSetupStageAction[]
 }
 
 const GUIDED_MODE = 'guided'
@@ -60,7 +61,7 @@ let guidedModeLabel = ''
 let overviewModeLabel = ''
 
 const props = withDefaults(defineProps<QuickSetupAppProps>(), {
-  mode: 'guided',
+  mode: GUIDED_MODE,
   toggleEnabled: false
 })
 
@@ -81,16 +82,16 @@ provide(formDataKey, readonly(formData))
 // Stages flow control and user input update
 //
 //
-const nextStage = async () => {
+const nextStage = async (actionId: string | null = null) => {
   loading.value = true
   globalError.value = null
 
-  const thisStage = quickSetupHook.stage.value
-  const nextStage = quickSetupHook.stage.value + 1
+  const thisStageNumber = quickSetupHook.stage.value
+  const nextStageNumber = quickSetupHook.stage.value + 1
 
   const userInput: StageData[] = []
 
-  for (let i = 0; i <= thisStage; i++) {
+  for (let i = 0; i <= thisStageNumber; i++) {
     const formData = (toValue(stages.value[i]!.user_input) || {}) as StageData
     userInput.push(formData)
   }
@@ -98,7 +99,7 @@ const nextStage = async () => {
   let result: QSStageResponse | null = null
 
   try {
-    result = await validateStage(props.quick_setup_id, userInput, props.objectId)
+    result = await validateStage(props.quick_setup_id, userInput, actionId, props.objectId)
   } catch (err) {
     handleError(err as RestApiError)
   }
@@ -108,41 +109,42 @@ const nextStage = async () => {
     return
   }
 
-  //Clear form_spec_errors and other_errors from thisStage
-  stages.value[thisStage]!.form_spec_errors = {}
-  stages.value[thisStage]!.errors = []
+  //Clear form_spec_errors and other_errors from thisStageNumber
+  stages.value[thisStageNumber]!.form_spec_errors = {}
+  stages.value[thisStageNumber]!.errors = []
 
-  stages.value[thisStage]!.recap = result.stage_recap
+  stages.value[thisStageNumber]!.recap = result.stage_recap
 
   //If we have not finished the quick setup yet, but still on the, regular step
-  if (nextStage < numberOfStages.value - 1) {
-    const btn = []
-    if (result.next_stage_structure.next_button) {
-      btn.push(
-        defineButton.next(
-          result.next_stage_structure.next_button.label,
-          result.next_stage_structure.next_button.aria_label
-        )
-      )
+  if (nextStageNumber < numberOfStages.value - 1) {
+    const acts: QuickSetupStageAction[] = stages.value[nextStageNumber]?.actions || []
+
+    acts.length = 0
+
+    for (const action of result.next_stage_structure.actions) {
+      acts.push(processActionData(ActionType.Next, action, nextStage))
     }
 
     if (result.next_stage_structure.prev_button) {
-      btn.push(
-        defineButton.prev(
-          result.next_stage_structure.prev_button.label,
-          result.next_stage_structure.prev_button.aria_label
+      acts.push(
+        processActionData(
+          ActionType.Prev,
+          {
+            button: result.next_stage_structure.prev_button,
+            load_wait_label: ''
+          },
+          prevStage
         )
       )
     }
 
-    stages.value[nextStage] = {
-      ...stages.value[nextStage]!,
+    stages.value[nextStageNumber] = {
+      ...stages.value[nextStageNumber]!,
       components: result.next_stage_structure.components,
       recap: [],
       form_spec_errors: {},
       errors: [],
-      buttons: btn,
-      load_wait_label: result.next_stage_structure.load_wait_label
+      actions: acts
     }
   }
 
@@ -163,13 +165,24 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
 
   for (let stageIndex = 0; stageIndex < data.stages.length; stageIndex++) {
     const stage = data.stages[stageIndex]!
-    const btn: StageButtonSpec[] = []
-    if (stageIndex !== data.stages.length - 1) {
-      btn.push(defineButton.next(stage.next_button!.label, stage.next_button!.aria_label))
-    }
 
-    if (stageIndex !== 0) {
-      btn.push(defineButton.prev(stage.prev_button!.label, stage.prev_button!.aria_label))
+    const acts: QuickSetupStageAction[] = []
+    if (stageIndex !== data.stages.length - 1) {
+      for (const action of stage.actions) {
+        acts.push(processActionData(ActionType.Next, action, nextStage))
+      }
+    }
+    if (stageIndex !== 0 && stage?.prev_button) {
+      acts.push(
+        processActionData(
+          ActionType.Prev,
+          {
+            button: stage.prev_button,
+            load_wait_label: ''
+          },
+          prevStage
+        )
+      )
     }
 
     const userInput = stages.value[stageIndex]?.user_input || {}
@@ -181,8 +194,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
       form_spec_errors: {},
       errors: [],
       user_input: ref(userInput),
-      buttons: btn,
-      load_wait_label: stage.load_wait_label
+      actions: acts
     })
   }
 
@@ -195,13 +207,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     form_spec_errors: {},
     errors: [],
     user_input: ref({}),
-    buttons: [
-      ...data.complete_buttons.map((button) =>
-        defineButton.save(button.id, button.label, button.ariaLabel)
-      ),
-      defineButton.prev(data.prev_button.label, data.prev_button.aria_label)
-    ],
-    load_wait_label: ''
+    actions: [...data.actions.map((action) => processActionData(ActionType.Save, action, save))]
   })
   loadedAllStages.value = true
   return result
@@ -221,14 +227,12 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
 
     const userInput = stages.value[index]?.user_input || {}
 
-    const btn = []
+    const acts: QuickSetupStageAction[] = []
+
     if (isFirst) {
-      btn.push(
-        defineButton.next(
-          data.stage.next_stage_structure.next_button!.label,
-          data.stage.next_stage_structure.next_button!.aria_label
-        )
-      )
+      for (const action of data.stage.next_stage_structure.actions) {
+        acts.push(processActionData(ActionType.Next, action, nextStage))
+      }
     }
 
     result.push({
@@ -239,8 +243,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
       form_spec_errors: {},
       errors: [],
       user_input: ref(userInput),
-      buttons: btn,
-      load_wait_label: isFirst ? data.stage.next_stage_structure.load_wait_label : ''
+      actions: acts
     })
   }
 
@@ -253,13 +256,17 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     form_spec_errors: {},
     errors: [],
     user_input: ref({}),
-    buttons: [
-      ...data.complete_buttons.map((button) =>
-        defineButton.save(button.id, button.label, button.ariaLabel)
-      ),
-      defineButton.prev(data.prev_button.label, data.prev_button.aria_label)
-    ],
-    load_wait_label: ''
+    actions: [
+      ...data.actions.map((action) => processActionData(ActionType.Save, action, save)),
+      processActionData(
+        ActionType.Prev,
+        {
+          button: data.prev_button,
+          load_wait_label: ''
+        },
+        prevStage
+      )
+    ]
   })
 
   return result
@@ -274,6 +281,9 @@ const save = async (buttonId: string) => {
   for (let i = 0; i < regularStages.value.length; i++) {
     const formData = (stages.value[i]!.user_input || {}) as StageData
     userInput.push(formData)
+
+    stages.value[i]!.form_spec_errors = {}
+    stages.value[i]!.errors = []
   }
 
   try {
@@ -310,13 +320,6 @@ const update = (index: number, value: StageData) => {
 
 //
 //
-// Rendering helpers
-//
-//
-const defineButton = defineButtons(nextStage, prevStage, save)
-
-//
-//
 // Computed properties to split regular stages from save stage
 // and translate them to QuickSetupStageSpec and QuickSetupSaveStageSpec
 //
@@ -334,9 +337,8 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
         stg.form_spec_errors,
         stg.user_input
       ),
-      buttons: stg.buttons!,
       errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
-      loadWaitLabel: stg.load_wait_label || ''
+      actions: [...stg.actions.values()]
     }
     return item
   })
@@ -346,9 +348,8 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
   const stg = stages.value[stages.value.length - 1]!
 
   return {
-    buttons: stg.buttons!,
     errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
-    loadWaitLabel: stg.load_wait_label || ''
+    actions: [...stg.actions.values()]
   }
 })
 
@@ -364,6 +365,13 @@ const handleError = (err: RestApiError) => {
 The underlying call raised the following error: ${(err as GeneralError).general_error}
 Please try again to confirm this is not a one-time occurrence.
 Please verify the logs if this error persists.`
+  } else if (err.type === 'validation_all_stages') {
+    const errs = err as AllStagesValidationError
+
+    for (const stageError of errs.all_stage_errors) {
+      stages.value[stageError.stage_index]!.errors = stageError.stage_errors
+      stages.value[stageError.stage_index]!.form_spec_errors = stageError.formspec_errors
+    }
   } else {
     stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors
     stages.value[quickSetupHook.stage.value]!.form_spec_errors = (

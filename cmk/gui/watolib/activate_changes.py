@@ -2670,6 +2670,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: list[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
+        base_folder_path = f"{cmk.utils.paths.check_mk_config_dir}/wato"
 
         default_sync_config = user_sync_default_config(omd_site())
         current_users = {}
@@ -2693,6 +2694,15 @@ class AutomationReceiveConfigSync(AutomationCommand):
                     # errno.ENOTDIR - dir with files was replaced by e.g. symlink
                     pass
 
+                finally:
+                    # Delete folder if empty
+                    parent = os.path.dirname(site_file)
+                    if (
+                        parent.startswith(base_folder_path)  # It's below the base folder
+                        and parent != base_folder_path  # It's not the base folder
+                        and not os.listdir(parent)  # It's empty
+                    ):
+                        os.rmdir(parent)
             _unpack_sync_archive(sync_archive, base_dir)
         finally:
             if keep_local_users:

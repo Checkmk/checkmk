@@ -1,0 +1,16 @@
+Title: activate_changes: sync folder deletion with remote site
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1731672971
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+When deleting a folder (with a host) on the central site,
+that was being monitored on a remote site, the host
+on the remote site would be deleted but the folder would
+remain.
+
+This werk fixes this issue by deleting both the host and
+the folder on the remote site.

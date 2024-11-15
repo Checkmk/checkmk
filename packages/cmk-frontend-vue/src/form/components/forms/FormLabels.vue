@@ -8,8 +8,8 @@ import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { X } from 'lucide-vue-next'
-import { onBeforeUpdate, ref, useTemplateRef, watch } from 'vue'
-import { setupAutocompleter } from '@/form/components/utils/autocompleter'
+import { onBeforeUpdate, ref, watch } from 'vue'
+import AutoComplete from './AutoComplete.vue'
 
 type StringMapping = Record<string, string>
 
@@ -38,6 +38,7 @@ const [validation, value] = useValidation<StringMapping>(
 )
 
 const keyValuePairs = ref<string[]>([])
+const error = ref<string | null>(null)
 
 const syncDataAndKeyValuePairs = () => {
   const newValues = stringMappingToArray(data.value)
@@ -55,35 +56,6 @@ watch(
 
 watch(keyValuePairs, (newValue) => {
   value.value = arrayToStringMapping(newValue)
-})
-
-const error = ref<string | null>(null)
-const filteredSuggestions = ref<string[]>([])
-const inputValue = ref<string>('')
-const showSuggestions = ref<boolean>(false)
-const selectedSuggestionIndex = ref<number>(-1)
-
-const inputField = useTemplateRef<HTMLInputElement>('inputField')
-
-type AutocompleterResponse = Record<'choices', [string, string][]>
-const [autocompleterInput, autocompleterOutput] = setupAutocompleter<AutocompleterResponse>(
-  props.spec.autocompleter || null
-)
-
-watch(inputValue, (newValue) => {
-  showSuggestions.value = inputValue.value ? true : false
-  autocompleterInput.value = newValue
-})
-
-watch(autocompleterOutput, (newValue) => {
-  if (newValue === undefined) {
-    return
-  }
-  filteredSuggestions.value = newValue.choices
-    .map((element: [string, string]) => element[0])
-    .filter((element: string) => element.length > 0)
-    .filter((element: string) => !keyValuePairs.value.includes(element))
-    .splice(0, 15)
 })
 
 const validate = (value: string): string | null => {
@@ -107,14 +79,6 @@ onBeforeUpdate(() => {
   }
 })
 
-const handleAddItem = (e: KeyboardEvent) => {
-  const value = (e.target as HTMLInputElement).value
-  if (value) {
-    addItem(value)
-  }
-  inputReset()
-}
-
 const addItem = (item: string) => {
   if (validate(item)) {
     keyValuePairs.value = [...keyValuePairs.value, item]
@@ -129,65 +93,17 @@ const editItem = (editedItem: string, index: number) => {
       ...keyValuePairs.value.slice(index + 1)
     ]
   }
-  inputFocus()
 }
 
 const handleDeleteCrossItems = (e: KeyboardEvent, item: string) => {
   if ((e.target as HTMLInputElement).value) {
     return
   }
-
   keyValuePairs.value = keyValuePairs.value.filter((i) => i !== item)
-  inputFocus()
-}
-
-const handleCloseList = (suggestion: string) => {
-  inputValue.value = suggestion
-  inputReset()
-  inputFocus()
-  addItem(suggestion)
 }
 
 const deleteItem = (item: string) => {
   keyValuePairs.value = keyValuePairs.value.filter((i) => i !== item)
-}
-
-const setBlur = (isSet: boolean) => {
-  setTimeout(() => {
-    showSuggestions.value = isSet
-  }, 200)
-}
-
-const inputReset = () => {
-  inputValue.value = ''
-}
-
-const inputFocus = () => {
-  if (inputField.value) {
-    inputField.value.focus()
-  }
-}
-
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value < filteredSuggestions.value.length - 1) {
-      selectedSuggestionIndex.value++
-    }
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value > 0) {
-      selectedSuggestionIndex.value--
-    }
-  } else if (e.key === 'Enter') {
-    e.preventDefault()
-    if (selectedSuggestionIndex.value >= 0) {
-      const suggestion = filteredSuggestions.value[selectedSuggestionIndex.value]
-      if (suggestion) {
-        handleCloseList(suggestion)
-      }
-    }
-  }
 }
 </script>
 
@@ -210,44 +126,14 @@ const handleKeyDown = (e: KeyboardEvent) => {
       </span>
     </li>
   </ul>
-  <div
-    v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels"
-    class="autocomplete"
-  >
-    <input
-      ref="inputField"
-      v-model="inputValue"
-      class="item new-item"
-      type="text"
-      autocomplete="on"
+  <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
+    <AutoComplete
+      :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
-      @keydown.enter="handleAddItem"
-      @focus="() => setBlur(true)"
-      @blur="() => setBlur(false)"
-      @keydown="handleKeyDown"
+      :show="!error"
+      :filter-on="keyValuePairs"
+      @item-selected="addItem"
     />
-    <Transition name="fade">
-      <ul
-        v-if="
-          filteredSuggestions.length > 0 &&
-          !filteredSuggestions.includes(inputValue) &&
-          !error &&
-          !!showSuggestions &&
-          !!inputValue
-        "
-        class="suggestions"
-        @blur="showSuggestions = false"
-      >
-        <li
-          v-for="(option, index) in filteredSuggestions"
-          :key="option"
-          :class="{ selected: index === selectedSuggestionIndex }"
-          @click="() => handleCloseList(option)"
-        >
-          {{ option }}
-        </li>
-      </ul>
-    </Transition>
   </div>
   <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>
   <FormValidation :validation="validation"></FormValidation>

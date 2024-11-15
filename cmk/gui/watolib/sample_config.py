@@ -5,9 +5,10 @@
 """Create an initial Checkmk configuration for new sites"""
 
 import os
+import uuid
 from datetime import datetime
 from typing import Any
-from uuid import uuid4
+from uuid import uuid4, uuid5
 
 from cmk.ccc import store
 
@@ -16,8 +17,13 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import (
     EventRule,
     MailPluginModel,
+    NotificationParameterGeneralInfos,
     NotificationParameterID,
+    NotificationParameterItem,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
     NotificationRuleID,
+    NotifyPlugin,
 )
 from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
@@ -33,7 +39,10 @@ from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
 from cmk.gui.watolib.groups_io import save_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.notifications import NotificationRuleConfigFile
+from cmk.gui.watolib.notifications import (
+    NotificationParameterConfigFile,
+    NotificationRuleConfigFile,
+)
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
@@ -104,6 +113,31 @@ def new_notification_parameter_id() -> NotificationParameterID:
     return NotificationParameterID(str(uuid4()))
 
 
+def _default_notification_parameter_id() -> NotificationParameterID:
+    return NotificationParameterID(
+        str(uuid5(uuid.UUID("f5b3b3b4-4b3b-4b3b-4b3b-4b3b4b3b4b3b"), "seed"))
+    )
+
+
+def _create_default_notify_plugin() -> NotifyPlugin:
+    method: NotificationPluginNameStr = "mail"
+    params_id: NotificationParameterID = _default_notification_parameter_id()
+    default_param: NotificationParameterSpecs = {
+        method: {
+            params_id: NotificationParameterItem(
+                general=NotificationParameterGeneralInfos(
+                    description="Default",
+                    comment="",
+                    docu_url="",
+                ),
+                parameter_properties=MailPluginModel(),
+            )
+        }
+    }
+    NotificationParameterConfigFile().save(default_param)
+    return method, params_id
+
+
 def get_default_notification_rule() -> EventRule:
     return EventRule(
         rule_id=new_notification_rule_id(),
@@ -111,9 +145,11 @@ def get_default_notification_rule() -> EventRule:
         contact_all=False,
         contact_all_with_email=False,
         contact_object=True,
-        description="Notify all contacts of a host/service via HTML email",
+        description="HTML email to all contacts about service/host status changes",
         disabled=False,
-        notify_plugin=("mail", MailPluginModel()),  # type: ignore[typeddict-item]
+        notify_plugin=("mail", _default_notification_parameter_id()),
+        match_host_event=["?d", "?r"],
+        match_service_event=["?c", "?w", "?r"],
     )
 
 
@@ -321,6 +357,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.replace_folder_config(root_folder, ruleset_config)
         rulesets.save_folder()
 
+        _create_default_notify_plugin()
         notification_rules = [get_default_notification_rule()]
         NotificationRuleConfigFile().save(notification_rules)
 

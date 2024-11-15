@@ -226,22 +226,22 @@ class ValidationMessage:
 
 @dataclass(kw_only=True)
 class Eq:
-    eq: str
+    oper_eq: str
 
 
 @dataclass(kw_only=True)
 class Ne:
-    ne: str
+    oper_ne: str
 
 
 @dataclass(kw_only=True)
 class Or:
-    or_: list[str]
+    oper_or: list[str]
 
 
 @dataclass(kw_only=True)
 class Nor:
-    nor: list[str]
+    oper_nor: list[str]
 
 
 @dataclass(kw_only=True)

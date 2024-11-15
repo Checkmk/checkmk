@@ -59,11 +59,11 @@ def test_tags_from_disk() -> None:
 
     assert frontend_tags == [
         ConditionChoicesValue(
-            group_name="address_family", value=Nor(nor=["ip-v6-only", "ip-v4-only"])
+            group_name="address_family", value=Nor(oper_nor=["ip-v6-only", "ip-v4-only"])
         ),
-        ConditionChoicesValue(group_name="agent", value=Or(or_=["all-agents"])),
-        ConditionChoicesValue(group_name="ip-v4", value=Ne(ne="ip-v4")),
-        ConditionChoicesValue(group_name="ip-v6", value=Eq(eq="ip-v6")),
+        ConditionChoicesValue(group_name="agent", value=Or(oper_or=["all-agents"])),
+        ConditionChoicesValue(group_name="ip-v4", value=Ne(oper_ne="ip-v4")),
+        ConditionChoicesValue(group_name="ip-v6", value=Eq(oper_eq="ip-v6")),
     ]
 
 
@@ -71,12 +71,12 @@ def test_tags_from_frontend() -> None:
     frontend_tags = [
         asdict(
             ConditionChoicesValue(
-                group_name="address_family", value=Nor(nor=["ip-v6-only", "ip-v4-only"])
+                group_name="address_family", value=Nor(oper_nor=["ip-v6-only", "ip-v4-only"])
             )
         ),
-        asdict(ConditionChoicesValue(group_name="agent", value=Or(or_=["all-agents"]))),
-        asdict(ConditionChoicesValue(group_name="ip-v4", value=Ne(ne="ip-v4"))),
-        asdict(ConditionChoicesValue(group_name="ip-v6", value=Eq(eq="ip-v6"))),
+        asdict(ConditionChoicesValue(group_name="agent", value=Or(oper_or=["all-agents"]))),
+        asdict(ConditionChoicesValue(group_name="ip-v4", value=Ne(oper_ne="ip-v4"))),
+        asdict(ConditionChoicesValue(group_name="ip-v6", value=Eq(oper_eq="ip-v6"))),
     ]
     disk_visitor = get_visitor(
         CONDITION_CHOICES_FS, VisitorOptions(data_origin=DataOrigin.FRONTEND)

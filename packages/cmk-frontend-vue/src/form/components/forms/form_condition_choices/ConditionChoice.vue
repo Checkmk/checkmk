@@ -33,9 +33,10 @@ if (props.group.conditions.length === 0) {
 
 type KeysOfUnion<T> = T extends T ? keyof T : never
 type Operator = KeysOfUnion<ConditionChoicesValue['value']>
-const operatorIsMultiSelect = (operator: Operator) => operator === 'or' || operator === 'nor'
+const operatorIsMultiSelect = (operator: Operator) =>
+  operator === 'oper_or' || operator === 'oper_nor'
 
-const selectedOperator = ref<Operator>('eq')
+const selectedOperator = ref<Operator>('oper_eq')
 const selectedSingleValue = ref<string>(props.group.conditions[0]!.name)
 const selectedMultiValue = ref<string[]>([props.group.conditions[0]!.name])
 
@@ -62,15 +63,15 @@ immediateWatch(
 const operatorChoices = computed<{ name: Operator; title: string }[]>(() => {
   if (props.group.conditions.length > 1) {
     return [
-      { name: 'eq', title: props.i18n.eq },
-      { name: 'ne', title: props.i18n.ne },
-      { name: 'or', title: props.i18n.or },
-      { name: 'nor', title: props.i18n.nor }
+      { name: 'oper_eq', title: props.i18n.eq },
+      { name: 'oper_ne', title: props.i18n.ne },
+      { name: 'oper_or', title: props.i18n.or },
+      { name: 'oper_nor', title: props.i18n.nor }
     ]
   }
   return [
-    { name: 'eq', title: props.i18n.eq },
-    { name: 'ne', title: props.i18n.ne }
+    { name: 'oper_eq', title: props.i18n.eq },
+    { name: 'oper_ne', title: props.i18n.ne }
   ]
 })
 
@@ -89,7 +90,7 @@ function updateValue(operator: Operator, value: string | string[] | null) {
     group_name: props.data.group_name,
     value: {
       [operator]: value
-    } as { eq: string } | { ne: string } | { or: string[] } | { nor: string[] }
+    } as { oper_eq: string } | { oper_ne: string } | { oper_or: string[] } | { oper_nor: string[] }
   })
 }
 

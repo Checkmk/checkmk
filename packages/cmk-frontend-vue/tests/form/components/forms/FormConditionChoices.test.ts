@@ -72,7 +72,7 @@ test('FormConditionChoices checks validators', async () => {
       data: [
         {
           group_name: 'group1',
-          value: { eq: 'condition1' }
+          value: { oper_eq: 'condition1' }
         }
       ],
       backendValidation: []

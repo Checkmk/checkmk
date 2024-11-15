@@ -38,23 +38,23 @@ def _condition_to_value(name: str, condition: Condition) -> shared_type_defs.Con
             or_condition = condition["$or"]  # type: ignore[index]
             assert isinstance(or_condition, list)
             return shared_type_defs.ConditionChoicesValue(
-                group_name=name, value=shared_type_defs.Or(or_=or_condition)
+                group_name=name, value=shared_type_defs.Or(oper_or=or_condition)
             )
         case {"$nor": list()}:
             nor_condition = condition["$nor"]  # type: ignore[index]
             assert isinstance(nor_condition, list)  # Same as above
             return shared_type_defs.ConditionChoicesValue(
-                group_name=name, value=shared_type_defs.Nor(nor=nor_condition)
+                group_name=name, value=shared_type_defs.Nor(oper_nor=nor_condition)
             )
         case {"$ne": str()}:
             ne_condition = condition["$ne"]  # type: ignore[index]
             assert isinstance(ne_condition, str)  # Same as above
             return shared_type_defs.ConditionChoicesValue(
-                group_name=name, value=shared_type_defs.Ne(ne=ne_condition)
+                group_name=name, value=shared_type_defs.Ne(oper_ne=ne_condition)
             )
         case str():
             return shared_type_defs.ConditionChoicesValue(
-                group_name=name, value=shared_type_defs.Eq(eq=condition)
+                group_name=name, value=shared_type_defs.Eq(oper_eq=condition)
             )
         case _other:
             assert not isinstance(_other, dict)  # Remove this as well
@@ -78,24 +78,24 @@ def _value_to_condition(condition_value: object) -> tuple[ConditionGroupID, Cond
     # might be subject to change in shared typing.
     try:
         ne_operator: Literal["$ne"] = "$ne"
-        return name, {ne_operator: shared_type_defs.Ne(**value).ne}
+        return name, {ne_operator: shared_type_defs.Ne(**value).oper_ne}
     except TypeError:
         pass
 
     try:
         or_operator: Literal["$or"] = "$or"
-        return name, {or_operator: shared_type_defs.Or(**value).or_}
+        return name, {or_operator: shared_type_defs.Or(**value).oper_or}
     except TypeError:
         pass
 
     try:
         nor_operator: Literal["$nor"] = "$nor"
-        return name, {nor_operator: shared_type_defs.Nor(**value).nor}
+        return name, {nor_operator: shared_type_defs.Nor(**value).oper_nor}
     except TypeError:
         pass
 
     try:
-        return name, shared_type_defs.Eq(**value).eq
+        return name, shared_type_defs.Eq(**value).oper_eq
     except TypeError:
         raise TypeError(_UNSUPPORTED_VALUE_FROM_FRONTEND)
 

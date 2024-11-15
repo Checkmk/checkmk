@@ -360,14 +360,14 @@ export interface ConditionChoicesValue {
   value: Eq | Ne | Or | Nor;
 }
 export interface Eq {
-  eq: string;
+  oper_eq: string;
 }
 export interface Ne {
-  ne: string;
+  oper_ne: string;
 }
 export interface Or {
-  or: string[];
+  oper_or: string[];
 }
 export interface Nor {
-  nor: string[];
+  oper_nor: string[];
 }

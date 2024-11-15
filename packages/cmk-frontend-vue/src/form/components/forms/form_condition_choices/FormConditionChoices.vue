@@ -43,7 +43,7 @@ function addElement(selected: string | null) {
   }
   data.value.push({
     group_name: selected,
-    value: { eq: group.conditions[0]!.name }
+    value: { oper_eq: group.conditions[0]!.name }
   })
   validation.value = validateValue(data.value, props.spec.validators)
   selectedConditionGroup.value = null

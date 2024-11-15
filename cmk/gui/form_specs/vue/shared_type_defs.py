@@ -218,6 +218,12 @@ class LabelSource(str, Enum):
 
 
 @dataclass(kw_only=True)
+class TimeSpecificI18n:
+    enable: str
+    disable: str
+
+
+@dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
     message: str
@@ -490,6 +496,16 @@ class Labels(FormSpec):
 
 
 @dataclass(kw_only=True)
+class TimeSpecific(FormSpec):
+    i18n: TimeSpecificI18n
+    parameter_form_enabled: FormSpec
+    parameter_form_disabled: FormSpec
+    type: str = "time_specific"
+    time_specific_values_key: str = "tp_values"
+    default_value_key: str = "tp_default_value"
+
+
+@dataclass(kw_only=True)
 class ListUniqueSelection(FormSpec):
     element_template: Union[SingleChoice, CascadingSingleChoice]
     element_default_value: Any
@@ -528,6 +544,7 @@ Components = Union[
     Folder,
     ConditionChoices,
     Labels,
+    TimeSpecific,
 ]
 
 

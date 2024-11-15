@@ -28,7 +28,8 @@ import type {
   Labels,
   ConditionChoices,
   ConditionChoicesValue,
-  ConditionGroup
+  ConditionGroup,
+  TimeSpecific
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -101,6 +102,8 @@ function renderForm(
       return renderFolder(formSpec as Folder, value as string, backendValidation)
     case 'labels':
       return renderLabels(formSpec as Labels, value as Record<string, string>)
+    case 'time_specific':
+      return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -406,6 +409,19 @@ function renderCascadingSingleChoice(
   return null
 }
 
+function renderTimeSpecific(
+  formSpec: TimeSpecific,
+  value: unknown,
+  backendValidation: ValidationMessages
+): VNode {
+  const isActive = typeof value === 'object' && value !== null && 'tp_default_value' in value
+  if (isActive) {
+    return h('div', [renderForm(formSpec.parameter_form_enabled, value, backendValidation)])
+  } else {
+    return h('div', [renderForm(formSpec.parameter_form_disabled, value, backendValidation)])
+  }
+}
+
 interface PreRenderedHtml {
   input_html: string
   readonly_html: string
@@ -470,7 +486,6 @@ function renderFolder(
 ): VNode {
   return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
 }
-
 function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
   let bgColor = 'var(--tag-color)'
   let color = 'var(--black)'

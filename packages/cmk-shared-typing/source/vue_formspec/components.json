@@ -1271,6 +1271,55 @@
                 }
             ]
         },
+        "time_specific": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "time_specific",
+                    "default": "time_specific"
+                },
+                "time_specific_values_key": {
+                    "const": "tp_values",
+                    "default": "tp_values"
+                },
+                "default_value_key": {
+                    "const": "tp_default_value",
+                    "default": "tp_default_value"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "time_specific_i18n",
+                    "properties": {
+                        "enable": {
+                            "type": "string"
+                        },
+                        "disable": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["enable", "disable"]
+                },
+                "parameter_form_enabled": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "parameter_form_disabled": {
+                    "$ref": "#/$defs/form_spec"
+                }
+            },
+            "required": [
+                "type",
+                "time_specific_values_key",
+                "default_value_key",
+                "i18n",
+                "parameter_form_enabled",
+                "parameter_form_disabled"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -1356,6 +1405,9 @@
                 },
                 {
                     "$ref": "#/$defs/labels"
+                },
+                {
+                    "$ref": "#/$defs/time_specific"
                 }
             ],
             "required": ["type"]

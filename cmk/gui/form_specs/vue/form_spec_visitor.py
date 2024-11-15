@@ -37,6 +37,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
+    TimeSpecific,
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -119,6 +120,7 @@ from .visitors import (
     SingleChoiceVisitor,
     StringVisitor,
     TimeSpanVisitor,
+    TimeSpecificVisitor,
     TransformVisitor,
     TupleVisitor,
 )
@@ -168,6 +170,7 @@ def register_form_specs():
     register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
     register_visitor_class(Folder, FolderVisitor)
     register_visitor_class(Labels, LabelsVisitor)
+    register_visitor_class(TimeSpecific, TimeSpecificVisitor)
 
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)

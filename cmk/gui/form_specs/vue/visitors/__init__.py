@@ -29,6 +29,7 @@ from .single_choice import SingleChoiceVisitor
 from .single_choice_editable import SingleChoiceEditableVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
+from .time_specific import TimeSpecificVisitor
 from .transform import TransformVisitor
 from .tuple import TupleVisitor
 
@@ -63,6 +64,7 @@ __all__ = [
     "SingleChoiceEditableVisitor",
     "StringVisitor",
     "TimeSpanVisitor",
+    "TimeSpecificVisitor",
     "TransformVisitor",
     "TupleVisitor",
     "VisitorOptions",

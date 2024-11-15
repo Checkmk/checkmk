@@ -48,24 +48,26 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <CmkList
-    :items-props="{ itemData: data, itemElementValidation: elementValidation }"
-    :draggable="props.spec.editable_order ? { onReorder: reorderElements } : null"
-    :add="{
-      show: true,
-      tryAdd: addElement,
-      label: props.spec.add_element_label
-    }"
-    :try-delete="deleteElement"
-  >
-    <template #item-props="{ index, itemData, itemElementValidation }">
-      <FormEditDispatcher
-        :data="itemData"
-        :spec="spec.element_template"
-        :backend-validation="itemElementValidation"
-        @update:data="(new_value: unknown) => updateElementData(new_value, index)"
-      />
-    </template>
-  </CmkList>
-  <FormValidation :validation="validation"></FormValidation>
+  <span>
+    <CmkList
+      :items-props="{ itemData: data, itemElementValidation: elementValidation }"
+      :draggable="props.spec.editable_order ? { onReorder: reorderElements } : null"
+      :add="{
+        show: true,
+        tryAdd: addElement,
+        label: props.spec.add_element_label
+      }"
+      :try-delete="deleteElement"
+    >
+      <template #item-props="{ index, itemData, itemElementValidation }">
+        <FormEditDispatcher
+          :data="itemData"
+          :spec="spec.element_template"
+          :backend-validation="itemElementValidation"
+          @update:data="(new_value: unknown) => updateElementData(new_value, index)"
+        />
+      </template>
+    </CmkList>
+    <FormValidation :validation="validation"></FormValidation>
+  </span>
 </template>

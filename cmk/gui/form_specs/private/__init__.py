@@ -26,6 +26,7 @@ from .multiple_choice import (
 from .optional_choice import OptionalChoice
 from .single_choice_editable import SingleChoiceEditable
 from .string_autocompleter import StringAutocompleter
+from .time_specific import TimeSpecific
 from .validators import not_empty
 
 __all__ = [
@@ -45,6 +46,7 @@ __all__ = [
     "SingleChoiceExtended",
     "SingleChoiceEditable",
     "StringAutocompleter",
+    "TimeSpecific",
     "OptionalChoice",
     "UnknownFormSpec",
     "not_empty",

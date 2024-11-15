@@ -36,7 +36,8 @@ export type Components =
   | ListOfStrings
   | Folder
   | ConditionChoices
-  | Labels;
+  | Labels
+  | TimeSpecific;
 export type Integer = FormSpec & {
   type: "integer";
   label: string | null;
@@ -219,6 +220,14 @@ export type Labels = FormSpec & {
   max_labels: number;
   label_source?: "explicit" | "ruleset" | "discovered";
 };
+export type TimeSpecific = FormSpec & {
+  type: "time_specific";
+  time_specific_values_key: "tp_values";
+  default_value_key: "tp_default_value";
+  i18n: TimeSpecificI18N;
+  parameter_form_enabled: FormSpec;
+  parameter_form_disabled: FormSpec;
+};
 export type Values = ConditionChoicesValue;
 
 export interface VueFormspecComponents {
@@ -359,6 +368,10 @@ export interface LabelsI18N {
   key_value_format_error: string;
   uniqueness_error: string;
   max_labels_reached: string;
+}
+export interface TimeSpecificI18N {
+  enable: string;
+  disable: string;
 }
 export interface ValidationMessage {
   location: string[];

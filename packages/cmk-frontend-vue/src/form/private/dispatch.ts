@@ -34,6 +34,7 @@ import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
+import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<Components['type'], Component> = {
@@ -63,6 +64,7 @@ const components: Record<Components['type'], Component> = {
   single_choice: FormSingleChoice,
   string: FormString,
   time_span: FormTimeSpan,
+  time_specific: FormTimeSpecific,
   tuple: FormTuple
 }
 

@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Any, cast, Literal
+from typing import Any, assert_never, cast, Literal
 
+from cmk.utils.tags import AuxTag, TagGroup
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
     AdaptiveMultipleChoice,
     AdaptiveMultipleChoiceLayout,
     CascadingSingleChoiceExtended,
     CommentTextArea,
+    ConditionChoices,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -25,9 +28,12 @@ from cmk.gui.form_specs.private import (
 )
 from cmk.gui.form_specs.vue.shared_type_defs import (
     CascadingSingleChoiceLayout,
+    Condition,
+    ConditionGroup,
     DictionaryLayout,
     ListOfStringsLayout,
 )
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
@@ -340,6 +346,41 @@ def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended]
     ]
 
 
+@request_memoize()
+def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
+    choices: list[TagGroup | AuxTag] = []
+    all_topics = active_config.tags.get_topic_choices()
+    tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
+    aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
+    for topic_id, _topic_title in all_topics:
+        for tag_group in tag_groups_by_topic.get(topic_id, []):
+            choices.append(tag_group)
+
+        for aux_tag in aux_tags_by_topic.get(topic_id, []):
+            choices.append(aux_tag)
+
+    return choices
+
+
+def _get_condition_choices() -> dict[str, ConditionGroup]:
+    choices: dict[str, ConditionGroup] = {}
+    for tag in _get_cached_tags():
+        match tag:
+            case TagGroup():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[Condition(name=t.id or "", title=t.title) for t in tag.tags],
+                )
+            case AuxTag():
+                choices[tag.id] = ConditionGroup(
+                    title=tag.choice_title,
+                    conditions=[Condition(name=tag.id, title=tag.title)],
+                )
+            case other:
+                assert_never(other)
+    return choices
+
+
 def filter_for_hosts_and_services() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         return [
@@ -427,11 +468,22 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                         form_spec=DictionaryExtended(
                             layout=DictionaryLayout.two_columns,
                             elements={
-                                "host_tags": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "host_tags": DictElement(
+                                    parameter_form=ConditionChoices(
                                         title=Title("Host tags"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
+                                        add_condition_group_label=Label("Add tag condition"),
+                                        select_condition_group_to_add=Label("Select tag to add"),
+                                        no_more_condition_groups_to_add=Label(
+                                            "No more tags to add"
+                                        ),
+                                        get_conditions=_get_condition_choices,
+                                        custom_validate=[
+                                            not_empty(
+                                                error_msg=Message(
+                                                    "Please add at least one tag condition."
+                                                )
+                                            )
+                                        ],
                                     ),
                                 ),
                                 "host_labels": DictElement(  # TODO: Waiting on team engelbart

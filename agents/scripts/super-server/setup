@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+: "${MK_INSTALLDIR:=""}"
 : "${MK_CONFDIR:="/etc/check_mk"}"
 
-CONFIG="${MK_CONFDIR}/super-server.cfg"
+if [ -n "${MK_INSTALLDIR}" ]; then
+    CONFIG="${MK_INSTALLDIR}/package/config/super-server.cfg"
+else
+    CONFIG="${MK_CONFDIR}/super-server.cfg"
+fi
 
 MODULES_DIR="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
 

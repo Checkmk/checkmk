@@ -6,7 +6,7 @@
 import itertools
 import logging
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Any, AnyStr, NamedTuple
 
@@ -728,18 +728,17 @@ class CMKOpenApiSession(requests.Session):
 
     def get_broker_connections(
         self,
-    ) -> list[dict[str, Any]]:
+    ) -> Sequence[Mapping[str, object]]:
         response = self.get(
             "/domain-types/broker_connection/collections/all",
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
+        return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
 
     def create_broker_connection(
         self, connection_id: str, connection_config: BrokerConnectionInfo
-    ) -> dict[str, Any]:
+    ) -> Mapping[str, object]:
         response = self.post(
             "/domain-types/broker_connection/collections/all",
             headers={
@@ -749,12 +748,11 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: dict[str, Any] = response.json()
-        return value
+        return {str(k): v for k, v in response.json().items()}
 
     def edit_broker_connection(
         self, connection_id: str, connection_config: BrokerConnectionInfo
-    ) -> dict[str, Any]:
+    ) -> Mapping[str, object]:
         response = self.put(
             f"/objects/broker_connection/{connection_id}",
             headers={
@@ -764,8 +762,7 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: dict[str, Any] = response.json()
-        return value
+        return {str(k): v for k, v in response.json().items()}
 
     def delete_broker_connection(self, connection_id: str) -> None:
         response = self.delete(

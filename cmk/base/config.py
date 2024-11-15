@@ -386,10 +386,12 @@ def _get_clustered_services(
 
     if not config_cache.is_ping_host(cluster_name):
 
-        def appears_on_cluster(node_name: HostAddress, service_id: ServiceID) -> bool:
-            if config_cache.check_plugin_ignored(node_name, service_id[0]):
+        def appears_on_cluster(node_name: HostAddress, entry: AutocheckEntry) -> bool:
+            if config_cache.check_plugin_ignored(node_name, entry.check_plugin_name):
                 return False
-            description = service_description(config_cache.ruleset_matcher, node_name, *service_id)
+            description = service_description(
+                config_cache.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+            )
             return not config_cache.service_ignored(node_name, description) and (
                 config_cache.effective_host(node_name, description) == cluster_name
             )
@@ -1699,6 +1701,28 @@ def _make_clusters_nodes_maps() -> (
     return clusters_of_cache, nodes_cache
 
 
+class AutochecksConfigurer:
+    """Implementation of the autochecks configuration"""
+
+    def __init__(self, config_cache: ConfigCache) -> None:
+        self._config_cache = config_cache
+
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
+        return self._config_cache.check_plugin_ignored(host_name, plugin_name)
+
+    def ignore_service(self, host_name: HostName, entry: AutocheckEntry) -> bool:
+        description = self.service_description(host_name, entry)
+        return self._config_cache.service_ignored(host_name, description)
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return self._config_cache.effective_host_of_autocheck(host_name, entry)
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
+        return service_description(
+            self._config_cache.ruleset_matcher, host_name, entry.check_plugin_name, entry.item
+        )
+
+
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
@@ -1825,7 +1849,7 @@ class ConfigCache:
             hostname,
             service_desc,
             _make_service_description_cb(self.ruleset_matcher),
-            self.effective_host,
+            self.effective_host_of_autocheck,
         )
 
     @staticmethod
@@ -3686,6 +3710,14 @@ class ConfigCache:
     def nodes(self, hostname: HostName) -> Sequence[HostName]:
         """Returns the nodes of a cluster. Returns () if no match."""
         return self._nodes_cache.get(hostname, ())
+
+    def effective_host_of_autocheck(self, node_name: HostName, entry: AutocheckEntry) -> HostName:
+        return self.effective_host(
+            node_name,
+            service_description(
+                self.ruleset_matcher, node_name, entry.check_plugin_name, entry.item
+            ),
+        )
 
     def effective_host(
         self,

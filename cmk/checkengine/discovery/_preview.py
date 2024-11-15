@@ -17,7 +17,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import Item
 from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
@@ -38,7 +38,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckEntry, AutochecksStore
+from ._autochecks import AutocheckEntry, AutochecksConfig, AutochecksStore
 from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
@@ -92,10 +92,7 @@ def get_check_preview(
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
     on_error: OnError,
@@ -167,10 +164,7 @@ def get_check_preview(
         ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        ignore_service=ignore_service,
-        ignore_plugin=ignore_plugin,
-        get_effective_host=get_effective_host,
-        get_service_description=find_service_description,
+        autochecks_config=autochecks_config,
         enforced_services=enforced_services,
     )
 
@@ -182,9 +176,7 @@ def get_check_preview(
                 service=ConfiguredService(
                     check_plugin_name=entry.newer.check_plugin_name,
                     item=entry.newer.item,
-                    description=find_service_description(
-                        h, entry.newer.check_plugin_name, entry.newer.item
-                    ),
+                    description=autochecks_config.service_description(h, entry.newer),
                     parameters=compute_check_parameters(h, entry.older),
                     discovered_parameters=entry.older.parameters,
                     discovered_labels=entry.older.service_labels,

@@ -287,6 +287,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         config_cache = config.get_config_cache()
         plugins = agent_based_register.get_previously_loaded_plugins()
         ruleset_matcher = config_cache.ruleset_matcher
+        autochecks_config = config.AutochecksConfigurer(config_cache)
 
         results: dict[HostName, DiscoveryResult] = {}
 
@@ -357,10 +358,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     sections={**plugins.agent_sections, **plugins.snmp_sections},
                 ),
                 plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-                ignore_service=config_cache.service_ignored,
-                ignore_plugin=config_cache.check_plugin_ignored,
-                get_effective_host=config_cache.effective_host,
-                get_service_description=_make_service_description_cb(ruleset_matcher),
+                autochecks_config=autochecks_config,
                 settings=settings,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
@@ -601,6 +599,7 @@ def _execute_discovery(
     hosts_config = config.make_hosts_config()
     plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
@@ -660,10 +659,7 @@ def _execute_discovery(
                 )
             ),
             discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            ignore_service=config_cache.service_ignored,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            get_effective_host=config_cache.effective_host,
-            find_service_description=_make_service_description_cb(ruleset_matcher),
+            autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
         )
@@ -721,6 +717,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     config.load()
     config_cache = config.get_config_cache()
     ab_plugins = agent_based_register.get_previously_loaded_plugins()
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
         # error handling: we're redirecting stdout to /dev/null anyway,
@@ -846,10 +843,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         section_error_handling=section_error_handling,
                         host_label_plugins=host_label_plugins,
                         plugins=plugins,
-                        ignore_service=config_cache.service_ignored,
-                        ignore_plugin=config_cache.check_plugin_ignored,
-                        get_effective_host=config_cache.effective_host,
-                        get_service_description=_make_service_description_cb(ruleset_matcher),
+                        autochecks_config=autochecks_config,
                         schedule_discovery_check=_schedule_discovery_check,
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
@@ -931,18 +925,16 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
             for service_name, autocheck_entry in services.items()
         }
 
-        def get_effective_host_by_id(
-            host: HostName, check_plugin: CheckPluginName, item: Item
-        ) -> HostName:
+        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
             # This function is used to get the effective host for a service description.
             # Some of the service_descriptions are actually already passed down in which case they
             # are used directly. In case all service_descriptions are passed down, needs_checks can
             # be set to False.
             return config_cache.effective_host(
                 host,
-                service_descriptions.get((host, check_plugin, item))
+                service_descriptions.get((host, entry.check_plugin_name, entry.item))
                 or config.service_description(
-                    config_cache.ruleset_matcher, host, check_plugin, item
+                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
                 ),
             )
 
@@ -951,7 +943,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
                 autochecks_owner=set_autochecks_input.discovered_host,
                 effective_host=set_autochecks_input.discovered_host,
                 new_services=set_autochecks_input.target_services.values(),
-                get_effective_host=get_effective_host_by_id,
+                get_effective_host=get_effective_host_of_autocheck,
             )
         else:
             desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
@@ -960,7 +952,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
                     autochecks_owner=node,
                     effective_host=set_autochecks_input.discovered_host,
                     new_services=(s for s in services.values() if s.id() in desired_on_cluster),
-                    get_effective_host=get_effective_host_by_id,
+                    get_effective_host=get_effective_host_of_autocheck,
                 )
 
         self._trigger_discovery_check(config_cache, set_autochecks_input.discovered_host)
@@ -999,6 +991,14 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 checks_dir=checks_dir,
             )
 
+        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
+            return config_cache.effective_host(
+                host,
+                config.service_description(
+                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
+                ),
+            )
+
         new_services = [
             AutocheckServiceWithNodes(
                 DiscoveredItem[AutocheckEntry](
@@ -1024,8 +1024,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 # The set-autochecks automation will do nothing in clustered mode.
                 # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
                 {hostname: new_services},
-                config_cache.effective_host,
-                _make_service_description_cb(config_cache.ruleset_matcher),
+                get_effective_host_of_autocheck,
             )
         else:
             set_autochecks_of_real_hosts(hostname, new_services)

@@ -602,7 +602,7 @@ def test__get_post_discovery_services(
             grouped_services,
             service_filters,
             result,
-            get_service_description=lambda *args: f"Test Description {args[-1]}",
+            get_service_description=lambda hn, entry: f"Test Description {entry.item}",
             settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
@@ -1017,7 +1017,7 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
-        find_service_description=lambda *args: f"Test Description {args[-1]}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
         discovery_mode=discovery_mode,
     )
 
@@ -1925,6 +1925,20 @@ def test__perform_host_label_discovery_on_cluster(
     assert kept_labels == discovery_test_case.on_cluster.expected_kept_labels
 
 
+class _AutochecksConfigDummy:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+        return False
+
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return False
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return host_name
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+        return "desc"
+
+
 def test_get_node_services() -> None:
     host_name = HostName("horst")
     entries = QualifiedDiscovery[AutocheckEntry](
@@ -1947,14 +1961,7 @@ def test_get_node_services() -> None:
             for discovery_status in ("unchanged", "new")
         ],
     )
-    assert make_table(
-        host_name,
-        entries,
-        ignore_service=lambda *args, **kw: False,
-        ignore_plugin=lambda *args, **kw: False,
-        get_effective_host=lambda hn, *args, **kw: hn,
-        get_service_description=lambda *args, **kw: "desc",
-    ) == {
+    assert make_table(host_name, entries, autochecks_config=_AutochecksConfigDummy()) == {
         ServiceID(CheckPluginName("plugin_vanished"), item=None): ServicesTableEntry(
             transition="vanished",
             autocheck=DiscoveredItem[AutocheckEntry](

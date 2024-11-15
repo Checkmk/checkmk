@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.hostaddress import HostAddress
+from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery._autochecks import AutocheckEntry, AutocheckServiceWithNodes
@@ -41,6 +41,23 @@ AUTOCHECK_2 = AutocheckEntry(
 )
 
 
+class _AutochecksConfigDummy:
+    def __init__(self, *, effective_host: HostName) -> None:
+        self._effective_host = effective_host
+
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+        return False
+
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return False
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return self._effective_host
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+        return f"{entry.check_plugin_name} / {entry.item}"
+
+
 def test_get_host_services_by_host_name_vanished_on_node() -> None:
     assert get_host_services_by_host_name(
         NODE_1,
@@ -48,10 +65,7 @@ def test_get_host_services_by_host_name_vanished_on_node() -> None:
         discovered_services={NODE_1: []},
         is_cluster=False,
         cluster_nodes=(),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: NODE_1,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=NODE_1),
         enforced_services={},
     ) == {
         NODE_1: {
@@ -72,10 +86,7 @@ def test_get_host_services_by_host_name_unchanged_on_node() -> None:
         discovered_services={NODE_1: [AUTOCHECK_1A]},
         is_cluster=False,
         cluster_nodes=(),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: NODE_1,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=NODE_1),
         enforced_services={},
     ) == {
         NODE_1: {
@@ -96,10 +107,7 @@ def test_get_host_services_by_host_name_changed_on_node() -> None:
         discovered_services={NODE_1: [AUTOCHECK_1B]},
         is_cluster=False,
         cluster_nodes=(),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: NODE_1,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=NODE_1),
         enforced_services={},
     ) == {
         NODE_1: {
@@ -120,10 +128,7 @@ def test_get_host_services_by_host_name_new_on_node() -> None:
         discovered_services={NODE_1: [AUTOCHECK_1B]},
         is_cluster=False,
         cluster_nodes=(),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: NODE_1,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=NODE_1),
         enforced_services={},
     ) == {
         NODE_1: {
@@ -150,10 +155,7 @@ def test_get_host_services_by_host_name_vanished_on_cluster() -> None:
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: CLUSTER,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
         "vanished": [
@@ -178,10 +180,7 @@ def test_get_host_services_by_host_name_unchanged_on_cluster() -> None:
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: CLUSTER,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
         "unchanged": [
@@ -206,10 +205,7 @@ def test_get_host_services_by_host_name_changed_on_cluster() -> None:
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: CLUSTER,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
         "changed": [
@@ -234,10 +230,7 @@ def test_get_host_services_by_host_name_new_on_cluster() -> None:
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: CLUSTER,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
         "new": [
@@ -262,10 +255,7 @@ def test_get_host_services_by_host_name_swaps_on_cluster() -> None:
         },
         is_cluster=True,
         cluster_nodes=(NODE_1, NODE_2),
-        ignore_service=lambda *args: False,
-        ignore_plugin=lambda *args: False,
-        get_effective_host=lambda *args: CLUSTER,
-        get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
+        autochecks_config=_AutochecksConfigDummy(effective_host=CLUSTER),
         enforced_services={},
     )[CLUSTER] == {
         "unchanged": [

@@ -51,7 +51,6 @@ from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.structured_data import (
     ImmutableTree,
     load_tree,
@@ -1238,7 +1237,6 @@ modes.register(
 def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    ruleset_matcher = config_cache.ruleset_matcher
 
     if not hosts:
         hosts = sorted(
@@ -1303,8 +1301,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
             remove_autochecks_of_host(
                 node,
                 host,
-                config_cache.effective_host,
-                _make_service_description_cb(ruleset_matcher),
+                config_cache.effective_host_of_autocheck,
             )
             for node in config_cache.nodes(host) or [host]
         )
@@ -1855,6 +1852,7 @@ def mode_check_discovery(
     plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     check_interval = config_cache.check_mk_check_interval(hostname)
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
@@ -1927,10 +1925,7 @@ def mode_check_discovery(
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
             ),
             plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            ignore_service=config_cache.service_ignored,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            get_effective_host=config_cache.effective_host,
-            find_service_description=_make_service_description_cb(ruleset_matcher),
+            autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(hostname),
         )
 
@@ -1947,20 +1942,6 @@ def mode_check_discovery(
             sys.stdout.write(check_result.as_text() + "\n")
             sys.stdout.flush()
     return check_result.state
-
-
-def _make_service_description_cb(
-    matcher: RulesetMatcher,
-) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
-    """Replacement for functool.partial(config.service_description, matcher)
-
-    functools.partial is not supported by the mypy type checker.
-    """
-
-    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return config.service_description(matcher, hostname, check_plugin_name, item)
-
-    return callback
 
 
 def register_mode_check_discovery(

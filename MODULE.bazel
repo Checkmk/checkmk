@@ -65,13 +65,13 @@ use_repo(pip, "cmk_requirements")
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "28.3", repo_name = "com_google_protobuf")
 
-fork_cc_toolchain_config = use_repo_rule("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
+fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
 
 fork_cc_toolchain_config(
     name = "forked_cc_toolchain_config",
 )
 
-register_toolchains("//omd/packages/toolchain:linux_gcc13")
+register_toolchains("//bazel/toolchains/cc:linux_gcc13")
 
 # bazel_skylib: Required for setting up rules_foreign_cc
 bazel_dep(name = "bazel_skylib", version = "1.6.1")

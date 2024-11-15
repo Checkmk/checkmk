@@ -40,7 +40,7 @@ common:ci --color=no
 common:ci --show_progress_rate_limit=0
 common:ci --show_timestamps
 common:ci --memory_profile=bazel-memory.profile
-common:ci --extra_toolchains="//omd/packages/toolchain:ci"
+common:ci --extra_toolchains="//bazel/toolchains/cc:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
 common:ci --lockfile_mode=error
@@ -98,7 +98,7 @@ build:iwyu --@bazel_iwyu//:iwyu_mappings=//omd/packages/bazel_iwyu:iwyu_mappings
 ################################################################################
 # Example: bazel build --config=mypy //packages/cmk-agent-based:all
 ################################################################################
-build:mypy --aspects //packages/cmk-agent-based:aspects.bzl%mypy_aspect
+build:mypy --aspects //bazel/tools:aspects.bzl%mypy_aspect
 build:mypy --output_groups=mypy
 
 # Turn off automatic capturing of environmental stuff like PATH - those will be set explicitly

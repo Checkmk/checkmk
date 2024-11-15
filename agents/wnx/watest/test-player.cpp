@@ -217,7 +217,7 @@ static void RemoveFolder(const std::filesystem::path &Path) {
         }
     }
 
-    fs::remove_all(Path);
+    tst::RemoveAll(Path);
 }
 
 // returns folder where

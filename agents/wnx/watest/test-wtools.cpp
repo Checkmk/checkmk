@@ -78,7 +78,7 @@ protected:
     static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
         uint32_t pid = 0;
         std::wstring path;
-        ScanProcessList([&path, &pid ](const PROCESSENTRY32 &entry) -> auto {
+        ScanProcessList([&path, &pid](const PROCESSENTRY32 &entry) -> auto {
             if (std::wstring{entry.szExeFile} != nameToUse()) {
                 return true;  // continue scan
             }
@@ -192,7 +192,7 @@ protected:
     bool findProcessByPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            [&found, pid](const PROCESSENTRY32 &entry) -> auto {
                 if (entry.th32ProcessID == pid) {
                     found = true;
                     EXPECT_FALSE(true) << "bullshit found " << pid << "name is "
@@ -206,7 +206,7 @@ protected:
     bool findProcessByParentPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
-            [&found, pid ](const PROCESSENTRY32 &entry) -> auto {
+            [&found, pid](const PROCESSENTRY32 &entry) -> auto {
                 if (entry.th32ParentProcessID == pid) {
                     found = true;
                 }
@@ -219,7 +219,7 @@ protected:
         uint32_t proc_id) {
         std::wstring proc_name;
         DWORD parent_process_id = 0;
-        wtools::ScanProcessList([ proc_id, &proc_name, &parent_process_id ](
+        wtools::ScanProcessList([proc_id, &proc_name, &parent_process_id](
                                     const PROCESSENTRY32 &entry) -> auto {
             if (entry.th32ProcessID == proc_id) {
                 proc_name = entry.szExeFile;
@@ -750,6 +750,6 @@ TEST(Wtools, RunCommandCheck) {
 TEST(Wtools, MakeSafeFolderIntegration) {
     const auto path = MakeSafeTempFolder("temp");  //
     EXPECT_TRUE(fs::exists(*path));
-    fs::remove_all(*path);
+    tst::RemoveAll(*path);
 }
 }  // namespace wtools

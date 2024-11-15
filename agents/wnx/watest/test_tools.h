@@ -152,19 +152,26 @@ void EnableSectionsNode(std::string_view value, bool update_global);
 void DisableSectionsNode(std::string_view value, bool update_global);
 
 inline void SafeCleanBakeryDir() {
-    namespace fs = std::filesystem;
     auto bakery_dir = cma::cfg::GetBakeryDir();
     auto normal_dir = bakery_dir.find(L"\\bakery", 0) != std::wstring::npos;
     if (normal_dir) {
         // clean
-        fs::remove_all(bakery_dir);
-        fs::create_directory(bakery_dir);
+        std::error_code ec;
+        std::filesystem::remove_all(bakery_dir, ec);
+        if (ec) {
+            XLOG::l(XLOG::kStdio)
+                .e("Failed to kill bakery dir: {} error[{}]: {}",
+                   wtools::ToUtf8(bakery_dir), ec.value(), ec.message());
+        } else {
+            std::filesystem::create_directory(bakery_dir, ec);
+        }
     } else {
         XLOG::l("attempt to delete suspicious dir {}",
                 wtools::ToUtf8(bakery_dir));
     }
 }
 
+bool RemoveAll(const std::filesystem::path &path);
 const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();

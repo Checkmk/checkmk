@@ -78,8 +78,10 @@ public:
 
     void TearDown() override {
         if (temp_dir_.u8string().find(temp_test_prefix_)) {
-            fs::remove_all(temp_dir_);
-            fs::remove(temp_dir_);
+            if (RemoveAll(temp_dir_)) {
+                std::error_code ec;
+                fs::remove(temp_dir_, ec);
+            }
         }
     }
 
@@ -158,7 +160,7 @@ void SafeCleanTempDir() {
     if (ec)
         XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(temp_dir),
                 ec.message());
-    fs::create_directory(temp_dir);
+    fs::create_directory(temp_dir, ec);
 }
 
 void SafeCleanTmpxDir() {
@@ -529,5 +531,17 @@ const std::vector<EventRecordData> simple_log_data{
 }  // namespace
 
 const std::vector<EventRecordData> &SimpleLogData() { return simple_log_data; }
+
+bool RemoveAll(const std::filesystem::path &path) {
+    std::error_code ec;
+    fs::remove_all(path, ec);
+    if (ec) {
+        XLOG::l(XLOG::kStdio)
+            .e("Failed to kill dir: {} error[{}]: {}", path, ec.value(),
+               ec.message());
+        return false;
+    }
+    return true;
+}
 
 }  // namespace tst

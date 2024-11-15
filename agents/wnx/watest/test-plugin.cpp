@@ -122,7 +122,7 @@ void RemoveFolder(const std::filesystem::path &path) {
         }
     }
 
-    fs::remove_all(path);
+    tst::RemoveAll(path);
 }
 
 // because PluginMap is relative complicated(PluginEntry is not trivial)
@@ -363,8 +363,10 @@ TEST(PluginTest, ApplyGroupUser_Integration) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
     cma::PluginEntry pe("c:\\a\\x.cmd");
-    auto get_usr = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().first; };
-    auto get_pwd = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().second; };
+    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto {
+        return ptr_pe->getUser().second;
+    };
     ASSERT_TRUE(get_usr().empty());
     ASSERT_TRUE(get_pwd().empty());
 

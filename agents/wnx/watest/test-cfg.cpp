@@ -388,7 +388,7 @@ public:
     }
     void TearDown() override {
         tools::win::SetEnv(std::wstring{env::test_integration_root}, {});
-        fs::remove_all(expected_);
+        tst::RemoveAll(expected_);
     }
     fs::path expected_;
 };
@@ -540,7 +540,7 @@ TEST_F(CmaCfg_F, CreateTree) {
 TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
     // prepare damaged folder
     fs::path user_dir = cma::cfg::GetUserDir();
-    fs::remove_all(user_dir / dirs::kBakery);
+    tst::RemoveAll(user_dir / dirs::kBakery);
 
     for (auto m : {details::CleanMode::none, details::CleanMode::smart,
                    details::CleanMode::all})

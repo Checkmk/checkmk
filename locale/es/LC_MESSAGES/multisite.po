@@ -588,10 +588,6 @@ msgid "%s can only be deleted via Quick setup"
 msgstr ""
 
 #, python-format
-msgid "%s cannot be empty"
-msgstr ""
-
-#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -637,6 +633,10 @@ msgstr "%s no es un elemento existente en esta selección."
 #, python-format
 msgid "%s is parent of %s."
 msgstr "%s es padre de %s."
+
+#, python-format
+msgid "%s is required but not specified."
+msgstr ""
 
 #, python-format
 msgid "%s left in your Checkmk trial period"
@@ -3086,9 +3086,8 @@ msgstr "Clave de acceso"
 msgid "Access key ID"
 msgstr "Clave de acceso"
 
-#, fuzzy
-msgid "Access key ID cannot be empty"
-msgstr "Clave de acceso"
+msgid "Access key ID is required but not specified."
+msgstr ""
 
 msgid "Access point name"
 msgstr "Nombre del punto de acceso"
@@ -25687,6 +25686,13 @@ msgstr ""
 "%s y %s utilizan ambas el sufijo %s, que no está permitido."
 
 #, python-format
+msgid ""
+"Found invalid characters in the %s. Please ensure that only letters from the "
+"English alphabet, numbers and the special characters dot, hyphen and "
+"underscore are used."
+msgstr ""
+
+#, python-format
 msgid "Found multiple entries using for '%s'"
 msgstr "Se han encontrado varias entradas utilizando para '%s'"
 
@@ -26414,6 +26420,10 @@ msgstr "Ir a paquetes de extensión"
 
 msgid "Go to main page"
 msgstr "Ir a la página principal"
+
+#, fuzzy
+msgid "Go to parameters of this method"
+msgstr "Parámetros para este host"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Ir a las reglas de esta conexión InfluxDB"
@@ -34459,6 +34469,10 @@ msgstr "URL de vuelta inválida proporcionada."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Especificación de color inválida '%s'"
+
+#, fuzzy
+msgid "Invalid conditions"
+msgstr "Acción no válida"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -49056,7 +49070,7 @@ msgid "Please choose an audit log to view:"
 msgstr "Por favor, elija un archivo para cargar."
 
 #, fuzzy
-msgid "Please choose one or more regions to continue"
+msgid "Please choose one or more regions to continue."
 msgstr "Elija un informe para programar"
 
 #, fuzzy
@@ -49819,7 +49833,7 @@ msgid "Port index or 'Total'"
 msgstr "Índice de puertos o \"Total"
 
 #, fuzzy
-msgid "Port must be between 0 and 65535"
+msgid "Port must be between 0 and 65535."
 msgstr "El valor de %s debe estar entre %d y %d"
 
 msgid "Port number"
@@ -55179,6 +55193,9 @@ msgstr "Clave secreta"
 #, fuzzy
 msgid "Secret access key cannot be empty"
 msgstr "Clave secreta"
+
+msgid "Secret access key is required but not specified."
+msgstr ""
 
 msgid "Secret key"
 msgstr "Clave secreta"
@@ -62545,6 +62562,12 @@ msgid ""
 "it."
 msgstr ""
 "El %s sólo es visible para ti porque no tienes permiso para compartirlo."
+
+#, python-format
+msgid ""
+"The %s is required but not specified or too long. Please enter a name that "
+"is not yet in use and is no longer than 253 characters."
+msgstr ""
 
 #, python-format
 msgid "The %s started flapping"
@@ -85138,6 +85161,10 @@ msgstr "cualquier"
 msgid "any node"
 msgstr "cualquier nodo"
 
+#, fuzzy
+msgid "any of"
+msgstr "cualquier nodo"
+
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
 
@@ -87197,6 +87224,10 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "Access key ID cannot be empty"
+#~ msgstr "Clave de acceso"
 
 #, fuzzy
 #~ msgid "New notification setup"

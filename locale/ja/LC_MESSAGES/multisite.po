@@ -581,10 +581,6 @@ msgid "%s can only be deleted via Quick setup"
 msgstr ""
 
 #, python-format
-msgid "%s cannot be empty"
-msgstr ""
-
-#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -629,6 +625,10 @@ msgstr "%s は、この選択の既存の要素ではありません。"
 #, python-format
 msgid "%s is parent of %s."
 msgstr "%s は %s の親です。"
+
+#, python-format
+msgid "%s is required but not specified."
+msgstr ""
 
 #, python-format
 msgid "%s left in your Checkmk trial period"
@@ -2964,9 +2964,8 @@ msgstr "アクセスキー"
 msgid "Access key ID"
 msgstr "アクセスキー"
 
-#, fuzzy
-msgid "Access key ID cannot be empty"
-msgstr "アクセスキー"
+msgid "Access key ID is required but not specified."
+msgstr ""
 
 msgid "Access point name"
 msgstr "アクセスポイント名"
@@ -24465,6 +24464,13 @@ msgstr ""
 "許可されていないサフィックス %s を使用します。"
 
 #, python-format
+msgid ""
+"Found invalid characters in the %s. Please ensure that only letters from the "
+"English alphabet, numbers and the special characters dot, hyphen and "
+"underscore are used."
+msgstr ""
+
+#, python-format
 msgid "Found multiple entries using for '%s'"
 msgstr "%s'を使用して複数のエントリが見つかりました"
 
@@ -25168,6 +25174,10 @@ msgstr "拡張パッケージへ"
 
 msgid "Go to main page"
 msgstr "メインページに移動"
+
+#, fuzzy
+msgid "Go to parameters of this method"
+msgstr "このホストのパラメーター"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "新しいInfluxDB接続のルールに移動する"
@@ -33023,6 +33033,10 @@ msgstr "不正なコード"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "無効な色指定 '%s'"
+
+#, fuzzy
+msgid "Invalid conditions"
+msgstr "無効なアクション"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -47295,7 +47309,7 @@ msgid "Please choose an audit log to view:"
 msgstr "アップロードするファイルを選択してください。"
 
 #, fuzzy
-msgid "Please choose one or more regions to continue"
+msgid "Please choose one or more regions to continue."
 msgstr "スケジュールするレポートを選択してください"
 
 #, fuzzy
@@ -48019,7 +48033,7 @@ msgid "Port index or 'Total'"
 msgstr "ポートインデックスまたは\"合計\""
 
 #, fuzzy
-msgid "Port must be between 0 and 65535"
+msgid "Port must be between 0 and 65535."
 msgstr "%sの値は%dから%dの間でなければなりません"
 
 msgid "Port number"
@@ -53287,6 +53301,9 @@ msgstr "秘密鍵"
 #, fuzzy
 msgid "Secret access key cannot be empty"
 msgstr "秘密鍵"
+
+msgid "Secret access key is required but not specified."
+msgstr ""
 
 msgid "Secret key"
 msgstr "秘密鍵"
@@ -60429,6 +60446,12 @@ msgid ""
 "The %s is only visible to you because you don't have the permission to share "
 "it."
 msgstr "%sはあなただけに表示されます。共有する権限はありません。"
+
+#, python-format
+msgid ""
+"The %s is required but not specified or too long. Please enter a name that "
+"is not yet in use and is no longer than 253 characters."
+msgstr ""
 
 #, python-format
 msgid "The %s started flapping"
@@ -82240,6 +82263,10 @@ msgstr "どれか"
 msgid "any node"
 msgstr "任意のノード"
 
+#, fuzzy
+msgid "any of"
+msgstr "任意のノード"
+
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
 
@@ -84280,6 +84307,10 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Access key ID cannot be empty"
+#~ msgstr "アクセスキー"
 
 #, fuzzy
 #~ msgid "New notification setup"

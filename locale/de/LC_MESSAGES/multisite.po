@@ -590,10 +590,6 @@ msgid "%s can only be deleted via Quick setup"
 msgstr "%s kann nur durch Quick Setup gelöscht werden"
 
 #, python-format
-msgid "%s cannot be empty"
-msgstr "%s darf nicht leer sein"
-
-#, python-format
 msgid ""
 "%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)"
 msgstr ""
@@ -639,6 +635,10 @@ msgstr "%s ist kein existierendes Element in dieser Auswahl."
 #, python-format
 msgid "%s is parent of %s."
 msgstr "%s ist Parent von %s."
+
+#, fuzzy, python-format
+msgid "%s is required but not specified."
+msgstr "Tags aktiviert, aber keine Tags definiert."
 
 #, python-format
 msgid "%s left in your Checkmk trial period"
@@ -3034,8 +3034,8 @@ msgstr "Zugriffsschlüssel"
 msgid "Access key ID"
 msgstr "ID des Zugriffsschlüssels"
 
-msgid "Access key ID cannot be empty"
-msgstr "ID des Zugriffsschlüssels darf nicht leer sein"
+msgid "Access key ID is required but not specified."
+msgstr ""
 
 msgid "Access point name"
 msgstr "Name des Accesspoints"
@@ -24654,6 +24654,13 @@ msgstr ""
 "%s benutzen beide das Suffix %s. Das ist nicht erlaubt."
 
 #, python-format
+msgid ""
+"Found invalid characters in the %s. Please ensure that only letters from the "
+"English alphabet, numbers and the special characters dot, hyphen and "
+"underscore are used."
+msgstr ""
+
+#, python-format
 msgid "Found multiple entries using for '%s'"
 msgstr "Mehrere Einträge mit '%s' gefunden"
 
@@ -25346,6 +25353,10 @@ msgstr "Gehe zu Erweiterungspakete"
 
 msgid "Go to main page"
 msgstr "Zur Hauptübersicht"
+
+#, fuzzy
+msgid "Go to parameters of this method"
+msgstr "Parameter für diesen Host"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Zu den Regeln dieser InfluxDB-Verbindung"
@@ -32930,6 +32941,10 @@ msgstr "Ungültiger Code angegeben"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ungültige Farbangabe '%s'"
+
+#, fuzzy
+msgid "Invalid conditions"
+msgstr "Ungültige Aktion"
 
 msgid "Invalid configuration bundle group type."
 msgstr "Ungültiger Konfigurationsbündel-Gruppentyp."
@@ -46684,7 +46699,8 @@ msgstr "Bitte wählen Sie ein gültiges PNG-Bild."
 msgid "Please choose an audit log to view:"
 msgstr "Bitte wählen Sie ein Audit-Log für die Anzeige aus:"
 
-msgid "Please choose one or more regions to continue"
+#, fuzzy
+msgid "Please choose one or more regions to continue."
 msgstr "Bitte wählen Sie eine oder mehrere Regionen aus, um fortzufahren"
 
 msgid "Please choose the check plug-in"
@@ -47413,7 +47429,8 @@ msgstr "Portindex"
 msgid "Port index or 'Total'"
 msgstr "Portindex oder 'Total'"
 
-msgid "Port must be between 0 and 65535"
+#, fuzzy
+msgid "Port must be between 0 and 65535."
 msgstr "Port muss zwischen 0 und 65535 liegen"
 
 msgid "Port number"
@@ -52514,6 +52531,9 @@ msgstr "Geheimer Zugangsschlüssel"
 
 msgid "Secret access key cannot be empty"
 msgstr "Geheimer Zugangsschlüssel darf nicht leer sein"
+
+msgid "Secret access key is required but not specified."
+msgstr ""
 
 msgid "Secret key"
 msgstr "Geheimer Schlüssel"
@@ -59601,6 +59621,12 @@ msgid ""
 msgstr ""
 "Das %s ist nur für Sie sichtbar, weil Sie nicht die Berechtigung haben, es "
 "zu teilen."
+
+#, python-format
+msgid ""
+"The %s is required but not specified or too long. Please enter a name that "
+"is not yet in use and is no longer than 253 characters."
+msgstr ""
 
 #, python-format
 msgid "The %s started flapping"
@@ -81323,6 +81349,10 @@ msgstr "beliebig"
 msgid "any node"
 msgstr "einem beliebigen Knoten"
 
+#, fuzzy
+msgid "any of"
+msgstr "einem beliebigen Knoten"
+
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
 
@@ -83327,6 +83357,13 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "%s cannot be empty"
+#~ msgstr "%s darf nicht leer sein"
+
+#~ msgid "Access key ID cannot be empty"
+#~ msgstr "ID des Zugriffsschlüssels darf nicht leer sein"
 
 #~ msgid "New notification setup"
 #~ msgstr "Neue Benachrichtigungseinstellung"

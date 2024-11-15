@@ -16,7 +16,7 @@ http_archive(
 )
 
 load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
-load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
+load("//bazel/rules:rust_workspace.bzl", "rust_workspace")
 
 rust_workspace()
 

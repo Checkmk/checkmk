@@ -1,4 +1,4 @@
-load("@omd_packages//omd/packages/rules:local_archive.bzl", "local_archive")
+load("//bazel/rules:local_archive.bzl", "local_archive")
 
 def httplib_workspace():
     version_str = "0.13.3"

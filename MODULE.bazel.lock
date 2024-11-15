@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "990a180b0df9fa7a71c7c11472ba6a7d165de64861c2cc3b2c767fde782f53e1",
+  "moduleFileHash": "c7cf0db9a7bd93c89a0da828d0da3f56ca9a182e60b29db23642f9a58c7742f7",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -42,7 +42,7 @@
           "devImports": [],
           "tags": [
             {
-              "tagName": "//omd/packages/rules:repo_license.bzl%detect_repo_license",
+              "tagName": "//bazel/rules:repo_license.bzl%detect_repo_license",
               "attributeValues": {
                 "name": "repo_license"
               },

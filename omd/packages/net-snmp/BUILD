@@ -1,7 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//omd/packages/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
-load("//omd/packages/rules:make_deployable.bzl", "make_deployable_file")
+load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_file")
 
 bin_paths = [
     "encode_keychange",

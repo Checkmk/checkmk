@@ -108,10 +108,10 @@ TempDirPair::TempDirPair(const std::string &case_name) {
 }
 
 TempDirPair::~TempDirPair() {
-    try {
-        fs::remove_all(path_);
-    } catch (const std::filesystem::filesystem_error &e) {
-        XLOG::l("Failure deleting '{}' exception '{}'", path_, e.what());
+    std::error_code ec;
+    fs::remove_all(path_, ec);
+    if (ec) {
+        XLOG::l("Failure deleting '{}' error '{}'", path_, ec.message());
     }
 }
 

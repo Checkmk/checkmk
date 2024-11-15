@@ -11,12 +11,7 @@ using namespace std::chrono_literals;
 
 void HostServiceState::computePerStateDurations(
     std::chrono::system_clock::duration query_timeframe) {
-    // TODO(sp): _duration is already set, but we should probably do it here,
-    // but the code at the call sites is quite confusing: It's probably just
-    // (_until - _from), but who knows? Furthermore, there seems to be some
-    // confusion regarding the query_timeframe: Is the interval from which it is
-    // computed closed or half-open? Should there be a -1s somewhere? The two
-    // statehist implementations do not agree on this. :-/
+    _duration = _until - _from;
     _duration_part = mk::ticks<std::chrono::duration<double>>(_duration) /
                      mk::ticks<std::chrono::duration<double>>(query_timeframe);
 

@@ -804,7 +804,6 @@ TableStateHistory::Processor::Processor(Query &query, const User &user,
 LogPeriod TableStateHistory::Processor::period() const { return period_; }
 
 bool TableStateHistory::Processor::process(HostServiceState &hss) const {
-    hss._duration = hss._until - hss._from;
     hss.computePerStateDurations(period_.duration());
 
     // if (hss._duration > 0)

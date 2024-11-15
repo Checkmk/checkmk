@@ -78,6 +78,7 @@ public:
     std::string _host_name;            // Fallback if host no longer exists
     std::string _service_description;  // Fallback if service no longer exists
 
+    // Set all _duration* fields based on _from, _until and query_timeframe
     void computePerStateDurations(
         std::chrono::system_clock::duration query_timeframe);
 };

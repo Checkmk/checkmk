@@ -10,7 +10,7 @@ def test_init_scripts(site: Site) -> None:
     scripts = {
         "agent-receiver",
         "apache",
-        "background-jobs",
+        "cmk-ui-job-scheduler",
         "core",
         "crontab",
         "jaeger",

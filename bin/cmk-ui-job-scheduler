@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.gui.cron_job import main
+from cmk.gui.job_scheduler import main
 
 if __name__ == "__main__":
     sys.exit(main())

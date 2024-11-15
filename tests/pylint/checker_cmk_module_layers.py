@@ -678,7 +678,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
-    ModulePath("bin/cmk-trigger-ui-jobs"): Component("cmk.gui"),
+    ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-wait-for-background-jobs"): Component("cmk.gui"),

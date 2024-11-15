@@ -1,2 +1,0 @@
-# Run Multisite regular jobs, e.g. scheduled reports
-* * * * * . $OMD_ROOT/etc/omd/site.conf ; cmk-trigger-ui-jobs >/dev/null 2>&1

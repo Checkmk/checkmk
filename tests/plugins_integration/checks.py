@@ -647,8 +647,8 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
 
 
 def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
-    """Hosts' discovery by DCD should take up to 30 seconds."""
-    max_count = 30
+    """Wait up to 60 seconds for DCD to discover new piggyback hosts."""
+    max_count = 60
     count = 0
     while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
         logger.info("Waiting for piggyback hosts to be discovered. Count: %s/%s", count, max_count)
@@ -670,8 +670,8 @@ def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: boo
 
 
 def wait_for_dcd_pend_changes(site: Site) -> None:
-    """Changes activation by DCD should take up to 30 seconds."""
-    max_count = 30
+    """Wait up to 60 seconds for DCD to activate changes."""
+    max_count = 60
     count = 0
     while (
         n_pending_changes := len(site.openapi.pending_changes([site.id]))

@@ -14,6 +14,12 @@ from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-impo
 
 logger = logging.getLogger(__name__)
 
+# * Ceph-dump containing "Systemd Service Summary" changing between 2.2.0 and 2.3.0 due to
+#   commit 7206301e6.
+SKIPPED_DUMPS = [
+    "agent-2.2.0p8-ceph-17.2.6",
+]
+
 
 def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory) -> None:
     """Test performing the following steps:
@@ -26,7 +32,7 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
     """
     base_data = {}
     base_data_status_0 = {}
-    for host_name in get_host_names():
+    for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 

@@ -2052,14 +2052,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"A delay can be configured here so that multiple changes can be activated in "
-"one go. This avoids frequent activation of changes in situations with "
-"frequent services changes."
-msgstr ""
-"ここで遅延を構成して、一度に複数の変更をアクティブ化できます。これにより、"
-"サービスが頻繁に変更される状況での変更の頻繁なアクティブ化が回避されます。"
-
-msgid ""
 "A delay can be configured here so that multiple discoveries can be activated "
 "in one go. This avoids frequent core restarts in situations with frequent "
 "services changes."
@@ -3276,6 +3268,10 @@ msgstr "イベントコンソールの変更を有効にする"
 msgid "Activate changes of other users"
 msgstr "他のユーザーの変更をアクティブ化する"
 
+#, fuzzy
+msgid "Activate changes timeout"
+msgstr "変更を有効にしました"
+
 msgid "Activate configuration"
 msgstr "構成を有効化する"
 
@@ -4141,6 +4137,10 @@ msgid "Add tags"
 msgstr "タグを追加する"
 
 msgid "Add target"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add text"
 msgstr "ターゲットを追加"
 
 msgid "Add text of events"
@@ -6829,6 +6829,10 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignee filters"
+msgstr "サービスフィルター"
+
 msgid "Assignment of hosts to contact groups"
 msgstr "連絡先グループへのホストの割り当て"
 
@@ -9102,10 +9106,6 @@ msgstr "一括名前変更"
 
 msgid "Bulk renaming of hosts"
 msgstr "ホストの一括名前変更"
-
-#, fuzzy
-msgid "Bulk service discovery batch size"
-msgstr "サービス一括検出の実行"
 
 msgid "Bulk up to"
 msgstr "バルクまで"
@@ -14319,15 +14319,11 @@ msgstr "ホスト名を大文字に変換する"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr "同期中に、インポートされたユーザーIDを小文字に変換します。"
 
-msgid "Cool down after host a change batch has been processed"
+msgid "Cooldown after host a change batch has been processed"
 msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "失敗したリモートまたはローカル配信を再試行する前のクールダウン"
-
-#, fuzzy
-msgid "Cooldown interval to update update "
-msgstr "更新チェックの間隔"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr "失敗後再接続を試みるまでのクールダウン時間"
@@ -17201,10 +17197,6 @@ msgstr "ホストを削除"
 msgid "Delete hosts"
 msgstr "ホストを削除する"
 
-#, fuzzy
-msgid "Delete hosts automatically"
-msgstr "自動検出"
-
 #, python-format
 msgid "Delete icon #%d"
 msgstr "アイコン#%dを削除"
@@ -19033,6 +19025,10 @@ msgstr ""
 msgid "Do not add column headers"
 msgstr "列ヘッダーを追加しないでください"
 
+#, fuzzy
+msgid "Do not add text"
+msgstr "パッドを入れないでください"
+
 msgid "Do not ask for a comment"
 msgstr "コメントを求めないでください"
 
@@ -19381,10 +19377,6 @@ msgstr "レベルを課さないでください"
 
 msgid "Do not impose levels, always be OK"
 msgstr "レベルを課さないでください、常に大丈夫です"
-
-#, fuzzy
-msgid "Do not include in monitoring hosts to be discovered"
-msgstr "検出されるホストがありません"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "コントローラーの自動登録を管理しない"
@@ -20045,19 +20037,7 @@ msgstr "動的トークンバケット"
 msgid "Dynamic configuration"
 msgstr "動的構成"
 
-#, fuzzy
-msgid "Dynamic configuration activate changes timeout"
-msgstr "動的構成ロギング"
-
-#, fuzzy
-msgid "Dynamic configuration bulk discovery timeout"
-msgstr "動的構成ロギング"
-
 msgid "Dynamic configuration logging"
-msgstr "動的構成ロギング"
-
-#, fuzzy
-msgid "Dynamic configuration site activate changes delay"
 msgstr "動的構成ロギング"
 
 msgid "Dynamic host configuration"
@@ -25449,9 +25429,6 @@ msgstr ""
 
 msgid "Group"
 msgstr "グループ"
-
-msgid "Group \"Activate changes\""
-msgstr "グループ\"変更をアクティブ化\""
 
 msgid "Group Base-DN"
 msgstr "グループベース-DN"
@@ -41139,6 +41116,10 @@ msgstr "最新のものが最初"
 msgid "Newly discovered"
 msgstr "NTPディスカバリー"
 
+#, fuzzy
+msgid "Next"
+msgstr "次の実行"
+
 msgid "Next Run"
 msgstr "次の実行"
 
@@ -45538,6 +45519,11 @@ msgstr "PDisk EID:スロットデバイス"
 
 msgid "PEM File"
 msgstr "PEM ファイル"
+
+msgid ""
+"PEM-encoded root certificate used for validating server certificates when "
+"downloading or pulling dependencies."
+msgstr ""
 
 msgid "PEND"
 msgstr "保留"
@@ -51816,6 +51802,9 @@ msgstr "セッション管理"
 msgid "Rollovers Asserts"
 msgstr "%s アサート"
 
+msgid "Root CA"
+msgstr ""
+
 #, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
 msgstr "毎週月曜日の現地時間 00:00 にローテーションします"
@@ -54204,6 +54193,10 @@ msgstr "サービスディスカバリ: "
 msgid "Service discovery rules"
 msgstr "サービス検出ルール"
 
+#, fuzzy
+msgid "Service discovery timeout"
+msgstr "サービスディスカバリ: "
+
 msgid "Service discovery triggers service discovery check"
 msgstr "サービス検出がサービス検出チェックをトリガーします"
 
@@ -54336,9 +54329,6 @@ msgstr "最高サービスレベル"
 
 msgid "Service level of forwarded events shown in Event Console."
 msgstr "イベントコンソールに表示される転送イベントのサービスレベルを設定する。"
-
-msgid "Service level of forwarded logs shown in Event Console."
-msgstr "イベントコンソールに表示される転送ログのサービスレベルを設定する。"
 
 #, fuzzy
 msgid "Service level of hosts"
@@ -56443,6 +56433,10 @@ msgstr "空でない親を持つホストホストをスキップします(継�
 
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr "明示的な親定義を持つホストをスキップします(空の場合でも)"
+
+#, fuzzy
+msgid "Skip monitoring non discovered hosts"
+msgstr "OMDモニタリングコア"
 
 msgid "Skip preexisting log messages"
 msgstr "既存のログメッセージをスキップする"
@@ -59595,9 +59589,6 @@ msgstr "イベントコンソール通知用のSyslogファシリティ"
 
 msgid "Syslog facility for forwarded messages"
 msgstr "転送されたメッセージのSyslog機能"
-
-msgid "Syslog facility of forwarded events shown in Event Console."
-msgstr "イベントコンソールに表示される、転送されたメッセージのSyslog機能。"
 
 msgid "Syslog facility of forwarded logs shown in Event Console."
 msgstr "イベントコンソールに表示される、転送されたログのSyslog機能。"
@@ -68960,11 +68951,6 @@ msgstr ""
 "正確になりますが、RRDは大きくなります。ステップをサービスの通常のチェック間隔"
 "よりも小さくすることは意味がありません。デフォルトは60秒の値で、これはデフォ"
 "ルトのチェック間隔と一致します。"
-
-msgid ""
-"This setting decides how late your changes will be activated. Default is 10 "
-"minutes"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -82963,10 +82949,6 @@ msgstr "ホストは稼働していますが、サービスは警告状態にあ
 msgid "hosts in total"
 msgstr "ホスト全体の問題"
 
-#, fuzzy
-msgid "hosts per batch"
-msgstr "バッチごとのMSSQLロック"
-
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] "時間"
@@ -84307,6 +84289,55 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid ""
+#~ "A delay can be configured here so that multiple changes can be activated "
+#~ "in one go. This avoids frequent activation of changes in situations with "
+#~ "frequent services changes."
+#~ msgstr ""
+#~ "ここで遅延を構成して、一度に複数の変更をアクティブ化できます。これにより、"
+#~ "サービスが頻繁に変更される状況での変更の頻繁なアクティブ化が回避されます。"
+
+#, fuzzy
+#~ msgid "Bulk service discovery batch size"
+#~ msgstr "サービス一括検出の実行"
+
+#, fuzzy
+#~ msgid "Cooldown interval to update update "
+#~ msgstr "更新チェックの間隔"
+
+#, fuzzy
+#~ msgid "Delete hosts automatically"
+#~ msgstr "自動検出"
+
+#, fuzzy
+#~ msgid "Do not include in monitoring hosts to be discovered"
+#~ msgstr "検出されるホストがありません"
+
+#, fuzzy
+#~ msgid "Dynamic configuration activate changes timeout"
+#~ msgstr "動的構成ロギング"
+
+#, fuzzy
+#~ msgid "Dynamic configuration bulk discovery timeout"
+#~ msgstr "動的構成ロギング"
+
+#, fuzzy
+#~ msgid "Dynamic configuration site activate changes delay"
+#~ msgstr "動的構成ロギング"
+
+#~ msgid "Group \"Activate changes\""
+#~ msgstr "グループ\"変更をアクティブ化\""
+
+#~ msgid "Service level of forwarded logs shown in Event Console."
+#~ msgstr "イベントコンソールに表示される転送ログのサービスレベルを設定する。"
+
+#~ msgid "Syslog facility of forwarded events shown in Event Console."
+#~ msgstr "イベントコンソールに表示される、転送されたメッセージのSyslog機能。"
+
+#, fuzzy
+#~ msgid "hosts per batch"
+#~ msgstr "バッチごとのMSSQLロック"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

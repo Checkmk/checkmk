@@ -2112,15 +2112,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"A delay can be configured here so that multiple changes can be activated in "
-"one go. This avoids frequent activation of changes in situations with "
-"frequent services changes."
-msgstr ""
-"Um atraso pode ser configurado aqui para que múltiplas alterações possam ser "
-"ativadas de uma só vez. Isto evita a ativação frequente de mudanças em "
-"situações com mudanças frequentes de serviços."
-
-msgid ""
 "A delay can be configured here so that multiple discoveries can be activated "
 "in one go. This avoids frequent core restarts in situations with frequent "
 "services changes."
@@ -3401,6 +3392,10 @@ msgstr "Activar alterações para a consola de eventos"
 msgid "Activate changes of other users"
 msgstr "Activar as alterações de outros utilizadores"
 
+#, fuzzy
+msgid "Activate changes timeout"
+msgstr "Activou as alterações"
+
 msgid "Activate configuration"
 msgstr "Ativar a configuração"
 
@@ -4291,6 +4286,10 @@ msgid "Add tags"
 msgstr "Adicionar etiquetas"
 
 msgid "Add target"
+msgstr "Adicionar alvo"
+
+#, fuzzy
+msgid "Add text"
 msgstr "Adicionar alvo"
 
 msgid "Add text of events"
@@ -7145,6 +7144,10 @@ msgstr "Atribuir através de expressões regulares"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignee filters"
+msgstr "Filtros de serviço"
+
 msgid "Assignment of hosts to contact groups"
 msgstr "Designação de anfitriões para grupos de contato"
 
@@ -9500,10 +9503,6 @@ msgstr "Renomeação a granel"
 
 msgid "Bulk renaming of hosts"
 msgstr "Renomeação em massa dos anfitriões"
-
-#, fuzzy
-msgid "Bulk service discovery batch size"
-msgstr "Executar a descoberta de serviços em massa"
 
 msgid "Bulk up to"
 msgstr "A granel até"
@@ -14962,16 +14961,12 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converter os User-IDs importados para minúsculas durante a sincronização."
 
-msgid "Cool down after host a change batch has been processed"
+msgid "Cooldown after host a change batch has been processed"
 msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Refrigeração antes de tentar novamente a entrega remota ou local falhou"
-
-#, fuzzy
-msgid "Cooldown interval to update update "
-msgstr "Intervalo para verificação de atualização"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -17945,10 +17940,6 @@ msgstr "Eliminar o anfitrião"
 msgid "Delete hosts"
 msgstr "Eliminar anfitriões"
 
-#, fuzzy
-msgid "Delete hosts automatically"
-msgstr "detectar automaticamente"
-
 #, python-format
 msgid "Delete icon #%d"
 msgstr "Apagar ícone #%d"
@@ -19892,6 +19883,10 @@ msgstr ""
 msgid "Do not add column headers"
 msgstr "Não adicionar cabeçalhos de coluna"
 
+#, fuzzy
+msgid "Do not add text"
+msgstr "Não almofadar"
+
 msgid "Do not ask for a comment"
 msgstr "Não peça um comentário"
 
@@ -20314,10 +20309,6 @@ msgstr "Não imponha níveis"
 
 msgid "Do not impose levels, always be OK"
 msgstr "Não imponha níveis, esteja sempre OK"
-
-#, fuzzy
-msgid "Do not include in monitoring hosts to be discovered"
-msgstr "Nenhum anfitrião a ser descoberto"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "Não gerir o registo automático dos controladores"
@@ -20975,19 +20966,7 @@ msgstr "Balde Dinâmico Token"
 msgid "Dynamic configuration"
 msgstr "Configuração dinâmica"
 
-#, fuzzy
-msgid "Dynamic configuration activate changes timeout"
-msgstr "Registro dinâmico de configuração"
-
-#, fuzzy
-msgid "Dynamic configuration bulk discovery timeout"
-msgstr "Registro dinâmico de configuração"
-
 msgid "Dynamic configuration logging"
-msgstr "Registro dinâmico de configuração"
-
-#, fuzzy
-msgid "Dynamic configuration site activate changes delay"
 msgstr "Registro dinâmico de configuração"
 
 msgid "Dynamic host configuration"
@@ -26479,9 +26458,6 @@ msgstr ""
 
 msgid "Group"
 msgstr "Grupo"
-
-msgid "Group \"Activate changes\""
-msgstr "Grupo \"Activar alterações\""
 
 msgid "Group Base-DN"
 msgstr "Grupo Base-DN"
@@ -42398,6 +42374,10 @@ msgstr "O mais recente primeiro"
 msgid "Newly discovered"
 msgstr "descoberta do NTP"
 
+#, fuzzy
+msgid "Next"
+msgstr "Próxima execução"
+
 msgid "Next Run"
 msgstr "Próxima execução"
 
@@ -46851,6 +46831,11 @@ msgstr "PDisk EID:Dispositivo de Slot-Dispositivo"
 
 msgid "PEM File"
 msgstr "Ficheiro PEM"
+
+msgid ""
+"PEM-encoded root certificate used for validating server certificates when "
+"downloading or pulling dependencies."
+msgstr ""
 
 msgid "PEND"
 msgstr "PEND"
@@ -53201,6 +53186,9 @@ msgstr "Gestão de sessões"
 msgid "Rollovers Asserts"
 msgstr "%s Afirmações"
 
+msgid "Root CA"
+msgstr ""
+
 #, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
 msgstr "Rodar todas as segundas-feiras às 00:00, hora local"
@@ -55606,6 +55594,10 @@ msgstr "Descoberta de serviços: "
 msgid "Service discovery rules"
 msgstr "Regras de descoberta de serviços"
 
+#, fuzzy
+msgid "Service discovery timeout"
+msgstr "Descoberta de serviços: "
+
 msgid "Service discovery triggers service discovery check"
 msgstr ""
 "A descoberta de serviços aciona a verificação da descoberta de serviços"
@@ -55740,11 +55732,6 @@ msgstr "Nível de serviço no máximo"
 msgid "Service level of forwarded events shown in Event Console."
 msgstr ""
 "Nível de serviço dos eventos encaminhados mostrados no Console de Eventos."
-
-msgid "Service level of forwarded logs shown in Event Console."
-msgstr ""
-"Nível de serviço dos registos reencaminhados apresentados na Consola de "
-"Eventos."
 
 #, fuzzy
 msgid "Service level of hosts"
@@ -57881,6 +57868,10 @@ msgstr "Saltar anfitriões com pais não vazios (também se herdados)"
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr ""
 "Saltar anfitriões com definições explícitas dos pais (mesmo que vazios)"
+
+#, fuzzy
+msgid "Skip monitoring non discovered hosts"
+msgstr "Núcleos de monitorização OMD"
 
 msgid "Skip preexisting log messages"
 msgstr "Saltar mensagens de registo pré-existentes"
@@ -61108,9 +61099,6 @@ msgstr "Facilidade Syslog para notificações de Console de Eventos"
 
 msgid "Syslog facility for forwarded messages"
 msgstr "Facilidade Syslog para o encaminhamento de mensagens"
-
-msgid "Syslog facility of forwarded events shown in Event Console."
-msgstr "Recurso Syslog de eventos encaminhados mostrado no Console de Eventos."
 
 msgid "Syslog facility of forwarded logs shown in Event Console."
 msgstr ""
@@ -70803,11 +70791,6 @@ msgstr ""
 "sentido ter o passo menor que o seu intervalo normal de verificação para um "
 "serviço. O padrão é um valor de 60 segundos - que corresponde ao intervalo "
 "de verificação padrão."
-
-msgid ""
-"This setting decides how late your changes will be activated. Default is 10 "
-"minutes"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -85056,10 +85039,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
-msgid "hosts per batch"
-msgstr "Bloqueios MSSQL por Lote"
-
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -86399,6 +86378,59 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#~ msgid ""
+#~ "A delay can be configured here so that multiple changes can be activated "
+#~ "in one go. This avoids frequent activation of changes in situations with "
+#~ "frequent services changes."
+#~ msgstr ""
+#~ "Um atraso pode ser configurado aqui para que múltiplas alterações possam "
+#~ "ser ativadas de uma só vez. Isto evita a ativação frequente de mudanças "
+#~ "em situações com mudanças frequentes de serviços."
+
+#, fuzzy
+#~ msgid "Bulk service discovery batch size"
+#~ msgstr "Executar a descoberta de serviços em massa"
+
+#, fuzzy
+#~ msgid "Cooldown interval to update update "
+#~ msgstr "Intervalo para verificação de atualização"
+
+#, fuzzy
+#~ msgid "Delete hosts automatically"
+#~ msgstr "detectar automaticamente"
+
+#, fuzzy
+#~ msgid "Do not include in monitoring hosts to be discovered"
+#~ msgstr "Nenhum anfitrião a ser descoberto"
+
+#, fuzzy
+#~ msgid "Dynamic configuration activate changes timeout"
+#~ msgstr "Registro dinâmico de configuração"
+
+#, fuzzy
+#~ msgid "Dynamic configuration bulk discovery timeout"
+#~ msgstr "Registro dinâmico de configuração"
+
+#, fuzzy
+#~ msgid "Dynamic configuration site activate changes delay"
+#~ msgstr "Registro dinâmico de configuração"
+
+#~ msgid "Group \"Activate changes\""
+#~ msgstr "Grupo \"Activar alterações\""
+
+#~ msgid "Service level of forwarded logs shown in Event Console."
+#~ msgstr ""
+#~ "Nível de serviço dos registos reencaminhados apresentados na Consola de "
+#~ "Eventos."
+
+#~ msgid "Syslog facility of forwarded events shown in Event Console."
+#~ msgstr ""
+#~ "Recurso Syslog de eventos encaminhados mostrado no Console de Eventos."
+
+#, fuzzy
+#~ msgid "hosts per batch"
+#~ msgstr "Bloqueios MSSQL por Lote"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

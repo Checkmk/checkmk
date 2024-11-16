@@ -2117,15 +2117,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"A delay can be configured here so that multiple changes can be activated in "
-"one go. This avoids frequent activation of changes in situations with "
-"frequent services changes."
-msgstr ""
-"Hier kan een vertraging worden geconfigureerd, zodat meerdere wijzigingen in "
-"één keer kunnen worden geactiveerd. Dit vermijdt frequente activering van "
-"wijzigingen in situaties met frequente wijzigingen van diensten."
-
-msgid ""
 "A delay can be configured here so that multiple discoveries can be activated "
 "in one go. This avoids frequent core restarts in situations with frequent "
 "services changes."
@@ -3405,6 +3396,10 @@ msgid "Activate changes of other users"
 msgstr "Activeer wijzigingen van andere gebruikers"
 
 #, fuzzy
+msgid "Activate changes timeout"
+msgstr "Activeerde de veranderingen"
+
+#, fuzzy
 msgid "Activate configuration"
 msgstr "Configuratie activeren"
 
@@ -4294,6 +4289,10 @@ msgid "Add tags"
 msgstr "Labels toevoegen"
 
 msgid "Add target"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Add text"
 msgstr "Doel toevoegen"
 
 msgid "Add text of events"
@@ -7135,6 +7134,10 @@ msgstr "Toewijzen via reguliere expressies"
 msgid "Assignee"
 msgstr ""
 
+#, fuzzy
+msgid "Assignee filters"
+msgstr "Service Filters"
+
 msgid "Assignment of hosts to contact groups"
 msgstr "Toewijzing van hosts aan contactgroepen"
 
@@ -9495,10 +9498,6 @@ msgstr "Bulk hernoemen"
 
 msgid "Bulk renaming of hosts"
 msgstr "Bulk hernoemen van hosts"
-
-#, fuzzy
-msgid "Bulk service discovery batch size"
-msgstr "Bulkdienstontdekking uitvoeren"
 
 msgid "Bulk up to"
 msgstr "Bulk tot"
@@ -14974,17 +14973,13 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converteer geïmporteerde User-IDs naar kleine letters tijdens synchronisatie."
 
-msgid "Cool down after host a change batch has been processed"
+msgid "Cooldown after host a change batch has been processed"
 msgstr ""
 
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Afkoeling voor het opnieuw proberen van mislukte aflevering op afstand of "
 "lokaal"
-
-#, fuzzy
-msgid "Cooldown interval to update update "
-msgstr "Interval voor updatecontrole"
 
 msgid "Cooldown time before trying to reconnect after failure"
 msgstr ""
@@ -17952,10 +17947,6 @@ msgstr "Hosts verwijderen"
 msgid "Delete hosts"
 msgstr "Hosts verwijderen"
 
-#, fuzzy
-msgid "Delete hosts automatically"
-msgstr "automatisch detecteren"
-
 #, python-format
 msgid "Delete icon #%d"
 msgstr "Pictogram verwijderen #%d"
@@ -19891,6 +19882,10 @@ msgstr "Voeg geen link naar deze pagina toe in de zijbalk"
 msgid "Do not add column headers"
 msgstr "Voeg geen kolomkoppen toe"
 
+#, fuzzy
+msgid "Do not add text"
+msgstr "Niet opvullen"
+
 msgid "Do not ask for a comment"
 msgstr "Vraag niet om een reactie"
 
@@ -20315,10 +20310,6 @@ msgstr "Geen niveaus opleggen"
 
 msgid "Do not impose levels, always be OK"
 msgstr "Geen niveaus opleggen, altijd OK zijn"
-
-#, fuzzy
-msgid "Do not include in monitoring hosts to be discovered"
-msgstr "Geen hosts ontdekt"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "De automatische registratie van de controllers niet beheren"
@@ -20985,19 +20976,7 @@ msgstr "Dynamische Token Emmer"
 msgid "Dynamic configuration"
 msgstr "Dynamische configuratie"
 
-#, fuzzy
-msgid "Dynamic configuration activate changes timeout"
-msgstr "Loggen van dynamische configuratie"
-
-#, fuzzy
-msgid "Dynamic configuration bulk discovery timeout"
-msgstr "Loggen van dynamische configuratie"
-
 msgid "Dynamic configuration logging"
-msgstr "Loggen van dynamische configuratie"
-
-#, fuzzy
-msgid "Dynamic configuration site activate changes delay"
 msgstr "Loggen van dynamische configuratie"
 
 msgid "Dynamic host configuration"
@@ -26477,9 +26456,6 @@ msgstr ""
 
 msgid "Group"
 msgstr "Groep"
-
-msgid "Group \"Activate changes\""
-msgstr "Groep \"Wijzigingen activeren\""
 
 msgid "Group Base-DN"
 msgstr "Groep Base-DN"
@@ -42409,6 +42385,10 @@ msgstr "Nieuwste eerst"
 msgid "Newly discovered"
 msgstr "NTP ontdekking"
 
+#, fuzzy
+msgid "Next"
+msgstr "Volgende run"
+
 msgid "Next Run"
 msgstr "Volgende run"
 
@@ -46883,6 +46863,11 @@ msgstr "PDisk EID:Slot-Device"
 
 msgid "PEM File"
 msgstr "PEM-bestand"
+
+msgid ""
+"PEM-encoded root certificate used for validating server certificates when "
+"downloading or pulling dependencies."
+msgstr ""
 
 msgid "PEND"
 msgstr "PEND"
@@ -53210,6 +53195,9 @@ msgstr "Beheer van de site"
 msgid "Rollovers Asserts"
 msgstr "%s Verklaart"
 
+msgid "Root CA"
+msgstr ""
+
 #, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
 msgstr "Draaien elke maandag om 00:00 lokale tijd"
@@ -55618,6 +55606,10 @@ msgstr "Dienst ontdekking: "
 msgid "Service discovery rules"
 msgstr "Regels voor het opsporen van diensten"
 
+#, fuzzy
+msgid "Service discovery timeout"
+msgstr "Dienst ontdekking: "
+
 msgid "Service discovery triggers service discovery check"
 msgstr "Service discovery leidt tot service discovery-controle"
 
@@ -55750,9 +55742,6 @@ msgid "Service level at most"
 msgstr "Dienstverleningsniveau maximaal"
 
 msgid "Service level of forwarded events shown in Event Console."
-msgstr "Serviceniveau van doorgestuurde events getoond in Event Console."
-
-msgid "Service level of forwarded logs shown in Event Console."
 msgstr "Serviceniveau van doorgestuurde events getoond in Event Console."
 
 #, fuzzy
@@ -57889,6 +57878,10 @@ msgstr "Sla hosts over met niet-lege ouders (ook indien geërfd)"
 msgid "Skip hosts with explicit parent definitions (even if empty)"
 msgstr ""
 "Sla hosts met expliciete ouder definities over (zelfs als ze leeg zijn)"
+
+#, fuzzy
+msgid "Skip monitoring non discovered hosts"
+msgstr "OMD bewakingskernen"
 
 msgid "Skip preexisting log messages"
 msgstr "Overslaan van reeds bestaande logberichten"
@@ -61110,10 +61103,6 @@ msgstr "Syslog faciliteit voor Event Console meldingen"
 
 msgid "Syslog facility for forwarded messages"
 msgstr "Syslogvoorziening voor doorgestuurde berichten"
-
-msgid "Syslog facility of forwarded events shown in Event Console."
-msgstr ""
-"Syslog faciliteit van doorgestuurde gebeurtenissen getoond in Event Console."
 
 msgid "Syslog facility of forwarded logs shown in Event Console."
 msgstr ""
@@ -70841,11 +70830,6 @@ msgstr ""
 "Het heeft geen zin om de stap kleiner te maken dan het normale controle-"
 "interval voor een onderhoudsbeurt. De standaardwaarde is 60 seconden - wat "
 "overeenkomt met het standaard controle-interval."
-
-msgid ""
-"This setting decides how late your changes will be activated. Default is 10 "
-"minutes"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -85153,10 +85137,6 @@ msgid "hosts in total"
 msgstr "hosts in totaal"
 
 #, fuzzy
-msgid "hosts per batch"
-msgstr "MSSQL Sloten per Batch"
-
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] "uur"
@@ -86502,6 +86482,58 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid ""
+#~ "A delay can be configured here so that multiple changes can be activated "
+#~ "in one go. This avoids frequent activation of changes in situations with "
+#~ "frequent services changes."
+#~ msgstr ""
+#~ "Hier kan een vertraging worden geconfigureerd, zodat meerdere wijzigingen "
+#~ "in één keer kunnen worden geactiveerd. Dit vermijdt frequente activering "
+#~ "van wijzigingen in situaties met frequente wijzigingen van diensten."
+
+#, fuzzy
+#~ msgid "Bulk service discovery batch size"
+#~ msgstr "Bulkdienstontdekking uitvoeren"
+
+#, fuzzy
+#~ msgid "Cooldown interval to update update "
+#~ msgstr "Interval voor updatecontrole"
+
+#, fuzzy
+#~ msgid "Delete hosts automatically"
+#~ msgstr "automatisch detecteren"
+
+#, fuzzy
+#~ msgid "Do not include in monitoring hosts to be discovered"
+#~ msgstr "Geen hosts ontdekt"
+
+#, fuzzy
+#~ msgid "Dynamic configuration activate changes timeout"
+#~ msgstr "Loggen van dynamische configuratie"
+
+#, fuzzy
+#~ msgid "Dynamic configuration bulk discovery timeout"
+#~ msgstr "Loggen van dynamische configuratie"
+
+#, fuzzy
+#~ msgid "Dynamic configuration site activate changes delay"
+#~ msgstr "Loggen van dynamische configuratie"
+
+#~ msgid "Group \"Activate changes\""
+#~ msgstr "Groep \"Wijzigingen activeren\""
+
+#~ msgid "Service level of forwarded logs shown in Event Console."
+#~ msgstr "Serviceniveau van doorgestuurde events getoond in Event Console."
+
+#~ msgid "Syslog facility of forwarded events shown in Event Console."
+#~ msgstr ""
+#~ "Syslog faciliteit van doorgestuurde gebeurtenissen getoond in Event "
+#~ "Console."
+
+#, fuzzy
+#~ msgid "hosts per batch"
+#~ msgstr "MSSQL Sloten per Batch"
 
 #, fuzzy
 #~ msgid "Access key ID cannot be empty"

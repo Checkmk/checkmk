@@ -23,12 +23,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.gui import log
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -116,16 +111,16 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     save_updated_host_label_files(result.updated_host_labels)
 
 
-def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
+def execute_host_label_sync_job() -> None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
     if not has_wato_slave_sites():
-        return None
+        return
 
     job = DiscoveredHostLabelSyncJob()
 
-    try:
-        job.start(
+    if (
+        result := job.start(
             job.do_sync,
             InitialStatusArgs(
                 title=DiscoveredHostLabelSyncJob.gui_title(),
@@ -133,10 +128,8 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
                 user=str(user.id) if user.id else None,
             ),
         )
-    except BackgroundJobAlreadyRunning:
-        logger.debug("Another synchronization job is already running: Skipping this sync")
-
-    return job
+    ).is_error():
+        logger.error(result.error)
 
 
 class DiscoveredHostLabelSyncJob(BackgroundJob):

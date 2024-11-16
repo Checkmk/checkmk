@@ -27,7 +27,6 @@ import cmk.utils.paths
 import cmk.gui.log
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobDefines,
     BackgroundProcessInterface,
     InitialStatusArgs,
@@ -144,16 +143,15 @@ def test_start_job() -> None:
     )
     wait_until(job.is_active, timeout=10, interval=0.1)
 
-    with pytest.raises(BackgroundJobAlreadyRunning):
-        job.start(
-            job.execute_hello,
-            InitialStatusArgs(
-                title=job.gui_title(),
-                deletable=False,
-                stoppable=True,
-                user=None,
-            ),
-        )
+    assert job.start(
+        job.execute_hello,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    ).is_error()
     assert job.is_active()
 
     job.finish_hello_event.set()

@@ -293,9 +293,8 @@ class ModeUsers(WatoMode):
         if request.var("_sync"):
             try:
                 job = UserSyncBackgroundJob()
-
-                try:
-                    job.start(
+                if (
+                    result := job.start(
                         partial(
                             job.do_sync,
                             add_to_changelog=True,
@@ -309,12 +308,12 @@ class ModeUsers(WatoMode):
                             user=str(user.id) if user.id else None,
                         ),
                     )
-                except background_job.BackgroundJobAlreadyRunning as e:
-                    raise MKUserError(
-                        None, _("Another synchronization job is already running: %s") % e
-                    )
+                ).is_error():
+                    raise MKUserError(None, result.error)
 
                 self._job_snapshot = job.get_status_snapshot()
+            except MKUserError:
+                raise
             except Exception:
                 logger.exception("error syncing users")
                 raise MKUserError(None, traceback.format_exc().replace("\n", "<br>\n"))

@@ -24,11 +24,7 @@ from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 
 from cmk.gui import userdb
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -438,11 +434,6 @@ class RenameHostsBackgroundJob(BackgroundJob):
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
-
-        if self.is_active():
-            raise BackgroundJobAlreadyRunning(
-                _("Another renaming operation is currently in progress")
-            )
 
     def _back_url(self) -> str:
         return makeuri(request, [])

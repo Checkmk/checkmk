@@ -66,7 +66,6 @@ import cmk.gui.watolib.utils
 from cmk.gui import hooks, userdb
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
@@ -1971,8 +1970,8 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
         logger.debug("Job shall not start")
         return
 
-    try:
-        job.start(
+    if (
+        result := job.start(
             job.do_execute,
             InitialStatusArgs(
                 title=job.gui_title(),
@@ -1981,8 +1980,8 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
                 user=str(user.id) if user.id else None,
             ),
         )
-    except BackgroundJobAlreadyRunning:
-        logger.debug("Another activation cleanup job is already running: Skipping this time")
+    ).is_error():
+        logger.debug(result)
 
 
 def _handle_distributed_sites_in_free(

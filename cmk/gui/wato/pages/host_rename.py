@@ -19,11 +19,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 
 from cmk.gui import forms
-from cmk.gui.background_job import (
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -173,9 +169,8 @@ class ModeBulkRenameHost(WatoMode):
         if c:
             title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob()
-
-            try:
-                host_renaming_job.start(
+            if (
+                result := host_renaming_job.start(
                     partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
                     InitialStatusArgs(
                         title=title,
@@ -185,8 +180,8 @@ class ModeBulkRenameHost(WatoMode):
                         user=str(user.id) if user.id else None,
                     ),
                 )
-            except BackgroundJobAlreadyRunning as e:
-                raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+            ).is_error():
+                raise MKGeneralException(result.error)
 
             return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
@@ -556,8 +551,8 @@ class ModeRenameHost(WatoMode):
         host_renaming_job = RenameHostBackgroundJob(self._host)
         renamings = [(folder, self._host.name(), newname)]
 
-        try:
-            host_renaming_job.start(
+        if (
+            result := host_renaming_job.start(
                 partial(rename_hosts_background_job, _renamings_to_job_args(renamings)),
                 InitialStatusArgs(
                     title=_("Renaming of %s -> %s") % (self._host.name(), newname),
@@ -567,8 +562,8 @@ class ModeRenameHost(WatoMode):
                     user=str(user.id) if user.id else None,
                 ),
             )
-        except BackgroundJobAlreadyRunning as e:
-            raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
+        ).is_error():
+            raise MKGeneralException(result.error)
 
         return redirect(host_renaming_job.detail_url())
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
-from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from typing import Final
@@ -28,12 +27,7 @@ from cmk.utils.setup_search_index import (
     updates_requested,
 )
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.global_config import get_global_config
@@ -406,18 +400,17 @@ class IndexSearcher:
 
     def _launch_index_building_in_background_job(self) -> None:
         build_job = SearchIndexBackgroundJob()
-        with suppress(BackgroundJobAlreadyRunning):
-            build_job.start(
-                _index_building_in_background_job,
-                # We deliberately do not provide an estimated duration here, since that involves I/O.
-                # We need to be as fast as possible here, since this is done at the end of HTTP
-                # requests.
-                InitialStatusArgs(
-                    title=_("Search index"),
-                    stoppable=False,
-                    user=str(user.id) if user.id else None,
-                ),
-            )
+        build_job.start(
+            _index_building_in_background_job,
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
+            InitialStatusArgs(
+                title=_("Search index"),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     def _search_redis_categories(
         self,
@@ -552,18 +545,17 @@ def launch_requests_processing_background() -> None:
     if not updates_requested() or not redis_enabled():
         return
     job = SearchIndexBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        job.start(
-            _process_update_requests_background,
-            # We deliberately do not provide an estimated duration here, since that involves I/O.
-            # We need to be as fast as possible here, since this is done at the end of HTTP
-            # requests.
-            InitialStatusArgs(
-                title=_("Search index"),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+    job.start(
+        _process_update_requests_background,
+        # We deliberately do not provide an estimated duration here, since that involves I/O.
+        # We need to be as fast as possible here, since this is done at the end of HTTP
+        # requests.
+        InitialStatusArgs(
+            title=_("Search index"),
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
 
 def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:

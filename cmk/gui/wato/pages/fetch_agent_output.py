@@ -16,7 +16,6 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
@@ -245,8 +244,8 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
 
 def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
     job = FetchAgentOutputBackgroundJob(api_request)
-    try:
-        job.start(
+    if (
+        result := job.start(
             job.fetch_agent_output,
             InitialStatusArgs(
                 title=_("Fetching %s of %s / %s")
@@ -258,8 +257,8 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
                 user=str(user.id) if user.id else None,
             ),
         )
-    except BackgroundJobAlreadyRunning:
-        pass
+    ).is_error():
+        raise MKUserError(None, result.error)
 
 
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):

@@ -49,7 +49,7 @@ from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
+from cmk.gui.background_job import InitialStatusArgs
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
@@ -643,24 +643,19 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             detail="Locked hosts cannot be renamed.",
         )
 
-    try:
-        background_job = RenameHostBackgroundJob(host)
-        background_job.start(
-            partial(rename_hosts_background_job, [(host.folder().path(), host_name, new_name)]),
-            InitialStatusArgs(
-                title="Renaming of %s -> %s" % (host_name, new_name),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=background_job.get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    except BackgroundJobAlreadyRunning:
-        return problem(
-            status=409,
-            title="Conflict",
-            detail="A host rename process is already running",
-        )
+    background_job = RenameHostBackgroundJob(host)
+    result = background_job.start(
+        partial(rename_hosts_background_job, [(host.folder().path(), host_name, new_name)]),
+        InitialStatusArgs(
+            title="Renaming of %s -> %s" % (host_name, new_name),
+            lock_wato=True,
+            stoppable=False,
+            estimated_duration=background_job.get_status().duration,
+            user=str(user.id) if user.id else None,
+        ),
+    )
+    if result.is_error():
+        return problem(status=409, title="Conflict", detail=result.error)
 
     response = Response(status=303)
     response.location = urlparse(

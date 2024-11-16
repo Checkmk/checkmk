@@ -50,7 +50,6 @@ PACKAGES := \
     monitoring-plugins \
     check-cert \
     check-http \
-    nagvis \
     nrpe \
     omd \
     navicli \
@@ -66,7 +65,6 @@ PACKAGES := \
     robotmk \
     xmlsec1 \
     redfish_mkp \
-    jaeger \
     rabbitmq
 
 ifeq ($(EDITION),enterprise)
@@ -87,6 +85,9 @@ ifeq ($(EDITION),saas)
 PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += saas
+else
+PACKAGES += jaeger
+PACKAGES += nagvis
 endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))

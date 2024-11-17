@@ -21,6 +21,7 @@ from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.cron import cron_job_registry
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
+from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 
 from cmk import trace
@@ -49,10 +50,12 @@ def main() -> int:
         add_span_log_handler()
 
         main_modules.load_plugins()
+        if errors := get_failed_plugins():
+            raise RuntimeError(f"The following errors occured during plug-in loading: {errors}")
 
         daemonize()
 
-        with pid_file_lock(_pid_file(omd_root)), gui_context(), SuperUserContext():
+        with pid_file_lock(_pid_file(omd_root)):
             init_logging()
             _run_scheduler()
     except Exception:
@@ -74,17 +77,19 @@ def _setup_console_logging() -> None:
 
 def _run_scheduler() -> None:
     while True:
-        try:
-            cycle_start = time.time()
-            _run_scheduled_jobs()
-            time.sleep(60 - (time.time() - cycle_start))
-        except Exception:
-            crash = create_gui_crash_report()
-            logger.error(
-                "Exception in scheduler (Crash ID: %s)",
-                crash.ident_to_text(),
-                exc_info=True,
-            )
+        # gui_context is within the loop to ensure that config changes are automatically applied
+        with gui_context(), SuperUserContext():
+            try:
+                cycle_start = time.time()
+                _run_scheduled_jobs()
+                time.sleep(60 - (time.time() - cycle_start))
+            except Exception:
+                crash = create_gui_crash_report()
+                logger.error(
+                    "Exception in scheduler (Crash ID: %s)",
+                    crash.ident_to_text(),
+                    exc_info=True,
+                )
 
 
 @tracer.start_as_current_span("_run_scheduled_jobs")

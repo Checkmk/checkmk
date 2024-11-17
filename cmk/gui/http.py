@@ -16,7 +16,6 @@ from typing import Any, cast, Literal, overload, Protocol, TypeVar
 import flask
 from flask import request as flask_request
 from pydantic import BaseModel
-from six import ensure_str
 from werkzeug.utils import get_content_type
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -192,18 +191,10 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        # ? type of values attribute and functions defined with it are unclear
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield (
-                    name,
-                    (
-                        ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
-                        if values
-                        else None
-                    ),
-                )
+                yield (name, (values[-1] if values else None))
 
     @overload
     def var(self, name: str) -> str | None: ...
@@ -223,7 +214,7 @@ class LegacyDeprecatedMixin:
             return default
 
         # Preserve previous behaviour
-        return ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+        return str(values[-1])
 
     def has_var(self, varname: str) -> bool:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -246,11 +237,9 @@ class LegacyDeprecatedMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
-        # ? type of self.cookies argument is unclear
         value = self.cookies.get(varname, default)  # type: ignore[attr-defined]
         if value is not None:
-            # Why would we want to do that? test_http.py requires it though.
-            return ensure_str(value)  # pylint: disable= six-ensure-str-bin-call
+            return value
         return None
 
     def get_request_header(self, key: str, default: str | None = None) -> str | None:

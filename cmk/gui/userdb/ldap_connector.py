@@ -47,7 +47,6 @@ from typing import Any, cast, IO, Literal
 import ldap  # type: ignore[import-untyped]
 import ldap.filter  # type: ignore[import-untyped]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
-from six import ensure_str
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -185,7 +184,6 @@ GroupMemberships = dict[DistinguishedName, dict[str, str | list[str]]]
 
 def _get_ad_locator():
     import activedirectory  # type: ignore[import-untyped] # pylint: disable=import-error
-    import six
     from activedirectory.protocol import netlogon  # type: ignore[import-untyped]
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc]
@@ -224,7 +222,7 @@ def _get_ad_locator():
             sites_list = [(value, key) for key, value in found_sites.items()]
             sites_list.sort()
             self.m_logger.debug("site detected as %s", sites_list[-1][1])
-            return six.ensure_text(sites_list[0][1])
+            return str(sites_list[0][1])
 
     return FasterDetectLocator()
 
@@ -491,11 +489,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
-            # ? user_dn seems to have the type str
-            conn.simple_bind_s(
-                ensure_str(user_dn),  # pylint: disable= six-ensure-str-bin-call
-                password_store.extract(password_id),
-            )
+            conn.simple_bind_s(user_dn, password_store.extract(password_id))
             self._logger.info("  SUCCESS")
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise
@@ -624,9 +618,6 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         page_size = self._config.get("page_size", 1000)
 
         lc = SimplePagedResultsControl(size=page_size, cookie="")
-        # ? base and filt seem to have type str
-        base = ensure_str(base)  # pylint: disable= six-ensure-str-bin-call
-        filt = ensure_str(filt)  # pylint: disable= six-ensure-str-bin-call
 
         results = []
         while True:
@@ -686,19 +677,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                             continue  # skip unwanted answers
                         new_obj = {}
                         for key, val in obj.items():
-                            # Convert all keys to lower case!
-                            new_obj[
-                                ensure_str(key).lower()  # pylint: disable= six-ensure-str-bin-call
-                            ] = [
-                                ensure_str(i)  # pylint: disable= six-ensure-str-bin-call
-                                for i in val
-                            ]
-                        result.append(
-                            (
-                                ensure_str(dn).lower(),  # pylint: disable= six-ensure-str-bin-call
-                                new_obj,
-                            )
-                        )
+                            new_obj[key.lower()] = val
+                        result.append((dn.lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(

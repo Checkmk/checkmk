@@ -84,14 +84,12 @@ types-redis = "*"  # used for type checking
 types-requests = "*"  # used for type checking
 types-setuptools = "*"  # used for type checking
 types-simplejson = "*"  # used for type checking
-types-six = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
 uvicorn = "*"
 
 [packages]
 setuptools = "<=70.3.0"  # See https://github.com/pypa/setuptools/issues/4487#issuecomment-2237487845 for context
 setuptools-scm = "==4.1.2"  # needed by various setup.py
-six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python-active-directory
 python-dateutil = "~=2.9.0"  # direct dependency
 pyyaml = "==6.0.1"  # needed by vcrpy
 vcrpy = "==6.0.1"  # used by various unit tests to mock HTTP transactions in some special agents (only)

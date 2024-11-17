@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import-untyped]
     import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import-untyped]
 
-from six import ensure_binary
-
 from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from cmk.utils.agentdatatype import AgentRawData
@@ -53,14 +51,10 @@ class IPMISensor:
         #  'value': 25.0, 'unavailable': 0}]]
         return cls(
             id=b"%d" % number,
-            name=ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
-            type=ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
+            name=reading.name.encode("utf-8"),
+            type=reading.type.encode("utf-8"),
             value=(b"%0.2f" % reading.value) if reading.value else b"N/A",
-            unit=(
-                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
-                if reading.units != b"\xc2\xb0C"
-                else b"C"
-            ),
+            unit=(reading.units.encode("utf-8") if reading.units != b"\xc2\xb0C" else b"C"),
             health=cls._parse_health_txt(reading),
         )
 

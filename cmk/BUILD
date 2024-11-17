@@ -119,7 +119,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "roman",
     "setproctitle",
     "setuptools-scm",
-    "six",
     "snmpsim-lextudio",
     "typing-extensions",
     "urllib3",

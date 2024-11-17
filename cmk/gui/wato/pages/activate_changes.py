@@ -12,8 +12,6 @@ import os
 import tarfile
 from collections.abc import Collection, Iterator
 
-from six import ensure_str
-
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
@@ -1010,17 +1008,13 @@ class PageAjaxStartActivation(AjaxPage):
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
-        # ? type of activate_until is unclear
         activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
         manager.load()
-        # ? type of api_request is unclear
-        affected_sites_request = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-            api_request.get("sites", "").strip()
-        )
+        affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
@@ -1045,7 +1039,7 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
+            activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
             source="GUI",

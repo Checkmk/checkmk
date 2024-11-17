@@ -15,8 +15,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast, Literal, TypeVar
 
-from six import ensure_str
-
 from cmk.ccc.store import (
     acquire_lock,
     load_from_mk_file,
@@ -250,9 +248,6 @@ def _merge_users_and_contacts(
 ) -> Users:
     result: Users = {}
     for uid, user in users.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
-
         profile: dict[str, object] = {}
         if (contact := contacts.get(uid)) is not None:
             profile.update(contact)
@@ -266,9 +261,7 @@ def _merge_users_and_contacts(
             #  the cast to str. Once verified, the condition can be switched to
             #  `if "email" in contact`.
             email = cast(str, profile["email"])
-            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                email
-            )
+            profile["email"] = email
 
         # see TODO in UserSpec why the cast is currently necessary
         result[UserId(uid)] = cast(UserSpec, profile)

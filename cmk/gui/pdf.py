@@ -33,7 +33,6 @@ from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
 
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
-from six import ensure_str
 
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
@@ -224,12 +223,8 @@ class Document:
 
     @classmethod
     def send(cls, pdf_source: bytes, sendas: str) -> None:
-        # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
-        response.set_content_disposition(
-            ContentDispositionType.INLINE,
-            ensure_str(sendas),  # pylint: disable= six-ensure-str-bin-call
-        )
+        response.set_content_disposition(ContentDispositionType.INLINE, sendas)
         response.set_data(pdf_source)
 
     # Methods dealing with manipulating the graphics state (font size, etc.)

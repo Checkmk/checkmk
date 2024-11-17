@@ -57,7 +57,6 @@ from typing import (
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from six import ensure_str
 
 from livestatus import SiteId
 
@@ -1021,8 +1020,7 @@ class TextInput(ValueSpec[str]):
                 self._empty_text or _("An empty value is not allowed here."),
             )
         if value and self._regex:
-            # ? removing ensure_str causes an error in unit tests despite the type of value being str in the function typization
-            if not self._regex.match(ensure_str(value)):  # pylint: disable= six-ensure-str-bin-call
+            if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:

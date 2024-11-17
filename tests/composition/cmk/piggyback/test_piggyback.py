@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -13,6 +14,9 @@ from tests.testlib.site import Site
 
 from tests.composition.cmk.piggyback.piggyback_test_helper import (
     create_local_check,
+    disable_piggyback_hub_globally,
+    disable_piggyback_hub_remote_site,
+    get_piggybacked_service_time,
     piggybacked_service_discovered,
 )
 
@@ -103,7 +107,7 @@ def test_piggyback_services_source_remote(
         _schedule_check_and_discover(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
-        _ = piggybacked_service_discovered(
+        assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
 
@@ -121,7 +125,7 @@ def test_piggyback_services_remote_remote(
         remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
         central_site.openapi.discover_services_and_wait_for_completion(_HOSTNAME_PIGGYBACKED_B)
 
-        _ = piggybacked_service_discovered(
+        assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED_B
         )
 
@@ -169,6 +173,88 @@ def test_piggyback_rename_host(
         _schedule_check_and_discover(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
-        _ = piggybacked_service_discovered(
+        assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+
+
+def _piggybacked_service_gets_updated(
+    source_site: Site, target_site: Site, hostname_source: str, hostname_piggybacked: str
+) -> bool:
+    now = time.time()
+    # sleep needed to not enforce decimal positions in the agent output
+    time.sleep(1)
+    source_site.schedule_check(hostname_source, "Check_MK")
+    target_site.schedule_check(hostname_piggybacked, "Check_MK")
+    service_time = get_piggybacked_service_time(source_site, hostname_source, hostname_piggybacked)
+    return service_time - now > 0
+
+
+def test_piggyback_hub_disabled_globally(
+    central_site: Site,
+    remote_site: Site,
+    prepare_piggyback_environment: None,
+) -> None:
+    """
+    Scenario: Disabling global piggyback hub stops piggyback data distribution
+    - piggyback hub is enabled globally
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored on remote_site
+    - piggyback hub is disabled globally
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is not monitored on remote_site
+    - piggyback hub is enabled globally
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored again on remote_site
+    """
+
+    with _setup_piggyback_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED_A):
+        _schedule_check_and_discover(
+            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+
+        assert _piggybacked_service_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+
+        with disable_piggyback_hub_globally(central_site, remote_site.id):
+            assert not _piggybacked_service_gets_updated(
+                central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+            )
+
+        assert _piggybacked_service_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+
+
+def test_piggyback_hub_disabled_remote_site(
+    central_site: Site,
+    remote_site: Site,
+    prepare_piggyback_environment: None,
+) -> None:
+    """
+    Scenario: Disabling piggyback hub for remote site stops piggyback data distribution for that site
+    - piggyback hub is enabled globally
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored on remote_site
+    - piggyback hub is disabled for remote_site
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is not monitored on remote_site
+    - piggyback hub is enabled for remote_site
+    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored again on remote_site
+    """
+
+    with _setup_piggyback_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED_A):
+        _schedule_check_and_discover(
+            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+
+        assert _piggybacked_service_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+        )
+
+        with disable_piggyback_hub_remote_site(central_site, remote_site.id):
+            assert not _piggybacked_service_gets_updated(
+                central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
+            )
+
+        assert _piggybacked_service_gets_updated(
+            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )

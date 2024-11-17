@@ -318,9 +318,6 @@ def execute_sync_remote_sites() -> None:
         return
 
     job = SyncRemoteSitesBackgroundJob()
-    if job.is_active():
-        logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
-        return
 
     if not job.shall_start():
         logger.debug("Job shall not start")

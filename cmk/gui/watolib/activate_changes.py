@@ -1966,10 +1966,6 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
     else:
         job = ActivationCleanupBackgroundJob()
 
-    if job.is_active():
-        logger.debug("Another activation cleanup job is already running: Skipping this time")
-        return
-
     if not job.shall_start():
         logger.debug("Job shall not start")
         return

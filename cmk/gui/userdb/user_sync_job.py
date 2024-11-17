@@ -32,9 +32,6 @@ def execute_userdb_job() -> None:
         return
 
     job = UserSyncBackgroundJob()
-    if job.is_active():
-        gui_logger.debug("Another synchronization job is already running: Skipping this sync")
-        return
 
     if not job.shall_start():
         gui_logger.debug("Job shall not start")

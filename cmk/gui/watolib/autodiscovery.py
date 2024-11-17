@@ -99,10 +99,6 @@ def execute_autodiscovery() -> None:
         return
 
     job = AutodiscoveryBackgroundJob()
-    if job.is_active():
-        logger.debug("Another 'autodiscovery' job is already running: Skipping this time.")
-        return
-
     job.start(
         job.do_execute,
         InitialStatusArgs(

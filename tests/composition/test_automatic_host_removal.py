@@ -67,6 +67,10 @@ def test_automatic_host_removal(
             interval=20,
         )
 
+    except Exception as exc:
+        if not central_site.file_exists("var/check_mk/background_jobs/host_removal"):
+            raise RuntimeError("Host removal background job was not even started") from exc
+        raise
     finally:
         central_site.openapi.delete_rule(rule_id=rule_id)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

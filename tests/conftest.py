@@ -22,8 +22,6 @@ import pytest_check  # type: ignore[import-untyped]
 from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
-from tests.testlib.utils import verbose_called_process_error
-
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
 pytest.register_assert_rewrite(
@@ -39,7 +37,7 @@ from tests.testlib.repo import (
     is_saas_repo,
     repo_path,
 )
-from tests.testlib.utils import run
+from tests.testlib.utils import run, verbose_called_process_error
 
 logger = logging.getLogger(__name__)
 

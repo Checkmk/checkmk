@@ -123,7 +123,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     expected += [
         ReplicationPath("dir", "mkeventd", "etc/check_mk/mkeventd.d/wato", []),
         ReplicationPath("dir", "mkeventd_mkp", "etc/check_mk/mkeventd.d/mkp/rule_packs", []),
-        ReplicationPath("file", "diskspace", "etc/diskspace.conf", []),
+        ReplicationPath("dir", "diskspace", "etc/check_mk/diskspace.d/wato", []),
     ]
 
     if edition is cmk_version.Edition.CME:

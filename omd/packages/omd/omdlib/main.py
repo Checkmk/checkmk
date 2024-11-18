@@ -360,6 +360,7 @@ def walk_skel(
         # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
         # to delete their existing htpasswd.
         "etc/htpasswd",
+        "etc/diskspace.conf",
     ]
 
     with contextlib.chdir(root):

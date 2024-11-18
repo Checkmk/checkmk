@@ -115,22 +115,23 @@ PreprocessedServiceRuleset: TypeAlias = list[
 # test_tuple_rulesets.py. They contain horrible hand-made types...
 
 
-class RuleOptionsSpec(TypedDict, total=False):
-    disabled: bool
-    description: str
-    comment: str
-    docu_url: str
-    predefined_condition_id: str
+# TODO: Improve this type
+class RuleOptionsSpec(TypedDict, total=True):
+    disabled: NotRequired[bool]
+    description: NotRequired[str]
+    comment: NotRequired[str]
+    docu_url: NotRequired[str]
+    predefined_condition_id: NotRequired[str]
 
 
 # TODO: Improve this type
-class RuleConditionsSpec(TypedDict, total=False):
-    host_tags: Mapping[TagGroupID, TagCondition]
-    host_label_groups: LabelGroups
-    host_name: HostOrServiceConditions | None
-    service_description: HostOrServiceConditions | None
-    service_label_groups: LabelGroups
-    host_folder: str
+class RuleConditionsSpec(TypedDict, total=True):
+    host_tags: NotRequired[Mapping[TagGroupID, TagCondition]]
+    host_label_groups: NotRequired[LabelGroups]
+    host_name: NotRequired[HostOrServiceConditions | None]
+    service_description: NotRequired[HostOrServiceConditions | None]
+    service_label_groups: NotRequired[LabelGroups]
+    host_folder: NotRequired[str]
 
 
 class RuleSpec(Generic[TRuleValue], TypedDict):

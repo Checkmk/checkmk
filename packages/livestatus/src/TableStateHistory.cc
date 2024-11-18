@@ -8,6 +8,7 @@
 #include <bitset>
 #include <chrono>
 #include <compare>
+#include <cstdlib>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -405,7 +406,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
-                handle_timeperiod_transition(processor, core, entry,
+                handle_timeperiod_transition(processor, logger, entry,
                                              only_update, time_periods,
                                              state_info);
                 in_nagios_initial_states = false;
@@ -455,7 +456,7 @@ void TableStateHistory::handle_state_entry(
                          blacklist, processor.period(), entry_host,
                          entry_service, key);
     }
-    update(processor, core, entry, *state_info[key], only_update, time_periods);
+    update(processor, entry, *state_info[key], only_update, time_periods);
 }
 
 // static
@@ -542,19 +543,18 @@ void TableStateHistory::insert_new_state(
 }
 
 void TableStateHistory::handle_timeperiod_transition(
-    Processor &processor, const ICore &core, const LogEntry *entry,
+    Processor &processor, Logger *logger, const LogEntry *entry,
     bool only_update, TimePeriods &time_periods,
     const state_info_t &state_info) {
     try {
         time_periods.update(entry->options());
         for (const auto &[key, hss] : state_info) {
-            updateHostServiceState(processor, core, entry, *hss, only_update,
-                                   time_periods);
+            process_time_period_transition(processor, logger, *entry, *hss,
+                                           only_update);
         }
     } catch (const std::logic_error &e) {
-        Warning(core.loggerLivestatus())
-            << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-            << entry->message();
+        Warning(logger) << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+                        << entry->message();
     }
 }
 
@@ -587,11 +587,10 @@ void TableStateHistory::final_reports(Processor &processor,
     }
 }
 
-void TableStateHistory::update(Processor &processor, const ICore &core,
-                               const LogEntry *entry, HostServiceState &state,
-                               bool only_update,
+void TableStateHistory::update(Processor &processor, const LogEntry *entry,
+                               HostServiceState &state, bool only_update,
                                const TimePeriods &time_periods) {
-    auto state_changed = updateHostServiceState(processor, core, entry, state,
+    auto state_changed = updateHostServiceState(processor, entry, state,
                                                 only_update, time_periods);
     // Host downtime or state changes also affect its services
     if (entry->kind() == LogEntryKind::alert_host ||
@@ -599,22 +598,60 @@ void TableStateHistory::update(Processor &processor, const ICore &core,
         entry->kind() == LogEntryKind::downtime_alert_host) {
         if (state_changed == ModificationStatus::changed) {
             for (auto &svc : state._services) {
-                updateHostServiceState(processor, core, entry, *svc,
-                                       only_update, time_periods);
+                updateHostServiceState(processor, entry, *svc, only_update,
+                                       time_periods);
             }
         }
     }
 }
 
+void TableStateHistory::process_time_period_transition(Processor &processor,
+                                                       Logger *logger,
+                                                       const LogEntry &entry,
+                                                       HostServiceState &hss,
+                                                       bool only_update) {
+    // Update basic information
+    hss._time = entry.time();
+    hss._lineno = entry.lineno();
+    hss._until = entry.time();
+
+    try {
+        const TimePeriodTransition tpt{entry.options()};
+        // if no _host pointer is available the initial status of
+        // _in_notification_period (1) never changes
+        if (hss._host != nullptr && tpt.name() == hss._notification_period) {
+            if (tpt.to() != hss._in_notification_period) {
+                if (!only_update) {
+                    abort_query_ = processor.process(hss);
+                }
+                hss._debug_info = "TIMEPERIOD ";
+                hss._in_notification_period = tpt.to();
+            }
+        }
+        // same for service period
+        if (hss._host != nullptr && tpt.name() == hss._service_period) {
+            if (tpt.to() != hss._in_service_period) {
+                if (!only_update) {
+                    abort_query_ = processor.process(hss);
+                }
+                hss._debug_info = "TIMEPERIOD ";
+                hss._in_service_period = tpt.to();
+            }
+        }
+    } catch (const std::logic_error &e) {
+        Warning(logger) << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+                        << entry.message();
+    }
+}
+
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Processor &processor, const ICore &core, const LogEntry *entry,
-    HostServiceState &hss, bool only_update, const TimePeriods &time_periods) {
+    Processor &processor, const LogEntry *entry, HostServiceState &hss,
+    bool only_update, const TimePeriods &time_periods) {
     ModificationStatus state_changed{ModificationStatus::changed};
 
     // Revive host / service if it was unmonitored
-    if (entry->kind() != LogEntryKind::timeperiod_transition &&
-        hss._has_vanished) {
+    if (hss._has_vanished) {
         hss._time = hss._last_known_time;
         hss._until = hss._last_known_time;
         if (!only_update) {
@@ -644,12 +681,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     hss._time = entry->time();
     hss._lineno = entry->lineno();
     hss._until = entry->time();
-
-    // A timeperiod entry never brings an absent host or service into
-    // existence..
-    if (entry->kind() != LogEntryKind::timeperiod_transition) {
-        hss._may_no_longer_exist = false;
-    }
+    hss._may_no_longer_exist = false;
 
     switch (entry->kind()) {
         case LogEntryKind::none:
@@ -659,6 +691,8 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         case LogEntryKind::log_initial_states:
         case LogEntryKind::acknowledge_alert_host:
         case LogEntryKind::acknowledge_alert_service:
+        case LogEntryKind::timeperiod_transition:
+            abort();  // should not happen
             break;
         case LogEntryKind::state_host:
         case LogEntryKind::state_host_initial:
@@ -741,48 +775,14 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             }
             break;
         }
-        case LogEntryKind::timeperiod_transition: {
-            try {
-                const TimePeriodTransition tpt{entry->options()};
-                // if no _host pointer is available the initial status of
-                // _in_notification_period (1) never changes
-                if (hss._host != nullptr &&
-                    tpt.name() == hss._notification_period) {
-                    if (tpt.to() != hss._in_notification_period) {
-                        if (!only_update) {
-                            abort_query_ = processor.process(hss);
-                        }
-                        hss._debug_info = "TIMEPERIOD ";
-                        hss._in_notification_period = tpt.to();
-                    }
-                }
-                // same for service period
-                if (hss._host != nullptr && tpt.name() == hss._service_period) {
-                    if (tpt.to() != hss._in_service_period) {
-                        if (!only_update) {
-                            abort_query_ = processor.process(hss);
-                        }
-                        hss._debug_info = "TIMEPERIOD ";
-                        hss._in_service_period = tpt.to();
-                    }
-                }
-            } catch (const std::logic_error &e) {
-                Warning(core.loggerLivestatus())
-                    << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                    << entry->message();
-            }
-            break;
-        }
     }
 
-    if (entry->kind() != LogEntryKind::timeperiod_transition) {
-        const bool fix_me =
-            (entry->kind() == LogEntryKind::state_host_initial ||
-             entry->kind() == LogEntryKind::state_service_initial) &&
-            entry->plugin_output() == "(null)";
-        hss._log_output = fix_me ? "" : entry->plugin_output();
-        hss._long_log_output = entry->long_plugin_output();
-    }
+    const bool fix_me =
+        (entry->kind() == LogEntryKind::state_host_initial ||
+         entry->kind() == LogEntryKind::state_service_initial) &&
+        entry->plugin_output() == "(null)";
+    hss._log_output = fix_me ? "" : entry->plugin_output();
+    hss._long_log_output = entry->long_plugin_output();
 
     return state_changed;
 }

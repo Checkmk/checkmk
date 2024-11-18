@@ -129,23 +129,26 @@ private:
                                  const IService *entry_service,
                                  HostServiceKey key);
 
-    void handle_timeperiod_transition(Processor &processor, const ICore &core,
+    void handle_timeperiod_transition(Processor &processor, Logger *logger,
                                       const LogEntry *entry, bool only_update,
                                       TimePeriods &time_periods,
                                       const state_info_t &state_info);
 
     void final_reports(Processor &processor, const state_info_t &state_info);
 
-    void update(Processor &processor, const ICore &core, const LogEntry *entry,
+    void update(Processor &processor, const LogEntry *entry,
                 HostServiceState &state, bool only_update,
                 const TimePeriods &time_periods);
 
     ModificationStatus updateHostServiceState(Processor &processor,
-                                              const ICore &core,
                                               const LogEntry *entry,
                                               HostServiceState &hss,
                                               bool only_update,
                                               const TimePeriods &time_periods);
+    void process_time_period_transition(Processor &processor, Logger *logger,
+                                        const LogEntry &entry,
+                                        HostServiceState &hss,
+                                        bool only_update);
 };
 
 #endif  // TableStateHistory_h

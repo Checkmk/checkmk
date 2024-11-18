@@ -23,7 +23,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
@@ -1800,7 +1799,3 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         finally:
             if may_use_redis():
                 get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_rulesets(cfg)

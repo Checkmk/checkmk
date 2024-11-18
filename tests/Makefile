@@ -188,6 +188,7 @@ test-semgrep:
 	    --use-git-ignore \
 	    --exclude=$(realpath ..)/packages \
 	    --disable-version-check \
+	    --error \
 	    $(realpath ..)
 
 test-semgrep-docker:

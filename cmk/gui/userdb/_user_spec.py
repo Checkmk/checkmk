@@ -37,5 +37,7 @@ def validate_users_details(users: object) -> dict[str, UserDetails]:
 
 
 def validate_contact_details(contacts: object) -> dict[str, UserContactDetails]:
+    # Performance impact needs to be investigated (see CMK-19527)
+    # nosemgrep: type-adapter-detected
     validator = TypeAdapter(dict[str, UserContactDetails])
     return validator.validate_python(contacts, strict=True)

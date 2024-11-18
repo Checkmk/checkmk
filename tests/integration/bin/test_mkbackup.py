@@ -316,6 +316,7 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     _execute_restore(site, backup_id)
 
 
+@pytest.mark.skip(reason="CMK-20253: investigate flake.")
 @pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")

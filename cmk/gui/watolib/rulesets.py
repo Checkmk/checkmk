@@ -77,7 +77,7 @@ from .rulespecs import (
     RulespecAllowList,
     TimeperiodValuespec,
 )
-from .simple_config_file import ConfigFileRegistry, WatoConfigFile
+from .simple_config_file import WatoConfigFile
 from .timeperiods import TimeperiodSelection, TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
@@ -92,6 +92,10 @@ RuleValue = Any
 # This macro is needed to make the to_config() methods be able to use native pprint/repr for the
 # ruleset data structures. Have a look at to_config() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+class InvalidRuleException(MKGeneralException):
+    pass
 
 
 @dataclasses.dataclass()
@@ -1137,7 +1141,7 @@ class Rule:
             raise NotImplementedError()
         except Exception:
             logger.exception("error parsing rule")
-            raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
+            raise InvalidRuleException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
     @classmethod
     def _parse_dict_rule(
@@ -1800,13 +1804,3 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
     def read_file_and_validate(self) -> None:
         cfg = self.load_for_reading()
         validate_rulesets(cfg)
-
-
-def register(
-    config_file_registry: ConfigFileRegistry, folder: Path = Path(wato_root_dir())
-) -> None:
-    if not folder.is_dir():
-        return
-    for subfolder in folder.iterdir():
-        register(config_file_registry, subfolder)
-    config_file_registry.register(RuleConfigFile(folder / "rules.mk"))

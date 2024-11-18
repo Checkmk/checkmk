@@ -132,6 +132,7 @@ def check_mk_local_automation_serialized(
                 cmdline=result.command_description,
                 code=result.exit_code,
                 out=result.output,
+                err=result.error,
             )
 
         # On successful "restart" command execute the activate changes hook

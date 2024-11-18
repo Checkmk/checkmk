@@ -14,6 +14,7 @@ class LocalAutomationResult:
     exit_code: int
     output: str
     command_description: str
+    error: str | None = None
 
 
 class AutomationExecutor(Protocol):

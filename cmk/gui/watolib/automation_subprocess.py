@@ -52,6 +52,7 @@ class SubprocessExecutor(AutomationExecutor):
             exit_code=completed_process.returncode,
             output=completed_process.stdout,
             command_description=cmd_descr,
+            error=completed_process.stderr,
         )
 
     def command_description(

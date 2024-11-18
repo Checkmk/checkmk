@@ -9,7 +9,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 defineProps<{
-  addElementLabel?: string | undefined
+  addElementLabel: string | undefined
   addElement: () => void
 }>()
 </script>

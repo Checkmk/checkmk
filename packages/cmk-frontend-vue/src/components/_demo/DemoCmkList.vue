@@ -10,18 +10,20 @@ import { ref, type Ref } from 'vue'
 
 function setupList(): {
   data: Ref<string[]>
-  addElement: () => void
-  deleteElement: (index: number) => void
+  addElement: () => boolean
+  deleteElement: (index: number) => boolean
   reorderElements: (order: number[]) => void
 } {
   const data = ref(['element 1', 'element 2', 'element 3'])
 
   function addElement() {
     data.value.push('new element')
+    return true
   }
 
   function deleteElement(index: number) {
     data.value.splice(index, 1)
+    return true
   }
 
   function reorderElements(order: number[]) {
@@ -57,11 +59,12 @@ const { data: data2, addElement: addElement2, deleteElement: deleteElement2 } = 
       <CmkList
         :items-props="{ itemData: data1 }"
         :draggable="{ onReorder: reorderElements1 }"
-        :on-add="addElement1"
-        :on-delete="deleteElement1"
-        :i18n="{
-          addElementLabel: 'Add new entry'
+        :add="{
+          show: true,
+          tryAdd: addElement1,
+          label: 'Add new entry'
         }"
+        :try-delete="deleteElement1"
         :orientation="'vertical'"
       >
         <template #item-props="{ itemData }">
@@ -75,11 +78,12 @@ const { data: data2, addElement: addElement2, deleteElement: deleteElement2 } = 
     <dd>
       <CmkList
         :items-props="{ itemData: data2 }"
-        :on-add="addElement2"
-        :on-delete="deleteElement2"
-        :i18n="{
-          addElementLabel: 'Add new entry'
+        :add="{
+          show: true,
+          tryAdd: addElement2,
+          label: 'Add new entry'
         }"
+        :try-delete="deleteElement2"
         :orientation="'horizontal'"
       >
         <template #item-props="{ itemData }">

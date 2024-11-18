@@ -91,11 +91,13 @@ function updateValue(operator: Operator, value: string | string[] | null) {
 function addMultiValue() {
   selectedMultiValue.value.push(remainingConditions.value[0]!.name)
   updateValue(selectedOperator.value, selectedMultiValue.value)
+  return true
 }
 
 function deleteMultiValue(index: number) {
   selectedMultiValue.value.splice(index, 1)
   updateValue(selectedOperator.value, selectedMultiValue.value)
+  return true
 }
 
 function updateMultiValue(index: number, value: string) {
@@ -125,11 +127,13 @@ watch(selectedOperator, (operator) => {
   <template v-else-if="operatorIsMultiSelect(selectedOperator)">
     <CmkList
       :items-props="{ selectedValue: selectedMultiValue }"
-      :on-add="addMultiValue"
-      :on-delete="deleteMultiValue"
-      :i18n="{ addElementLabel: props.i18n.add_condition_label }"
+      :add="{
+        show: remainingConditions.length > 0,
+        tryAdd: addMultiValue,
+        label: props.i18n.add_condition_label
+      }"
+      :try-delete="deleteMultiValue"
       :orientation="'horizontal'"
-      :show-add-button="remainingConditions.length > 0"
     >
       <template #item-props="{ index, selectedValue }">
         <DropDown

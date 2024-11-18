@@ -64,12 +64,14 @@ function addElement(index: number) {
   data.value[index] = JSON.parse(JSON.stringify(props.spec.element_default_value))
   elementValidation.value[index] = []
   _validateList()
+  return true
 }
 
 function deleteElement(index: number) {
   data.value.splice(index, 1)
   elementValidation.value.splice(index, 1)
   _validateList()
+  return true
 }
 
 function updateElementData(newValue: unknown, index: number) {
@@ -87,15 +89,16 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <CmkList
-    :items-props="{ data, elementValidation }"
+    :items-props="{ itemData: data, itemElementValidation: elementValidation }"
     :draggable="props.spec.editable_order ? { onReorder: reorderElements } : null"
-    :on-add="addElement"
-    :on-delete="deleteElement"
-    :i18n="{
-      addElementLabel: props.spec.add_element_label
+    :add="{
+      show: true,
+      tryAdd: addElement,
+      label: props.spec.add_element_label
     }"
+    :try-delete="deleteElement"
   >
-    <template #item-props="{ index, data: itemData, elementValidation: itemElementValidation }">
+    <template #item-props="{ index, itemData, itemElementValidation }">
       <FormEditDispatcher
         :data="itemData"
         :spec="spec.element_template"

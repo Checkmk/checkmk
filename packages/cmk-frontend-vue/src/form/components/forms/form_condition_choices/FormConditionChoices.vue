@@ -67,12 +67,15 @@ const remainingGroups = computed(() =>
 
 <template>
   <CmkList
-    :items-props="{ data }"
-    :show-add-button="false"
-    :on-add="() => {}"
-    :on-delete="deleteElement"
+    :items-props="{ itemData: data }"
+    :try-delete="
+      (index) => {
+        deleteElement(index)
+        return true
+      }
+    "
   >
-    <template #item-props="{ index, data: itemData }">
+    <template #item-props="{ index, itemData }">
       <ConditionChoice
         :data="itemData"
         :group="spec.condition_groups[data[index]!.group_name]!"

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 from functools import cache
 from pathlib import Path
@@ -50,3 +51,16 @@ def get_omd_config(omd_root: Path) -> OMDConfig:
 def get_apache_port(omd_root: Path) -> int:
     port = get_omd_config(omd_root).get("CONFIG_APACHE_TCP_PORT")
     return 80 if port is None else int(port)
+
+
+def resource_attributes_from_config(omd_root: Path) -> dict[str, str]:
+    """Get site specific tracing resource attributes
+
+    Users can extend the builtin tracing resource attributes. This is useful
+    for example to add environment specific attributes to the tracing spans.
+    """
+    attributes_path = omd_root / "etc" / "omd" / "resource_attributes_from_config.json"
+    try:
+        return json.loads(attributes_path.read_text())
+    except IOError:
+        return {}

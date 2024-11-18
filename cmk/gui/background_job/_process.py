@@ -26,7 +26,7 @@ from setproctitle import setthreadtitle
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
@@ -84,9 +84,12 @@ def run_process(job_parameters: JobParameters) -> None:
         job_status = jobstatus_store.read()
         init_span_processor_callback(
             init_tracing(
-                service_namespace_from_config("", omd_config := get_omd_config(paths.omd_root)),
-                "gui",
-                omd_site(),
+                service_namespace=service_namespace_from_config(
+                    "", omd_config := get_omd_config(paths.omd_root)
+                ),
+                service_name="gui",
+                service_instance_id=omd_site(),
+                extra_resource_attributes=resource_attributes_from_config(paths.omd_root),
             ),
             exporter_from_config(trace_send_config(omd_config)),
         )

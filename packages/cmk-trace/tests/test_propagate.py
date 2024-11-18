@@ -9,7 +9,12 @@ from cmk import trace
 
 
 def test_propagate_context_via_environment() -> None:
-    trace.init_tracing("namespace", "service", "instance")
+    trace.init_tracing(
+        service_namespace="namespace",
+        service_name="service",
+        service_instance_id="instance",
+        extra_resource_attributes={},
+    )
 
     # Create span and get the environment variables for propagation
     assert trace.get_current_span() == otel_trace.INVALID_SPAN

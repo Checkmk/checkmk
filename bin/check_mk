@@ -30,7 +30,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
 import cmk.utils.caching
 import cmk.utils.log
@@ -61,11 +61,12 @@ help_function = modes.get("help").handler_function
 if trace_context := trace.extract_context_from_environment(dict(os.environ)):
     init_span_processor(
         trace.init_tracing(
-            trace.service_namespace_from_config(
+            service_namespace=trace.service_namespace_from_config(
                 "", omd_config := get_omd_config(cmk.utils.paths.omd_root)
             ),
-            "cmk",
-            omd_site(),
+            service_name="cmk",
+            service_instance_id=omd_site(),
+            extra_resource_attributes=resource_attributes_from_config(cmk.utils.paths.omd_root),
         ),
         exporter_from_config(trace.trace_send_config(omd_config)),
     )

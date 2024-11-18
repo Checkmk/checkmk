@@ -6,6 +6,7 @@
 """Provides functionality to enable tracing in the Python components of Checkmk"""
 
 import socket
+from collections.abc import Mapping
 
 from opentelemetry import trace
 from opentelemetry.context.context import Context as Context  # pylint: disable=useless-import-alias
@@ -42,17 +43,25 @@ get_current_span = trace.get_current_span
 
 
 def init_tracing(
+    *,
     service_namespace: str,
     service_name: str,
     service_instance_id: str,
+    extra_resource_attributes: Mapping[str, str] | None = None,
     host_name: str | None = None,
 ) -> TracerProvider:
     """Create a new tracer provider and register it globally for the application run time"""
+    if extra_resource_attributes is None:
+        extra_resource_attributes = {}
     if host_name is None:
         host_name = socket.gethostname()
     trace.set_tracer_provider(
         provider := _init_tracer_provider(
-            service_namespace, service_name, service_instance_id, host_name
+            service_namespace,
+            service_name,
+            service_instance_id,
+            host_name,
+            extra_resource_attributes,
         )
     )
     return provider
@@ -69,7 +78,11 @@ def get_current_tracer_provider() -> TracerProvider:
 
 
 def _init_tracer_provider(
-    service_namespace: str, service_name: str, service_instance_id: str, host_name: str
+    service_namespace: str,
+    service_name: str,
+    service_instance_id: str,
+    host_name: str,
+    extra_resource_attributes: Mapping[str, str],
 ) -> TracerProvider:
     provider = TracerProvider(
         resource=Resource(
@@ -79,6 +92,7 @@ def _init_tracer_provider(
                 "service.namespace": service_namespace,
                 "service.instance.id": service_instance_id,
                 "host.name": host_name,
+                **extra_resource_attributes,
             }
         )
     )

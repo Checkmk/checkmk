@@ -7,7 +7,7 @@ from wsgiref.types import WSGIEnvironment
 
 from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTelemetryMiddleware
 
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
@@ -64,9 +64,12 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
 
 init_span_processor(
     trace.init_tracing(
-        trace.service_namespace_from_config("", omd_config := get_omd_config(paths.omd_root)),
-        "gui",
-        omd_site(),
+        service_namespace=trace.service_namespace_from_config(
+            "", omd_config := get_omd_config(paths.omd_root)
+        ),
+        service_name="gui",
+        service_instance_id=omd_site(),
+        extra_resource_attributes=resource_attributes_from_config(paths.omd_root),
     ),
     exporter_from_config(trace.trace_send_config(omd_config)),
 )

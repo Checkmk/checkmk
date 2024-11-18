@@ -17,7 +17,7 @@ from setproctitle import setproctitle
 
 from cmk.ccc import store
 from cmk.ccc.daemon import daemonize, pid_file_lock
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
 from cmk.utils import paths
 
@@ -49,7 +49,12 @@ def main() -> int:
 
         _setup_console_logging()
         init_span_processor(
-            trace.init_tracing("", "cmk-ui-job-scheduler", omd_site()),
+            trace.init_tracing(
+                service_namespace="",
+                service_name="cmk-ui-job-scheduler",
+                service_instance_id=omd_site(),
+                extra_resource_attributes=resource_attributes_from_config(omd_root),
+            ),
             exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
         )
         add_span_log_handler()

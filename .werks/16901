@@ -1,0 +1,14 @@
+Title: nagios-plugins:check_ping: custom-command not mapped to 'check_ping' resulting in wrong time units displayed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731940191
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+Having an 'Integrate Nagios plug-ins' rule configured to call 'check_ping' but having the actual
+value for 'Command line' not start with 'check_ping' or './check_ping' wouldn't have it recognized
+correctly resulting in ms wrongly interpreted as seconds.
+This change also allows the command to contain '/check_ping' in order to recognize more ways
+to write the custom command and thus displaying correct units.

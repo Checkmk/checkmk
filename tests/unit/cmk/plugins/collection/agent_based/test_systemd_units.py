@@ -578,10 +578,10 @@ def test_services_split(
                         current_state="running",
                         description="Checkmk agent (PID 1849349/UID 997)",
                         enabled_status="static",
-                        time_since_change=None,
-                        cpu_seconds=CpuTimeSeconds(value=0.0008349999999999999),
-                        memory=Memory(bytes=0),
-                        number_of_tasks=0,
+                        time_since_change=timedelta(seconds=1),
+                        cpu_seconds=CpuTimeSeconds(value=0.134),
+                        memory=Memory(bytes=4089446),
+                        number_of_tasks=6,
                     )
                 },
                 sockets={
@@ -599,8 +599,8 @@ def test_services_split(
                     )
                 },
             ),
-            id="BUG: a unit which triggers multiple units: the service's CPU time is falsley parsed from"
-            "the socket CPU as the new line after 'Triggeres' is evaluated as a new entry",
+            id="a unit which triggers multiple units: the new line after 'Triggers' is not a "
+            "new entry, but referes to another unit which gets triggered by the current entry",
         ),
     ],
 )

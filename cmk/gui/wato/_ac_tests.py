@@ -21,6 +21,7 @@ from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
@@ -74,7 +75,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestCheckMKHelperUsage)
     ac_test_registry.register(ACTestCheckMKFetcherUsage)
     ac_test_registry.register(ACTestCheckMKCheckerUsage)
-    ac_test_registry.register(ACTestAlertHandlerEventTypes)
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
@@ -83,6 +83,8 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
+    if edition() is not Edition.CSE:  # disabled in CSE
+        ac_test_registry.register(ACTestAlertHandlerEventTypes)
 
 
 class ACTestPersistentConnections(ACTest):

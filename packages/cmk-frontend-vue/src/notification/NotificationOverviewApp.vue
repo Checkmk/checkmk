@@ -57,8 +57,8 @@ function toggleContent() {
     :properties="fallback_warning"
     :user_id="user_id"
   ></FallbackWarningComponent>
-  <h3 class="table overview_header">
-    <CmkButton variant="transparent" @click.prevent="toggleContent()">
+  <h3 class="table overview_header" @click.prevent="toggleContent()">
+    <CmkButton variant="transparent">
       <CmkIcon name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     </CmkButton>
     {{ overview_title_i18n }}
@@ -85,6 +85,7 @@ function toggleContent() {
 }
 .overview_header {
   margin: 0 0 12px 0;
+  cursor: pointer;
 }
 .button {
   height: 8px;

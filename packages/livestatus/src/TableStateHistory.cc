@@ -246,13 +246,10 @@ void TableStateHistory::answerQuery(Query &query, const User &user,
 namespace {
 // Set still unknown hosts / services to unmonitored
 void set_unknown_to_unmonitored(
-    bool in_nagios_initial_states,
     const TableStateHistory::state_info_t &state_info) {
-    if (in_nagios_initial_states) {
-        for (const auto &[key, hss] : state_info) {
-            if (hss->_may_no_longer_exist) {
-                hss->_has_vanished = true;
-            }
+    for (const auto &[key, hss] : state_info) {
+        if (hss->_may_no_longer_exist) {
+            hss->_has_vanished = true;
         }
     }
 }
@@ -368,8 +365,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::log_version:
             case LogEntryKind::acknowledge_alert_host:
             case LogEntryKind::acknowledge_alert_service:
-                set_unknown_to_unmonitored(in_nagios_initial_states,
-                                           state_info);
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_service_initial:
@@ -380,8 +378,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                set_unknown_to_unmonitored(in_nagios_initial_states,
-                                           state_info);
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 handle_state_entry(processor, core, entry, only_update,
                                    time_periods, false, state_info, blacklist);
                 in_nagios_initial_states = false;
@@ -394,23 +393,26 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_host:
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host:
-                set_unknown_to_unmonitored(in_nagios_initial_states,
-                                           state_info);
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 handle_state_entry(processor, core, entry, only_update,
                                    time_periods, true, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
-                set_unknown_to_unmonitored(in_nagios_initial_states,
-                                           state_info);
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 handle_timeperiod_transition(processor, core, entry,
                                              only_update, time_periods,
                                              state_info);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::log_initial_states:
-                set_unknown_to_unmonitored(in_nagios_initial_states,
-                                           state_info);
+                if (in_nagios_initial_states) {
+                    set_unknown_to_unmonitored(state_info);
+                }
                 handle_log_initial_states(entry, state_info);
                 in_nagios_initial_states = true;
                 break;

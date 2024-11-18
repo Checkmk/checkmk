@@ -2283,7 +2283,7 @@ do_custom_sqls() {
                 output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
                 handle_custom_sql_errors "$output"
             else
-                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
+                run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}" "$section_name"
             fi
         fi
     done
@@ -2495,7 +2495,8 @@ run_cached() {
     # that execution (see e.g. export -f logging)
     CMD="${2}"
     IDENTIFIER="${3}"
-    if [[ "${IDENTIFIER}" == "_custom_sql_"* ]]; then
+    SECTION_NAME="${4}"
+    if [ "${SECTION_NAME}" = "oracle_sql" ]; then
         NAME="oracle_${MK_SID}${IDENTIFIER}_${MAXAGE}"
     else
         NAME="oracle_${MK_SID}${IDENTIFIER}"
@@ -2516,7 +2517,7 @@ run_cached() {
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
-        if [[ "${IDENTIFIER}" == "_custom_sql_"* ]]; then
+        if [ "${SECTION_NAME}" = "oracle_sql" ]; then
             sed -e "s/^\[\[\[\(.*\)\]\]\]$/[[[\1|${CACHE_INFO}]]]/g" "${CACHEFILE}"
         elif [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
             sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"

@@ -41,7 +41,7 @@ alcatel_power_aos7_power_type_mapping = {
     "2": "DC",
 }
 
-PowerSupplyEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+PowerSupplyEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "PowerSupplyEntry", "status_readable power_supply_type"
 )
 

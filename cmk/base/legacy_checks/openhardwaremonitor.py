@@ -65,7 +65,7 @@ OpenhardwaremonitorTraits: Mapping[str, _Trait] = {
     "Factor": {"unit": "1", "factor": 1.0},
     "Data": {"unit": " B", "factor": 1073741824.0},
 }
-OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+OpenhardwaremonitorSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "OpenhardwaremonitorSensor", ("reading", "unit", "perf_var", "WMIstatus")
 )
 

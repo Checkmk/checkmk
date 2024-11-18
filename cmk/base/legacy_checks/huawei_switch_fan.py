@@ -16,7 +16,7 @@ from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
 check_info = {}
 
-HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+HuaweiFanData = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "HuaweiFanData", "fan_present fan_speed"
 )
 

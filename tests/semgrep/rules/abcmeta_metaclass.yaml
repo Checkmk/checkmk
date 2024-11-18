@@ -1,0 +1,12 @@
+---
+rules:
+    - id: abcmeta-metaclass
+      pattern-either:
+          - pattern: |-
+                class $ANYTHING(metaclass=ABCMeta):
+          - pattern: |-
+                class $ANYTHING(metaclass=abc.ABCMeta):
+      message: >-
+          Inheritance from ABC should be used instead to define metaclass
+      languages: [python]
+      severity: ERROR

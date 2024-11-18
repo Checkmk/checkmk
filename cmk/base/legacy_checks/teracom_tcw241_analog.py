@@ -11,7 +11,7 @@ from cmk.agent_based.v2 import contains, SNMPTree
 
 check_info = {}
 
-AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+AnalogSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "AnalogSensor", "description maximum minimum voltage"
 )
 

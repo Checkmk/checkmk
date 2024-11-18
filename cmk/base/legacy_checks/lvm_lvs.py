@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import render
 
 check_info = {}
 
-LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+LvmLvsEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "LvmLvsEntry", ["data", "meta"]
 )
 

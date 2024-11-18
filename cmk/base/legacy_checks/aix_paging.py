@@ -20,7 +20,7 @@ check_info = {}
 # hd6                   hdisk11                rootvg       10240MB    23        yes        yes       lv       0
 
 
-AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+AIXPaging = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "AIXPaging", ["group", "size_mb", "usage_perc", "active", "auto", "type"]
 )
 

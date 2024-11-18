@@ -33,7 +33,7 @@ vsphere_object_names = {
 
 def parse_esx_vsphere_objects(string_table):
     parsed = {}
-    Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    Obj = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
         "Obj", ["name", "hostsystem", "state"]
     )
     for line in string_table:

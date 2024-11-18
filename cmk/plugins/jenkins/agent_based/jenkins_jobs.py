@@ -32,7 +32,7 @@ from cmk.agent_based.v2 import (
 
 from .lib import render_integer
 
-JenkinsJobInfo: NamedTuple = namedtuple(  # pylint: disable=collections-namedtuple-call
+JenkinsJobInfo: NamedTuple = namedtuple(  # nosemgrep: typing-namedtuple-call
     "JenkinsJobInfo",
     [
         "display_name",

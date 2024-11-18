@@ -384,8 +384,7 @@ test-pylint: prepare-protobuf-files
 	    --dist=loadfile \
 	    -- \
 	    tests/unit/test_pylint_checker_cmk_module_layers.py \
-	    tests/unit/test_pylint_checker_localization.py \
-	    tests/unit/test_pylint_checker_forbidden_objects.py
+	    tests/unit/test_pylint_checker_localization.py
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint

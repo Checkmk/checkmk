@@ -1,0 +1,12 @@
+---
+rules:
+    - id: pillow-module-import
+      patterns:
+          - pattern: from PIL import $ANYTHING
+          - pattern: import PIL
+      message: PIL should not be used directly. Use cmk.utils.images instead.
+      languages: [python]
+      severity: ERROR
+      paths:
+          exclude:
+              - cmk/utils/images.py

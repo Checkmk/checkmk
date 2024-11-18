@@ -335,7 +335,7 @@ def test_grouping_multiple_groups(
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    FilestatFake = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
         "FilestatFake", ["size", "age", "stat_status"]
     )
     filestat = FilestatFake(val, val, "file vanished")

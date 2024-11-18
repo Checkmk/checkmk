@@ -96,15 +96,21 @@ class SendingPayloadProcess(multiprocessing.Process):
         config = load_config(self.paths)
         self.logger.debug("Loaded configuration: %r", config)
 
+        failed_message = None
         try:
             while True:
                 with make_connection(self.omd_root, self.logger, self.task_name) as conn:
                     try:
                         channel = conn.channel(PiggybackPayload)
+                        if failed_message is not None:
+                            # Retry in case the first time the channel was not available after make_connection
+                            self._handle_message(channel, config, failed_message)
+                            failed_message = None
                         for piggyback_message in watch_new_messages(self.omd_root):
                             config = self._check_for_config_reload(config)
                             self._handle_message(channel, config, piggyback_message)
                     except CMKConnectionError as exc:
+                        failed_message = piggyback_message
                         self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
         except CMKConnectionError as exc:
             self.logger.error("Connection error: %s: %s", self.task_name, exc)

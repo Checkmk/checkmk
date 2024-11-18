@@ -228,7 +228,8 @@ class Channel(Generic[_ModelT]):
                 properties=properties,
             )
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def consume(
         self,

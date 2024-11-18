@@ -255,7 +255,8 @@ void set_unknown_to_unmonitored(
 }
 
 void handle_log_initial_states(
-    const LogEntry *entry, const TableStateHistory::state_info_t &state_info) {
+    const TableStateHistory::state_info_t &state_info,
+    std::chrono::system_clock::time_point entry_time) {
     // This feature is only available if log_initial_states is set to 1. If
     // log_initial_states is set, each nagios startup logs the initial states of
     // all known hosts and services. Therefore we can detect if a host is no
@@ -263,7 +264,7 @@ void handle_log_initial_states(
     // HOST/SERVICE state entry will follow up shortly.
     for (const auto &[key, hss] : state_info) {
         if (!hss->_has_vanished) {
-            hss->_last_known_time = entry->time();
+            hss->_last_known_time = entry_time;
             hss->_may_no_longer_exist = true;
         }
     }
@@ -413,7 +414,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 if (in_nagios_initial_states) {
                     set_unknown_to_unmonitored(state_info);
                 }
-                handle_log_initial_states(entry, state_info);
+                handle_log_initial_states(state_info, entry->time());
                 in_nagios_initial_states = true;
                 break;
         }

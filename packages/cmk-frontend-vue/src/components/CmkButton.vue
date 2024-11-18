@@ -5,6 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
+import { ref } from 'vue'
+
+const buttonRef = ref<HTMLButtonElement | null>(null)
+
+// Expose the focus method
+defineExpose({
+  focus: () => {
+    buttonRef.value?.focus()
+  }
+})
 
 const buttonVariants = cva('', {
   variants: {
@@ -38,7 +48,7 @@ defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button class="button" :class="buttonVariants({ variant, size })">
+  <button ref="buttonRef" class="button" :class="buttonVariants({ variant, size })">
     <slot />
   </button>
 </template>

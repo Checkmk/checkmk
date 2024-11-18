@@ -6,6 +6,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormPassword from '@/form/components/forms/FormPassword.vue'
+import { renderFormWithData } from '../cmk-form-helper'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -31,10 +32,10 @@ const spec: FormSpec.Password = {
     }
   ],
   i18n: {
-    explicit_password: 'explicit_password',
-    password_store: 'password_store',
-    no_password_store_choices: 'no_password_store_choices',
-    password_choice_invalid: 'password_choice_invalid'
+    explicit_password: 'explicit_password_i18n',
+    password_store: 'password_store_i18n',
+    no_password_store_choices: 'no_password_store_choices_i18n',
+    password_choice_invalid: 'password_choice_invalid_i18n'
   }
 }
 
@@ -66,12 +67,10 @@ test('FormPassword user input', async () => {
 })
 
 test('FormPassword updates validation but dont touch value', async () => {
-  const { rerender } = render(FormPassword, {
-    props: {
-      spec,
-      data: ['explicit_password', '', '', true],
-      backendValidation: []
-    }
+  const { rerender, getCurrentData } = renderFormWithData({
+    spec,
+    data: ['explicit_password', '', '', true],
+    backendValidation: []
   })
 
   expect(screen.queryByText('Backend error message')).toBeNull()
@@ -89,24 +88,21 @@ test('FormPassword updates validation but dont touch value', async () => {
   })
 
   screen.getByText('Backend error message')
-  const element = screen.getByLabelText<HTMLInputElement>('explicit password')
-  expect(element.value).toBe('some_password')
+  expect(getCurrentData()).toBe('["explicit_password","","some_password",false]')
 })
 
 test('FormPassword selected first password store choice if present', async () => {
-  render(FormPassword, {
-    props: {
-      spec,
-      data: ['explicit_password', '', '', true],
-      backendValidation: []
-    }
+  const { getCurrentData } = renderFormWithData({
+    spec,
+    data: ['explicit_password', '', '', true],
+    backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLSelectElement>('combobox')
-  await fireEvent.update(element, 'stored_password')
-
-  const storeChoice = await screen.getByRole<HTMLSelectElement>('combobox', {
-    name: 'password store choice'
+  const element = screen.getByRole<HTMLSelectElement>('combobox', {
+    name: 'explicit_password_i18n'
   })
-  expect(storeChoice.value).toBe('pw_id0')
+  await fireEvent.click(element)
+  await fireEvent.click(screen.getByText('password_store_i18n'))
+
+  expect(getCurrentData()).toBe('["stored_password","pw_id0","",false]')
 })

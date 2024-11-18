@@ -30,5 +30,5 @@ test('FormDataSize renders value', () => {
   const selectElement = screen.getByRole<HTMLInputElement>('combobox')
 
   expect(inputElement.value).toBe('42')
-  expect(selectElement.value).toBe('mag_bar')
+  expect(selectElement).toHaveAccessibleName('mag_bar')
 })

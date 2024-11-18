@@ -107,7 +107,6 @@ const passwordStoreOptions = computed(() => {
       v-else
       v-model:selected-option="passwordStoreChoice"
       :options="passwordStoreOptions"
-      aria-label="password store choice"
     />
   </template>
   <FormValidation :validation="validation"></FormValidation>

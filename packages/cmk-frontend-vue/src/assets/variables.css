@@ -8,9 +8,13 @@
   /* Colors */
   --success: rgb(19, 211, 137);
   --success-dimmed: rgb(17 188 122);
+  --success-dimmed-2: rgb(13 141 91);
+
   --white: rgb(255, 255, 255);
+  --white-dimmed: rgba(255, 255, 255, 0.5);
   --black: rgb(0, 0, 0);
   --grey-4: rgb(51, 51, 51);
+  --grey-4-dimmed: rgba(51, 51, 51, 0.8);
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
   --form-readonly-error-bg-color: rgb(252, 85, 85);
   --tag-added-color-light: rgb(6, 103, 193);
@@ -69,6 +73,8 @@
 
     /* Fonts */
     --font-color: var(--grey-4);
+    --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-green: var(--success-dimmed-2);
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
@@ -84,8 +90,9 @@
     --default-bg-color: var(--ux-theme-0);
     --default-table-th-color: rgb(232 232 238);
     --default-form-element-bg-color: var(--ux-theme-5);
+    --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: rgb(183, 180, 180);
-    --default-select-hover-color: var(--success);
+    --default-select-hover-color: var(--font-color-green);
     --default-button-emphasis-color: rgb(13, 141, 91);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(233, 233, 233);
@@ -115,6 +122,8 @@
 
     /* Fonts */
     --font-color: var(--white);
+    --font-color-dimmed: var(--white-dimmed);
+    --font-color-green: var(--success);
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
@@ -130,8 +139,9 @@
     --default-bg-color: var(--ux-theme-1);
     --default-table-th-color: var(--ux-theme-2);
     --default-form-element-bg-color: var(--ux-theme-5);
+    --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: rgb(69, 77, 89);
-    --default-select-hover-color: var(--success);
+    --default-select-hover-color: var(--font-color-green);
     --default-button-emphasis-color: rgb(19, 211, 137);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(83, 83, 83);

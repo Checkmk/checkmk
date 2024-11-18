@@ -32,9 +32,9 @@ test('FormSingleChoice renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
-  expect(element.value).toBe('choice1')
+  expect(element).toHaveAccessibleName('Choice 1')
 })
 
 test('FormSingleChoice renders something when noting is selected', () => {
@@ -46,9 +46,9 @@ test('FormSingleChoice renders something when noting is selected', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
-  expect(element.value).toBe('some input hint')
+  expect(element).toHaveAccessibleName('some input hint')
 })
 
 test('FormSingleChoice updates data', async () => {
@@ -58,8 +58,9 @@ test('FormSingleChoice updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
-  await fireEvent.update(element, 'choice2')
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
+  await fireEvent.click(element)
+  await fireEvent.click(screen.getByText('Choice 2'))
 
   expect(getCurrentData()).toBe('"choice2"')
 })

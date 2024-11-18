@@ -281,7 +281,16 @@ def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
     return unit.endswith(".service")
 
 
-def _is_new_entry(line: Sequence[str]) -> bool:
+def _is_new_entry(line: Sequence[str], entry: list[Sequence[str]]) -> bool:
+    # First check if we're not looking at a "Triggers" section.
+    # It looks like the beginning of a new status entry, e.g.:
+    # "Triggers: ● check-mk-agent@3148-1849349-997.service",
+    # "● check-mk-agent@3149-1849349-997.service",
+    for elem in reversed(entry):
+        if elem[0].startswith("Triggers:"):
+            return False
+        if elem[0] not in _STATUS_SYMBOLS:
+            break
     return (line[0] in _STATUS_SYMBOLS) and (len(line) > 3) and ("." in line[1])
 
 
@@ -289,7 +298,7 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
     unit_status = {}
     entry: list[Sequence[str]] = []
     for line in source:
-        if _is_new_entry(line):
+        if _is_new_entry(line, entry):
             if entry and _is_service_entry(entry):
                 status = UnitStatus.from_entry(entry)
                 unit_status[status.name] = status

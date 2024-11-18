@@ -556,6 +556,12 @@ class CMKOpenApiSession(requests.Session):
                 discovery_status == "finished"
             ), f"Unexpected service discovery status: {discovery_status}"
 
+    def service_discovery_result(self, hostname: str) -> Mapping[str, object]:
+        response = self.get(f"/objects/service_discovery/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
     @contextmanager
     def _wait_for_completion(
         self,

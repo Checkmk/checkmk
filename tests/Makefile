@@ -62,8 +62,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 .PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
-	test-docker test-docker-docker test-format-python test-format-python-docker \
-	test-format-shell \
+	test-docker test-docker-docker test-docker-sit test-docker-sit-docker \
+	test-format-python test-format-python-docker test-format-shell \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
@@ -98,6 +98,8 @@ help:
 	@echo "test-cycles-docker                  - Run cycles check in docker"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
+	@echo "test-docker-sit                     - Run docker system integration tests"
+	@echo "test-docker-sit-docker              - Run docker system integration tests in docker"
 	@echo "test-format-bazel                   - Run the Bazel formatting"
 	@echo "test-format-bazel-docker            - Run the Bazel formatting in docker"
 	@echo "test-format-python                  - Run formatting tests"
@@ -229,6 +231,13 @@ test-docker:
 	docker run --rm -i $$(../buildscripts/docker_image_aliases/resolve.py IMAGE_HADOLINT) < ../docker_image/Dockerfile
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
+
+test-docker-sit-docker:
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+	    ../scripts/run-in-docker.sh make --quiet test-docker-sit
+
+test-docker-sit:
+	$(PYTEST) -x -T docker_sit --log-cli-level=INFO docker_sit
 
 test-format-python: test-format-python-sort test-format-python-format
 

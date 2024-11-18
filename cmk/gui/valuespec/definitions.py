@@ -7035,7 +7035,11 @@ class FileUpload(ValueSpec[FileUploadModel]):
         return json_value
 
     def value_to_html(self, value: FileUploadModel) -> ValueSpecText:
-        raise NotImplementedError()  # FIXME! Violates LSP!
+        match value:
+            case (str(file_name), str(_), bytes(_)):
+                return _("Chosen file: %s") % file_name
+            case other:
+                raise TypeError(other)
 
 
 class ImageUpload(FileUpload):

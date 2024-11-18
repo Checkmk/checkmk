@@ -21,10 +21,15 @@ from cmk.gui.form_specs.private import (
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
+    ListUniqueSelection,
     not_empty,
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+)
+from cmk.gui.form_specs.private.list_unique_selection import (
+    UniqueCascadingSingleChoiceElement,
+    UniqueSingleChoiceElement,
 )
 from cmk.gui.form_specs.vue.shared_type_defs import (
     CascadingSingleChoiceLayout,
@@ -141,60 +146,74 @@ def _get_states(what: Literal["host", "service"]) -> Sequence[tuple[int, Title]]
             raise ValueError(f"Invalid value for 'what': {what}")
 
 
-def _event_choices(what: Literal["host", "service"]) -> Sequence[CascadingSingleChoiceElement]:
+def _event_choices(
+    what: Literal["host", "service"],
+) -> Sequence[UniqueCascadingSingleChoiceElement]:
     return [
-        CascadingSingleChoiceElement(
-            name="status_change",
-            title=Title("Status change"),
-            parameter_form=Tuple(
-                layout="horizontal",
-                elements=[
-                    SingleChoiceExtended(
-                        label=Label("From"),
-                        prefill=DefaultValue(-1),
-                        type=int,
-                        elements=[
-                            SingleChoiceElementExtended(name=state, title=title)
-                            for state, title in _get_states(what)
-                        ],
-                    ),
-                    SingleChoiceExtended(
-                        label=Label("to"),
-                        prefill=DefaultValue(1) if what == "host" else DefaultValue(2),
-                        type=int,
-                        elements=[
-                            SingleChoiceElementExtended(name=state, title=title)
-                            for state, title in _get_states(what)
-                        ],
-                    ),
-                ],
-                custom_validate=[_validate_from_to],
+        UniqueCascadingSingleChoiceElement(
+            unique=False,
+            parameter_form=CascadingSingleChoiceElement(
+                name="status_change",
+                title=Title("Status change"),
+                parameter_form=Tuple(
+                    layout="horizontal",
+                    elements=[
+                        SingleChoiceExtended(
+                            label=Label("From"),
+                            prefill=DefaultValue(-1),
+                            type=int,
+                            elements=[
+                                SingleChoiceElementExtended(name=state, title=title)
+                                for state, title in _get_states(what)
+                            ],
+                        ),
+                        SingleChoiceExtended(
+                            label=Label("to"),
+                            prefill=DefaultValue(1) if what == "host" else DefaultValue(2),
+                            type=int,
+                            elements=[
+                                SingleChoiceElementExtended(name=state, title=title)
+                                for state, title in _get_states(what)
+                            ],
+                        ),
+                    ],
+                    custom_validate=[_validate_from_to],
+                ),
             ),
         ),
-        CascadingSingleChoiceElement(
-            name="downtime",
-            title=Title("Start or end of downtime"),
-            parameter_form=FixedValue(value=None),
+        UniqueCascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElement(
+                name="downtime",
+                title=Title("Start or end of downtime"),
+                parameter_form=FixedValue(value=None),
+            ),
         ),
-        CascadingSingleChoiceElement(
-            name="acknowledgement",
-            title=Title("Acknowledgement of problem"),
-            parameter_form=FixedValue(value=None),
+        UniqueCascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElement(
+                name="acknowledgement",
+                title=Title("Acknowledgement of problem"),
+                parameter_form=FixedValue(value=None),
+            ),
         ),
-        CascadingSingleChoiceElement(
-            name="flapping_state",
-            title=Title("Start or end of flapping state"),
-            parameter_form=FixedValue(value=None),
+        UniqueCascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElement(
+                name="flapping_state",
+                title=Title("Start or end of flapping state"),
+                parameter_form=FixedValue(value=None),
+            ),
         ),
-        CascadingSingleChoiceElement(
-            name="alert_handler",
-            title=Title("Alert handler execution"),
-            parameter_form=SingleChoice(
-                prefill=DefaultValue("success"),
-                elements=[
-                    SingleChoiceElement(name="success", title=Title("Success")),
-                    SingleChoiceElement(name="failure", title=Title("Failure")),
-                ],
+        UniqueCascadingSingleChoiceElement(
+            unique=False,
+            parameter_form=CascadingSingleChoiceElement(
+                name="alert_handler",
+                title=Title("Alert handler execution"),
+                parameter_form=SingleChoice(
+                    prefill=DefaultValue("success"),
+                    elements=[
+                        SingleChoiceElement(name="success", title=Title("Success")),
+                        SingleChoiceElement(name="failure", title=Title("Failure")),
+                    ],
+                ),
             ),
         ),
     ]
@@ -252,27 +271,23 @@ def triggering_events() -> QuickSetupStage:
                                 ),
                                 elements={
                                     "host_events": DictElement(
-                                        parameter_form=ListExtended(
+                                        parameter_form=ListUniqueSelection(
                                             title=Title("Host events"),
                                             prefill=DefaultValue([]),
-                                            editable_order=False,
-                                            element_template=CascadingSingleChoiceExtended(
-                                                elements=_event_choices("host"),
-                                                layout=CascadingSingleChoiceLayout.horizontal,
-                                            ),
+                                            single_choice_type=CascadingSingleChoice,
+                                            cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
+                                            elements=_event_choices("host"),
                                             add_element_label=Label("Add event"),
                                             custom_validate=[_validate_empty_selection],
                                         )
                                     ),
                                     "service_events": DictElement(
-                                        parameter_form=ListExtended(
+                                        parameter_form=ListUniqueSelection(
                                             title=Title("Service events"),
                                             prefill=DefaultValue([]),
-                                            editable_order=False,
-                                            element_template=CascadingSingleChoiceExtended(
-                                                elements=_event_choices("service"),
-                                                layout=CascadingSingleChoiceLayout.horizontal,
-                                            ),
+                                            single_choice_type=CascadingSingleChoice,
+                                            cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
+                                            elements=_event_choices("service"),
                                             add_element_label=Label("Add event"),
                                             custom_validate=[_validate_empty_selection],
                                         )
@@ -1083,17 +1098,16 @@ def _get_sorted_users() -> list[tuple[UserId, str]]:
     )
 
 
-def _contact_group_choice() -> SingleChoice:
-    return SingleChoice(
-        prefill=InputHint(Title("Select contact group")),
-        elements=[
-            SingleChoiceElement(
+def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
+    return [
+        UniqueSingleChoiceElement(
+            parameter_form=SingleChoiceElement(
                 name=ident,
                 title=Title(title),  # pylint: disable=localization-of-non-literal-string
-            )
-            for ident, title in sorted_contact_group_choices()
-        ],
-    )
+            ),
+        )
+        for ident, title in sorted_contact_group_choices()
+    ]
 
 
 def recipient() -> QuickSetupStage:
@@ -1105,30 +1119,42 @@ def recipient() -> QuickSetupStage:
                     elements={
                         "receive": DictElement(
                             required=True,
-                            parameter_form=ListExtended(
+                            parameter_form=ListUniqueSelection(
                                 title=Title("Select recipient"),
                                 prefill=DefaultValue([("all_contacts_affected", None)]),
-                                element_template=CascadingSingleChoiceExtended(
-                                    elements=[
-                                        CascadingSingleChoiceElement(
+                                single_choice_type=CascadingSingleChoice,
+                                cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
+                                elements=[
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("All contacts of the affected object"),
                                             name="all_contacts_affected",
                                             parameter_form=FixedValue(value=None),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("All users with an email address"),
                                             name="all_email_users",
                                             parameter_form=FixedValue(value=None),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("Contact group"),
                                             name="contact_group",
-                                            parameter_form=ListExtended(
+                                            parameter_form=ListUniqueSelection(
                                                 prefill=DefaultValue([]),
-                                                element_template=_contact_group_choice(),
+                                                single_choice_prefill=InputHint(
+                                                    Title("Select contact group")
+                                                ),
+                                                single_choice_type=SingleChoice,
+                                                elements=_contact_group_choice(),
                                             ),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("Explicit email addresses"),
                                             name="explicit_email_addresses",
                                             parameter_form=ListOfStrings(
@@ -1138,34 +1164,38 @@ def recipient() -> QuickSetupStage:
                                                 ),
                                             ),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("Specific users"),
                                             name="specific_users",
-                                            parameter_form=ListExtended(
+                                            parameter_form=ListUniqueSelection(
                                                 prefill=DefaultValue([]),
-                                                element_template=SingleChoiceExtended(
-                                                    prefill=InputHint(Title("Select user")),
-                                                    type=str,
-                                                    elements=[
-                                                        SingleChoiceElementExtended(
+                                                single_choice_prefill=InputHint(
+                                                    Title("Select user")
+                                                ),
+                                                single_choice_type=SingleChoice,
+                                                elements=[
+                                                    UniqueSingleChoiceElement(
+                                                        parameter_form=SingleChoiceElement(
                                                             name=ident,
                                                             title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                                         )
-                                                        for ident, title in _get_sorted_users()
-                                                    ],
-                                                ),
+                                                    )
+                                                    for ident, title in _get_sorted_users()
+                                                ],
                                             ),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             title=Title("All users"),
                                             name="all_users",
                                             parameter_form=FixedValue(value=None),
                                         ),
-                                    ],
-                                    layout=CascadingSingleChoiceLayout.horizontal,
-                                ),
+                                    ),
+                                ],
                                 add_element_label=Label("Add recipient"),
-                                editable_order=False,
                                 custom_validate=[
                                     not_empty(
                                         error_msg=Message("Please add at least one recipient")
@@ -1175,24 +1205,29 @@ def recipient() -> QuickSetupStage:
                         ),
                         "restrict_previous": DictElement(
                             required=False,
-                            parameter_form=ListExtended(
+                            parameter_form=ListUniqueSelection(
                                 title=Title("Restrict previous options to"),
                                 prefill=DefaultValue([]),
-                                editable_order=False,
                                 add_element_label=Label("Add restriction"),
-                                element_template=CascadingSingleChoiceExtended(
-                                    prefill=DefaultValue("contact_group"),
-                                    elements=[
-                                        CascadingSingleChoiceElement(
+                                cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
+                                single_choice_type=CascadingSingleChoice,
+                                elements=[
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             name="contact_group",
                                             title=Title("Users of contact groups"),
-                                            parameter_form=ListExtended(
+                                            parameter_form=ListUniqueSelection(
                                                 prefill=DefaultValue([]),
-                                                editable_order=False,
-                                                element_template=_contact_group_choice(),
+                                                single_choice_prefill=InputHint(
+                                                    Title("Select contact group")
+                                                ),
+                                                single_choice_type=SingleChoice,
+                                                elements=_contact_group_choice(),
                                             ),
                                         ),
-                                        CascadingSingleChoiceElement(
+                                    ),
+                                    UniqueCascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElement(
                                             name="custom_macros",
                                             title=Title("Custom macros"),
                                             parameter_form=ListExtended(
@@ -1214,9 +1249,8 @@ def recipient() -> QuickSetupStage:
                                                 add_element_label=Label("Add condition"),
                                             ),
                                         ),
-                                    ],
-                                    layout=CascadingSingleChoiceLayout.horizontal,
-                                ),
+                                    ),
+                                ],
                             ),
                         ),
                     }

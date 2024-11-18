@@ -336,7 +336,11 @@ TempCfgFs::TempCfgFs(Mode mode) : mode_{mode} {
 TempCfgFs ::~TempCfgFs() {
     cma::cfg::GetCfg().popFolders();
     if (mode_ == Mode::standard) {
-        std::filesystem::remove_all(base_);
+        try {
+            fs::remove_all(base_);
+        } catch (const std::exception &e) {
+            XLOG::l("Strange exception '{}'", e.what());
+        }
     }
     cma::cfg::GetCfg().setConfig(yaml_);
 }

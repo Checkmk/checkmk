@@ -348,6 +348,15 @@ def _bulk_host_action_response(
     return serve_host_collection(succeeded_hosts)
 
 
+def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
+    yield from (host for host in folder.hosts().values() if host.permissions.may("read"))
+    for subfolder in folder.subfolders():
+        if not subfolder.permissions.may("read"):
+            continue  # skip all hosts if folder isn't readable
+
+        yield from _iter_hosts_with_permission(subfolder)
+
+
 @Endpoint(
     constructors.collection_href("host_config"),
     ".../collection",
@@ -365,11 +374,12 @@ def _bulk_host_action_response(
 def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
-    hosts = (
-        host
-        for host in root_folder.all_hosts_recursively().values()
-        if host.permissions.may("read")
-    )
+    if user.may("wato.see_all_folders"):
+        # allowed to see all hosts, no need for individual permission checks
+        hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
+    else:
+        hosts = _iter_hosts_with_permission(root_folder)
+
     return serve_host_collection(
         hosts,
         effective_attributes=params["effective_attributes"],

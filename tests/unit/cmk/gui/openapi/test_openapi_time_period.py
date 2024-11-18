@@ -7,9 +7,11 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils.config_validation_layer.timeperiods import validate_timeperiod, validate_timeperiods
+from cmk.utils.timeperiod import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
+
+from cmk.update_config.plugins.actions.validate_mk_files import validate_timeperiods
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -942,11 +944,11 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
     ],
 )
 def test_timeperiod_config_validator_fields(
-    time_period: dict, is_valid: bool, request: pytest.FixtureRequest
+    time_period: TimeperiodSpec, is_valid: bool, request: pytest.FixtureRequest
 ) -> None:
     result = True
     try:
-        validate_timeperiod(request.node.name, time_period)
+        validate_timeperiods({request.node.name: time_period})
     except Exception:
         result = False
 
@@ -954,7 +956,7 @@ def test_timeperiod_config_validator_fields(
 
 
 def test_timeperiod_config_validator_on_file() -> None:
-    time_periods = {
+    time_periods: TimeperiodSpecs = {
         "Nights": {
             "alias": "Nights",
             "friday": [("21:00", "24:00"), ("00:00", "06:00")],

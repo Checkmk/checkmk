@@ -525,6 +525,6 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
 
 def create_rabbitmq_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
     store.save_text_to_file(
-        base_dir.joinpath("etc/rabbitmq/definitions.d/definitions.json"),
+        base_dir / rabbitmq.DEFINITIONS_FILE,
         definition.model_dump_json(indent=4),
     )

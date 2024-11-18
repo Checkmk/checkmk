@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
 DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
+DEFINITIONS_FILE = f"{DEFINITIONS_PATH}/definitions.json"
 
 
 class User(BaseModel):

@@ -329,7 +329,7 @@ def _get_expected_paths(
         "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
         "etc/rabbitmq",
         "etc/rabbitmq/definitions.d",
-        "etc/rabbitmq/definitions.d/definitions.json",
+        "etc/rabbitmq/definitions.d/definitions.next.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:

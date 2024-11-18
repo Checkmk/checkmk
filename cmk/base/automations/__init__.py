@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import enum
 import os
 import signal
 import sys
 from contextlib import redirect_stdout, suppress
 from types import FrameType
-from typing import Any, NoReturn
+from typing import NoReturn
 
 import cmk.ccc.debug
 from cmk.ccc import version as cmk_version
@@ -33,6 +34,14 @@ class MKAutomationError(MKException):
     pass
 
 
+class AutomationExitCode(enum.IntEnum):
+    """Supported exit code for an executed automation command."""
+
+    SUCCESS = 0
+    KNOWN_ERROR = 1
+    UNKNOWN_ERROR = 2
+
+
 class Automations:
     def __init__(self) -> None:
         super().__init__()
@@ -43,7 +52,7 @@ class Automations:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    def execute(self, cmd: str, args: list[str]) -> Any:
+    def execute(self, cmd: str, args: list[str]) -> AutomationExitCode:
         self._handle_generic_arguments(args)
 
         try:
@@ -77,13 +86,13 @@ class Automations:
             console.error(f"{e}", file=sys.stderr)
             if cmk.ccc.debug.enabled():
                 raise
-            return 1
+            return AutomationExitCode.KNOWN_ERROR
 
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
             console.error(f"{e}", file=sys.stderr)
-            return 2
+            return AutomationExitCode.UNKNOWN_ERROR
 
         finally:
             profiling.output_profile()
@@ -95,7 +104,7 @@ class Automations:
                 file=sys.stdout,
             )
 
-        return 0
+        return AutomationExitCode.SUCCESS
 
     def _handle_generic_arguments(self, args: list[str]) -> None:
         """Handle generic arguments (currently only the optional timeout argument)"""

@@ -35,7 +35,7 @@ from cmk.base.plugins.agent_based.systemd_units import (
                     active_status="inactive",
                     current_state="dead",
                     description="Detect the available GPUs and deal with any system changes",
-                    enabled_status="unknown",
+                    enabled_status=None,
                 ),
                 UnitEntry(
                     name="rsyslog",
@@ -63,7 +63,7 @@ from cmk.base.plugins.agent_based.systemd_units import (
                         active_status="inactive",
                         current_state="dead",
                         description="Detect the available GPUs and deal with any system changes",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     ),
                     UnitEntry(
                         name="rsyslog",
@@ -99,7 +99,7 @@ from cmk.base.plugins.agent_based.systemd_units import (
                     active_status="inactive",
                     current_state="dead",
                     description="Detect the available GPUs and deal with any system changes",
-                    enabled_status="unknown",
+                    enabled_status=None,
                 ),
                 UnitEntry(
                     name="rsyslog",
@@ -137,7 +137,7 @@ from cmk.base.plugins.agent_based.systemd_units import (
                         active_status="inactive",
                         current_state="dead",
                         description="Detect the available GPUs and deal with any system changes",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     ),
                 ],
                 "disabled": [
@@ -209,7 +209,7 @@ def test_services_split(
                         active_status="active",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     )
                 },
             ),
@@ -231,7 +231,7 @@ def test_services_split(
                         active_status="active",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     )
                 },
             ),
@@ -291,11 +291,11 @@ def test_services_split(
                         active_status="active",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     )
                 },
             ),
-            id='Systemd unit status not available in list-unit-files mapping, use "unknown" instead',
+            id="Systemd unit status not available in list-unit-files mapping, use unknown instead",
         ),
         pytest.param(
             [
@@ -312,7 +312,7 @@ def test_services_split(
                         active_status="inactive",
                         current_state="dead",
                         description="kbd.service",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     ),
                 },
             ),
@@ -346,7 +346,7 @@ def test_services_split(
                         active_status="active",
                         current_state="running",
                         description="NOT FROM SYSTEMD",
-                        enabled_status="unknown",
+                        enabled_status="disabled",
                         time_since_change=timedelta(minutes=33),
                     ),
                 },
@@ -376,7 +376,7 @@ def test_services_split(
                         active_status="active",
                         current_state="running",
                         description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-                        enabled_status="unknown",
+                        enabled_status="enabled",
                         time_since_change=None,
                     ),
                 },
@@ -458,7 +458,7 @@ def test_services_split(
                         active_status="active",
                         current_state="listening",
                         description="Cockpit Web Service Socket",
-                        enabled_status="unknown",
+                        enabled_status=None,
                         time_since_change=None,
                     )
                 },
@@ -489,7 +489,7 @@ def test_services_split(
                         active_status="failed",
                         current_state="failed",
                         description="The WAS Server blablu",
-                        enabled_status="indirect",
+                        enabled_status="enabled",
                         time_since_change=timedelta(days=13),
                     )
                 },
@@ -563,6 +563,37 @@ def test_services_split(
             id="a unit which triggers multiple units: the new line after 'Triggers' is not a "
             "new entry, but referes to another unit which gets triggered by the current entry",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "● apache2.service - LSB: Apache2 web server",
+                "Loaded: loaded (/etc/init.d/apache2)",
+                "Drop-In: /lib/systemd/system/apache2.service.d",
+                "└─forking.conf",
+                "Active: active (running) since Sat 2024-11-16 02:00:04 CET; 2 days ago",
+                "CGroup: /system.slice/apache2.service",
+                "├─ 1174 /usr/sbin/apache2 -k start",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+                "apache2.service loaded active running LSB: Apache2 web server",
+            ],
+            Section(
+                services={
+                    "apache2": UnitEntry(
+                        name="apache2",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="running",
+                        description="LSB: Apache2 web server",
+                        enabled_status=None,
+                        time_since_change=None,
+                    )
+                },
+                sockets={},
+            ),
+            id="unit in status section but not in list-unit-files",
+        ),
     ],
 )
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:
@@ -627,7 +658,7 @@ def test_parse_time_since_state_change(time: str, expected: timedelta) -> None:
                 active_status="active",
                 current_state="running",
                 description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-                enabled_status="unknown",
+                enabled_status="enabled",
                 time_since_change=expected,
             ),
         },
@@ -660,7 +691,7 @@ def test_all_possible_service_states_in_status_section(icon: str) -> None:
                 active_status="active",
                 current_state="running",
                 description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-                enabled_status="unknown",
+                enabled_status="enabled",
                 time_since_change=timedelta(seconds=3),
             ),
         },
@@ -693,7 +724,7 @@ def test_all_possible_service_states_in_all_section(icon: str) -> None:
                 active_status="active",
                 current_state="running",
                 description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-                enabled_status="unknown",
+                enabled_status="enabled",
                 time_since_change=timedelta(seconds=3),
             ),
         },
@@ -711,7 +742,7 @@ SECTION = Section(
             active_status="active",
             current_state="exited",
             description="LSB: VirtualBox Linux kernel module",
-            enabled_status="unknown",
+            enabled_status=None,
             time_since_change=timedelta(seconds=2),
         ),
         "bar": UnitEntry(
@@ -720,7 +751,7 @@ SECTION = Section(
             active_status="failed",
             current_state="failed",
             description="a bar service",
-            enabled_status="unknown",
+            enabled_status=None,
         ),
         "foo": UnitEntry(
             name="foo",
@@ -728,7 +759,7 @@ SECTION = Section(
             active_status="failed",
             current_state="failed",
             description="Arbitrary Executable File Formats File System Automount Point",
-            enabled_status="unknown",
+            enabled_status=None,
         ),
         "check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542": UnitEntry(
             name="check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542",
@@ -821,7 +852,7 @@ def test_discover_systemd_units_services(
                         active_status="active",
                         current_state="listening",
                         description="Cockpit Web Service Socket",
-                        enabled_status="unknown",
+                        enabled_status=None,
                         time_since_change=None,
                     )
                 },
@@ -943,7 +974,7 @@ def test_check_systemd_units_services(
                         active_status="active",
                         current_state="listening",
                         description="Cockpit Web Service Socket",
-                        enabled_status="unknown",
+                        enabled_status=None,
                         time_since_change=None,
                     )
                 },
@@ -1004,7 +1035,7 @@ def test_check_systemd_units_sockets(
                         active_status="active",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     ),
                 },
             ),
@@ -1032,7 +1063,7 @@ def test_check_systemd_units_sockets(
                         active_status="activating",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                         time_since_change=timedelta(seconds=2),
                     ),
                     "actualbox": UnitEntry(
@@ -1041,7 +1072,7 @@ def test_check_systemd_units_sockets(
                         active_status="deactivating",
                         current_state="finished",
                         description="A made up service for this test",
-                        enabled_status="unknown",
+                        enabled_status=None,
                         time_since_change=timedelta(seconds=4),
                     ),
                 },
@@ -1171,7 +1202,7 @@ def test_check_systemd_units_sockets(
                         active_status="somesystemdstate",
                         current_state="exited",
                         description="LSB: VirtualBox Linux kernel module",
-                        enabled_status="unknown",
+                        enabled_status=None,
                     ),
                 },
             ),

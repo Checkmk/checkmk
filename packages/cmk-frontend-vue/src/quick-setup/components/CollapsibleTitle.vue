@@ -17,7 +17,7 @@ interface CollapsibleTitleProps {
   open: boolean
 
   /**@property {string} help_text - Help text to display next to the title */
-  help_text: string
+  help_text: string | null
 }
 
 defineProps<CollapsibleTitleProps>()
@@ -30,7 +30,7 @@ defineEmits(['toggleOpen'])
     <span class="qs-collapsible-title__text">
       {{ title }}
     </span>
-    <HelpText :help="help_text" />
+    <HelpText v-if="help_text" :help="help_text" />
   </button>
 </template>
 

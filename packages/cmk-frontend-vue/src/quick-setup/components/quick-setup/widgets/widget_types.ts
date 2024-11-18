@@ -69,7 +69,7 @@ export interface CollapsibleWidgetProps extends CompositeWidgetProps {
   title: string
 
   /** @property {string} help_text - Help of the collapsible element */
-  help_text: string
+  help_text: string | null
 }
 
 /** The conditional notification event stage widgets are a really specific solution to a really

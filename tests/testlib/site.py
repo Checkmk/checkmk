@@ -1988,7 +1988,18 @@ def resource_attributes_from_environment(env: Mapping[str, str]) -> Mapping[str,
     attribute.
     """
     logger.warning("Environment: %r", env)
-    attributes = {}
-    if edition_short := env.get("EDITION"):
-        attributes["cmk.version.edition_short"] = edition_short
-    return attributes
+    return {
+        name: val
+        for name, val in [
+            ("cmk.version.version", env.get("VERSION")),
+            ("cmk.version.edition_short", env.get("EDITION")),
+            ("cmk.version.branch", env.get("BRANCH")),
+            ("cmk.version.distro", env.get("DISTRO")),
+            ("cmk.ci.node_name", env.get("CI_NODE_NAME")),
+            ("cmk.ci.workspace", env.get("CI_WORKSPACE")),
+            ("cmk.ci.job_name", env.get("CI_JOB_NAME")),
+            ("cmk.ci.build_number", env.get("CI_BUILD_NUMBER")),
+            ("cmk.ci.build_url", env.get("CI_BUILD_URL")),
+        ]
+        if val
+    }

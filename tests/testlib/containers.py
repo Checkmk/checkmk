@@ -496,6 +496,8 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
 
 
 def _container_env(version: CMKVersion) -> Mapping[str, str]:
+    # In addition to the ones defined here, some environment vars, like "DISTRO" are added through
+    # the docker image
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -505,6 +507,11 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
         "BRANCH": version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
+        "CI_NODE_NAME": os.environ.get("CI_NODE_NAME", ""),
+        "CI_WORKSPACE": os.environ.get("CI_WORKSPACE", ""),
+        "CI_JOB_NAME": os.environ.get("CI_JOB_NAME", ""),
+        "CI_BUILD_NUMBER": os.environ.get("CI_BUILD_NUMBER", ""),
+        "CI_BUILD_URL": os.environ.get("CI_BUILD_URL", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }

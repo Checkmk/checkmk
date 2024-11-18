@@ -117,6 +117,11 @@ def main() {
                                     VERSION='daily' \
                                     DISTRO='${distro}' \
                                     BRANCH='${branch_name}' \
+                                    CI_NODE_NAME='${env.NODE_NAME}' \
+                                    CI_WORKSPACE='${env.WORKSPACE}' \
+                                    CI_JOB_NAME='${env.JOB_NAME}' \
+                                    CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
+                                    CI_BUILD_URL='${env.BUILD_URL}' \
                                     make ${make_target}
                                 """);
                             }

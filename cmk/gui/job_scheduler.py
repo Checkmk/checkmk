@@ -49,7 +49,7 @@ def main() -> int:
 
         _setup_console_logging()
         init_span_processor(
-            trace.init_tracing(omd_site(), "cmk-ui-job-scheduler"),
+            trace.init_tracing("", "cmk-ui-job-scheduler", omd_site()),
             exporter_from_config(trace.trace_send_config(get_omd_config(omd_root))),
         )
         add_span_log_handler()

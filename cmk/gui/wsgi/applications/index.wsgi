@@ -64,10 +64,9 @@ def _request_hook(span: trace.Span, environ: WSGIEnvironment) -> None:
 
 init_span_processor(
     trace.init_tracing(
-        trace.service_namespace_from_config(
-            omd_site(), omd_config := get_omd_config(paths.omd_root)
-        ),
+        trace.service_namespace_from_config("", omd_config := get_omd_config(paths.omd_root)),
         "gui",
+        omd_site(),
     ),
     exporter_from_config(trace.trace_send_config(omd_config)),
 )

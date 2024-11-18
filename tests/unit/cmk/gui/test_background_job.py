@@ -412,7 +412,7 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
     span_name_path = Path(job.get_work_dir()) / "span_names"
 
     with _reset_global_fixture_provider():
-        provider = init_tracing("test", "background-job")
+        provider = init_tracing("", "background-job", "test")
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
         with tracer.start_as_current_span("test_tracing_with_background_job"):

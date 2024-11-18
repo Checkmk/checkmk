@@ -26,7 +26,7 @@ sudo install -m 755 \
     cmk-wait-for-background-jobs \
     post-rename-site \
     init-redis \
-    piggyback_hub \
+    cmk-piggyback-hub \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
 sudo chown root:omd "$ROOT"/bin/mkeventd_open514

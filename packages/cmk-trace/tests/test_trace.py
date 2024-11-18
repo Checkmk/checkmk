@@ -145,7 +145,7 @@ def test_exporter_from_config_local_site() -> None:
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_tracer_after_initialized() -> None:
-    trace.init_tracing("namespace", "service")
+    trace.init_tracing("namespace", "service", "instance")
 
     tracer = trace.get_tracer()
     assert isinstance(tracer, sdk_trace.Tracer)
@@ -155,34 +155,35 @@ def test_get_tracer_after_initialized() -> None:
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_tracer_verify_provider_attributes() -> None:
-    trace.init_tracing("namespace", "service", "myhost")
+    trace.init_tracing("namespace", "service", "instance", "myhost")
 
     tracer = trace.get_tracer()
     assert isinstance(tracer, sdk_trace.Tracer)
 
-    assert tracer.resource.attributes["service.name"] == "namespace.service"
+    assert tracer.resource.attributes["service.name"] == "service"
     assert tracer.resource.attributes["service.version"] == "0.0.1"
     assert tracer.resource.attributes["service.namespace"] == "namespace"
+    assert tracer.resource.attributes["service.instance.id"] == "instance"
     assert tracer.resource.attributes["host.name"] == "myhost"
 
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_current_span_without_span() -> None:
     with initial_span_context():
-        trace.init_tracing("namespace", "service")
+        trace.init_tracing("namespace", "instance", "service")
         assert trace.get_current_span() == otel_trace.INVALID_SPAN
 
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_current_span_with_span() -> None:
-    trace.init_tracing("namespace", "service")
+    trace.init_tracing("namespace", "service", "instance")
     with trace.get_tracer().start_as_current_span("test") as span:
         assert trace.get_current_span() == span
 
 
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_current_tracer_provider() -> None:
-    provider = trace.init_tracing("namespace", "service")
+    provider = trace.init_tracing("namespace", "instance", "service")
     assert provider == trace.get_current_tracer_provider()
 
 
@@ -191,7 +192,7 @@ def test_logs_initialize_attaches_logs_as_events(caplog: pytest.LogCaptureFixtur
     caplog.set_level(logging.INFO, logger="cmk.trace.test")
 
     with trace_logging(logger):
-        trace.init_tracing("namespace", "service")
+        trace.init_tracing("namespace", "instance", "service")
         with trace.get_tracer().start_as_current_span("test") as span:
             logger.info("HELLO")
             assert isinstance(span, sdk_trace.ReadableSpan)

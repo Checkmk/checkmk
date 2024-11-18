@@ -62,9 +62,10 @@ if trace_context := trace.extract_context_from_environment(dict(os.environ)):
     init_span_processor(
         trace.init_tracing(
             trace.service_namespace_from_config(
-                omd_site(), omd_config := get_omd_config(cmk.utils.paths.omd_root)
+                "", omd_config := get_omd_config(cmk.utils.paths.omd_root)
             ),
             "cmk",
+            omd_site(),
         ),
         exporter_from_config(trace.trace_send_config(omd_config)),
     )

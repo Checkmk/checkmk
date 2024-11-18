@@ -42,13 +42,18 @@ get_current_span = trace.get_current_span
 
 
 def init_tracing(
-    service_namespace: str, service_name: str, host_name: str | None = None
+    service_namespace: str,
+    service_name: str,
+    service_instance_id: str,
+    host_name: str | None = None,
 ) -> TracerProvider:
     """Create a new tracer provider and register it globally for the application run time"""
     if host_name is None:
         host_name = socket.gethostname()
     trace.set_tracer_provider(
-        provider := _init_tracer_provider(service_namespace, service_name, host_name)
+        provider := _init_tracer_provider(
+            service_namespace, service_name, service_instance_id, host_name
+        )
     )
     return provider
 
@@ -64,14 +69,15 @@ def get_current_tracer_provider() -> TracerProvider:
 
 
 def _init_tracer_provider(
-    service_namespace: str, service_name: str, host_name: str
+    service_namespace: str, service_name: str, service_instance_id: str, host_name: str
 ) -> TracerProvider:
     provider = TracerProvider(
         resource=Resource(
             attributes={
-                "service.name": f"{service_namespace}.{service_name}",
+                "service.name": service_name,
                 "service.version": "0.0.1",
                 "service.namespace": service_namespace,
+                "service.instance.id": service_instance_id,
                 "host.name": host_name,
             }
         )

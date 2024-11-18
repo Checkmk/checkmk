@@ -84,10 +84,9 @@ def run_process(job_parameters: JobParameters) -> None:
         job_status = jobstatus_store.read()
         init_span_processor_callback(
             init_tracing(
-                service_namespace_from_config(
-                    omd_site(), omd_config := get_omd_config(paths.omd_root)
-                ),
+                service_namespace_from_config("", omd_config := get_omd_config(paths.omd_root)),
                 "gui",
+                omd_site(),
             ),
             exporter_from_config(trace_send_config(omd_config)),
         )

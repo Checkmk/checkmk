@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 from collections.abc import Callable, Sequence
+from datetime import timedelta
 
 from cmk.ccc import version
 from cmk.ccc.version import edition_supports_nagvis
@@ -262,29 +263,34 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
         CronJob(
             name="execute_activation_cleanup_background_job",
             callable=execute_activation_cleanup_background_job,
+            interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(
         CronJob(
             name="execute_network_scan_job",
             callable=execute_network_scan_job,
+            interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(
         CronJob(
             name="rebuild_folder_lookup_cache",
             callable=rebuild_folder_lookup_cache,
+            interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(
         CronJob(
             name="execute_host_removal_background_job",
             callable=automatic_host_removal.execute_host_removal_background_job,
+            interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(
         CronJob(
             name="execute_autodiscovery",
             callable=autodiscovery.execute_autodiscovery,
+            interval=timedelta(minutes=5),
         )
     )

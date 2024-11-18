@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from contextlib import suppress
-from pathlib import Path
-
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
@@ -36,10 +32,6 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         self.site_id = omd_site()
 
     @staticmethod
-    def last_run_path() -> Path:
-        return Path(cmk.utils.paths.var_dir, "wato", "last_autodiscovery.mk")
-
-    @staticmethod
     def _get_discovery_message_text(
         hostname: str, discovery_result: SingleHostDiscoveryResult
     ) -> str:
@@ -65,7 +57,6 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
 
         if not result.hosts:
             job_interface.send_result_message(_("No hosts to be discovered"))
-            AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
             return
 
         for hostname, discovery_result in result.hosts.items():
@@ -96,7 +87,6 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
             log_audit("activate-changes", "Started activation of site %s" % self.site_id)
 
         job_interface.send_result_message(_("Successfully discovered hosts"))
-        AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
 
 
 def execute_autodiscovery() -> None:
@@ -112,12 +102,6 @@ def execute_autodiscovery() -> None:
     if job.is_active():
         logger.debug("Another 'autodiscovery' job is already running: Skipping this time.")
         return
-
-    interval = 300
-    with suppress(FileNotFoundError):
-        if time.time() - AutodiscoveryBackgroundJob.last_run_path().stat().st_mtime < interval:
-            logger.debug("Job was already executed within last %d minutes", interval / 60)
-            return
 
     job.start(
         job.do_execute,

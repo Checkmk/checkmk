@@ -5,20 +5,25 @@
 
 """Runs and obseves regular jobs in the cmk.gui context"""
 
+import datetime
 import logging
 import os
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from setproctitle import setproctitle
 
+from cmk.ccc import store
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.site import get_omd_config, omd_site
 
+from cmk.utils import paths
+
 from cmk.gui import main_modules
 from cmk.gui.crash_handler import create_gui_crash_report
-from cmk.gui.cron import cron_job_registry
+from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
@@ -81,7 +86,7 @@ def _run_scheduler() -> None:
         with gui_context(), SuperUserContext():
             try:
                 cycle_start = time.time()
-                _run_scheduled_jobs()
+                run_scheduled_jobs(list(cron_job_registry.values()))
                 time.sleep(60 - (time.time() - cycle_start))
             except Exception:
                 crash = create_gui_crash_report()
@@ -92,11 +97,36 @@ def _run_scheduler() -> None:
                 )
 
 
-@tracer.start_as_current_span("_run_scheduled_jobs")
-def _run_scheduled_jobs() -> None:
+def _load_last_job_runs() -> dict[str, datetime.datetime]:
+    return {
+        ident: datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
+        for ident, ts in store.load_object_from_file(
+            Path(paths.var_dir) / "last_job_runs.mk", default={}
+        ).items()
+    }
+
+
+def _save_last_job_runs(runs: Mapping[str, datetime.datetime]) -> None:
+    store.save_object_to_file(
+        Path(paths.var_dir) / "last_job_runs.mk",
+        {ident: dt.timestamp() for ident, dt in runs.items()},
+    )
+
+
+def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]) -> list[CronJob]:
+    return [
+        job
+        for job in jobs
+        if job.name not in job_runs
+        or datetime.datetime.now(tz=datetime.UTC) >= job_runs[job.name] + job.interval
+    ]
+
+
+@tracer.start_as_current_span("run_scheduled_jobs")
+def run_scheduled_jobs(jobs: Sequence[CronJob]) -> None:
     logger.debug("Starting cron jobs")
 
-    for job in cron_job_registry.values():
+    for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
         try:
             with tracer.start_as_current_span(
                 f"run_cron_job[{job.name}]", attributes={"cmk.gui.job_name": job.name}
@@ -112,5 +142,7 @@ def _run_scheduled_jobs() -> None:
                 crash.ident_to_text(),
                 exc_info=True,
             )
+        job_runs[job.name] = datetime.datetime.now()
+    _save_last_job_runs(job_runs)
 
     logger.debug("Finished all cron jobs")

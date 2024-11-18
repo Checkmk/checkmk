@@ -10,6 +10,7 @@ import shutil
 import time
 import xml.dom.minidom
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
@@ -97,6 +98,7 @@ def register(
         CronJob(
             name="execute_inventory_housekeeping_job",
             callable=execute_inventory_housekeeping_job,
+            interval=timedelta(hours=12),
         )
     )
     visual_info_registry.register(VisualInfoInventoryHistory)
@@ -257,12 +259,6 @@ class InventoryHousekeeping:
         ):
             return
 
-        last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
-        # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
-            return
-
-        # TODO: remove with pylint 2
         inventory_archive_hosts = {
             x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
         }
@@ -291,9 +287,6 @@ class InventoryHousekeeping:
                     delete = True
                 if delete:
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
-
-        # TODO: remove with pylint 2
-        last_cleanup.touch()
 
     def _get_timestamps_for_host(self, hostname):
         timestamps = {"None"}  # 'None' refers to the histories start

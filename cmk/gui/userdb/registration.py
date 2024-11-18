@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import timedelta
+
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import CronJob, CronJobRegistry
@@ -40,6 +42,7 @@ def register(
         CronJob(
             name="execute_userdb_job",
             callable=execute_userdb_job,
+            interval=timedelta(minutes=1),
         )
     )
 
@@ -47,6 +50,7 @@ def register(
         CronJob(
             name="execute_user_profile_cleanup_job",
             callable=execute_user_profile_cleanup_job,
+            interval=timedelta(hours=1),
         )
     )
     job_registry.register(UserProfileCleanupBackgroundJob)

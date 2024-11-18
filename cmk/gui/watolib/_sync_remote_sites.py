@@ -8,6 +8,7 @@ import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 
 from livestatus import SiteId
@@ -49,6 +50,7 @@ def register(
         CronJob(
             name="execute_sync_remote_sites",
             callable=execute_sync_remote_sites,
+            interval=timedelta(minutes=1),
         )
     )
     job_registry.register(SyncRemoteSitesBackgroundJob)

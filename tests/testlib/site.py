@@ -18,6 +18,7 @@ import time
 import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
+from dataclasses import dataclass
 from getpass import getuser
 from pathlib import Path
 from pprint import pformat
@@ -60,6 +61,15 @@ logger = logging.getLogger(__name__)
 ADMIN_USER: Final[str] = "cmkadmin"
 AUTOMATION_USER: Final[str] = "automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
+
+
+@dataclass
+class TracingConfig:
+    collect_traces: bool
+    extra_resource_attributes: Mapping[str, str]
+
+
+NO_TRACING = TracingConfig(collect_traces=False, extra_resource_attributes={})
 
 
 class Site:
@@ -1159,6 +1169,12 @@ class Site:
         self.set_config("TRACE_SEND", "on")
         self.set_config("TRACE_SEND_TARGET", f"{collector}:9123")
 
+    def write_resource_config(self, extra_resource_attributes: Mapping[str, str]) -> None:
+        self.write_text_file(
+            "etc/omd/resource_attributes_from_config.json",
+            json.dumps(extra_resource_attributes) + "\n",
+        )
+
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
@@ -1464,12 +1480,14 @@ class SiteFactory:
         prepare_for_tests: bool = True,
         activate_changes: bool = True,
         auto_restart_httpd: bool = False,
-        collect_traces: bool = False,
+        tracing_config: TracingConfig = NO_TRACING,
     ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
-        if collect_traces:
+        if tracing_config.collect_traces:
             site.send_traces_to_central_collector()
+            if tracing_config.extra_resource_attributes:
+                site.write_resource_config(tracing_config.extra_resource_attributes)
 
         if not start:
             return site
@@ -1753,7 +1771,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
         report_crashes: bool = True,
-        collect_traces: bool = False,
+        tracing_config: TracingConfig = NO_TRACING,
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -1763,7 +1781,7 @@ class SiteFactory:
             init_livestatus=init_livestatus,
             save_results=save_results,
             report_crashes=report_crashes,
-            collect_traces=collect_traces,
+            tracing_config=tracing_config,
         )
 
     def get_test_site(
@@ -1775,7 +1793,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
         report_crashes: bool = True,
-        collect_traces: bool = False,
+        tracing_config: TracingConfig = NO_TRACING,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1802,7 +1820,7 @@ class SiteFactory:
                 site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
-                collect_traces=collect_traces,
+                tracing_config=tracing_config,
             )
             site.start()
             if auto_restart_httpd:
@@ -1960,3 +1978,17 @@ def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
         assert "counters" in tmp_dirs
         assert "piggyback" in tmp_dirs
         assert "piggyback_sources" in tmp_dirs
+
+
+def resource_attributes_from_environment(env: Mapping[str, str]) -> Mapping[str, str]:
+    """Extract tracing resource attributes from the process environment
+
+    This is meant to transport information exposed by the CI to tracing context in case the
+    information is available. In case it is not there, be silent and don't expose the missing
+    attribute.
+    """
+    logger.warning("Environment: %r", env)
+    attributes = {}
+    if edition_short := env.get("EDITION"):
+        attributes["cmk.version.edition_short"] = edition_short
+    return attributes

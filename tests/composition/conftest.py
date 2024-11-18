@@ -5,6 +5,7 @@
 
 import copy
 import logging
+import os
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -19,7 +20,12 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
     install_agent_package,
 )
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import (
+    get_site_factory,
+    resource_attributes_from_environment,
+    Site,
+    TracingConfig,
+)
 from tests.testlib.utils import is_containerized, run
 
 from tests.composition.utils import get_cre_agent_path
@@ -68,7 +74,10 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         "central",
         description=request.node.name,
         auto_restart_httpd=True,
-        collect_traces=True,
+        tracing_config=TracingConfig(
+            collect_traces=True,
+            extra_resource_attributes=resource_attributes_from_environment(os.environ),
+        ),
     ) as central_site:
         with _increased_logging_level(central_site):
             yield central_site
@@ -97,7 +106,10 @@ def _make_connected_remote_site(
         site_name,
         description=site_description,
         auto_restart_httpd=True,
-        collect_traces=True,
+        tracing_config=TracingConfig(
+            collect_traces=True,
+            extra_resource_attributes=resource_attributes_from_environment(os.environ),
+        ),
     ) as remote_site:
         with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site

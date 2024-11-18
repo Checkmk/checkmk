@@ -1,0 +1,16 @@
+Title: Determine systemd enabled state from status section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731940536
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+You may be affected by this werk in case you're using systemd service templates in combination with <code>indirect</code> units.
+
+Previous to this werk, the enabled state of your service was determined by looking at its unit file which may have indicated <code>indirect</code>.
+This will result in the service beeing considered as <code>disabled</code> and therefore won't affect the status of the (Checkmk) service in case you've been using the summary check.
+
+As the agent section <code>systemd_units</code> delivers also the <code>status</code> of a systemd service, the check can derive the enabled status from this information.
+Since this information was not always present from the agent, a fall back to use the information <code>list-unit-files</code> is still in place.

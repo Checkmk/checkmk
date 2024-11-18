@@ -4,13 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
+from typing import Generator
+
+from pydantic import TypeAdapter, ValidationError
 
 from cmk.utils import tty
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.rulesets import FolderRulesets, InvalidRuleException
 from cmk.gui.watolib.simple_config_file import config_file_registry
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
+
+
+class LABELS:
+    failed = f"{tty.red}Failed{tty.normal}"
+    passed = f"{tty.green}Passed{tty.normal}"
 
 
 class ValidateConfigFiles(UpdateAction):
@@ -20,17 +31,29 @@ class ValidateConfigFiles(UpdateAction):
         """
 
         failures: bool = False
-        for n, relative_file_path in enumerate(config_file_registry, start=1):
-            result = f"    {tty.yellow}{n:02d}{tty.normal} {relative_file_path:.<60} "
+        counter = 1
+        for relative_file_path in config_file_registry:
+            result = _file_format(relative_file_path, counter)
             try:
                 config_file_registry[relative_file_path].read_file_and_validate()
             except (NotImplementedError, ConfigValidationError) as exc:
-                result += f"{tty.red}Failed{tty.normal}\n    {str(exc)}"
+                result += f"{LABELS.failed}\n\t{str(exc)}"
                 failures = True
             else:
-                result += f"{tty.green}Passed{tty.normal}"
+                result += LABELS.passed
 
+            counter += 1
             logger.info(result)
+
+        rule_validator = TypeAdapter(RuleSpec)  # nosemgrep: type-adapter-detected
+        for folder_path, validate_result, has_failure in _validate_folder_ruleset_rules(
+            folder_tree().root_folder(), rule_validator
+        ):
+            logger.info(
+                _file_format(f"{folder_path}/rules.mk", row_number=counter) + validate_result
+            )
+            failures |= has_failure
+            counter += 1
 
         if failures:
             logger.info(
@@ -42,6 +65,35 @@ class ValidateConfigFiles(UpdateAction):
                 "    Please send us a support ticket with the information provided here so that we can work\n"
                 "    out whether there is migration code missing or the validation needs to be improved.\n\n"
             )
+
+
+def _file_format(file_path: str, row_number: int) -> str:
+    return f"    {tty.yellow}{row_number:02d}{tty.normal} {file_path:.<60} "
+
+
+def _validate_folder_ruleset_rules(
+    folder: Folder, rule_validator: TypeAdapter
+) -> Generator[tuple[str, str, bool], None, None]:
+    """Validate the rulesets of each folder recursively
+
+    Folders are allowed to have overlapping names so display the folder path
+    """
+    try:  # the validation already starts during loading of the rulesets & underlying rules
+        for ruleset in FolderRulesets.load_folder_rulesets(folder).get_rulesets().values():
+            for rules in ruleset.rules.values():
+                for rule in rules:
+                    rule_validator.validate_python(rule.to_config(), strict=True)
+    except (InvalidRuleException, ValidationError, Exception) as e:
+        evaluation_message = f"{LABELS.failed}\n\t{str(e)}"
+        has_failure = True
+    else:
+        evaluation_message = LABELS.passed
+        has_failure = False
+
+    yield folder.path(), evaluation_message, has_failure
+
+    for sub_folder in folder.subfolders():
+        yield from _validate_folder_ruleset_rules(sub_folder, rule_validator)
 
 
 update_action_registry.register(

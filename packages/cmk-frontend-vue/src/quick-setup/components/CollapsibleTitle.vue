@@ -48,7 +48,7 @@ defineEmits(['toggleOpen'])
 }
 
 .qs-collapsible-title__text {
-  color: var(--default-text-color);
+  color: var(--font-color);
   font-weight: var(--font-weight-bold);
 }
 

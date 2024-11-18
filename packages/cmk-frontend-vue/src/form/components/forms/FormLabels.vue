@@ -303,7 +303,7 @@ table.nform input {
   margin: 0;
   padding: 5px;
   background-color: rgb(247, 65, 65);
-  color: var(--default-text-color);
+  color: var(--font-color);
   display: block;
 }
 
@@ -340,7 +340,7 @@ table.nform input {
 .suggestions {
   position: absolute;
   z-index: 1;
-  color: var(--default-text-color);
+  color: var(--font-color);
   background-color: var(--default-form-element-bg-color);
   border-radius: 4px;
   max-height: 200px;

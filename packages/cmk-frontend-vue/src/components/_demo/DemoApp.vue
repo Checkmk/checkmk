@@ -93,7 +93,7 @@ immediateWatch(
 }
 .demo {
   display: flex;
-  color: var(--default-text-color);
+  color: var(--font-color);
   background-color: var(--default-bg-color);
   height: 100vh;
 

@@ -10,6 +10,7 @@
   --success-dimmed: rgb(17 188 122);
   --white: rgb(255, 255, 255);
   --black: rgb(0, 0, 0);
+  --grey-4: rgb(51, 51, 51);
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
   --form-readonly-error-bg-color: rgb(252, 85, 85);
   --tag-added-color-light: rgb(6, 103, 193);
@@ -55,6 +56,20 @@
 
 @layer theme {
   body[data-theme='facelift'] {
+    /* Base colors */
+    --ux-theme-0: rgb(249, 249, 255);
+    --ux-theme-1: rgb(245, 245, 251);
+    --ux-theme-2: rgb(239, 239, 245);
+    --ux-theme-3: rgb(235, 235, 241);
+    --ux-theme-4: rgb(232, 232, 238);
+    --ux-theme-5: rgb(224, 224, 228);
+    --ux-theme-6: rgb(204, 207, 219);
+
+    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
+
+    /* Fonts */
+    --font-color: var(--grey-4);
+
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
@@ -66,9 +81,9 @@
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
-    --default-bg-color: rgb(249, 249, 255);
+    --default-bg-color: var(--ux-theme-0);
     --default-table-th-color: rgb(232 232 238);
-    --default-form-element-bg-color: rgb(224, 224, 228);
+    --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-border-color: rgb(183, 180, 180);
     --default-select-hover-color: var(--success);
     --default-button-emphasis-color: rgb(13, 141, 91);
@@ -78,16 +93,29 @@
     --default-tooltip-text-color: rgb(17, 24, 29);
     --custom-scroll-bar-thumb-border-color: rgb(234, 234, 234);
     --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
-    --custom-scroll-bar-backgroud-color: rgb(249, 249, 255);
-    --default-text-color: rgb(39, 39, 39);
+    --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240, 240, 240);
     --default-help-icon-bg-color: rgb(12, 129, 238);
-    --help-text-bg-color: rgb(235, 235, 241); /* $ux-theme-3 */
+    --help-text-bg-color: var(--ux-theme-3);
     --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
-    --input-hover-bg-color: rgb(232, 232, 238); /* $ux-theme-4 */
+    --input-hover-bg-color: var(--ux-theme-4);
   }
 
   body[data-theme='modern-dark'] {
+    /* Base colors */
+    --ux-theme-0: rgb(17, 24, 29);
+    --ux-theme-1: rgb(28, 34, 40);
+    --ux-theme-2: rgb(32, 39, 46);
+    --ux-theme-3: rgb(38, 47, 56);
+    --ux-theme-4: rgb(38, 45, 52);
+    --ux-theme-5: rgb(48, 57, 70);
+    --ux-theme-6: rgb(53, 63, 74);
+
+    /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
+
+    /* Fonts */
+    --font-color: var(--white);
+
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
@@ -99,9 +127,9 @@
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
-    --default-bg-color: rgb(28, 34, 40);
-    --default-table-th-color: rgb(32, 39, 46);
-    --default-form-element-bg-color: rgb(48, 57, 70);
+    --default-bg-color: var(--ux-theme-1);
+    --default-table-th-color: var(--ux-theme-2);
+    --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-border-color: rgb(69, 77, 89);
     --default-select-hover-color: var(--success);
     --default-button-emphasis-color: rgb(19, 211, 137);
@@ -109,14 +137,13 @@
     --default-tooltip-icon-color: rgb(83, 83, 83);
     --default-tooltip-background-color: rgb(17, 24, 29);
     --default-tooltip-text-color: var(--white);
-    --custom-scroll-bar-thumb-border-color: rgb(48, 57, 70);
+    --custom-scroll-bar-thumb-border-color: var(--ux-theme-5);
     --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
-    --custom-scroll-bar-backgroud-color: rgb(48, 57, 70);
-    --default-text-color: rgb(255, 255, 255);
+    --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46, 44, 44);
     --default-help-icon-bg-color: rgb(6, 103, 193);
-    --help-text-bg-color: rgb(38, 47, 56); /* $ux-theme-3 */
+    --help-text-bg-color: var(--ux-theme-3);
     --help-text-font-color: var(--white);
-    --input-hover-bg-color: rgb(38, 45, 52); /* $ux-theme-4 */
+    --input-hover-bg-color: var(--ux-theme-4);
   }
 }

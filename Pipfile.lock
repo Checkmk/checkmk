@@ -823,12 +823,12 @@
         },
         "grpcio": {
             "hashes": [
-                "sha256:1d7616d2ded471231c701489190379e0c311ee0a6c756f3c03e6a62b95a7146e",
-                "sha256:3dc2ed4cabea4dc14d5e708c2b426205956077cc5de419b4d4079315017e9732"
+                "sha256:7e7483d39b4a4fddb9906671e9ea21aaad4f031cdfc349fec76bdfa1e404543a",
+                "sha256:e0d30f3fee9372796f54d3100b31ee70972eaadcc87314be369360248a3dcffe"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==1.67.1"
+            "version": "==1.68.0"
         },
         "grpcio-status": {
             "hashes": [
@@ -1505,11 +1505,11 @@
                 "crypto"
             ],
             "hashes": [
-                "sha256:3b02fb0f44517787776cf48f2ae25d8e14f300e6d7545a4315cee571a415e850",
-                "sha256:7e1e5b56cc735432a7369cbfa0efe50fa113ebecdc04ae6922deba8b84582d0c"
+                "sha256:543b77207db656de204372350926bed5a86201c4cbff159f623f79c7bb487a15",
+                "sha256:7628a7eb7938959ac1b26e819a1df0fd3259505627b575e4bad6d08f76db695c"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==2.9.0"
+            "markers": "python_version >= '3.9'",
+            "version": "==2.10.0"
         },
         "pymssql": {
             "hashes": [
@@ -1719,11 +1719,11 @@
         },
         "redfish": {
             "hashes": [
-                "sha256:c34d7041b51e00d339aa65082e05afb43303eeb54ca307ab711d5e17ef568ff7",
-                "sha256:cfe778386b5e408075689236cdcb32b191add69a269e6d3cf64e55624b2970d7"
+                "sha256:68f0fdd53611320402cd5307b13debc8673db6b2a5a04976598d53de7329deca",
+                "sha256:8e3aedf630c8678bfc4e8686f640981f2c20d5a86e08ed775cb47ceb9993ab2a"
             ],
             "index": "pypi",
-            "version": "==3.2.5"
+            "version": "==3.2.6"
         },
         "redis": {
             "hashes": [
@@ -4494,11 +4494,11 @@
         },
         "waitress": {
             "hashes": [
-                "sha256:26cdbc593093a15119351690752c99adc13cbc6786d75f7b6341d1234a3730ac",
-                "sha256:ef0c1f020d9f12a515c4ec65c07920a702613afcad1dbfdc3bcec256b6c072b3"
+                "sha256:682aaaf2af0c44ada4abfb70ded36393f0e307f4ab9456a215ce0020baefc31f",
+                "sha256:c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e"
             ],
             "markers": "python_full_version >= '3.9.0'",
-            "version": "==3.0.1"
+            "version": "==3.0.2"
         },
         "webob": {
             "hashes": [

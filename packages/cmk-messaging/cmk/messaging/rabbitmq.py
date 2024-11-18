@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for RabbitMq definitions creation"""
 
-import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -12,8 +11,6 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
-
-_logger = logging.getLogger(__name__)
 
 DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
 

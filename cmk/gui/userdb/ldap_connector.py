@@ -677,7 +677,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                             continue  # skip unwanted answers
                         new_obj = {}
                         for key, val in obj.items():
-                            new_obj[key.lower()] = val
+                            new_obj[key.lower()] = [v.decode("utf-8") for v in val]
                         result.append((dn.lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:

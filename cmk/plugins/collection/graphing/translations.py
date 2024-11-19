@@ -25,3 +25,29 @@ translation_ibm_svc_nodestats_disk_latency = translations.Translation(
         "write_latency": translations.ScaleBy(0.001),
     },
 )
+
+# translation for lib function check_diskstat_dict
+translation_disk_utilization_check_diskstat_dict = translations.Translation(
+    name="disk_utilization_check_diskstat_dict",
+    check_commands=[
+        translations.PassiveCheck("diskstat_io"),
+        translations.PassiveCheck("diskstat_io_director"),
+        translations.PassiveCheck("diskstat_io_volumes"),
+        translations.PassiveCheck("aws_ebs"),
+        translations.PassiveCheck("aws_ec2_disk_io"),
+        translations.PassiveCheck("aws_rds_disk_io"),
+        translations.PassiveCheck("cadvisor_diskstat"),
+        translations.PassiveCheck("scaleio_storage_pool_totalrw"),
+        translations.PassiveCheck("scaleio_storage_pool_rebalancerw"),
+        translations.PassiveCheck("scaleio_volume"),
+        translations.PassiveCheck("ucd_diskio"),
+        translations.PassiveCheck("winperf_phydisk"),
+        translations.PassiveCheck("gcp_filestore_disk"),
+        translations.PassiveCheck("gcp_sql_disk"),
+        translations.PassiveCheck("esx_vsphere_counters_diskio"),
+        translations.PassiveCheck("esx_vsphere_datastore_io"),
+    ],
+    translations={
+        "disk_utilization": translations.ScaleBy(100.0),
+    },
+)

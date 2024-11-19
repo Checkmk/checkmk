@@ -43,6 +43,7 @@ from cmk.gui.wato.pages.notifications.quick_setup_types import (
     ServiceEvent,
     ServiceFilters,
     Settings,
+    SpecificEvents,
     StatusChangeHost,
     StatusChangeService,
     StatusChangeStateHost,
@@ -92,10 +93,17 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
         )
         return status_change_service
 
-    trigger_events = TriggeringEvents()
+    if (
+        "match_host_event" not in event_rule
+        and "match_service_event" not in event_rule
+        and "match_ec" not in event_rule
+    ):
+        return "all_events", None
+
+    specific_events = SpecificEvents()
 
     if "match_host_event" in event_rule:
-        trigger_events["host_events"] = [
+        specific_events["host_events"] = [
             _non_status_change_events(ev)
             if is_non_status_change_event_type(ev)
             else _migrate_host_event(ev)
@@ -103,7 +111,7 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
         ]
 
     if "match_service_event" in event_rule:
-        trigger_events["service_events"] = [
+        specific_events["service_events"] = [
             _non_status_change_events(ev)
             if is_non_status_change_event_type(ev)
             else _migrate_service_event(ev)
@@ -111,9 +119,9 @@ def _get_triggering_events(event_rule: EventRule) -> TriggeringEvents:
         ]
 
     if event_rule.get("match_ec", False):
-        trigger_events["ec_alerts"] = True
+        specific_events["ec_alerts"] = True
 
-    return trigger_events
+    return "specific_events", specific_events
 
 
 def _get_ec_alert_filters(event_rule: EventRule) -> ECAlertFilters:
@@ -392,17 +400,26 @@ def _set_triggering_events(event_rule: EventRule, notification: NotificationQuic
         }
         return cast(ServiceEventType, "".join([_state_map[state] for state in service_event[1]]))
 
-    if "host_events" in notification["triggering_events"]:
-        event_rule["match_host_event"] = [
-            _host_event_mapper(ev) if ev[0] == "status_change" else _non_status_change_events(ev)
-            for ev in notification["triggering_events"]["host_events"]
-        ]
+    trigger_events = notification["triggering_events"]
+    if trigger_events[0] == "all_events":
+        return
+    if trigger_events[0] == "specific_events":
+        specific_events = trigger_events[1]
+        if "host_events" in specific_events:
+            event_rule["match_host_event"] = [
+                _host_event_mapper(ev)
+                if ev[0] == "status_change"
+                else _non_status_change_events(ev)
+                for ev in specific_events["host_events"]
+            ]
 
-    if "service_events" in notification["triggering_events"]:
-        event_rule["match_service_event"] = [
-            _service_event_mapper(ev) if ev[0] == "status_change" else _non_status_change_events(ev)
-            for ev in notification["triggering_events"]["service_events"]
-        ]
+        if "service_events" in specific_events:
+            event_rule["match_service_event"] = [
+                _service_event_mapper(ev)
+                if ev[0] == "status_change"
+                else _non_status_change_events(ev)
+                for ev in specific_events["service_events"]
+            ]
 
 
 def _set_event_console_filters(

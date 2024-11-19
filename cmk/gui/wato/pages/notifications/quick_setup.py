@@ -213,11 +213,13 @@ def _validate_at_least_one_event(
     _stage_index: StageIndex,
     form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    if not form_data[FormSpecId("triggering_events")]:
-        return [
-            "No triggering events selected. "
-            "Please select at least one event to trigger the notification."
-        ]
+    match form_data[FormSpecId("triggering_events")]:
+        case ("specific_events", data):
+            if not data:
+                return [
+                    "No triggering events selected. "
+                    "Please select at least one event to trigger the notification."
+                ]
     return []
 
 
@@ -226,56 +228,73 @@ def triggering_events() -> QuickSetupStage:
         return [
             FormSpecWrapper(
                 id=FormSpecId("triggering_events"),
-                form_spec=DictionaryExtended(
-                    layout=DictionaryLayout.two_columns,
-                    prefill=DefaultValue(
-                        {
-                            "host_events": [
-                                ("status_change", (-1, HostState.DOWN)),
-                                ("status_change", (-1, HostState.UP)),
-                            ],
-                            "service_events": [
-                                ("status_change", (-1, ServiceState.CRIT)),
-                                ("status_change", (-1, ServiceState.WARN)),
-                                ("status_change", (-1, ServiceState.OK)),
-                            ],
-                        }
-                    ),
-                    elements={
-                        "host_events": DictElement(
-                            parameter_form=ListExtended(
-                                title=Title("Host events"),
-                                prefill=DefaultValue([]),
-                                element_template=CascadingSingleChoiceExtended(
-                                    elements=_event_choices("host"),
-                                    layout=CascadingSingleChoiceLayout.horizontal,
+                form_spec=CascadingSingleChoiceExtended(
+                    prefill=DefaultValue("specific_events"),
+                    layout=CascadingSingleChoiceLayout.button_group,
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="specific_events",
+                            title=Title("Specific events"),
+                            parameter_form=DictionaryExtended(
+                                layout=DictionaryLayout.two_columns,
+                                prefill=DefaultValue(
+                                    {
+                                        "host_events": [
+                                            ("status_change", (-1, HostState.DOWN)),
+                                            ("status_change", (-1, HostState.UP)),
+                                        ],
+                                        "service_events": [
+                                            ("status_change", (-1, ServiceState.CRIT)),
+                                            ("status_change", (-1, ServiceState.WARN)),
+                                            ("status_change", (-1, ServiceState.OK)),
+                                        ],
+                                    }
                                 ),
-                                add_element_label=Label("Add event"),
-                                editable_order=False,
-                                custom_validate=[_validate_empty_selection],
-                            )
-                        ),
-                        "service_events": DictElement(
-                            parameter_form=ListExtended(
-                                title=Title("Service events"),
-                                prefill=DefaultValue([]),
-                                element_template=CascadingSingleChoiceExtended(
-                                    elements=_event_choices("service"),
-                                    layout=CascadingSingleChoiceLayout.horizontal,
-                                ),
-                                add_element_label=Label("Add event"),
-                                editable_order=False,
-                                custom_validate=[_validate_empty_selection],
-                            )
-                        ),
-                        "ec_alerts": DictElement(
-                            parameter_form=FixedValue(
-                                title=Title("Event Console alerts"),
-                                label=Label("Enabled"),
-                                value=True,
+                                elements={
+                                    "host_events": DictElement(
+                                        parameter_form=ListExtended(
+                                            title=Title("Host events"),
+                                            prefill=DefaultValue([]),
+                                            editable_order=False,
+                                            element_template=CascadingSingleChoiceExtended(
+                                                elements=_event_choices("host"),
+                                                layout=CascadingSingleChoiceLayout.horizontal,
+                                            ),
+                                            add_element_label=Label("Add event"),
+                                            custom_validate=[_validate_empty_selection],
+                                        )
+                                    ),
+                                    "service_events": DictElement(
+                                        parameter_form=ListExtended(
+                                            title=Title("Service events"),
+                                            prefill=DefaultValue([]),
+                                            editable_order=False,
+                                            element_template=CascadingSingleChoiceExtended(
+                                                elements=_event_choices("service"),
+                                                layout=CascadingSingleChoiceLayout.horizontal,
+                                            ),
+                                            add_element_label=Label("Add event"),
+                                            custom_validate=[_validate_empty_selection],
+                                        )
+                                    ),
+                                    "ec_alerts": DictElement(
+                                        parameter_form=FixedValue(
+                                            title=Title("Event Console alerts"),
+                                            label=Label("Enabled"),
+                                            value=True,
+                                        ),
+                                    ),
+                                },
                             ),
                         ),
-                    },
+                        CascadingSingleChoiceElement(
+                            name="all_events",
+                            title=Title("All events"),
+                            parameter_form=FixedValue(
+                                value=None, label=Label("Rule applies to all possible events")
+                            ),
+                        ),
+                    ],
                 ),
             )
         ]
@@ -301,12 +320,17 @@ def custom_recap_formspec_triggering_events(
     all_stages_form_data: ParsedFormData,
 ) -> Sequence[Widget]:
     cleaned_stages_form_data = {
-        form_spec_wrapper_id: {
-            form_spec_id: data
-            for form_spec_id, data in form_data.items()
-            if form_spec_id not in ["host_events", "service_events"] or len(data) > 0
-        }
-        for form_spec_wrapper_id, form_data in all_stages_form_data.items()
+        form_spec_wrapper_id: (
+            mode,
+            {
+                form_spec_id: data
+                for form_spec_id, data in form_data.items()
+                if form_spec_id not in ["host_events", "service_events"] or len(data) > 0
+            }
+            if isinstance(form_data, dict)
+            else form_data,
+        )
+        for form_spec_wrapper_id, (mode, form_data) in all_stages_form_data.items()
     }
     return recaps.recaps_form_spec(quick_setup_id, stage_index, cleaned_stages_form_data)
 

@@ -32,10 +32,15 @@ HostEvent = StatusChangeHost | OtherTriggerEvent
 ServiceEvent = StatusChangeService | OtherTriggerEvent
 
 
-class TriggeringEvents(TypedDict):
+class SpecificEvents(TypedDict):
     host_events: NotRequired[list[HostEvent]]
     service_events: NotRequired[list[ServiceEvent]]
     ec_alerts: NotRequired[Literal[True]]
+
+
+TriggeringEvents = (
+    tuple[Literal["specific_events"], SpecificEvents] | tuple[Literal["all_events"], None]
+)
 
 
 class ECAlertFilters(TypedDict):

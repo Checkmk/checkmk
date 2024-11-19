@@ -11,26 +11,33 @@ from cmk.gui.wato.pages.notifications.migrate import (
     migrate_to_event_rule,
     migrate_to_notification_quick_setup_spec,
 )
-from cmk.gui.wato.pages.notifications.quick_setup_types import Method, NotificationQuickSetupSpec
+from cmk.gui.wato.pages.notifications.quick_setup_types import (
+    Method,
+    NotificationQuickSetupSpec,
+    SpecificEvents,
+)
 
 QUICK_SETUP_PARAMS: NotificationQuickSetupSpec = {
-    "triggering_events": {
-        "host_events": [
-            ("status_change", (-1, 0)),
-            ("status_change", (1, 2)),
-            ("flapping_state", None),
-            ("acknowledgement", None),
-            ("alert_handler", "failure"),
-        ],
-        "service_events": [
-            ("status_change", (-1, 0)),
-            ("status_change", (1, 2)),
-            ("status_change", (3, 0)),
-            ("downtime", None),
-            ("alert_handler", "success"),
-        ],
-        "ec_alerts": True,
-    },
+    "triggering_events": (
+        "specific_events",
+        SpecificEvents(
+            host_events=[
+                ("status_change", (-1, 0)),
+                ("status_change", (1, 2)),
+                ("flapping_state", None),
+                ("acknowledgement", None),
+                ("alert_handler", "failure"),
+            ],
+            service_events=[
+                ("status_change", (-1, 0)),
+                ("status_change", (1, 2)),
+                ("status_change", (3, 0)),
+                ("downtime", None),
+                ("alert_handler", "success"),
+            ],
+            ec_alerts=True,
+        ),
+    ),
     "host_filters": {
         "match_host_groups": ["group1", "group2", "group3"],
     },

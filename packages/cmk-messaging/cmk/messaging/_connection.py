@@ -189,16 +189,20 @@ class Channel(Generic[_ModelT]):
         """
         bindings = bindings or [BindingKey(queue.value)]
         full_queue_name = self._make_queue_name(queue)
-        self._pchannel.queue_declare(
-            queue=full_queue_name,
-            arguments=None if message_ttl is None else {"x-message-ttl": message_ttl * 1000},
-        )
-        for binding in bindings:
-            self._pchannel.queue_bind(
-                exchange=LOCAL_EXCHANGE,
+        try:
+            self._pchannel.queue_declare(
                 queue=full_queue_name,
-                routing_key=self._make_binding_key(binding),
+                arguments=None if message_ttl is None else {"x-message-ttl": message_ttl * 1000},
             )
+            for binding in bindings:
+                self._pchannel.queue_bind(
+                    exchange=LOCAL_EXCHANGE,
+                    queue=full_queue_name,
+                    routing_key=self._make_binding_key(binding),
+                )
+        except AMQPConnectionError as e:
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def publish_locally(
         self,

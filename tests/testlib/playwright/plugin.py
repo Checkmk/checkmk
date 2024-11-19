@@ -203,7 +203,7 @@ def _may_create_screenshot(
     pages: t.List[Page],
 ) -> None:
     if isinstance(request, pytest.FixtureRequest):
-        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
+        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
         screenshot_option = request.config.getoption("--screenshot")
         capture_screenshot = screenshot_option == "on" or (
             failed and screenshot_option == "only-on-failure"
@@ -212,7 +212,7 @@ def _may_create_screenshot(
             return
         for page in pages:
             human_readable_status = "failed" if failed else "finished"
-            screenshot_path = _build_artifact_path(request, f".{human_readable_status}.png")
+            screenshot_path = _build_artifact_path(request, suffix=f"{human_readable_status}.png")
             try:
                 page.screenshot(timeout=5432, path=screenshot_path)
             except Error as e:

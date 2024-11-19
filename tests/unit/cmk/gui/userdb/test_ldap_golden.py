@@ -140,7 +140,7 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
         ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
     ]
     # note that the key is lower-cased due to 'lower_user_ids'
-    expected_result = {"user1_id": {"dn": "user1", "uid": ["USER1_ID"]}}
+    expected_result = {"user1_id": {"dn": ["user1"], "uid": ["USER1_ID"]}}
     add_filter = "my(*)filter"
     expected_filter = f"(&(objectclass=person){add_filter})"
 

@@ -711,7 +711,7 @@ def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
     }
 
 
-def _get_os_info() -> str:
+def _get_os_info() -> str:  # noqa: C901
     for path_release_file in (
         Path("/etc/redhat-release"),
         Path("/etc/SuSE-release"),

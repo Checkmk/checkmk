@@ -92,8 +92,8 @@ class Profile:
             f.write(
                 "#!/usr/bin/env python3\n"
                 "import pstats\n"
-                'stats = pstats.Stats("%s")\n'
-                "stats.sort_stats('cumtime').print_stats()\n" % self._profile_file
+                f'stats = pstats.Stats("{self._profile_file}")\n'
+                "stats.sort_stats('cumtime').print_stats()\n"
             )
         script_path.chmod(0o755)
         logger.info("Created profile dump script: %s", script_path)

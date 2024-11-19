@@ -192,8 +192,8 @@ class ABCCrashReport(abc.ABC):
 
     def local_crash_report_url(self) -> str:
         """Returns the site local URL to the current crash report"""
-        return "crash.py?%s" % urllib.parse.urlencode(
-            [("component", self.type()), ("ident", self.ident_to_text())]
+        return "crash.py?{}".format(
+            urllib.parse.urlencode([("component", self.type()), ("ident", self.ident_to_text())])
         )
 
 

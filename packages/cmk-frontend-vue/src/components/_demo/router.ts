@@ -12,7 +12,7 @@ import DemoSlideIn from './DemoSlideIn.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
-import DemoDropDown from './DemoDropDown.vue'
+import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
@@ -79,8 +79,8 @@ const router = createRouter({
     },
     {
       path: '/dropdown',
-      name: 'DropDown',
-      component: DemoDropDown
+      name: 'CmkDropdown',
+      component: DemoCmkDropdown
     },
     {
       path: '/cmk_switch',

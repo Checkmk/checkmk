@@ -10,6 +10,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 const defaultSelected = ref<string>('init')
 const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)
+const defaultEmpty3 = ref<string | null>(null)
 </script>
 
 <template>
@@ -39,6 +40,18 @@ const defaultEmpty2 = ref<string | null>(null)
     v-model:selected-option="defaultEmpty2"
     :options="[]"
     input-hint="some input hint"
+    no-results-hint="no results hint"
+    component-id="some component id"
+  />
+  <CmkSpace />
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty3"
+    :options="[
+      ...Array(20)
+        .fill(0)
+        .map((_, i) => ({ name: i.toString(), title: i.toString() }))
+    ]"
+    input-hint="long dropdown"
     no-results-hint="no results hint"
     component-id="some component id"
   />

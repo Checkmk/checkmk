@@ -31,30 +31,35 @@ const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const selectedOptionTitle = computed(
-  () => options.find((option) => option.name === selectedOption.value)?.title ?? inputHint
+  () => options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint
 )
 
 const suggestionsShown = ref(false)
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
+const optionRefs = ref<(HTMLLIElement | null)[]>([])
 
 const filterString = ref('')
-const filteredOptions = ref<DropdownOption[]>(options)
-const selectedSuggestionName: Ref<string | null> = ref(options[0]?.name ?? null)
+const filteredOptions = ref<number[]>(options.map((_, index) => index))
+const selectedSuggestionOptionIndex: Ref<number | null> = ref(options.length > 0 ? 0 : null)
 
 watch(filterString, (newFilterString) => {
-  filteredOptions.value = options.filter((option) =>
-    option.title.toLowerCase().includes(newFilterString.toLowerCase())
-  )
-  selectedSuggestionName.value = filteredOptions.value[0]?.name ?? null
+  filteredOptions.value = options
+    .map((option, index) => ({
+      option,
+      index
+    }))
+    .filter(({ option }) => option.title.toLowerCase().includes(newFilterString.toLowerCase()))
+    .map(({ index }) => index)
+  selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
 })
 
 function showSuggestions(): void {
   if (!disabled && options.length > 0) {
     suggestionsShown.value = !suggestionsShown.value
     filterString.value = ''
-    filteredOptions.value = options
-    selectedSuggestionName.value = Object.values(options)[0]?.name ?? null
+    filteredOptions.value = options.map((_, index) => index)
+    selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
     nextTick(() => {
       suggestionInputRef.value?.focus()
     })
@@ -66,32 +71,50 @@ function hideSuggestions(): void {
   comboboxButtonRef.value?.focus()
 }
 
-function selectOption(option: DropdownOption): void {
-  selectedOption.value = option.name
+function selectOption(optionIndex: number): void {
+  selectedOption.value = options[optionIndex]?.name ?? null
   hideSuggestions()
+}
+
+function selectSuggestion(filteredOptionIndex: number | null): void {
+  if (filteredOptionIndex === null) {
+    selectedSuggestionOptionIndex.value = null
+    return
+  }
+  const optionIndex = filteredOptions.value[filteredOptionIndex]
+  if (optionIndex === undefined) {
+    throw new Error('Invalid filtered option index')
+  }
+  selectedSuggestionOptionIndex.value = optionIndex
+  nextTick(() => {
+    optionRefs.value[optionIndex]?.scrollIntoView({ block: 'nearest' })
+  })
 }
 
 function keyEnter(event: InputEvent): void {
   event.preventDefault()
   event.stopPropagation()
-  const selectedSuggestion = filteredOptions.value.find(
-    (o) => o.name === selectedSuggestionName.value
-  )
-  if (selectedSuggestion) {
-    selectOption(selectedSuggestion)
+  if (selectedSuggestionOptionIndex.value === null) {
+    return
   }
+  selectOption(selectedSuggestionOptionIndex.value)
 }
 
-function keyDown(): void {
-  const index = filteredOptions.value.findIndex((o) => o.name === selectedSuggestionName.value)
-  selectedSuggestionName.value =
-    filteredOptions.value[wrap(index + 1, filteredOptions.value.length)]?.name ?? null
-}
-
-function keyUp(): void {
-  const index = filteredOptions.value.findIndex((o) => o.name === selectedSuggestionName.value)
-  selectedSuggestionName.value =
-    filteredOptions.value[wrap(index - 1, filteredOptions.value.length)]?.name ?? null
+function moveSuggestion(amount: number): void {
+  if (selectedSuggestionOptionIndex.value === null) {
+    return
+  }
+  const selectedFilteredOptionIndex = filteredOptions.value.findIndex(
+    (index) => index === selectedSuggestionOptionIndex.value
+  )
+  if (selectedFilteredOptionIndex === -1) {
+    throw new Error('Selected suggestion option index not found in filtered options')
+  }
+  selectSuggestion(
+    filteredOptions.value[
+      wrap(selectedFilteredOptionIndex + amount, filteredOptions.value.length)
+    ] ?? null
+  )
 }
 
 function wrap(index: number, length: number): number {
@@ -126,22 +149,24 @@ function wrap(index: number, length: number): number {
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"
       @keydown.enter="keyEnter"
-      @keydown.down.prevent="keyDown"
-      @keydown.up.prevent="keyUp"
+      @keydown.down.prevent="() => moveSuggestion(1)"
+      @keydown.up.prevent="() => moveSuggestion(-1)"
     >
       <span class="input">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
       <div class="options-container">
-        <li
-          v-for="option in filteredOptions"
-          :key="option.name"
-          role="option"
-          :class="{ selected: option.name === selectedSuggestionName, selectable: true }"
-          @click.prevent="() => selectOption(option)"
-        >
-          {{ option.title }}
-        </li>
+        <template v-for="(option, index) in options" :key="option.name">
+          <li
+            v-show="filteredOptions.includes(index)"
+            :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
+            role="option"
+            :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
+            @click.prevent="() => selectOption(index)"
+          >
+            {{ option.title }}
+          </li>
+        </template>
         <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
           {{ noResultsHint }}
         </li>

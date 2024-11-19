@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.1.0p49"
+set CMK_VERSION="2.1.0p50"
 cd C:\Progra~1\Tivoli\TSM\baclient\
 SET COMMAND=dsmadmc -dataonly=YES -id=admin -password=password -displaymode=table
 

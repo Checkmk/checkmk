@@ -118,6 +118,7 @@ function openSlideIn(objectId: null | OptionId) {
       :options="choices"
       :input-hint="choices.length === 0 ? spec.i18n.no_objects : spec.i18n.no_selection"
       :disabled="choices.length === 0"
+      :show-filter="props.spec.elements.length > 5"
       class="fsce__dropdown"
     />
     <CmkButton

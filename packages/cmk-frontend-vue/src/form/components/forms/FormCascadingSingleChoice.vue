@@ -24,6 +24,8 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
+const FILTER_SHOW_THRESHOLD = 5
+
 const validation = ref<Array<string>>([])
 const elementValidation = ref<ValidationMessages>([])
 
@@ -132,6 +134,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         v-model:selected-option="selectedOption"
         :component-id="componentId"
         :options="spec.elements"
+        :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
         :input-hint="props.spec.input_hint as string"
       />
     </template>

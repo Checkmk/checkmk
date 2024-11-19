@@ -34,6 +34,7 @@ const componentId = useId()
       :input-hint="spec.input_hint || ''"
       :disabled="spec.frozen"
       :component-id="componentId"
+      :show-filter="props.spec.elements.length > 5"
     />
   </div>
   <FormValidation :validation="validation"></FormValidation>

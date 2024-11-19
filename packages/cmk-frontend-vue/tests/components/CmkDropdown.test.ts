@@ -17,7 +17,8 @@ test('dropdown shows options', async () => {
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      inputHint: 'Select an option'
+      inputHint: 'Select an option',
+      showFilter: true
     }
   })
 
@@ -37,6 +38,7 @@ test('dropdown updates selecedOption', async () => {
     ],
     selectedOption: null,
     inputHint: 'Select an option',
+    showFilter: true,
     'onUpdate:selectedOption': (option: string | null) => {
       selectedOption = option
     }
@@ -63,6 +65,7 @@ test('dropdown shows and hides options', async () => {
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
+      showFilter: true,
       selectedOption: null,
       inputHint: 'Select an option'
     }
@@ -87,6 +90,7 @@ test('dropdown updates selecedOption selected via keyboard', async () => {
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
+      showFilter: true,
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -109,6 +113,7 @@ test('dropdown option selection via keyboard wraps', async () => {
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
+      showFilter: true,
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -131,6 +136,7 @@ test('dropdown option immediate focus and filtering', async () => {
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
+      showFilter: true,
       selectedOption: null,
       inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
@@ -165,8 +171,9 @@ test('dropdown doesnt interfere with tab order', async () => {
             { title: 'Option 1', name: 'option1' },
             { title: 'Option 2', name: 'option2' }
           ]"
-          @update:selected-option="$emit('update:selectedOption', $event)"
+          :show-filter="true"
           input-hint="Select an option"
+          @update:selected-option="$emit('update:selectedOption', $event)"
         />
         <input data-testid="next-input" type="text" />
       </div>

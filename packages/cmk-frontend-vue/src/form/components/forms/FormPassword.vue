@@ -89,7 +89,11 @@ const passwordStoreOptions = computed(() => {
 </script>
 
 <template>
-  <CmkDropdown v-model:selected-option="passwordType" :options="passwordTypeOptions" />
+  <CmkDropdown
+    v-model:selected-option="passwordType"
+    :options="passwordTypeOptions"
+    :show-filter="false"
+  />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
     <input
@@ -107,6 +111,7 @@ const passwordStoreOptions = computed(() => {
       v-else
       v-model:selected-option="passwordStoreChoice"
       :options="passwordStoreOptions"
+      :show-filter="false"
     />
   </template>
   <FormValidation :validation="validation"></FormValidation>

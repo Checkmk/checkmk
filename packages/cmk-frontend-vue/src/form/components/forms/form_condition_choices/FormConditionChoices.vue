@@ -18,6 +18,8 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
+const FILTER_SHOW_THRESHOLD = 5
+
 const data = defineModel<typing.ConditionChoicesValue[]>('data', { required: true })
 const selectedConditionGroup = ref<string | null>(null)
 
@@ -99,6 +101,7 @@ const remainingGroups = computed(() =>
         : spec.i18n.select_condition_group_to_add
     "
     :disabled="remainingGroups.length === 0"
+    :show-filter="remainingGroups.length > FILTER_SHOW_THRESHOLD"
     @update:selected-option="addElement"
   />
   <FormValidation :validation="validation"></FormValidation>

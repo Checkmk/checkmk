@@ -18,9 +18,11 @@ const {
   noResultsHint = '',
   disabled = false,
   componentId = '',
-  options
+  options,
+  showFilter
 } = defineProps<{
   options: DropdownOption[]
+  showFilter: boolean
   inputHint?: string
   noResultsHint?: string
   disabled?: boolean
@@ -152,7 +154,7 @@ function wrap(index: number, length: number): number {
       @keydown.down.prevent="() => moveSuggestion(1)"
       @keydown.up.prevent="() => moveSuggestion(-1)"
     >
-      <span class="input">
+      <span :class="{ hidden: !showFilter, input: true }">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
       <div class="options-container">
@@ -221,6 +223,10 @@ function wrap(index: number, length: number): number {
   span.input {
     display: flex;
     padding: 4px;
+
+    &.hidden {
+      display: none;
+    }
   }
 
   input {

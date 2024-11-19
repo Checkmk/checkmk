@@ -24,6 +24,8 @@ const props = defineProps<{
   } & OperatorI18n
 }>()
 
+const FILTER_SHOW_THRESHOLD = 5
+
 if (props.group.conditions.length === 0) {
   throw new Error('Invalid group')
 }
@@ -119,7 +121,11 @@ watch(selectedOperator, (operator) => {
 
 <template>
   {{ group.title }}
-  <CmkDropdown v-model:selected-option="selectedOperator" :options="operatorChoices" />
+  <CmkDropdown
+    v-model:selected-option="selectedOperator"
+    :options="operatorChoices"
+    :show-filter="false"
+  />
   <CmkSpace :size="'small'" />
   <template v-if="allValueChoices.length === 1">
     {{ allValueChoices[0]!.title }}
@@ -151,6 +157,7 @@ watch(selectedOperator, (operator) => {
               title: condition.title
             }))
           ]"
+          :show-filter="remainingConditions.length > FILTER_SHOW_THRESHOLD - 1"
           @update:selected-option="(value) => updateMultiValue(index, value!)"
         />
       </template>
@@ -160,6 +167,7 @@ watch(selectedOperator, (operator) => {
     <CmkDropdown
       :selected-option="selectedSingleValue"
       :options="allValueChoices"
+      :show-filter="allValueChoices.length > FILTER_SHOW_THRESHOLD"
       @update:selected-option="(value) => updateValue(selectedOperator, value)"
     />
   </template>

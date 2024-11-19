@@ -44,6 +44,10 @@ const magnitudeOptions = computed(() => {
     class="number"
     type="text"
   />
-  <CmkDropdown v-model:selected-option="value[1]" :options="magnitudeOptions" />
+  <CmkDropdown
+    v-model:selected-option="value[1]"
+    :options="magnitudeOptions"
+    :show-filter="false"
+  />
   <FormValidation :validation="validation"></FormValidation>
 </template>

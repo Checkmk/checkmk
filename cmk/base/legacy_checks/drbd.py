@@ -212,7 +212,7 @@ def inventory_drbd(info, checktype):
         yield "drbd%s" % line[0][:-1], levels
 
 
-def drbd_parse_block(block, to_parse):
+def drbd_parse_block(block, checktype):
     parsed = {}
     for line in block:
         for field in line:
@@ -220,16 +220,16 @@ def drbd_parse_block(block, to_parse):
             if len(parts) > 1:
                 # Only parse the requested information depending on the check
                 # to be executed now
-                if to_parse == "drbd" and parts[0] in drbd_general_map:
+                if checktype == "drbd" and parts[0] in drbd_general_map:
                     if parts[0] in ["ro", "ds"]:
                         parsed[parts[0]] = parts[1].split("/")
                     else:
                         parsed[parts[0]] = parts[1]
-                elif to_parse == "drbd.net" and parts[0] in drbd_net_map:
+                elif checktype == "drbd.net" and parts[0] in drbd_net_map:
                     parsed[parts[0]] = parts[1]
-                elif to_parse == "drbd.disk" and parts[0] in drbd_disk_map:
+                elif checktype == "drbd.disk" and parts[0] in drbd_disk_map:
                     parsed[parts[0]] = parts[1]
-                elif to_parse == "drbd.stats" and parts[0] in drbd_stats_map:
+                elif checktype == "drbd.stats" and parts[0] in drbd_stats_map:
                     parsed[parts[0]] = parts[1]
 
     return parsed

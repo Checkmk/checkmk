@@ -1113,7 +1113,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     def _get_discovery_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult]:
         return (
             int(time.time()),
-            local_discovery_preview(self.host_name, prevent_fetching=True, raise_errors=False),
+            local_discovery_preview(self.host_name, prevent_fetching=False, raise_errors=False),
         )
 
     @staticmethod

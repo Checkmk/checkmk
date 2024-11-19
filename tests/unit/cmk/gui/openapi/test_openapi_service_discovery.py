@@ -1003,7 +1003,7 @@ def test_openapi_discovery_refresh_services(
         == "/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
         call("example.com", prevent_fetching=False, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
@@ -1036,8 +1036,8 @@ def test_openapi_discovery_tabula_rasa(
         )
     ]
     assert mock_discovery_preview.mock_calls == [
-        call("example.com", prevent_fetching=True, raise_errors=False),
-        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
     ]
 
 

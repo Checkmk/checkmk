@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import yaml
 
 from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import Site
@@ -46,7 +45,6 @@ class CheckModes(IntEnum):
 @dataclass
 class CheckConfig:
     mode: CheckModes = CheckModes.DEFAULT
-    skip_masking: bool = False
     skip_cleanup: bool = False
     dump_types: list[str] | None = None
     data_dir: str | None = None
@@ -55,7 +53,7 @@ class CheckConfig:
     diff_dir: str | None = None
     host_names: list[str] | None = None
     check_names: list[str] | None = None
-    api_services_cols: list | None = None
+    api_services_cols: list[str] | None = None
 
     def load(self):
         data_dir_default = str(qa_test_data_path() / "plugins_integration")
@@ -97,7 +95,6 @@ class CheckConfig:
             "display_name",
             "has_been_checked",
             "labels",
-            "plugin_output",
             "state",
             "state_type",
             "tags",
@@ -111,48 +108,6 @@ class CheckConfig:
 config = CheckConfig()
 
 
-def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
-    """Apply regular expressions to the canon and result objects."""
-    regexp_filepath = f"{config.data_dir}/regexp.yaml"
-    if not os.path.exists(regexp_filepath):
-        return
-    with open(regexp_filepath, encoding="utf-8") as regexp_file:
-        all_patterns = yaml.safe_load(regexp_file)
-    # global regexps
-    patterns = all_patterns.get("*", {})
-    # pattern matches
-    patterns.update(
-        next((item for name, item in all_patterns.items() if re.match(name, identifier)), {})
-    )
-    # exact matches
-    patterns.update(all_patterns.get(identifier, {}))
-
-    for pattern_group in all_patterns:
-        if not (pattern_group == identifier or re.match(pattern_group, identifier)):
-            continue
-        patterns = all_patterns[pattern_group]
-
-        for field_name in patterns:
-            pattern = patterns[field_name]
-            logger.debug("> Applying regexp: %s", pattern)
-            if not canon.get(field_name):
-                logger.debug(
-                    '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
-                )
-                continue
-            if not result.get(field_name):
-                logger.debug(
-                    '> Field "%s" not found in result "%s", skipping...', field_name, identifier
-                )
-                continue
-            if match := re.search(pattern, result[field_name]):
-                canon[field_name] = re.sub(
-                    pattern,
-                    match.group(),
-                    canon[field_name],
-                )
-
-
 def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     """Return the current check results from the API."""
     try:
@@ -160,7 +115,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
             check["id"]: check
             for check in site.openapi.get_host_services(
                 host_name,
-                columns=config.api_services_cols,
+                columns=(config.api_services_cols or []) + ["plugin_output"],
                 pending=False,
             )
             if not config.check_names
@@ -264,6 +219,8 @@ def _verify_check_result(
         logger.error("[%s] Canon not found!", check_id)
         return False, ""
 
+    check_output = str(result_data.pop("plugin_output", ""))
+
     safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
     with open(
         json_result_file_path := str(output_dir / f"{safe_name}.result.json"),
@@ -272,16 +229,14 @@ def _verify_check_result(
     ) as json_file:
         json.dump(result_data, json_file, indent=4, sort_keys=True)
 
-    if mode != CheckModes.UPDATE:
-        # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore[operator]
-
-    if not config.skip_masking:
-        _apply_regexps(check_id, canon_data, result_data)
+    # ignore columns in the canon that are not supposed to be returned
+    canon_data = {_: canon_data[_] for _ in canon_data if _ in (config.api_services_cols or [])}
 
     if result_data and canon_data == result_data:
         # if the canon was just added or matches the result, there is nothing else to do
         return True, ""
+
+    logger.error("[%s] Plugin output: %s", check_id, check_output)
 
     with open(
         json_canon_file_path := str(output_dir / f"{safe_name}.canon.json"),

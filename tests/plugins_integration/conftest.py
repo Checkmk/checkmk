@@ -126,7 +126,6 @@ def pytest_configure(config):
             checks.CheckModes.ADD if config.getoption("--add-checks") else checks.CheckModes.DEFAULT
         )
     )
-    checks.config.skip_masking = config.getoption("--skip-masking")
     checks.config.skip_cleanup = config.getoption("--skip-cleanup")
     checks.config.data_dir = config.getoption(name="--data-dir")
     checks.config.dump_dir = config.getoption(name="--dump-dir")

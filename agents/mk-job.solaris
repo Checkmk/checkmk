@@ -65,12 +65,14 @@ fi
 
 trap "cleanup" 0
 
+# BEGIN PLATFORM SPECIFIC CODE
 # Note that Solaris has a variant of this command, for "complex commands"
 # (whatever that means):
 #    /usr/bin/time -p sh -c "much_command --such_complex --wow"
 # See https://docs.oracle.com/cd/E19253-01/816-5165/6mbb0m9to/index.html
 # But I'm not sure if this is really needed. Let's find out.
 /usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
+# END PLATFORM SPECIFIC CODE
 RC=$?
 echo "exit_code ${RC}" >>"${TMP_FILE}"
 

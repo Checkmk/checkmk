@@ -258,7 +258,7 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
             ),
         )
     ).is_error():
-        raise MKUserError(None, result.error)
+        raise MKUserError(None, str(result.error))
 
 
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):

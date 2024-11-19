@@ -129,7 +129,7 @@ def execute_host_label_sync_job() -> None:
             ),
         )
     ).is_error():
-        logger.error(result.error)
+        logger.error(str(result.error))
 
 
 class DiscoveredHostLabelSyncJob(BackgroundJob):

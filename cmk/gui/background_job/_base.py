@@ -40,6 +40,12 @@ from ._store import JobStatusStore
 tracer = get_tracer()
 
 
+class AlreadyRunningError(Exception): ...
+
+
+class StartupError(Exception): ...
+
+
 class BackgroundJob:
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 50
@@ -288,7 +294,7 @@ class BackgroundJob:
         init_span_processor_callback: (
             Callable[[TracerProvider, SpanExporter | None], None] | None
         ) = None,
-    ) -> result.Result[None, str]:
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if init_span_processor_callback is None:
             init_span_processor_callback = init_span_processor
 
@@ -309,7 +315,10 @@ class BackgroundJob:
                 self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
             else:
                 self._logger.debug('Failed to start job "%s"', self._job_id)
-                span.set_status(Status(StatusCode.ERROR))
+                if not isinstance(start_result.error, AlreadyRunningError):
+                    # Callers decided on the severity of this case, so we don't report this as an
+                    # error condition here.
+                    span.set_status(Status(StatusCode.ERROR, str(start_result.error)))
             return start_result
 
     def _start(
@@ -319,9 +328,11 @@ class BackgroundJob:
         override_job_log_level: int | None,
         init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None],
         origin_span: Link,
-    ) -> result.Result[None, str]:
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if self.is_active():
-            return result.Error(_("Background Job %s already running") % self._job_id)
+            return result.Error(
+                AlreadyRunningError(f"Background Job {self._job_id} already running")
+            )
 
         self._prepare_work_dir()
 
@@ -367,7 +378,9 @@ class BackgroundJob:
         p.join()
 
         if p.exitcode != 0:
-            return result.Error(f'Failed to start job "{self._job_id}". Exit code: {p.exitcode}')
+            return result.Error(
+                StartupError(f'Failed to start job "{self._job_id}". Exit code: {p.exitcode}')
+            )
 
         return result.OK(None)
 

@@ -1981,7 +1981,7 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
             ),
         )
     ).is_error():
-        logger.debug(result)
+        logger.debug(str(result))
 
 
 def _handle_distributed_sites_in_free(

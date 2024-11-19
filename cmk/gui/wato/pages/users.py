@@ -309,7 +309,7 @@ class ModeUsers(WatoMode):
                         ),
                     )
                 ).is_error():
-                    raise MKUserError(None, result.error)
+                    raise MKUserError(None, str(result.error))
 
                 self._job_snapshot = job.get_status_snapshot()
             except MKUserError:

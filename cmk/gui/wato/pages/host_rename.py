@@ -181,7 +181,7 @@ class ModeBulkRenameHost(WatoMode):
                     ),
                 )
             ).is_error():
-                raise MKGeneralException(result.error)
+                raise MKGeneralException(str(result.error))
 
             return redirect(host_renaming_job.detail_url())
         if c is False:  # not yet confirmed
@@ -563,7 +563,7 @@ class ModeRenameHost(WatoMode):
                 ),
             )
         ).is_error():
-            raise MKGeneralException(result.error)
+            raise MKGeneralException(str(result.error))
 
         return redirect(host_renaming_job.detail_url())
 

@@ -87,7 +87,7 @@ def ajax_sync() -> None:
                 ),
             )
         ).is_error():
-            raise MKUserError(None, result.error)
+            raise MKUserError(None, str(result.error))
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         gui_logger.exception("error synchronizing user DB")

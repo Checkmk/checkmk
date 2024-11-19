@@ -655,7 +655,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         ),
     )
     if result.is_error():
-        return problem(status=409, title="Conflict", detail=result.error)
+        return problem(status=409, title="Conflict", detail=str(result.error))
 
     response = Response(status=303)
     response.location = urlparse(

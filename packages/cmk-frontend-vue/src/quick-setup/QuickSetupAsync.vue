@@ -289,21 +289,21 @@ const save = async (buttonId: string) => {
 
   try {
     if (props.objectId) {
+      preventLeaving.value = false
       const { redirect_url: redirectUrl } = await editQuickSetup(
         props.quick_setup_id,
         buttonId,
         props.objectId,
         userInput
       )
-      preventLeaving.value = false
       window.location.href = redirectUrl
     } else {
+      preventLeaving.value = false
       const { redirect_url: redirectUrl } = await saveQuickSetup(
         props.quick_setup_id,
         buttonId,
         userInput
       )
-      preventLeaving.value = false
       window.location.href = redirectUrl
     }
   } catch (err) {

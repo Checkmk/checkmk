@@ -10,12 +10,13 @@ from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recomp
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import NotificationParameter
 
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
     FieldSize,
+    FixedValue,
     migrate_to_password,
     migrate_to_proxy,
     MultilineText,
@@ -75,6 +76,16 @@ class NotificationParameterOpsgenie(NotificationParameter):
                     ),
                 ),
                 "proxy_url": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
+                "ignore_ssl": DictElement(
+                    parameter_form=FixedValue(
+                        value=True,
+                        title=Title("Disable SSL certificate verification"),
+                        label=Label("Disable SSL certificate verification"),
+                        help_text=Help(
+                            "Ignore unverified HTTPS request warnings. Use with caution."
+                        ),
+                    ),
+                ),
                 "integration_team": DictElement(
                     parameter_form=String(
                         title=Title("Integration team"),

@@ -12,7 +12,6 @@ from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Transform
 
 from cmk.rulesets.v1 import Title
 
@@ -142,12 +141,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
             return self.form_spec.valuespec.default_value()
 
         if self.options.data_origin == DataOrigin.DISK:
-            if (
-                isinstance(self.form_spec.valuespec, Transform)
-                and self.form_spec.valuespec.from_valuespec is not None
-            ):
-                return self.form_spec.valuespec.from_valuespec(parsed_value)
-            return parsed_value
+            return self.form_spec.valuespec.transform_value(parsed_value)
 
         assert isinstance(parsed_value, dict)
         with request.stashed_vars():

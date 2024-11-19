@@ -264,77 +264,74 @@ def drbd_get_block(item, info, checktype):
 
 
 def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
-    parsed = drbd_get_block(item, info, "drbd")
+    if (parsed := drbd_get_block(item, info, "drbd")) is None:
+        return (3, "Undefined state")
+    if parsed["cs"] == "Unconfigured":
+        return (2, 'The device is "Unconfigured"')
+    if parsed["cs"] not in drbd_cs_map:
+        return (3, 'Undefined "connection state" in drbd output')
 
-    if parsed is not None:
-        if parsed["cs"] == "Unconfigured":
-            return (2, 'The device is "Unconfigured"')
-        if parsed["cs"] not in drbd_cs_map:
-            return (3, 'Undefined "connection state" in drbd output')
+    # Weight of connection state is calculated by the drbd_cs_map.
+    # The roles and disk states are calculated using the expected values
+    state = drbd_cs_map[parsed["cs"]]
+    output = "Connection State: %s" % parsed["cs"]
 
-        # Weight of connection state is calculated by the drbd_cs_map.
-        # The roles and disk states are calculated using the expected values
-        state = drbd_cs_map[parsed["cs"]]
-        output = "Connection State: %s" % parsed["cs"]
+    # Roles
+    output += ", Roles: %s/%s" % tuple(parsed["ro"])
+    current_roles = "_".join(str(a).lower() for a in parsed["ro"])
 
-        # Roles
-        output += ", Roles: %s/%s" % tuple(parsed["ro"])
-        current_roles = "_".join(str(a).lower() for a in parsed["ro"])
+    found_role_match = False
+    if "roles" in params:
+        roles = params.get("roles")
+        if roles:
+            for roles_entry, roles_state in roles:
+                if roles_entry == current_roles:
+                    found_role_match = True
+                    state = max(state, roles_state)
+                    output += " %s" % STATE_MARKERS[roles_state]
+                    break
+        else:  # Ignore roles if set to None
+            found_role_match = True
 
-        found_role_match = False
-        if "roles" in params:
-            roles = params.get("roles")
-            if roles:
-                for roles_entry, roles_state in roles:
-                    if roles_entry == current_roles:
-                        found_role_match = True
-                        state = max(state, roles_state)
-                        output += " %s" % STATE_MARKERS[roles_state]
-                        break
-            else:  # Ignore roles if set to None
-                found_role_match = True
+    if not found_role_match:
+        if "roles_inventory" in params:
+            roles_inventory = params.get("roles_inventory")
+            if roles_inventory and parsed["ro"] != roles_inventory:
+                state = max(2, state)
+                output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))
+        else:
+            state = max(3, state)
+            output += " (Check requires a new service discovery)"
 
-        if not found_role_match:
-            if "roles_inventory" in params:
-                roles_inventory = params.get("roles_inventory")
-                if roles_inventory and parsed["ro"] != roles_inventory:
-                    state = max(2, state)
-                    output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))
-            else:
-                state = max(3, state)
-                output += " (Check requires a new service discovery)"
-
-        output += ", Diskstates: %s/%s" % tuple(parsed["ds"])
-        # Do not evaluate diskstates. Either set by rule or through the
-        # legacy configuration option None in the check parameters tuple
-        if (
-            "diskstates" in params
-            and params["diskstates"] is None
-            or "diskstates_inventory" in params
-            and params["diskstates_inventory"] is None
-        ):
-            return (state, output)
-
-        params_diskstates_dict = dict(params.get("diskstates", []))
-        diskstates_info = set()
-        for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
-            diskstate = f"{ro.lower()}_{ds}"
-            params_diskstate = params_diskstates_dict.get(diskstate)
-
-            if params_diskstate is not None:
-                state = max(state, params_diskstate)
-                diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[params_diskstate]}")
-            else:
-                default_state = drbd_ds_map.get(diskstate, 3)
-                if default_state > 0:
-                    diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[default_state]}")
-                state = max(state, drbd_ds_map.get(diskstate, 3))
-        if diskstates_info:
-            output += " (%s)" % ", ".join(diskstates_info)
-
+    output += ", Diskstates: %s/%s" % tuple(parsed["ds"])
+    # Do not evaluate diskstates. Either set by rule or through the
+    # legacy configuration option None in the check parameters tuple
+    if (
+        "diskstates" in params
+        and params["diskstates"] is None
+        or "diskstates_inventory" in params
+        and params["diskstates_inventory"] is None
+    ):
         return (state, output)
 
-    return (3, "Undefined state")
+    params_diskstates_dict = dict(params.get("diskstates", []))
+    diskstates_info = set()
+    for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
+        diskstate = f"{ro.lower()}_{ds}"
+        params_diskstate = params_diskstates_dict.get(diskstate)
+
+        if params_diskstate is not None:
+            state = max(state, params_diskstate)
+            diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[params_diskstate]}")
+        else:
+            default_state = drbd_ds_map.get(diskstate, 3)
+            if default_state > 0:
+                diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[default_state]}")
+            state = max(state, drbd_ds_map.get(diskstate, 3))
+    if diskstates_info:
+        output += " (%s)" % ", ".join(diskstates_info)
+
+    return (state, output)
 
 
 def parse_drbd(string_table: StringTable) -> StringTable:
@@ -369,20 +366,20 @@ def drbd_get_rates(list_):
 
 
 def check_drbd_net(item, _no_params, info):
-    parsed = drbd_get_block(item, info, "drbd.net")
-    if parsed is not None:
-        if parsed["cs"] == "Unconfigured":
-            return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_rates(
-            [
-                ("drbd.net", "in", item, int(parsed["nr"]), "kb"),
-                ("drbd.net", "out", item, int(parsed["ns"]), "kb"),
-            ]
-        )
-        # FIXME: Maybe handle thresholds in the future
-        return (0, output, perfdata)
+    if (parsed := drbd_get_block(item, info, "drbd.net")) is None:
+        return (3, "Undefined state")
+    if parsed["cs"] == "Unconfigured":
+        return (2, 'The device is "Unconfigured"')
 
-    return (3, "Undefined state")
+    output, perfdata = drbd_get_rates(
+        [
+            ("drbd.net", "in", item, int(parsed["nr"]), "kb"),
+            ("drbd.net", "out", item, int(parsed["ns"]), "kb"),
+        ]
+    )
+
+    # FIXME: Maybe handle thresholds in the future
+    return (0, output, perfdata)
 
 
 def discover_drbd_net(info):
@@ -399,20 +396,20 @@ check_info["drbd.net"] = LegacyCheckDefinition(
 
 
 def check_drbd_disk(item, _no_params, info):
-    parsed = drbd_get_block(item, info, "drbd.disk")
-    if parsed is not None:
-        if parsed["cs"] == "Unconfigured":
-            return (2, 'The device is "Unconfigured"')
-        output, perfdata = drbd_get_rates(
-            [
-                ("drbd.disk", "write", item, int(parsed["dw"]), "kb"),
-                ("drbd.disk", "read", item, int(parsed["dr"]), "kb"),
-            ]
-        )
-        # FIXME: Maybe handle thresholds in the future
-        return (0, output, perfdata)
+    if (parsed := drbd_get_block(item, info, "drbd.disk")) is None:
+        return (3, "Undefined state")
+    if parsed["cs"] == "Unconfigured":
+        return (2, 'The device is "Unconfigured"')
 
-    return (3, "Undefined state")
+    output, perfdata = drbd_get_rates(
+        [
+            ("drbd.disk", "write", item, int(parsed["dw"]), "kb"),
+            ("drbd.disk", "read", item, int(parsed["dr"]), "kb"),
+        ]
+    )
+
+    # FIXME: Maybe handle thresholds in the future
+    return (0, output, perfdata)
 
 
 def discover_drbd_disk(info):
@@ -429,32 +426,32 @@ check_info["drbd.disk"] = LegacyCheckDefinition(
 
 
 def check_drbd_stats(item, _no_params, info):
-    parsed = drbd_get_block(item, info, "drbd.stats")
-    if parsed is not None:
-        if parsed["cs"] == "Unconfigured":
-            return (2, 'The device is "Unconfigured"')
-        output = ""
-        perfdata = []
-        for key, label in [
-            ("al", "activity log updates"),
-            ("bm", "bit map updates"),
-            ("lo", "local count requests"),
-            ("pe", "pending requests"),
-            ("ua", "unacknowledged requests"),
-            ("ap", "application pending requests"),
-            ("ep", "epoch objects"),
-            ("wo", "write order"),
-            ("oos", "kb out of sync"),
-        ]:
-            if key in parsed:
-                output += f"{label}: {parsed[key]}, "
-            else:
-                parsed[key] = "0"  # perfdata must always have same number of entries
-            if parsed[key].isdigit():
-                perfdata.append(("%s" % label.replace(" ", "_"), int(parsed[key])))
-        return (0, output.rstrip(", "), perfdata)
+    if (parsed := drbd_get_block(item, info, "drbd.stats")) is None:
+        return (3, "Undefined state")
+    if parsed["cs"] == "Unconfigured":
+        return (2, 'The device is "Unconfigured"')
 
-    return (3, "Undefined state")
+    output = ""
+    perfdata = []
+    for key, label in [
+        ("al", "activity log updates"),
+        ("bm", "bit map updates"),
+        ("lo", "local count requests"),
+        ("pe", "pending requests"),
+        ("ua", "unacknowledged requests"),
+        ("ap", "application pending requests"),
+        ("ep", "epoch objects"),
+        ("wo", "write order"),
+        ("oos", "kb out of sync"),
+    ]:
+        if key in parsed:
+            output += f"{label}: {parsed[key]}, "
+        else:
+            parsed[key] = "0"  # perfdata must always have same number of entries
+        if parsed[key].isdigit():
+            perfdata.append(("%s" % label.replace(" ", "_"), int(parsed[key])))
+
+    return (0, output.rstrip(", "), perfdata)
 
 
 def discover_drbd_stats(info):

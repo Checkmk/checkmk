@@ -308,7 +308,7 @@ class BackgroundJob:
                 job_status = self.get_status()
                 self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
             else:
-                self._logger.error('Failed to start job "%s"', self._job_id)
+                self._logger.debug('Failed to start job "%s"', self._job_id)
                 span.set_status(Status(StatusCode.ERROR))
             return start_result
 

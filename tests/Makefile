@@ -430,7 +430,7 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
-test-unit:
+test-unit: prepare-protobuf-files
 	cd .. && \
 	    ./scripts/run-bazel.sh test //cmk:doctest
 	cd .. && \
@@ -446,7 +446,7 @@ test-unit-docker:
 	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
 	    exit $$x'
 
-test-unit-all:
+test-unit-all: prepare-protobuf-files
 	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \

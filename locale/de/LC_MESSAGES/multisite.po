@@ -6409,15 +6409,8 @@ msgstr ""
 "diese um sicherzustellen, dass Sie diese ebenfalls aktivieren wollen und "
 "starten Sie die Aktivierung erneut."
 
-#, python-format
-msgid "Another host renaming job is already running: %s"
-msgstr "Ein weiterer Host-Umbenennungsauftrag läuft bereits: %s"
-
 msgid "Another omd config change job is already running."
 msgstr "Ein weiterer Auftrag zur Änderung der omd-Konfiguration läuft bereits."
-
-msgid "Another renaming operation is currently in progress"
-msgstr "Eine andere Umbenennung wird gerade durchgeführt"
 
 #, python-format
 msgid ""
@@ -6432,14 +6425,6 @@ msgstr ""
 
 msgid "Another session is active"
 msgstr "Andere Sitzung aktiv"
-
-#, python-format
-msgid "Another synchronization job is already running: %s"
-msgstr "Eine andere Synchronisation läuft gerade: %s"
-
-#, python-format
-msgid "Another user synchronization is already running: %s"
-msgstr "Eine andere Usersynchronisation läuft gerade: %s"
 
 msgid "AntiVirus last update age"
 msgstr "Alter des letzten AntiVirus-Updates"
@@ -7180,6 +7165,9 @@ msgstr "Attribute"
 
 msgid "Attributes to remove from hosts"
 msgstr "Von Hosts zu entfernende Attribute"
+
+msgid "AudioCodes Alarms"
+msgstr ""
 
 msgid "Audit log"
 msgstr "Auditlog"
@@ -20047,6 +20035,10 @@ msgstr "Wartungszeiten von Host"
 msgid "Downtimes of service"
 msgstr "Wartungszeiten von Service"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Log: Informationen zum Zustand"
+
 msgid "Drive"
 msgstr "Laufwerk"
 
@@ -32210,6 +32202,10 @@ msgstr ""
 "Modus, wenn die Tests innerhalb der Roboter-Suite miteinander in Beziehung "
 "stehen und ihre Ausführungsreihenfolge ebenfalls wichtig ist."
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Unterbrechung"
+
 msgid "Index"
 msgstr "Index"
 
@@ -37066,6 +37062,9 @@ msgstr "Hauptspeicherauslastung einfacher Geräte mit einzelnen Services"
 msgid "Maintenance"
 msgstr "Instandhaltung"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Wesentliche Seitenfehler"
 
@@ -37466,6 +37465,10 @@ msgstr "Bereitstellung und Energiezustand zuordnen"
 
 msgid "Map roles"
 msgstr "Rollen zuordnen"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Obergrenzen für Neustarts"
 
 msgid "Map states"
 msgstr "Zustände übersetzen"
@@ -41023,9 +41026,6 @@ msgstr ""
 msgid "No elements available"
 msgstr "Keine Elemente verfügbar"
 
-msgid "No elements available, create one"
-msgstr "Keine Elemente verfügbar, erstellen Sie eines"
-
 msgid "No elements selected"
 msgstr "Keine Elemente ausgewählt"
 
@@ -41163,6 +41163,10 @@ msgstr "Keine Parameter für Benachrichtigung für die Methode '%s' gefunden"
 
 msgid "No object type"
 msgstr "Kein Objekttyp"
+
+#, fuzzy
+msgid "No options available"
+msgstr "Keine Informationen vorhanden"
 
 msgid "No password entered. Please enter a password."
 msgstr "Kein Passwort eingegeben. Bitte geben Sie ein Passwort ein."
@@ -44753,6 +44757,13 @@ msgstr "Ausgehende Nicht-Unicast-Pakete"
 msgid "Output octets"
 msgstr "Ausgabe-Oktette"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Ausgabe von `sestatus`. Weitere Einzelheiten finden Sie in der "
+"entsprechenden Kommandozeilenhilfe."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -44772,6 +44783,13 @@ msgid ""
 "more details."
 msgstr ""
 "Ausgabe von `mkp show-all --json`. Weitere Einzelheiten finden Sie in der "
+"entsprechenden Kommandozeilenhilfe."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Ausgabe von `sestatus`. Weitere Einzelheiten finden Sie in der "
 "entsprechenden Kommandozeilenhilfe."
 
 msgid ""
@@ -45517,6 +45535,11 @@ msgstr ""
 "Service-Namen können die Werte der Parameter durch Einsetzen der in Dollar-"
 "Zeichen eingeschlossenen Parameter (Beispiel <tt>$HOST$</tt> oder <tt>$INST"
 "$</tt>) dargestellt werden."
+
+msgid ""
+"Parameters define the look, content, and connection details of the "
+"notification and are reusable."
+msgstr ""
 
 msgid "Parameters for"
 msgstr "Parameter für"
@@ -51133,6 +51156,10 @@ msgstr "Routen"
 msgid "Rows"
 msgstr "Zeilen"
 
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Checkmk Appliance Information"
+
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
 
@@ -52773,6 +52800,10 @@ msgstr "Auswahl der an InfluxDB zu sendenden Metriken"
 
 msgid "Select packages"
 msgstr "Pakete auswählen"
+
+#, fuzzy
+msgid "Select parameters"
+msgstr "Standard-Parameter"
 
 #, fuzzy
 msgid "Select recipient"
@@ -83338,6 +83369,24 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr "Ein weiterer Host-Umbenennungsauftrag läuft bereits: %s"
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "Eine andere Umbenennung wird gerade durchgeführt"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "Eine andere Synchronisation läuft gerade: %s"
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr "Eine andere Usersynchronisation läuft gerade: %s"
+
+#~ msgid "No elements available, create one"
+#~ msgstr "Keine Elemente verfügbar, erstellen Sie eines"
 
 #~ msgid ""
 #~ "A delay can be configured here so that multiple changes can be activated "

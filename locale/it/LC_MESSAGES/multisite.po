@@ -6520,16 +6520,9 @@ msgstr ""
 "Nel frattempo è stato fatto un altro cambiamento. Per favore, rivedilo per "
 "assicurarti che anche tu voglia attivarlo ora e ricominciare l'attivazione."
 
-#, python-format
-msgid "Another host renaming job is already running: %s"
-msgstr "Un altro lavoro di rinomina dell'host è già in esecuzione: %s"
-
 msgid "Another omd config change job is already running."
 msgstr ""
 "È già in corso un altro lavoro di modifica della configurazione di omd."
-
-msgid "Another renaming operation is currently in progress"
-msgstr "Un'altra operazione di ridenominazione è attualmente in corso"
 
 #, python-format
 msgid ""
@@ -6543,14 +6536,6 @@ msgstr ""
 
 msgid "Another session is active"
 msgstr "Un'altra sessione è attiva"
-
-#, python-format
-msgid "Another synchronization job is already running: %s"
-msgstr "Un altro lavoro di sincronizzazione è già in esecuzione: %s"
-
-#, python-format
-msgid "Another user synchronization is already running: %s"
-msgstr "Un'altra sincronizzazione utente è già in esecuzione: %s"
 
 msgid "AntiVirus last update age"
 msgstr "Età dell'ultimo aggiornamento dell'AntiVirus"
@@ -7291,6 +7276,9 @@ msgstr "Attributi"
 
 msgid "Attributes to remove from hosts"
 msgstr "Attributi da rimuovere dagli host"
+
+msgid "AudioCodes Alarms"
+msgstr ""
 
 msgid "Audit log"
 msgstr "Registro di controllo"
@@ -20618,6 +20606,10 @@ msgstr "Tempi di inattività dell'host"
 msgid "Downtimes of service"
 msgstr "Tempi di inattività del servizio"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Log: Informazioni sullo stato"
+
 msgid "Drive"
 msgstr "Guida"
 
@@ -33159,6 +33151,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Intervallo"
+
 msgid "Index"
 msgstr "Indice"
 
@@ -38173,6 +38169,9 @@ msgstr ""
 msgid "Maintenance"
 msgstr "Manutenzione"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Errori di pagina importanti"
 
@@ -38573,6 +38572,10 @@ msgstr "Mappatura del provisioning e degli stati di alimentazione"
 
 msgid "Map roles"
 msgstr "Ruoli della mappa"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Livelli superiori per i riavvii"
 
 msgid "Map states"
 msgstr "Stati della mappa"
@@ -42248,10 +42251,6 @@ msgid "No elements available"
 msgstr "Non disponibile"
 
 #, fuzzy
-msgid "No elements available, create one"
-msgstr "Non disponibile"
-
-#, fuzzy
 msgid "No elements selected"
 msgstr "Non selezionato"
 
@@ -42393,6 +42392,10 @@ msgstr "Regola di notifica modificata %d"
 
 msgid "No object type"
 msgstr "Nessun tipo di oggetto"
+
+#, fuzzy
+msgid "No options available"
+msgstr "Nessuna informazione disponibile"
 
 msgid "No password entered. Please enter a password."
 msgstr ""
@@ -46244,6 +46247,13 @@ msgstr "Uscita dei pacchetti non-unicast"
 msgid "Output octets"
 msgstr "Ottetti di uscita"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Output di `sestatus`. Per maggiori dettagli, consultare la guida alla riga "
+"di comando corrispondente."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -46264,6 +46274,13 @@ msgid ""
 msgstr ""
 "Risultato di `mkp show-all --json`. Per maggiori dettagli, vedere la guida "
 "alla riga di comando corrispondente."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Output di `sestatus`. Per maggiori dettagli, consultare la guida alla riga "
+"di comando corrispondente."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -47024,6 +47041,11 @@ msgstr ""
 "questi parametri. Nel titolo della regola, così come nei nomi degli host e "
 "dei servizi, è possibile inserire il valore effettivo dei parametri con <tt>"
 "$HOST$</tt> e <tt>$INST$</tt> (racchiusi nel segno del dollaro)."
+
+msgid ""
+"Parameters define the look, content, and connection details of the "
+"notification and are reusable."
+msgstr ""
 
 #, fuzzy
 msgid "Parameters for"
@@ -52797,6 +52819,10 @@ msgstr "Percorsi"
 msgid "Rows"
 msgstr "Righe"
 
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automazione Checkmk"
+
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
 
@@ -54488,6 +54514,10 @@ msgstr "Selezionare le metriche da inviare a InfluxDB"
 
 msgid "Select packages"
 msgstr "Seleziona i pacchetti"
+
+#, fuzzy
+msgid "Select parameters"
+msgstr "Parametri predefiniti"
 
 #, fuzzy
 msgid "Select recipient"
@@ -85717,6 +85747,25 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr "Un altro lavoro di rinomina dell'host è già in esecuzione: %s"
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "Un'altra operazione di ridenominazione è attualmente in corso"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "Un altro lavoro di sincronizzazione è già in esecuzione: %s"
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr "Un'altra sincronizzazione utente è già in esecuzione: %s"
+
+#, fuzzy
+#~ msgid "No elements available, create one"
+#~ msgstr "Non disponibile"
 
 #~ msgid ""
 #~ "A delay can be configured here so that multiple changes can be activated "

@@ -6564,15 +6564,8 @@ msgstr ""
 "Er is intussen een andere wijziging doorgevoerd. Controleer deze om er zeker "
 "van te zijn dat u deze nu ook wilt activeren en start de activering opnieuw."
 
-#, python-format
-msgid "Another host renaming job is already running: %s"
-msgstr "Een andere host hernoemingsopdracht is al bezig: %s"
-
 msgid "Another omd config change job is already running."
 msgstr "Een andere omd config change job is al bezig."
-
-msgid "Another renaming operation is currently in progress"
-msgstr "Een andere hernoemingsoperatie is momenteel aan de gang"
 
 #, python-format
 msgid ""
@@ -6586,14 +6579,6 @@ msgstr ""
 
 msgid "Another session is active"
 msgstr "Een andere sessie is actief"
-
-#, python-format
-msgid "Another synchronization job is already running: %s"
-msgstr "Er loopt al een synchronisatiejob: %s"
-
-#, python-format
-msgid "Another user synchronization is already running: %s"
-msgstr "Een andere gebruikerssynchronisatie is al bezig: %s"
 
 msgid "AntiVirus last update age"
 msgstr "AntiVirus laatste update leeftijd"
@@ -7348,6 +7333,9 @@ msgstr "Attributen"
 
 msgid "Attributes to remove from hosts"
 msgstr "Attributen te verwijderen uit hosts"
+
+msgid "AudioCodes Alarms"
+msgstr ""
 
 msgid "Audit log"
 msgstr "Auditlogboek"
@@ -20803,6 +20791,10 @@ msgid "Downtimes of service"
 msgstr "Onderbrekingen van de dienst"
 
 #, fuzzy
+msgid "Dpkg packages information"
+msgstr "Logboek: Informatie over de staat"
+
+#, fuzzy
 msgid "Drive"
 msgstr "Bestuurder"
 
@@ -33435,6 +33427,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Pauze"
+
 msgid "Index"
 msgstr "Index"
 
@@ -38500,6 +38496,9 @@ msgstr "Hoofdgeheugengebruik van eenvoudige toestellen"
 msgid "Maintenance"
 msgstr "Onderhoud"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Belangrijke pagina fouten"
 
@@ -38907,6 +38906,10 @@ msgstr "Voorziening en vermogenstoestanden in kaart brengen"
 
 msgid "Map roles"
 msgstr "Kaartrollen"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Bovenste niveaus voor herstarten"
 
 msgid "Map states"
 msgstr "Kaart staten"
@@ -42619,10 +42622,6 @@ msgid "No elements available"
 msgstr "niet beschikbaar"
 
 #, fuzzy
-msgid "No elements available, create one"
-msgstr "niet beschikbaar"
-
-#, fuzzy
 msgid "No elements selected"
 msgstr "Niet geselecteerd"
 
@@ -42763,6 +42762,10 @@ msgstr "Gewijzigde meldingsregel %d"
 
 msgid "No object type"
 msgstr "Geen objecttype"
+
+#, fuzzy
+msgid "No options available"
+msgstr "Geen informatie beschikbaar"
 
 msgid "No password entered. Please enter a password."
 msgstr ""
@@ -46652,6 +46655,13 @@ msgstr "Uitvoer niet-unicast-pakketten"
 msgid "Output octets"
 msgstr "Uitgang Octets"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Uitvoer van `mkp list --json`. Zie de bijbehorende commandoregelhulp voor "
+"meer details."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -46672,6 +46682,13 @@ msgid ""
 msgstr ""
 "Uitvoer van `mkp show-all --json`. Zie de bijbehorende commandoregelhulp "
 "voor meer details."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Uitvoer van `mkp list --json`. Zie de bijbehorende commandoregelhulp voor "
+"meer details."
 
 #, fuzzy
 msgid ""
@@ -47433,6 +47450,11 @@ msgstr ""
 "de titel van de regel als in de host en service namen, kan je de werkelijke "
 "waarde van de parameters invoegen door <tt>$HOST$</tt> en <tt>$INST$</tt> "
 "(ingesloten door dollartekens)."
+
+msgid ""
+"Parameters define the look, content, and connection details of the "
+"notification and are reusable."
+msgstr ""
 
 #, fuzzy
 msgid "Parameters for"
@@ -53248,6 +53270,10 @@ msgstr "Routes"
 msgid "Rows"
 msgstr "Rijen"
 
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Checkmk automatisering"
+
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
 
@@ -54953,6 +54979,10 @@ msgstr "Selecteer metrieken om naar InfluxDB te sturen"
 
 msgid "Select packages"
 msgstr "Kies pakketten"
+
+#, fuzzy
+msgid "Select parameters"
+msgstr "Modelparameters"
 
 #, fuzzy
 msgid "Select recipient"
@@ -86482,6 +86512,25 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr "Een andere host hernoemingsopdracht is al bezig: %s"
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "Een andere hernoemingsoperatie is momenteel aan de gang"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "Er loopt al een synchronisatiejob: %s"
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr "Een andere gebruikerssynchronisatie is al bezig: %s"
+
+#, fuzzy
+#~ msgid "No elements available, create one"
+#~ msgstr "niet beschikbaar"
 
 #~ msgid ""
 #~ "A delay can be configured here so that multiple changes can be activated "

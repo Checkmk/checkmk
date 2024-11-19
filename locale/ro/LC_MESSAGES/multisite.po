@@ -6570,18 +6570,10 @@ msgstr ""
 "pentru a vă asigura că doriți să o activați și acum și să începeți din nou "
 "activarea."
 
-#, python-format
-msgid "Another host renaming job is already running: %s"
-msgstr ""
-"O altă sarcină de redenumire a gazdei este deja în curs de desfășurare: %s."
-
 msgid "Another omd config change job is already running."
 msgstr ""
 "O altă sarcină de modificare a configurației omd este deja în curs de "
 "execuție."
-
-msgid "Another renaming operation is currently in progress"
-msgstr "O altă operațiune de redenumire este în curs de desfășurare"
 
 #, python-format
 msgid ""
@@ -6595,15 +6587,6 @@ msgstr ""
 
 msgid "Another session is active"
 msgstr "O altă sesiune este activă"
-
-#, python-format
-msgid "Another synchronization job is already running: %s"
-msgstr "O altă sarcină de sincronizare este deja în curs de execuție: %s."
-
-#, python-format
-msgid "Another user synchronization is already running: %s"
-msgstr ""
-"O altă sincronizare a utilizatorului este deja în curs de desfășurare: %s."
 
 msgid "AntiVirus last update age"
 msgstr "Vârsta ultimei actualizări AntiVirus"
@@ -7356,6 +7339,9 @@ msgstr "Atribute"
 
 msgid "Attributes to remove from hosts"
 msgstr "Atributele care trebuie eliminate din gazde"
+
+msgid "AudioCodes Alarms"
+msgstr ""
 
 msgid "Audit log"
 msgstr "Jurnal de audit"
@@ -20829,6 +20815,10 @@ msgstr "Timpii de întrerupere a gazdei"
 msgid "Downtimes of service"
 msgstr "Întreruperi de serviciu"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "Jurnal: Informații de stat"
+
 msgid "Drive"
 msgstr "Conducere"
 
@@ -33511,6 +33501,10 @@ msgid ""
 "their execution order is also crucial."
 msgstr ""
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "Pauză"
+
 msgid "Index"
 msgstr "Index"
 
@@ -38553,6 +38547,9 @@ msgstr ""
 msgid "Maintenance"
 msgstr "Întreținere"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "Defecțiuni majore ale paginii"
 
@@ -38961,6 +38958,10 @@ msgstr "Harta de aprovizionare și stări de putere"
 
 msgid "Map roles"
 msgstr "Roluri pe hartă"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "Niveluri superioare pentru reporniri"
 
 msgid "Map states"
 msgstr "Harta statelor"
@@ -42686,10 +42687,6 @@ msgid "No elements available"
 msgstr "nu este disponibil"
 
 #, fuzzy
-msgid "No elements available, create one"
-msgstr "nu este disponibil"
-
-#, fuzzy
 msgid "No elements selected"
 msgstr "Nu este selectat"
 
@@ -42831,6 +42828,10 @@ msgstr "Regula de notificare modificată %d"
 
 msgid "No object type"
 msgstr "Nici un tip de obiect"
+
+#, fuzzy
+msgid "No options available"
+msgstr "Nu există informații disponibile"
 
 msgid "No password entered. Please enter a password."
 msgstr "Nu a fost introdusă nicio parolă. Vă rugăm să introduceți o parolă."
@@ -46718,6 +46719,13 @@ msgstr "Ieșire pachete non-unicast"
 msgid "Output octets"
 msgstr "Octeți de ieșire"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"Ieșirea lui `sestatus`. Pentru mai multe detalii, consultați ajutorul "
+"corespunzător din linia de comandă."
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -46738,6 +46746,13 @@ msgid ""
 msgstr ""
 "Ieșirea din `mkp show-all --json`. Pentru mai multe detalii, consultați "
 "ajutorul corespunzător din linia de comandă."
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"Ieșirea lui `sestatus`. Pentru mai multe detalii, consultați ajutorul "
+"corespunzător din linia de comandă."
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -47498,6 +47513,11 @@ msgstr ""
 "arbitrare pentru acești parametri. În titlul regulii, precum și în numele "
 "gazdei și al serviciului, puteți insera valoarea reală a parametrilor prin "
 "<tt>$HOST$</tt> și <tt>$INST$</tt> (încadrate în semne de dolar)."
+
+msgid ""
+"Parameters define the look, content, and connection details of the "
+"notification and are reusable."
+msgstr ""
 
 #, fuzzy
 msgid "Parameters for"
@@ -53315,6 +53335,10 @@ msgstr "Rute"
 msgid "Rows"
 msgstr "Rânduri"
 
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Automatizare Checkmk"
+
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
 
@@ -55018,6 +55042,10 @@ msgstr "Selectați metricile pentru a trimite la InfluxDB"
 
 msgid "Select packages"
 msgstr "Selectați pachetele"
+
+#, fuzzy
+msgid "Select parameters"
+msgstr "Parametrii impliciți"
 
 #, fuzzy
 msgid "Select recipient"
@@ -86656,6 +86684,28 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr ""
+#~ "O altă sarcină de redenumire a gazdei este deja în curs de desfășurare: "
+#~ "%s."
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "O altă operațiune de redenumire este în curs de desfășurare"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "O altă sarcină de sincronizare este deja în curs de execuție: %s."
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr ""
+#~ "O altă sincronizare a utilizatorului este deja în curs de desfășurare: %s."
+
+#, fuzzy
+#~ msgid "No elements available, create one"
+#~ msgstr "nu este disponibil"
 
 #~ msgid ""
 #~ "A delay can be configured here so that multiple changes can be activated "

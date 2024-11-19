@@ -6276,15 +6276,8 @@ msgstr ""
 "その間に別の変更が行われました。今すぐアクティベートして、アクティベーション"
 "を再開することを確認してください。"
 
-#, python-format
-msgid "Another host renaming job is already running: %s"
-msgstr "別のホスト名変更ジョブがすでに実行されています: %s"
-
 msgid "Another omd config change job is already running."
 msgstr "別のomd config変更ジョブがすでに実行されています。"
-
-msgid "Another renaming operation is currently in progress"
-msgstr "現在、別のリネーム作業が進行中"
 
 #, python-format
 msgid ""
@@ -6298,14 +6291,6 @@ msgstr ""
 
 msgid "Another session is active"
 msgstr "別のセッションがアクティブです"
-
-#, python-format
-msgid "Another synchronization job is already running: %s"
-msgstr "別の同期ジョブがすでに実行されています: %s"
-
-#, python-format
-msgid "Another user synchronization is already running: %s"
-msgstr "別のユーザー同期がすでに実行されています:%s"
 
 msgid "AntiVirus last update age"
 msgstr "アンチウイルスの最終更新期間"
@@ -7028,6 +7013,9 @@ msgstr "属性"
 
 msgid "Attributes to remove from hosts"
 msgstr "ホストから削除する属性"
+
+msgid "AudioCodes Alarms"
+msgstr ""
 
 msgid "Audit log"
 msgstr "監査ログ"
@@ -19853,6 +19841,10 @@ msgstr "ホストのダウンタイム"
 msgid "Downtimes of service"
 msgstr "サービスのダウンタイム"
 
+#, fuzzy
+msgid "Dpkg packages information"
+msgstr "ログ:状態情報"
+
 msgid "Drive"
 msgstr "ドライバ"
 
@@ -32282,6 +32274,10 @@ msgstr ""
 "られます。このモードは、ロボットのテストスイートに含まれるテストが互いに関連"
 "していて、その実行順序も重要である場合に選択します。"
 
+#, fuzzy
+msgid "Indeterminate"
+msgstr "休憩"
+
 msgid "Index"
 msgstr "インデックス"
 
@@ -37256,6 +37252,9 @@ msgstr "単純なデバイスのメインメモリ使用量"
 msgid "Maintenance"
 msgstr "メンテナンス"
 
+msgid "Major"
+msgstr ""
+
 msgid "Major Page Faults"
 msgstr "メジャーページフォールト"
 
@@ -37659,6 +37658,10 @@ msgstr "マッププロビジョニングと電源の状態"
 
 msgid "Map roles"
 msgstr "マップの役割"
+
+#, fuzzy
+msgid "Map severity levels to alarm states"
+msgstr "再起動の上位レベル"
 
 msgid "Map states"
 msgstr "マップの状態"
@@ -41347,10 +41350,6 @@ msgid "No elements available"
 msgstr "利用不可"
 
 #, fuzzy
-msgid "No elements available, create one"
-msgstr "利用不可"
-
-#, fuzzy
 msgid "No elements selected"
 msgstr "選択されていない"
 
@@ -41490,6 +41489,10 @@ msgstr "通知ルール %d を変更しました"
 
 msgid "No object type"
 msgstr "オブジェクトタイプなし"
+
+#, fuzzy
+msgid "No options available"
+msgstr "利用可能な情報はありません"
 
 msgid "No password entered. Please enter a password."
 msgstr "パスワードが入力されていません。パスワードを入力してください。"
@@ -45316,6 +45319,12 @@ msgstr "ユニキャスト以外のパケットを出力する"
 msgid "Output octets"
 msgstr "出力オクテット"
 
+#, fuzzy
+msgid ""
+"Output of `dpkg -l`. See the corresponding commandline help for more details."
+msgstr ""
+"「sestatus」の出力。詳細は対応するコマンドラインヘルプを参照してください。"
+
 msgid ""
 "Output of `mkp find --all --json`. See the corresponding commandline help "
 "for more details."
@@ -45336,6 +45345,12 @@ msgid ""
 msgstr ""
 "「mkp show-all --json」の出力。詳細は対応するコマンドラインヘルプを参照してく"
 "ださい。"
+
+#, fuzzy
+msgid ""
+"Output of `rpm -qa`. See the corresponding commandline help for more details."
+msgstr ""
+"「sestatus」の出力。詳細は対応するコマンドラインヘルプを参照してください。"
 
 msgid ""
 "Output of `sestatus`. See the corresponding commandline help for more "
@@ -46085,6 +46100,11 @@ msgstr ""
 "の値を指定できます。ルールのタイトル、およびホスト名とサービス名に、<tt>$HOST"
 "$</tt>と<tt>$INST$ </tt>(ドルで囲まれている)でパラメーターの実際の値を挿入で"
 "きます。標識)。"
+
+msgid ""
+"Parameters define the look, content, and connection details of the "
+"notification and are reusable."
+msgstr ""
 
 #, fuzzy
 msgid "Parameters for"
@@ -51855,6 +51875,10 @@ msgstr "ルート"
 msgid "Rows"
 msgstr "行"
 
+#, fuzzy
+msgid "Rpm packages information"
+msgstr "Checkmkの自動化"
+
 msgid "Ruckus Spot"
 msgstr "Ruckus Spot"
 
@@ -53540,6 +53564,10 @@ msgstr "InfluxDBに送信するメトリクスを選択する"
 
 msgid "Select packages"
 msgstr "選択したパッケージ"
+
+#, fuzzy
+msgid "Select parameters"
+msgstr "デフォルトパラメータ"
 
 #, fuzzy
 msgid "Select recipient"
@@ -84289,6 +84317,25 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, python-format
+#~ msgid "Another host renaming job is already running: %s"
+#~ msgstr "別のホスト名変更ジョブがすでに実行されています: %s"
+
+#~ msgid "Another renaming operation is currently in progress"
+#~ msgstr "現在、別のリネーム作業が進行中"
+
+#, python-format
+#~ msgid "Another synchronization job is already running: %s"
+#~ msgstr "別の同期ジョブがすでに実行されています: %s"
+
+#, python-format
+#~ msgid "Another user synchronization is already running: %s"
+#~ msgstr "別のユーザー同期がすでに実行されています:%s"
+
+#, fuzzy
+#~ msgid "No elements available, create one"
+#~ msgstr "利用不可"
 
 #~ msgid ""
 #~ "A delay can be configured here so that multiple changes can be activated "

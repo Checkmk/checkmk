@@ -57,6 +57,8 @@ update_action_registry.register(
     ConvertCounters(
         name="counters_conversion",
         title="Convert counter files",
-        sort_index=101,  # can run whenever
+        # Run this action quite early on. In case the update is aborted before this is run,
+        # all hosts using counters can not be monitored anymore _at all_.
+        sort_index=21,
     )
 )

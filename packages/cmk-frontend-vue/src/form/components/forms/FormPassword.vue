@@ -9,7 +9,7 @@ import type { Password } from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 
 const props = defineProps<{
   spec: Password
@@ -89,7 +89,7 @@ const passwordStoreOptions = computed(() => {
 </script>
 
 <template>
-  <DropDown v-model:selected-option="passwordType" :options="passwordTypeOptions" />
+  <CmkDropdown v-model:selected-option="passwordType" :options="passwordTypeOptions" />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
     <input
@@ -103,7 +103,7 @@ const passwordStoreOptions = computed(() => {
     <template v-if="props.spec.password_store_choices.length === 0">
       {{ props.spec.i18n.no_password_store_choices }}
     </template>
-    <DropDown
+    <CmkDropdown
       v-else
       v-model:selected-option="passwordStoreChoice"
       :options="passwordStoreOptions"

@@ -8,7 +8,7 @@ import type { DataSize } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -44,6 +44,6 @@ const magnitudeOptions = computed(() => {
     class="number"
     type="text"
   />
-  <DropDown v-model:selected-option="value[1]" :options="magnitudeOptions" />
+  <CmkDropdown v-model:selected-option="value[1]" :options="magnitudeOptions" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

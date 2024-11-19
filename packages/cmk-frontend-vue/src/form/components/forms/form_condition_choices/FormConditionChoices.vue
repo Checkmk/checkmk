@@ -9,7 +9,7 @@ import ConditionChoice from './ConditionChoice.vue'
 import type * as typing from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 
@@ -90,10 +90,10 @@ const remainingGroups = computed(() =>
       />
     </template>
   </CmkList>
-  <DropDown
+  <CmkDropdown
     v-model:selected-option="selectedConditionGroup"
     :options="remainingGroups.map(([name, value]) => ({ name, title: value.title }))"
-    :input_hint="
+    :input-hint="
       remainingGroups.length === 0
         ? spec.i18n.no_more_condition_groups_to_add
         : spec.i18n.select_condition_group_to_add

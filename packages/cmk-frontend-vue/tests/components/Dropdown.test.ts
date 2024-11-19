@@ -4,20 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import userEvent from '@testing-library/user-event'
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 test('dropdown shows options', async () => {
-  render(DropDown, {
+  render(CmkDropdown, {
     props: {
       options: [
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      input_hint: 'Select an option'
+      inputHint: 'Select an option'
     }
   })
 
@@ -36,12 +36,12 @@ test('dropdown updates selecedOption', async () => {
       { title: 'Option 2', name: 'option2' }
     ],
     selectedOption: null,
-    input_hint: 'Select an option',
+    inputHint: 'Select an option',
     'onUpdate:selectedOption': (option: string | null) => {
       selectedOption = option
     }
   }
-  const { rerender } = render(DropDown, { props })
+  const { rerender } = render(CmkDropdown, { props })
 
   const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
   await fireEvent.click(dropdown)
@@ -57,14 +57,14 @@ test('dropdown updates selecedOption', async () => {
 })
 
 test('dropdown shows and hides options', async () => {
-  render(DropDown, {
+  render(CmkDropdown, {
     props: {
       options: [
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      input_hint: 'Select an option'
+      inputHint: 'Select an option'
     }
   })
 
@@ -81,14 +81,14 @@ test('dropdown shows and hides options', async () => {
 
 test('dropdown updates selecedOption selected via keyboard', async () => {
   let selectedOption: string | null = ''
-  render(DropDown, {
+  render(CmkDropdown, {
     props: {
       options: [
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      input_hint: 'Select an option',
+      inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
         selectedOption = option
       }
@@ -103,14 +103,14 @@ test('dropdown updates selecedOption selected via keyboard', async () => {
 
 test('dropdown option selection via keyboard wraps', async () => {
   let selectedOption: string | null = ''
-  render(DropDown, {
+  render(CmkDropdown, {
     props: {
       options: [
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      input_hint: 'Select an option',
+      inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
         selectedOption = option
       }
@@ -125,14 +125,14 @@ test('dropdown option selection via keyboard wraps', async () => {
 
 test('dropdown option immediate focus and filtering', async () => {
   let selectedOption: string | null = ''
-  render(DropDown, {
+  render(CmkDropdown, {
     props: {
       options: [
         { title: 'Option 1', name: 'option1' },
         { title: 'Option 2', name: 'option2' }
       ],
       selectedOption: null,
-      input_hint: 'Select an option',
+      inputHint: 'Select an option',
       'onUpdate:selectedOption': (option: string | null) => {
         selectedOption = option
       }
@@ -152,21 +152,21 @@ test('dropdown option immediate focus and filtering', async () => {
 
 test('dropdown doesnt interfere with tab order', async () => {
   const testComponent = defineComponent({
-    components: { DropDown },
+    components: { CmkDropdown },
     setup() {
       const selectedOption = ref(null)
       return { selectedOption }
     },
     template: `
       <div>
-        <DropDown
+        <CmkDropdown
           :selected-option="selectedOption"
           :options="[
             { title: 'Option 1', name: 'option1' },
             { title: 'Option 2', name: 'option2' }
           ]"
           @update:selected-option="$emit('update:selectedOption', $event)"
-          input_hint="Select an option"
+          input-hint="Select an option"
         />
         <input data-testid="next-input" type="text" />
       </div>

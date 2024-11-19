@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkList from '@/components/CmkList'
 import CmkSpace from '@/components/CmkSpace.vue'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import {
   type ConditionChoicesValue,
   type ConditionGroup,
@@ -119,7 +119,7 @@ watch(selectedOperator, (operator) => {
 
 <template>
   {{ group.title }}
-  <DropDown v-model:selected-option="selectedOperator" :options="operatorChoices" />
+  <CmkDropdown v-model:selected-option="selectedOperator" :options="operatorChoices" />
   <CmkSpace :size="'small'" />
   <template v-if="allValueChoices.length === 1">
     {{ allValueChoices[0]!.title }}
@@ -136,7 +136,7 @@ watch(selectedOperator, (operator) => {
       :orientation="'horizontal'"
     >
       <template #item-props="{ index, selectedValue }">
-        <DropDown
+        <CmkDropdown
           :selected-option="selectedValue"
           :disabled="remainingConditions.length === 0"
           :options="[
@@ -157,7 +157,7 @@ watch(selectedOperator, (operator) => {
     </CmkList>
   </template>
   <template v-else>
-    <DropDown
+    <CmkDropdown
       :selected-option="selectedSingleValue"
       :options="allValueChoices"
       @update:selected-option="(value) => updateValue(selectedOperator, value)"

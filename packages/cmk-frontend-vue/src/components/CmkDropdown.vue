@@ -13,35 +13,25 @@ export interface DropdownOption {
   title: string
 }
 
-const props = defineProps({
-  options: {
-    type: Array as () => DropdownOption[],
-    required: true
-  },
-  input_hint: {
-    type: String,
-    default: ''
-  },
-  no_results_hint: {
-    type: String,
-    default: ''
-  },
-  disabled: {
-    type: Boolean,
-    default: false
-  },
-  componentId: {
-    type: String,
-    default: ''
-  }
-})
+const {
+  inputHint = '',
+  noResultsHint = '',
+  disabled = false,
+  componentId = '',
+  options
+} = defineProps<{
+  options: DropdownOption[]
+  inputHint?: string
+  noResultsHint?: string
+  disabled?: boolean
+  componentId?: string
+}>()
 
 const vClickOutside = useClickOutside()
 
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const selectedOptionTitle = computed(
-  () =>
-    props.options.find((option) => option.name === selectedOption.value)?.title ?? props.input_hint
+  () => options.find((option) => option.name === selectedOption.value)?.title ?? inputHint
 )
 
 const suggestionsShown = ref(false)
@@ -49,22 +39,22 @@ const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
 
 const filterString = ref('')
-const filteredOptions = ref<DropdownOption[]>(props.options)
-const selectedSuggestionName: Ref<string | null> = ref(props.options[0]?.name ?? null)
+const filteredOptions = ref<DropdownOption[]>(options)
+const selectedSuggestionName: Ref<string | null> = ref(options[0]?.name ?? null)
 
 watch(filterString, (newFilterString) => {
-  filteredOptions.value = props.options.filter((option) =>
+  filteredOptions.value = options.filter((option) =>
     option.title.toLowerCase().includes(newFilterString.toLowerCase())
   )
   selectedSuggestionName.value = filteredOptions.value[0]?.name ?? null
 })
 
 function showSuggestions(): void {
-  if (!props.disabled && props.options.length > 0) {
+  if (!disabled && options.length > 0) {
     suggestionsShown.value = !suggestionsShown.value
     filterString.value = ''
-    filteredOptions.value = props.options
-    selectedSuggestionName.value = Object.values(props.options)[0]?.name ?? null
+    filteredOptions.value = options
+    selectedSuggestionName.value = Object.values(options)[0]?.name ?? null
     nextTick(() => {
       suggestionInputRef.value?.focus()
     })
@@ -123,7 +113,7 @@ function wrap(index: number, length: number): number {
       role="combobox"
       :aria-label="selectedOptionTitle"
       :aria-expanded="suggestionsShown"
-      :class="{ 'drop-down': true, disabled: props.disabled || props.options.length === 0 }"
+      :class="{ 'drop-down': true, disabled: disabled || options.length === 0 }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
@@ -150,8 +140,8 @@ function wrap(index: number, length: number): number {
       >
         {{ option.title }}
       </li>
-      <li v-if="filteredOptions.length === 0 && props.no_results_hint !== ''">
-        {{ props.no_results_hint }}
+      <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
+        {{ noResultsHint }}
       </li>
     </ul>
   </div>

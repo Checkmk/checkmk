@@ -15,7 +15,7 @@ import type { SingleChoiceEditable } from '@/form/components/vue_formspec_compon
 import { ref, toRaw } from 'vue'
 import { configEntityAPI, type Payload } from '@/form/components/utils/configuration_entity'
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 
 const props = defineProps<{
   spec: SingleChoiceEditable
@@ -113,10 +113,10 @@ function openSlideIn(objectId: null | OptionId) {
 
 <template>
   <div>
-    <DropDown
+    <CmkDropdown
       v-model:selected-option="selectedObjectId"
       :options="choices"
-      :input_hint="choices.length === 0 ? spec.i18n.no_objects : spec.i18n.no_selection"
+      :input-hint="choices.length === 0 ? spec.i18n.no_objects : spec.i18n.no_selection"
       :disabled="choices.length === 0"
       class="fsce__dropdown"
     />

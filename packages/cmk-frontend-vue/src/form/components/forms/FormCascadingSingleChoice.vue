@@ -16,7 +16,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import HelpText from '@/components/HelpText.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import DropDown from '@/components/DropDown.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
@@ -128,11 +128,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <span class="form-cascading-single-choice__choice">
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
     <template v-if="!layoutSettings.side_by_side">
-      <DropDown
+      <CmkDropdown
         v-model:selected-option="selectedOption"
         :component-id="componentId"
         :options="spec.elements"
-        :input_hint="props.spec.input_hint as string"
+        :input-hint="props.spec.input_hint as string"
       />
     </template>
     <template v-else>

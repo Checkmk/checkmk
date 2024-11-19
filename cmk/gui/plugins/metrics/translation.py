@@ -586,6 +586,23 @@ check_metrics["check_mk-winperf_phydisk"] = disk_utilization_translation
 check_metrics["check_mk-arbor_peakflow_sp_disk_usage"] = disk_utilization_translation
 check_metrics["check_mk-arbor_peakflow_tms_disk_usage"] = disk_utilization_translation
 check_metrics["check_mk-arbor_pravail_disk_usage"] = disk_utilization_translation
+
+# check plugins relying on check_diskstat_dict
+check_metrics["check_mk-diskstat_io"] = disk_utilization_translation
+check_metrics["check_mk-diskstat_io_director"] = disk_utilization_translation
+check_metrics["check_mk-diskstat_io_volumes"] = disk_utilization_translation
+check_metrics["check_mk-aws_ec2_disk_io"] = disk_utilization_translation
+check_metrics["check_mk-aws_rds_disk_io"] = disk_utilization_translation
+check_metrics["check_mk-cadvisor_diskstat"] = disk_utilization_translation
+check_metrics["check_mk-scaleio_storage_pool_totalrw"] = disk_utilization_translation
+check_metrics["check_mk-scaleio_storage_pool_rebalancerw"] = disk_utilization_translation
+check_metrics["check_mk-scaleio_volume"] = disk_utilization_translation
+check_metrics["check_mk-ucd_diskio"] = disk_utilization_translation
+check_metrics["check_mk-winperf_phydisk"] = disk_utilization_translation
+check_metrics["check_mk-gcp_filestore_disk"] = disk_utilization_translation
+check_metrics["check_mk-gcp_sql_disk"] = disk_utilization_translation
+check_metrics["check_mk-esx_vsphere_datastore_io"] = disk_utilization_translation
+
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
 if_translation: dict[str, CheckMetricEntry] = {
     "in": {"name": "if_in_bps", "scale": 8},

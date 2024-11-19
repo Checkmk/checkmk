@@ -1,0 +1,27 @@
+Title: disk_utilization: scale graph metric to correct percentage value
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1732012675
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+This werk introduces a fix to scale the graph metric 'Disk utilization'
+percentage value correctly. The following check plugins are affected by
+fix:
+
+LI: diskstat_io
+LI: diskstat_io_director
+LI: diskstat_io_volumes
+LI: aws_ebs
+LI: aws_ec2_disk_io
+LI: aws_rds_disk_io
+LI: cadvisor_diskstat
+LI: scaleio_storage_pool_totalrw
+LI: scaleio_storage_pool_rebalancerw
+LI: scaleio_volume
+LI: ucd_diskio
+LI: gcp_filestore_disk
+LI: gcp_sql_disk
+LI: esx_vsphere_datastore_io

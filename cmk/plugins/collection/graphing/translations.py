@@ -444,6 +444,29 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
     },
 )
 
+# translation for lib function check_diskstat_dict
+translation_disk_utilization_check_diskstat_dict = translations.Translation(
+    name="disk_utilization_check_diskstat_dict",
+    check_commands=[
+        translations.PassiveCheck("aws_ebs"),
+        translations.PassiveCheck("aws_ec2_disk_io"),
+        translations.PassiveCheck("aws_rds_disk_io"),
+        translations.PassiveCheck("cadvisor_diskstat"),
+        translations.PassiveCheck("scaleio_storage_pool_totalrw"),
+        translations.PassiveCheck("scaleio_storage_pool_rebalancerw"),
+        translations.PassiveCheck("scaleio_volume"),
+        translations.PassiveCheck("ucd_diskio"),
+        translations.PassiveCheck("winperf_phydisk"),
+        translations.PassiveCheck("gcp_filestore_disk"),
+        translations.PassiveCheck("gcp_sql_disk"),
+        translations.PassiveCheck("esx_vsphere_counters_diskio"),
+        translations.PassiveCheck("esx_vsphere_datastore_io"),
+    ],
+    translations={
+        "disk_utilization": translations.ScaleBy(100.0),
+    },
+)
+
 translation_disk_smb = translations.Translation(
     name="disk_smb",
     check_commands=[translations.ActiveCheck("disk_smb")],
@@ -524,15 +547,14 @@ translation_emc_isilon_iops = translations.Translation(
     translations={"iops": translations.RenameTo("disk_ios")},
 )
 
-translation_emc_vplex_director_stats_emc_vplex_volumes_hp_msa_controller_io_hp_msa_disk_io_hp_msa_volume_io_winperf_phydisk_arbor_peakflow_sp_disk_usage_arbor_peakflow_tms_disk_usage_arbor_pravail_disk_usage = translations.Translation(
-    name="emc_vplex_director_stats_emc_vplex_volumes_hp_msa_controller_io_hp_msa_disk_io_hp_msa_volume_io_winperf_phydisk_arbor_peakflow_sp_disk_usage_arbor_peakflow_tms_disk_usage_arbor_pravail_disk_usage",
+translation_disk_utilization_scale = translations.Translation(
+    name="disk_utilization_scale",
     check_commands=[
         translations.PassiveCheck("emc_vplex_director_stats"),
         translations.PassiveCheck("emc_vplex_volumes"),
         translations.PassiveCheck("hp_msa_controller_io"),
         translations.PassiveCheck("hp_msa_disk_io"),
         translations.PassiveCheck("hp_msa_volume_io"),
-        translations.PassiveCheck("winperf_phydisk"),
         translations.PassiveCheck("arbor_peakflow_sp_disk_usage"),
         translations.PassiveCheck("arbor_peakflow_tms_disk_usage"),
         translations.PassiveCheck("arbor_pravail_disk_usage"),
@@ -544,7 +566,6 @@ translation_esx_vsphere_counters_diskio = translations.Translation(
     name="esx_vsphere_counters_diskio",
     check_commands=[translations.PassiveCheck("esx_vsphere_counters_diskio")],
     translations={
-        "disk_utilization": translations.ScaleBy(100.0),
         "ios": translations.RenameTo("disk_ios"),
         "latency": translations.RenameTo("disk_latency"),
         "read": translations.RenameTo("disk_read_throughput"),

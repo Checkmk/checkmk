@@ -7,13 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, watch } from 'vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
-import {
-  groupIndexedValidations,
-  validateValue,
-  type ValidationMessages
-} from '@/form/components/utils/validation'
+import { type ValidationMessages } from '@/form/components/utils/validation'
 import CmkList from '@/components/CmkList'
 import { useFormEditDispatcher } from '@/form/private'
+import formListActions from '@/form/components/forms/utils/formListActions'
 
 const props = defineProps<{
   spec: List
@@ -25,13 +22,12 @@ const data = defineModel<unknown[]>('data', { required: true })
 const validation = ref<Array<string>>([])
 const elementValidation = ref<Array<ValidationMessages>>([])
 
-function initialize(newBackendData: unknown[]) {
-  validation.value.splice(0)
-  elementValidation.value.splice(0)
-  newBackendData.forEach(() => {
-    elementValidation.value.push([] as ValidationMessages)
-  })
-}
+const { initialize, deleteElement, addElement, updateElementData, setValidation } = formListActions(
+  props,
+  data,
+  validation,
+  elementValidation
+)
 
 watch(
   [data, () => props.backendValidation],
@@ -41,42 +37,6 @@ watch(
   },
   { immediate: true }
 )
-
-function setValidation(newBackendValidation: ValidationMessages) {
-  const [_listValidations, _elementValidations] = groupIndexedValidations(
-    newBackendValidation,
-    data.value.length
-  )
-  validation.value = _listValidations
-  Object.entries(_elementValidations).forEach(([i, value]) => {
-    elementValidation.value[i as unknown as number] = value
-  })
-}
-
-function _validateList() {
-  validation.value = []
-  validateValue(data.value, props.spec.validators!).forEach((error) => {
-    validation.value.push(error)
-  })
-}
-
-function addElement(index: number) {
-  data.value[index] = JSON.parse(JSON.stringify(props.spec.element_default_value))
-  elementValidation.value[index] = []
-  _validateList()
-  return true
-}
-
-function deleteElement(index: number) {
-  data.value.splice(index, 1)
-  elementValidation.value.splice(index, 1)
-  _validateList()
-  return true
-}
-
-function updateElementData(newValue: unknown, index: number) {
-  data.value[index] = newValue
-}
 
 function reorderElements(order: number[]) {
   data.value = order.map((index) => data.value[index])

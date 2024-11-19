@@ -425,7 +425,7 @@ class ABCPackageManager(abc.ABC):
             run(["ln", "-s", "/bin/true", systemctl.as_posix()], sudo=True)
 
         if os.geteuid() != 0:
-            cmd.insert(0, "sudo")
+            cmd.insert(0, "/usr/bin/sudo")
 
         try:
             subprocess.run(cmd, shell=False, close_fds=True, encoding="utf-8", check=True)

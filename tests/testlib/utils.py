@@ -292,7 +292,7 @@ def _extend_command(
 
 
 def _cmd_as_sudo(preserve_env: list[str] | None = None) -> list[str]:
-    base_cmd = ["sudo"]
+    base_cmd = ["/usr/bin/sudo"]
     if preserve_env:
         base_cmd += [f"--preserve-env={','.join(preserve_env)}"]
     return base_cmd

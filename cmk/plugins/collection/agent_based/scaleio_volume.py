@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 from cmk.plugins.lib.scaleio import (
     create_disk_read_write,
     DiskReadWrite,
@@ -113,7 +113,7 @@ def check_scaleio_volume(
         )
         return
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk={
             "read_ios": volume.volume_ios.read_operations,

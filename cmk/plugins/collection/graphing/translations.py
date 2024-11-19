@@ -445,6 +445,7 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
 )
 
 # translation for lib function check_diskstat_dict
+# no new check plugins should be added here (see docstring for check_diskstat_dict_)
 translation_disk_utilization_check_diskstat_dict = translations.Translation(
     name="disk_utilization_check_diskstat_dict",
     check_commands=[

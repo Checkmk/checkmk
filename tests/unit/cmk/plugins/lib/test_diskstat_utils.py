@@ -451,7 +451,7 @@ def test_check_diskstat_dict(
     expected = list(exp_res)
     assert (
         list(
-            diskstat.check_diskstat_dict(
+            diskstat.check_diskstat_dict_legacy(
                 params=params,
                 disk=disk,
                 value_store=value_store,
@@ -461,7 +461,7 @@ def test_check_diskstat_dict(
         == expected
     )
     assert list(
-        diskstat.check_diskstat_dict(
+        diskstat.check_diskstat_dict_legacy(
             params={**params, "average": 300},
             disk=disk,
             value_store=value_store,

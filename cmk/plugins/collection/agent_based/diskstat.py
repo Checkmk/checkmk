@@ -471,7 +471,7 @@ def check_diskstat(
         if disk_name != item:
             yield Result(state=State.OK, summary=f"[{disk_name}]")
 
-    yield from diskstat.check_diskstat_dict(
+    yield from diskstat.check_diskstat_dict_legacy(
         params=params,
         disk=disk_with_rates,
         value_store=value_store,

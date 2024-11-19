@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 from cmk.plugins.lib.ucd_hr_detection import UCD
 
 
@@ -127,7 +127,7 @@ def _check_ucd_diskio(
 
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk_data,
         value_store=value_store,

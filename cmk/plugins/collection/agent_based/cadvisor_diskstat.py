@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 Section = Mapping[str, MutableMapping[str, float]]
 
@@ -57,7 +57,7 @@ def check_cadvisor_diskstat(item: str, params: Mapping[str, Any], section: Secti
     if (disk := section.get(item)) is None:
         return
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk,
         value_store=get_value_store(),

@@ -30,7 +30,7 @@ from cmk.plugins.aws.lib import (
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 Section = Mapping[str, float]
 
@@ -251,7 +251,7 @@ def check_aws_ec2_disk_io(
     if not disk_data:
         raise IgnoreResultsError("Currently no data from AWS")
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk_data,
         value_store=get_value_store(),

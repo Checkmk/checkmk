@@ -65,10 +65,12 @@ fi
 
 trap "cleanup" 0
 
+# BEGIN PLATFORM SPECIFIC CODE
 # /usr/bin/time has more comprehensive metrics under Linux.
 # Under AIX/Solaris, only real, sys and reads are available.
 /usr/bin/time -o "${TMP_FILE}" --append \
     -f "real %E\nuser %U\nsys %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
+# END PLATFORM SPECIFIC CODE
 RC=$?
 echo "exit_code ${RC}" >>"${TMP_FILE}"
 

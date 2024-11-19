@@ -65,7 +65,9 @@ fi
 
 trap "cleanup" 0
 
+# BEGIN PLATFORM SPECIFIC CODE
 /usr/bin/time -p "$@" 2>>"${TMP_FILE}" # the -p option writes to stderr, strangely...
+# END PLATFORM SPECIFIC CODE
 RC=$?
 echo "exit_code ${RC}" >>"${TMP_FILE}"
 

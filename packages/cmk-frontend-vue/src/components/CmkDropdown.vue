@@ -132,18 +132,20 @@ function wrap(index: number, length: number): number {
       <span class="input">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
-      <li
-        v-for="option in filteredOptions"
-        :key="option.name"
-        role="option"
-        :class="{ selected: option.name === selectedSuggestionName, selectable: true }"
-        @click.prevent="() => selectOption(option)"
-      >
-        {{ option.title }}
-      </li>
-      <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
-        {{ noResultsHint }}
-      </li>
+      <div class="options-container">
+        <li
+          v-for="option in filteredOptions"
+          :key="option.name"
+          role="option"
+          :class="{ selected: option.name === selectedSuggestionName, selectable: true }"
+          @click.prevent="() => selectOption(option)"
+        >
+          {{ option.title }}
+        </li>
+        <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
+          {{ noResultsHint }}
+        </li>
+      </div>
     </ul>
   </div>
 </template>
@@ -186,8 +188,6 @@ function wrap(index: number, length: number): number {
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-6);
   border-radius: 0px;
-  max-height: 200px;
-  overflow-y: auto;
   max-width: fit-content;
   margin: 0;
   padding: 0;
@@ -215,6 +215,12 @@ function wrap(index: number, length: number): number {
         color: var(--default-select-hover-color);
       }
     }
+  }
+
+  .options-container {
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
   }
 }
 </style>

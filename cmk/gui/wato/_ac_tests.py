@@ -77,6 +77,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestCheckMKHelperUsage)
     ac_test_registry.register(ACTestCheckMKFetcherUsage)
     ac_test_registry.register(ACTestCheckMKCheckerUsage)
+    ac_test_registry.register(ACTestAlertHandlerEventTypes)
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
@@ -1041,6 +1042,36 @@ class ACTestCheckMKCheckerUsage(ACTest):
                     "The checker usage is below 50%, you may decrease the number of "
                     "checkers to reduce the memory consumption."
                 ),
+            )
+
+
+class ACTestAlertHandlerEventTypes(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.performance
+
+    def title(self) -> str:
+        return _("Alert handler: Don't handle all check executions")
+
+    def help(self) -> str:
+        return _(
+            "In general it will result in a significantly increased load when alert handlers are "
+            "configured to handle all check executions. It is highly recommended to "
+            '<a href="wato.py?mode=edit_configvar&varname=alert_handler_event_types">disable '
+            "this</a> in most cases."
+        )
+
+    def is_relevant(self) -> bool:
+        return self._uses_microcore()
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        if "checkresult" in self._get_effective_global_setting("alert_handler_event_types"):
+            yield ACSingleResult(
+                state=ACResultState.CRIT,
+                text=_("Alert handler are configured to handle all check execution."),
+            )
+        else:
+            yield ACSingleResult(
+                state=ACResultState.OK, text=_("Alert handlers will handle state changes.")
             )
 
 

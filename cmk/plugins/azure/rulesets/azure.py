@@ -253,6 +253,11 @@ def configuration_authentication() -> Mapping[str, DictElement]:
             ),
             required=True,
         ),
+        "proxy": DictElement(
+            parameter_form=Proxy(
+                migrate=migrate_to_proxy,
+            ),
+        ),
     }
 
 
@@ -280,11 +285,6 @@ def configuration_services() -> Mapping[str, DictElement]:
 
 def configuration_advanced() -> Mapping[str, DictElement]:
     return {
-        "proxy": DictElement(
-            parameter_form=Proxy(
-                migrate=migrate_to_proxy,
-            ),
-        ),
         "config": DictElement(
             parameter_form=Dictionary(
                 title=Title("Retrieve information about..."),

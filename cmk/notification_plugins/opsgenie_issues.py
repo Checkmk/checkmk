@@ -7,6 +7,7 @@ import sys
 from contextlib import contextmanager
 from typing import Iterator
 
+import urllib3
 from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import-untyped]
 from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
@@ -56,7 +57,9 @@ def _handle_api_exceptions(api_call_name: str, ignore_retry: bool = False) -> It
 
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
 class Connector:
-    def __init__(self, api_key: str, host_url: str | None, proxy_url: str | None) -> None:
+    def __init__(
+        self, api_key: str, host_url: str | None, proxy_url: str | None, ignore_ssl: bool
+    ) -> None:
         conf: "Configuration" = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
@@ -65,10 +68,15 @@ class Connector:
             sys.stdout.write(f"Using proxy: {proxy_url}\n")
             conf.proxy = proxy_url
 
-        url = parse_url(conf.host)
-        if proxy_url or url.host is None or url.host.endswith(".opsgenie.com"):
+        if ignore_ssl:
+            sys.stdout.write("Ignoring SSL certificate verification\n")
+            conf.verify_ssl = False
+            urllib3.disable_warnings(urllib3.connectionpool.InsecureRequestWarning)
+        else:
             sys.stdout.write(f"Using trust store: {trusted_ca_file}\n")
             conf.ssl_ca_cert = trusted_ca_file
+
+        sys.stdout.flush()
 
         api_client: "ApiClient" = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
@@ -245,7 +253,9 @@ $LONGSERVICEOUTPUT$
     desc = utils.substitute_context(desc, context)
     msg = utils.substitute_context(msg, context)
 
-    connector = Connector(api_key, host_url, proxy_url)
+    connector = Connector(
+        api_key, host_url, proxy_url, ignore_ssl="PARAMETER_IGNORE_SSL" in context
+    )
 
     if context["NOTIFICATIONTYPE"] == "PROBLEM":
         return connector.handle_alert_creation(

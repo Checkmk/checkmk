@@ -7,6 +7,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
+    FixedValue,
     ListOfStrings,
     TextAreaUnicode,
     TextInput,
@@ -55,6 +56,15 @@ class NotificationParameterOpsgenie(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
+                (
+                    "ignore_ssl",
+                    FixedValue(
+                        value=True,
+                        title=_("Disable SSL certificate verification"),
+                        totext=_("Disable SSL certificate verification"),
+                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                    ),
+                ),
                 (
                     "owner",
                     TextInput(

@@ -31,12 +31,18 @@ def _ls(counters_path: Path) -> Sequence[Path]:
 
 class ConvertCounters(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        self.convert_counter_files(Path(cmk.utils.paths.counters_dir))
+        self.convert_counter_files(Path(cmk.utils.paths.counters_dir), logger)
 
     @staticmethod
-    def convert_counter_files(counters_path: Path) -> None:
+    def convert_counter_files(counters_path: Path, logger: Logger) -> None:
+        msg_temp = "    '%s': %s"
         for f in _ls(counters_path):
-            if not (content := f.read_text().strip()) or _is_json(content):
+            if not (content := f.read_text().strip()):
+                logger.debug(msg_temp, "skipped (empty)", f)
+                continue
+
+            if _is_json(content):
+                logger.debug(msg_temp, "skipped (already JSON)", f)
                 continue
 
             f.write_text(
@@ -44,6 +50,7 @@ class ConvertCounters(UpdateAction):
                     [(k, repr(v)) for k, v in ast.literal_eval(content).items()],
                 )
             )
+            logger.debug(msg_temp, "converted", f)
 
 
 update_action_registry.register(

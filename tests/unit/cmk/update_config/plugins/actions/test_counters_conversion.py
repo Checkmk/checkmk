@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import getLogger
 from pathlib import Path
 
 from cmk.utils.hostaddress import HostAddress
@@ -19,7 +20,7 @@ def test_new_files_are_ignored(tmp_path: Path) -> None:
 
     (new_file := tmp_path / "heute").write_text(content)
 
-    ConvertCounters.convert_counter_files(tmp_path)
+    ConvertCounters.convert_counter_files(tmp_path, getLogger())
 
     assert new_file.read_text() == content
 
@@ -31,7 +32,7 @@ def test_old_files_are_converted(tmp_path: Path) -> None:
 
     (tmp_path / str(host)).write_text(old_content)
 
-    ConvertCounters.convert_counter_files(tmp_path)
+    ConvertCounters.convert_counter_files(tmp_path, getLogger())
 
     assert (tmp_path / str(host)).exists()
 

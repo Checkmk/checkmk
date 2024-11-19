@@ -125,14 +125,29 @@ setup_venv() {
     SETUP_VENV_RAN=yes
 }
 
-setup_node_modules() {
-    test -d "node_modules" && return
-    npm ci --yes --unsafe-perm --audit=false
+npm_install_dependencies() {
+    npm \
+        ci \
+        --yes \
+        --unsafe-perm \
+        --audit=false
+}
+
+npm_dependencies_installed() {
+    npm ls --all &>/dev/null
+}
+
+setup_npm() {
+    test "${SETUP_NPM_RAN}" = "yes" && return
+    npm_dependencies_installed || npm_install_dependencies
+    echo "npm version $(npm --version)"
+    echo "node version $(node --version)"
+    SETUP_NPM_RAN=yes
 }
 
 setup() {
     setup_venv
-    setup_node_modules
+    setup_npm
 }
 
 run_clean() {
@@ -217,10 +232,12 @@ run_build() {
 }
 
 run_check_format() {
+    setup
     npm run prettier -- -c source/
 }
 
 run_format() {
+    setup
     npm run prettier -- -w source/
 }
 

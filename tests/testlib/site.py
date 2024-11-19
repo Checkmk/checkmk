@@ -26,7 +26,6 @@ from typing import Any, Final, Literal, overload
 
 import pytest
 import pytest_check  # type: ignore[import-untyped]
-import requests
 
 from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
     create_cse_initial_config,
@@ -66,10 +65,11 @@ PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version
 @dataclass
 class TracingConfig:
     collect_traces: bool
+    otlp_endpoint: str
     extra_resource_attributes: Mapping[str, str]
 
 
-NO_TRACING = TracingConfig(collect_traces=False, extra_resource_attributes={})
+NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
 
 class Site:
@@ -1157,17 +1157,11 @@ class Site:
         r = web.get("user_profile.py", allow_redirect_to_login=True)
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
-    def send_traces_to_central_collector(self) -> None:
+    def send_traces_to_central_collector(self, endpoint: str) -> None:
         """Configure the site to send traces to our central collector"""
-        # Before enabling this feature, do some test to see whether the collector is available
-        collector = "http://tracing.lan.checkmk.net"
-        if requests.head(f"{collector}:8080/", timeout=5).status_code != 200:
-            logger.warning("Central collector is not available. Skip enabling trace sending.")
-            return
-
-        logger.info("Send traces to central collector (collector: %s:9123)", collector)
+        logger.info("Send traces to central collector (collector: %s)", endpoint)
         self.set_config("TRACE_SEND", "on")
-        self.set_config("TRACE_SEND_TARGET", f"{collector}:9123")
+        self.set_config("TRACE_SEND_TARGET", endpoint)
 
     def write_resource_config(self, extra_resource_attributes: Mapping[str, str]) -> None:
         self.write_text_file(
@@ -1485,7 +1479,7 @@ class SiteFactory:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
         if tracing_config.collect_traces:
-            site.send_traces_to_central_collector()
+            site.send_traces_to_central_collector(tracing_config.otlp_endpoint)
             if tracing_config.extra_resource_attributes:
                 site.write_resource_config(tracing_config.extra_resource_attributes)
 
@@ -1980,7 +1974,15 @@ def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
         assert "piggyback_sources" in tmp_dirs
 
 
-def resource_attributes_from_environment(env: Mapping[str, str]) -> Mapping[str, str]:
+def tracing_config_from_env(env: Mapping[str, str]) -> TracingConfig:
+    return TracingConfig(
+        collect_traces=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", "") != "",
+        otlp_endpoint=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+        extra_resource_attributes=_resource_attributes_from_env(env),
+    )
+
+
+def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
     """Extract tracing resource attributes from the process environment
 
     This is meant to transport information exposed by the CI to tracing context in case the

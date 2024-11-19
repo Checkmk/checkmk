@@ -11,6 +11,7 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -117,6 +118,7 @@ def main() {
                                     VERSION='daily' \
                                     DISTRO='${distro}' \
                                     BRANCH='${branch_name}' \
+                                    OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                                     CI_NODE_NAME='${env.NODE_NAME}' \
                                     CI_WORKSPACE='${env.WORKSPACE}' \
                                     CI_JOB_NAME='${env.JOB_NAME}' \

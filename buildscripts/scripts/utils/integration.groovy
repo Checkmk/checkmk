@@ -86,6 +86,12 @@ def run_make_targets(Map args) {
                                     VERSION='${args.VERSION == "daily" ? args.VERSION : args.cmk_version}' \
                                     DISTRO='$DISTRO' \
                                     BRANCH='${args.BRANCH}' \
+                                    OTEL_EXPORTER_OTLP_ENDPOINT='${args.OTEL_EXPORTER_OTLP_ENDPOINT}' \
+                                    CI_NODE_NAME='${env.NODE_NAME}' \
+                                    CI_WORKSPACE='${env.WORKSPACE}' \
+                                    CI_JOB_NAME='${env.JOB_NAME}' \
+                                    CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
+                                    CI_BUILD_URL='${env.BUILD_URL}' \
                                     make ${args.MAKE_TARGET}""");
                                 }
                             }

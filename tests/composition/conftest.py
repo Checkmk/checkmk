@@ -22,9 +22,8 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import (
     get_site_factory,
-    resource_attributes_from_environment,
     Site,
-    TracingConfig,
+    tracing_config_from_env,
 )
 from tests.testlib.utils import is_containerized, run
 
@@ -74,10 +73,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         "central",
         description=request.node.name,
         auto_restart_httpd=True,
-        tracing_config=TracingConfig(
-            collect_traces=True,
-            extra_resource_attributes=resource_attributes_from_environment(os.environ),
-        ),
+        tracing_config=tracing_config_from_env(os.environ),
     ) as central_site:
         with _increased_logging_level(central_site):
             yield central_site
@@ -106,10 +102,7 @@ def _make_connected_remote_site(
         site_name,
         description=site_description,
         auto_restart_httpd=True,
-        tracing_config=TracingConfig(
-            collect_traces=True,
-            extra_resource_attributes=resource_attributes_from_environment(os.environ),
-        ),
+        tracing_config=tracing_config_from_env(os.environ),
     ) as remote_site:
         with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site

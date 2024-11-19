@@ -72,6 +72,7 @@ def main() {
                 MAKE_TARGET: "test-composition-docker",
                 BRANCH: branch_name,
                 cmk_version: cmk_version_rc_aware,
+                OTEL_EXPORTER_OTLP_ENDPOINT: env.OTEL_EXPORTER_OTLP_ENDPOINT,
             );
         }
     }

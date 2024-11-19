@@ -34,6 +34,8 @@ logger = logging.getLogger()
 
 CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
 CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
+# We allow a 120s timeout since a very new page might take a while to setup
+PW_TIMEOUT = 120_000
 
 
 class PageContent(NamedTuple):
@@ -206,10 +208,10 @@ class Crawler:
         return num_done
 
     async def crawl(self, max_tasks: int, max_url_batch_size: int = 100) -> None:
-        """Crawl through URLs using simultaneously running tasks / coroutines.
+        """Crawl through URLs using simultaneously using tasks / coroutines.
 
-        New task / coroutine is added every `rate_create_crawl_task` seconds.
-        Crawling URLs stop when URLs are not found for last `memory_size_urls_exist` iterations
+        A group of tasks / coroutines is added every `rate_create_crawl_task` seconds.
+        Crawling stop when URLs are not found for last `memory_size_urls_exist` iterations
         (`rate_create_crawl_task` x `memory_size_urls_exist` seconds).
 
         debug-mode: Crawling URLs stop when at least `--max-urls` number of URLs have been crawled.
@@ -222,10 +224,26 @@ class Crawler:
             max_tasks = self._max_urls
         # ----
         with Progress() as progress:
-            tasks: set = set()
             find_more_urls = True
             track_todo_status = deque([True] * memory_size_urls_exist)
             while find_more_urls:
+                # body
+                tasks: set = set()
+                async with asyncio.TaskGroup() as task_group:
+                    for _ in range(max_tasks):
+                        urls = [
+                            self._todos.popleft() for _ in range(max_url_batch_size) if self._todos
+                        ]
+                        tasks.add(task_group.create_task(self.batch_test_urls(urls)))
+                    logger.debug(
+                        "Maximum tasks assigned. Waiting for tasks to be completed ...\n"
+                        "Task group comprises of: %s",
+                        " ".join(task.get_name() for task in tasks),
+                    )
+                progress.done(done=sum(task.result() for task in tasks))
+                self.duration = progress.duration
+                # ----
+
                 # condition
                 track_todo_status.popleft()
                 track_todo_status.append(bool(self._todos))
@@ -234,24 +252,8 @@ class Crawler:
                     if search_limited_urls
                     else any(track_todo_status)
                 )
-                await_task_strategy = (
-                    asyncio.FIRST_COMPLETED if find_more_urls else asyncio.ALL_COMPLETED
-                )
-                # ----
-
-                # body
-                urls = [self._todos.popleft() for _ in range(max_url_batch_size) if self._todos]
-                tasks.add(asyncio.create_task(self.batch_test_urls(urls)))
-                if len(tasks) >= max_tasks or not find_more_urls:
-                    msg = (
-                        "Maximum tasks assigned. Waiting for tasks to be completed ..."
-                        if find_more_urls
-                        else "No more URLs to crawl. Finish running tasks ..."
-                    )
-                    getattr(logger, "debug" if find_more_urls else "info")(msg)
-                    done, tasks = await asyncio.wait(tasks, return_when=await_task_strategy)
-                    progress.done(done=sum(task.result() for task in done))
-                    self.duration = progress.duration
+                if not find_more_urls:
+                    logger.info("No more URLs to crawl. Stopping ...")
                 # ----
 
                 # ensure rate of URL collection in `self._todos` > rate of new tasks added
@@ -261,6 +263,8 @@ class Crawler:
         self, browser: playwright.async_api.Browser
     ) -> playwright.async_api.BrowserContext:
         context = await browser.new_context()
+        context.set_default_timeout(PW_TIMEOUT)
+        context.set_default_navigation_timeout(PW_TIMEOUT)
         page = await context.new_page()
 
         async def handle_page_error(error: playwright.async_api.Error) -> None:
@@ -272,8 +276,7 @@ class Crawler:
 
         page.on("pageerror", handle_page_error)
 
-        # We allow a 120s timeout since a very new page might take a while to setup
-        await page.goto(self.site.internal_url, timeout=120000)
+        await page.goto(self.site.internal_url)
         await page.fill('input[name="_username"]', "cmkadmin")
         await page.fill('input[name="_password"]', "cmk")
         async with page.expect_navigation():
@@ -435,7 +438,7 @@ class Crawler:
         page.on("pageerror", handle_page_error)
         page.on("console", handle_console_messages)
         try:
-            await page.goto(url.url, timeout=60 * 1000)
+            await page.goto(url.url)
             return PageContent(content=await page.content(), logs=logs)
         finally:
             await page.close()

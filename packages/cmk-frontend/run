@@ -105,9 +105,6 @@ parse_options() {
 }
 
 npm_install_dependencies() {
-    ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
-    export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
-    export SASS_BINARY_SITE="${ARTIFACTS_BASE}/repository/archives/"
     npm \
         ci \
         --yes \

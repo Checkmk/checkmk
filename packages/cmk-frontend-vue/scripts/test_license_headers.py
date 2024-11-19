@@ -37,6 +37,7 @@ FILES_IGNORED = set(
         Path(".gitignore"),
         Path(".prettierignore"),
         Path(".prettierrc.json"),
+        Path(".npmrc"),
         Path("README.md"),
         Path("index.html"),
         Path("src/components/_demo/index.html"),

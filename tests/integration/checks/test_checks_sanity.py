@@ -25,7 +25,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 logger = logging.getLogger(__name__)
 
 
-_RESCHEDULES_LIMIT = 1
+_RESCHEDULES_LIMIT = 2
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")

@@ -23,6 +23,7 @@ import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 import FormLegacyValueSpec from '@/form/components/forms/FormLegacyValueSpec.vue'
 import FormList from '@/form/components/forms/FormList.vue'
+import FormListUniqueSelection from '@/form/components/forms/FormListUniqueSelection.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
 import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
@@ -52,7 +53,7 @@ const components: Record<Components['type'], Component> = {
   labels: FormLabels,
   legacy_valuespec: FormLegacyValueSpec,
   list: FormList,
-  list_unique_selection: FormList, // TODO: implement FormListUniqueSelection (just to make tests pass)
+  list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,

@@ -587,16 +587,16 @@ void TableStateHistory::final_reports(Processor &processor,
 }
 
 void TableStateHistory::update(Processor &processor, const LogEntry *entry,
-                               HostServiceState &state, bool only_update,
+                               HostServiceState &hss, bool only_update,
                                const TimePeriods &time_periods) {
-    auto state_changed = updateHostServiceState(processor, entry, state,
+    auto state_changed = updateHostServiceState(processor, entry, hss,
                                                 only_update, time_periods);
     // Host downtime or state changes also affect its services
     if (entry->kind() == LogEntryKind::alert_host ||
         entry->kind() == LogEntryKind::state_host ||
         entry->kind() == LogEntryKind::downtime_alert_host) {
         if (state_changed == ModificationStatus::changed) {
-            for (auto &svc : state._services) {
+            for (auto &svc : hss._services) {
                 updateHostServiceState(processor, entry, *svc, only_update,
                                        time_periods);
             }

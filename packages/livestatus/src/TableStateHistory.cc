@@ -509,15 +509,14 @@ void TableStateHistory::insert_new_state(
         state->_service != nullptr ? state->_service->notificationPeriodName()
         : state->_host != nullptr  ? state->_host->notificationPeriodName()
                                    : "";
+    state->_in_notification_period =
+        time_periods.find(state->_notification_period);
 
     // Same for service period.
     state->_service_period =
         state->_service != nullptr ? state->_service->servicePeriodName()
         : state->_host != nullptr  ? state->_host->servicePeriodName()
                                    : "";
-
-    state->_in_notification_period =
-        time_periods.find(state->_notification_period);
     state->_in_service_period = time_periods.find(state->_service_period);
 
     // If this key is a service try to find its host and apply its

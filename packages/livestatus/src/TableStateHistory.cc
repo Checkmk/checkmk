@@ -456,7 +456,21 @@ void TableStateHistory::handle_state_entry(
                          blacklist, processor.period(), entry_host,
                          entry_service, key);
     }
-    update(processor, entry, *state_info[key], only_update, time_periods);
+
+    auto &hss = *state_info[key];
+    auto state_changed = updateHostServiceState(processor, entry, hss,
+                                                only_update, time_periods);
+    // Host downtime or state changes also affect its services
+    if (entry->kind() == LogEntryKind::alert_host ||
+        entry->kind() == LogEntryKind::state_host ||
+        entry->kind() == LogEntryKind::downtime_alert_host) {
+        if (state_changed == ModificationStatus::changed) {
+            for (auto &svc : hss._services) {
+                updateHostServiceState(processor, entry, *svc, only_update,
+                                       time_periods);
+            }
+        }
+    }
 }
 
 // static
@@ -583,24 +597,6 @@ void TableStateHistory::final_reports(Processor &processor,
         hss->_until = hss->_time;
 
         abort_query_ = processor.process(*hss);
-    }
-}
-
-void TableStateHistory::update(Processor &processor, const LogEntry *entry,
-                               HostServiceState &hss, bool only_update,
-                               const TimePeriods &time_periods) {
-    auto state_changed = updateHostServiceState(processor, entry, hss,
-                                                only_update, time_periods);
-    // Host downtime or state changes also affect its services
-    if (entry->kind() == LogEntryKind::alert_host ||
-        entry->kind() == LogEntryKind::state_host ||
-        entry->kind() == LogEntryKind::downtime_alert_host) {
-        if (state_changed == ModificationStatus::changed) {
-            for (auto &svc : hss._services) {
-                updateHostServiceState(processor, entry, *svc, only_update,
-                                       time_periods);
-            }
-        }
     }
 }
 

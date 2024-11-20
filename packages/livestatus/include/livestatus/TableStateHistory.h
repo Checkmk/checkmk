@@ -136,10 +136,6 @@ private:
 
     void final_reports(Processor &processor, const state_info_t &state_info);
 
-    void update(Processor &processor, const LogEntry *entry,
-                HostServiceState &hss, bool only_update,
-                const TimePeriods &time_periods);
-
     ModificationStatus updateHostServiceState(Processor &processor,
                                               const LogEntry *entry,
                                               HostServiceState &hss,

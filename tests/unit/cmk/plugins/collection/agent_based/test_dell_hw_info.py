@@ -16,6 +16,7 @@ from cmk.plugins.collection.agent_based.dell_hw_info import (
 
 _STRING_TABLE = [
     [
+        "7.10.50.10",
         "FGS8YY3",
         "33666641643",
         "03/03/2023",
@@ -35,6 +36,11 @@ def _parsed_section() -> Section:
 
 def test_inventory_testable() -> None:
     assert list(_inventory_testable(_parsed_section(), UTC)) == [
+        Attributes(
+            path=["software", "firmware"],
+            inventory_attributes={"version": "7.10.50.10"},
+            status_attributes={},
+        ),
         Attributes(
             path=["hardware", "system"],
             inventory_attributes={"serial": "FGS8YY3", "expresscode": "33666641643"},

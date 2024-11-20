@@ -21,6 +21,7 @@ from cmk.agent_based.v2 import (
 
 @dataclass(frozen=True, kw_only=True)
 class Section:
+    firmware_version: str
     serial: str
     expresscode: str
     bios_date: datetime | None
@@ -33,13 +34,14 @@ class Section:
 def parse_dell_hw_info(string_table: StringTable) -> Section | None:
     for line in string_table:
         return Section(
-            serial=line[0],
-            expresscode=line[1],
-            bios_date=_format_date(line[2]),
-            bios_version=line[3],
-            bios_vendor=line[4],
-            raid_name=line[5],
-            raid_version=line[6],
+            firmware_version=line[0],
+            serial=line[1],
+            expresscode=line[2],
+            bios_date=_format_date(line[3]),
+            bios_version=line[4],
+            bios_vendor=line[5],
+            raid_name=line[6],
+            raid_version=line[7],
         )
     return None
 
@@ -75,6 +77,7 @@ snmp_section_dell_hw_info = SimpleSNMPSection(
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5",
         oids=[
+            "1.1.8.0",  # IDRAC-MIB::racFirmwareVersion
             "1.3.2.0",  # IDRAC-MIB::systemServiceTag
             "1.3.3.0",  # IDRAC-MIB::systemExpressServiceCode
             "4.300.50.1.7.1.1",  # IDRAC-MIB::systemBIOSReleaseDateName
@@ -102,6 +105,13 @@ inventory_plugin_dell_hw_info = InventoryPlugin(
 
 
 def _inventory_testable(section: Section, time_zone: timezone | None) -> InventoryResult:
+    yield Attributes(
+        path=["software", "firmware"],
+        inventory_attributes={
+            "version": section.firmware_version,
+        },
+    )
+
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={

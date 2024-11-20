@@ -114,7 +114,7 @@ attrs = "==22.2.0"  # needed by jsonschema
 importlib_metadata = "==5.2.0"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema
 click = "==8.1.3"  # needed by Flask
-werkzeug = "==3.0.1"  # direct dependency and needed by flask
+werkzeug = "==3.0.6"  # direct dependency and needed by flask
 jsonschema = "==4.17.3"  # needed by openapi-spec-validator
 flask = "==3.0.2"  # direct dependency
 pytz = "==2022.7"  # direct dependency

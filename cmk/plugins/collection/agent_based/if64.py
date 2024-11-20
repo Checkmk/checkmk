@@ -139,7 +139,7 @@ def _check_timestamps(
         yield Result(
             state=State.OK,
             notice="The uptime did not change since the last check cycle for these node(s): "
-            ", ".join(nodes_without_uptime_increase)
+            + ", ".join(nodes_without_uptime_increase)
             + "\n"
             "It is likely that no new data was collected.",
         )
@@ -153,7 +153,7 @@ def _check_timestamps(
         yield Result(
             state=State.OK,
             notice="The uptime has decreased since the last check cycle for these node(s): "
-            ", ".join(nodes_without_uptime_increase)
+            + ", ".join(nodes_without_uptime_increase)
             + "\n"
             "The device might have rebooted or its uptime counter overflowed.",
         )

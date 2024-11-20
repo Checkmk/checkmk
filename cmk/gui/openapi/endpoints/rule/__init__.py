@@ -23,7 +23,6 @@ from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 from cmk.gui import exceptions, http
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.rule.fields import (
     APILabelGroupCondition,
     InputRuleObject,
@@ -250,15 +249,13 @@ def create_rule(param):
     method="get",
     response_schema=RuleCollection,
     permissions_required=PERMISSIONS,
-    query_params=[RuleSearchOptions, field_include_links(), field_include_extensions()],
+    query_params=[RuleSearchOptions],
 )
 def list_rules(param):
     """List rules"""
     user.need_permission("wato.rulesets")
     all_rulesets = AllRulesets.load_all_rulesets()
     ruleset_name = param["ruleset_name"]
-    include_links: bool = param["include_links"]
-    include_extensions: bool = param["include_extensions"]
 
     ruleset = _retrieve_from_rulesets(all_rulesets, ruleset_name)
 
@@ -270,9 +267,7 @@ def list_rules(param):
                 folder=folder,
                 index_nr=index,
                 all_rulesets=all_rulesets,
-            ),
-            include_links=include_links,
-            include_extensions=include_extensions,
+            )
         )
         for folder, index, rule in ruleset.get_rules()
     ]
@@ -548,38 +543,29 @@ def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> R
     return ruleset
 
 
-def _serialize_rule(
-    rule_entry: RuleEntry, *, include_links: bool = True, include_extensions: bool = True
-) -> DomainObject:
+def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
     rule = rule_entry.rule
     return constructors.domain_object(
         domain_type="rule",
         editable=False,
         identifier=rule.id,
         title=rule.description(),
-        extensions=(
-            {
-                "ruleset": rule.ruleset.name,
-                "folder": "/" + rule_entry.folder.path(),
-                "folder_index": rule_entry.index_nr,
-                "properties": rule.rule_options.to_config(),
-                "value_raw": repr(rule.ruleset.valuespec().mask(rule.value)),
-                "conditions": denilled(
-                    {
-                        "host_name": rule.conditions.host_name,
-                        "host_tags": rule.conditions.host_tags,
-                        "host_label_groups": _internal_to_api(rule.conditions.host_label_groups),
-                        "service_description": rule.conditions.service_description,
-                        "service_label_groups": _internal_to_api(
-                            rule.conditions.service_label_groups
-                        ),
-                    }
-                ),
-            }
-            if include_extensions
-            else None
-        ),
-        include_links=include_links,
+        extensions={
+            "ruleset": rule.ruleset.name,
+            "folder": "/" + rule_entry.folder.path(),
+            "folder_index": rule_entry.index_nr,
+            "properties": rule.rule_options.to_config(),
+            "value_raw": repr(rule.ruleset.valuespec().mask(rule.value)),
+            "conditions": denilled(
+                {
+                    "host_name": rule.conditions.host_name,
+                    "host_tags": rule.conditions.host_tags,
+                    "host_label_groups": _internal_to_api(rule.conditions.host_label_groups),
+                    "service_description": rule.conditions.service_description,
+                    "service_label_groups": _internal_to_api(rule.conditions.service_label_groups),
+                }
+            ),
+        },
     )
 
 

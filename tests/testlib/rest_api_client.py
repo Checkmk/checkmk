@@ -461,23 +461,11 @@ class ActivateChangesClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_running_activations(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_running_activations(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/running",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
-                }
-            ),
         )
 
     def activate_changes(
@@ -645,22 +633,11 @@ class UserClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, effective_attributes: bool = False, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params=_only_set_keys(
-                {
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
-                }
-            ),
+            query_params={"effective_attributes": "true" if effective_attributes else "false"},
             expect_ok=expect_ok,
         )
 
@@ -753,20 +730,18 @@ class HostConfigClient(RestApiClient):
         *,
         effective_attributes: bool = False,
         include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
             query_params=_only_set_keys(
                 {
                     "effective_attributes": effective_attributes,
                     "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
+            expect_ok=expect_ok,
         )
 
     def create(
@@ -976,23 +951,19 @@ class FolderClient(RestApiClient):
         parent: str | None = None,
         recursive: bool = False,
         show_hosts: bool = False,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
             query_params=_only_set_keys(
                 {
                     "parent": parent,
                     "recursive": recursive,
                     "show_hosts": show_hosts,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
+            expect_ok=expect_ok,
         )
 
     def get_hosts(
@@ -1001,7 +972,6 @@ class FolderClient(RestApiClient):
         *,
         effective_attributes: bool | None = None,
         include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -1012,7 +982,6 @@ class FolderClient(RestApiClient):
                 {
                     "effective_attributes": effective_attributes,
                     "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -1128,23 +1097,11 @@ class AuxTagClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
-                }
-            ),
         )
 
     def create(self, tag_data: dict[str, Any], expect_ok: bool = True) -> Response:
@@ -1196,23 +1153,11 @@ class TimePeriodClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
-                }
-            ),
         )
 
     def delete(self, time_period_id: str, expect_ok: bool = True) -> Response:
@@ -1255,14 +1200,7 @@ class RuleClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def list(
-        self,
-        ruleset: str,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def list(self, ruleset: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
@@ -1270,8 +1208,6 @@ class RuleClient(RestApiClient):
             query_params=_only_set_keys(
                 {
                     "ruleset_name": ruleset,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -1365,8 +1301,6 @@ class RulesetClient(RestApiClient):
         used: bool | None = None,
         group: str | None = None,
         name: str | None = None,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -1381,8 +1315,6 @@ class RulesetClient(RestApiClient):
                     "used": used,
                     "group": group,
                     "name": name,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -1423,17 +1355,12 @@ class HostTagGroupClient(RestApiClient):
     def get_all(
         self,
         *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def delete(
@@ -1518,17 +1445,12 @@ class PasswordClient(RestApiClient):
     def get_all(
         self,
         *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def edit(
@@ -1584,20 +1506,12 @@ class AgentClient(RestApiClient):
     def get_all(
         self,
         *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
-                }
-            ),
         )
 
 
@@ -1619,8 +1533,6 @@ class DowntimeClient(RestApiClient):
         query: str | None = None,
         downtime_type: Literal["host", "service", "both"] = "both",
         site_id: str | None = None,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -1634,8 +1546,6 @@ class DowntimeClient(RestApiClient):
                     "service_description": service_description,
                     "query": query,
                     "site_id": site_id,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -1841,20 +1751,11 @@ class GroupConfig(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def list(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def list(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def bulk_edit(self, groups: tuple[dict[str, str], ...], expect_ok: bool = True) -> Response:
@@ -1909,20 +1810,11 @@ class SiteManagementClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def login(self, site_id: str, username: str, password: str, expect_ok: bool = True) -> Response:
@@ -1980,21 +1872,11 @@ class HostClient(RestApiClient):
 
     def get_all(
         self,
-        *,
-        query: dict[str, Any] | None = None,
+        query: dict[str, Any],
         columns: Sequence[str] = ("name",),
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        params = _only_set_keys(
-            {
-                "query": json.dumps(query),
-                "columns": columns,
-                "include_links": include_links,
-                "include_extensions": include_extensions,
-            }
-        )
+        params = {"query": json.dumps(query), "columns": columns}
         return self.request(
             "get",
             url="/domain-types/host/collections/all",
@@ -2013,20 +1895,11 @@ class RuleNotificationClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def create(self, rule_config: APINotificationRule, expect_ok: bool = True) -> Response:
@@ -2079,8 +1952,6 @@ class EventConsoleClient(RestApiClient):
         state: Literal["warning", "ok", "critical", "unknown"] | None = None,
         phase: Literal["open", "ack"] | None = None,
         site_id: str | None = None,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -2095,8 +1966,6 @@ class EventConsoleClient(RestApiClient):
                     "state": state,
                     "phase": phase,
                     "site_id": site_id,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -2338,8 +2207,6 @@ class CommentClient(RestApiClient):
         service_description: str | None = None,
         query: Mapping[str, Any] | str | None = None,
         site_id: str | None = None,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         q: Mapping[str, Any] = _only_set_keys(
@@ -2348,8 +2215,6 @@ class CommentClient(RestApiClient):
                 "service_description": service_description,
                 "query": query,
                 "site_id": site_id,
-                "include_links": include_links,
-                "include_extensions": include_extensions,
             }
         )
 
@@ -2701,20 +2566,11 @@ class UserRoleClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def clone(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
@@ -2769,20 +2625,11 @@ class SAMLConnectionClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(
-        self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
+    def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def create(
@@ -2827,8 +2674,6 @@ class ServiceClient(RestApiClient):
         self,
         *,
         host_name: str | None = None,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -2838,8 +2683,6 @@ class ServiceClient(RestApiClient):
             query_params=_only_set_keys(
                 {
                     "host_name": host_name,
-                    "include_links": include_links,
-                    "include_extensions": include_extensions,
                 }
             ),
         )
@@ -2909,18 +2752,12 @@ class LDAPConnectionClient(RestApiClient):
 
     def get_all(
         self,
-        *,
-        include_links: bool | None = None,
-        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
-            query_params=_only_set_keys(
-                {"include_links": include_links, "include_extensions": include_extensions}
-            ),
         )
 
     def create(

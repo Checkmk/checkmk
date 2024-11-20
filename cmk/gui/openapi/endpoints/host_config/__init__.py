@@ -54,7 +54,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
+from cmk.gui.openapi.endpoints.common_fields import field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -368,7 +368,6 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
         field_include_links(
             "Flag which toggles whether the links field of the individual hosts should be populated."
         ),
-        field_include_extensions(),
     ],
 )
 def list_hosts(params: Mapping[str, Any]) -> Response:
@@ -384,43 +383,28 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
         hosts,
         effective_attributes=params["effective_attributes"],
         include_links=params["include_links"],
-        include_extensions=params["include_extensions"],
     )
 
 
 def serve_host_collection(
-    hosts: Iterable[Host],
-    *,
-    effective_attributes: bool = False,
-    include_links: bool = False,
-    include_extensions: bool = True,
+    hosts: Iterable[Host], *, effective_attributes: bool = False, include_links: bool = False
 ) -> Response:
     return serve_json(
         _host_collection(
-            hosts,
-            effective_attributes=effective_attributes,
-            include_links=include_links,
-            include_extensions=include_extensions,
+            hosts, effective_attributes=effective_attributes, include_links=include_links
         )
     )
 
 
 def _host_collection(
-    hosts: Iterable[Host],
-    *,
-    effective_attributes: bool = False,
-    include_links: bool = False,
-    include_extensions: bool = True,
+    hosts: Iterable[Host], *, effective_attributes: bool = False, include_links: bool = False
 ) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
         "value": [
             serialize_host(
-                host,
-                effective_attributes=effective_attributes,
-                include_links=include_links,
-                include_extensions=include_extensions,
+                host, effective_attributes=effective_attributes, include_links=include_links
             )
             for host in hosts
         ],
@@ -844,24 +828,16 @@ agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
 def serialize_host(
-    host: Host,
-    *,
-    effective_attributes: bool,
-    include_links: bool = True,
-    include_extensions: bool = True,
+    host: Host, *, effective_attributes: bool, include_links: bool = True
 ) -> DomainObject:
-    extensions = (
-        {
-            "folder": "/" + host.folder().path(),
-            "attributes": host.attributes,
-            "effective_attributes": host.effective_attributes() if effective_attributes else None,
-            "is_cluster": host.is_cluster(),
-            "is_offline": host.is_offline(),
-            "cluster_nodes": host.cluster_nodes(),
-        }
-        if include_extensions
-        else None
-    )
+    extensions = {
+        "folder": "/" + host.folder().path(),
+        "attributes": host.attributes,
+        "effective_attributes": host.effective_attributes() if effective_attributes else None,
+        "is_cluster": host.is_cluster(),
+        "is_offline": host.is_offline(),
+        "cluster_nodes": host.cluster_nodes(),
+    }
 
     if include_links:
         links = [

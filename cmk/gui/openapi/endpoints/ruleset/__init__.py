@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
     RulesetCollection,
@@ -43,15 +42,13 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
     constructors.collection_href(domain_type="ruleset"),
     ".../collection",
     method="get",
-    query_params=[RulesetSearchOptions, field_include_links(), field_include_extensions()],
+    query_params=[RulesetSearchOptions],
     response_schema=RulesetCollection,
     permissions_required=LIST_PERMISSIONS,
 )
 def list_rulesets(param):
     """Search rule sets"""
     user.need_permission("wato.rulesets")
-    include_links: bool = param["include_links"]
-    include_extensions: bool = param["include_extensions"]
     all_sets = (
         FolderRulesets.load_folder_rulesets(param["folder"])
         if param.get("folder")
@@ -81,9 +78,7 @@ def list_rulesets(param):
         constructors.collection_object(
             domain_type="ruleset",
             value=[
-                _serialize_ruleset(
-                    ruleset, include_links=include_links, include_extensions=include_extensions
-                )
+                _serialize_ruleset(ruleset)
                 for ruleset in visible_rulesets(rulesets.get_rulesets()).values()
             ],
         )
@@ -122,9 +117,7 @@ def show_ruleset(param):
     return serve_json(_serialize_ruleset(ruleset))
 
 
-def _serialize_ruleset(
-    ruleset: Ruleset, *, include_links: bool = True, include_extensions: bool = True
-) -> DomainObject:
+def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
     members = {}
     if ruleset.num_rules() > 0:
         members["rules"] = constructors.collection_property(
@@ -140,21 +133,16 @@ def _serialize_ruleset(
         editable=False,
         deletable=False,
         members=members,
-        extensions=(
-            {
-                "name": ruleset.name,
-                "title": ruleset.title(),
-                "item_type": ruleset.item_type(),
-                "item_name": ruleset.item_name(),
-                "item_enum": ruleset.item_enum(),
-                "match_type": ruleset.match_type(),
-                "help": strip_tags(ruleset.help()),
-                "number_of_rules": ruleset.num_rules(),
-            }
-            if include_extensions
-            else None
-        ),
-        include_links=include_links,
+        extensions={
+            "name": ruleset.name,
+            "title": ruleset.title(),
+            "item_type": ruleset.item_type(),
+            "item_name": ruleset.item_name(),
+            "item_enum": ruleset.item_enum(),
+            "match_type": ruleset.match_type(),
+            "help": strip_tags(ruleset.help()),
+            "number_of_rules": ruleset.num_rules(),
+        },
     )
 
 

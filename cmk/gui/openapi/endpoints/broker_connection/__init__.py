@@ -34,7 +34,6 @@ from cmk.gui.openapi.endpoints.broker_connection.response_schemas import (
     BrokerConnectionResponse,
     BrokerConnectionResponseCollection,
 )
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
     domain_object,
@@ -95,7 +94,6 @@ def _serialize_broker_connection(
     tag_group="Checkmk Internal",
     response_schema=BrokerConnectionResponseCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_extensions()],
 )
 def show_broker_connections(params: Mapping[str, Any]) -> Response:
     """Show all peer to peer broker connections"""
@@ -109,13 +107,7 @@ def show_broker_connections(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="broker_connection",
-            value=[
-                _serialize_broker_connection(
-                    connection,
-                    include_extensions=params["include_extensions"],
-                )
-                for connection in all_connections_objs
-            ],
+            value=[_serialize_broker_connection(connection) for connection in all_connections_objs],
         )
     )
 
@@ -128,7 +120,6 @@ def show_broker_connections(params: Mapping[str, Any]) -> Response:
     path_params=[CONNECTION_ID_SHOULD_EXIST],
     response_schema=BrokerConnectionResponse,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_extensions()],
     etag="output",
 )
 def show_broker_connection(params: Mapping[str, Any]) -> Response:

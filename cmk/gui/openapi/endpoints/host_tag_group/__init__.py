@@ -21,7 +21,6 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.host_tag_group.request_schemas import (
     DeleteHostTagGroup,
     InputHostTagGroup,
@@ -133,7 +132,6 @@ def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=HostTagGroupCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
     """Show all host tag groups"""
@@ -144,11 +142,7 @@ def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
         "id": "host_tag",
         "domainType": "host_tag_group",
         "value": [
-            serialize_host_tag_group(
-                tag_group_obj.get_dict_format(),
-                include_links=params["include_links"],
-                include_extensions=params["include_extensions"],
-            )
+            serialize_host_tag_group(tag_group_obj.get_dict_format())
             for tag_group_obj in tag_config.get_tag_groups()
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_tag_group"))],
@@ -281,19 +275,14 @@ def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
     return constructors.response_with_etag_created_from_dict(response, dict(tag_details))
 
 
-def _serialize_host_tag_group_extensions(details: TagGroupSpec) -> dict[str, Any]:
+def serialize_host_tag_group(details: TagGroupSpec) -> DomainObject:
     extensions = {
         "topic": details.get("topic", "Tags"),
         "tags": details["tags"],
     }
     if details.get("help") is not None:
         extensions.update({"help": details["help"]})
-    return extensions
 
-
-def serialize_host_tag_group(
-    details: TagGroupSpec, *, include_links: bool = True, include_extensions: bool = True
-) -> DomainObject:
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],
@@ -306,8 +295,7 @@ def serialize_host_tag_group(
                 base=constructors.object_href("host_tag_group", details["id"]),
             )
         },
-        extensions=_serialize_host_tag_group_extensions(details) if include_extensions else None,
-        include_links=include_links,
+        extensions=extensions,
     )
 
 

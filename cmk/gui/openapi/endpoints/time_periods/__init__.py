@@ -21,7 +21,6 @@ from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.time_periods.request_schemas import (
     CreateTimePeriod,
     UpdateTimePeriod,
@@ -71,16 +70,12 @@ def time_period_not_found_problem(time_period_id: str) -> Response:
 def _get_time_period_domain_object(
     name: str,
     time_period: TimeperiodSpec,
-    *,
-    include_links: bool = True,
-    include_extensions: bool = True,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="time_period",
         identifier=name,
         title=time_period["alias"],
-        extensions=_to_api_format(time_period, name == "24X7") if include_extensions else None,
-        include_links=include_links,
+        extensions=_to_api_format(time_period, name == "24X7"),
         deletable=True,
         editable=True,
     )
@@ -222,7 +217,6 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=TimePeriodResponseCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_time_periods(params: Mapping[str, Any]) -> Response:
     """Show all time periods"""
@@ -231,12 +225,7 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="time_period",
             value=[
-                _get_time_period_domain_object(
-                    name,
-                    time_period,
-                    include_links=params["include_links"],
-                    include_extensions=params["include_extensions"],
-                )
+                _get_time_period_domain_object(name, time_period)
                 for name, time_period in load_timeperiods().items()
             ],
         )

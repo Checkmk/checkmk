@@ -15,7 +15,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
@@ -102,19 +101,11 @@ def show_user(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=UserCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
-    include_links: bool = params["include_links"]
-    include_extensions: bool = params["include_extensions"]
-    users = [
-        serialize_user(
-            user_id, spec, include_links=include_links, include_extensions=include_extensions
-        )
-        for user_id, spec in load_users(False).items()
-    ]
+    users = [serialize_user(user_id, spec) for user_id, spec in load_users(False).items()]
     return serve_json(constructors.collection_object(domain_type="user_config", value=users))
 
 
@@ -240,18 +231,12 @@ def serve_user(user_id):
 def serialize_user(
     user_id: UserId,
     user_spec: UserSpec,
-    *,
-    include_links: bool = True,
-    include_extensions: bool = True,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_config",
         identifier=user_id,
         title=user_spec["alias"],
-        extensions=(
-            complement_customer(_internal_to_api_format(user_spec)) if include_extensions else None
-        ),
-        include_links=include_links,
+        extensions=complement_customer(_internal_to_api_format(user_spec)),
     )
 
 

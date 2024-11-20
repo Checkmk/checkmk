@@ -49,7 +49,6 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -105,7 +104,7 @@ PERMISSIONS = permissions.Undocumented(
     method="get",
     tag_group="Monitoring",
     blacklist_in=["swagger-ui"],
-    query_params=[HostParameters, field_include_links(), field_include_extensions()],
+    query_params=[HostParameters],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )
@@ -132,15 +131,7 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="host",
-            value=[
-                _host_object(
-                    entry["name"],
-                    entry,
-                    include_links=params["include_links"],
-                    include_extensions=params["include_extensions"],
-                )
-                for entry in result
-            ],
+            value=[_host_object(entry["name"], entry) for entry in result],
         )
     )
 
@@ -186,19 +177,12 @@ def show_host(params: Mapping[str, Any]) -> Response:
     return serve_json(_host_object(host_name, host))
 
 
-def _host_object(
-    host_name: str,
-    host: dict,
-    *,
-    include_links: bool = True,
-    include_extensions: bool = True,
-) -> DomainObject:
+def _host_object(host_name: str, host: dict) -> DomainObject:
     return constructors.domain_object(
         domain_type="host",
         identifier=host_name,
         title=host_name,
-        extensions=host if include_extensions else None,
-        include_links=include_links,
+        extensions=host,
         editable=False,
         deletable=False,
     )

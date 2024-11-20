@@ -27,7 +27,6 @@ from cmk.utils import paths
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.service_group_config.request_schemas import (
     BulkDeleteServiceGroup,
     BulkInputServiceGroup,
@@ -124,20 +123,12 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=ServiceGroupCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all service groups"""
     user.need_permission("wato.groups")
     collection = build_group_list(load_service_group_information())
-    return serve_json(
-        serialize_group_list(
-            "service_group_config",
-            collection,
-            include_links=params["include_links"],
-            include_extensions=params["include_extensions"],
-        )
-    )
+    return serve_json(serialize_group_list("service_group_config", collection))
 
 
 @Endpoint(

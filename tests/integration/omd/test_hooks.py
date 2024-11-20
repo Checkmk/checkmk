@@ -52,6 +52,11 @@ def test_hooks(site: Site) -> None:
             "TRACE_JAEGER_ADMIN_PORT",
         ]
 
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+        hooks += [
+            "OPENTELEMETRY_COLLECTOR",
+        ]
+
     installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)

@@ -5,7 +5,6 @@ common: &common
     - "debian-12"
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-23.10"
     - "ubuntu-24.04"
     - "centos-7"
     - "centos-8"
@@ -28,7 +27,6 @@ daily_extended: &daily_extended
     - "debian-12"
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-23.10"
     - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
@@ -66,5 +64,4 @@ editions:
 # TODO: Sync this with our omd/distros/*.mk files
 # We currently only need this for the internal_distros as at the point in the pipeline,
 # where we want to exclude the internal distros, we are only using the distro codes and not the distro name anymore.
-distro_to_codename:
-    ubuntu-23.10: "mantic"
+distro_to_codename: []

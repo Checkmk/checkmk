@@ -728,9 +728,10 @@ class HostConfigClient(RestApiClient):
     def get_all(
         self,
         *,
-        effective_attributes: bool = False,
+        effective_attributes: bool | None = None,
         search: Mapping[str, object] | None = None,
         include_links: bool | None = None,
+        fields: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -740,6 +741,7 @@ class HostConfigClient(RestApiClient):
                 {
                     "effective_attributes": effective_attributes,
                     "include_links": include_links,
+                    "fields": fields,
                     **(search or {}),
                 }
             ),

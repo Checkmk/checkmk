@@ -50,7 +50,11 @@ from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     MoveFolder,
     UpdateFolder,
 )
-from cmk.gui.openapi.endpoints.host_config import EFFECTIVE_ATTRIBUTES, serve_host_collection
+from cmk.gui.openapi.endpoints.host_config import (
+    EFFECTIVE_ATTRIBUTES,
+    host_fields_filter,
+    serve_host_collection,
+)
 from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     FolderCollection,
     FolderSchema,
@@ -145,7 +149,12 @@ def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
     return serve_host_collection(
-        folder.hosts().values(), effective_attributes=params["effective_attributes"]
+        folder.hosts().values(),
+        fields_filter=host_fields_filter(
+            is_collection=True,
+            include_links=False,
+            effective_attributes=params["effective_attributes"],
+        ),
     )
 
 

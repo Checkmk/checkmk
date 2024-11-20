@@ -591,7 +591,6 @@ def test_openapi_host_collection(clients: ClientRegistry) -> None:
     for host in resp.json["value"]:
         # Check that all entries are domain objects
         assert "extensions" in host
-        assert "links" in host
         assert "members" in host
         assert "title" in host
         assert "id" in host
@@ -605,7 +604,25 @@ def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -
 
     resp2 = clients.HostConfig.get_all(effective_attributes=False)
     for host in resp2.json["value"]:
-        assert host["extensions"]["effective_attributes"] is None
+        assert "effective_attributes" not in host["extensions"]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_host_collection_fields(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.get_all(fields="(id)")
+    # TODO: update response models to not automatically add fields
+    # assert resp.json == {"id": "host"}, "Expected only the id field to be returned"
+    assert resp.json == {"id": "host", "domainType": "host_config"}
+
+    resp = clients.HostConfig.get_all(fields="!(value~extensions)")
+    assert "value" in resp.json, "Expected the value field to be returned"
+    for host in resp.json["value"]:
+        assert host.get("links"), "Expected the links field to be returned and computed"
+        assert "extensions" not in host, "Expected the extensions field to not be returned"
+
+
+def test_host_collection_invalid_fields(clients: ClientRegistry) -> None:
+    clients.HostConfig.get_all(fields="invalid_filter", expect_ok=False).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("with_host")
@@ -618,7 +635,7 @@ def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
 
     assert default_response.json == disabled_response.json
     assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
+    assert all("links" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

@@ -51,10 +51,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import InitialStatusArgs
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.fields.fields_filter import FieldsFilter, make_filter
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_links
+from cmk.gui.openapi.endpoints.common_fields import field_fields_filter, field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -191,6 +192,43 @@ def with_access_check_permission(perm: permissions.BasePerm) -> permissions.Base
     )
 
 
+def host_fields_filter(
+    *, is_collection: bool, include_links: bool, effective_attributes: bool
+) -> FieldsFilter:
+    response_fields_filters: dict[str, FieldsFilter] = {}
+    if not include_links:
+        response_fields_filters["links"] = make_filter(this_is="excluded")
+    if not effective_attributes:
+        response_fields_filters["extensions"] = make_filter(
+            exclude={"effective_attributes": make_filter(this_is="excluded")}
+        )
+
+    if not response_fields_filters:
+        # no filters, all fields are included
+        return make_filter(this_is="included")
+
+    fields_filter = make_filter(exclude=response_fields_filters)
+    if not is_collection:
+        return fields_filter
+
+    return make_filter(exclude={"value": fields_filter})
+
+
+def _fields_filter_from_params(params: Mapping[str, Any], *, is_collection: bool) -> FieldsFilter:
+    if "fields" in params:
+        return params["fields"]
+
+    return host_fields_filter(
+        is_collection=is_collection,
+        include_links=params.get(
+            "include_links", True
+        ),  # actual default is false, we use get in case it's not a parameter
+        effective_attributes=params.get(
+            "effective_attributes", True
+        ),  # actual default is false, we use get in case it's not a parameter
+    )
+
+
 @Endpoint(
     constructors.collection_href("host_config"),
     "cmk/create",
@@ -216,7 +254,10 @@ def create_host(params: Mapping[str, Any]) -> Response:
         bakery.try_bake_agents_for_hosts([host_name])
 
     host = Host.load_host(host_name)
-    return _serve_host(host, False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -246,7 +287,10 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
         bakery.try_bake_agents_for_hosts([host_name])
 
     host = Host.load_host(host_name)
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 class FailedHosts(BaseSchema):
@@ -397,6 +441,7 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
         field_include_links(
             "Flag which toggles whether the links field of the individual hosts should be populated."
         ),
+        field_fields_filter(),
         {
             SearchFilter.hostnames_filter: fields.List(
                 fields.String(
@@ -429,35 +474,43 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
 
     return serve_host_collection(
         filter(hosts_filter, hosts),
-        effective_attributes=params["effective_attributes"],
-        include_links=params["include_links"],
+        fields_filter=_fields_filter_from_params(params, is_collection=True),
     )
 
 
 def serve_host_collection(
-    hosts: Iterable[Host], *, effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host], *, fields_filter: FieldsFilter | None = None
 ) -> Response:
-    return serve_json(
-        _host_collection(
-            hosts, effective_attributes=effective_attributes, include_links=include_links
-        )
-    )
+    return serve_json(_host_collection(hosts, fields_filter=fields_filter))
 
 
 def _host_collection(
-    hosts: Iterable[Host], *, effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    *,
+    fields_filter: FieldsFilter | None = None,
 ) -> dict[str, Any]:
-    return {
-        "id": "host",
-        "domainType": "host_config",
-        "value": [
-            serialize_host(
-                host, effective_attributes=effective_attributes, include_links=include_links
-            )
-            for host in hosts
-        ],
-        "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
-    }
+    fields_filter = fields_filter or host_fields_filter(
+        is_collection=True, include_links=False, effective_attributes=False
+    )
+    value_filter = fields_filter.get_nested_fields("value")
+    return fields_filter.apply(
+        {
+            "id": "host",
+            "domainType": "host_config",
+            "value": (
+                [
+                    serialize_host(
+                        host,
+                        fields_filter=value_filter,
+                    )
+                    for host in hosts
+                ]
+                if value_filter
+                else None
+            ),
+            "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
+        }
+    )
 
 
 @Endpoint(
@@ -570,7 +623,10 @@ def update_host(params: Mapping[str, Any]) -> Response:
                 detail=f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
             )
 
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -790,7 +846,10 @@ def move(params: Mapping[str, Any]) -> Response:
             title="Permission denied",
             detail=f"You lack the permissions to move host {host.name()} to {folder_slug(target_folder)}.",
         )
-    return _serve_host(host, effective_attributes=False)
+    return _serve_host(
+        host,
+        host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
+    )
 
 
 @Endpoint(
@@ -864,11 +923,14 @@ def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
     host: Host = Host.load_host(host_name)
-    return _serve_host(host, effective_attributes=params["effective_attributes"])
+    return _serve_host(
+        host,
+        _fields_filter_from_params(params, is_collection=False),
+    )
 
 
-def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
-    response = serve_json(serialize_host(host, effective_attributes=effective_attributes))
+def _serve_host(host: Host, fields_filter: FieldsFilter) -> Response:
+    response = serve_json(serialize_host(host, fields_filter=fields_filter))
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
@@ -876,18 +938,28 @@ agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
 def serialize_host(
-    host: Host, *, effective_attributes: bool, include_links: bool = True
+    host: Host,
+    *,
+    fields_filter: FieldsFilter,
 ) -> DomainObject:
-    extensions = {
-        "folder": "/" + host.folder().path(),
-        "attributes": host.attributes,
-        "effective_attributes": host.effective_attributes() if effective_attributes else None,
-        "is_cluster": host.is_cluster(),
-        "is_offline": host.is_offline(),
-        "cluster_nodes": host.cluster_nodes(),
-    }
+    extensions = (
+        {
+            "folder": "/" + host.folder().path(),
+            "attributes": host.attributes,
+            "effective_attributes": (
+                host.effective_attributes()
+                if "extensions.effective_attributes" in fields_filter
+                else None
+            ),
+            "is_cluster": host.is_cluster(),
+            "is_offline": host.is_offline(),
+            "cluster_nodes": host.cluster_nodes(),
+        }
+        if "extensions" in fields_filter
+        else None
+    )
 
-    if include_links:
+    if "links" in fields_filter:
         links = [
             constructors.link_rel(
                 rel="cmk/folder_config",
@@ -905,7 +977,7 @@ def serialize_host(
         title=host.alias() or host.name(),
         links=links,
         extensions=extensions,
-        include_links=include_links,
+        include_links="links" in fields_filter,
     )
 
 

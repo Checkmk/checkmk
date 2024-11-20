@@ -5,6 +5,7 @@
 from collections.abc import Mapping
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.fields.fields_filter import FieldsFilterField
 
 from cmk.fields import Boolean
 
@@ -27,3 +28,7 @@ def field_include_links(description: str | None = None) -> Mapping[str, Boolean]
             or "Flag which toggles whether the links field of the individual values should be populated.",
         )
     }
+
+
+def field_fields_filter() -> Mapping[str, FieldsFilterField]:
+    return {"fields": FieldsFilterField(required=False)}

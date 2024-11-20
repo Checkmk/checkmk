@@ -291,7 +291,11 @@ def triggering_events() -> QuickSetupStage:
                             name="all_events",
                             title=Title("All events"),
                             parameter_form=FixedValue(
-                                value=None, label=Label("Rule applies to all possible events")
+                                value=None,
+                                label=Label(
+                                    "All host events, service events and event console alerts will "
+                                    "trigger a notification"
+                                ),
                             ),
                         ),
                     ],

@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import hashlib
 from collections.abc import Callable, Sequence
 from typing import Any, Optional, Protocol, TypeVar
 
@@ -103,3 +104,7 @@ def compute_label(label: Label | None) -> str | None:
     if label is None:
         return None
     return label.localize(translate_to_current_language)
+
+
+def option_id(val: object) -> str:
+    return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()

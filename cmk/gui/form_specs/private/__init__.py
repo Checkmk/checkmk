@@ -17,6 +17,7 @@ from .folder import Folder
 from .labels import Labels
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
+from .list_unique_selection import ListUniqueSelection
 from .monitored_host_extended import MonitoredHostExtended
 from .multiple_choice import AdaptiveMultipleChoice, AdaptiveMultipleChoiceLayout
 from .optional_choice import OptionalChoice
@@ -34,6 +35,7 @@ __all__ = [
     "ConditionChoices",
     "LegacyValueSpec",
     "ListExtended",
+    "ListUniqueSelection",
     "ListOfStrings",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",

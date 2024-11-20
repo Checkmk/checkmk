@@ -19,6 +19,7 @@ from .labels import LabelsVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
 from .list import ListVisitor
 from .list_of_strings import ListOfStringsVisitor
+from .list_unique_selection import ListUniqueSelectionVisitor
 from .multiline_text import MultilineTextVisitor
 from .multiple_choice import MultipleChoiceVisitor
 from .optional_choice import OptionalChoiceVisitor
@@ -51,6 +52,7 @@ __all__ = [
     "LegacyValuespecVisitor",
     "ListVisitor",
     "ListOfStringsVisitor",
+    "ListUniqueSelectionVisitor",
     "MultilineTextVisitor",
     "MultipleChoiceVisitor",
     "OptionalChoiceVisitor",

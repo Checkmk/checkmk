@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import hashlib
 from typing import Generic, TypeVar
 
 from cmk.gui.form_specs import private
@@ -23,6 +22,7 @@ from ._utils import (
     get_prefill_default,
     get_title_and_help,
     localize,
+    option_id,
 )
 
 T = TypeVar("T")
@@ -38,7 +38,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     @classmethod
     def option_id(cls, val: object) -> str:
-        return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
+        return option_id(val)
 
     def _parse_value(self, raw_value: object) -> T | EmptyValue:
         if isinstance(raw_value, DefaultValue):

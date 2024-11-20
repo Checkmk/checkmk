@@ -248,7 +248,7 @@ namespace {
 // Set still unknown hosts / services to unmonitored
 void set_unknown_to_unmonitored(
     const TableStateHistory::state_info_t &state_info) {
-    for (const auto &[key, hss] : state_info) {
+    for (const auto &[_, hss] : state_info) {
         if (hss->_may_no_longer_exist) {
             hss->_has_vanished = true;
         }
@@ -263,7 +263,7 @@ void handle_log_initial_states(
     // all known hosts and services. Therefore we can detect if a host is no
     // longer available after a nagios startup. If it still exists an INITIAL
     // HOST/SERVICE state entry will follow up shortly.
-    for (const auto &[key, hss] : state_info) {
+    for (const auto &[_, hss] : state_info) {
         if (!hss->_has_vanished) {
             hss->_last_known_time = entry_time;
             hss->_may_no_longer_exist = true;
@@ -353,7 +353,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         if (only_update && entry->time() >= period.since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
-            for (const auto &[key, hss] : state_info) {
+            for (const auto &[_, hss] : state_info) {
                 hss->_from = period.since;
                 hss->_until = period.since;
             }
@@ -512,7 +512,7 @@ void TableStateHistory::fill_new_state(HostServiceState *state,
                                        const LogPeriod &period) {
     // Host/Service relations
     if (state->_is_host) {
-        for (const auto &[key, hss] : state_info) {
+        for (const auto &[_, hss] : state_info) {
             if (hss->_host != nullptr &&
                 hss->_host->handleForStateHistory() ==
                     state->_host->handleForStateHistory()) {
@@ -569,7 +569,7 @@ void TableStateHistory::handle_timeperiod_transition(
     const state_info_t &state_info) {
     try {
         time_periods.update(entry->options());
-        for (const auto &[key, hss] : state_info) {
+        for (const auto &[_, hss] : state_info) {
             process_time_period_transition(processor, logger, *entry, *hss,
                                            only_update);
         }
@@ -581,7 +581,7 @@ void TableStateHistory::handle_timeperiod_transition(
 
 void TableStateHistory::final_reports(Processor &processor,
                                       const state_info_t &state_info) {
-    for (const auto &[key, hss] : state_info) {
+    for (const auto &[_, hss] : state_info) {
         // No trace since the last two nagios startup -> host/service has
         // vanished
         if (hss->_may_no_longer_exist) {

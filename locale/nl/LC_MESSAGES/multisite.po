@@ -11742,6 +11742,10 @@ msgstr ""
 "Kies of u alleen het versienummer wilt opvragen, of dat u het antwoord op "
 "een adresopvraag wilt controleren."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Kernbestanden"
+
 msgid "Chrony timesynchronisation"
 msgstr "Chrony timesynchronisatie"
 

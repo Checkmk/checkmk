@@ -11510,6 +11510,10 @@ msgstr ""
 "Wählen Sie, ob Sie die Parent-Host-Informationen für den NetBIOS-Servernamen "
 "verwenden oder einen eigenen angeben möchten."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Kerndateien"
+
 msgid "Chrony timesynchronisation"
 msgstr "Chrony Zeitsynchronisation"
 

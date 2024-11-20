@@ -11831,6 +11831,10 @@ msgstr ""
 "Elija, si sólo quiere consultar el número de versión, o si quiere comprobar "
 "la respuesta a una consulta de dirección."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Archivos principales"
+
 msgid "Chrony timesynchronisation"
 msgstr "Sincronización horaria de las crónicas"
 

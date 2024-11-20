@@ -11737,6 +11737,10 @@ msgstr ""
 "Escolha se pretende utilizar as informações do anfitrião principal para o "
 "nome do servidor NetBIOS ou se pretende especificar um."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Ficheiros principais"
+
 msgid "Chrony timesynchronisation"
 msgstr "Sincronização temporal cronológica"
 

@@ -11178,6 +11178,10 @@ msgid ""
 "server name, or if you want to specify one."
 msgstr "NetBIOSサーバー名に親ホスト情報を使用するか指定するかを選択します。"
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "コアファイル"
+
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
 

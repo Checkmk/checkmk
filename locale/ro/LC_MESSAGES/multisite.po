@@ -11752,6 +11752,10 @@ msgstr ""
 "Alegeți dacă doriți să utilizați informațiile despre gazda părinte pentru "
 "numele serverului NetBIOS sau dacă doriți să specificați unul."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Fișiere de bază"
+
 msgid "Chrony timesynchronisation"
 msgstr "Sincronizarea cronică a timpului"
 

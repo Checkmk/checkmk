@@ -11619,6 +11619,10 @@ msgstr ""
 "Scegliere se utilizzare le informazioni sull'host padre per il nome del "
 "server NetBIOS o se specificarne uno."
 
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "File di base"
+
 msgid "Chrony timesynchronisation"
 msgstr "Cronosincronizzazione"
 

@@ -21,8 +21,6 @@
 class Column;
 class ColumnOffsets;
 class ICore;
-class IHost;
-class IService;
 class LogEntry;
 class Logger;
 class Query;
@@ -125,14 +123,11 @@ private:
         bool only_update, const TimePeriods &time_periods,
         state_info_t &state_info, ObjectBlacklist &blacklist);
 
-    static void insert_new_state(const LogEntry *entry, bool only_update,
-                                 const TimePeriods &time_periods,
-                                 state_info_t &state_info,
-                                 ObjectBlacklist &blacklist,
-                                 const LogPeriod &period,
-                                 const IHost *entry_host,
-                                 const IService *entry_service,
-                                 HostServiceKey key);
+    static void fill_new_state(HostServiceState *state, const LogEntry *entry,
+                               bool only_update,
+                               const TimePeriods &time_periods,
+                               state_info_t &state_info,
+                               const LogPeriod &period);
 
     void handle_timeperiod_transition(Processor &processor, Logger *logger,
                                       const LogEntry *entry, bool only_update,

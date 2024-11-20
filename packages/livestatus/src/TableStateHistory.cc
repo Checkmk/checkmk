@@ -478,38 +478,38 @@ HostServiceState *TableStateHistory::get_state_for_entry(
     }
 
     if (!state_info.contains(key)) {
-        insert_new_state(entry, only_update, time_periods, state_info,
-                         blacklist, period, entry_host, entry_service, key);
+        auto state = std::make_unique<HostServiceState>();
+        state->_is_host = entry->service_description().empty();
+        state->_host = entry_host;
+        state->_service = entry_service;
+        state->_host_name = entry->host_name();
+        state->_service_description = entry->service_description();
+
+        // No state found. Now check if this host/services is filtered out.
+        // Note: we currently do not filter out hosts since they might be needed
+        // for service states
+        if (!state->_is_host) {
+            // NOTE: The filter is only allowed to inspect those fields of state
+            // which are set by now, see createPartialFilter()!
+            if (!blacklist.accepts(*state)) {
+                blacklist.insert(key);
+                return nullptr;
+            }
+        }
+
+        fill_new_state(state.get(), entry, only_update, time_periods,
+                       state_info, period);
+        state_info[key] = std::move(state);
     }
     return state_info[key].get();
 }
 
 // static
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
-void TableStateHistory::insert_new_state(
-    const LogEntry *entry, bool only_update, const TimePeriods &time_periods,
-    state_info_t &state_info, ObjectBlacklist &blacklist,
-    const LogPeriod &period, const IHost *entry_host,
-    const IService *entry_service, HostServiceKey key) {
-    auto state = std::make_unique<HostServiceState>();
-    state->_is_host = entry->service_description().empty();
-    state->_host = entry_host;
-    state->_service = entry_service;
-    state->_host_name = entry->host_name();
-    state->_service_description = entry->service_description();
-
-    // No state found. Now check if this host/services is filtered out.
-    // Note: we currently do not filter out hosts since they might be needed
-    // for service states
-    if (!state->_is_host) {
-        // NOTE: The filter is only allowed to inspect those fields of state
-        // which are set by now, see createPartialFilter()!
-        if (!blacklist.accepts(*state)) {
-            blacklist.insert(key);
-            return;
-        }
-    }
-
+void TableStateHistory::fill_new_state(HostServiceState *state,
+                                       const LogEntry *entry, bool only_update,
+                                       const TimePeriods &time_periods,
+                                       state_info_t &state_info,
+                                       const LogPeriod &period) {
     // Host/Service relations
     if (state->_is_host) {
         for (const auto &[key, hss] : state_info) {
@@ -522,7 +522,7 @@ void TableStateHistory::insert_new_state(
     } else {
         auto it_inh = state_info.find(state->_host->handleForStateHistory());
         if (it_inh != state_info.end()) {
-            it_inh->second->_services.push_back(state.get());
+            it_inh->second->_services.push_back(state);
         }
     }
 
@@ -561,9 +561,6 @@ void TableStateHistory::insert_new_state(
         state->_debug_info = "UNMONITORED ";
         state->_state = -1;
     }
-
-    // Store this state object for tracking state transitions
-    state_info[key] = std::move(state);
 }
 
 void TableStateHistory::handle_timeperiod_transition(

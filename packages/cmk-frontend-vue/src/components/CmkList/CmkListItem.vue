@@ -74,6 +74,11 @@ const { buttonPadding = '16px', ...props } = defineProps<{
     padding-left: v-bind(buttonPadding);
   }
 
+  .cmk_list__buttons {
+    display: flex;
+    gap: 2px;
+  }
+
   .cmk_list__buttons.first {
     padding-top: var(--button-padding-top);
   }

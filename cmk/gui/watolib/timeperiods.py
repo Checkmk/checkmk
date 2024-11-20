@@ -21,7 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
 from . import changes as _changes
@@ -39,10 +39,6 @@ class TimePeriodsConfigFile(WatoSimpleConfigFile[TimeperiodSpec]):
             config_variable="timeperiods",
             spec_class=TimeperiodSpec,
         )
-
-
-def register(config_file_registry: ConfigFileRegistry) -> None:
-    config_file_registry.register(TimePeriodsConfigFile())
 
 
 def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:

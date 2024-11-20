@@ -111,6 +111,10 @@ class SiteConfiguration(TypedDict, total=False):
     tls: TLSInfo
 
 
+def sanitize_site_configuration(config: SiteConfiguration) -> dict[str, object]:
+    return {key: "redacted" if key == "secret" else value for key, value in config.items()}
+
+
 SiteConfigurations = NewType("SiteConfigurations", dict[SiteId, SiteConfiguration])
 
 LivestatusColumn = Any

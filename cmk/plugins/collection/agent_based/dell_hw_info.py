@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from contextlib import suppress
+from datetime import datetime, timezone
 from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
 class Section(NamedTuple):
     serial: str
     expresscode: str
-    bios_date: float | None
+    bios_date: datetime | None
     bios_version: str
     bios_vendor: str
     raid_name: str
@@ -43,9 +43,9 @@ def parse_dell_hw_info(string_table: StringTable) -> Section | None:
     return None
 
 
-def _format_date(raw_date: str) -> float | None:
+def _format_date(raw_date: str) -> datetime | None:
     if fmt := _get_date_format(raw_date):
-        return time.mktime(time.strptime(raw_date, fmt))
+        return datetime.strptime(raw_date, fmt)
     return None
 
 
@@ -91,6 +91,16 @@ snmp_section_dell_hw_info = SimpleSNMPSection(
 
 
 def inventory_dell_hw_info(section: Section) -> InventoryResult:
+    yield from _inventory_testable(section, None)
+
+
+inventory_plugin_dell_hw_info = InventoryPlugin(
+    name="dell_hw_info",
+    inventory_function=inventory_dell_hw_info,
+)
+
+
+def _inventory_testable(section: Section, time_zone: timezone | None) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={
@@ -104,7 +114,11 @@ def inventory_dell_hw_info(section: Section) -> InventoryResult:
         inventory_attributes={
             "version": section.bios_version,
             "vendor": section.bios_vendor,
-            **({} if section.bios_date is None else {"date": section.bios_date}),
+            **(
+                {}
+                if section.bios_date is None
+                else {"date": section.bios_date.replace(tzinfo=time_zone).timestamp()}
+            ),
         },
     )
 
@@ -115,9 +129,3 @@ def inventory_dell_hw_info(section: Section) -> InventoryResult:
             "name": section.raid_name,
         },
     )
-
-
-inventory_plugin_dell_hw_info = InventoryPlugin(
-    name="dell_hw_info",
-    inventory_function=inventory_dell_hw_info,
-)

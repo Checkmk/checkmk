@@ -52,6 +52,7 @@ const components: Record<Components['type'], Component> = {
   labels: FormLabels,
   legacy_valuespec: FormLegacyValueSpec,
   list: FormList,
+  list_unique_selection: FormList, // TODO: implement FormListUniqueSelection (just to make tests pass)
   list_of_strings: FormListOfStrings,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,

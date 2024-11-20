@@ -60,6 +60,7 @@ function renderForm(
     case 'single_choice':
       return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
+    case 'list_unique_selection':
       return renderList(formSpec as List, value as unknown[], backendValidation)
     case 'list_of_strings':
       return renderListOfStrings(formSpec as ListOfStrings, value as unknown[], backendValidation)

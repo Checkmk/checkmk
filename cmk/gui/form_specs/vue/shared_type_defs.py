@@ -489,12 +489,24 @@ class Labels(FormSpec):
     label_source: Optional[LabelSource] = None
 
 
+@dataclass(kw_only=True)
+class ListUniqueSelection(FormSpec):
+    element_template: Union[SingleChoice, CascadingSingleChoice]
+    element_default_value: Any
+    add_element_label: str
+    remove_element_label: str
+    no_element_label: str
+    unique_selection_elements: list[str]
+    type: str = "list_unique_selection"
+
+
 Components = Union[
     Integer,
     Float,
     String,
     Dictionary,
     List,
+    ListUniqueSelection,
     LegacyValuespec,
     SingleChoice,
     CascadingSingleChoice,

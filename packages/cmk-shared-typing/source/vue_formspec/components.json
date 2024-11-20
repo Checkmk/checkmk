@@ -222,6 +222,54 @@
                 }
             ]
         },
+        "list_unique_selection": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "list_unique_selection",
+                            "default": "list_unique_selection"
+                        },
+                        "element_template": {
+                            "anyOf": [
+                                { "$ref": "#/$defs/single_choice" },
+                                { "$ref": "#/$defs/cascading_single_choice" }
+                            ]
+                        },
+                        "element_default_value": {},
+                        "add_element_label": {
+                            "type": "string"
+                        },
+                        "remove_element_label": {
+                            "type": "string"
+                        },
+                        "no_element_label": {
+                            "type": "string"
+                        },
+                        "unique_selection_elements": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "element_template",
+                        "element_default_value",
+                        "add_element_label",
+                        "remove_element_label",
+                        "no_element_label",
+                        "unique_selection_elements"
+                    ]
+                }
+            ]
+        },
         "dictionary_group": {
             "type": "object",
             "properties": {
@@ -333,42 +381,45 @@
         },
         "single_choice": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "single_choice",
-                    "default": "single_choice"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/single_choice_element"
-                    },
-                    "default": []
-                },
-                "no_elements_text": {
-                    "type": ["string", "null"]
-                },
-                "frozen": {
-                    "type": "boolean"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "input_hint": {
-                    "type": ["string", "null"]
-                }
-            },
-            "required": [
-                "type",
-                "no_elements_text",
-                "label",
-                "input_hint",
-                "frozen",
-                "elements"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "single_choice",
+                            "default": "single_choice"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/single_choice_element"
+                            },
+                            "default": []
+                        },
+                        "no_elements_text": {
+                            "type": ["string", "null"]
+                        },
+                        "frozen": {
+                            "type": "boolean"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "no_elements_text",
+                        "label",
+                        "input_hint",
+                        "frozen",
+                        "elements"
+                    ]
                 }
             ]
         },
@@ -506,32 +557,41 @@
         },
         "cascading_single_choice": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "cascading_single_choice",
-                    "default": "cascading_single_choice"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/cascading_single_choice_element"
-                    },
-                    "default": []
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "input_hint": {},
-                "layout": {
-                    "title": "CascadingSingleChoiceLayout",
-                    "enum": ["vertical", "horizontal", "button_group"],
-                    "default": "vertical"
-                }
-            },
-            "required": ["type", "elements", "label", "input_hint", "layout"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "cascading_single_choice",
+                            "default": "cascading_single_choice"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/cascading_single_choice_element"
+                            },
+                            "default": []
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "input_hint": {},
+                        "layout": {
+                            "title": "CascadingSingleChoiceLayout",
+                            "enum": ["vertical", "horizontal", "button_group"],
+                            "default": "vertical"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "elements",
+                        "label",
+                        "input_hint",
+                        "layout"
+                    ]
                 }
             ]
         },
@@ -1170,6 +1230,9 @@
                 },
                 {
                     "$ref": "#/$defs/list"
+                },
+                {
+                    "$ref": "#/$defs/list_unique_selection"
                 },
                 {
                     "$ref": "#/$defs/legacy_valuespec"

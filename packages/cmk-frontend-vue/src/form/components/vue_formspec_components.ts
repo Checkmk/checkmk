@@ -15,6 +15,7 @@ export type Components =
   | String
   | Dictionary
   | List
+  | ListUniqueSelection
   | LegacyValuespec
   | SingleChoice
   | CascadingSingleChoice
@@ -74,9 +75,14 @@ export type List = FormSpec & {
   remove_element_label: string;
   no_element_label: string;
 };
-export type LegacyValuespec = FormSpec & {
-  type: "legacy_valuespec";
-  varprefix: string;
+export type ListUniqueSelection = FormSpec & {
+  type: "list_unique_selection";
+  element_template: SingleChoice | CascadingSingleChoice;
+  element_default_value: unknown;
+  add_element_label: string;
+  remove_element_label: string;
+  no_element_label: string;
+  unique_selection_elements: string[];
 };
 export type SingleChoice = FormSpec & {
   type: "single_choice";
@@ -94,6 +100,10 @@ export type CascadingSingleChoice = FormSpec & {
   layout: CascadingSingleChoiceLayout;
 };
 export type CascadingSingleChoiceLayout = "vertical" | "horizontal" | "button_group";
+export type LegacyValuespec = FormSpec & {
+  type: "legacy_valuespec";
+  varprefix: string;
+};
 export type FixedValue = FormSpec & {
   type: "fixed_value";
   label: string | null;

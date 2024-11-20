@@ -123,7 +123,7 @@ def configure_host_and_regions() -> QuickSetupStage:
             FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
                 form_spec=DictionaryExtended(
-                    elements=aws.quick_setup_stage_2(),
+                    elements=aws.quick_setup_stage_2(max_regions=5),
                     layout=DictionaryLayout.two_columns,
                 ),
             ),
@@ -148,6 +148,7 @@ def _configure() -> Sequence[Widget]:
             form_spec=DictionaryExtended(
                 elements=aws.quick_setup_stage_3(),
                 layout=DictionaryLayout.two_columns,
+                custom_validate=[],
             ),
         ),
         Collapsible(

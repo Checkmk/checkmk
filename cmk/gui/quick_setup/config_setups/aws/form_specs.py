@@ -196,7 +196,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
     }
 
 
-def quick_setup_stage_2() -> Mapping[str, DictElement]:
+def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElement]:
     return {
         "regions_to_monitor": DictElement(
             parameter_form=MultipleChoice(
@@ -211,7 +211,12 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Please choose one or more regions to continue."),
+                        max_value=max_regions,
+                        error_msg=Message("Please select at least one or more regions to continue.")
+                        if max_regions is None
+                        else Message(  # pylint: disable=localization-of-non-literal-string
+                            f"Please choose at least one and at most {max_regions} regions to continue"
+                        ),
                     ),
                 ),
             ),

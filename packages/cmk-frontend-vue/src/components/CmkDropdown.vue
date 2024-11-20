@@ -106,6 +106,7 @@ function wrap(index: number, length: number): number {
         if (suggestionsShown) suggestionsShown = false
       }
     "
+    class="cmk_dropdown__container"
   >
     <CmkButton
       :id="componentId"
@@ -148,8 +149,9 @@ function wrap(index: number, length: number): number {
 </template>
 
 <style scoped>
-div {
+.cmk_dropdown__container {
   display: inline-block;
+  position: relative;
 }
 
 .drop-down {

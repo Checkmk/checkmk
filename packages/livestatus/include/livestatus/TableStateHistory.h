@@ -120,6 +120,11 @@ private:
                             state_info_t &state_info,
                             ObjectBlacklist &blacklist);
 
+    static HostServiceState *get_state_for_entry(
+        const LogPeriod &period, const ICore &core, const LogEntry *entry,
+        bool only_update, const TimePeriods &time_periods,
+        state_info_t &state_info, ObjectBlacklist &blacklist);
+
     static void insert_new_state(const LogEntry *entry, bool only_update,
                                  const TimePeriods &time_periods,
                                  state_info_t &state_info,

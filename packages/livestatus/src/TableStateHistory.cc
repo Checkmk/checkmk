@@ -430,6 +430,32 @@ void TableStateHistory::handle_state_entry(
     Processor &processor, const ICore &core, const LogEntry *entry,
     bool only_update, const TimePeriods &time_periods, state_info_t &state_info,
     ObjectBlacklist &blacklist) {
+    auto *hss =
+        get_state_for_entry(processor.period(), core, entry, only_update,
+                            time_periods, state_info, blacklist);
+    if (hss == nullptr) {
+        return;
+    }
+    auto state_changed = updateHostServiceState(processor, entry, *hss,
+                                                only_update, time_periods);
+    // Host downtime or state changes also affect its services
+    if (entry->kind() == LogEntryKind::alert_host ||
+        entry->kind() == LogEntryKind::state_host ||
+        entry->kind() == LogEntryKind::downtime_alert_host) {
+        if (state_changed == ModificationStatus::changed) {
+            for (auto &svc : hss->_services) {
+                updateHostServiceState(processor, entry, *svc, only_update,
+                                       time_periods);
+            }
+        }
+    }
+}
+
+// static
+HostServiceState *TableStateHistory::get_state_for_entry(
+    const LogPeriod &period, const ICore &core, const LogEntry *entry,
+    bool only_update, const TimePeriods &time_periods, state_info_t &state_info,
+    ObjectBlacklist &blacklist) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
         core.find_service(entry->host_name(), entry->service_description());
@@ -442,35 +468,20 @@ void TableStateHistory::handle_state_entry(
                    ? nullptr
                    : entry_service->handleForStateHistory());
     if (key == nullptr) {
-        return;
+        return nullptr;
     }
 
     if (blacklist.contains(key)) {
         // Host/Service is not needed for this query and has already been
         // filtered out.
-        return;
+        return nullptr;
     }
 
     if (!state_info.contains(key)) {
         insert_new_state(entry, only_update, time_periods, state_info,
-                         blacklist, processor.period(), entry_host,
-                         entry_service, key);
+                         blacklist, period, entry_host, entry_service, key);
     }
-
-    auto &hss = *state_info[key];
-    auto state_changed = updateHostServiceState(processor, entry, hss,
-                                                only_update, time_periods);
-    // Host downtime or state changes also affect its services
-    if (entry->kind() == LogEntryKind::alert_host ||
-        entry->kind() == LogEntryKind::state_host ||
-        entry->kind() == LogEntryKind::downtime_alert_host) {
-        if (state_changed == ModificationStatus::changed) {
-            for (auto &svc : hss._services) {
-                updateHostServiceState(processor, entry, *svc, only_update,
-                                       time_periods);
-            }
-        }
-    }
+    return state_info[key].get();
 }
 
 // static

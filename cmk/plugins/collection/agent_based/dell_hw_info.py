@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
     all_of,
@@ -19,7 +19,8 @@ from cmk.agent_based.v2 import (
 )
 
 
-class Section(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class Section:
     serial: str
     expresscode: str
     bios_date: datetime | None

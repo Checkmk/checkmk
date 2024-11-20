@@ -18,7 +18,6 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
-from contextlib import suppress
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -955,10 +954,14 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         # sanitize encrypted files
         elif str(rel_filepath) == "multisite.d/sites.mk":
             sites = store.load_from_mk_file(filepath, "sites", {})
-            for detail in sites.values():
-                with suppress(KeyError):
-                    detail["secret"] = "redacted"
-            store.save_to_mk_file(tmp_filepath, "sites", sites)
+            store.save_to_mk_file(
+                tmp_filepath,
+                "sites",
+                {
+                    siteid: livestatus.sanitize_site_configuration(config)
+                    for siteid, config in sites
+                },
+            )
         else:
             shutil.copy(str(filepath), str(tmp_filepath))
 

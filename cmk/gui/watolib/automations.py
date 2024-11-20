@@ -24,7 +24,7 @@ import requests
 import urllib3
 from pydantic import BaseModel, field_validator
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -264,7 +264,7 @@ def _do_remote_automation_serialized(
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site, command)
+    auto_logger.info("RUN [%s]: %s", sanitize_site_configuration(site), command)
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]

@@ -9,7 +9,12 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.notify import NotificationHostConfig
-from cmk.utils.notify_types import EventRule, NotificationParameterID, NotificationRuleID
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterID,
+    NotificationRuleID,
+    NotifyPluginParamsDict,
+)
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -19,6 +24,7 @@ import cmk.base.events
 from cmk.base.events import (
     _update_enriched_context_from_notify_host_file,
     add_to_event_context,
+    convert_proxy_params,
     event_match_hosttags,
     raw_context_from_string,
 )
@@ -445,3 +451,36 @@ def test_match_host_tags(
         )
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "no_proxy", "")},
+            ("no_proxy", None),
+            id="No proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "stored_proxy", "proxy_id")},
+            ("global", "proxy_id"),
+            id="Stored proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "environment_proxy", "")},
+            ("environment", "environment"),
+            id="Environment proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "explicit_proxy", "http://www.myproxy.com")},
+            ("url", "http://www.myproxy.com"),
+            id="Explicit proxy",
+        ),
+    ],
+)
+def test_convert_proxy_params(
+    params: NotifyPluginParamsDict,
+    expected: tuple[str, str | None],
+) -> None:
+    params_dict = convert_proxy_params(params)
+    assert params_dict["proxy_url"] == expected

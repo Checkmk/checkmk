@@ -1718,6 +1718,10 @@ def create_plugin_context(
 ) -> NotificationContext:
     plugin_context = NotificationContext({})
     plugin_context.update(cast(Mapping[str, str], enriched_context))  # Make a real copy
+
+    if "proxy_url" in params:
+        params = events.convert_proxy_params(params)
+
     events.add_to_event_context(plugin_context, "PARAMETER", params, get_http_proxy)
     return plugin_context
 

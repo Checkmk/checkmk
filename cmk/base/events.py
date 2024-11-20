@@ -25,7 +25,7 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EventRule
+from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
@@ -1014,6 +1014,29 @@ def add_context_to_environment(
     for key, value in plugin_context.items():
         assert isinstance(value, str)
         os.putenv(prefix + key, value.encode("utf-8"))
+
+
+def convert_proxy_params(params: NotifyPluginParamsDict) -> dict[str, Any]:
+    """
+    This is needed before add_to_event_context() to keep the 2.3 structure for
+    the changes we made in 2.4. The new format can not be handled by add_to_event_context()
+    """
+    params_dict = dict(params)
+    proxy_params = params["proxy_url"]  # type: ignore[typeddict-item]
+    match proxy_params:
+        case "cmk_postprocessed", "environment_proxy", str():
+            params_dict["proxy_url"] = ("environment", "environment")
+        case "cmk_postprocessed", "no_proxy", str():
+            params_dict["proxy_url"] = ("no_proxy", None)
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            params_dict["proxy_url"] = ("global", stored_proxy_id)
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            params_dict["proxy_url"] = ("url", url)
+        case _:
+            # unknown format, take it as it is
+            pass
+
+    return params_dict
 
 
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import signal
+import subprocess
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -168,3 +170,44 @@ def _write_sitespecific_config_file(central_site: Site) -> Iterator[None]:
         yield
     finally:
         central_site.write_text_file(global_settings_file, settings_text)
+
+
+class Timeout(RuntimeError):
+    pass
+
+
+@contextmanager
+def _timeout(seconds: int, exc: Timeout) -> Iterator[None]:
+    """Context manager to raise an exception after a timeout"""
+
+    def _raise_timeout(signum, frame):
+        raise exc
+
+    alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)
+    try:
+        signal.alarm(seconds)
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, alarm_handler)
+
+
+def piggybacked_data_gets_updated(
+    source_site: Site, target_site: Site, hostname_source: str, hostname_piggybacked: str
+) -> bool:
+    """Track incoming piggybacked data on the target site"""
+
+    try:
+        with _timeout(5, Timeout("`cmk-piggyback track` timed out after 5s")):
+            track = target_site.execute(
+                ["cmk-piggyback", "track"], stdout=subprocess.PIPE, text=True
+            )
+            source_site.schedule_check(hostname_source, "Check_MK")
+            assert track.stdout
+            while line := track.stdout.readline():
+                if f"{hostname_source} -> {hostname_piggybacked}" in line:
+                    return True
+    except Timeout:
+        pass
+
+    return False

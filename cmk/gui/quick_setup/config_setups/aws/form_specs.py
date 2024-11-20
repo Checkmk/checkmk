@@ -215,7 +215,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                         error_msg=Message("Please select at least one or more regions to continue.")
                         if max_regions is None
                         else Message(  # pylint: disable=localization-of-non-literal-string
-                            f"Please choose at least one and at most {max_regions} regions to continue"
+                            f"Please select at least one and at most {max_regions} regions to continue"
                         ),
                     ),
                 ),

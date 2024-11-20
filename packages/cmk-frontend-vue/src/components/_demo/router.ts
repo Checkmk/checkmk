@@ -10,7 +10,7 @@ import DemoEmpty from './DemoEmpty.vue'
 import DemoAlertBox from './DemoAlertBox.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
-import DemoFormEditAsync from './DemoFormEditAsync.vue'
+import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
@@ -139,8 +139,8 @@ const router = createRouter({
         },
         {
           path: 'formeditasync',
-          name: 'FormEditAsync',
-          component: DemoFormEditAsync
+          name: 'FormSingleChoiceEditableEditAsync',
+          component: DemoFormSingleChoiceEditableEditAsync
         }
       ]
     }

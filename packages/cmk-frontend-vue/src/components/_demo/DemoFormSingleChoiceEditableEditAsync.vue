@@ -5,8 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, toRaw, provide } from 'vue'
-import type { API, SetDataResult } from '@/form/components/FormEditAsync.vue'
-import FormEditAsync from '@/form/components/FormEditAsync.vue'
+import type {
+  API,
+  SetDataResult
+} from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   Dictionary,
@@ -86,7 +89,7 @@ const api: API<ObjectId, ObjectId> = {
     return dict as FormSpec
   }
 }
-// this is a hack to use FormEditAsync outside a FormEdit context:
+// this is a hack to use FormSingleChoiceEditableEditAsync outside a FormEdit context:
 // if you need this in production code, we should think about a better solution
 provide('dispatcher', FormEditDispatcher)
 </script>
@@ -129,7 +132,7 @@ provide('dispatcher', FormEditDispatcher)
       </select>
     </label>
   </div>
-  <FormEditAsync
+  <FormSingleChoiceEditableEditAsync
     :key="reloadCount"
     :object-id="objectId"
     :api="api"

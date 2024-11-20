@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfigEntityType } from '@/form/components/configuration_entity'
-import type { SetDataResult } from '@/form/components/FormEditAsync.vue'
+import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 
 export interface EntityDescription {
   ident: string

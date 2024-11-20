@@ -4,16 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { FormSpec, Dictionary } from '@/form/components/vue_formspec_components'
-import FormEditAsync from '@/form/components/FormEditAsync.vue'
-import type { SetDataResult } from '@/form/components/FormEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import { dispatcherKey } from '@/form/private'
 import { screen, render } from '@testing-library/vue'
 
-test('FormEditAsync renders form', async () => {
+test('FormSingleChoiceEditableEditAsync renders form', async () => {
   type Data = Record<string, unknown>
 
-  render(FormEditAsync<string, Data>, {
+  render(FormSingleChoiceEditableEditAsync<string, Data>, {
     global: {
       provide: {
         [dispatcherKey]: FormEditDispatcher

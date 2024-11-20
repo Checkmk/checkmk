@@ -26,7 +26,7 @@ export type API<ObjectIdent, Result> = {
   setData: (objectId: ObjectIdent | null, data: Payload) => Promise<SetDataResult<Result>>
 }
 
-export interface FormEditAsyncProps<ObjectIdent, Result> {
+export interface FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result> {
   objectId: ObjectIdent | null
   api: API<ObjectIdent, Result>
   i18n: {
@@ -39,7 +39,7 @@ export interface FormEditAsyncProps<ObjectIdent, Result> {
   }
 }
 
-const props = defineProps<FormEditAsyncProps<ObjectIdent, Result>>()
+const props = defineProps<FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result>>()
 
 const schema = ref<FormSpec>()
 const data = ref<Payload>()

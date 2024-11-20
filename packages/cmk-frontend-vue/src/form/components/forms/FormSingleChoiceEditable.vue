@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import FormEditAsync from '@/form/components/FormEditAsync.vue'
+import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -146,7 +146,7 @@ function openSlideIn(objectId: null | OptionId) {
         {{ spec.i18n.fatal_error }}
         {{ error }}
       </AlertBox>
-      <FormEditAsync
+      <FormSingleChoiceEditableEditAsync
         :object-id="slideInObjectId"
         :api="slideInAPI"
         :i18n="{

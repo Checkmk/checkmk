@@ -87,6 +87,10 @@ def edition_has_enforced_licensing(ed: Edition, /) -> bool:
     return ed in (Edition.CME, Edition.CCE)
 
 
+def edition_has_license_scheduler(ed: Edition, /) -> bool:
+    return ed in (Edition.CME, Edition.CCE, Edition.CEE)
+
+
 def edition_supports_nagvis(ed: Edition, /) -> bool:
     return ed is not Edition.CSE
 

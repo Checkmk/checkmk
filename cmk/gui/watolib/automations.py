@@ -22,7 +22,7 @@ from typing import NamedTuple
 import requests
 import urllib3
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -274,7 +274,7 @@ def _do_remote_automation_serialized(
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site, command)
+    auto_logger.info("RUN [%s]: %s", sanitize_site_configuration(site), command)
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]

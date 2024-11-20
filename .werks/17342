@@ -1,0 +1,29 @@
+Title: Redact site secret in info logs of automation calls
+Class: security
+Compatible: compat
+Component: wato
+Date: 1732112958
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+If the log level of <em>Automation calls</em> is set to <em>Informational</em>, automation calls are logged including the site secret.
+
+With this Werk the secret is redacted.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Mitigations</em>:
+
+Set the log level to <em>Warning</em> or higher.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 5.7 Medium (<code>CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N</code>) and assigned <code>CVE-2024-47094</code>.

@@ -27,6 +27,8 @@ import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
 import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
+import DemoFormSingleChoice from './DemoFormSingleChoice.vue'
+import DemoFormTuple from './DemoFormTuple.vue'
 import DemoFormLabels from './DemoFormLabels.vue'
 
 const router = createRouter({
@@ -131,6 +133,16 @@ const router = createRouter({
           path: 'formcheckboxlistchoice',
           name: 'FormCheckboxListChoice',
           component: DemoFormCheckboxListChoice
+        },
+        {
+          path: 'formsinglechoice',
+          name: 'FormSingleChoice',
+          component: DemoFormSingleChoice
+        },
+        {
+          path: 'formtuple',
+          name: 'FormTuple',
+          component: DemoFormTuple
         },
         {
           path: 'formlabels',

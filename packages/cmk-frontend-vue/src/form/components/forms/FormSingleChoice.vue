@@ -9,6 +9,7 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -27,7 +28,9 @@ const componentId = useId()
 
 <template>
   <div>
-    <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
+    <label v-if="$props.spec.label" :for="componentId"
+      >{{ spec.label }}<CmkSpace size="small"
+    /></label>
     <CmkDropdown
       v-model:selected-option="value"
       :options="props.spec.elements"

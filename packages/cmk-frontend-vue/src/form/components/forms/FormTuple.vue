@@ -12,6 +12,7 @@ import {
 import { ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import HelpText from '@/components/HelpText.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import { capitalizeFirstLetter } from '@/lib/utils'
 import { useFormEditDispatcher } from '@/form/private'
 
@@ -60,11 +61,13 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             <span v-if="spec.show_titles && element.title" class="title">{{
               capitalizeFirstLetter(element.title)
             }}</span>
-
+            <CmkSpace
+              v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
+              size="small"
+            />
             <br
               v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'"
             />
-            <span v-else> </span>
             <FormEditDispatcher
               v-model:data="data[index]"
               :spec="element"
@@ -84,6 +87,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
           <span v-if="element.title" class="vs_floating_text">{{
             capitalizeFirstLetter(element.title)
           }}</span>
+          <CmkSpace v-if="spec.show_titles && element.title" size="small" />
         </td>
         <td :class="{ tuple_right: true, has_title: element.title }">
           <FormEditDispatcher
@@ -109,3 +113,12 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   </template>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+td.tuple_td:first-child {
+  padding-left: 0;
+}
+td.tuple_td {
+  padding-left: var(--spacing);
+}
+</style>

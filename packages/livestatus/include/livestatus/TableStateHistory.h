@@ -123,7 +123,7 @@ private:
         bool only_update, const TimePeriods &time_periods,
         state_info_t &state_info, ObjectBlacklist &blacklist);
 
-    static void fill_new_state(HostServiceState *state, const LogEntry *entry,
+    static void fill_new_state(HostServiceState *hss, const LogEntry *entry,
                                bool only_update,
                                const TimePeriods &time_periods,
                                state_info_t &state_info,

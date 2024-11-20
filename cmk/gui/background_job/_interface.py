@@ -79,5 +79,6 @@ class JobParameters(NamedTuple):
     lock_wato: bool
     is_stoppable: bool
     override_job_log_level: int | None
+    span_id: str
     init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None]
     origin_span: Link

@@ -369,6 +369,7 @@ class BackgroundJob:
                     lock_wato=initial_status_args.lock_wato,
                     is_stoppable=initial_status_args.stoppable,
                     override_job_log_level=override_job_log_level,
+                    span_id=self.job_prefix,
                     init_span_processor_callback=init_span_processor_callback,
                     origin_span=origin_span,
                 ),

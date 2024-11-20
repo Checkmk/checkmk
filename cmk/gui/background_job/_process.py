@@ -71,6 +71,7 @@ def run_process(job_parameters: JobParameters) -> None:
         lock_wato,
         is_stoppable,
         override_job_log_level,
+        span_id,
         init_span_processor_callback,
         origin_span,
     ) = job_parameters
@@ -99,7 +100,7 @@ def run_process(job_parameters: JobParameters) -> None:
         )
 
         with tracer.start_as_current_span(
-            f"run_process[{job_id}]",
+            f"run_process[{span_id}]",
             context=set_span_in_context(INVALID_SPAN),
             attributes={
                 "cmk.job_id": job_id,

@@ -54,7 +54,7 @@ def fixture_aws_qs_config_page(
     aws_config_list_page = AWSConfigurationList(aws_qs_config_page.page)
     try:
         expect(aws_config_list_page.configuration_row(configuration_name)).to_be_visible()
-    except PWTimeoutError:
+    except (PWTimeoutError, AssertionError):
         pass
     else:
         # no exception found; configuration exists

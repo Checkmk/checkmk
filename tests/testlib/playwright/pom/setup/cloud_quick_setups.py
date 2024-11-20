@@ -131,7 +131,8 @@ class AWSAddNewConfiguration(CmkPage):
         logger.info("Initialize stage-1 details.")
         self._get_row("Configuration name").get_by_role("textbox").fill(configuration_name)
         self._get_row("Access key ID").get_by_role("textbox").fill(access_key)
-        self._get_row("Secret access key").get_by_role("combobox").select_option("Explicit")
+        self._get_row("Secret access key").get_by_role("combobox").click()
+        self._get_row("Secret access key").get_by_role("option", name="Explicit").click()
         self._get_row("Secret access key").locator('input[type="password"]').fill(access_password)
 
     def specify_stage_two_details(
@@ -145,8 +146,9 @@ class AWSAddNewConfiguration(CmkPage):
             self.regions_to_monitor_table("available").get_by_role("option", name=region).click()
             self.regions_to_monitor_table().get_by_role("button", name="Add >").click()
 
-        self._get_row("Site selection").get_by_role("combobox").select_option(
-            f"{site_name} - Local site {site_name}"
+        self._get_row("Site selection").get_by_role("combobox").click()
+        self._get_row("Site selection").get_by_role(
+            "option", name=f"{site_name} - Local site {site_name}"
         )
 
     def specify_stage_three_details(

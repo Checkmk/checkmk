@@ -9050,6 +9050,9 @@ msgstr "URL base para el motor API de Docker"
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "Directorio base para <tt>plugins</tt> y <tt>local</tt>"
 
+msgid "Base directory for ROBOCORP_HOME directories"
+msgstr ""
+
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Directorio base para datos variables (cachés, archivos de estado)"
 
@@ -12891,6 +12894,10 @@ msgid ""
 msgstr ""
 "Elija, si sólo quiere consultar el número de versión, o si quiere comprobar "
 "la respuesta a una consulta de dirección."
+
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Archivos principales"
 
 msgid "Chrony timesynchronisation"
 msgstr "Sincronización horaria de las crónicas"
@@ -43101,6 +43108,9 @@ msgstr "Todavía no hay métricas en este gráfico."
 msgid "No monitoring core"
 msgstr "No hay núcleo de control"
 
+msgid "No more tags to add"
+msgstr ""
+
 #, fuzzy
 msgid "No names defined"
 msgstr "No hay conexiones definidas"
@@ -49009,6 +49019,10 @@ msgstr "Por favor, añada al menos una columna a su vista."
 
 #, fuzzy
 msgid "Please add at least one recipient"
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
+msgid "Please add at least one tag condition."
 msgstr "Por favor, añada al menos un nodo hijo."
 
 msgid ""
@@ -55491,6 +55505,10 @@ msgstr "Seleccione un tipo de objeto específico"
 msgid "Select suites by name (%s)"
 msgstr "Nombre de seguridad"
 
+#, fuzzy
+msgid "Select tag to add"
+msgstr "Seleccione un periodo de tiempo"
+
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -58437,6 +58455,10 @@ msgstr "Núcleos de control de la OMD"
 msgid "Skip preexisting log messages"
 msgstr "Omitir los mensajes de registro preexistentes"
 
+#, fuzzy
+msgid "Skip test"
+msgstr "Detenido"
+
 msgid "Skip the following SIDs (if found)"
 msgstr "Omita los siguientes SID (si los encuentra)"
 
@@ -58452,6 +58474,10 @@ msgstr "Detenido"
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "Omitido %s: %s"
+
+#, fuzzy
+msgid "Skipped the configuration test."
+msgstr "Configuración por defecto"
 
 msgid ""
 "Skipping sections reduces CPU load on the monitored host and the amount of "
@@ -63201,6 +63227,17 @@ msgstr "El mecanismo Piggyback"
 
 msgid "The Port Description"
 msgstr "Descripción del puerto"
+
+msgid ""
+"The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
+"running RCC commands. There is one ROBOCORP_HOME directory per user. The "
+"scheduler creates these directories in the base directory. Before executing "
+"any tests, the scheduler will take ownership of the base directory. However, "
+"it will not clear an existing directory of its contents. If you specify a "
+"base directory, which was previously owned by a user, then that user could "
+"potentially execute arbitrary code via the scheduler. To avoid this issue, "
+"one should specify a non-existing directory or empty directory here."
+msgstr ""
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "

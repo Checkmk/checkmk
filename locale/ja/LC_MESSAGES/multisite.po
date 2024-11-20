@@ -8615,6 +8615,9 @@ msgstr "Docker APIエンジンのベースURL"
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "<tt>プラグイン</tt>および<tt>ローカル</tt>のベースディレクトリ"
 
+msgid "Base directory for ROBOCORP_HOME directories"
+msgstr ""
+
 msgid "Base directory for variable data (caches, state files)"
 msgstr "変数データ(キャッシュ、状態ファイル)のベースディレクトリ"
 
@@ -12239,6 +12242,10 @@ msgid ""
 "Choose, whether you want to use the parent host information for the NetBIOS "
 "server name, or if you want to specify one."
 msgstr "NetBIOSサーバー名に親ホスト情報を使用するか指定するかを選択します。"
+
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "コアファイル"
 
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
@@ -41476,6 +41483,9 @@ msgstr "このグラフにはまだ指標がありません。"
 msgid "No monitoring core"
 msgstr "モニタリングコアなし"
 
+msgid "No more tags to add"
+msgstr ""
+
 #, fuzzy
 msgid "No names defined"
 msgstr "接続が定義されていません"
@@ -47251,6 +47261,10 @@ msgstr "監視するエンドポイントを少なくとも1つ追加してく�
 
 #, fuzzy
 msgid "Please add at least one recipient"
+msgstr "少なくとも1つの子ノードを追加してください。"
+
+#, fuzzy
+msgid "Please add at least one tag condition."
 msgstr "少なくとも1つの子ノードを追加してください。"
 
 msgid ""
@@ -53591,6 +53605,10 @@ msgstr "特定のオブジェクトタイプを選択します"
 msgid "Select suites by name (%s)"
 msgstr "名前でスイートを選択 (%s)"
 
+#, fuzzy
+msgid "Select tag to add"
+msgstr "期間を選択してください"
+
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -56469,6 +56487,10 @@ msgstr "OMDモニタリングコア"
 msgid "Skip preexisting log messages"
 msgstr "既存のログメッセージをスキップする"
 
+#, fuzzy
+msgid "Skip test"
+msgstr "停止"
+
 msgid "Skip the following SIDs (if found)"
 msgstr "次のSIDsをスキップします(見つかった場合)"
 
@@ -56483,6 +56505,10 @@ msgstr "停止"
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "スキップされた%s: %s"
+
+#, fuzzy
+msgid "Skipped the configuration test."
+msgstr "デフォルト設定"
 
 msgid ""
 "Skipping sections reduces CPU load on the monitored host and the amount of "
@@ -61048,6 +61074,17 @@ msgstr "ピギーバックメカニズム"
 
 msgid "The Port Description"
 msgstr "ポートの説明"
+
+msgid ""
+"The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
+"running RCC commands. There is one ROBOCORP_HOME directory per user. The "
+"scheduler creates these directories in the base directory. Before executing "
+"any tests, the scheduler will take ownership of the base directory. However, "
+"it will not clear an existing directory of its contents. If you specify a "
+"base directory, which was previously owned by a user, then that user could "
+"potentially execute arbitrary code via the scheduler. To avoid this issue, "
+"one should specify a non-existing directory or empty directory here."
+msgstr ""
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "

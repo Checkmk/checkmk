@@ -8970,6 +8970,9 @@ msgstr "URL de bază pentru motorul API docker"
 msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
 msgstr "Director de bază pentru <tt>plugins</tt> și <tt>local</tt>."
 
+msgid "Base directory for ROBOCORP_HOME directories"
+msgstr ""
+
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Director de bază pentru datele variabile (cache-uri, fișiere de stare)"
 
@@ -12807,6 +12810,10 @@ msgid ""
 msgstr ""
 "Alegeți dacă doriți să utilizați informațiile despre gazda părinte pentru "
 "numele serverului NetBIOS sau dacă doriți să specificați unul."
+
+#, fuzzy, python-format
+msgid "Chosen file: %s"
+msgstr "Fișiere de bază"
 
 msgid "Chrony timesynchronisation"
 msgstr "Sincronizarea cronică a timpului"
@@ -42815,6 +42822,9 @@ msgstr "Nu există încă metrici în acest grafic."
 msgid "No monitoring core"
 msgstr "Fără miez de monitorizare"
 
+msgid "No more tags to add"
+msgstr ""
+
 #, fuzzy
 msgid "No names defined"
 msgstr "Nu sunt definite conexiuni"
@@ -48663,6 +48673,10 @@ msgstr "Vă rugăm să adăugați cel puțin un punct final pentru a monitoriza"
 
 #, fuzzy
 msgid "Please add at least one recipient"
+msgstr "Vă rugăm să adăugați cel puțin un nod copil."
+
+#, fuzzy
+msgid "Please add at least one tag condition."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 msgid ""
@@ -55071,6 +55085,10 @@ msgid "Select suites by name (%s)"
 msgstr "Selectați suitele după nume (%s)"
 
 #, fuzzy
+msgid "Select tag to add"
+msgstr "Selectați o perioadă de timp"
+
+#, fuzzy
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
@@ -58044,6 +58062,10 @@ msgstr "Miezuri de monitorizare OMD"
 msgid "Skip preexisting log messages"
 msgstr "Omiteți mesajele de jurnal preexistente"
 
+#, fuzzy
+msgid "Skip test"
+msgstr "S-a oprit"
+
 msgid "Skip the following SIDs (if found)"
 msgstr "Treceți peste următoarele SID-uri (dacă sunt găsite)"
 
@@ -58059,6 +58081,10 @@ msgstr "S-a oprit"
 #, python-format
 msgid "Skipped %s: %s"
 msgstr "A sărit %s: %s"
+
+#, fuzzy
+msgid "Skipped the configuration test."
+msgstr "Configurație implicită"
 
 msgid ""
 "Skipping sections reduces CPU load on the monitored host and the amount of "
@@ -62776,6 +62802,17 @@ msgstr "Mecanismul Piggyback"
 
 msgid "The Port Description"
 msgstr "Descrierea portului"
+
+msgid ""
+"The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
+"running RCC commands. There is one ROBOCORP_HOME directory per user. The "
+"scheduler creates these directories in the base directory. Before executing "
+"any tests, the scheduler will take ownership of the base directory. However, "
+"it will not clear an existing directory of its contents. If you specify a "
+"base directory, which was previously owned by a user, then that user could "
+"potentially execute arbitrary code via the scheduler. To avoid this issue, "
+"one should specify a non-existing directory or empty directory here."
+msgstr ""
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "

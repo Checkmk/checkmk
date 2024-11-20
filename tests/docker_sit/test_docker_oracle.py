@@ -140,6 +140,10 @@ class OracleDatabase:
         self._start_container()
         self._setup_container()
 
+    @property
+    def logs(self) -> str:
+        return self.container.logs().decode("utf-8")
+
     def _create_oracle_wallet(self) -> None:
         logger.info("Creating Oracle wallet...")
         wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
@@ -212,18 +216,22 @@ class OracleDatabase:
                 detach=True,
             )
 
+            success_msg = "DATABASE IS READY TO USE!"
+            failure_msg = "Database configuration failed."
             try:
                 wait_until(
-                    lambda: "DATABASE IS READY TO USE!" in self.container.logs().decode(),
+                    lambda: any(_ in self.logs for _ in (success_msg, failure_msg)),
                     timeout=1200,
                     interval=5,
                 )
             except TimeoutError:
                 logger.error(
                     "TIMEOUT while starting Oracle. Log output: %s",
-                    self.container.logs().decode("utf-8"),
+                    self.logs,
                 )
                 raise
+            if failure_msg in self.logs:
+                logger.error("ERROR while starting Oracle. Log output: %s", self.logs)
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
         self.container.reload()
         self.ip = get_container_ip(self.container)

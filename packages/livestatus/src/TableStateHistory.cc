@@ -374,7 +374,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 break;
             case LogEntryKind::state_service_initial:
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, false, state_info, blacklist);
+                                   time_periods, state_info, blacklist);
                 break;
             case LogEntryKind::alert_service:
             case LogEntryKind::state_service:
@@ -384,12 +384,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     set_unknown_to_unmonitored(state_info);
                 }
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, false, state_info, blacklist);
+                                   time_periods, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::state_host_initial:
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, true, state_info, blacklist);
+                                   time_periods, state_info, blacklist);
                 break;
             case LogEntryKind::alert_host:
             case LogEntryKind::state_host:
@@ -399,7 +399,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     set_unknown_to_unmonitored(state_info);
                 }
                 handle_state_entry(processor, core, entry, only_update,
-                                   time_periods, true, state_info, blacklist);
+                                   time_periods, state_info, blacklist);
                 in_nagios_initial_states = false;
                 break;
             case LogEntryKind::timeperiod_transition:
@@ -428,14 +428,14 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
 void TableStateHistory::handle_state_entry(
     Processor &processor, const ICore &core, const LogEntry *entry,
-    bool only_update, const TimePeriods &time_periods, bool is_host_entry,
-    state_info_t &state_info, ObjectBlacklist &blacklist) {
+    bool only_update, const TimePeriods &time_periods, state_info_t &state_info,
+    ObjectBlacklist &blacklist) {
     const auto *entry_host = core.find_host(entry->host_name());
     const auto *entry_service =
         core.find_service(entry->host_name(), entry->service_description());
 
     HostServiceKey key =
-        is_host_entry
+        entry->service_description().empty()
             ? (entry_host == nullptr ? nullptr
                                      : entry_host->handleForStateHistory())
             : (entry_service == nullptr
@@ -476,7 +476,7 @@ void TableStateHistory::insert_new_state(
     // No state found. Now check if this host/services is filtered out.
     // Note: we currently do not filter out hosts since they might be needed
     // for service states
-    if (!entry->service_description().empty()) {
+    if (!state->_is_host) {
         // NOTE: The filter is only allowed to inspect those fields of state
         // which are set by now, see createPartialFilter()!
         if (!blacklist.accepts(*state)) {

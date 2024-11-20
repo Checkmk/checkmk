@@ -116,7 +116,7 @@ private:
 
     void handle_state_entry(Processor &processor, const ICore &core,
                             const LogEntry *entry, bool only_update,
-                            const TimePeriods &time_periods, bool is_host_entry,
+                            const TimePeriods &time_periods,
                             state_info_t &state_info,
                             ObjectBlacklist &blacklist);
 

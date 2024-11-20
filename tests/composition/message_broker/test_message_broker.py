@@ -57,10 +57,10 @@ def _broker_stopped(site: Site) -> Iterator[None]:
 def _p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -> Iterator[None]:
     """Establish a direct connection between two sites"""
     connection_id = f"comp_test_p2p_{remote_site.id}_{remote_site_2.id}"
+    central_site.openapi.create_broker_connection(
+        connection_id, connecter=remote_site.id, connectee=remote_site_2.id
+    )
     try:
-        central_site.openapi.create_broker_connection(
-            connection_id, connecter=remote_site.id, connectee=remote_site_2.id
-        )
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
         yield
     finally:

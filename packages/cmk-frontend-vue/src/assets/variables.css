@@ -22,6 +22,8 @@
   --tag-discovered-color: rgb(119, 72, 152);
   --tag-explicit-color: rgba(243, 174, 75);
   --tag-ruleset-color: rgba(222, 67, 131);
+  --default-help-icon-bg-color: rgb(6, 103, 193);
+  --default-help-icon-bg-color-hover: rgb(56, 133, 205);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -102,7 +104,6 @@
     --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240, 240, 240);
-    --default-help-icon-bg-color: rgb(12, 129, 238);
     --help-text-bg-color: var(--ux-theme-3);
     --help-text-font-color: rgb(51, 51, 51); /* $grey-4 */
     --input-hover-bg-color: var(--ux-theme-4);
@@ -151,7 +152,6 @@
     --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
     --custom-scroll-bar-backgroud-color: var(--ux-theme-5);
     --default-component-bg-color: rgb(46, 44, 44);
-    --default-help-icon-bg-color: rgb(6, 103, 193);
     --help-text-bg-color: var(--ux-theme-3);
     --help-text-font-color: var(--white);
     --input-hover-bg-color: var(--ux-theme-4);

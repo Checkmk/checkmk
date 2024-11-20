@@ -101,6 +101,11 @@ defineProps<ButtonProps>()
   color: var(--white);
 }
 
+.button--variant-info:hover {
+  background-color: var(--default-help-icon-bg-color-hover);
+  color: var(--white);
+}
+
 .button--size-small {
   height: 25px;
 }

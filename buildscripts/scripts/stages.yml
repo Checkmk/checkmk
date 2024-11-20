@@ -484,7 +484,7 @@ STAGES:
     - NAME: "Package cmk-otel"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES
       DIR: "non-free/packages/cmk-otel"
-      COMMAND: "../../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-otel.txt"
+      COMMAND: "../../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-otel.txt"
       TEXT_ON_SKIP: "No cmk-otel files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-otel.txt"
 

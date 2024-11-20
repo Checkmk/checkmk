@@ -7,7 +7,7 @@ common: &common
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "centos-8"
-    - "almalinux-9"
+    # - "almalinux-9" # disabled due to CMK-20297
     - "sles-12sp5"
     - "sles-15sp3"
     - "sles-15sp4"

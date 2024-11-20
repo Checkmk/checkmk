@@ -238,7 +238,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "ubuntu-23.10": "mantic",
             "ubuntu-24.04": "noble",
             "centos-8": "el8",
-            "almalinux-9": "el9",
+            # "almalinux-9": "el9", # disabled due to CMK-20297
             "sles-15sp3": "sles15sp3",
             "sles-15sp4": "sles15sp4",
             "sles-12sp5": "sles12sp5",

@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Migration is currently only used for migrating runtime files from muliple directory deployment
+# to single directory deployment, but may be augmented by further migration actions in the future.
+# This should run as the first action after files have been placed
+# by the package manager, in order to provide a clean structure for all further scripts.
+/bin/sh /var/lib/cmk-agent/scripts/migrate.sh
+
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy
 

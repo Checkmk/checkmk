@@ -3,7 +3,6 @@
 # to create dest, since intermediate install can be removed at
 # that point.
 PACKAGES_EXT = [
-    "freetds",
 ]
 
 PACKAGES_EXT_LABEL = ["@%s//:%s" % (p, p) for p in PACKAGES_EXT]
@@ -31,6 +30,7 @@ PACKAGES_INT = [
     "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
     "//packages/cmk-trace:pkg_tar",
     "//omd/packages/protobuf:protobuf_tar",
+    "//omd/packages/freetds:freetds_tar",
 ]
 
 genrule(

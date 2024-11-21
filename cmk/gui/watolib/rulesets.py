@@ -1270,14 +1270,14 @@ class Rule:
         too expensive."""
         hosts = Host.all()
         for host_name in hosts.keys():
-            if self.matches_host_conditions(host_name):
+            if self._matches_host_conditions(host_name):
                 return False
         return True
 
-    def matches_host_conditions(self, hostname: HostName) -> bool:
+    def _matches_host_conditions(self, hostname: HostName) -> bool:
         """Whether or not the given host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return self.matches(
+        return self._matches(
             hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -1293,7 +1293,7 @@ class Rule:
         service_labels: Labels,
     ) -> bool:
         """Whether the given host and service/item matches this rule"""
-        return self.matches(
+        return self._matches(
             hostname,
             svc_desc_or_item,
             svc_desc,
@@ -1301,7 +1301,7 @@ class Rule:
             service_labels=service_labels,
         )
 
-    def matches(
+    def _matches(
         self,
         hostname: HostName,
         svc_desc_or_item: str | None,

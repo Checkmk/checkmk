@@ -1294,6 +1294,7 @@ def default_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
+@tracer.start_as_current_span("create_and_activate_central_rabbitmq_changes")
 def create_and_activate_central_rabbitmq_changes(
     rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
 ) -> None:
@@ -1487,7 +1488,10 @@ class ActivateChangesManager(ActivateChanges):
             create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
-            with _debug_log_message("Starting piggyback hub config distribution"):
+            with (
+                tracer.start_as_current_span("distribute_piggyback_hub_configs"),
+                _debug_log_message("Starting piggyback hub config distribution"),
+            ):
                 activation_features.distribute_piggyback_hub_configs(
                     load_configuration_settings(),
                     configured_sites(),
@@ -2545,6 +2549,7 @@ def _create_folder_content_hash(folder_path: str) -> str:
     return sha256_hash.hexdigest()
 
 
+@tracer.start_as_current_span("_reload_rabbitmq_when_changed")
 def _reload_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
     if old_definitions_hash != new_definitions_hash:
         # make sure stdout and stderr is available in local variables (crash report!)

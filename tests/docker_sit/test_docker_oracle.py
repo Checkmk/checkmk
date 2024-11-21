@@ -443,6 +443,11 @@ def test_docker_oracle(
             {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Recovery Status"},
             {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Sessions"},
             {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.TEMP Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.SYSTEM Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.SYSAUX Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.UNDOTBS1 Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.USERS Tablespace"},
             {"description": f"{oracle.SERVICE_PREFIX} Instance"},
             {"description": f"{oracle.SERVICE_PREFIX} Locks"},
             {"description": f"{oracle.SERVICE_PREFIX} Logswitches"},
@@ -456,6 +461,11 @@ def test_docker_oracle(
             {"description": f"{oracle.SERVICE_PREFIX} Sessions"},
             {"description": f"{oracle.SERVICE_PREFIX} Undo Retention"},
             {"description": f"{oracle.SERVICE_PREFIX} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT.TEMP Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.UNDOTBS1 Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.SYSAUX Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.SYSTEM Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.USERS Tablespace"},
         ]
     ]
 
@@ -464,7 +474,8 @@ def test_docker_oracle(
         for _ in checkmk.openapi.services.get_host_services(
             oracle.name, columns=["state", "description"]
         )
-        if _.get("title", "").upper().startswith(oracle.SERVICE_PREFIX)
+        if _["extensions"]["description"].upper().startswith(oracle.SERVICE_PREFIX)
+        and not _["extensions"]["description"].upper().endswith(" JOB")
     ]
 
     missing_services = [

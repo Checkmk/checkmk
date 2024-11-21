@@ -5557,6 +5557,10 @@ msgstr "Todos os elementos do tuple devem ser do tipo int, você tem %s"
 msgid "All even pages"
 msgstr "Todas as páginas pares"
 
+#, fuzzy
+msgid "All events"
+msgstr "Todos os Eventlogs"
+
 #, python-format
 msgid ""
 "All events of the host '%s' will be removed from the open events list. You "
@@ -5607,6 +5611,11 @@ msgid "All historic scheduled downtimes of hosts and services"
 msgstr ""
 "Todos os horários históricos de paragens programadas dos anfitriões e "
 "serviços"
+
+msgid ""
+"All host events, service events and event console alerts will trigger a "
+"notification"
+msgstr ""
 
 msgid "All host- and service comments"
 msgstr "Todos os comentários de serviço e anfitrião"
@@ -9053,6 +9062,10 @@ msgid "Batch Requests/sec"
 msgstr "Pedidos de lote/segundo"
 
 #, fuzzy
+msgid "Batch id"
+msgstr "Identificação do caminho"
+
+#, fuzzy
 msgid "Batches"
 msgstr "Jogo"
 
@@ -11562,6 +11575,10 @@ msgstr "Mudou a %s de %s para %s"
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "Mudou a variável de configuração %s para %s."
+
+#, fuzzy
+msgid "Changed DCD global settings"
+msgstr "Editar cenário global"
 
 #, python-format
 msgid "Changed LDAP connection %s"
@@ -15813,6 +15830,10 @@ msgstr "Novos usuários criados: %s"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Criado com Checkmk Versão $CHECK_MK_VERSION$"
+
+#, fuzzy, python-format
+msgid "Created: %d, Modified %d, Deleted %d"
+msgstr "Anfitriões: %d criados, %d modificados, %d apagados"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -48657,10 +48678,6 @@ msgid "Please choose an audit log to view:"
 msgstr "Por favor, escolha um arquivo para carregar."
 
 #, fuzzy
-msgid "Please choose one or more regions to continue."
-msgstr "Por favor, escolha um relatório para agendar"
-
-#, fuzzy
 msgid "Please choose the check plug-in"
 msgstr "Por favor escolha o plugin de verificação"
 
@@ -48986,6 +49003,11 @@ msgstr "Por favor, selecione um serviço"
 msgid "Please select an element"
 msgstr "Por favor, selecione pelo menos um elemento"
 
+#, fuzzy, python-brace-format
+msgid ""
+"Please select at least one and at most {max_regions} regions to continue"
+msgstr "Por favor, escolha um relatório para agendar"
+
 msgid "Please select at least one element"
 msgstr "Por favor, selecione pelo menos um elemento"
 
@@ -48998,6 +49020,10 @@ msgstr "Seleccione pelo menos um método de envio de mensagens."
 
 msgid "Please select at least one metric"
 msgstr "Por favor, selecione pelo menos uma métrica"
+
+#, fuzzy
+msgid "Please select at least one or more regions to continue."
+msgstr "Por favor, escolha um relatório para agendar"
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr ""
@@ -58519,6 +58545,10 @@ msgstr "Mapeamentos específicos"
 
 msgid "Specific date"
 msgstr "Data específica"
+
+#, fuzzy
+msgid "Specific events"
+msgstr "Objetos específicos"
 
 msgid "Specific list of instances"
 msgstr "Lista específica de instâncias"
@@ -79876,6 +79906,10 @@ msgid "Waiting containers"
 msgstr "Contentores em espera"
 
 #, fuzzy
+msgid "Waiting for completion of previous run"
+msgstr "À espera que a replicação comece"
+
+#, fuzzy
 msgid "Waiting for discovery"
 msgstr "Netapp descoberta da porta"
 
@@ -79899,6 +79933,10 @@ msgstr "À espera que a replicação comece"
 #, fuzzy
 msgid "Waiting on team Engelbart"
 msgstr "Contentores em espera"
+
+#, fuzzy
+msgid "Waiting..."
+msgstr "Aguardando"
 
 msgid "Waitlocks"
 msgstr "Waitlocks"
@@ -86436,6 +86474,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "{region} ({id_})"
+msgstr ""
+
+msgid "{} - {}"
 msgstr ""
 
 #, python-format

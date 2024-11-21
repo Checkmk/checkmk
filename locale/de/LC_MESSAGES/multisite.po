@@ -5428,6 +5428,10 @@ msgstr "Alle Elemente von Tuple müssen Int sein, Sie haben %s"
 msgid "All even pages"
 msgstr "Alle geraden Seiten"
 
+#, fuzzy
+msgid "All events"
+msgstr "Alle Ereignisprotokolle"
+
 #, python-format
 msgid ""
 "All events of the host '%s' will be removed from the open events list. You "
@@ -5476,6 +5480,11 @@ msgstr "Alle historischen geplanten Wartungszeiten eines bestimmten Services"
 
 msgid "All historic scheduled downtimes of hosts and services"
 msgstr "Alle historischen geplanten Wartungszeiten von Hosts und Services"
+
+msgid ""
+"All host events, service events and event console alerts will trigger a "
+"notification"
+msgstr ""
 
 msgid "All host- and service comments"
 msgstr "Alle Host- und Service-Kommentare"
@@ -8700,6 +8709,10 @@ msgstr "Batch-ID"
 msgid "Batch Requests/sec"
 msgstr "Batchanfragen/sec"
 
+#, fuzzy
+msgid "Batch id"
+msgstr "Batch-ID"
+
 msgid "Batches"
 msgstr "Batches"
 
@@ -11180,6 +11193,10 @@ msgstr "%s wurde von %s zu %s geändert"
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "Konfigurationsvariable %s nach %s geändert."
+
+#, fuzzy
+msgid "Changed DCD global settings"
+msgstr "Globale Einstellung bearbeiten"
 
 #, python-format
 msgid "Changed LDAP connection %s"
@@ -15315,6 +15332,10 @@ msgstr "Nutzer angelegt: %s"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit Checkmk Version $CHECK_MK_VERSION$"
+
+#, fuzzy, python-format
+msgid "Created: %d, Modified %d, Deleted %d"
+msgstr "Hosts: %d erstellt, %d geändert, %d gelöscht"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -46727,10 +46748,6 @@ msgstr "Bitte wählen Sie ein gültiges PNG-Bild."
 msgid "Please choose an audit log to view:"
 msgstr "Bitte wählen Sie ein Audit-Log für die Anzeige aus:"
 
-#, fuzzy
-msgid "Please choose one or more regions to continue."
-msgstr "Bitte wählen Sie eine oder mehrere Regionen aus, um fortzufahren"
-
 msgid "Please choose the check plug-in"
 msgstr "Bitte Check-Plugin auswählen"
 
@@ -47050,6 +47067,11 @@ msgstr "Bitte wählen Sie einen Service."
 msgid "Please select an element"
 msgstr "Bitte wählen Sie ein Element aus"
 
+#, fuzzy, python-brace-format
+msgid ""
+"Please select at least one and at most {max_regions} regions to continue"
+msgstr "Bitte wählen Sie eine oder mehrere Regionen aus, um fortzufahren"
+
 msgid "Please select at least one element"
 msgstr "Bitte wählen Sie mindestens ein Element aus"
 
@@ -47061,6 +47083,10 @@ msgstr "Bitte wählen Sie mindestens eine Benachrichtigungsmethode aus."
 
 msgid "Please select at least one metric"
 msgstr "Bitte wählen Sie mindestens eine Metrik"
+
+#, fuzzy
+msgid "Please select at least one or more regions to continue."
+msgstr "Bitte wählen Sie eine oder mehrere Regionen aus, um fortzufahren"
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr ""
@@ -56275,6 +56301,10 @@ msgstr "Bestimmte Zuordnungen"
 
 msgid "Specific date"
 msgstr "Bestimmten Datum"
+
+#, fuzzy
+msgid "Specific events"
+msgstr "Bestimmte Objekte"
 
 msgid "Specific list of instances"
 msgstr "Explizite Angabe von Instanzen"
@@ -76826,6 +76856,10 @@ msgstr "Wartende Verbindungen"
 msgid "Waiting containers"
 msgstr "Wartende Container"
 
+#, fuzzy
+msgid "Waiting for completion of previous run"
+msgstr "Warte auf den Beginn der Replikation"
+
 msgid "Waiting for discovery"
 msgstr "Wartet auf Erkennung"
 
@@ -76847,6 +76881,10 @@ msgstr "Warte auf den Beginn der Replikation"
 
 msgid "Waiting on team Engelbart"
 msgstr "Auf Team Engelbart wartend"
+
+#, fuzzy
+msgid "Waiting..."
+msgstr "Wartend"
 
 msgid "Waitlocks"
 msgstr "Waitlocks"
@@ -83399,6 +83437,9 @@ msgstr "{checkname} - {check['title']}"
 #, python-brace-format
 msgid "{region} ({id_})"
 msgstr "{region} ({id_})"
+
+msgid "{} - {}"
+msgstr ""
 
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."

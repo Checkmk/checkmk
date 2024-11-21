@@ -5333,6 +5333,10 @@ msgstr "タプルのすべての要素はint型である必要があり、%sが�
 msgid "All even pages"
 msgstr "すべての偶数ページ"
 
+#, fuzzy
+msgid "All events"
+msgstr "すべてのイベントログ"
+
 #, python-format
 msgid ""
 "All events of the host '%s' will be removed from the open events list. You "
@@ -5373,6 +5377,11 @@ msgstr "特定のサービスのすべての履歴的なスケジュールされ
 
 msgid "All historic scheduled downtimes of hosts and services"
 msgstr "ホストとサービスのすべての歴史的なスケジュールされたダウンタイム"
+
+msgid ""
+"All host events, service events and event console alerts will trigger a "
+"notification"
+msgstr ""
 
 msgid "All host- and service comments"
 msgstr "すべてのホストおよびサービスのコメント"
@@ -8678,6 +8687,10 @@ msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
 
 #, fuzzy
+msgid "Batch id"
+msgstr "パスID"
+
+#, fuzzy
 msgid "Batches"
 msgstr "一致"
 
@@ -11098,6 +11111,10 @@ msgstr "%s を%sから%sに変更"
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "構成変数 %s を%s に変更しました。"
+
+#, fuzzy
+msgid "Changed DCD global settings"
+msgstr "グローバル設定を編集する"
 
 #, python-format
 msgid "Changed LDAP connection %s"
@@ -15138,6 +15155,10 @@ msgstr "作成された新しいユーザー: %s"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Checkmkバージョン$ CHECK_MK_VERSION $で作成"
+
+#, fuzzy, python-format
+msgid "Created: %d, Modified %d, Deleted %d"
+msgstr "ホスト: %d が作成され、 %d が変更され、 %d が削除されました"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -47329,10 +47350,6 @@ msgid "Please choose an audit log to view:"
 msgstr "アップロードするファイルを選択してください。"
 
 #, fuzzy
-msgid "Please choose one or more regions to continue."
-msgstr "スケジュールするレポートを選択してください"
-
-#, fuzzy
 msgid "Please choose the check plug-in"
 msgstr "チェックプラグインを選択してください"
 
@@ -47645,6 +47662,11 @@ msgstr "サービスを選択してください。"
 msgid "Please select an element"
 msgstr "少なくとも1つの要素を選択してください"
 
+#, fuzzy, python-brace-format
+msgid ""
+"Please select at least one and at most {max_regions} regions to continue"
+msgstr "スケジュールするレポートを選択してください"
+
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
 
@@ -47657,6 +47679,10 @@ msgstr "メッセージ送信方法を少なくとも1つ選択してくださ�
 
 msgid "Please select at least one metric"
 msgstr "最低1つの指標を選択してください"
+
+#, fuzzy
+msgid "Please select at least one or more regions to continue."
+msgstr "スケジュールするレポートを選択してください"
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr "ホストで一括操作を行う前に、いくつかのホストを選択してください。"
@@ -57067,6 +57093,10 @@ msgstr "特定のマッピング"
 
 msgid "Specific date"
 msgstr "特定の日付"
+
+#, fuzzy
+msgid "Specific events"
+msgstr "特定のオブジェクト"
 
 msgid "Specific list of instances"
 msgstr "インスタンスの特定のリスト"
@@ -77924,6 +77954,10 @@ msgid "Waiting containers"
 msgstr "待機中コンテナ"
 
 #, fuzzy
+msgid "Waiting for completion of previous run"
+msgstr "レプリケーションの開始を待機しています"
+
+#, fuzzy
 msgid "Waiting for discovery"
 msgstr "Netappポートの検出"
 
@@ -77946,6 +77980,10 @@ msgstr "レプリケーションの開始を待機しています"
 #, fuzzy
 msgid "Waiting on team Engelbart"
 msgstr "待機中コンテナ"
+
+#, fuzzy
+msgid "Waiting..."
+msgstr "待っています"
 
 msgid "Waitlocks"
 msgstr "ウェイトロック"
@@ -84344,6 +84382,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "{region} ({id_})"
+msgstr ""
+
+msgid "{} - {}"
 msgstr ""
 
 #, python-format

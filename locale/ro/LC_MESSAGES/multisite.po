@@ -5564,6 +5564,10 @@ msgstr "Toate elementele din tuple trebuie să fie de tip int, aveți %s."
 msgid "All even pages"
 msgstr "Toate paginile pare"
 
+#, fuzzy
+msgid "All events"
+msgstr "Toate Eventlogs"
+
 #, python-format
 msgid ""
 "All events of the host '%s' will be removed from the open events list. You "
@@ -5610,6 +5614,11 @@ msgstr "Toate opririle istorice programate pentru un anumit serviciu"
 
 msgid "All historic scheduled downtimes of hosts and services"
 msgstr "Toate opririle istorice programate ale gazdelor și serviciilor"
+
+msgid ""
+"All host events, service events and event console alerts will trigger a "
+"notification"
+msgstr ""
 
 msgid "All host- and service comments"
 msgstr "Toate comentariile privind gazdele și serviciile"
@@ -9035,6 +9044,10 @@ msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
 
 #, fuzzy
+msgid "Batch id"
+msgstr "ID-ul căii"
+
+#, fuzzy
 msgid "Batches"
 msgstr "Potriviri"
 
@@ -11577,6 +11590,10 @@ msgstr "A schimbat %s din %s în %s"
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "A fost schimbată variabila de configurare %s în %s."
+
+#, fuzzy
+msgid "Changed DCD global settings"
+msgstr "Editarea setării globale"
 
 #, python-format
 msgid "Changed LDAP connection %s"
@@ -15825,6 +15842,10 @@ msgstr "A creat noi utilizatori: %s"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Creat cu versiunea Checkmk $CHECK_MK_VERSION$."
+
+#, fuzzy, python-format
+msgid "Created: %d, Modified %d, Deleted %d"
+msgstr "Gazde: %d creat, %d modificat, %d șters"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -48745,10 +48766,6 @@ msgid "Please choose an audit log to view:"
 msgstr "Vă rugăm să alegeți un jurnal de audit pe care să îl vizualizați:"
 
 #, fuzzy
-msgid "Please choose one or more regions to continue."
-msgstr "Vă rugăm să alegeți un raport de programat"
-
-#, fuzzy
 msgid "Please choose the check plug-in"
 msgstr "Vă rugăm să alegeți plugin-ul de verificare"
 
@@ -49077,6 +49094,11 @@ msgstr "Vă rugăm să selectați un serviciu"
 msgid "Please select an element"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
+#, fuzzy, python-brace-format
+msgid ""
+"Please select at least one and at most {max_regions} regions to continue"
+msgstr "Vă rugăm să alegeți un raport de programat"
+
 msgid "Please select at least one element"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
@@ -49089,6 +49111,10 @@ msgstr "Vă rugăm să selectați cel puțin o metodă de mesagerie."
 
 msgid "Please select at least one metric"
 msgstr "Vă rugăm să selectați cel puțin un sistem metric"
+
+#, fuzzy
+msgid "Please select at least one or more regions to continue."
+msgstr "Vă rugăm să alegeți un raport de programat"
 
 msgid "Please select some hosts before doing bulk operations on hosts."
 msgstr ""
@@ -58656,6 +58682,10 @@ msgstr "Mapări specifice"
 
 msgid "Specific date"
 msgstr "Data specifică"
+
+#, fuzzy
+msgid "Specific events"
+msgstr "Obiecte specifice"
 
 msgid "Specific list of instances"
 msgstr "Lista specifică de instanțe"
@@ -80115,6 +80145,10 @@ msgid "Waiting containers"
 msgstr "Containere în așteptare"
 
 #, fuzzy
+msgid "Waiting for completion of previous run"
+msgstr "Așteptare pentru începerea replicării"
+
+#, fuzzy
 msgid "Waiting for discovery"
 msgstr "Descoperirea portului Netapp"
 
@@ -80138,6 +80172,10 @@ msgstr "Așteptare pentru începerea replicării"
 #, fuzzy
 msgid "Waiting on team Engelbart"
 msgstr "Containere în așteptare"
+
+#, fuzzy
+msgid "Waiting..."
+msgstr "Așteptare"
 
 msgid "Waitlocks"
 msgstr "Blocuri de așteptare"
@@ -86712,6 +86750,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "{region} ({id_})"
+msgstr ""
+
+msgid "{} - {}"
 msgstr ""
 
 #, python-format

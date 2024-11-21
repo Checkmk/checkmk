@@ -20,7 +20,6 @@ dill = "*"
 docker = "*"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "*"  # used by dockerized tests for opening debug shells
 fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
-fastapi = "*"  # needed to run fake idp for cse tests
 flake8 = "*"
 furo = "*"  # sphinx theme
 hypothesis = "*"    # used by unit tests
@@ -186,6 +185,8 @@ opentelemetry-instrumentation-wsgi = "*" # used for distributed tracing of Check
 opentelemetry-instrumentation-requests = "*" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-redis = "*" # used for distributed tracing of Checkmk
 opentelemetry-semantic-conventions = "*" # used for distributed tracing of Checkmk
+fastapi = "*"  # automation helper and needed to run fake idp for cse tests
+gunicorn = "*"  # automation helper
 
 [requires]
 python_version = "3.12"

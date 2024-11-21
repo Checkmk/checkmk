@@ -12,6 +12,7 @@ make
 sudo install -m 755 \
     apply_unsign_msi_patch.sh \
     check_mk \
+    cmk-automation-helper \
     cmk-compute-api-spec \
     cmk-passwd \
     cmk-piggyback-hub \

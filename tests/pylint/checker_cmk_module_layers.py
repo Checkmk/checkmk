@@ -674,6 +674,7 @@ _COMPONENTS = (
 _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
+    ModulePath("bin/cmk-automation-helper"): Component("cmk.base"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),

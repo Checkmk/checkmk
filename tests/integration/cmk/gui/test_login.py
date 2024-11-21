@@ -7,7 +7,7 @@ import base64
 import contextlib
 from collections.abc import Iterator
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -406,7 +406,15 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
         assert not session.is_logged_in()
 
 
+@skip_if_saas_edition
+@skip_if_raw_edition
 def test_invalid_remote_site_login(site: Site) -> None:
+    """test that we are not logged in with any remote site secret
+
+    AFAIK we have not configured a remote site at that point so no secret should work.
+    In the raw edition we don't have the `register_agent.py` page since the agent
+    bakery is a enterprise feature."""
+
     session = CMKWebSession(site)
     response = session.get(
         f"/{site.id}/check_mk/register_agent.py",

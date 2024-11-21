@@ -81,7 +81,7 @@ class TimePeriod(BaseModel):
         day_names = weekday_ids()
         model_has_day_fields = False
         for name, value in values.items():
-            if name in cls.model_fields:
+            if name in cls.__pydantic_fields__:
                 model_has_day_fields = model_has_day_fields or (name in day_names)
                 pre_processed_data[name] = value
 

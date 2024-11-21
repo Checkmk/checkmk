@@ -54,7 +54,7 @@ class Job(pydantic.BaseModel):
     @classmethod
     def from_string_table_item(cls, table: list[str]) -> Self:
         """Build and validate the input from a string table item passed by the agent."""
-        payload = dict(zip(cls.model_fields, table))
+        payload = dict(zip(cls.__pydantic_fields__, table))
         return cls.model_validate_strings(payload)
 
 

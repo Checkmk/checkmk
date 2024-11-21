@@ -1,0 +1,19 @@
+Title: Parsing systemd units which trigger others
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1731934538
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+In case a <code>systemd</code> unit will trigger others, a <code>systemctl</code> output may look like:
+
+C+:
+Triggers: ● check-mk-agent@3148-1849349-997.service
+● check-mk-agent@3149-1849349-997.service
+C-:
+
+This led to falsely parsed data from the <code>systemd status</code> section. CPU or memory may have been mixed up between the units.
+
+This is fixed now.

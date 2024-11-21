@@ -560,8 +560,8 @@ def test_services_split(
                     )
                 },
             ),
-            id="BUG: a unit which triggers multiple units: the service's CPU time is falsley parsed from"
-            "the socket CPU as the new line after 'Triggeres' is evaluated as a new entry",
+            id="a unit which triggers multiple units: the new line after 'Triggers' is not a "
+            "new entry, but referes to another unit which gets triggered by the current entry",
         ),
     ],
 )

@@ -26,8 +26,8 @@ daily_saas: &daily_saas
     - "ubuntu-24.04"
 
 # Builds for those distros will only be available internally for development purpose
-internal_distros: &internal_distros
-    - "ubuntu-23.10"
+# internal_distros: &internal_distros
+#     - "ubuntu-23.10"
 
 # Currently, all builds of the saas edition should stay completley internal
 internal_editions:
@@ -48,8 +48,8 @@ fips_distros: &fips_distros
 editions:
     enterprise:
         release: [*common, *cma_distros]
-        daily: [*common, *cma_distros, *internal_distros]
-        daily_tests: [*common, *internal_distros]
+        daily: [*common, *cma_distros]
+        daily_tests: [*common]
         fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]

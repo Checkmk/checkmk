@@ -753,4 +753,22 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="",
         encryption=CheckmkFileEncryption.none,
     ),
+    "automation-helper/access.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="This log file contains all requests that are sent to the automation helper server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automation-helper/automation-helper.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="This log file contains all activity inside the automation helper application.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "automation-helper/error.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="This log file contains all errors that occur when requests are sent to the automation helper server.",
+        encryption=CheckmkFileEncryption.none,
+    ),
 }

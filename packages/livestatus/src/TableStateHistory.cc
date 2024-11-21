@@ -484,6 +484,7 @@ HostServiceState *TableStateHistory::get_state_for_entry(
         hss->_service = entry_service;
         hss->_host_name = entry->host_name();
         hss->_service_description = entry->service_description();
+        hss->_from = period.since;
 
         // No state found. Now check if this host/services is filtered out.
         // Note: we currently do not filter out hosts since they might be needed
@@ -497,8 +498,7 @@ HostServiceState *TableStateHistory::get_state_for_entry(
             }
         }
 
-        fill_new_state(hss.get(), entry, only_update, time_periods, state_info,
-                       period);
+        fill_new_state(hss.get(), entry, only_update, time_periods, state_info);
         state_info[key] = std::move(hss);
     }
     return state_info[key].get();
@@ -508,8 +508,7 @@ HostServiceState *TableStateHistory::get_state_for_entry(
 void TableStateHistory::fill_new_state(HostServiceState *hss,
                                        const LogEntry *entry, bool only_update,
                                        const TimePeriods &time_periods,
-                                       state_info_t &state_info,
-                                       const LogPeriod &period) {
+                                       state_info_t &state_info) {
     // Host/Service relations
     if (hss->_is_host) {
         for (const auto &[_, s] : state_info) {
@@ -525,8 +524,6 @@ void TableStateHistory::fill_new_state(HostServiceState *hss,
             it_inh->second->_services.push_back(hss);
         }
     }
-
-    hss->_from = period.since;
 
     // Get notification period of host/service. If this host/service is no
     // longer available in nagios -> set to ""
@@ -553,10 +550,11 @@ void TableStateHistory::fill_new_state(HostServiceState *hss,
         }
     }
 
-    // Log UNMONITORED state if this host or service just appeared within
-    // the query timeframe. It gets a grace period of ten minutes (nagios
-    // startup)
-    if (!only_update && entry->time() - period.since > 10min) {
+    // Log UNMONITORED state if this host or service just appeared within the
+    // query timeframe. It gets a grace period of ten minutes (Nagios startup).
+    // Note that _from is at the beginning of the requested log period for fresh
+    // states.
+    if (!only_update && entry->time() - hss->_from > 10min) {
         hss->_debug_info = "UNMONITORED ";
         hss->_state = -1;
     }
@@ -826,7 +824,7 @@ ObjectBlacklist::ObjectBlacklist(const Query &query, const User &user)
     , filter_{query.partialFilter(
           "current host/service columns", [](const std::string &columnName) {
               // NOTE: This is quite brittle and must be kept in sync with its
-              // usage in TableStateHistory::insert_new_state()!
+              // usage in TableStateHistory::get_state_for_entry()!
               return (
                   // joined via HostServiceState::_host
                   columnName.starts_with("current_host_") ||

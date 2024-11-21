@@ -126,8 +126,7 @@ private:
     static void fill_new_state(HostServiceState *hss, const LogEntry *entry,
                                bool only_update,
                                const TimePeriods &time_periods,
-                               state_info_t &state_info,
-                               const LogPeriod &period);
+                               state_info_t &state_info);
 
     void handle_timeperiod_transition(Processor &processor, Logger *logger,
                                       const LogEntry *entry, bool only_update,

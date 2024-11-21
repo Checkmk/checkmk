@@ -18,7 +18,7 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleCon
 from cmk.gui.watolib.utils import multisite_dir
 
 
-class BuiltInUserRoleValues(Enum):
+class BuiltInUserRoleValues(str, Enum):
     USER = "user"
     ADMIN = "admin"
     GUEST = "guest"
@@ -91,6 +91,14 @@ class UserRolesConfigFile(WatoSingleConfigFile[Roles]):
                     role["permissions"]["general." + pname] = pvalue
 
         return cfg
+
+    def read_file_and_validate(self) -> None:
+        cfg = self._load_file(lock=False)
+        for role in cfg.values():
+            if "basedon" in role and role["basedon"] in builtin_role_ids:
+                role["basedon"] = BuiltInUserRoleValues(role["basedon"])
+
+        self.validate(cfg)
 
     def save(self, cfg: Roles) -> None:
         active_config.roles.update(cfg)

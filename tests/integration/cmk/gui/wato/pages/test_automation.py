@@ -5,8 +5,11 @@
 
 from ast import literal_eval
 
+from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
+
+pytestmark = [skip_if_saas_edition]
 
 
 def _distributed_site_secret(site: Site) -> str:

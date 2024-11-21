@@ -1,0 +1,15 @@
+Title: fileinfo_grouping: Fixed mixed up titles for File grouping patterns rule set
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1732202776
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+During code maintenance the original title of the rule set "File grouping
+patterns" has accidentally been changed to "Group patterns". As the rul
+set matching has been changed, a second title needed to be added. This
+title accidentally has been used as rule set title instead of the
+configuration block title. This is now fixed and the original title "File
+grouping patterns" is used again.

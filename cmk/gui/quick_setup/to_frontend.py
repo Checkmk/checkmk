@@ -366,7 +366,7 @@ def validate_stages(
         if (
             errors := validate_stage(
                 quick_setup=quick_setup,
-                stages_raw_formspecs=stages_raw_formspecs,
+                stages_raw_formspecs=stages_raw_formspecs[: stage_index + 1],
                 stage_index=StageIndex(stage_index),
                 stage_action_id=None,
                 stages=stages,

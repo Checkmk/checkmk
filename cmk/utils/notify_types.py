@@ -540,6 +540,7 @@ class MicrosoftTeamsPluginModel(TypedDict):
 class OpsGenieIssuesPluginModel(TypedDict, total=False):
     password: Required[tuple[Literal["password", "store"], str]]
     url: str
+    ignore_ssl: Literal[True]
     proxy_url: ProxyUrl
     owner: str
     source: str

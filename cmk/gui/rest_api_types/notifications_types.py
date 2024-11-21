@@ -805,6 +805,7 @@ class OpsGenieIssuePlugin:
     option: PluginOptions = PluginOptions.CANCEL
     api_key: APIOpenGenieKeyOption = field(default_factory=APIOpenGenieKeyOption)
     domain: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     owner: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     source: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
@@ -834,6 +835,9 @@ class OpsGenieIssuePlugin:
             ),
             domain=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("url"),
+            ),
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
+                pluginparams.get("ignore_ssl"),
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
                 pluginparams.get("proxy_url"),
@@ -890,6 +894,9 @@ class OpsGenieIssuePlugin:
             option=PluginOptions.WITH_PARAMS,
             api_key=APIOpenGenieKeyOption.from_api_request(params["api_key"]),
             domain=CheckboxWithStrValue.from_api_request(params["domain"]),
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
+                params["disable_ssl_cert_verification"]
+            ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
             owner=CheckboxWithStrValue.from_api_request(params["owner"]),
             source=CheckboxWithStrValue.from_api_request(params["source"]),
@@ -913,6 +920,7 @@ class OpsGenieIssuePlugin:
                 {
                     "api_key": self.api_key.api_response(),
                     "domain": self.domain.api_response(),
+                    "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
                     "http_proxy": self.http_proxy.api_response(),
                     "owner": self.owner.api_response(),
                     "source": self.source.api_response(),
@@ -938,6 +946,7 @@ class OpsGenieIssuePlugin:
         r = {
             "password": self.api_key.to_mk_file_format(),
             "url": self.domain.to_mk_file_format(),
+            "ignore_ssl": self.disable_ssl_cert_verification.to_mk_file_format(),
             "proxy_url": self.http_proxy.to_mk_file_format(),
             "owner": self.owner.to_mk_file_format(),
             "source": self.source.to_mk_file_format(),

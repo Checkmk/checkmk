@@ -58,8 +58,10 @@ class NotificationParameterMsTeams(NotificationParameter):
             title=Title("Create notification with the following parameters"),
             elements={
                 "webhook_url": DictElement(
+                    required=True,
                     parameter_form=CascadingSingleChoice(
                         title=Title("Webhook URL"),
+                        prefill=DefaultValue("webhook_url"),
                         help_text=Help(
                             "Create a workflow 'Post to a channel when a "
                             "webhook request is received' for a channel in MS "
@@ -70,15 +72,22 @@ class NotificationParameterMsTeams(NotificationParameter):
                         elements=[
                             CascadingSingleChoiceElement(
                                 name="webhook_url",
-                                title=Title("Webhook URL"),
-                                parameter_form=String(custom_validate=[LengthInRange(min_value=1)]),
+                                title=Title("Explicit"),
+                                parameter_form=String(
+                                    custom_validate=[
+                                        LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message("Please enter a valid Webhook URL"),
+                                        )
+                                    ],
+                                ),
                             ),
                             CascadingSingleChoiceElement(
                                 name="store",
-                                title=Title("URL from password store"),
+                                title=Title("From password store"),
                                 parameter_form=SingleChoiceExtended(
                                     no_elements_text=Message(
-                                        "There are no elements defined for this selection yet."
+                                        "There are no passwords defined for this selection yet."
                                     ),
                                     elements=[
                                         SingleChoiceElementExtended(

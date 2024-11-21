@@ -15,6 +15,7 @@ from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
     FixedValue,
@@ -44,7 +45,8 @@ class NotificationParameterVictorOPS(NotificationParameter):
                 "webhook_url": DictElement(
                     required=True,
                     parameter_form=CascadingSingleChoice(
-                        title=Title("Splunk On-Call REST Endpoint"),
+                        title=Title("Splunk On-Call REST endpoint"),
+                        prefill=DefaultValue("webhook_url"),
                         help_text=Help(
                             "Learn how to setup a REST endpoint "
                             '<a href="https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/" target="_blank">here</a>.'
@@ -53,14 +55,17 @@ class NotificationParameterVictorOPS(NotificationParameter):
                         elements=[
                             CascadingSingleChoiceElement(
                                 name="webhook_url",
-                                title=Title("REST Endpoint URL"),
+                                title=Title("Explicit"),
                                 parameter_form=String(
                                     custom_validate=[
-                                        LengthInRange(min_value=1),
+                                        LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message("Please enter a valid REST endpoint"),
+                                        ),
                                         MatchRegex(
                                             regex=r"^https://alert\.victorops\.com/integrations/.+",
                                             error_msg=Message(
-                                                "The Webhook-URL must begin with "
+                                                "The REST endpoint must begin with "
                                                 "<tt>https://alert.victorops.com/integrations</tt>"
                                             ),
                                         ),
@@ -69,10 +74,10 @@ class NotificationParameterVictorOPS(NotificationParameter):
                             ),
                             CascadingSingleChoiceElement(
                                 name="store",
-                                title=Title("URL from password store"),
+                                title=Title("From password store"),
                                 parameter_form=SingleChoiceExtended(
                                     no_elements_text=Message(
-                                        "There are no elements defined for this selection yet."
+                                        "There are no passwords defined for this selection yet."
                                     ),
                                     elements=[
                                         SingleChoiceElementExtended(

@@ -13,6 +13,7 @@ from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
     FixedValue,
@@ -20,6 +21,7 @@ from cmk.rulesets.v1.form_specs import (
     Proxy,
     String,
 )
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
 
 from ._helpers import _get_url_prefix_setting
 
@@ -40,7 +42,8 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
             elements={
                 "webhook_url": DictElement(
                     parameter_form=CascadingSingleChoice(
-                        title=Title("Webhook-URL"),
+                        title=Title("Webhook URL"),
+                        prefill=DefaultValue("webhook_url"),
                         help_text=Help(
                             "Webhook URL. Setup Cisco Webex Teams Webhook "
                             '<a href="https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054" target="_blank">here</a>'
@@ -49,16 +52,23 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                         ),
                         elements=[
                             CascadingSingleChoiceElement(
-                                title=Title("Webhook URL"),
+                                title=Title("Explicit"),
                                 name="webhook_url",
-                                parameter_form=String(),
+                                parameter_form=String(
+                                    custom_validate=[
+                                        LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message("Please enter a valid Webhook URL"),
+                                        )
+                                    ],
+                                ),
                             ),
                             CascadingSingleChoiceElement(
-                                title=Title("URL from password store"),
+                                title=Title("From password store"),
                                 name="store",
                                 parameter_form=SingleChoiceExtended(
                                     no_elements_text=Message(
-                                        "There are no elements defined for this selection yet."
+                                        "There are no passwords defined for this selection yet."
                                     ),
                                     elements=[
                                         SingleChoiceElementExtended(

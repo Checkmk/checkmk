@@ -15,6 +15,7 @@ from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
     FixedValue,
@@ -43,7 +44,8 @@ class NotificationParameterSlack(NotificationParameter):
                 "webhook_url": DictElement(
                     required=True,
                     parameter_form=CascadingSingleChoice(
-                        title=Title("Webhook-URL"),
+                        title=Title("Webhook URL"),
+                        prefill=DefaultValue("webhook_url"),
                         help_text=Help(
                             "Webhook URL. Setup Slack Webhook "
                             '<a href="https://my.slack.com/services/new/incoming-webhook/" target="_blank">here</a>'
@@ -53,20 +55,24 @@ class NotificationParameterSlack(NotificationParameter):
                         ),
                         elements=[
                             CascadingSingleChoiceElement(
-                                title=Title("Webhook URL"),
+                                title=Title("Explicit"),
                                 name="webhook_url",
                                 parameter_form=String(
                                     custom_validate=[
-                                        validators.Url(protocols=[validators.UrlProtocol.HTTPS])
+                                        validators.LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message("Please enter a valid Webhook URL"),
+                                        ),
+                                        validators.Url(protocols=[validators.UrlProtocol.HTTPS]),
                                     ]
                                 ),
                             ),
                             CascadingSingleChoiceElement(
-                                title=Title("URL from password store"),
+                                title=Title("From password store"),
                                 name="store",
                                 parameter_form=SingleChoiceExtended(
                                     no_elements_text=Message(
-                                        "There are no elements defined for this selection yet."
+                                        "There are no passwords defined for this selection yet."
                                     ),
                                     elements=[
                                         SingleChoiceElementExtended(

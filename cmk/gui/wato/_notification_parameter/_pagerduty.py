@@ -3,24 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from typing import Literal
+
+from cmk.utils import password_store
+
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import NotificationParameter
-from cmk.gui.watolib.password_store import passwordstore_choices_without_user
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice,
     DictElement,
     FixedValue,
     migrate_to_proxy,
+    Password,
     Proxy,
-    String,
 )
-from cmk.rulesets.v1.form_specs._composed import CascadingSingleChoiceElement
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
 
 from ._helpers import _get_url_prefix_setting
 
@@ -43,37 +44,17 @@ class NotificationParameterPagerDuty(NotificationParameter):
             # hidden_keys=["webhook_url"],
             elements={
                 "routing_key": DictElement(
-                    parameter_form=CascadingSingleChoice(
+                    parameter_form=Password(
                         title=Title("PagerDuty Service Integration Key"),
-                        help_text=Help(
-                            "After setting up a new service in PagerDuty you will receive an "
-                            "Integration key associated with that service. Copy that value here."
-                        ),
-                        elements=[
-                            CascadingSingleChoiceElement(
-                                name="routing_key",
-                                title=Title("Integration Key"),
-                                parameter_form=String(),
-                            ),
-                            CascadingSingleChoiceElement(
-                                title=Title("URL from password store"),
-                                name="store",
-                                parameter_form=SingleChoiceExtended(
-                                    no_elements_text=Message(
-                                        "There are no elements defined for this selection yet."
-                                    ),
-                                    elements=[
-                                        SingleChoiceElementExtended(
-                                            title=Title("%s") % title, name=ident
-                                        )
-                                        for ident, title in passwordstore_choices_without_user()
-                                        if ident is not None
-                                    ],
-                                    type=str,
-                                ),
+                        migrate=_migrate_to_password,
+                        custom_validate=[
+                            LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Please enter a Service Integration Key"),
                             ),
                         ],
                     ),
+                    required=True,
                 ),
                 "webhook_url": DictElement(
                     parameter_form=FixedValue(
@@ -101,3 +82,28 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ),
             },
         )
+
+
+def _migrate_to_password(
+    password: object,
+) -> tuple[
+    Literal["cmk_postprocessed"],
+    Literal["explicit_password", "stored_password"],
+    tuple[str, str],
+]:
+    if isinstance(password, tuple):
+        if password[0] == "store":
+            return ("cmk_postprocessed", "stored_password", (password[1], ""))
+
+        if password[0] == "routing_key":
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (password_store.ad_hoc_password_id(), password[1]),
+            )
+
+        # Already migrated
+        assert len(password) == 3
+        return password
+
+    raise ValueError(f"Invalid password format: {password}")

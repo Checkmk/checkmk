@@ -116,7 +116,9 @@ class NotificationParameterILert(NotificationParameter):
 def _migrate_to_password(
     password: object,
 ) -> tuple[
-    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+    Literal["cmk_postprocessed"],
+    Literal["explicit_password", "stored_password"],
+    tuple[str, str],
 ]:
     if isinstance(password, tuple):
         if password[0] == "store":

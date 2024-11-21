@@ -276,6 +276,10 @@ def _migrate_import_annotations(p: object) -> tuple[str, object]:
             return "include_annotations_as_host_labels", None
         case "include-matching-annotations-as-host-labels", str(pattern):
             return "include_matching_annotations_as_host_labels", pattern
+        case ("include_matching_annotations_as_host_labels", str(pattern)):
+            return ("include_matching_annotations_as_host_labels", str(pattern))
+        case ("include_annotations_as_host_labels", None):
+            return ("include_annotations_as_host_labels", None)
     raise TypeError(p)
 
 

@@ -547,6 +547,7 @@ OpsgenieElement = Literal[
 class OpsGenieIssuesPluginModel(TypedDict, total=False):
     password: CheckmkPassword
     url: str
+    ignore_ssl: Literal[True]
     proxy_url: ProxyUrl
     owner: str
     source: str

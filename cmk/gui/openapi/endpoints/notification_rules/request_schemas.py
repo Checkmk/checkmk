@@ -1510,6 +1510,7 @@ class OpsGeniePluginCreate(PluginName):
         required=True,
         description="If you have an european account, please set the domain of your opsgenie. Specify an absolute URL like https://api.eu.opsgenie.com",
     )
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = HTTP_PROXY_CREATE
     owner = fields.Nested(
         StrValueOneOfSchema,

@@ -752,9 +752,10 @@ class CheckboxOpsExtraPropertiesValue(CheckboxOutput):
     )
 
 
-class OpenGeniePluginResponse(PluginName):
+class OpsgeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse)
     domain = fields.Nested(CheckboxWithStrValueOutput)
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = fields.Nested(HttpProxyValue)
     owner = fields.Nested(CheckboxWithStrValueOutput)
     source = fields.Nested(CheckboxWithStrValueOutput)
@@ -1078,7 +1079,7 @@ class PluginBase(BaseSchema):
             "asciimail": AsciiEmailParamsResponse,
             "ilert": IlertPluginResponse,
             "jira_issues": JiraPluginResponse,
-            "opsgenie_issues": OpenGeniePluginResponse,
+            "opsgenie_issues": OpsgeniePluginResponse,
             "pagerduty": PagerDutyPluginResponse,
             "pushover": PushOverPluginResponse,
             "servicenow": ServiceNowPluginResponse,

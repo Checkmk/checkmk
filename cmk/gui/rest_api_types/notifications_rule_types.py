@@ -2838,6 +2838,7 @@ class API_OpsGenieIssueData(TypedDict, total=False):
     plugin_name: Required[OpsGeniePluginName]
     api_key: APIKey
     domain: CheckboxStrAPIType
+    disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     owner: CheckboxStrAPIType
     source: CheckboxStrAPIType

@@ -1,0 +1,12 @@
+Title: Cease to provide builds for Ubuntu 23.10 (Mantic Minotaur)
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1732108951
+Edition: cre
+Level: 1
+Version: 2.3.0p22
+
+With this werk, we cease to deliver builds for Ubuntu 23.10.
+Since Ubuntu 23.10 is out of support since July 2024, it is necessary to upgrade to Ubuntu 24.04 before installing upcoming Checkmk builds.
+

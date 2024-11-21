@@ -235,7 +235,6 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "debian-12": "bookworm",
             "ubuntu-20.04": "focal",
             "ubuntu-22.04": "jammy",
-            "ubuntu-23.10": "mantic",
             "ubuntu-24.04": "noble",
             "centos-8": "el8",
             # "almalinux-9": "el9", # disabled due to CMK-20297

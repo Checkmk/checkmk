@@ -28,10 +28,6 @@ daily_saas: &daily_saas
     - "ubuntu-22.04"
     - "ubuntu-24.04"
 
-# Builds for those distros will only be available internally for development purpose
-internal_distros: &internal_distros
-    - "ubuntu-23.10"
-
 # Currently, all builds of the saas edition should stay completley internal
 internal_editions:
     - "saas"
@@ -45,8 +41,8 @@ internal_editions:
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: [*common, *internal_distros, "cma-3", "cma-4"]
-        daily_tests: [*common, *internal_distros]
+        daily: [*common, "cma-3", "cma-4"]
+        daily_tests: [*common]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]
         weekly: [*common, "cma-3", "cma-4"]
@@ -82,5 +78,4 @@ editions:
 # We currently only need this for the internal_distros as at the point in the pipeline,
 # where we want to exclude the internal distros, we are only using the distro codes and not the
 # distro name anymore.
-distro_to_codename:
-    ubuntu-23.10: "mantic"
+distro_to_codename: []

@@ -432,7 +432,6 @@ def code_name(distro_name: str) -> str:
         "ubuntu-20.04": "focal",
         "ubuntu-22.04": "jammy",
         "ubuntu-23.04": "lunar",
-        "ubuntu-23.10": "mantic",
         "ubuntu-24.04": "noble",
         "centos-7": "el7",
         "centos-8": "el8",

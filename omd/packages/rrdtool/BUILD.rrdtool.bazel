@@ -26,6 +26,7 @@ configure_make(
         "--disable-lua",
         "--disable-rrdcgi",
         "--disable-libdbi",
+        "--disable-python",
         "--with-systemdsystemunitdir=no",
         "--with-perl-options='LIB=$${EXT_BUILD_DEPS}/lib/perl5/lib/perl5'",
         "CFLAGS='-Dredacted=\"redacted\"'",

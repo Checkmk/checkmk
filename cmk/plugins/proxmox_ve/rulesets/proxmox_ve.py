@@ -8,15 +8,19 @@ from collections.abc import Mapping
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
     Integer,
     migrate_to_password,
     Password,
     String,
     validators,
 )
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -51,6 +55,35 @@ def _form_special_agents_proxmox_ve() -> Dictionary:
                     prefill=DefaultValue(8006),
                     custom_validate=(validators.NetworkPort(),),
                 )
+            ),
+            # copied from cisco/cisco_prime
+            "host": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="ip_address",
+                            title=Title("IP address"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="host_name",
+                            title=Title("Host name"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="custom",
+                            title=Title("Custom host"),
+                            parameter_form=String(
+                                title=Title("Custom host"),
+                                label=Label("Host name or address"),
+                                custom_validate=(LengthInRange(min_value=1),),
+                                macro_support=True,
+                            ),
+                        ),
+                    ],
+                    prefill=DefaultValue("ip_address"),
+                    title=Title("Specify Proxmox VE host via.."),
+                ),
             ),
             "no_cert_check": DictElement(
                 parameter_form=BooleanChoice(

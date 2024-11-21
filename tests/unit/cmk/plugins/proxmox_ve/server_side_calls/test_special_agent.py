@@ -41,6 +41,51 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             ],
             id="explicit_password",
         ),
+        pytest.param(
+            {
+                "username": "user",
+                "password": Secret(23),
+                "host": ("ip_address", None),
+            },
+            [
+                "-u",
+                "user",
+                "-p",
+                Secret(23).unsafe(),
+                "hurz",
+            ],
+            id="connect_ip_address",
+        ),
+        pytest.param(
+            {
+                "username": "user",
+                "password": Secret(23),
+                "host": ("host_name", None),
+            },
+            [
+                "-u",
+                "user",
+                "-p",
+                Secret(23).unsafe(),
+                "testhost",
+            ],
+            id="connect_host_name",
+        ),
+        pytest.param(
+            {
+                "username": "user",
+                "password": Secret(23),
+                "host": ("custom", "custom-hostname"),
+            },
+            [
+                "-u",
+                "user",
+                "-p",
+                Secret(23).unsafe(),
+                "custom-hostname",
+            ],
+            id="connect_custom",
+        ),
     ],
 )
 def test_agent_proxmox_ve_arguments(

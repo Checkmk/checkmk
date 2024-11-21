@@ -28,6 +28,10 @@ daily_saas: &daily_saas
     - "ubuntu-22.04"
     - "ubuntu-24.04"
 
+# Builds for those distros will only be available internally for development purpose
+# internal_distros: &internal_distros
+#     - "ubuntu-23.10"
+
 # Currently, all builds of the saas edition should stay completley internal
 internal_editions:
     - "saas"

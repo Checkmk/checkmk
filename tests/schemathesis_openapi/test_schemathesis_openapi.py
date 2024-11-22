@@ -5,6 +5,7 @@
 import logging
 
 import pytest
+import schemathesis
 from hypothesis import given, seed, strategies
 
 from tests.schemathesis_openapi import settings
@@ -17,7 +18,7 @@ schema = get_schema()
 
 @pytest.mark.type("schemathesis_openapi")
 @schema.parametrize(endpoint="")
-def test_openapi_stateless(case):
+def test_openapi_stateless(case: schemathesis.models.Case) -> None:
     """Run default, stateless schemathesis testing."""
     if case.path == "/domain-types/notification_rule/collections/all" and case.method in (
         "GET",
@@ -29,7 +30,7 @@ def test_openapi_stateless(case):
 
 @pytest.mark.skip(reason="Currently fails due to recursive schema references")
 @pytest.mark.type("schemathesis_openapi")
-def test_openapi_stateful():
+def test_openapi_stateful() -> None:
     """Run stateful schemathesis testing."""
     run_state_machine_test(schema)
 

@@ -8,8 +8,10 @@ from json.decoder import JSONDecodeError
 from typing import Any
 
 import hypothesis
+import hypothesis.stateful
 import schemathesis
 from requests import Response
+from schemathesis.specs.openapi import schemas
 from schemathesis.stateful.state_machine import APIStateMachine
 
 from tests.schemathesis_openapi import settings
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def _init_case(
-    schema: schemathesis.schemas.BaseSchema,
+    schema: schemas.BaseOpenAPISchema,
     data: Any,
     endpoint: str,
     method: str,
@@ -76,7 +78,7 @@ def _response_reason(response: Response, value: str | None = "detail") -> str:
 
 
 def run_crud_test(
-    schema: schemathesis.schemas.BaseSchema,
+    schema: schemas.BaseOpenAPISchema,
     data: Any,
     object_endpoint: str,
     post_endpoint: str,
@@ -266,7 +268,7 @@ def run_crud_test(
         )
 
 
-def run_state_machine_test(schema: schemathesis.schemas.BaseSchema) -> None:
+def run_state_machine_test(schema: schemas.BaseOpenAPISchema) -> None:
     """Get a state machine for stateful testing."""
     state_machine: type[APIStateMachine]
     state_machine = schema.as_state_machine()

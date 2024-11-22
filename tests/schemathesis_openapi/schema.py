@@ -9,6 +9,7 @@ from re import match
 from typing import Any
 
 import schemathesis
+from requests.structures import CaseInsensitiveDict
 from schemathesis import DataGenerationMethod
 from schemathesis.specs.openapi import schemas
 
@@ -190,6 +191,8 @@ def get_schema() -> schemas.BaseOpenAPISchema:
 
         def set(self, case, data, context):
             case.cookies = {}
+            if case.headers is None:
+                case.headers = CaseInsensitiveDict({})
             case.headers["Authorization"] = token
             case.headers["Content-Type"] = "application/json"
 

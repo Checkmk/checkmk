@@ -29,6 +29,11 @@ from cmk import trace
 tracer = trace.get_tracer()
 
 
+# INFO: flag for disabling loading of config and plugins. Setting this to False will disable the
+# reloading functionality, which is necessary for testing the automation helpers locally.
+PLUGIN_CONFIGURATION_RELOAD_ACTIVE = True
+
+
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(MKException):
     pass
@@ -64,7 +69,7 @@ class Automations:
                     f" (available: {', '.join(sorted(self._automations))})"
                 )
 
-            if automation.needs_checks:
+            if PLUGIN_CONFIGURATION_RELOAD_ACTIVE and automation.needs_checks:
                 with (
                     tracer.start_as_current_span("load_all_plugins"),
                     redirect_stdout(open(os.devnull, "w")),
@@ -75,7 +80,7 @@ class Automations:
                         checks_dir=paths.checks_dir,
                     )
 
-            if automation.needs_config:
+            if PLUGIN_CONFIGURATION_RELOAD_ACTIVE and automation.needs_config:
                 with tracer.start_as_current_span("load_config"):
                     config.load(validate_hosts=False)
 

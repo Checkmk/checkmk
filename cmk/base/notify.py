@@ -953,7 +953,11 @@ def _process_notifications(
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
         for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
-            verb = "would notify" if analyse and not dispatch else "notifying"
+            verb = (
+                "would notify"
+                if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"])
+                else "notifying"
+            )
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name
             # Hack for "Call with the following..." find a better solution

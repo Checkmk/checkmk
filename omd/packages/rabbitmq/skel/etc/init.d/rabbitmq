@@ -47,20 +47,23 @@ rabbitmq_accepting_connections() {
 }
 
 await_process_start() {
+    # Only write output in the end, otherwise we clobber the logfile.
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
-            date +"%F %T.%N RabbitMQ considered ready"
-            return 0
-        }
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && break
         [ -e "${PIDFILE}" ] || {
             date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
             return 1
         }
-        [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
     done
+
+    # once again, mostly to get the output of the diagnostics call
+    [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+        date +"%F %T.%N RabbitMQ considered ready"
+        return 0
+    }
 
     date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1

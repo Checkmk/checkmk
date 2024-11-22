@@ -1,0 +1,15 @@
+Title: Support Diagnostics: Select options by default
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1732288088
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+Before ths werk, the user had to select the needed options in the UI
+before creating a dump. Now, there is a set of options selected by
+default.
+
+This helps the support team to gather the data they need for solving
+tickets as quickly as possible.

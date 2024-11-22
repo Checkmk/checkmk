@@ -299,6 +299,15 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Optional general information"),
                         elements=self._get_optional_information_elements(),
+                        default_keys=[
+                            OPT_LOCAL_FILES,
+                            OPT_OMD_CONFIG,
+                            OPT_CHECKMK_OVERVIEW,
+                            OPT_CHECKMK_CRASH_REPORTS,
+                            OPT_CHECKMK_LOG_FILES,
+                            OPT_CHECKMK_CONFIG_FILES,
+                            OPT_PERFORMANCE_GRAPHS,
+                        ],
                     ),
                 ),
                 (
@@ -306,6 +315,11 @@ class ModeDiagnostics(WatoMode):
                     Dictionary(
                         title=_("Component specific information"),
                         elements=self._get_component_specific_elements(),
+                        default_keys=[
+                            OPT_COMP_BUSINESS_INTELLIGENCE,
+                            OPT_COMP_CMC,
+                            OPT_COMP_LICENSING,
+                        ],
                     ),
                 ),
             ],

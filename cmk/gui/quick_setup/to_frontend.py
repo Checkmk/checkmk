@@ -345,7 +345,6 @@ def validate_stage(
         errors.stage_errors.extend(
             custom_validator(
                 quick_setup.id,
-                stage_index,
                 _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             )
         )

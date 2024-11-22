@@ -229,7 +229,6 @@ def _validate_from_to(p):
 
 def _validate_at_least_one_event(
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     match form_data[FormSpecId("triggering_events")]:

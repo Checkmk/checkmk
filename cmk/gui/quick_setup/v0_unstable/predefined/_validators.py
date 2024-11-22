@@ -99,7 +99,6 @@ def _validate_test_connection(
 
 def validate_unique_id(
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
@@ -114,7 +113,6 @@ def validate_unique_id(
 
 def validate_host_name_doesnt_exists(
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     host_name = _find_id_in_form_data(stages_form_data, QSHostName)

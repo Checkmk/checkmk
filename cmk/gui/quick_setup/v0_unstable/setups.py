@@ -29,7 +29,7 @@ class QuickSetupActionMode(StrEnum):
 FormspecMap = Mapping[FormSpecId, FormSpec]
 # TODO: Validator should be refactored so during complete action, overlapping validations can be
 #  skipped
-CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
+CallableValidator = Callable[[QuickSetupId, ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
 CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], str]
 WidgetConfigurator = Callable[[], Sequence[Widget]]

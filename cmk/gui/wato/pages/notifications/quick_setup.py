@@ -110,7 +110,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import EmailAddress, ValidationError
+from cmk.rulesets.v1.form_specs.validators import EmailAddress, LengthInRange, ValidationError
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
@@ -1150,6 +1150,14 @@ def recipient() -> QuickSetupStage:
                                                 ),
                                                 single_choice_type=SingleChoice,
                                                 elements=_contact_group_choice(),
+                                                custom_validate=[
+                                                    LengthInRange(
+                                                        min_value=1,
+                                                        error_msg=Message(
+                                                            "Please add at least one contact group"
+                                                        ),
+                                                    )
+                                                ],
                                             ),
                                         ),
                                     ),
@@ -1160,8 +1168,16 @@ def recipient() -> QuickSetupStage:
                                             parameter_form=ListOfStrings(
                                                 layout=ListOfStringsLayout.vertical,
                                                 string_spec=String(
-                                                    custom_validate=[EmailAddress()]
+                                                    custom_validate=[EmailAddress()],
                                                 ),
+                                                custom_validate=[
+                                                    LengthInRange(
+                                                        min_value=1,
+                                                        error_msg=Message(
+                                                            "Please add at least one email address"
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                     ),
@@ -1183,6 +1199,14 @@ def recipient() -> QuickSetupStage:
                                                         )
                                                     )
                                                     for ident, title in _get_sorted_users()
+                                                ],
+                                                custom_validate=[
+                                                    LengthInRange(
+                                                        min_value=1,
+                                                        error_msg=Message(
+                                                            "Please add at least one user"
+                                                        ),
+                                                    ),
                                                 ],
                                             ),
                                         ),
@@ -1223,6 +1247,14 @@ def recipient() -> QuickSetupStage:
                                                 ),
                                                 single_choice_type=SingleChoice,
                                                 elements=_contact_group_choice(),
+                                                custom_validate=[
+                                                    LengthInRange(
+                                                        min_value=1,
+                                                        error_msg=Message(
+                                                            "Please add at least one contact group"
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                     ),
@@ -1247,6 +1279,14 @@ def recipient() -> QuickSetupStage:
                                                     ],
                                                 ),
                                                 add_element_label=Label("Add condition"),
+                                                custom_validate=[
+                                                    LengthInRange(
+                                                        min_value=1,
+                                                        error_msg=Message(
+                                                            "Please add at least one macro"
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                     ),

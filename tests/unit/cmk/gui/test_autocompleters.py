@@ -15,6 +15,7 @@ def test_builtin_autocompleters_registered() -> None:
         "allgroups",
         "available_graph_templates",
         "check_cmd",
+        "check_types",
         "config_hostname",
         "kubernetes_labels",
         "label",

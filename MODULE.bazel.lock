@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "d745145b6f93927b67df455fdf48e4179ebb3b496045c976ec47f6797b499fcd",
+  "moduleFileHash": "4a0bfd1759184782137f81d1c79cda22986b0fe556fb8521e4bac161d1bdefff",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -37,8 +37,7 @@
           },
           "imports": {
             "repo_license": "repo_license",
-            "forked_cc_toolchain_config": "forked_cc_toolchain_config",
-            "patch": "patch"
+            "forked_cc_toolchain_config": "forked_cc_toolchain_config"
           },
           "devImports": [],
           "tags": [
@@ -62,42 +61,8 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 73,
+                "line": 70,
                 "column": 25
-              }
-            },
-            {
-              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
-              "attributeValues": {
-                "build_file": "//omd/packages/patch:BUILD.patch.bazel",
-                "patch_args": [
-                  "-p1"
-                ],
-                "patch_tool": "patch",
-                "patches": [
-                  "//omd/packages/patch/patches:ed-style-01-missing-input-files.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-02-fix-arbitrary-command-execution.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-03-update-test-Makefile.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-04-invoke-ed-directly.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-05-minor-cleanups.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-06-fix-test-failure.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-07-dont-leak-tmp-file.patch.dif",
-                  "//omd/packages/patch/patches:ed-style-08-dont-leak-tmp-file-multi.patch.dif",
-                  "//omd/packages/patch/patches:fix-segfault-mangled-rename.patch.dif"
-                ],
-                "sha256": "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
-                "strip_prefix": "patch-2.7.6",
-                "urls": [
-                  "https://ftp.gnu.org/gnu/patch/patch-patch-2.7.6.tar.gz",
-                  "https://artifacts.lan.tribe29.com/repository/upstream-archives/patch-2.7.6.tar.gz"
-                ],
-                "name": "patch"
-              },
-              "devDependency": false,
-              "location": {
-                "file": "@@//:MODULE.bazel",
-                "line": 96,
-                "column": 13
               }
             }
           ],
@@ -110,7 +75,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 26,
+            "line": 23,
             "column": 23
           },
           "imports": {},
@@ -125,7 +90,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 27,
+                "line": 24,
                 "column": 17
               }
             }
@@ -139,7 +104,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 53,
+            "line": 50,
             "column": 20
           },
           "imports": {
@@ -162,7 +127,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 54,
+                "line": 51,
                 "column": 10
               }
             }

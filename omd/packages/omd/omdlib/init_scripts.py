@@ -92,7 +92,7 @@ def check_status(  # pylint: disable=too-many-branches
             if bare:
                 sys.stdout.write(komponent + " ")
             else:
-                sys.stdout.write("%-16s" % (komponent + ":"))
+                sys.stdout.write("%-20s" % (komponent + ":"))
                 sys.stdout.write(tty.bold)
 
         if bare:
@@ -130,8 +130,8 @@ def check_status(  # pylint: disable=too-many-branches
         if bare:
             sys.stdout.write("OVERALL %d\n" % exit_code)
         else:
-            sys.stdout.write("-----------------------\n")
-            sys.stdout.write("Overall state:  %s\n" % (tty.bold + ovstate + tty.normal))
+            sys.stdout.write("---------------------------\n")
+            sys.stdout.write("Overall state:      %s\n" % (tty.bold + ovstate + tty.normal))
     return exit_code
 
 

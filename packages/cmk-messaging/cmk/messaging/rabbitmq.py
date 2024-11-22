@@ -7,8 +7,9 @@
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
@@ -57,23 +58,36 @@ class VirtualHost(BaseModel):
     name: str
 
 
-DEFAULT_SHOVEL: Mapping[str, str | bool] = {
-    "ack-mode": "on-confirm",
-    "dest-add-forward-headers": False,
-    "dest-exchange": INTERSITE_EXCHANGE,
-    "dest-protocol": "amqp091",
-    "dest-uri": "amqp://",
-    "src-delete-after": "never",
-    "src-protocol": "amqp091",
-    "src-queue": "",
-    "src-uri": "amqp://",
-}
+class ShovelValue(BaseModel):
+    ack_mode: str = Field(alias="ack-mode", default="on-confirm")
+    dest_add_forward_headers: bool = Field(alias="dest-add-forward-headers", default=False)
+    dest_exchange: str = Field(alias="dest-exchange", default=INTERSITE_EXCHANGE)
+    dest_protocol: str = Field(alias="dest-protocol", default="amqp091")
+    dest_uri: str = Field(alias="dest-uri", default="amqp://")
+    src_delete_after: str = Field(alias="src-delete-after", default="never")
+    src_protocol: str = Field(alias="src-protocol", default="amqp091")
+    src_queue: str = Field(alias="src-queue")
+    src_uri: str = Field(alias="src-uri", default="amqp://")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+    )
+
+    @classmethod
+    def from_kwargs(cls, *, src_queue: str, src_uri: str, dest_uri: str) -> Self:
+        # centralized suppression.
+        # unfortunately mypy does not understand that I can use the non-alias
+        # field names (which is the point of them) :-(
+        return cls(  # type: ignore[call-arg]
+            src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri
+        )
 
 
-class Component(BaseModel):
-    value: Mapping[str, str | bool]
+class Shovel(BaseModel, frozen=True):
+    value: ShovelValue
     vhost: str
-    component: str
+    component: Literal["shovel"] = "shovel"
     name: str
 
 
@@ -93,7 +107,14 @@ class Definitions(BaseModel):
     exchanges: list[Exchange] = []
     bindings: list[Binding] = []
     queues: list[Queue] = []
-    parameters: list[Component] = []
+    parameters: list[Shovel] = []  # there are others, we currently only need shovels.
+
+    def dumps(self) -> str:
+        return self.model_dump_json(indent=4, by_alias=True)
+
+    @classmethod
+    def loads(cls, data: str) -> Self:
+        return cls.model_validate_json(data)
 
 
 @dataclass(frozen=True)
@@ -263,26 +284,22 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         arguments={},
     )
     parameters = [
-        Component(
-            value={
-                **DEFAULT_SHOVEL,
-                "src-uri": connecter_url,
-                "dest-uri": connectee_url,
-                "src-queue": queue.name,
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                src_uri=connecter_url,
+                dest_uri=connectee_url,
+                src_queue=queue.name,
+            ),
             vhost=vhost_name,
-            component="shovel",
             name=f"cmk.shovel.{connection.connecter.site_id}->{connection.connectee.site_id}",
         ),
-        Component(
-            value={
-                **DEFAULT_SHOVEL,
-                "src-queue": f"cmk.intersite.{connection.connecter.site_id}",
-                "src-uri": connectee_url,
-                "dest-uri": connecter_url,
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                src_queue=f"cmk.intersite.{connection.connecter.site_id}",
+                src_uri=connectee_url,
+                dest_uri=connecter_url,
+            ),
             vhost=vhost_name,
-            component="shovel",
             name=f"cmk.shovel.{connection.connectee.site_id}->{connection.connecter.site_id}",
         ),
     ]

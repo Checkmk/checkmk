@@ -5,7 +5,15 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.messaging.rabbitmq import Binding, Component, Definitions, Permission, Queue, User
+from cmk.messaging.rabbitmq import (
+    Binding,
+    Definitions,
+    Permission,
+    Queue,
+    Shovel,
+    ShovelValue,
+    User,
+)
 
 
 def _get_queue(site_id: str) -> Queue:
@@ -31,36 +39,24 @@ def _get_permission(site_id: str) -> Permission:
     )
 
 
-def _get_component(site1: str, site2: str, port2: int) -> Sequence[Component]:
+def _get_component(site1: str, site2: str, port2: int) -> Sequence[Shovel]:
     return [
-        Component(
-            value={
-                "ack-mode": "on-confirm",
-                "dest-add-forward-headers": False,
-                "dest-exchange": "cmk.intersite",
-                "dest-protocol": "amqp091",
-                "dest-uri": f"amqps://127.0.0.1:{port2}?server_name_indication={site2}&auth_mechanism=external",
-                "src-delete-after": "never",
-                "src-protocol": "amqp091",
-                "src-queue": f"cmk.intersite.{site2}",
-                "src-uri": "amqp:///%2f",
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                dest_uri=f"amqps://127.0.0.1:{port2}?server_name_indication={site2}&auth_mechanism=external",
+                src_queue=f"cmk.intersite.{site2}",
+                src_uri="amqp:///%2f",
+            ),
             vhost="/",
             component="shovel",
             name=f"cmk.shovel.{site1}->{site2}",
         ),
-        Component(
-            value={
-                "ack-mode": "on-confirm",
-                "dest-add-forward-headers": False,
-                "dest-exchange": "cmk.intersite",
-                "dest-protocol": "amqp091",
-                "dest-uri": "amqp:///%2f",
-                "src-delete-after": "never",
-                "src-protocol": "amqp091",
-                "src-queue": f"cmk.intersite.{site1}",
-                "src-uri": f"amqps://127.0.0.1:{port2}?server_name_indication={site2}&auth_mechanism=external",
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                dest_uri="amqp:///%2f",
+                src_queue=f"cmk.intersite.{site1}",
+                src_uri=f"amqps://127.0.0.1:{port2}?server_name_indication={site2}&auth_mechanism=external",
+            ),
             vhost="/",
             component="shovel",
             name=f"cmk.shovel.{site2}->{site1}",
@@ -77,7 +73,7 @@ def get_expected_definition(
 
     users = []
     permissions = []
-    parameters: list[Component] = []
+    parameters: list[Shovel] = []
     queues = []
     bindings = []
     for site, port in replicated_sites.items():

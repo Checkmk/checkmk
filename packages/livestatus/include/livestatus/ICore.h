@@ -46,7 +46,7 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual const IHostGroup *find_hostgroup(
         const std::string &name) const = 0;
-    [[nodiscard]] virtual std::unique_ptr<const IHost> getHostByDesignation(
+    [[nodiscard]] virtual const IHost *getHostByDesignation(
         const std::string &designation) const = 0;
     virtual bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const = 0;

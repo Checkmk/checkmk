@@ -71,7 +71,7 @@ class DummyMonitoringCore : public ICore {
         const std::string & /* name */) const override {
         return nullptr;
     }
-    [[nodiscard]] std::unique_ptr<const IHost> getHostByDesignation(
+    [[nodiscard]] const IHost *getHostByDesignation(
         const std::string & /*designation*/) const override {
         return {};
     }

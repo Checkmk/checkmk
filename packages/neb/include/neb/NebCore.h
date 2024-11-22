@@ -105,7 +105,7 @@ public:
         const std::string &name) const override;
     [[nodiscard]] const IHostGroup *find_hostgroup(
         const std::string &name) const override;
-    [[nodiscard]] std::unique_ptr<const IHost> getHostByDesignation(
+    [[nodiscard]] const IHost *getHostByDesignation(
         const std::string &designation) const override;
     bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const override;

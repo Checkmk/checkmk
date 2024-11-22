@@ -171,12 +171,10 @@ bool NebCore::all_of_services(
         [pred](const auto &entry) { return pred(*entry.second); });
 }
 
-std::unique_ptr<const IHost> NebCore::getHostByDesignation(
+const IHost *NebCore::getHostByDesignation(
     const std::string &designation) const {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
-    return it == _hosts_by_designation.end()
-               ? nullptr
-               : std::make_unique<NebHost>(*it->second);
+    return it == _hosts_by_designation.end() ? nullptr : ihost(it->second);
 }
 
 const IService *NebCore::iservice(const ::service *handle) const {

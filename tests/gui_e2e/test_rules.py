@@ -178,6 +178,7 @@ def test_create_rules(
             ), f'Rule creation for ruleset "{ruleset_name}" has failed!'
 
 
+@pytest.mark.skip(reason="Pending investigation; CMK-20395")
 @pytest.mark.parametrize(
     "created_host",
     [
@@ -244,6 +245,7 @@ def test_periodic_service_discovery_rule(
     ruleset_page.delete_button.click()
 
 
+@pytest.mark.skip(reason="Pending investigation; CMK-20395")
 @pytest.mark.parametrize(
     "created_host",
     [

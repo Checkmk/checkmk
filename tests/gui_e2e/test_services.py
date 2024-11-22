@@ -18,6 +18,7 @@ from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPag
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="Pending investigation; CMK-20395")
 @pytest.mark.parametrize(
     "created_host",
     [

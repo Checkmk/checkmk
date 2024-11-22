@@ -42,10 +42,10 @@ import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
-from cmk.utils.global_ident_type import is_locked_by_quick_setup
+from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import fields as gui_fields
@@ -350,16 +350,31 @@ def _bulk_host_action_response(
 
 class SearchFilter:
     hostnames_filter = "hostnames"
+    site_filter = "site"
 
     @classmethod
     def from_params(cls, params: Mapping[str, Any]) -> "SearchFilter":
-        return cls(hostnames=params.get(cls.hostnames_filter, []))
+        return cls(
+            hostnames=params.get(cls.hostnames_filter, []),
+            site=params.get(cls.site_filter),
+        )
 
-    def __init__(self, hostnames: Sequence[str] | None) -> None:
+    def __init__(
+        self,
+        hostnames: Sequence[str] | None,
+        site: str | None,
+    ) -> None:
         self._hostnames = set(hostnames) if hostnames else None
+        self._site = site
 
     def __call__(self, host: Host) -> bool:
+        return self.filter_by_hostnames(host) and self.filter_by_site(host)
+
+    def filter_by_hostnames(self, host: Host) -> bool:
         return host.name() in self._hostnames if self._hostnames else True
+
+    def filter_by_site(self, host: Host) -> bool:
+        return host.site_id() == self._site if self._site else True
 
 
 def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
@@ -393,7 +408,12 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
                 required=False,
                 example=["host1", "host2"],
                 minLength=1,
-            )
+            ),
+            SearchFilter.site_filter: fields.String(
+                description="Filter the result by a specific site.",
+                required=False,
+                example="site1",
+            ),
         },
     ],
 )

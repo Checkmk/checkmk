@@ -1720,3 +1720,12 @@ class TestHostsFilters:
 
         resp = clients.HostConfig.get_all(search={"hostnames": ["host1", "host2"]})
         assert {entry["id"] for entry in resp.json["value"]} == {"host1", "host2"}
+
+    def test_openapi_not_matching_site_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/", "attributes": {"site": "NO_SITE"}},
+            ]
+        )
+        resp = clients.HostConfig.get_all(search={"site": "INVALID_SITE"})
+        assert not resp.json["value"]

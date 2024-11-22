@@ -1550,7 +1550,7 @@ class SiteFactory:
         logger.info("Creating %s site from backup...", name)
 
         omd_restore_cmd = (
-            ["/usr/bin/sudo", "omd", "restore", "--apache-reload"]
+            ["sudo", "omd", "restore", "--apache-reload"]
             + (["--reuse", "--kill"] if reuse else [])
             + [backup_path]
         )

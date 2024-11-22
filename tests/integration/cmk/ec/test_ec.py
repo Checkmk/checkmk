@@ -117,7 +117,7 @@ def _activate_ec_changes(site: Site) -> None:
 def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:
     """Generate EC message via Unix socket"""
     events_path = site.path("tmp/run/mkeventd/events")
-    cmd = f"/usr/bin/sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} > {events_path}'"
+    cmd = f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} > {events_path}'"
     logger.info("Executing: %s", cmd)
     with subprocess.Popen(
         cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -134,7 +134,7 @@ def _generate_message_via_syslog(
 ) -> None:
     """Generate EC message via syslog"""
     cmd = (
-        f"/usr/bin/sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w {timeout} "
+        f"sudo su -l {site.id} -c 'echo {'' if end_of_line else '-n'} {message} | nc -w {timeout} "
         f"{'-u' if udp else ''} 127.0.0.1 514'"
     )
     logger.info("Executing: %s", cmd)

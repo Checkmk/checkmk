@@ -513,12 +513,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
             logger.info('Deleting source host "%s"...', source_host_name)
             site.openapi.delete_host(source_host_name)
 
-            assert (
-                run(
-                    ["/usr/bin/sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]
-                ).returncode
-                == 0
-            )
+            assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
 
             logger.info("Activating changes & reloading core...")
             site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)

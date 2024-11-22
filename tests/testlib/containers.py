@@ -118,12 +118,12 @@ def execute_tests_in_container(
                 dockerpty.exec_command(
                     client.api,
                     container.id,
-                    ["/usr/bin/sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "run"] + command,
+                    ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "run"] + command,
                 )
             dockerpty.exec_command(
                 client.api,
                 container.id,
-                ["/usr/bin/sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "shell"],
+                ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "shell"],
             )
 
             return 0

@@ -93,7 +93,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
     # like. Switch the user context to 'testuser' to execute the daemon.
     # When executed on a dev system, we run as lower privileged user and don't have to switch the
     # context.
-    sudo = ["/usr/bin/sudo", "-u", "testuser"] if with_sudo else []
+    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)

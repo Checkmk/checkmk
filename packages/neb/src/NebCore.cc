@@ -279,7 +279,8 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == &h && co->_service == nullptr) {
-            result.emplace_back(std::make_unique<NebComment>(*co));
+            result.emplace_back(
+                std::make_unique<NebComment>(*co, hst, nullptr));
         }
     }
     return result;
@@ -298,7 +299,8 @@ std::vector<std::unique_ptr<const IComment>> NebCore::comments_unlocked(
     std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == s.host_ptr && co->_service == &s) {
-            result.emplace_back(std::make_unique<NebComment>(*co));
+            result.emplace_back(
+                std::make_unique<NebComment>(*co, svc.host(), &svc));
         }
     }
     return result;
@@ -314,8 +316,10 @@ bool NebCore::all_of_comments(
     const std::function<bool(const IComment &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
     return std::all_of(_comments.cbegin(), _comments.cend(),
-                       [&pred](const auto &comment) {
-                           return pred(NebComment{*comment.second});
+                       [this, &pred](const auto &comment) {
+                           return pred(NebComment{
+                               *comment.second, *ihost(comment.second->_host),
+                               iservice(comment.second->_service)});
                        });
 }
 
@@ -326,7 +330,8 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == &h && dt->_service == nullptr) {
-            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+            result.emplace_back(
+                std::make_unique<NebDowntime>(*dt, hst, nullptr));
         }
     }
     return result;
@@ -345,7 +350,8 @@ std::vector<std::unique_ptr<const IDowntime>> NebCore::downtimes_unlocked(
     std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == s.host_ptr && dt->_service == &s) {
-            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+            result.emplace_back(
+                std::make_unique<NebDowntime>(*dt, svc.host(), &svc));
         }
     }
     return result;
@@ -361,8 +367,10 @@ bool NebCore::all_of_downtimes(
     // TODO(sp): Do we need a mutex here?
     const std::function<bool(const IDowntime &)> &pred) const {
     return std::all_of(_downtimes.cbegin(), _downtimes.cend(),
-                       [&pred](const auto &downtime) {
-                           return pred(NebDowntime{*downtime.second});
+                       [this, &pred](const auto &downtime) {
+                           return pred(NebDowntime{
+                               *downtime.second, *ihost(downtime.second->_host),
+                               iservice(downtime.second->_service)});
                        });
 }
 
@@ -393,11 +401,9 @@ bool NebCore::all_of_host_groups(
 
 bool NebCore::all_of_service_groups(
     const std::function<bool(const IServiceGroup &)> &pred) const {
-    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        if (!pred(NebServiceGroup{*sg})) {
-            return false;
-        }
-    }
+    return std::all_of(
+        iservicegroups_by_handle_.cbegin(), iservicegroups_by_handle_.cend(),
+        [pred](const auto &entry) { return pred(*entry.second); });
     return true;
 }
 

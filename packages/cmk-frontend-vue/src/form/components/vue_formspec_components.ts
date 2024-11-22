@@ -157,6 +157,7 @@ export type Catalog = FormSpec & {
 export type DualListChoice = (FormSpec & {
   elements: MultipleChoiceElement[];
   show_toggle_all: boolean;
+  autocompleter?: Autocompleter;
   i18n: DualListChoiceI18N;
 }) & {
   type: "dual_list_choice";
@@ -324,6 +325,7 @@ export interface DualListChoiceI18N {
   selected: string;
   no_elements_available: string;
   no_elements_selected: string;
+  autocompleter_loading: string;
 }
 export interface TimeSpanI18N {
   millisecond: string;

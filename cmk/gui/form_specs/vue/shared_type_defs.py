@@ -109,6 +109,7 @@ class DualListChoiceI18n:
     selected: str
     no_elements_available: str
     no_elements_selected: str
+    autocompleter_loading: str
 
 
 class CascadingSingleChoiceLayout(str, Enum):
@@ -354,6 +355,7 @@ class DualListChoice(FormSpec):
     i18n: DualListChoiceI18n
     elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
     show_toggle_all: Optional[bool] = False
+    autocompleter: Optional[Autocompleter] = None
     type: str = "dual_list_choice"
 
 

@@ -484,6 +484,9 @@
                             "type": "boolean",
                             "default": false
                         },
+                        "autocompleter": {
+                            "$ref": "#/$defs/autocompleter"
+                        },
                         "i18n": {
                             "type": "object",
                             "title": "dual_list_choice_i18n",
@@ -514,6 +517,9 @@
                                 },
                                 "no_elements_selected": {
                                     "type": "string"
+                                },
+                                "autocompleter_loading": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -525,7 +531,8 @@
                                 "selected_options",
                                 "selected",
                                 "no_elements_available",
-                                "no_elements_selected"
+                                "no_elements_selected",
+                                "autocompleter_loading"
                             ]
                         }
                     },

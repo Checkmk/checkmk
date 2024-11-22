@@ -26,7 +26,8 @@ const spec: FormSpec.DualListChoice = {
     selected_options: 'Selected options',
     selected: 'Selected',
     no_elements_available: 'No elements available',
-    no_elements_selected: 'No elements selected'
+    no_elements_selected: 'No elements selected',
+    autocompleter_loading: 'Loading'
   },
   validators: [],
   show_toggle_all: false

@@ -30,9 +30,13 @@ T = TypeVar("T")
 
 class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str]]):
     def _is_valid_choice(self, value: str) -> bool:
+        if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
+            return True
         return value in [x.name for x in self.form_spec.elements]
 
     def _strip_invalid_choices(self, raw_value: list[str]) -> list[str]:
+        if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
+            return raw_value
         valid_choices = {x.name for x in self.form_spec.elements}
         return list(set(raw_value) & valid_choices)
 
@@ -57,13 +61,16 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
     ]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        elements = [
-            shared_type_defs.MultipleChoiceElement(
-                name=element.name,
-                title=element.title.localize(translate_to_current_language),
-            )
-            for element in self.form_spec.elements
-        ]
+        if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter):
+            elements = []
+        else:
+            elements = [
+                shared_type_defs.MultipleChoiceElement(
+                    name=element.name,
+                    title=element.title.localize(translate_to_current_language),
+                )
+                for element in self.form_spec.elements
+            ]
 
         if self.form_spec.layout.value == MultipleChoiceExtendedLayout.dual_list or (
             self.form_spec.layout.value == MultipleChoiceExtendedLayout.auto and len(elements) > 15
@@ -74,6 +81,9 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                     help=help_text,
                     elements=elements,
                     validators=build_vue_validators(compute_validators(self.form_spec)),
+                    autocompleter=self.form_spec.elements
+                    if isinstance(self.form_spec.elements, shared_type_defs.Autocompleter)
+                    else None,
                     i18n=shared_type_defs.DualListChoiceI18n(
                         add_all=_("Add all >>"),
                         remove_all=_("<< Remove all"),
@@ -84,6 +94,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                         selected=_("Selected"),
                         no_elements_available=_("No elements available"),
                         no_elements_selected=_("No elements selected"),
+                        autocompleter_loading=_("Loading"),
                     ),
                     show_toggle_all=self.form_spec.show_toggle_all,
                 ),

@@ -6,6 +6,7 @@
 """Launches automation helper application for processing automation commands."""
 
 import dataclasses
+import logging
 import os
 from pathlib import Path
 from typing import Final
@@ -17,12 +18,24 @@ from setproctitle import setproctitle
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
 APPLICATION_LOG_DIRECTORY: Final = "automation-helper"
+APPLICATION_LOGGER: Final = "automation-helper"
 APPLICATION_ACCESS_LOG: Final = "access.log"
 APPLICATION_ERROR_LOG: Final = "error.log"
 APPLICATION_PID_FILE: Final = "automation-helper.pid"
 APPLICATION_SOCKET: Final = "unix:tmp/run/automation-helper.sock"
 APPLICATION_WORKER_CLASS: Final = "uvicorn.workers.UvicornWorker"
 APPLICATION_WORKER_COUNT: Final = 2
+
+
+logger = logging.getLogger(APPLICATION_LOGGER)
+
+
+def configure_logger(log_directory: Path) -> None:
+    handler = logging.FileHandler(log_directory / f"{APPLICATION_LOGGER}.log", encoding="UTF-8")
+    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 
 def get_application() -> FastAPI:
@@ -83,6 +96,8 @@ def main() -> int:
 
         run_directory.mkdir(exist_ok=True, parents=True)
         log_directory.mkdir(exist_ok=True, parents=True)
+
+        configure_logger(log_directory)
 
         app = get_application()
 

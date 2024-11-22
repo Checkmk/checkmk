@@ -39,19 +39,19 @@ package_wheel(
 )
 
 pkg_files(
-    name = "rrdtool_perl_findings_files",
+    name = "rrdtool_perl_bindings_files",
     srcs = ["@rrdtool//:perl_bindings_gen_dir"],
     visibility = ["//visibility:public"],
 )
 
 pkg_filegroup(
-    name = "rrdtool_perl_findings_pkg",
+    name = "rrdtool_perl_bindings_pkg",
     srcs = ["@rrdtool//:perl_bindings_gen_dir"],
     visibility = ["//visibility:public"],
 )
 
 pkg_tar(
     name = "rrdtool_perl_bindings",
-    srcs = ["rrdtool_perl_findings_files"],
+    srcs = ["rrdtool_perl_bindings_files"],
     visibility = ["//visibility:public"],
 )

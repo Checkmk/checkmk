@@ -279,7 +279,7 @@ class Channel(Generic[_ModelT]):
 class Connection:
     """Connection to the local message broker
 
-    Instances should be reused, as establishing the connection is comperatively expensive.
+    Instances should be reused, as establishing the connection is comparatively expensive.
     Most of the methods are just wrappers around the corresponding pika methods.
     Feel free to add more methods as needed.
 
@@ -307,15 +307,29 @@ class Connection:
         channel.consume(my_message_handler_callback)
 
     ```
+
+    To name distinguish between different app connections, you can additionally provide a connection
+     name:
+
+    ```python
+
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite"), "my-connection") as conn:
+        ...
+
     """
 
-    def __init__(self, app: AppName, omd_root: Path) -> None:
+    def __init__(self, app: AppName, omd_root: Path, connection_name: str | None = None) -> None:
         """Create a connection for a specific app"""
         self.app: Final = app
         self._omd_root = omd_root
         try:
             self._pconnection = pika.BlockingConnection(
-                make_connection_params(omd_root, "localhost", get_local_port())
+                make_connection_params(
+                    omd_root,
+                    "localhost",
+                    get_local_port(),
+                    connection_name if connection_name else app.value,
+                )
             )
         except AMQPConnectionError as e:
             # pika handles exceptions weirdly. We need repr, in order to see something.
@@ -358,7 +372,9 @@ def check_remote_connection(
     """
 
     try:
-        with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
+        with pika.BlockingConnection(
+            make_connection_params(omd_root, server, port, f"check-connection-from-{omd_root.name}")
+        ):
             return ConnectionOK()
     except AMQPConnectionError as exc:
         return (

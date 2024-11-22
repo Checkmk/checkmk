@@ -141,7 +141,10 @@ def multisite_cert_file(omd_root: Path, site: str) -> Path:
     return base_path.joinpath(f"{site}_cert.pem")
 
 
-def make_connection_params(omd_root: Path, server: str, port: int) -> pika.ConnectionParameters:
+def make_connection_params(
+    omd_root: Path, server: str, port: int, connection_name: str
+) -> pika.ConnectionParameters:
+    client_props: dict[str, str] = {"connection_name": connection_name}
     return pika.ConnectionParameters(
         host=server,
         port=port,
@@ -149,6 +152,7 @@ def make_connection_params(omd_root: Path, server: str, port: int) -> pika.Conne
         credentials=pika.credentials.ExternalCredentials(),
         heartbeat=0,
         blocked_connection_timeout=300,
+        client_properties=client_props,
     )
 
 

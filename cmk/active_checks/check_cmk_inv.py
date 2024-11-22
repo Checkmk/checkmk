@@ -74,9 +74,9 @@ def main(
     completed_process = subprocess.run(cmd, capture_output=True, encoding="utf8", check=False)
 
     if completed_process.stderr:
-        sys.stderr.write(completed_process.stderr + "\n")
+        print(completed_process.stderr, file=sys.stderr)
 
     if completed_process.stdout:
-        sys.stdout.write(completed_process.stdout + "\n")
+        print(completed_process.stdout)
 
     return completed_process.returncode

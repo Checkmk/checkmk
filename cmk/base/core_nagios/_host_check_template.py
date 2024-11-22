@@ -102,8 +102,7 @@ def main() -> int:
         )
     except KeyboardInterrupt:
         with suppress(IOError):
-            sys.stderr.write("<Interrupted>\n")
-            sys.stderr.flush()
+            print("<Interrupted>\n", end="", flush=True, file=sys.stderr)
         return 1
     except Exception as e:
         import traceback

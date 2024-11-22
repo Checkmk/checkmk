@@ -138,8 +138,7 @@ def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
 
 def print_(txt: str) -> None:
     with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
+        print(txt, end="", flush=True, file=sys.stdout)
 
 
 def do_core_action(

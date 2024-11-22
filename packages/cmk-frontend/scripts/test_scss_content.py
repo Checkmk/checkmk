@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-import sys
 import traceback
 from collections.abc import Callable, Iterable
 from pathlib import Path
@@ -97,14 +96,14 @@ def test_hex_color_codes() -> None:
 
 
 def test(function: Callable) -> None:
-    sys.stdout.write(function.__name__ + "\n")
+    print(function.__name__)
     try:
         function()
     except Exception:
-        sys.stdout.write(indent(traceback.format_exc().rstrip("\n"), "  ") + "\n")
-        sys.stdout.write("  FAIL\n")
+        print(indent(traceback.format_exc().rstrip("\n"), "  "))
+        print("  FAIL")
     else:
-        sys.stdout.write("  OK\n")
+        print("  OK")
 
 
 if __name__ == "__main__":

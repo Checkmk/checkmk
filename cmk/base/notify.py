@@ -1812,8 +1812,7 @@ def call_notification_script(
                     output_lines.append(output)
                     if _log_to_stdout:
                         with suppress(IOError):
-                            sys.stdout.write(line)
-                            sys.stdout.flush()
+                            print(line, end="", flush=True, file=sys.stdout)
             except MKTimeout:
                 plugin_log(
                     "Notification plug-in did not finish within %d seconds. Terminating."

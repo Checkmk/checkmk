@@ -871,12 +871,14 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
             cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
             break
         except Exception:  # pylint: disable=broad-exception-caught
-            sys.stdout.write(initial_werk_text + "\n\n")
-            sys.stdout.write(traceback.format_exc() + "\n\n")
-            sys.stdout.write(
+            print(initial_werk_text)
+            print()
+            print(traceback.format_exc())
+            print()
+            print(
                 "Could not load the werk, see exception above.\n"
                 "You may copy the initial werk text above the exception to fix your werk.\n"
-                "Will reopen the editor, after you acknowledged with enter\n"
+                "Will reopen the editor, after you acknowledged with enter"
             )
             input()
 
@@ -1069,7 +1071,7 @@ def main_preview(args: argparse.Namespace) -> None:
             yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
 
     definition_list = "\n".join(meta_data())
-    sys.stdout.write(
+    print(
         f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
         "<head>"
         f"<title>Preview of werk {args.id}</title>"
@@ -1079,7 +1081,7 @@ def main_preview(args: argparse.Namespace) -> None:
         f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
         f"<dl>{definition_list}</dl>"
         "</body>"
-        "</html>\n"
+        "</html>"
     )
 
 

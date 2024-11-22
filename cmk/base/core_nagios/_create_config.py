@@ -125,8 +125,7 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_mode: PrecompileMode,
     ) -> None:
         with suppress(IOError):
-            sys.stdout.write("Precompiling host checks...")
-            sys.stdout.flush()
+            print("Precompiling host checks...", end="", flush=True, file=sys.stdout)
         precompile_hostchecks(
             config_path,
             self._config_cache,
@@ -134,8 +133,7 @@ class NagiosCore(core_config.MonitoringCore):
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):
-            sys.stdout.write(tty.ok + "\n")
-            sys.stdout.flush()
+            print(tty.ok + "\n", end="", flush=True, file=sys.stdout)
 
 
 #   .--Create config-------------------------------------------------------.

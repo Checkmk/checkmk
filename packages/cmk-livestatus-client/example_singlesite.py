@@ -20,22 +20,22 @@ socket_path = "unix:" + omd_root + "/tmp/run/live"
 
 try:
     # Make a single connection for each query
-    sys.stdout.write("\nPerformance:\n")
+    print("\nPerformance:")
     for key, value in (
         livestatus.SingleSiteConnection(socket_path).query_row_assoc("GET status").items()
     ):
-        sys.stdout.write("%-30s: %s\n" % (key, value))
-    sys.stdout.write("\nHosts:\n")
+        print("%-30s: %s" % (key, value))
+    print("\nHosts:")
     hosts = livestatus.SingleSiteConnection(socket_path).query_table(
         "GET hosts\nColumns: name alias address"
     )
     for name, alias, address in hosts:
-        sys.stdout.write("%-16s %-16s %s\n" % (name, address, alias))
+        print("%-16s %-16s %s" % (name, address, alias))
 
     # Do several queries in one connection
     conn = livestatus.SingleSiteConnection(socket_path)
     num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
-    sys.stdout.write("\nHosts up: %d\n" % num_up)
+    print("\nHosts up: %d" % num_up)
 
     stats = conn.query_row(
         "GET services\n"
@@ -44,14 +44,12 @@ try:
         "Stats: state = 2\n"
         "Stats: state = 3\n"
     )
-    sys.stdout.write("Service stats: %d/%d/%d/%d\n" % tuple(stats))
+    print("Service stats: %d/%d/%d/%d" % tuple(stats))
 
-    sys.stdout.write(
-        "List of commands: %s\n" % ", ".join(conn.query_column("GET commands\nColumns: name"))
-    )
+    print("List of commands: %s" % ", ".join(conn.query_column("GET commands\nColumns: name")))
 
-    sys.stdout.write("Query error:\n")
+    print("Query error:")
     conn.query_value("GET hosts\nColumns: hirni")
 
 except Exception as e:  # livestatus.MKLivestatusException, e:
-    sys.stdout.write("Livestatus error: %s\n" % str(e))
+    print("Livestatus error: %s" % str(e))

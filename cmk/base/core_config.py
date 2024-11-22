@@ -278,10 +278,12 @@ def do_create_config(
     and available for starting the monitoring.
     """
     with suppress(IOError):
-        sys.stdout.write(
+        print(
             "Generating configuration for core (type %s)...\n" % core.name(),
+            end="",
+            flush=True,
+            file=sys.stdout,
         )
-        sys.stdout.flush()
 
     try:
         with tracer.start_as_current_span(

@@ -28,6 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.page_menu_entry import enable_page_menu_entry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
@@ -136,6 +137,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         )
 
     def page(self) -> None:
+        enable_page_menu_entry(html, "inline_help")
         html.vue_app(
             app_name="quick_setup",
             data={

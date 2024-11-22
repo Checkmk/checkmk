@@ -13,8 +13,6 @@ from cmk.utils.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
-    AdaptiveMultipleChoice,
-    AdaptiveMultipleChoiceLayout,
     CascadingSingleChoiceExtended,
     CommentTextArea,
     ConditionChoices,
@@ -22,6 +20,8 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
+    MultipleChoiceExtended,
+    MultipleChoiceExtendedLayout,
     not_empty,
     SingleChoiceEditable,
     SingleChoiceElementExtended,
@@ -536,8 +536,8 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     ),
                                 ),
                                 "match_host_groups": DictElement(
-                                    parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Host groups"),
+                                    parameter_form=MultipleChoiceExtended(
+                                        title=Title("Match host groups"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=group_name,
@@ -546,7 +546,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             for group_name in load_host_group_information().keys()
                                         ],
                                         show_toggle_all=True,
-                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                        layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
                                 "match_hosts": DictElement(  # TODO: Waiting on team engelbart
@@ -586,8 +586,8 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             ),
                                         ),
                                         "match_service_groups": DictElement(
-                                            parameter_form=AdaptiveMultipleChoice(
-                                                title=Title("Service groups"),
+                                            parameter_form=MultipleChoiceExtended(
+                                                title=Title("Match service groups"),
                                                 elements=[
                                                     MultipleChoiceElement(
                                                         name=group_name,
@@ -596,11 +596,11 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     for group_name in load_service_group_information().keys()
                                                 ],
                                                 show_toggle_all=True,
-                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                                layout=MultipleChoiceExtendedLayout.dual_list,
                                             ),
                                         ),
                                         "exclude_service_groups": DictElement(
-                                            parameter_form=AdaptiveMultipleChoice(
+                                            parameter_form=MultipleChoiceExtended(
                                                 title=Title("Exclude service groups"),
                                                 elements=[
                                                     MultipleChoiceElement(
@@ -610,7 +610,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     for group_name in load_service_group_information().keys()
                                                 ],
                                                 show_toggle_all=True,
-                                                layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                                layout=MultipleChoiceExtendedLayout.dual_list,
                                             ),
                                         ),
                                         "match_services": DictElement(
@@ -648,7 +648,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                             layout=DictionaryLayout.two_columns,
                             elements={
                                 "contact_groups": DictElement(
-                                    parameter_form=AdaptiveMultipleChoice(
+                                    parameter_form=MultipleChoiceExtended(
                                         title=Title("Contact groups"),
                                         elements=[
                                             MultipleChoiceElement(
@@ -658,7 +658,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             for name, title in sorted_contact_group_choices()
                                         ],
                                         show_toggle_all=True,
-                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                        layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
                                 "users": DictElement(
@@ -748,8 +748,8 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     ),
                                 ),
                                 "sites": DictElement(
-                                    parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Sites"),
+                                    parameter_form=MultipleChoiceExtended(
+                                        title=Title("Match sites"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=name,
@@ -758,13 +758,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             for name, title in get_activation_site_choices()
                                         ],
                                         show_toggle_all=True,
-                                        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                        layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
                                 # TODO disabled until we found a solution to load on demand or faster
                                 # "check_type_plugin": DictElement(
-                                #    parameter_form=AdaptiveMultipleChoice(
-                                #        title=Title("Check types"),
+                                #    parameter_form=MultipleChoiceExtended(
+                                #        title=Title("Match check types"),
                                 #        elements=[
                                 #            MultipleChoiceElement(
                                 #                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
@@ -773,7 +773,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 #            for name, title in _get_check_types()
                                 #        ],
                                 #        show_toggle_all=True,
-                                #        layout=AdaptiveMultipleChoiceLayout.dual_list,
+                                #        layout=MultipleChoiceExtendedLayout.dual_list,
                                 #    ),
                                 # ),
                             },

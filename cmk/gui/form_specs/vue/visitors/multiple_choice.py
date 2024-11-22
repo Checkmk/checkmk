@@ -7,8 +7,8 @@ from collections.abc import Sequence
 from typing import TypeVar
 
 from cmk.gui.form_specs.private.multiple_choice import (
-    AdaptiveMultipleChoice,
-    AdaptiveMultipleChoiceLayout,
+    MultipleChoiceExtended,
+    MultipleChoiceExtendedLayout,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -28,7 +28,7 @@ from cmk.rulesets.v1 import Title
 T = TypeVar("T")
 
 
-class MultipleChoiceVisitor(FormSpecVisitor[AdaptiveMultipleChoice, Sequence[str]]):
+class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str]]):
     def _is_valid_choice(self, value: str) -> bool:
         return value in [x.name for x in self.form_spec.elements]
 
@@ -65,8 +65,8 @@ class MultipleChoiceVisitor(FormSpecVisitor[AdaptiveMultipleChoice, Sequence[str
             for element in self.form_spec.elements
         ]
 
-        if self.form_spec.layout.value == AdaptiveMultipleChoiceLayout.dual_list or (
-            self.form_spec.layout.value == AdaptiveMultipleChoiceLayout.auto and len(elements) > 15
+        if self.form_spec.layout.value == MultipleChoiceExtendedLayout.dual_list or (
+            self.form_spec.layout.value == MultipleChoiceExtendedLayout.auto and len(elements) > 15
         ):
             return (
                 shared_type_defs.DualListChoice(

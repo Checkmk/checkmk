@@ -19,7 +19,10 @@ from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .list_unique_selection import ListUniqueSelection
 from .monitored_host_extended import MonitoredHostExtended
-from .multiple_choice import AdaptiveMultipleChoice, AdaptiveMultipleChoiceLayout
+from .multiple_choice import (
+    MultipleChoiceExtended,
+    MultipleChoiceExtendedLayout,
+)
 from .optional_choice import OptionalChoice
 from .single_choice_editable import SingleChoiceEditable
 from .string_autocompleter import StringAutocompleter
@@ -37,6 +40,7 @@ __all__ = [
     "ListExtended",
     "ListUniqueSelection",
     "ListOfStrings",
+    "MultipleChoiceExtended",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
     "SingleChoiceEditable",
@@ -44,8 +48,8 @@ __all__ = [
     "OptionalChoice",
     "UnknownFormSpec",
     "not_empty",
-    "AdaptiveMultipleChoice",
-    "AdaptiveMultipleChoiceLayout",
+    "MultipleChoiceExtended",
+    "MultipleChoiceExtendedLayout",
     "MonitoredHostExtended",
     "Labels",
 ]

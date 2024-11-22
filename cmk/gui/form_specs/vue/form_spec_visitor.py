@@ -21,7 +21,6 @@ from cmk.gui.form_specs.converter import (
     Tuple,
 )
 from cmk.gui.form_specs.private import (
-    AdaptiveMultipleChoice,
     CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
@@ -33,6 +32,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
+    MultipleChoiceExtended,
     OptionalChoice,
     SingleChoiceEditable,
     SingleChoiceExtended,
@@ -165,7 +165,7 @@ def register_form_specs():
     register_visitor_class(StringAutocompleter, StringVisitor)
     register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
-    register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
+    register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
     register_visitor_class(Folder, FolderVisitor)
     register_visitor_class(Labels, LabelsVisitor)
 

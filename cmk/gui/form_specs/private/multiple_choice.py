@@ -6,16 +6,16 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from cmk.rulesets.v1.form_specs._composed import MultipleChoice
+from cmk.rulesets.v1.form_specs import MultipleChoice
 
 
 @dataclass(frozen=True, kw_only=True)
-class AdaptiveMultipleChoiceLayout(str, Enum):
+class MultipleChoiceExtendedLayout(str, Enum):
     auto = "auto"
     dual_list = "dual_list"
     checkbox_list = "checkbox_list"
 
 
 @dataclass(frozen=True, kw_only=True)
-class AdaptiveMultipleChoice(MultipleChoice):
-    layout: AdaptiveMultipleChoiceLayout = AdaptiveMultipleChoiceLayout.auto
+class MultipleChoiceExtended(MultipleChoice):
+    layout: MultipleChoiceExtendedLayout = MultipleChoiceExtendedLayout.auto

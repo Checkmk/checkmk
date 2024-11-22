@@ -37,6 +37,7 @@ export type Components =
   | Folder
   | ConditionChoices
   | Labels
+  | FileUpload
   | TimeSpecific;
 export type Integer = FormSpec & {
   type: "integer";
@@ -220,6 +221,10 @@ export type Labels = FormSpec & {
   max_labels: number;
   label_source?: "explicit" | "ruleset" | "discovered";
 };
+export type FileUpload = FormSpec & {
+  type: "file_upload";
+  i18n: FileUploadI18N;
+};
 export type TimeSpecific = FormSpec & {
   type: "time_specific";
   time_specific_values_key: "tp_values";
@@ -368,6 +373,9 @@ export interface LabelsI18N {
   key_value_format_error: string;
   uniqueness_error: string;
   max_labels_reached: string;
+}
+export interface FileUploadI18N {
+  replace_file: string;
 }
 export interface TimeSpecificI18N {
   enable: string;

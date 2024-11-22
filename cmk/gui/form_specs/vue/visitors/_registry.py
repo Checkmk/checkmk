@@ -10,7 +10,6 @@ from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.rulesets.v1.form_specs._base import ModelT
 
 RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_spec_visitor_registry: dict[
@@ -21,20 +20,20 @@ form_spec_recomposer_registry: dict[type[FormSpec[Any]], RecomposerFunction] = {
 
 
 def register_visitor_class(
-    form_spec_class: type[FormSpec[ModelT]], visitor_class: type[FormSpecVisitor[Any, ModelT]]
+    form_spec_class: type[FormSpec[Any]], visitor_class: type[FormSpecVisitor[Any, Any]]
 ) -> None:
     form_spec_visitor_registry[form_spec_class] = visitor_class
 
 
 def register_recomposer_function(
-    form_spec_class: type[FormSpec[ModelT]], recomposer_function: RecomposerFunction
+    form_spec_class: type[FormSpec[Any]], recomposer_function: RecomposerFunction
 ) -> None:
     form_spec_recomposer_registry[form_spec_class] = recomposer_function
 
 
 def get_visitor(
-    form_spec: FormSpec[ModelT], options: VisitorOptions
-) -> FormSpecVisitor[FormSpec[ModelT], ModelT]:
+    form_spec: FormSpec[Any], options: VisitorOptions
+) -> FormSpecVisitor[FormSpec[Any], Any]:
     if recompose_function := form_spec_recomposer_registry.get(form_spec.__class__):
         return get_visitor(recompose_function(form_spec), options)
 

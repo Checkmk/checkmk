@@ -118,6 +118,11 @@ class CascadingSingleChoiceLayout(str, Enum):
 
 
 @dataclass(kw_only=True)
+class FileUploadI18n:
+    replace_file: str
+
+
+@dataclass(kw_only=True)
 class CommentTextAreaI18n:
     prefix_date_and_comment: str
 
@@ -376,6 +381,12 @@ class CascadingSingleChoice(FormSpec):
 
 
 @dataclass(kw_only=True)
+class FileUpload(FormSpec):
+    i18n: FileUploadI18n
+    type: str = "file_upload"
+
+
+@dataclass(kw_only=True)
 class FixedValue(FormSpec):
     label: Optional[str]
     value: Any
@@ -544,6 +555,7 @@ Components = Union[
     Folder,
     ConditionChoices,
     Labels,
+    FileUpload,
     TimeSpecific,
 ]
 

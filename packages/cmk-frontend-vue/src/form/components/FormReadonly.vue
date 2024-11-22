@@ -29,7 +29,8 @@ import type {
   ConditionChoices,
   ConditionChoicesValue,
   ConditionGroup,
-  TimeSpecific
+  TimeSpecific,
+  FileUpload
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -104,12 +105,18 @@ function renderForm(
       return renderLabels(formSpec as Labels, value as Record<string, string>)
     case 'time_specific':
       return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
+    case 'file_upload':
+      return renderFileUpload(formSpec as FileUpload, value as [string, string, string])
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
 
 function renderSimplePassword(): VNode {
   return h('div', ['******'])
+}
+
+function renderFileUpload(_formSpec: FileUpload, value: [string, string, string]): VNode {
+  return h('div', [value[0]])
 }
 
 function renderOptionalChoice(

@@ -612,6 +612,31 @@
                 }
             ]
         },
+        "file_upload": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "file_upload",
+                    "default": "file_upload"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "file_upload_i18n",
+                    "properties": {
+                        "replace_file": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["replace_file"]
+                }
+            },
+            "required": ["type", "i18n"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "fixed_value": {
             "type": "object",
             "allOf": [
@@ -1405,6 +1430,9 @@
                 },
                 {
                     "$ref": "#/$defs/labels"
+                },
+                {
+                    "$ref": "#/$defs/file_upload"
                 },
                 {
                     "$ref": "#/$defs/time_specific"

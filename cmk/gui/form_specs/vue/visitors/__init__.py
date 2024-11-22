@@ -11,6 +11,7 @@ from .comment_text_area import CommentTextAreaVisitor
 from .condition_choices import ConditionChoicesVisitor
 from .data_size import DataSizeVisitor
 from .dictionary import DictionaryVisitor
+from .file_upload import FileUploadVisitor
 from .fixed_value import FixedValueVisitor
 from .float import FloatVisitor
 from .folder import FolderVisitor
@@ -45,6 +46,7 @@ __all__ = [
     "CatalogVisitor",
     "DataSizeVisitor",
     "DictionaryVisitor",
+    "FileUploadVisitor",
     "FixedValueVisitor",
     "FloatVisitor",
     "FolderVisitor",

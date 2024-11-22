@@ -66,6 +66,7 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     DataSize,
     Dictionary,
+    FileUpload,
     FixedValue,
     Float,
     FormSpec,
@@ -99,6 +100,7 @@ from .visitors import (
     CommentTextAreaVisitor,
     DataSizeVisitor,
     DictionaryVisitor,
+    FileUploadVisitor,
     FixedValueVisitor,
     FloatVisitor,
     FolderVisitor,
@@ -171,6 +173,7 @@ def register_form_specs():
     register_visitor_class(Folder, FolderVisitor)
     register_visitor_class(Labels, LabelsVisitor)
     register_visitor_class(TimeSpecific, TimeSpecificVisitor)
+    register_visitor_class(FileUpload, FileUploadVisitor)
 
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)

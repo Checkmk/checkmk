@@ -41,8 +41,9 @@ const magnitudeOptions = computed(() => {
     :id="componentId"
     v-model="value[0]"
     :placeholder="spec.input_hint || ''"
-    class="number"
-    type="text"
+    class="number no-spinner"
+    step="any"
+    type="number"
   />
   <CmkDropdown
     v-model:selected-option="value[1]"
@@ -51,3 +52,19 @@ const magnitudeOptions = computed(() => {
   />
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input.number {
+  width: 5.8ex;
+}
+
+.no-spinner[type='number'] {
+  -moz-appearance: textfield;
+}
+</style>

@@ -140,7 +140,7 @@ def test_no_errors_on_combined_graphs_page(
     combined_graphs_service_search_page = CombinedGraphsServiceSearch(
         service_search_page.page, navigate_to_page=False
     )
-    combined_graphs_service_search_page.check_no_errors(timeout=5000)
+    combined_graphs_service_search_page.check_no_errors()
     # TODO: uncomment this after fixing CMK-19580
     # broken_graphs_count = combined_graphs_service_search_page.broken_graph.count()
     # assert (

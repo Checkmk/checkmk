@@ -85,7 +85,7 @@ def test_host_dashboard(
     not_empty_dashboards = dashlets_expected_row_count.keys()
     hosts_dashboard_page = dashboard_class(dashboard_page.page)
 
-    hosts_dashboard_page.check_no_errors(timeout=5000)
+    hosts_dashboard_page.check_no_errors()
 
     # Can be moved down after CMK-18863 is fixed
     logger.info("Check that scatterplots are visible on dashlets")

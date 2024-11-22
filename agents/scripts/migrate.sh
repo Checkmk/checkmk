@@ -23,7 +23,7 @@ migrate_runtime_dir() {
     new_runtime_dir="$2"
 
     [ -e "${old_runtime_dir}" ] && [ -e "${new_runtime_dir}" ] && [ "${old_runtime_dir}" != "${new_runtime_dir}" ] && {
-        printf "Found runtime directory from previous agent installation at %s, migrating all runtime files to %s" "${old_runtime_dir}" "${new_runtime_dir}"
+        printf "Found runtime directory from previous agent installation at %s, migrating all runtime files to %s\n" "${old_runtime_dir}" "${new_runtime_dir}"
         mv -f "${old_runtime_dir}"/* "${new_runtime_dir}"
         rm -r "${old_runtime_dir}"
     }

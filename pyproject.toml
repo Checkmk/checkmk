@@ -4,7 +4,7 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "C90", "PL", "UP"]
+select = ["A", "ARG", "E", "F", "W", "C90", "PL", "RUF100", "UP", "SLF"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
@@ -47,6 +47,11 @@ ignore = [
   "UP040", # Type alias `FOO` uses `TypeAlias` annotation instead of the `type` keyword
   "UP041", # Replace aliased errors with `TimeoutError`
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Explicit re-exports is fine in __init__.py, still a code smell elsewhere.
+"__init__.py" = ["PLC0414"]
+"packages/cmk-agent-based/cmk/*" = ["PLR2004"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

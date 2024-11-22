@@ -6,13 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import ConditionalNotificationStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationStageWidget.vue'
 import type { CompositeWidgetProps } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+import { inject } from 'vue'
+import { formDataKey } from '@/quick-setup/keys.ts'
+import { showConditionalNotificationStageWidget } from '@/quick-setup/components/quick-setup/widgets/conditional_widget_utils.ts'
 
 const props = defineProps<CompositeWidgetProps>()
+
+const formData = inject(formDataKey)
 </script>
 
 <template>
   <ConditionalNotificationStageWidget
-    condition-key="service_events"
+    :condition="showConditionalNotificationStageWidget(formData, 'service_events')"
     :items="props.items"
     :data="props?.data || {}"
     :errors="props.errors || {}"

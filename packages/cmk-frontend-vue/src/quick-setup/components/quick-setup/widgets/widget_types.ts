@@ -77,7 +77,7 @@ export interface CollapsibleWidgetProps extends CompositeWidgetProps {
  *  solution which exactly covers the three use cases we have in the notification quick setup.
  *  A more generic approach has been rejected, but may be considered in the future. */
 export interface ConditionalNotificationStageWidgetProps extends CompositeWidgetProps {
-  conditionKey: string
+  condition: boolean
 }
 
 type SingleWidgetSpec =

@@ -24,27 +24,29 @@ const { buttonPadding = '16px', ...props } = defineProps<{
   <div class="cmk_list__element">
     <div
       :class="{
-        cmk_list__buttons: true,
+        cmk_list__button_container: true,
         first: props.style === 'first',
         last: props.style === 'last'
       }"
     >
-      <template v-if="draggable!!">
-        <CmkButton
-          variant="transparent"
-          aria-label="Drag to reorder"
-          :draggable="true"
-          @dragstart="draggable?.dragStart"
-          @drag="draggable?.dragging"
-          @dragend="draggable?.dragEnd"
-        >
-          <CmkIcon name="drag" size="small" style="pointer-events: none" />
+      <div class="cmk_list__buttons">
+        <template v-if="draggable!!">
+          <CmkButton
+            variant="transparent"
+            aria-label="Drag to reorder"
+            :draggable="true"
+            @dragstart="draggable?.dragStart"
+            @drag="draggable?.dragging"
+            @dragend="draggable?.dragEnd"
+          >
+            <CmkIcon name="drag" size="small" style="pointer-events: none" />
+          </CmkButton>
+          <CmkSpace direction="horizontal" />
+        </template>
+        <CmkButton variant="transparent" @click.prevent="() => removeElement()">
+          <CmkIcon name="close" size="small" />
         </CmkButton>
-        <CmkSpace direction="vertical" />
-      </template>
-      <CmkButton variant="transparent" @click.prevent="() => removeElement()">
-        <CmkIcon name="close" size="small" />
-      </CmkButton>
+      </div>
     </div>
     <div
       :class="{
@@ -62,11 +64,15 @@ const { buttonPadding = '16px', ...props } = defineProps<{
 .cmk_list__element {
   --button-padding-top: 4px;
 
-  .cmk_list__buttons,
+  .cmk_list__button_container,
   .cmk_list__content {
     display: inline-block;
     vertical-align: top;
     padding: var(--spacing) 0;
+
+    .cmk_list__buttons {
+      display: flex;
+    }
   }
 
   .cmk_list__content {
@@ -74,12 +80,7 @@ const { buttonPadding = '16px', ...props } = defineProps<{
     padding-left: v-bind(buttonPadding);
   }
 
-  .cmk_list__buttons {
-    display: flex;
-    gap: 2px;
-  }
-
-  .cmk_list__buttons.first {
+  .cmk_list__button_container.first {
     padding-top: var(--button-padding-top);
   }
 
@@ -87,12 +88,9 @@ const { buttonPadding = '16px', ...props } = defineProps<{
     padding-top: 0;
   }
 
-  .cmk_list__buttons.last,
+  .cmk_list__button_container.last,
   .cmk_list__content.last {
     padding-bottom: 0;
   }
-}
-.cmk_list__buttons > * {
-  display: flex;
 }
 </style>

@@ -2587,9 +2587,6 @@ msgstr "Certificats ACME"
 msgid "ACTIVE"
 msgstr "ACTIF"
 
-msgid "AD Connect Sync"
-msgstr "AD Connect Sync"
-
 msgid "ADMIN"
 msgstr ""
 
@@ -3331,12 +3328,6 @@ msgstr "Accusé de réception expire :"
 msgid "Acknowledgments: "
 msgstr "Remerciements : "
 
-msgid ""
-"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
-"project, note down the Project ID either from the dashboard or project "
-"settings, and use it below."
-msgstr ""
-
 msgid "Act."
 msgstr "Agir."
 
@@ -3373,11 +3364,6 @@ msgstr "Actions en cas d'annulation"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Activer (désactivé : prendre en compte toutes les alertes)"
-
-msgid ""
-"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
-"necessary, and wait for it to become accessible."
-msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Activer le planificateur de changements"
@@ -3514,10 +3500,6 @@ msgid "Activating"
 msgstr "Activation de"
 
 msgid "Activation"
-msgstr "Activation"
-
-#, fuzzy, python-format
-msgid "Activation (%s)"
 msgstr "Activation"
 
 #, python-format
@@ -7150,11 +7132,6 @@ msgid ""
 "(not email)."
 msgstr ""
 
-msgid ""
-"Assign permissions to the app: Grant necessary access rights, assigning the "
-"\"Reader\" role."
-msgstr ""
-
 #, fuzzy
 msgid "Assign plan/test result to piggyback host"
 msgstr "Traduction du nom d'hôte pour les hôtes en ferroutage"
@@ -7174,6 +7151,14 @@ msgstr ""
 
 msgid "Assign services to the following cluster:"
 msgstr "Affectez les services au cluster suivant :"
+
+msgid ""
+"Assign the built-in role \"Reader\" to the app in the Access control (IAM). "
+"Additionally add the application permissions \"Directory.Read.All\" and "
+"\"User.Read.All\" to the app if resources available through the Graph API "
+"will be monitored. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", \"App Registrations\"."
+msgstr ""
 
 msgid "Assign this object to a specific customer."
 msgstr "Affecter cet objet à un client spécifique."
@@ -8869,10 +8854,6 @@ msgstr "Port backend"
 
 msgid "Backends"
 msgstr "Backends"
-
-#, python-format
-msgid "Background Job %s already running"
-msgstr "Background Job %s déjà en cours d'exécution"
 
 msgid "Background in status color and label"
 msgstr "Fond d'écran en couleur d'état et étiquette"
@@ -15573,11 +15554,19 @@ msgid "Create SLA"
 msgstr "Créer un SLA"
 
 msgid ""
+"Create a Service Account in \"IAM & Admin\" and assign the roles "
+"\"Monitoring Viewer\" and \"Cloud Asset Viewer\" to this account."
+msgstr ""
+
+msgid ""
 "Create a child node for each service on the specified hosts that is not "
 "contained in any other node of the aggregation."
 msgstr ""
 "Créer un noeud enfant pour chaque service sur les hôtes spécifiés qui n'est "
 "pas contenu dans un autre noeud de l'agrégation."
+
+msgid "Create a client secret for the app and note it down."
+msgstr ""
 
 msgid "Create a copy"
 msgstr "Créer une copie"
@@ -15609,6 +15598,11 @@ msgstr "Créer une copie de cet utilisateur"
 
 msgid "Create a new event for each incident - never merge"
 msgstr "Créer un nouvel événement pour chaque incident - ne jamais fusionner"
+
+msgid ""
+"Create a new key in json format for the service account and download the "
+"created file."
+msgstr ""
 
 msgid "Create a notification"
 msgstr "Créer une notification"
@@ -15683,11 +15677,6 @@ msgstr "Créer un service supplémentaire pour les demandes de statistiques IO"
 msgid "Create additional service for system wait"
 msgstr "Créer un service supplémentaire pour le système d'attente"
 
-msgid ""
-"Create an Azure app for Checkmk: Register the app in Azure Active Directory "
-"and note down the Application ID."
-msgstr ""
-
 msgid "Create an annotation for this period"
 msgstr "Créer une annotation pour cette période"
 
@@ -15733,12 +15722,6 @@ msgstr "Créer des hôtes"
 
 msgid "Create hosts in"
 msgstr "Créer des hôtes dans"
-
-msgid ""
-"Create key: Generate a key for the service account to access monitoring and "
-"asset data, ensuring it's in JSON format. Copy JSON object including the "
-"curly brackets and store to use it below."
-msgstr ""
 
 #, python-format
 msgid "Create new %s"
@@ -15848,12 +15831,6 @@ msgstr "Créez les groupes d'interface suivants"
 
 msgid "Create topic"
 msgstr "Créer un sujet"
-
-msgid ""
-"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
-"service account with a descriptive name, assign roles (Monitoring Viewer and "
-"Cloud Asset Viewer), and finalize the creation."
-msgstr ""
 
 msgid "Create users only on login"
 msgstr "Créer des utilisateurs uniquement à la connexion"
@@ -16784,10 +16761,6 @@ msgstr "Match"
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Phase 1.1 : Récupération du site \"%s\""
-
-#, fuzzy
-msgid "DCD Work State"
-msgstr "pire état"
 
 #, fuzzy
 msgid "DCD batch history"
@@ -19496,10 +19469,6 @@ msgid "Discovered service labels"
 msgstr "Afficher les étiquettes de service découvertes"
 
 msgid "Discovery"
-msgstr "Découverte"
-
-#, fuzzy, python-format
-msgid "Discovery (%s)"
 msgstr "Découverte"
 
 msgid "Discovery Output"
@@ -22819,6 +22788,10 @@ msgstr "ID de l'entité"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr "Niveau d'entité utilisé pour créer des hôtes Checkmk piggyback"
+
+#, fuzzy
+msgid "Entra Connect Sync"
+msgstr "AD Connect Sync"
 
 msgid "Entries"
 msgstr "Entrées"
@@ -26238,11 +26211,6 @@ msgstr "Générer"
 #, fuzzy
 msgid "Generate REST API specification"
 msgstr "Spécification SLA"
-
-msgid ""
-"Generate a key for the app: Create a Secret key in the app settings and note "
-"it down."
-msgstr ""
 
 #, fuzzy
 msgid "Generate backup codes"
@@ -33973,10 +33941,6 @@ msgstr "Expansion initiale des agrégations"
 msgid "Initial scheduling"
 msgstr "Programmation initiale"
 
-#, fuzzy
-msgid "Initialized"
-msgstr "Initialisation de"
-
 msgid "Initialized GIT for Checkmk"
 msgstr "Initialisation de GIT pour Checkmk"
 
@@ -37901,6 +37865,11 @@ msgstr "Fichiers journaux de l'hôte %s"
 
 msgid "Log hits for rules in log of Event Console"
 msgstr "Les occurrences des règles dans le journal de la console d'événements"
+
+msgid ""
+"Log in to the Google Cloud Console, select the project to monitor and note "
+"down the Project ID either from the dashboard or project settings."
+msgstr ""
 
 msgid "Log latency"
 msgstr "Latence des journaux"
@@ -50473,10 +50442,6 @@ msgstr "Processus"
 msgid "Processes performance data"
 msgstr "Traite les données de performance"
 
-#, fuzzy, python-format
-msgid "Processing (%s)"
-msgstr "Traitement du premier site %s"
-
 #, python-format
 msgid "Processing first site %s"
 msgstr "Traitement du premier site %s"
@@ -51949,6 +51914,11 @@ msgstr ""
 "n'êtes pas un contact pour l'hôte en question. Veuillez noter que ces agents "
 "peuvent contenir des informations confidentielles telles que des mots de "
 "passe."
+
+msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID, "
+"Application (client) ID as well as the used Subscription ID."
+msgstr ""
 
 msgid "Register an authentication device before generating backup codes."
 msgstr ""
@@ -53543,11 +53513,6 @@ msgstr ""
 "Récupérer des informations sur les processus à l'aide de WMI (Windows "
 "Management Instrumentation)"
 
-msgid ""
-"Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, "
-"and the Client secret from Azure."
-msgstr ""
-
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -53598,13 +53563,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique Azure account name, and use the  "
-"Subscription ID, Tenant ID, Client ID, and the Client secret below."
+"Return to Checkmk, define a unique configuration name, and use the Project "
+"ID as well as the raw output of the JSON file for the key below."
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
-"and JSON object below."
+"Return to Checkmk, define a unique configuration name, and use the "
+"Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
+"note that the Subscription ID is not needed if only monitoring resources "
+"through the Graph API."
 msgstr ""
 
 msgid ""
@@ -79128,8 +79095,9 @@ msgstr ""
 "Les utilisateurs ne peuvent se connecter qu'à partir d'un seul client à la "
 "fois"
 
-msgid "Users in the Active Directory"
-msgstr "Utilisateurs dans l'Active Directory"
+#, fuzzy
+msgid "Users in Entra ID"
+msgstr "Interface utilisateur"
 
 msgid "Users listed here are still allowed to modify things."
 msgstr ""
@@ -80213,6 +80181,11 @@ msgstr "Vérifier la réponse"
 msgid "Verify server certificate"
 msgstr "Vérifier le certificat du serveur"
 
+msgid ""
+"Verify that the \"Cloud Asset API\" on \"APIs & Serivces\" is activated. It "
+"may take some minutes until the API is accessible."
+msgstr ""
+
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr ""
 "Vérifier le certificat du serveur Livestatus en utilisant l'AC du site local"
@@ -80743,10 +80716,6 @@ msgid "Wait until the other has finished"
 msgstr "Attendez que l'autre ait terminé"
 
 msgid "Waiting"
-msgstr "Attente"
-
-#, fuzzy, python-format
-msgid "Waiting (%s)"
 msgstr "Attente"
 
 msgid "Waiting connections"
@@ -87457,6 +87426,37 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy, python-format
+#~ msgid "Activation (%s)"
+#~ msgstr "Activation"
+
+#, python-format
+#~ msgid "Background Job %s already running"
+#~ msgstr "Background Job %s déjà en cours d'exécution"
+
+#, fuzzy
+#~ msgid "DCD Work State"
+#~ msgstr "pire état"
+
+#, fuzzy, python-format
+#~ msgid "Discovery (%s)"
+#~ msgstr "Découverte"
+
+#, fuzzy
+#~ msgid "Initialized"
+#~ msgstr "Initialisation de"
+
+#, fuzzy, python-format
+#~ msgid "Processing (%s)"
+#~ msgstr "Traitement du premier site %s"
+
+#~ msgid "Users in the Active Directory"
+#~ msgstr "Utilisateurs dans l'Active Directory"
+
+#, fuzzy, python-format
+#~ msgid "Waiting (%s)"
+#~ msgstr "Attente"
 
 #, python-format
 #~ msgid "Another host renaming job is already running: %s"

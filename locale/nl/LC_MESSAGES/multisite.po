@@ -2539,9 +2539,6 @@ msgstr "ACME-certificaten"
 msgid "ACTIVE"
 msgstr "ACTIEF"
 
-msgid "AD Connect Sync"
-msgstr "AD Connect Sync"
-
 msgid "ADMIN"
 msgstr ""
 
@@ -3289,12 +3286,6 @@ msgstr "Erken problemen"
 msgid "Acknowledgments: "
 msgstr "Erkenning"
 
-msgid ""
-"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
-"project, note down the Project ID either from the dashboard or project "
-"settings, and use it below."
-msgstr ""
-
 msgid "Act."
 msgstr "Act."
 
@@ -3335,11 +3326,6 @@ msgstr "Acties bij annulering"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Activeren (uit: alle waarschuwingen in aanmerking nemen)"
-
-msgid ""
-"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
-"necessary, and wait for it to become accessible."
-msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Activeer Wijzigingen Planner"
@@ -3473,10 +3459,6 @@ msgid "Activating"
 msgstr "Activeren"
 
 msgid "Activation"
-msgstr "Activering"
-
-#, fuzzy, python-format
-msgid "Activation (%s)"
 msgstr "Activering"
 
 #, python-format
@@ -7085,11 +7067,6 @@ msgid ""
 "(not email)."
 msgstr ""
 
-msgid ""
-"Assign permissions to the app: Grant necessary access rights, assigning the "
-"\"Reader\" role."
-msgstr ""
-
 #, fuzzy
 msgid "Assign plan/test result to piggyback host"
 msgstr "Hostname vertaling voor piggybacked hosts"
@@ -7109,6 +7086,14 @@ msgstr ""
 
 msgid "Assign services to the following cluster:"
 msgstr "Wijs diensten toe aan het volgende cluster:"
+
+msgid ""
+"Assign the built-in role \"Reader\" to the app in the Access control (IAM). "
+"Additionally add the application permissions \"Directory.Read.All\" and "
+"\"User.Read.All\" to the app if resources available through the Graph API "
+"will be monitored. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", \"App Registrations\"."
+msgstr ""
 
 msgid "Assign this object to a specific customer."
 msgstr "Wijs dit object toe aan een specifieke klant."
@@ -8802,10 +8787,6 @@ msgstr "Achterpoort"
 
 msgid "Backends"
 msgstr "Backends"
-
-#, python-format
-msgid "Background Job %s already running"
-msgstr "Achtergrond opdracht %s loopt al"
 
 msgid "Background in status color and label"
 msgstr "Achtergrond in statuskleur en label"
@@ -15452,11 +15433,19 @@ msgid "Create SLA"
 msgstr "Maak SLA"
 
 msgid ""
+"Create a Service Account in \"IAM & Admin\" and assign the roles "
+"\"Monitoring Viewer\" and \"Cloud Asset Viewer\" to this account."
+msgstr ""
+
+msgid ""
 "Create a child node for each service on the specified hosts that is not "
 "contained in any other node of the aggregation."
 msgstr ""
 "Creëer een kindnode voor elke dienst op de gespecificeerde hosts die niet in "
 "een andere node van de aggregatie zit."
+
+msgid "Create a client secret for the app and note it down."
+msgstr ""
 
 msgid "Create a copy"
 msgstr "Maak een kopie"
@@ -15488,6 +15477,11 @@ msgstr "Maak een kopie van deze gebruiker"
 
 msgid "Create a new event for each incident - never merge"
 msgstr "Maak een nieuwe gebeurtenis voor elk incident - nooit samenvoegen"
+
+msgid ""
+"Create a new key in json format for the service account and download the "
+"created file."
+msgstr ""
 
 msgid "Create a notification"
 msgstr "Maak een melding"
@@ -15560,11 +15554,6 @@ msgstr "Maak een extra dienst voor IO Stats Verzoeken"
 msgid "Create additional service for system wait"
 msgstr "Creëer extra dienst voor Systeem Wacht"
 
-msgid ""
-"Create an Azure app for Checkmk: Register the app in Azure Active Directory "
-"and note down the Application ID."
-msgstr ""
-
 msgid "Create an annotation for this period"
 msgstr "Maak een annotatie voor deze periode"
 
@@ -15610,12 +15599,6 @@ msgstr "Maak hosts"
 
 msgid "Create hosts in"
 msgstr "Maak hosts in"
-
-msgid ""
-"Create key: Generate a key for the service account to access monitoring and "
-"asset data, ensuring it's in JSON format. Copy JSON object including the "
-"curly brackets and store to use it below."
-msgstr ""
 
 #, python-format
 msgid "Create new %s"
@@ -15723,12 +15706,6 @@ msgstr "Maak de volgende interface groepen"
 
 msgid "Create topic"
 msgstr "Onderwerp maken"
-
-msgid ""
-"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
-"service account with a descriptive name, assign roles (Monitoring Viewer and "
-"Cloud Asset Viewer), and finalize the creation."
-msgstr ""
 
 msgid "Create users only on login"
 msgstr "Gebruikers alleen aanmaken bij inloggen"
@@ -16644,10 +16621,6 @@ msgstr "Wedstrijd"
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Fase 1.1: Afhalen van site \"%s\""
-
-#, fuzzy
-msgid "DCD Work State"
-msgstr "ergste staat"
 
 #, fuzzy
 msgid "DCD batch history"
@@ -19344,10 +19317,6 @@ msgid "Discovered service labels"
 msgstr "Ontdekte service labels tonen"
 
 msgid "Discovery"
-msgstr "Ontdekking"
-
-#, fuzzy, python-format
-msgid "Discovery (%s)"
 msgstr "Ontdekking"
 
 msgid "Discovery Output"
@@ -22620,6 +22589,10 @@ msgstr "Entiteit ID"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr "Entiteitsniveau gebruikt om Checkmk piggyback hosts te creëren"
+
+#, fuzzy
+msgid "Entra Connect Sync"
+msgstr "AD Connect Sync"
 
 msgid "Entries"
 msgstr "Inzendingen"
@@ -26014,11 +25987,6 @@ msgstr "Genereer"
 #, fuzzy
 msgid "Generate REST API specification"
 msgstr "SLA-specificatie"
-
-msgid ""
-"Generate a key for the app: Create a Secret key in the app settings and note "
-"it down."
-msgstr ""
 
 #, fuzzy
 msgid "Generate backup codes"
@@ -33659,10 +33627,6 @@ msgstr "Aanvankelijke uitbreiding van aggregaties"
 msgid "Initial scheduling"
 msgstr "Initiële planning"
 
-#, fuzzy
-msgid "Initialized"
-msgstr "Initialiseren"
-
 msgid "Initialized GIT for Checkmk"
 msgstr "Geïnitialiseerde GIT voor Checkmk"
 
@@ -37571,6 +37535,11 @@ msgstr "Logbestanden van host %s"
 
 msgid "Log hits for rules in log of Event Console"
 msgstr "Log treffers voor regels in log van Event Console"
+
+msgid ""
+"Log in to the Google Cloud Console, select the project to monitor and note "
+"down the Project ID either from the dashboard or project settings."
+msgstr ""
 
 msgid "Log latency"
 msgstr "Log vertraging"
@@ -50026,10 +49995,6 @@ msgstr "Processen"
 msgid "Processes performance data"
 msgstr "Verwerkt prestatiegegevens"
 
-#, fuzzy, python-format
-msgid "Processing (%s)"
-msgstr "Verwerking eerste site %s"
-
 #, python-format
 msgid "Processing first site %s"
 msgstr "Verwerking eerste site %s"
@@ -51497,6 +51462,11 @@ msgstr ""
 "die zijn aangemaakt bij de agent bakery, zelfs als u geen contactpersoon "
 "bent voor de host in kwestie. Houd er rekening mee dat deze agents "
 "vertrouwelijke informatie zoals wachtwoorden kunnen bevatten."
+
+msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID, "
+"Application (client) ID as well as the used Subscription ID."
+msgstr ""
 
 msgid "Register an authentication device before generating backup codes."
 msgstr ""
@@ -53051,11 +53021,6 @@ msgid ""
 "Retrieve process information using WMI (Windows Management Instrumentation)"
 msgstr "Procesinformatie opvragen met WMI (Windows Management Instrumentation)"
 
-msgid ""
-"Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, "
-"and the Client secret from Azure."
-msgstr ""
-
 msgid "Retry"
 msgstr "Opnieuw proberen"
 
@@ -53106,13 +53071,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique Azure account name, and use the  "
-"Subscription ID, Tenant ID, Client ID, and the Client secret below."
+"Return to Checkmk, define a unique configuration name, and use the Project "
+"ID as well as the raw output of the JSON file for the key below."
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
-"and JSON object below."
+"Return to Checkmk, define a unique configuration name, and use the "
+"Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
+"note that the Subscription ID is not needed if only monitoring resources "
+"through the Graph API."
 msgstr ""
 
 msgid ""
@@ -78353,8 +78320,9 @@ msgstr ""
 msgid "Users can only login from one client at a time"
 msgstr "Gebruikers kunnen slechts vanaf één client tegelijk inloggen"
 
-msgid "Users in the Active Directory"
-msgstr "Gebruikers in de Active Directory"
+#, fuzzy
+msgid "Users in Entra ID"
+msgstr "Gebruikersinterface"
 
 msgid "Users listed here are still allowed to modify things."
 msgstr "Gebruikers die hier staan, mogen nog steeds dingen wijzigen."
@@ -79428,6 +79396,11 @@ msgstr "Antwoord verifiëren"
 msgid "Verify server certificate"
 msgstr "Verifieer server certificaat"
 
+msgid ""
+"Verify that the \"Cloud Asset API\" on \"APIs & Serivces\" is activated. It "
+"may take some minutes until the API is accessible."
+msgstr ""
+
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr ""
 "Verifieer het Livestatus server certificaat met behulp van de lokale site CA"
@@ -79954,10 +79927,6 @@ msgid "Wait until the other has finished"
 msgstr "Wacht tot de ander klaar is"
 
 msgid "Waiting"
-msgstr "Waiting"
-
-#, fuzzy, python-format
-msgid "Waiting (%s)"
 msgstr "Waiting"
 
 msgid "Waiting connections"
@@ -86590,6 +86559,37 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy, python-format
+#~ msgid "Activation (%s)"
+#~ msgstr "Activering"
+
+#, python-format
+#~ msgid "Background Job %s already running"
+#~ msgstr "Achtergrond opdracht %s loopt al"
+
+#, fuzzy
+#~ msgid "DCD Work State"
+#~ msgstr "ergste staat"
+
+#, fuzzy, python-format
+#~ msgid "Discovery (%s)"
+#~ msgstr "Ontdekking"
+
+#, fuzzy
+#~ msgid "Initialized"
+#~ msgstr "Initialiseren"
+
+#, fuzzy, python-format
+#~ msgid "Processing (%s)"
+#~ msgstr "Verwerking eerste site %s"
+
+#~ msgid "Users in the Active Directory"
+#~ msgstr "Gebruikers in de Active Directory"
+
+#, fuzzy, python-format
+#~ msgid "Waiting (%s)"
+#~ msgstr "Waiting"
 
 #, python-format
 #~ msgid "Another host renaming job is already running: %s"

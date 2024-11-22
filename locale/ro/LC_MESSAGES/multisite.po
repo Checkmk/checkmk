@@ -2563,9 +2563,6 @@ msgstr "Certificate ACME"
 msgid "ACTIVE"
 msgstr "ACTIVE"
 
-msgid "AD Connect Sync"
-msgstr "AD Connect Sync"
-
 msgid "ADMIN"
 msgstr ""
 
@@ -3303,12 +3300,6 @@ msgstr "Confirmarea expiră:"
 msgid "Acknowledgments: "
 msgstr "Recunoștințe: "
 
-msgid ""
-"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
-"project, note down the Project ID either from the dashboard or project "
-"settings, and use it below."
-msgstr ""
-
 msgid "Act."
 msgstr "Act."
 
@@ -3348,11 +3339,6 @@ msgstr "Acțiuni în cazul anulării"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "Activare (dezactivat: ia în considerare toate alertele)"
-
-msgid ""
-"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
-"necessary, and wait for it to become accessible."
-msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "Activarea modificării Scheduler"
@@ -3486,10 +3472,6 @@ msgid "Activating"
 msgstr "Activarea"
 
 msgid "Activation"
-msgstr "Activare"
-
-#, fuzzy, python-format
-msgid "Activation (%s)"
 msgstr "Activare"
 
 #, python-format
@@ -7092,11 +7074,6 @@ msgid ""
 "(not email)."
 msgstr ""
 
-msgid ""
-"Assign permissions to the app: Grant necessary access rights, assigning the "
-"\"Reader\" role."
-msgstr ""
-
 #, fuzzy
 msgid "Assign plan/test result to piggyback host"
 msgstr "Atribuiți rezultatul la gazda piggyback"
@@ -7116,6 +7093,14 @@ msgstr ""
 
 msgid "Assign services to the following cluster:"
 msgstr "Atribuiți servicii la următorul cluster:"
+
+msgid ""
+"Assign the built-in role \"Reader\" to the app in the Access control (IAM). "
+"Additionally add the application permissions \"Directory.Read.All\" and "
+"\"User.Read.All\" to the app if resources available through the Graph API "
+"will be monitored. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", \"App Registrations\"."
+msgstr ""
 
 msgid "Assign this object to a specific customer."
 msgstr "Atribuiți acest obiect unui anumit client."
@@ -8794,10 +8779,6 @@ msgstr "Port backend"
 
 msgid "Backends"
 msgstr "Backends"
-
-#, python-format
-msgid "Background Job %s already running"
-msgstr "Job de fundal %s deja în execuție"
 
 msgid "Background in status color and label"
 msgstr "Fundalul în culoarea de stare și eticheta"
@@ -15454,11 +15435,19 @@ msgid "Create SLA"
 msgstr "Creați SLA"
 
 msgid ""
+"Create a Service Account in \"IAM & Admin\" and assign the roles "
+"\"Monitoring Viewer\" and \"Cloud Asset Viewer\" to this account."
+msgstr ""
+
+msgid ""
 "Create a child node for each service on the specified hosts that is not "
 "contained in any other node of the aggregation."
 msgstr ""
 "Creează un nod copil pentru fiecare serviciu de pe gazdele specificate care "
 "nu este inclus în niciun alt nod al agregării."
+
+msgid "Create a client secret for the app and note it down."
+msgstr ""
 
 msgid "Create a copy"
 msgstr "Creați o copie"
@@ -15491,6 +15480,11 @@ msgstr "Creați o copie a acestui utilizator"
 msgid "Create a new event for each incident - never merge"
 msgstr ""
 "Creați un eveniment nou pentru fiecare incident - nu fuzionați niciodată"
+
+msgid ""
+"Create a new key in json format for the service account and download the "
+"created file."
+msgstr ""
 
 msgid "Create a notification"
 msgstr "Creați o notificare"
@@ -15565,11 +15559,6 @@ msgstr "Crearea unui serviciu suplimentar pentru solicitările de statistici IO"
 msgid "Create additional service for system wait"
 msgstr "Creați un serviciu suplimentar pentru sistemul de așteptare"
 
-msgid ""
-"Create an Azure app for Checkmk: Register the app in Azure Active Directory "
-"and note down the Application ID."
-msgstr ""
-
 msgid "Create an annotation for this period"
 msgstr "Creați o adnotare pentru această perioadă"
 
@@ -15616,12 +15605,6 @@ msgstr "Creați gazde"
 
 msgid "Create hosts in"
 msgstr "Creați gazde în"
-
-msgid ""
-"Create key: Generate a key for the service account to access monitoring and "
-"asset data, ensuring it's in JSON format. Copy JSON object including the "
-"curly brackets and store to use it below."
-msgstr ""
 
 #, python-format
 msgid "Create new %s"
@@ -15732,12 +15715,6 @@ msgstr "Creați următoarele grupuri de interfețe"
 
 msgid "Create topic"
 msgstr "Creați un subiect"
-
-msgid ""
-"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
-"service account with a descriptive name, assign roles (Monitoring Viewer and "
-"Cloud Asset Viewer), and finalize the creation."
-msgstr ""
 
 msgid "Create users only on login"
 msgstr "Creați utilizatori numai la conectare"
@@ -16651,10 +16628,6 @@ msgstr "Potriviri"
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
-
-#, fuzzy
-msgid "DCD Work State"
-msgstr "cea mai rea stare"
 
 #, fuzzy
 msgid "DCD batch history"
@@ -19358,10 +19331,6 @@ msgid "Discovered service labels"
 msgstr "Etichete de serviciu descoperite"
 
 msgid "Discovery"
-msgstr "Descoperire"
-
-#, fuzzy, python-format
-msgid "Discovery (%s)"
 msgstr "Descoperire"
 
 msgid "Discovery Output"
@@ -22661,6 +22630,10 @@ msgstr "ID-ul entității"
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr ""
 "Nivelul de entitate utilizat pentru a crea gazde de tip Piggyback Checkmk"
+
+#, fuzzy
+msgid "Entra Connect Sync"
+msgstr "AD Connect Sync"
 
 msgid "Entries"
 msgstr "Intrări"
@@ -26047,11 +26020,6 @@ msgstr "Generați"
 
 msgid "Generate REST API specification"
 msgstr "Generarea specificației REST API"
-
-msgid ""
-"Generate a key for the app: Create a Secret key in the app settings and note "
-"it down."
-msgstr ""
 
 msgid "Generate backup codes"
 msgstr "Generarea codurilor de rezervă"
@@ -33734,10 +33702,6 @@ msgstr "Extinderea inițială a agregatelor"
 msgid "Initial scheduling"
 msgstr "Programarea inițială"
 
-#, fuzzy
-msgid "Initialized"
-msgstr "Inițializarea"
-
 msgid "Initialized GIT for Checkmk"
 msgstr "GIT inițializat pentru Checkmk"
 
@@ -37622,6 +37586,11 @@ msgstr "Fișiere jurnal ale gazdei %s"
 
 msgid "Log hits for rules in log of Event Console"
 msgstr "Rezultatele pozitive pentru reguli în jurnalul Consola de evenimente"
+
+msgid ""
+"Log in to the Google Cloud Console, select the project to monitor and note "
+"down the Project ID either from the dashboard or project settings."
+msgstr ""
 
 msgid "Log latency"
 msgstr "Latența jurnalului"
@@ -50092,10 +50061,6 @@ msgstr "Procese"
 msgid "Processes performance data"
 msgstr "Procesează datele de performanță"
 
-#, fuzzy, python-format
-msgid "Processing (%s)"
-msgstr "Prelucrarea primului site %s"
-
 #, python-format
 msgid "Processing first site %s"
 msgstr "Prelucrarea primului site %s"
@@ -51559,6 +51524,11 @@ msgstr ""
 "de monitorizare care au fost creați cu agenția de agenți, chiar dacă nu "
 "sunteți o persoană de contact pentru gazda în cauză. Rețineți că acești "
 "agenți pot conține informații confidențiale, cum ar fi parolele."
+
+msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID, "
+"Application (client) ID as well as the used Subscription ID."
+msgstr ""
 
 msgid "Register an authentication device before generating backup codes."
 msgstr ""
@@ -53118,11 +53088,6 @@ msgstr ""
 "Obținerea de informații despre procese utilizând WMI (Windows Management "
 "Instrumentation)"
 
-msgid ""
-"Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, "
-"and the Client secret from Azure."
-msgstr ""
-
 msgid "Retry"
 msgstr "Reîncercare"
 
@@ -53172,13 +53137,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique Azure account name, and use the  "
-"Subscription ID, Tenant ID, Client ID, and the Client secret below."
+"Return to Checkmk, define a unique configuration name, and use the Project "
+"ID as well as the raw output of the JSON file for the key below."
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
-"and JSON object below."
+"Return to Checkmk, define a unique configuration name, and use the "
+"Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
+"note that the Subscription ID is not needed if only monitoring resources "
+"through the Graph API."
 msgstr ""
 
 msgid ""
@@ -78532,8 +78499,9 @@ msgid "Users can only login from one client at a time"
 msgstr ""
 "Utilizatorii se pot autentifica doar de la un singur client la un moment dat"
 
-msgid "Users in the Active Directory"
-msgstr "Utilizatorii din Active Directory"
+#, fuzzy
+msgid "Users in Entra ID"
+msgstr "Interfața cu utilizatorul"
 
 msgid "Users listed here are still allowed to modify things."
 msgstr ""
@@ -79611,6 +79579,11 @@ msgstr "Verificați răspunsul"
 msgid "Verify server certificate"
 msgstr "Verificarea certificatului serverului"
 
+msgid ""
+"Verify that the \"Cloud Asset API\" on \"APIs & Serivces\" is activated. It "
+"may take some minutes until the API is accessible."
+msgstr ""
+
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr ""
 "Verificați certificatul serverului Livestatus folosind CA-ul local al site-"
@@ -80132,10 +80105,6 @@ msgid "Wait until the other has finished"
 msgstr "Așteptați până când celălalt a terminat"
 
 msgid "Waiting"
-msgstr "Așteptare"
-
-#, fuzzy, python-format
-msgid "Waiting (%s)"
 msgstr "Așteptare"
 
 msgid "Waiting connections"
@@ -86762,6 +86731,37 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+#~ msgid "Activation (%s)"
+#~ msgstr "Activare"
+
+#, python-format
+#~ msgid "Background Job %s already running"
+#~ msgstr "Job de fundal %s deja în execuție"
+
+#, fuzzy
+#~ msgid "DCD Work State"
+#~ msgstr "cea mai rea stare"
+
+#, fuzzy, python-format
+#~ msgid "Discovery (%s)"
+#~ msgstr "Descoperire"
+
+#, fuzzy
+#~ msgid "Initialized"
+#~ msgstr "Inițializarea"
+
+#, fuzzy, python-format
+#~ msgid "Processing (%s)"
+#~ msgstr "Prelucrarea primului site %s"
+
+#~ msgid "Users in the Active Directory"
+#~ msgstr "Utilizatorii din Active Directory"
+
+#, fuzzy, python-format
+#~ msgid "Waiting (%s)"
+#~ msgstr "Așteptare"
 
 #, python-format
 #~ msgid "Another host renaming job is already running: %s"

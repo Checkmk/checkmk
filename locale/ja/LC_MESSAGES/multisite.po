@@ -2451,9 +2451,6 @@ msgstr "ACME 証明書"
 msgid "ACTIVE"
 msgstr "アクティブ"
 
-msgid "AD Connect Sync"
-msgstr "AD Connect Sync"
-
 msgid "ADMIN"
 msgstr ""
 
@@ -3166,12 +3163,6 @@ msgstr "承認期限切れ:"
 msgid "Acknowledgments: "
 msgstr "了承 "
 
-msgid ""
-"Acquire Project ID: Log in to the Google Cloud Console, select the correct "
-"project, note down the Project ID either from the dashboard or project "
-"settings, and use it below."
-msgstr ""
-
 msgid "Act."
 msgstr "Act."
 
@@ -3207,11 +3198,6 @@ msgstr "キャンセル時のアクション"
 
 msgid "Activate (off: consider all alerts)"
 msgstr "アクティブ化(オフ:すべてのアラートを検討)"
-
-msgid ""
-"Activate APIs: Check if the Cloud Asset API is enabled, activate it if "
-"necessary, and wait for it to become accessible."
-msgstr ""
 
 msgid "Activate Changes Scheduler"
 msgstr "変更スケジューラをアクティブ化する"
@@ -3343,10 +3329,6 @@ msgid "Activating"
 msgstr "アクティベート"
 
 msgid "Activation"
-msgstr "アクティベーション"
-
-#, fuzzy, python-format
-msgid "Activation (%s)"
 msgstr "アクティベーション"
 
 #, python-format
@@ -6781,11 +6763,6 @@ msgid ""
 "(not email)."
 msgstr ""
 
-msgid ""
-"Assign permissions to the app: Grant necessary access rights, assigning the "
-"\"Reader\" role."
-msgstr ""
-
 msgid "Assign plan/test result to piggyback host"
 msgstr "プラン/テスト結果をピギーバックホストに割り当てる"
 
@@ -6804,6 +6781,14 @@ msgstr ""
 
 msgid "Assign services to the following cluster:"
 msgstr "次のクラスターにサービスを割り当てます。"
+
+msgid ""
+"Assign the built-in role \"Reader\" to the app in the Access control (IAM). "
+"Additionally add the application permissions \"Directory.Read.All\" and "
+"\"User.Read.All\" to the app if resources available through the Graph API "
+"will be monitored. These resources include \"Users in Entra ID\", \"Entra "
+"Connect Sync\", \"App Registrations\"."
+msgstr ""
 
 msgid "Assign this object to a specific customer."
 msgstr "このオブジェクトを特定の顧客に割り当てます。"
@@ -8442,10 +8427,6 @@ msgstr "バックエンドポート"
 
 msgid "Backends"
 msgstr "バックエンド"
-
-#, python-format
-msgid "Background Job %s already running"
-msgstr "バックグラウンドジョブ %s はすでに実行されています"
 
 msgid "Background in status color and label"
 msgstr "ステータスの色とラベルの背景"
@@ -14782,11 +14763,19 @@ msgid "Create SLA"
 msgstr "SLAを作成する"
 
 msgid ""
+"Create a Service Account in \"IAM & Admin\" and assign the roles "
+"\"Monitoring Viewer\" and \"Cloud Asset Viewer\" to this account."
+msgstr ""
+
+msgid ""
 "Create a child node for each service on the specified hosts that is not "
 "contained in any other node of the aggregation."
 msgstr ""
 "アグリゲーションの他のノードに含まれていない、指定されたホスト上の各サービス"
 "の子ノードを作成します。"
+
+msgid "Create a client secret for the app and note it down."
+msgstr ""
 
 msgid "Create a copy"
 msgstr "コピーを作成する"
@@ -14818,6 +14807,11 @@ msgstr "このユーザーのコピーを作成します"
 
 msgid "Create a new event for each incident - never merge"
 msgstr "インシデントごとに新しいイベントを作成します - マージしないでください"
+
+msgid ""
+"Create a new key in json format for the service account and download the "
+"created file."
+msgstr ""
 
 msgid "Create a notification"
 msgstr "通知を作成する"
@@ -14890,11 +14884,6 @@ msgstr "IO統計リクエスト用の追加サービスを作成する"
 msgid "Create additional service for system wait"
 msgstr "システム待機用の追加サービスを作成する"
 
-msgid ""
-"Create an Azure app for Checkmk: Register the app in Azure Active Directory "
-"and note down the Application ID."
-msgstr ""
-
 msgid "Create an annotation for this period"
 msgstr "この期間の注釈を作成します"
 
@@ -14940,12 +14929,6 @@ msgstr "ホストを作成する"
 
 msgid "Create hosts in"
 msgstr "ホストを作成する"
-
-msgid ""
-"Create key: Generate a key for the service account to access monitoring and "
-"asset data, ensuring it's in JSON format. Copy JSON object including the "
-"curly brackets and store to use it below."
-msgstr ""
 
 #, python-format
 msgid "Create new %s"
@@ -15047,12 +15030,6 @@ msgstr "次のインターフェイスグループを作成します"
 
 msgid "Create topic"
 msgstr "トピックを作成する"
-
-msgid ""
-"Create user: Navigate to IAM & Admin, select Service Accounts, create a new "
-"service account with a descriptive name, assign roles (Monitoring Viewer and "
-"Cloud Asset Viewer), and finalize the creation."
-msgstr ""
 
 msgid "Create users only on login"
 msgstr "ログイン時にのみユーザーを作成する"
@@ -15943,10 +15920,6 @@ msgstr "一致"
 #, fuzzy, python-format
 msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
 msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
-
-#, fuzzy
-msgid "DCD Work State"
-msgstr "最悪の状態"
 
 #, fuzzy
 msgid "DCD batch history"
@@ -18502,10 +18475,6 @@ msgid "Discovered service labels"
 msgstr "発見されたサービスラベル"
 
 msgid "Discovery"
-msgstr "発見"
-
-#, fuzzy, python-format
-msgid "Discovery (%s)"
 msgstr "発見"
 
 msgid "Discovery Output"
@@ -21643,6 +21612,10 @@ msgstr "エンティティID"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr "Checkmkピギーバックホストの作成に使用するエンティティレベル"
+
+#, fuzzy
+msgid "Entra Connect Sync"
+msgstr "AD Connect Sync"
 
 msgid "Entries"
 msgstr "エントリー"
@@ -24987,11 +24960,6 @@ msgstr "生成する"
 #, fuzzy
 msgid "Generate REST API specification"
 msgstr "SLA仕様"
-
-msgid ""
-"Generate a key for the app: Create a Secret key in the app settings and note "
-"it down."
-msgstr ""
 
 #, fuzzy
 msgid "Generate backup codes"
@@ -32506,10 +32474,6 @@ msgstr "アグリゲーションの初期拡大"
 msgid "Initial scheduling"
 msgstr "初期スケジューリング"
 
-#, fuzzy
-msgid "Initialized"
-msgstr "初期化中"
-
 msgid "Initialized GIT for Checkmk"
 msgstr "Checkmkの初期化されたGIT"
 
@@ -36345,6 +36309,11 @@ msgstr "ホスト %s のログファイル"
 
 msgid "Log hits for rules in log of Event Console"
 msgstr "イベントコンソールのログにルールのヒットを記録する"
+
+msgid ""
+"Log in to the Google Cloud Console, select the project to monitor and note "
+"down the Project ID either from the dashboard or project settings."
+msgstr ""
 
 msgid "Log latency"
 msgstr "ログのレイテンシ"
@@ -48630,10 +48599,6 @@ msgstr "プロセス"
 msgid "Processes performance data"
 msgstr "プロセスパフォーマンスデータ"
 
-#, fuzzy, python-format
-msgid "Processing (%s)"
-msgstr "最初のサイト %s を処理中"
-
 #, python-format
 msgid "Processing first site %s"
 msgstr "最初のサイト %s を処理中"
@@ -50103,6 +50068,11 @@ msgstr ""
 "されたすべての監視エージェントをダウンロードしてください。これらのエージェン"
 "トには、パスワードのような機密情報が含まれている可能性があることに注意してく"
 "ださい。"
+
+msgid ""
+"Register an app in Entra ID. Note down the Directory (tenant) ID, "
+"Application (client) ID as well as the used Subscription ID."
+msgstr ""
 
 msgid "Register an authentication device before generating backup codes."
 msgstr "バックアップ・コードを生成する前に、認証デバイスを登録する。"
@@ -51657,11 +51627,6 @@ msgid ""
 msgstr ""
 "WMI(Windows Management Instrumentation)を使用してプロセス情報を取得する"
 
-msgid ""
-"Retrieve required information: Gather Subscription ID, Tenant ID, Client ID, "
-"and the Client secret from Azure."
-msgstr ""
-
 msgid "Retry"
 msgstr "リトライ"
 
@@ -51712,13 +51677,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique Azure account name, and use the  "
-"Subscription ID, Tenant ID, Client ID, and the Client secret below."
+"Return to Checkmk, define a unique configuration name, and use the Project "
+"ID as well as the raw output of the JSON file for the key below."
 msgstr ""
 
 msgid ""
-"Return to Checkmk: Define a unique GCP account name, and use the Project ID "
-"and JSON object below."
+"Return to Checkmk, define a unique configuration name, and use the "
+"Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
+"note that the Subscription ID is not needed if only monitoring resources "
+"through the Graph API."
 msgstr ""
 
 msgid ""
@@ -76357,8 +76324,9 @@ msgstr "ユーザーは個人設定でこの属性を変更できます"
 msgid "Users can only login from one client at a time"
 msgstr "ユーザーは一度に1つのクライアントからのみログインできます"
 
-msgid "Users in the Active Directory"
-msgstr "Active Directoryに登録されたユーザー"
+#, fuzzy
+msgid "Users in Entra ID"
+msgstr "ユーザーインターフェース"
 
 msgid "Users listed here are still allowed to modify things."
 msgstr "ここにリストされているユーザーは、引き続き変更することができます。"
@@ -77423,6 +77391,11 @@ msgstr "応答を確認する"
 msgid "Verify server certificate"
 msgstr "サーバー証明書を確認する"
 
+msgid ""
+"Verify that the \"Cloud Asset API\" on \"APIs & Serivces\" is activated. It "
+"may take some minutes until the API is accessible."
+msgstr ""
+
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr "ローカルサイトのCAを使用してLivestatusサーバー証明書を確認します"
 
@@ -77941,10 +77914,6 @@ msgid "Wait until the other has finished"
 msgstr "もう一方が終了するまで待ちます"
 
 msgid "Waiting"
-msgstr "待っています"
-
-#, fuzzy, python-format
-msgid "Waiting (%s)"
 msgstr "待っています"
 
 msgid "Waiting connections"
@@ -84395,6 +84364,37 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy, python-format
+#~ msgid "Activation (%s)"
+#~ msgstr "アクティベーション"
+
+#, python-format
+#~ msgid "Background Job %s already running"
+#~ msgstr "バックグラウンドジョブ %s はすでに実行されています"
+
+#, fuzzy
+#~ msgid "DCD Work State"
+#~ msgstr "最悪の状態"
+
+#, fuzzy, python-format
+#~ msgid "Discovery (%s)"
+#~ msgstr "発見"
+
+#, fuzzy
+#~ msgid "Initialized"
+#~ msgstr "初期化中"
+
+#, fuzzy, python-format
+#~ msgid "Processing (%s)"
+#~ msgstr "最初のサイト %s を処理中"
+
+#~ msgid "Users in the Active Directory"
+#~ msgstr "Active Directoryに登録されたユーザー"
+
+#, fuzzy, python-format
+#~ msgid "Waiting (%s)"
+#~ msgstr "待っています"
 
 #, python-format
 #~ msgid "Another host renaming job is already running: %s"

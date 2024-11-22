@@ -11,7 +11,6 @@ import FormSpecWidget from './FormSpecWidget.vue'
 import CollapsibleWidget from './CollapsibleWidget.vue'
 import FormSpecRecapWidget from './FormSpecRecapWidget.vue'
 import type { ComponentSpec, FormSpecWidgetProps } from './widget_types'
-import ConditionalNotificationHostEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationHostEventStageWidget.vue'
 import ConditionalNotificationECAlertStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationECAlertStageWidget.vue'
 import ConditionalNotificationServiceEventStageWidget from '@/quick-setup/components/quick-setup/widgets/ConditionalNotificationServiceEventStageWidget.vue'
 
@@ -24,7 +23,6 @@ export const getWidget = (widgetType: string): unknown => {
     form_spec: FormSpecWidget,
     collapsible: CollapsibleWidget,
     form_spec_recap: FormSpecRecapWidget,
-    conditional_notification_host_event_stage_widget: ConditionalNotificationHostEventStageWidget,
     conditional_notification_service_event_stage_widget:
       ConditionalNotificationServiceEventStageWidget,
     conditional_notification_ec_alert_stage_widget: ConditionalNotificationECAlertStageWidget

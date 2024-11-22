@@ -211,13 +211,11 @@ class Crawler:
         """Crawl through URLs using simultaneously using tasks / coroutines.
 
         A group of tasks / coroutines is added every `rate_create_crawl_task` seconds.
-        Crawling stop when URLs are not found for last `memory_size_urls_exist` iterations
-        (`rate_create_crawl_task` x `memory_size_urls_exist` seconds).
+        Crawling stop when URLs are not found for last `memory_size_urls_exist` iterations.
 
         debug-mode: Crawling URLs stop when at least `--max-urls` number of URLs have been crawled.
         """
-        rate_create_crawl_task = 0.1  # seconds
-        memory_size_urls_exist = 100  # iterations
+        memory_size_urls_exist = 25  # iterations
         search_limited_urls: bool = self._max_urls > 0
         # special-case
         if search_limited_urls and self._max_urls < max_tasks:
@@ -255,9 +253,6 @@ class Crawler:
                 if not find_more_urls:
                     logger.info("No more URLs to crawl. Stopping ...")
                 # ----
-
-                # ensure rate of URL collection in `self._todos` > rate of new tasks added
-                time.sleep(rate_create_crawl_task)
 
     async def setup_checkmk_context(
         self, browser: playwright.async_api.Browser

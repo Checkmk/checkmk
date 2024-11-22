@@ -10,6 +10,7 @@ def test_init_scripts(site: Site) -> None:
     scripts = {
         "agent-receiver",
         "apache",
+        "automation-helper",
         "cmk-ui-jobs",
         "core",
         "crontab",

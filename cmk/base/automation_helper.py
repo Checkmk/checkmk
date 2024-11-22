@@ -61,6 +61,7 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
         self._app = app
         self._options = {
             "daemon": cfg.daemon,
+            "umask": 0o077,
             "bind": APPLICATION_SOCKET,
             "workers": APPLICATION_WORKER_COUNT,
             "worker_class": APPLICATION_WORKER_CLASS,

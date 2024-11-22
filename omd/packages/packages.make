@@ -35,7 +35,8 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	$(BAZEL_CMD) build \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    //omd:intermediate_install
-	tar -C $(BUILD_BASE_DIR) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
+	mkdir -p $(INTERMEDIATE_INSTALL_BASE)
+	tar -C $(INTERMEDIATE_INSTALL_BASE) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata

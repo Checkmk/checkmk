@@ -59,6 +59,7 @@ pkg_filegroup(
         ":well_known_protos",
     ],
     prefix = "protobuf",
+    visibility = ["//visibility:public"],
 )
 
 pkg_tar(

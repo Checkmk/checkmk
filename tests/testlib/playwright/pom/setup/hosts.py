@@ -189,11 +189,7 @@ class AddHost(CmkPage):
                 )
                 e.add_note(error_msg)
             raise e
-
-        logger.info("Activate changes")
-        self.get_link("1 change").click()
-        self.activate_selected()
-        self.expect_success_state()
+        self.activate_changes()
 
 
 class HostProperties(CmkPage):
@@ -275,8 +271,5 @@ class HostProperties(CmkPage):
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
         )
-        logger.info("Activate changes")
-        self.get_link("1 change").click()
-        self.activate_selected()
-        self.expect_success_state()
+        self.activate_changes()
         self._exists = False

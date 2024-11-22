@@ -729,6 +729,7 @@ class HostConfigClient(RestApiClient):
         self,
         *,
         effective_attributes: bool = False,
+        search: Mapping[str, object] | None = None,
         include_links: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
@@ -739,6 +740,7 @@ class HostConfigClient(RestApiClient):
                 {
                     "effective_attributes": effective_attributes,
                     "include_links": include_links,
+                    **(search or {}),
                 }
             ),
             expect_ok=expect_ok,

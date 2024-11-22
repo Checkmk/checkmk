@@ -1704,3 +1704,19 @@ def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="host1")
     resp = clients.HostConfig.get_all(include_links=True)
     assert len(resp.json["value"][0]["links"])
+
+
+class TestHostsFilters:
+    """Test cases for filtering hosts by various attributes."""
+
+    def test_openapi_hostnames_filter(self, clients: ClientRegistry) -> None:
+        clients.HostConfig.bulk_create(
+            entries=[
+                {"host_name": "host1", "folder": "/"},
+                {"host_name": "host2", "folder": "/"},
+                {"host_name": "host3", "folder": "/"},
+            ]
+        )
+
+        resp = clients.HostConfig.get_all(search={"hostnames": ["host1", "host2"]})
+        assert {entry["id"] for entry in resp.json["value"]} == {"host1", "host2"}

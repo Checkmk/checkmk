@@ -761,6 +761,14 @@ class WebTestAppRequestHandler(RequestHandler):
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> Response:
+        """Perform a request to the server.
+
+        Note for REST API:
+            * the urlencode with doseq=True converts a list to multiple query parameters
+            (e.g. `?a=1&a=2`) instead of a single parameter `?a=1,2`. However, the latter also
+            works with the url validation.
+        """
+
         if query_params is not None:
             query_string = "?" + urllib.parse.urlencode(query_params, doseq=True)
         else:

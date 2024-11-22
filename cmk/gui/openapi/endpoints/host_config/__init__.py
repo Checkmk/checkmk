@@ -348,6 +348,20 @@ def _bulk_host_action_response(
     return serve_host_collection(succeeded_hosts)
 
 
+class SearchFilter:
+    hostnames_filter = "hostnames"
+
+    @classmethod
+    def from_params(cls, params: Mapping[str, Any]) -> "SearchFilter":
+        return cls(hostnames=params.get(cls.hostnames_filter, []))
+
+    def __init__(self, hostnames: Sequence[str] | None) -> None:
+        self._hostnames = set(hostnames) if hostnames else None
+
+    def __call__(self, host: Host) -> bool:
+        return host.name() in self._hostnames if self._hostnames else True
+
+
 def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
     yield from (host for host in folder.hosts().values() if host.permissions.may("read"))
     for subfolder in folder.subfolders():
@@ -368,11 +382,25 @@ def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
         field_include_links(
             "Flag which toggles whether the links field of the individual hosts should be populated."
         ),
+        {
+            SearchFilter.hostnames_filter: fields.List(
+                fields.String(
+                    description="A list of host names to filter the result by.",
+                    required=False,
+                    example="host1",
+                ),
+                description="Filter the result by a list of host names.",
+                required=False,
+                example=["host1", "host2"],
+                minLength=1,
+            )
+        },
     ],
 )
 def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
+    hosts_filter = SearchFilter.from_params(params)
     if user.may("wato.see_all_folders"):
         # allowed to see all hosts, no need for individual permission checks
         hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
@@ -380,7 +408,7 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
         hosts = _iter_hosts_with_permission(root_folder)
 
     return serve_host_collection(
-        hosts,
+        filter(hosts_filter, hosts),
         effective_attributes=params["effective_attributes"],
         include_links=params["include_links"],
     )

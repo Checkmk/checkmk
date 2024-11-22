@@ -1125,7 +1125,7 @@ def rbn_rule_contacts(  # pylint: disable=too-many-branches
 
         else:
             logger.info(
-                "Warning: cannot get information about contact %s: ignoring restrictions",
+                "Warning: cannot get information about contact %s: ignoring personal user notification restrictions",
                 contactname,
             )
 

@@ -628,7 +628,11 @@ def _process_notifications(  # pylint: disable=too-many-branches
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
         for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
-            verb = "would notify" if analyse and not dispatch else "notifying"
+            verb = (
+                "would notify"
+                if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"])
+                else "notifying"
+            )
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name
             paramtxt = ", ".join(params) if params else "(no parameters)"

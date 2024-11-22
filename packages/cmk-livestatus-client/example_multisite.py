@@ -40,12 +40,12 @@ sites = {
 
 c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 c.set_prepend_site(True)
-print(c.query("GET hosts\nColumns: name state\n"))
+sys.stdout.write("%s\n" % c.query("GET hosts\nColumns: name state\n"))
 c.set_prepend_site(False)
-print(c.query("GET hosts\nColumns: name state\n"))
+sys.stdout.write("%s\n" % c.query("GET hosts\nColumns: name state\n"))
 
 # Beware: When doing stats, you need to aggregate yourself:
-print(sum(c.query_column("GET hosts\nStats: state >= 0\n")))
+sys.stdout.write("%d\n" % sum(c.query_column("GET hosts\nStats: state >= 0\n")))
 
 # Detect errors:
 sites = {
@@ -70,7 +70,7 @@ sites = {
 
 c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 for name, state in c.query("GET hosts\nColumns: name state\n"):
-    print("%-15s: %d" % (name, state))
-print("Dead sites:")
+    sys.stdout.write("%-15s: %d\n" % (name, state))
+sys.stdout.write("Dead sites:\n")
 for sitename, info in c.dead_sites().items():
-    print("{}: {}".format(sitename, info["exception"]))
+    sys.stdout.write("{}: {}\n".format(sitename, info["exception"]))

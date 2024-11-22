@@ -121,7 +121,8 @@ def _agent_description(cds: ComputedDataSources) -> str:
 
 def print_(txt: str) -> None:
     with suppress(IOError):
-        print(txt, end="", flush=True, file=sys.stdout)
+        sys.stdout.write(txt)
+        sys.stdout.flush()
 
 
 def dump_host(

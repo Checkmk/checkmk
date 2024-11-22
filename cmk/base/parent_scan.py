@@ -124,7 +124,8 @@ def scan_parents_of(
     def dot(color: str, dot: str = "o") -> None:
         if not silent:
             with suppress(IOError):
-                print(tty.bold + color + dot + tty.normal, end="", flush=True, file=sys.stdout)
+                sys.stdout.write(tty.bold + color + dot + tty.normal)
+                sys.stdout.flush()
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output

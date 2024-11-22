@@ -6,6 +6,7 @@
 import json
 import logging
 import re
+import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -158,4 +159,4 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             **werk_dict,  # type: ignore[arg-type]
         ).model_dump(by_alias=True, mode="json")
 
-    print(json.dumps(all_werks_by_id))
+    sys.stdout.write(json.dumps(all_werks_by_id) + "\n")

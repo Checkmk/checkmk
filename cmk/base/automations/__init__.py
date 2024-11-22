@@ -103,11 +103,10 @@ class Automations:
             profiling.output_profile()
 
         with suppress(IOError):
-            print(
-                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)),
-                flush=True,
-                file=sys.stdout,
+            sys.stdout.write(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
             )
+            sys.stdout.flush()
 
         return AutomationExitCode.SUCCESS
 

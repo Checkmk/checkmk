@@ -9,6 +9,8 @@ import FormEdit from '@/form/components/FormEdit.vue'
 
 import type { Tuple, String, SingleChoice } from '@/form/components/vue_formspec_components'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const data = ref<Array<string>>(['eins', 'zwei'])
 
 function getStringSpec(name: string): String {

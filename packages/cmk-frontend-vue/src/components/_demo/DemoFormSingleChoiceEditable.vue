@@ -12,6 +12,8 @@ import { configEntityAPI } from '@/form/components/utils/configuration_entity'
 import { passthrough, bypass, http } from 'msw'
 import { setupWorker } from 'msw/browser'
 
+defineProps<{ screenshotMode: boolean }>()
+
 async function loadSpec() {
   const specTemplate: SingleChoiceEditable = {
     type: 'single_choice_editable',

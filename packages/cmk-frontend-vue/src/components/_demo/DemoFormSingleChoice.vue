@@ -9,6 +9,8 @@ import FormEdit from '@/form/components/FormEdit.vue'
 
 import type { SingleChoice } from '@/form/components/vue_formspec_components'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const data = ref<string | null>(null)
 
 function getSingleChoiceSpec(): SingleChoice {

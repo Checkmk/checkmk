@@ -11,6 +11,8 @@ import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 type StringMapping = Record<string, string>
 type LabelSources = 'explicit' | 'ruleset' | 'discovered'
 

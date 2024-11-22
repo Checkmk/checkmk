@@ -8,6 +8,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import type { BooleanChoice } from '@/form/components/vue_formspec_components'
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const spec = ref<BooleanChoice>({
   type: 'boolean_choice',
   title: 'some title',

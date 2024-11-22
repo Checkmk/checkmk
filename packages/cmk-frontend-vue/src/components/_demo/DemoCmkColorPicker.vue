@@ -8,6 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import { ref } from 'vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const data = ref('#ff0000')
 </script>
 

@@ -8,6 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkList from '@/components/CmkList'
 import { ref, type Ref } from 'vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 function setupList(): {
   data: Ref<string[]>
   addElement: () => boolean

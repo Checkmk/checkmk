@@ -8,6 +8,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormList from '@/form/components/forms/FormList.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const spec = ref<List>({
   type: 'list',
   title: 'some title',

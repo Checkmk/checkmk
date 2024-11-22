@@ -6,6 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import { ref } from 'vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const value1 = ref<boolean>(true)
 const value2 = ref<boolean>(false)
 const value3 = ref<boolean>(false)

@@ -7,6 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const defaultSelected = ref<string>('init')
 const defaultEmpty1 = ref<string | null>(null)
 const defaultEmpty2 = ref<string | null>(null)

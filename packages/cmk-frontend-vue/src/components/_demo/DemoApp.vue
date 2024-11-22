@@ -5,12 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { immediateWatch } from '@/lib/watch'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import router from './router'
 
 import { filterRoutes } from './utils'
+import { useRoute } from 'vue-router'
 
 const routes = computed(() => {
   return filterRoutes(router.getRoutes(), '')
@@ -18,6 +20,20 @@ const routes = computed(() => {
 
 const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')
 const selectedCss = ref<'cmk' | 'none'>('cmk')
+
+const currentRoute = useRoute()
+const screenshotMode = ref(currentRoute.query.screenshot === 'true')
+
+function enableScreenshotMode() {
+  router.push({ path: currentRoute.path, query: { screenshot: 'true' } })
+}
+
+watch(
+  () => currentRoute.query.screenshot,
+  (screenshot) => {
+    screenshotMode.value = screenshot === 'true'
+  }
+)
 
 async function setTheme(name: 'modern-dark' | 'facelift') {
   document.getElementsByTagName('body')[0]!.dataset['theme'] = name
@@ -53,7 +69,7 @@ immediateWatch(
 </script>
 
 <template>
-  <div class="demo">
+  <div v-if="!screenshotMode" class="demo">
     <nav>
       <fieldset>
         <legend>global styles</legend>
@@ -71,6 +87,7 @@ immediateWatch(
             { label: 'dark', value: 'modern-dark' }
           ]"
         />
+        <CmkButton @click="enableScreenshotMode">screenshot mode</CmkButton>
       </fieldset>
       <ul>
         <li v-for="route in routes" :key="route.path">
@@ -81,10 +98,11 @@ immediateWatch(
     <main>
       <h1>{{ $route.name }}</h1>
       <div class="demo-area">
-        <RouterView />
+        <RouterView :screenshot-mode="screenshotMode" />
       </div>
     </main>
   </div>
+  <RouterView v-else :screenshot-mode="screenshotMode" />
 </template>
 
 <style scoped>

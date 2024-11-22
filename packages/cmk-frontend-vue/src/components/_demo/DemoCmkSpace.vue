@@ -5,6 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkSpace from '@/components/CmkSpace.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>

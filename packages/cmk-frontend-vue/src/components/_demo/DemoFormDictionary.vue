@@ -9,6 +9,8 @@ import { ref } from 'vue'
 import type { Dictionary, String } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const embeddedSpec: String = {
   type: 'string',
   title: 'some string title',

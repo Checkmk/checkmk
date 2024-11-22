@@ -14,6 +14,8 @@ import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import { ref } from 'vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const data = ref<Record<string, Record<string, unknown>>>({
   some_topic_id: { element_name: 'string content' }
 })

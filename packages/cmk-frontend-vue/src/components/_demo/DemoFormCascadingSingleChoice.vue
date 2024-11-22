@@ -9,6 +9,9 @@ import { ref } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import type * as vue_formspec_components from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const spec = ref<vue_formspec_components.CascadingSingleChoice>({
   type: 'cascading_single_choice',
   title: 'some title',

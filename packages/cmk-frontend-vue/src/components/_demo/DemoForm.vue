@@ -9,24 +9,29 @@ import AlertBox from '@/components/AlertBox.vue'
 import { computed } from 'vue'
 import router from './router'
 import { filterRoutes } from './utils'
+
+defineProps<{ screenshotMode: boolean }>()
+
 const routes = computed(() => {
   return filterRoutes(router.getRoutes(), '/form')
 })
 </script>
 
 <template>
-  <AlertBox variant="warning">
-    <h2>Attention: No real Building-Blocks here!</h2>
-    <p>
-      This is just a demo for FormEdit, but you should use FormEdit only in combination with its
-      backend/python counterpart. Don't start writing specs in JavaScript!
-    </p>
-  </AlertBox>
-  <ul>
-    <li v-for="route in routes" :key="route.path">
-      <RouterLink :to="route.path">{{ route.name }}</RouterLink>
-    </li>
-  </ul>
-  <hr />
+  <template v-if="!screenshotMode">
+    <AlertBox variant="warning">
+      <h2>Attention: No real Building-Blocks here!</h2>
+      <p>
+        This is just a demo for FormEdit, but you should use FormEdit only in combination with its
+        backend/python counterpart. Don't start writing specs in JavaScript!
+      </p>
+    </AlertBox>
+    <ul>
+      <li v-for="route in routes" :key="route.path">
+        <RouterLink :to="route.path">{{ route.name }}</RouterLink>
+      </li>
+    </ul>
+    <hr />
+  </template>
   <RouterView />
 </template>

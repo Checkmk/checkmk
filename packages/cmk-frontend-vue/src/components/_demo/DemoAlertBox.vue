@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import AlertBox from '@/components/AlertBox.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>

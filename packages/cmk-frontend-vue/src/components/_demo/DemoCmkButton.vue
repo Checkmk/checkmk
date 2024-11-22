@@ -9,6 +9,8 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>

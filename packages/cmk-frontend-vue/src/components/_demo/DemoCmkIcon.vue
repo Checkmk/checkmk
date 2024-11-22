@@ -9,6 +9,8 @@ import { ref, type Ref } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import { type CmkIconVariants } from '@/components/CmkIcon.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const sizes: CmkIconVariants['size'][] = ['xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge']
 const variants: CmkIconVariants['variant'][] = ['plain', 'inline']
 const title = 'Some title that is shown in a tooltip on hovering the icon'

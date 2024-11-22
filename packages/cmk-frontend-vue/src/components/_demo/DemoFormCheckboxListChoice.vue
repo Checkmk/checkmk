@@ -9,6 +9,8 @@ import { ref } from 'vue'
 import type { CheckboxListChoice } from '@/form/components/vue_formspec_components'
 import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const spec: CheckboxListChoice = {
   type: 'checkbox_list_choice',
   title: 'some title',

@@ -9,6 +9,8 @@ import { ref } from 'vue'
 import type { OptionalChoice, String } from '@/form/components/vue_formspec_components'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const embeddedSpec: String = {
   type: 'string',
   title: 'some string title',

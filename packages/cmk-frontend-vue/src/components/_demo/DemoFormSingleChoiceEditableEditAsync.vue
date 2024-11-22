@@ -17,6 +17,8 @@ import type {
   ValidationMessage
 } from '@/form/components/vue_formspec_components'
 
+defineProps<{ screenshotMode: boolean }>()
+
 // demo stuff
 
 const reloadCount = ref<number>(0)

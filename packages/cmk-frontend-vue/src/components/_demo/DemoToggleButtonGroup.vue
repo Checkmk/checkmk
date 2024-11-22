@@ -8,6 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
+defineProps<{ screenshotMode: boolean }>()
+
 const model = ref<string>('1')
 </script>
 

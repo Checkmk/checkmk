@@ -27,198 +27,216 @@
         },
         "integer": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "integer",
-                    "default": "integer"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "unit": {
-                    "type": ["string", "null"]
-                },
-                "input_hint": {
-                    "type": ["string", "null"]
-                }
-            },
-            "required": ["type", "label", "unit", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "integer",
+                            "default": "integer"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "unit": {
+                            "type": ["string", "null"]
+                        },
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": ["type", "label", "unit", "input_hint"]
                 }
             ]
         },
         "float": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "float",
-                    "default": "float"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "unit": {
-                    "type": ["string", "null"]
-                },
-                "input_hint": {
-                    "type": ["string", "null"]
-                }
-            },
-            "required": ["type", "label", "unit", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "float",
+                            "default": "float"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "unit": {
+                            "type": ["string", "null"]
+                        },
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": ["type", "label", "unit", "input_hint"]
                 }
             ]
         },
         "legacy_valuespec": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "legacy_valuespec",
-                    "default": "legacy_valuespec"
-                },
-                "varprefix": {
-                    "type": "string"
-                }
-            },
-            "required": ["type", "html", "varprefix"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "legacy_valuespec",
+                            "default": "legacy_valuespec"
+                        },
+                        "varprefix": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["type", "html", "varprefix"]
                 }
             ]
         },
         "string": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "string",
-                    "default": "string"
-                },
-                "input_hint": {
-                    "type": ["string", "null"]
-                },
-                "field_size": {
-                    "title": "StringFieldSize",
-                    "enum": ["SMALL", "MEDIUM", "LARGE"]
-                },
-                "autocompleter": {
-                    "oneOf": [
-                        {
-                            "type": "null"
-                        },
-                        {
-                            "$ref": "#/$defs/autocompleter"
-                        }
-                    ]
-                }
-            },
-            "required": [
-                "type",
-                "placeholder",
-                "input_hint",
-                "field_size",
-                "autocompleter"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "string",
+                            "default": "string"
+                        },
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        },
+                        "field_size": {
+                            "title": "StringFieldSize",
+                            "enum": ["SMALL", "MEDIUM", "LARGE"]
+                        },
+                        "autocompleter": {
+                            "oneOf": [
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "$ref": "#/$defs/autocompleter"
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "placeholder",
+                        "input_hint",
+                        "field_size",
+                        "autocompleter"
+                    ]
                 }
             ]
         },
         "password": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "password",
-                    "default": "password"
-                },
-                "password_store_choices": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "password_id": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["password_id", "name"]
-                    }
-                },
-                "i18n": {
-                    "type": "object",
-                    "title": "i18nPassword",
-                    "properties": {
-                        "explicit_password": {
-                            "type": "string"
-                        },
-                        "password_store": {
-                            "type": "string"
-                        },
-                        "no_password_store_choices": {
-                            "type": "string"
-                        },
-                        "password_choice_invalid": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "explicit_password",
-                        "password_store",
-                        "no_password_store_choices",
-                        "password_choice_invalid"
-                    ]
-                }
-            },
-            "required": ["type", "password_store_choices", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "password",
+                            "default": "password"
+                        },
+                        "password_store_choices": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "password_id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": ["password_id", "name"]
+                            }
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "i18nPassword",
+                            "properties": {
+                                "explicit_password": {
+                                    "type": "string"
+                                },
+                                "password_store": {
+                                    "type": "string"
+                                },
+                                "no_password_store_choices": {
+                                    "type": "string"
+                                },
+                                "password_choice_invalid": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "explicit_password",
+                                "password_store",
+                                "no_password_store_choices",
+                                "password_choice_invalid"
+                            ]
+                        }
+                    },
+                    "required": ["type", "password_store_choices", "i18n"]
                 }
             ]
         },
         "list": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "list",
-                    "default": "list"
-                },
-                "element_template": {
-                    "$ref": "#/$defs/form_spec"
-                },
-                "element_default_value": {},
-                "editable_order": {
-                    "type": "boolean"
-                },
-                "add_element_label": {
-                    "type": "string"
-                },
-                "remove_element_label": {
-                    "type": "string"
-                },
-                "no_element_label": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "type",
-                "element_template",
-                "element_default_value",
-                "editable_order",
-                "add_element_label",
-                "remove_element_label",
-                "no_element_label"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "list",
+                            "default": "list"
+                        },
+                        "element_template": {
+                            "$ref": "#/$defs/form_spec"
+                        },
+                        "element_default_value": {},
+                        "editable_order": {
+                            "type": "boolean"
+                        },
+                        "add_element_label": {
+                            "type": "string"
+                        },
+                        "remove_element_label": {
+                            "type": "string"
+                        },
+                        "no_element_label": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "element_template",
+                        "element_default_value",
+                        "editable_order",
+                        "add_element_label",
+                        "remove_element_label",
+                        "no_element_label"
+                    ]
                 }
             ]
         },
@@ -513,7 +531,6 @@
             "required": ["type"]
         },
         "checkbox_list_choice": {
-            "id": "checkbox_list_choice",
             "type": "object",
             "allOf": [
                 {
@@ -597,49 +614,54 @@
         },
         "fixed_value": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "fixed_value",
-                    "default": "fixed_value"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "value": {}
-            },
-            "required": ["type", "value", "label"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "fixed_value",
+                            "default": "fixed_value"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "value": {}
+                    },
+                    "required": ["type", "value", "label"]
                 }
             ]
         },
         "boolean_choice": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "boolean_choice",
-                    "default": "boolean_choice"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "text_on": {
-                    "type": "string"
-                },
-                "text_off": {
-                    "type": "string"
-                }
-            },
-            "required": ["type", "label", "text_on", "text_off"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "boolean_choice",
+                            "default": "boolean_choice"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "text_on": {
+                            "type": "string"
+                        },
+                        "text_off": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["type", "label", "text_on", "text_off"]
                 }
             ]
         },
         "multiline_text": {
-            "id": "multiline_text",
             "type": "object",
             "properties": {
                 "type": {
@@ -714,28 +736,36 @@
         },
         "data_size": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "data_size",
-                    "default": "data_size"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "displayed_magnitudes": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "input_hint": {
-                    "type": ["string", "null"]
-                }
-            },
-            "required": ["type", "label", "displayed_magnitudes", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "data_size",
+                            "default": "data_size"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "displayed_magnitudes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "label",
+                        "displayed_magnitudes",
+                        "input_hint"
+                    ]
                 }
             ]
         },
@@ -753,270 +783,288 @@
         },
         "catalog": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "catalog",
-                    "default": "catalog"
-                },
-                "topics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/topic"
-                    }
-                }
-            },
-            "required": ["type", "topics"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "catalog",
+                            "default": "catalog"
+                        },
+                        "topics": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/topic"
+                            }
+                        }
+                    },
+                    "required": ["type", "topics"]
                 }
             ]
         },
         "time_span": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "time_span",
-                    "default": "time_span"
-                },
-                "label": {
-                    "type": ["string", "null"]
-                },
-                "i18n": {
-                    "title": "time_span_i18n",
-                    "type": "object",
-                    "properties": {
-                        "millisecond": {
-                            "type": "string"
-                        },
-                        "second": {
-                            "type": "string"
-                        },
-                        "minute": {
-                            "type": "string"
-                        },
-                        "hour": {
-                            "type": "string"
-                        },
-                        "day": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "millisecond",
-                        "second",
-                        "minute",
-                        "hour",
-                        "day"
-                    ]
-                },
-                "displayed_magnitudes": {
-                    "type": "array",
-                    "items": {
-                        "enum": [
-                            "millisecond",
-                            "second",
-                            "minute",
-                            "hour",
-                            "day"
-                        ],
-                        "title": "time_span_time_magnitude"
-                    }
-                },
-                "input_hint": {
-                    "type": ["number", "null"]
-                }
-            },
-            "required": [
-                "type",
-                "displayed_magnitudes",
-                "label",
-                "i18n",
-                "prefill",
-                "input_hint"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "time_span",
+                            "default": "time_span"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
+                        "i18n": {
+                            "title": "time_span_i18n",
+                            "type": "object",
+                            "properties": {
+                                "millisecond": {
+                                    "type": "string"
+                                },
+                                "second": {
+                                    "type": "string"
+                                },
+                                "minute": {
+                                    "type": "string"
+                                },
+                                "hour": {
+                                    "type": "string"
+                                },
+                                "day": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "millisecond",
+                                "second",
+                                "minute",
+                                "hour",
+                                "day"
+                            ]
+                        },
+                        "displayed_magnitudes": {
+                            "type": "array",
+                            "items": {
+                                "enum": [
+                                    "millisecond",
+                                    "second",
+                                    "minute",
+                                    "hour",
+                                    "day"
+                                ],
+                                "title": "time_span_time_magnitude"
+                            }
+                        },
+                        "input_hint": {
+                            "type": ["number", "null"]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "displayed_magnitudes",
+                        "label",
+                        "i18n",
+                        "prefill",
+                        "input_hint"
+                    ]
                 }
             ]
         },
         "tuple": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "tuple",
-                    "default": "tuple"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/form_spec"
-                    }
-                },
-                "layout": {
-                    "title": "TupleLayout",
-                    "enum": [
-                        "horizontal_titles_top",
-                        "horizontal",
-                        "vertical",
-                        "float"
-                    ],
-                    "default": "vertical"
-                },
-                "show_titles": {
-                    "type": "boolean"
-                }
-            },
-            "required": ["type", "elements", "layout", "show_titles"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "tuple",
+                            "default": "tuple"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/form_spec"
+                            }
+                        },
+                        "layout": {
+                            "title": "TupleLayout",
+                            "enum": [
+                                "horizontal_titles_top",
+                                "horizontal",
+                                "vertical",
+                                "float"
+                            ],
+                            "default": "vertical"
+                        },
+                        "show_titles": {
+                            "type": "boolean"
+                        }
+                    },
+                    "required": ["type", "elements", "layout", "show_titles"]
                 }
             ]
         },
         "optional_choice": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "optional_choice",
-                    "default": "optional_choice"
-                },
-                "parameter_form": {
-                    "$ref": "#/$defs/form_spec"
-                },
-                "i18n": {
-                    "type": "object",
-                    "title": "i18nOptionalChoice",
-                    "properties": {
-                        "label": {
-                            "type": "string"
-                        },
-                        "none_label": {
-                            "type": "string"
-                        }
-                    },
-                    "required": ["label", "none_label"]
-                },
-                "parameter_form_default_value": {}
-            },
-            "required": [
-                "type",
-                "parameter_form",
-                "parameter_form_default_value",
-                "i18n"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "optional_choice",
+                            "default": "optional_choice"
+                        },
+                        "parameter_form": {
+                            "$ref": "#/$defs/form_spec"
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "i18nOptionalChoice",
+                            "properties": {
+                                "label": {
+                                    "type": "string"
+                                },
+                                "none_label": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["label", "none_label"]
+                        },
+                        "parameter_form_default_value": {}
+                    },
+                    "required": [
+                        "type",
+                        "parameter_form",
+                        "parameter_form_default_value",
+                        "i18n"
+                    ]
                 }
             ]
         },
         "simple_password": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "simple_password",
-                    "default": "simple_password"
-                }
-            },
-            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "simple_password",
+                            "default": "simple_password"
+                        }
+                    },
+                    "required": ["type"]
                 }
             ]
         },
         "single_choice_editable": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "single_choice_editable",
-                    "default": "single_choice_editable"
-                },
-                "config_entity_type": {
-                    "type": "string"
-                },
-                "config_entity_type_specifier": {
-                    "type": "string"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/single_choice_element"
-                    }
-                },
-                "i18n": {
-                    "title": "single_choice_editable_i18n",
-                    "type": "object",
-                    "properties": {
-                        "slidein_save_button": {
-                            "type": "string"
-                        },
-                        "slidein_cancel_button": {
-                            "type": "string"
-                        },
-                        "slidein_create_button": {
-                            "type": "string"
-                        },
-                        "slidein_new_title": {
-                            "type": "string"
-                        },
-                        "slidein_edit_title": {
-                            "type": "string"
-                        },
-                        "edit": {
-                            "type": "string"
-                        },
-                        "create": {
-                            "type": "string"
-                        },
-                        "loading": {
-                            "type": "string"
-                        },
-                        "no_objects": {
-                            "type": "string"
-                        },
-                        "no_selection": {
-                            "type": "string"
-                        },
-                        "validation_error": {
-                            "type": "string"
-                        },
-                        "fatal_error": {
-                            "type": "string"
-                        },
-                        "fatal_error_reload": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "slidein_save_button",
-                        "slidein_cancel_button",
-                        "slidein_create_button",
-                        "slidein_new_title",
-                        "slidein_edit_title",
-                        "edit",
-                        "create",
-                        "loading",
-                        "no_objects",
-                        "no_selection",
-                        "validation_error",
-                        "fatal_error",
-                        "fatal_error_reload"
-                    ]
-                }
-            },
-            "required": [
-                "type",
-                "i18n",
-                "config_entity_type",
-                "config_entity_type_specifier",
-                "elements"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "single_choice_editable",
+                            "default": "single_choice_editable"
+                        },
+                        "config_entity_type": {
+                            "type": "string"
+                        },
+                        "config_entity_type_specifier": {
+                            "type": "string"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/single_choice_element"
+                            }
+                        },
+                        "i18n": {
+                            "title": "single_choice_editable_i18n",
+                            "type": "object",
+                            "properties": {
+                                "slidein_save_button": {
+                                    "type": "string"
+                                },
+                                "slidein_cancel_button": {
+                                    "type": "string"
+                                },
+                                "slidein_create_button": {
+                                    "type": "string"
+                                },
+                                "slidein_new_title": {
+                                    "type": "string"
+                                },
+                                "slidein_edit_title": {
+                                    "type": "string"
+                                },
+                                "edit": {
+                                    "type": "string"
+                                },
+                                "create": {
+                                    "type": "string"
+                                },
+                                "loading": {
+                                    "type": "string"
+                                },
+                                "no_objects": {
+                                    "type": "string"
+                                },
+                                "no_selection": {
+                                    "type": "string"
+                                },
+                                "validation_error": {
+                                    "type": "string"
+                                },
+                                "fatal_error": {
+                                    "type": "string"
+                                },
+                                "fatal_error_reload": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "slidein_save_button",
+                                "slidein_cancel_button",
+                                "slidein_create_button",
+                                "slidein_new_title",
+                                "slidein_edit_title",
+                                "edit",
+                                "create",
+                                "loading",
+                                "no_objects",
+                                "no_selection",
+                                "validation_error",
+                                "fatal_error",
+                                "fatal_error_reload"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "i18n",
+                        "config_entity_type",
+                        "config_entity_type_specifier",
+                        "elements"
+                    ]
                 }
             ]
         },
@@ -1035,179 +1083,191 @@
         },
         "list_of_strings": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "list_of_strings",
-                    "default": "list_of_strings"
-                },
-                "string_spec": {
-                    "$ref": "#/$defs/form_spec"
-                },
-                "string_default_value": {
-                    "type": "string",
-                    "default": ""
-                },
-                "layout": {
-                    "title": "ListOfStringsLayout",
-                    "enum": ["horizontal", "vertical"],
-                    "default": "horizontal"
-                }
-            },
-            "required": [
-                "type",
-                "string_spec",
-                "string_default_value",
-                "layout"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "list_of_strings",
+                            "default": "list_of_strings"
+                        },
+                        "string_spec": {
+                            "$ref": "#/$defs/form_spec"
+                        },
+                        "string_default_value": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "layout": {
+                            "title": "ListOfStringsLayout",
+                            "enum": ["horizontal", "vertical"],
+                            "default": "horizontal"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "string_spec",
+                        "string_default_value",
+                        "layout"
+                    ]
                 }
             ]
         },
         "folder": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "folder",
-                    "default": "folder"
-                },
-                "input_hint": {
-                    "type": "string"
-                }
-            },
-            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "folder",
+                            "default": "folder"
+                        },
+                        "input_hint": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["type"]
                 }
             ]
         },
         "condition_choices": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "condition_choices",
-                    "default": "condition_choices"
-                },
-                "condition_groups": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "title": "ConditionGroup",
-                        "type": "object",
-                        "properties": {
-                            "title": {
-                                "type": "string"
-                            },
-                            "conditions": {
-                                "type": "array",
-                                "items": {
-                                    "title": "Condition",
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "title": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": ["name", "title"]
-                                }
-                            }
-                        },
-                        "required": ["title", "conditions"]
-                    }
-                },
-                "i18n": {
-                    "type": "object",
-                    "title": "condition_choices_i18n",
-                    "properties": {
-                        "add_condition_label": {
-                            "type": "string"
-                        },
-                        "select_condition_group_to_add": {
-                            "type": "string"
-                        },
-                        "no_more_condition_groups_to_add": {
-                            "type": "string"
-                        },
-                        "eq_operator": {
-                            "type": "string"
-                        },
-                        "ne_operator": {
-                            "type": "string"
-                        },
-                        "or_operator": {
-                            "type": "string"
-                        },
-                        "nor_operator": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "add_condition_label",
-                        "select_condition_group_to_add",
-                        "no_more_condition_groups_to_add",
-                        "eq_operator",
-                        "ne_operator",
-                        "or_operator",
-                        "nor_operator"
-                    ]
-                }
-            },
-            "required": ["type", "condition_groups", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "condition_choices",
+                            "default": "condition_choices"
+                        },
+                        "condition_groups": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "title": "ConditionGroup",
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "conditions": {
+                                        "type": "array",
+                                        "items": {
+                                            "title": "Condition",
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": ["name", "title"]
+                                        }
+                                    }
+                                },
+                                "required": ["title", "conditions"]
+                            }
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "condition_choices_i18n",
+                            "properties": {
+                                "add_condition_label": {
+                                    "type": "string"
+                                },
+                                "select_condition_group_to_add": {
+                                    "type": "string"
+                                },
+                                "no_more_condition_groups_to_add": {
+                                    "type": "string"
+                                },
+                                "eq_operator": {
+                                    "type": "string"
+                                },
+                                "ne_operator": {
+                                    "type": "string"
+                                },
+                                "or_operator": {
+                                    "type": "string"
+                                },
+                                "nor_operator": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "add_condition_label",
+                                "select_condition_group_to_add",
+                                "no_more_condition_groups_to_add",
+                                "eq_operator",
+                                "ne_operator",
+                                "or_operator",
+                                "nor_operator"
+                            ]
+                        }
+                    },
+                    "required": ["type", "condition_groups", "i18n"]
                 }
             ]
         },
         "labels": {
             "type": "object",
-            "properties": {
-                "type": {
-                    "const": "labels",
-                    "default": "labels"
-                },
-                "i18n": {
-                    "type": "object",
-                    "title": "labels_i18n",
-                    "properties": {
-                        "add_some_labels": {
-                            "type": "string"
-                        },
-                        "key_value_format_error": {
-                            "type": "string"
-                        },
-                        "uniqueness_error": {
-                            "type": "string"
-                        },
-                        "max_labels_reached": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "add_some_labels",
-                        "key_value_format_error",
-                        "uniqueness_error",
-                        "max_labels_reached"
-                    ]
-                },
-                "autocompleter": {
-                    "$ref": "#/$defs/autocompleter"
-                },
-                "max_labels": {
-                    "type": "integer"
-                },
-                "label_source": {
-                    "enum": ["explicit", "ruleset", "discovered"]
-                }
-            },
-            "required": ["type", "i18n", "max_labels"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "labels",
+                            "default": "labels"
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "labels_i18n",
+                            "properties": {
+                                "add_some_labels": {
+                                    "type": "string"
+                                },
+                                "key_value_format_error": {
+                                    "type": "string"
+                                },
+                                "uniqueness_error": {
+                                    "type": "string"
+                                },
+                                "max_labels_reached": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "add_some_labels",
+                                "key_value_format_error",
+                                "uniqueness_error",
+                                "max_labels_reached"
+                            ]
+                        },
+                        "autocompleter": {
+                            "$ref": "#/$defs/autocompleter"
+                        },
+                        "max_labels": {
+                            "type": "integer"
+                        },
+                        "label_source": {
+                            "enum": ["explicit", "ruleset", "discovered"]
+                        }
+                    },
+                    "required": ["type", "i18n", "max_labels"]
                 }
             ]
         },

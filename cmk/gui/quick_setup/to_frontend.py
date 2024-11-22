@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, cast
+from typing import Any, cast, Iterable
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -24,6 +24,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     stage_components,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableValidator,
     FormspecMap,
     QuickSetup,
     QuickSetupAction,
@@ -98,7 +99,22 @@ class StageOverview:
 
 @dataclass
 class Errors:
-    stage_index: StageIndex
+    """Data class representing errors that occurred during the validation process
+
+    Attributes:
+        stage_index:
+            The index of the stage where the error occurred. If None, the error is stage independent
+            (for example a Quick setup (not stage) custom validation failed when attempting to
+            perform the complete action)
+        formspec_errors:
+            A mapping of form spec ids to a list of validation errors that occurred for the
+            respective form spec. These are usually stage specific
+        stage_errors:
+            A list of general stage errors that occurred during the validation process (besides the
+            formspecs)
+    """
+
+    stage_index: StageIndex | None
     formspec_errors: ValidationErrorMap = field(default_factory=dict)
     stage_errors: GeneralStageErrors = field(default_factory=list)
 
@@ -284,7 +300,7 @@ def validate_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
     stage_index: StageIndex,
-    stage_action_id: ActionId | None,
+    stage_action_id: ActionId,
     stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
 ) -> Errors | None:
@@ -316,8 +332,27 @@ def validate_stage(
             The form spec map of the quick setup across all stages. This map is based on the stages
             definition
     """
-    errors = Errors(stage_index=stage_index)
+    errors = validate_stage_formspecs(stage_index, stages_raw_formspecs, quick_setup_formspec_map)
+    if errors.exist():
+        return errors
 
+    custom_validators = _matching_stage_action(
+        stages[stage_index], stage_action_id
+    ).custom_validators
+    errors.stage_errors.extend(
+        validate_custom_validators(
+            quick_setup.id, custom_validators, stages_raw_formspecs, quick_setup_formspec_map
+        ).stage_errors
+    )
+    return errors if errors.exist() else None
+
+
+def validate_stage_formspecs(
+    stage_index: StageIndex,
+    stages_raw_formspecs: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+) -> Errors:
+    errors = Errors(stage_index=stage_index)
     errors.stage_errors.extend(
         _stage_validate_all_form_spec_keys_existing(
             stages_raw_formspecs[stage_index], quick_setup_formspec_map
@@ -330,49 +365,40 @@ def validate_stage(
         stages_raw_formspecs[stage_index],
         quick_setup_formspec_map,
     )
-    if errors.exist():
-        return errors
+    return errors
 
-    # TODO: with the introduction of
-    if stage_action_id is None:
-        custom_validators = stages[stage_index].actions[0].custom_validators
-    else:
-        custom_validators = _matching_stage_action(
-            stages[stage_index], stage_action_id
-        ).custom_validators
 
+def validate_custom_validators(
+    quick_setup_id: QuickSetupId,
+    custom_validators: Iterable[CallableValidator],
+    stages_raw_formspecs: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+) -> Errors:
+    errors = Errors(stage_index=None)
     for custom_validator in custom_validators:
         errors.stage_errors.extend(
             custom_validator(
-                quick_setup.id,
+                quick_setup_id,
                 _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             )
         )
-    return errors if errors.exist() else None
+    return errors
 
 
-def validate_stages(
-    quick_setup: QuickSetup,
+def validate_stages_formspecs(
     stages_raw_formspecs: Sequence[RawFormData],
-    stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
 ) -> Sequence[Errors] | None:
-    # TODO: this should be changed to a quick setup specific custom validator instead of rerunning
-    #  through the stages
-    return [
-        errors
-        for stage_index in range(len(stages_raw_formspecs))
-        if (
-            errors := validate_stage(
-                quick_setup=quick_setup,
-                stages_raw_formspecs=stages_raw_formspecs[: stage_index + 1],
-                stage_index=StageIndex(stage_index),
-                stage_action_id=None,
-                stages=stages,
-                quick_setup_formspec_map=quick_setup_formspec_map,
-            )
+    stages_errors = []
+    for stage_index in range(len(stages_raw_formspecs)):
+        errors = validate_stage_formspecs(
+            stage_index=StageIndex(stage_index),
+            stages_raw_formspecs=stages_raw_formspecs[: stage_index + 1],
+            quick_setup_formspec_map=quick_setup_formspec_map,
         )
-    ] or None
+        if errors.exist():
+            stages_errors.append(errors)
+    return stages_errors or None
 
 
 def retrieve_next_stage(

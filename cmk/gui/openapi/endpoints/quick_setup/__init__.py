@@ -35,8 +35,9 @@ from cmk.gui.quick_setup.to_frontend import (
     QuickSetupOverview,
     retrieve_next_stage,
     Stage,
+    validate_custom_validators,
     validate_stage,
-    validate_stages,
+    validate_stages_formspecs,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
@@ -76,7 +77,6 @@ QUICKSETUP_MODE = {
     )
 }
 
-
 QUICKSETUP_OBJECT_ID = {
     "object_id": fields.String(
         required=False,
@@ -85,7 +85,6 @@ QUICKSETUP_OBJECT_ID = {
         load_default="",
     )
 }
-
 
 QUICKSETUP_OBJECT_ID_REQUIRED = {
     "object_id": fields.String(
@@ -234,9 +233,21 @@ def edit_quick_setup_action(params: Mapping[str, Any]) -> Response:
 
 
 def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActionMode) -> Response:
+    """Complete the quick setup action
+
+    This function handles the overall Quick setup action. This is usually at the very end of the
+    Quick setup flow. Multiple actions are performed here before the actual complete action:
+
+    1. Validate formspecs (of all stages)
+        - We validate again (in 'guided' mode) as there is a formspec validation when progressing
+        from one stage to the next
+        - the custom validators of the individual stages are not validated again
+    2. Run Quick setup validators
+    3. Perform Quick setup complete action
+    """
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
-    button_id = body["button_id"]
+    action_id = body["button_id"]
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         return _serve_error(
@@ -245,16 +256,15 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         )
 
     stage_index = StageIndex(len(body["stages"]) - 1)
-    stages, form_spec_map = get_stages_and_formspec_map(
+    _stages, form_spec_map = get_stages_and_formspec_map(
         quick_setup=quick_setup,
         stage_index=stage_index,
     )
 
+    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in body["stages"]]
     if (
-        stage_errors := validate_stages(
-            quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-            stages=stages,
+        stage_errors := validate_stages_formspecs(
+            stages_raw_formspecs=stages_raw_formspecs,
             quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
@@ -265,23 +275,36 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             status_code=400,
         )
 
-    for action in quick_setup.actions:
-        if action.id == button_id:
-            return _serve_data(
-                complete_quick_setup(
-                    action=action,
-                    mode=mode,
-                    stages_raw_formspecs=[
-                        RawFormData(stage["form_data"]) for stage in body["stages"]
-                    ],
-                    quick_setup_formspec_map=form_spec_map,
-                    object_id=params.get("object_id"),
-                ),
-                status_code=201,
-            )
-    return _serve_error(
-        title="Save action not found",
-        detail=f"Save action with id '{button_id}' does not exist.",
+    action = next((action for action in quick_setup.actions if action.id == action_id), None)
+    if action is None:
+        return _serve_error(
+            title="Save action not found",
+            detail=f"Save action with id '{action_id}' does not exist.",
+        )
+
+    errors = validate_custom_validators(
+        quick_setup_id=quick_setup_id,
+        custom_validators=action.custom_validators,
+        stages_raw_formspecs=stages_raw_formspecs,
+        quick_setup_formspec_map=form_spec_map,
+    )
+    if errors.exist():
+        return _serve_data(
+            AllStageErrors(
+                all_stage_errors=[errors],
+            ),
+            status_code=400,
+        )
+
+    return _serve_data(
+        complete_quick_setup(
+            action=action,
+            mode=mode,
+            stages_raw_formspecs=stages_raw_formspecs,
+            quick_setup_formspec_map=form_spec_map,
+            object_id=params.get("object_id"),
+        ),
+        status_code=201,
     )
 
 

@@ -25,6 +25,7 @@ class Errors(BaseSchema):
     stage_index = fields.Integer(
         example=0,
         description="Index of the stage containing errors.",
+        allow_none=True,
     )
     formspec_errors = fields.Dict(
         example={},

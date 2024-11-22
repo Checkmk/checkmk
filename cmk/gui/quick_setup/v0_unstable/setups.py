@@ -105,9 +105,33 @@ class QuickSetupStage:
 
 @dataclass(frozen=True)
 class QuickSetupAction:
+    """Dataclass representing an action that can be triggered at the end of the Quick setup flow.
+
+    Attributes:
+        id:
+            The unique identifier of the action
+        label:
+            The label of the action button
+        action:
+            The callable that is executed when the action is triggered
+        custom_validators:
+            A list of custom validators that are executed before the action is executed.
+            Prior to the custom validators, the formspecs of each stage are validated (again
+            if the user is in the 'guided' mode).
+
+
+            The individual stage custom validators are not executed. This is due to the fact
+            that some stage validations overlap in context with each other
+            (e.g. check key connection and then check the entire configuration).
+
+            Therefore, relevant custom validators should be included again here (especially
+            if the 'overview' mode is enabled)
+    """
+
     id: ActionId
     label: str
     action: CallableAction
+    custom_validators: Iterable[CallableValidator] = ()
 
 
 @dataclass(frozen=True)

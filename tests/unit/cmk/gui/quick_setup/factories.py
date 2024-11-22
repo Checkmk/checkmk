@@ -34,6 +34,7 @@ class QuickSetupStageForTest(QuickSetupStage):
 @dataclass(frozen=True)
 class QuickSetupActionForTest(QuickSetupAction):
     action: Callable
+    custom_validators: Sequence[Callable]
 
 
 @dataclass(frozen=True)

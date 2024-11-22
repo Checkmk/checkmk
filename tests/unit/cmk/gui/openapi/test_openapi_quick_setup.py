@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Sequence
+from typing import Iterable
 
 import pytest
 
@@ -15,6 +16,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, Uniqu
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableValidator,
     QuickSetup,
     QuickSetupAction,
     QuickSetupStage,
@@ -44,6 +46,7 @@ from cmk.rulesets.v1.form_specs import (
 def register_quick_setup(
     setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None,
+    action_custom_validators: Iterable[CallableValidator] | None = None,
 ) -> None:
     quick_setup_registry.register(
         QuickSetup(
@@ -55,11 +58,13 @@ def register_quick_setup(
                     id=ActionId("save"),
                     label="Complete",
                     action=lambda stages, mode, object_id: "http://save/url",
+                    custom_validators=action_custom_validators or [],
                 ),
                 QuickSetupAction(
                     id=ActionId("other_save"),
                     label="Complete2: The Sequel",
                     action=lambda stages, mode, object_id: "http://other_save",
+                    custom_validators=action_custom_validators or [],
                 ),
             ],
             load_data=load_data,
@@ -511,15 +516,10 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
             ],
             [
                 {
-                    "stage_index": 0,
                     "formspec_errors": {},
                     "stage_errors": ["this is a general error", "and another one"],
-                },
-                {
-                    "stage_index": 1,
-                    "formspec_errors": {},
-                    "stage_errors": ["this is a general error", "and another one"],
-                },
+                    "stage_index": None,
+                }
             ],
         ),
     ],
@@ -529,6 +529,7 @@ def test_validation_on_save_all(
     clients: ClientRegistry, post_data: list, expected_errors: list
 ) -> None:
     register_quick_setup(
+        action_custom_validators=[_form_spec_extra_validate],
         setup_stages=[
             lambda: QuickSetupStage(
                 title="stage1",
@@ -544,7 +545,7 @@ def test_validation_on_save_all(
                 actions=[
                     QuickSetupStageAction(
                         id=ActionId("action"),
-                        custom_validators=[_form_spec_extra_validate],
+                        custom_validators=[],
                         recap=[],
                         next_button_label="Next",
                     )
@@ -564,7 +565,7 @@ def test_validation_on_save_all(
                 actions=[
                     QuickSetupStageAction(
                         id=ActionId("action"),
-                        custom_validators=[_form_spec_extra_validate],
+                        custom_validators=[],
                         recap=[],
                         next_button_label="Next",
                     )

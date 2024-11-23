@@ -47,6 +47,7 @@ pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker f
 pytest-random-order = "*"  # used to test resiliency
 pytest-xdist = "*" # used to limit number of procs in e2e tests
 pytest-check = "*" # used to queue failed assertions and continue test execution
+pytest-opentelemetry = "*" # instrument pytest runs
 python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
 responses = "*"  # used for unit tests
 ruff = "*"

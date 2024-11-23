@@ -13,6 +13,7 @@ from shutil import which
 from typing import Any, Literal
 
 import pytest
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 from tests.testlib.agent import (
     agent_controller_daemon,
@@ -38,6 +39,11 @@ _TEST_SITES_LOGGING_LEVELS: Mapping[str, int] = {
     "cmk.web.background-job": 10,
     "cmk.web": 10,
 }
+
+
+@pytest.fixture(scope="session", autouse=True)
+def instrument_requests() -> None:
+    RequestsInstrumentor().instrument()
 
 
 def _write_global_settings(site: Site, file_path: str, settings: dict[str, Any]) -> None:

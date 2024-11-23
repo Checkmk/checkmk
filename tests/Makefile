@@ -284,7 +284,8 @@ test-integration:
 	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
 test-composition:
-	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
+	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)

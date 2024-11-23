@@ -981,9 +981,6 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ", prima potrivire sare peste acest pachet de reguli"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -4763,14 +4760,6 @@ msgstr ""
 "Information' și completați dialogul.<br>Dacă totul este corect, veți primi "
 "acum fișierul de răspuns de verificare care conține detaliile abonamentului "
 "dvs."
-
-#, fuzzy
-msgid ""
-"After setting up a new service in PagerDuty you will receive an Integration "
-"key associated with that service. Copy that value here."
-msgstr ""
-"După ce configurați un nou serviciu în PagerDuty, veți primi o cheie de "
-"integrare asociată cu serviciul respectiv. Copiați această valoare aici."
 
 #, python-format
 msgid ""
@@ -22735,10 +22724,6 @@ msgstr ""
 msgid "Error: Unknown time period id '%s'"
 msgstr "Eroare: Unknown time period id '%s'"
 
-#, python-format
-msgid "Error: passwords.mk validation %s"
-msgstr ""
-
 msgid "Errors"
 msgstr "Erori"
 
@@ -24514,6 +24499,10 @@ msgid "File grouping"
 msgstr "Gruparea fișierelor"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Modele de grupare a fișierelor"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Reguli"
 
@@ -24769,10 +24758,6 @@ msgid "Fingerprint: %s"
 msgstr "Amprenta digitală: %s."
 
 msgid "Finished"
-msgstr "Finalizat"
-
-#, fuzzy, python-format
-msgid "Finished %s"
 msgstr "Finalizat"
 
 msgid "Finished."
@@ -32789,10 +32774,6 @@ msgstr ""
 msgid "In Progress"
 msgstr "În curs de desfășurare"
 
-#, fuzzy, python-format
-msgid "In Progress %s"
-msgstr "În curs de desfășurare"
-
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -33967,9 +33948,6 @@ msgstr "Integrarea cu platformele VM, cloud sau de containere"
 
 msgid "Integrating Prometheus"
 msgstr "Integrarea Prometheus"
-
-msgid "Integration Key"
-msgstr "Cheia de integrare"
 
 #, fuzzy
 msgid "Integration team"
@@ -48811,11 +48789,23 @@ msgstr ""
 "Vă rugăm să introduceți o valoare hexagonală de 10 cifre, cu litere mici, de "
 "exemplu 0x00000000 sau 0x8004131f."
 
+#, fuzzy
+msgid "Please enter a Service Integration Key"
+msgstr "Cheia de integrare a serviciului PagerDuty"
+
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
 
 msgid "Please enter a time."
 msgstr "Vă rugăm să introduceți o oră."
+
+#, fuzzy
+msgid "Please enter a valid REST endpoint"
+msgstr "Vă rugăm să introduceți un număr valid"
+
+#, fuzzy
+msgid "Please enter a valid Webhook URL"
+msgstr "Vă rugăm să introduceți un număr valid"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr ""
@@ -50700,9 +50690,6 @@ msgstr "Specificația REST API generată cu succes"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Utilizați HTTP ETags pentru blocarea optimistă"
-
-msgid "REST Endpoint URL"
-msgstr "URL-ul punctului final REST"
 
 msgid "REWRITE"
 msgstr "REWRITE"
@@ -57084,6 +57071,10 @@ msgstr "Afișați toate subiectele"
 msgid "Show bar visualization"
 msgstr "Afișați vizualizarea barei"
 
+#, fuzzy
+msgid "Show batch details"
+msgstr "Arată detalii"
+
 msgid "Show check parameters"
 msgstr "Afișarea parametrilor de verificare"
 
@@ -59393,7 +59384,8 @@ msgstr "Statul de licență Splunk"
 msgid "Splunk License Usage"
 msgstr "Utilizarea licenței Splunk"
 
-msgid "Splunk On-Call REST Endpoint"
+#, fuzzy
+msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST Endpoint"
 
 msgid "Splunk instance to query."
@@ -62800,6 +62792,14 @@ msgstr "Mecanismul Piggyback"
 msgid "The Port Description"
 msgstr "Descrierea portului"
 
+#, fuzzy
+msgid ""
+"The REST endpoint must begin with <tt>https://alert.victorops.com/"
+"integrations</tt>"
+msgstr ""
+"Webhook-URL trebuie să înceapă cu <tt>https://alert.victorops.com/"
+"integrations</tt>."
+
 msgid ""
 "The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
 "running RCC commands. There is one ROBOCORP_HOME directory per user. The "
@@ -62940,13 +62940,6 @@ msgstr ""
 
 msgid "The User Base DN is not configured."
 msgstr "DN-ul de bază al utilizatorului nu este configurat."
-
-msgid ""
-"The Webhook-URL must begin with <tt>https://alert.victorops.com/"
-"integrations</tt>"
-msgstr ""
-"Webhook-URL trebuie să înceapă cu <tt>https://alert.victorops.com/"
-"integrations</tt>."
 
 #, fuzzy
 msgid ""
@@ -67019,6 +67012,10 @@ msgstr "Nu există încă elemente definite pentru această selecție."
 
 msgid "There are no elements for selection."
 msgstr "Nu există elemente de selecție."
+
+#, fuzzy
+msgid "There are no passwords defined for this selection yet."
+msgstr "Nu există încă elemente definite pentru această selecție."
 
 msgid "There are no rules defined in this folder."
 msgstr "Nu există reguli definite în acest dosar."
@@ -75628,9 +75625,6 @@ msgstr "Verificarea URL-ului"
 msgid "URL from host to remote site"
 msgstr "URL de la gazdă la site-ul la distanță"
 
-msgid "URL from password store"
-msgstr "URL din magazinul de parole"
-
 msgid "URL not allowed"
 msgstr "URL nepermis"
 
@@ -80455,9 +80449,6 @@ msgstr ""
 "Mattermost urmați documentația <a href=\"https://docs.mattermost.com/"
 "developer/webhooks-incoming.html\" target=\"_blank\">aici</a><br />Acest URL "
 "poate fi colectat și din Password Store de la Checkmk."
-
-msgid "Webhook-URL"
-msgstr "Webhook-URL"
 
 msgid "Wednesday"
 msgstr "Miercuri"
@@ -86731,6 +86722,34 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "După ce configurați un nou serviciu în PagerDuty, veți primi o cheie de "
+#~ "integrare asociată cu serviciul respectiv. Copiați această valoare aici."
+
+#, fuzzy, python-format
+#~ msgid "Finished %s"
+#~ msgstr "Finalizat"
+
+#, fuzzy, python-format
+#~ msgid "In Progress %s"
+#~ msgstr "În curs de desfășurare"
+
+#~ msgid "Integration Key"
+#~ msgstr "Cheia de integrare"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "URL-ul punctului final REST"
+
+#~ msgid "URL from password store"
+#~ msgstr "URL din magazinul de parole"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #, fuzzy, python-format
 #~ msgid "Activation (%s)"

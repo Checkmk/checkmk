@@ -980,9 +980,6 @@ msgstr ""
 msgid ", the first match skips this rule pack"
 msgstr ", o primeiro jogo salta este pacote de regras"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -4755,14 +4752,6 @@ msgstr ""
 "Information' e preencha a caixa de diálogo.<br>Se tudo estiver correto, você "
 "receberá o arquivo de resposta de verificação agora contendo os detalhes da "
 "sua assinatura."
-
-#, fuzzy
-msgid ""
-"After setting up a new service in PagerDuty you will receive an Integration "
-"key associated with that service. Copy that value here."
-msgstr ""
-"Depois de configurar um novo serviço no PagerDuty você receberá uma chave de "
-"integração associada a esse serviço. Copie esse valor aqui."
 
 #, python-format
 msgid ""
@@ -22693,10 +22682,6 @@ msgstr ""
 msgid "Error: Unknown time period id '%s'"
 msgstr "Erro: ID de período de tempo desconhecido '%s'"
 
-#, python-format
-msgid "Error: passwords.mk validation %s"
-msgstr ""
-
 msgid "Errors"
 msgstr "Erros"
 
@@ -24464,6 +24449,10 @@ msgid "File grouping"
 msgstr "Agrupamento de ficheiros"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Padrões de agrupamento de arquivos"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Padrões de ficheiros"
 
@@ -24721,10 +24710,6 @@ msgid "Fingerprint: %s"
 msgstr "Impressão digital: %s"
 
 msgid "Finished"
-msgstr "Concluído"
-
-#, fuzzy, python-format
-msgid "Finished %s"
 msgstr "Concluído"
 
 msgid "Finished."
@@ -32722,10 +32707,6 @@ msgstr ""
 msgid "In Progress"
 msgstr "Em andamento"
 
-#, fuzzy, python-format
-msgid "In Progress %s"
-msgstr "Em andamento"
-
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -33880,9 +33861,6 @@ msgstr "Integrar com VM, plataformas de nuvem ou contentores"
 
 msgid "Integrating Prometheus"
 msgstr "Integração do Prometheus"
-
-msgid "Integration Key"
-msgstr "Chave de Integração"
 
 #, fuzzy
 msgid "Integration team"
@@ -48720,11 +48698,23 @@ msgstr ""
 "Por favor, introduza um valor hexadecimais de 10 dígitos, em minúsculas, por "
 "exemplo 0x00000000 ou 0x8004131f."
 
+#, fuzzy
+msgid "Please enter a Service Integration Key"
+msgstr "Chave de Integração do Serviço PagerDuty"
+
 msgid "Please enter a filename."
 msgstr "Por favor, introduza um nome de ficheiro."
 
 msgid "Please enter a time."
 msgstr "Por favor, introduza uma hora."
+
+#, fuzzy
+msgid "Please enter a valid REST endpoint"
+msgstr "Por favor, introduza um número válido"
+
+#, fuzzy
+msgid "Please enter a valid Webhook URL"
+msgstr "Por favor, introduza um número válido"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr ""
@@ -50603,9 +50593,6 @@ msgstr "Anfitrião criado com sucesso"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Use ETags HTTP para bloqueio otimista"
-
-msgid "REST Endpoint URL"
-msgstr "URL do Endpoint REST"
 
 msgid "REWRITE"
 msgstr "REWRITE"
@@ -56942,6 +56929,10 @@ msgstr "Mostrar todos os tópicos"
 msgid "Show bar visualization"
 msgstr "visualização do BI"
 
+#, fuzzy
+msgid "Show batch details"
+msgstr "Mostrar detalhes"
+
 msgid "Show check parameters"
 msgstr "Mostrar parâmetros de verificação"
 
@@ -59238,7 +59229,8 @@ msgstr "Estado da Licença Splunk"
 msgid "Splunk License Usage"
 msgstr "Utilização da Licença Splunk"
 
-msgid "Splunk On-Call REST Endpoint"
+#, fuzzy
+msgid "Splunk On-Call REST endpoint"
 msgstr "Ponto de extremidade REST do Splunk On-Call"
 
 msgid "Splunk instance to query."
@@ -62642,6 +62634,14 @@ msgstr "O mecanismo Piggyback"
 msgid "The Port Description"
 msgstr "A Descrição do Porto"
 
+#, fuzzy
+msgid ""
+"The REST endpoint must begin with <tt>https://alert.victorops.com/"
+"integrations</tt>"
+msgstr ""
+"O Webhook-URL deve começar com <tt>https://alert.victorops.com/integrations</"
+"tt>"
+
 msgid ""
 "The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
 "running RCC commands. There is one ROBOCORP_HOME directory per user. The "
@@ -62780,13 +62780,6 @@ msgstr ""
 
 msgid "The User Base DN is not configured."
 msgstr "O DN base do usuário não está configurado."
-
-msgid ""
-"The Webhook-URL must begin with <tt>https://alert.victorops.com/"
-"integrations</tt>"
-msgstr ""
-"O Webhook-URL deve começar com <tt>https://alert.victorops.com/integrations</"
-"tt>"
 
 #, fuzzy
 msgid ""
@@ -66806,6 +66799,10 @@ msgstr "Ainda não há elementos definidos para esta seleção."
 
 msgid "There are no elements for selection."
 msgstr "Não há elementos para seleção."
+
+#, fuzzy
+msgid "There are no passwords defined for this selection yet."
+msgstr "Ainda não há elementos definidos para esta seleção."
 
 msgid "There are no rules defined in this folder."
 msgstr "Não há regras definidas nesta pasta."
@@ -75414,9 +75411,6 @@ msgstr "Verificação de URL"
 msgid "URL from host to remote site"
 msgstr "URL do host para o site remoto"
 
-msgid "URL from password store"
-msgstr "URL da loja de senhas"
-
 msgid "URL not allowed"
 msgstr "URL não permitido"
 
@@ -80217,9 +80211,6 @@ msgstr ""
 "Mattermost siga a documentação <a href=\"https://docs.mattermost.com/"
 "developer/webhooks-incoming.html\" target=\"_blank\">here</a><br />Esta URL "
 "também pode ser coletada na Loja de Senhas da Checkmk."
-
-msgid "Webhook-URL"
-msgstr "Webhook-URL"
 
 msgid "Wednesday"
 msgstr "Quarta-feira"
@@ -86455,6 +86446,34 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "Depois de configurar um novo serviço no PagerDuty você receberá uma chave "
+#~ "de integração associada a esse serviço. Copie esse valor aqui."
+
+#, fuzzy, python-format
+#~ msgid "Finished %s"
+#~ msgstr "Concluído"
+
+#, fuzzy, python-format
+#~ msgid "In Progress %s"
+#~ msgstr "Em andamento"
+
+#~ msgid "Integration Key"
+#~ msgstr "Chave de Integração"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "URL do Endpoint REST"
+
+#~ msgid "URL from password store"
+#~ msgstr "URL da loja de senhas"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #, fuzzy, python-format
 #~ msgid "Activation (%s)"

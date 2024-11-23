@@ -977,9 +977,6 @@ msgstr ", geen data ontvangen in de afgelopen %.1f check perioden"
 msgid ", the first match skips this rule pack"
 msgstr ", de eerste match zorgt ervoor dat deze regels overgeslagen worden"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -4763,14 +4760,6 @@ msgstr ""
 "selecteer uw actieve abonnement. Klik op 'Uploaden' onder 'Licentiegegevens "
 "uploaden' en vul het dialoogvenster in.<br>Als alles correct is, ontvangt u "
 "nu het verificatiebestand met uw abonnementsgegevens."
-
-#, fuzzy
-msgid ""
-"After setting up a new service in PagerDuty you will receive an Integration "
-"key associated with that service. Copy that value here."
-msgstr ""
-"Na het opzetten van een nieuwe Service in PagerDuty ontvangt u een "
-"Integratie sleutel gekoppeld aan die service. Kopieer die waarde hier."
 
 #, python-format
 msgid ""
@@ -22696,10 +22685,6 @@ msgstr ""
 msgid "Error: Unknown time period id '%s'"
 msgstr "Fout: Onbekende tijdsperiode id '%s'"
 
-#, python-format
-msgid "Error: passwords.mk validation %s"
-msgstr ""
-
 msgid "Errors"
 msgstr "Fouten"
 
@@ -24471,6 +24456,10 @@ msgid "File grouping"
 msgstr "Bestandsgroepering"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Patronen voor het groeperen van bestanden"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Bestandspatronen"
 
@@ -24727,10 +24716,6 @@ msgid "Fingerprint: %s"
 msgstr "Vingerafdruk: %s"
 
 msgid "Finished"
-msgstr "Afgewerkt"
-
-#, fuzzy, python-format
-msgid "Finished %s"
 msgstr "Afgewerkt"
 
 msgid "Finished."
@@ -32735,10 +32720,6 @@ msgstr ""
 msgid "In Progress"
 msgstr "In uitvoering"
 
-#, fuzzy, python-format
-msgid "In Progress %s"
-msgstr "In uitvoering"
-
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -33890,9 +33871,6 @@ msgstr "Integratie met VM-, cloud- of containerplatforms"
 
 msgid "Integrating Prometheus"
 msgstr "Integratie van Prometheus"
-
-msgid "Integration Key"
-msgstr "Integratie Toets"
 
 #, fuzzy
 msgid "Integration team"
@@ -48756,11 +48734,23 @@ msgstr ""
 "Voer een 10-cijferige hexadecimale waarde met kleine letters in, bijv. "
 "0x000000 of 0x8004131f."
 
+#, fuzzy
+msgid "Please enter a Service Integration Key"
+msgstr "PagerDuty Service Integratie Sleutel"
+
 msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
 
 msgid "Please enter a time."
 msgstr "Geef een tijd op."
+
+#, fuzzy
+msgid "Please enter a valid REST endpoint"
+msgstr "Voer een geldig nummer in"
+
+#, fuzzy
+msgid "Please enter a valid Webhook URL"
+msgstr "Voer een geldig nummer in"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr "Voer een geldige absolute padnaam in met / als pad scheidingsteken."
@@ -50633,9 +50623,6 @@ msgstr "Host succesvol aangemaakt"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Gebruik HTTP ETags voor optimistische vergrendeling"
-
-msgid "REST Endpoint URL"
-msgstr "REST Eindpunt URL"
 
 msgid "REWRITE"
 msgstr "REWRITE"
@@ -56956,6 +56943,10 @@ msgstr "Toon alle onderwerpen"
 msgid "Show bar visualization"
 msgstr "BI-visualisatie"
 
+#, fuzzy
+msgid "Show batch details"
+msgstr "Toon details"
+
 msgid "Show check parameters"
 msgstr "Toon controleparameters"
 
@@ -59240,7 +59231,8 @@ msgstr "Splunk Licentie Staat"
 msgid "Splunk License Usage"
 msgstr "Splunk Licentie Gebruik"
 
-msgid "Splunk On-Call REST Endpoint"
+#, fuzzy
+msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk Op afroep REST Eindpunt"
 
 msgid "Splunk instance to query."
@@ -62658,6 +62650,14 @@ msgstr "Het Piggyback mechanisme"
 msgid "The Port Description"
 msgstr "De Haven Beschrijving"
 
+#, fuzzy
+msgid ""
+"The REST endpoint must begin with <tt>https://alert.victorops.com/"
+"integrations</tt>"
+msgstr ""
+"De Webhook-URL moet beginnen met <tt>https://alert.victorops.com/"
+"integrations</tt>"
+
 msgid ""
 "The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
 "running RCC commands. There is one ROBOCORP_HOME directory per user. The "
@@ -62797,13 +62797,6 @@ msgstr ""
 
 msgid "The User Base DN is not configured."
 msgstr "De basis-DN van de gebruiker is niet geconfigureerd."
-
-msgid ""
-"The Webhook-URL must begin with <tt>https://alert.victorops.com/"
-"integrations</tt>"
-msgstr ""
-"De Webhook-URL moet beginnen met <tt>https://alert.victorops.com/"
-"integrations</tt>"
 
 #, fuzzy
 msgid ""
@@ -66846,6 +66839,10 @@ msgstr "Er zijn nog geen elementen gedefinieerd voor deze selectie."
 
 msgid "There are no elements for selection."
 msgstr "Er zijn geen elementen voor selectie."
+
+#, fuzzy
+msgid "There are no passwords defined for this selection yet."
+msgstr "Er zijn nog geen elementen gedefinieerd voor deze selectie."
 
 msgid "There are no rules defined in this folder."
 msgstr "Er zijn geen regels gedefinieerd in deze map."
@@ -75458,9 +75455,6 @@ msgstr "URL controleren"
 msgid "URL from host to remote site"
 msgstr "URL van host naar externe site"
 
-msgid "URL from password store"
-msgstr "URL van wachtwoord opslag"
-
 msgid "URL not allowed"
 msgstr "URL niet toegestaan"
 
@@ -80281,9 +80275,6 @@ msgstr ""
 "de documentatie <a href=\"https://docs.mattermost.com/developer/webhooks-"
 "incoming.html\" target=\"_blank\">hier</a><br />Deze URL kan ook worden "
 "opgehaald uit de Password Store van Checkmk."
-
-msgid "Webhook-URL"
-msgstr "Webhook-URL"
 
 msgid "Wednesday"
 msgstr "Woensdag"
@@ -86559,6 +86550,34 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "Na het opzetten van een nieuwe Service in PagerDuty ontvangt u een "
+#~ "Integratie sleutel gekoppeld aan die service. Kopieer die waarde hier."
+
+#, fuzzy, python-format
+#~ msgid "Finished %s"
+#~ msgstr "Afgewerkt"
+
+#, fuzzy, python-format
+#~ msgid "In Progress %s"
+#~ msgstr "In uitvoering"
+
+#~ msgid "Integration Key"
+#~ msgstr "Integratie Toets"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "REST Eindpunt URL"
+
+#~ msgid "URL from password store"
+#~ msgstr "URL van wachtwoord opslag"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #, fuzzy, python-format
 #~ msgid "Activation (%s)"

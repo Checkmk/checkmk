@@ -984,9 +984,6 @@ msgstr ""
 msgid ", the first match skips this rule pack"
 msgstr "la première correspondance ignore ce paquet de règles"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -4805,14 +4802,6 @@ msgstr ""
 "'Upload License Information' et complétez la boîte de dialogue.<br>Si tout "
 "est correct, vous recevrez le fichier de vérification de réponse contenant "
 "maintenant les détails de votre abonnement."
-
-#, fuzzy
-msgid ""
-"After setting up a new service in PagerDuty you will receive an Integration "
-"key associated with that service. Copy that value here."
-msgstr ""
-"Après avoir configuré un nouveau service dans PagerDuty, vous recevrez une "
-"clé d'intégration associée à ce service. Copiez cette valeur ici."
 
 #, python-format
 msgid ""
@@ -22896,10 +22885,6 @@ msgstr ""
 msgid "Error: Unknown time period id '%s'"
 msgstr "Erreur : Identifiant de période inconnu '%s'"
 
-#, python-format
-msgid "Error: passwords.mk validation %s"
-msgstr ""
-
 msgid "Errors"
 msgstr "Erreurs"
 
@@ -24686,6 +24671,10 @@ msgid "File grouping"
 msgstr "Regroupement de fichiers"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Modèles de regroupement de fichiers"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Modèles de fichiers"
 
@@ -24945,10 +24934,6 @@ msgid "Fingerprint: %s"
 msgstr "Empreinte digitale : %s"
 
 msgid "Finished"
-msgstr "Fini"
-
-#, fuzzy, python-format
-msgid "Finished %s"
 msgstr "Fini"
 
 msgid "Finished."
@@ -33032,10 +33017,6 @@ msgstr ""
 msgid "In Progress"
 msgstr "En cours"
 
-#, fuzzy, python-format
-msgid "In Progress %s"
-msgstr "En cours"
-
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -34205,9 +34186,6 @@ msgstr "Intégration avec les plates-formes VM, cloud ou conteneurs"
 
 msgid "Integrating Prometheus"
 msgstr "Intégration de Prometheus"
-
-msgid "Integration Key"
-msgstr "Clé d'intégration"
 
 #, fuzzy
 msgid "Integration team"
@@ -49177,11 +49155,23 @@ msgstr ""
 "Veuillez saisir une valeur hexagonale à 10 chiffres, en minuscules, par "
 "exemple 0x00000000 ou 0x8004131f."
 
+#, fuzzy
+msgid "Please enter a Service Integration Key"
+msgstr "Clé d'intégration du service PagerDuty"
+
 msgid "Please enter a filename."
 msgstr "Veuillez entrer un nom de fichier."
 
 msgid "Please enter a time."
 msgstr "Veuillez entrer une heure."
+
+#, fuzzy
+msgid "Please enter a valid REST endpoint"
+msgstr "Veuillez entrer un numéro valide"
+
+#, fuzzy
+msgid "Please enter a valid Webhook URL"
+msgstr "Veuillez entrer un numéro valide"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr ""
@@ -51083,9 +51073,6 @@ msgstr ""
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "API REST : Utilisation des ETags HTTP pour le verrouillage optimiste"
-
-msgid "REST Endpoint URL"
-msgstr "URL du point de terminaison REST"
 
 msgid "REWRITE"
 msgstr "REWRITE"
@@ -57490,6 +57477,10 @@ msgstr "Afficher tous les sujets"
 msgid "Show bar visualization"
 msgstr "Visualisation de la BI"
 
+#, fuzzy
+msgid "Show batch details"
+msgstr "Afficher les détails"
+
 msgid "Show check parameters"
 msgstr "Afficher les paramètres de contrôle"
 
@@ -59802,7 +59793,8 @@ msgstr "État de la licence Splunk"
 msgid "Splunk License Usage"
 msgstr "Utilisation de la licence Splunk"
 
-msgid "Splunk On-Call REST Endpoint"
+#, fuzzy
+msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST Endpoint"
 
 msgid "Splunk instance to query."
@@ -63248,6 +63240,14 @@ msgstr "Le mécanisme de ferroutage"
 msgid "The Port Description"
 msgstr "La description du port"
 
+#, fuzzy
+msgid ""
+"The REST endpoint must begin with <tt>https://alert.victorops.com/"
+"integrations</tt>"
+msgstr ""
+"Le Webhook-URL doit commencer par <tt>https://alert.victorops.com/"
+"integrations</tt>"
+
 msgid ""
 "The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
 "running RCC commands. There is one ROBOCORP_HOME directory per user. The "
@@ -63389,13 +63389,6 @@ msgstr ""
 
 msgid "The User Base DN is not configured."
 msgstr "Le DN de base de l'utilisateur n'est pas configuré."
-
-msgid ""
-"The Webhook-URL must begin with <tt>https://alert.victorops.com/"
-"integrations</tt>"
-msgstr ""
-"Le Webhook-URL doit commencer par <tt>https://alert.victorops.com/"
-"integrations</tt>"
 
 #, fuzzy
 msgid ""
@@ -67471,6 +67464,10 @@ msgstr "Il n'y a pas encore d'éléments définis pour cette sélection."
 
 msgid "There are no elements for selection."
 msgstr "Il n'y a pas d'éléments de sélection."
+
+#, fuzzy
+msgid "There are no passwords defined for this selection yet."
+msgstr "Il n'y a pas encore d'éléments définis pour cette sélection."
 
 msgid "There are no rules defined in this folder."
 msgstr "Il n'y a pas de règles définies dans ce dossier."
@@ -76178,9 +76175,6 @@ msgstr "Vérification des URL"
 msgid "URL from host to remote site"
 msgstr "URL de l'hôte vers le site distant"
 
-msgid "URL from password store"
-msgstr "URL du magasin de mots de passe"
-
 msgid "URL not allowed"
 msgstr "URL non autorisé"
 
@@ -81072,9 +81066,6 @@ msgstr ""
 "developer/webhooks-incoming.html\" target=\"_blank\">here</a><br />Cette URL "
 "peut également être collectée à partir du magasin de mots de passe de "
 "Checkmk."
-
-msgid "Webhook-URL"
-msgstr "Webhook-URL"
 
 msgid "Wednesday"
 msgstr "Mercredi"
@@ -87426,6 +87417,34 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "Après avoir configuré un nouveau service dans PagerDuty, vous recevrez "
+#~ "une clé d'intégration associée à ce service. Copiez cette valeur ici."
+
+#, fuzzy, python-format
+#~ msgid "Finished %s"
+#~ msgstr "Fini"
+
+#, fuzzy, python-format
+#~ msgid "In Progress %s"
+#~ msgstr "En cours"
+
+#~ msgid "Integration Key"
+#~ msgstr "Clé d'intégration"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "URL du point de terminaison REST"
+
+#~ msgid "URL from password store"
+#~ msgstr "URL du magasin de mots de passe"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #, fuzzy, python-format
 #~ msgid "Activation (%s)"

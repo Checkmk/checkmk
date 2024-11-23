@@ -970,9 +970,6 @@ msgstr "、最後の %.1f チェック期間内にデータが受信されてい
 msgid ", the first match skips this rule pack"
 msgstr ",最初の一致はこのルールパックをスキップします"
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr "-.--%"
 
@@ -4573,13 +4570,6 @@ msgstr ""
 "スクリプションを選択します。「ライセンス情報のアップロード」の下にある「アッ"
 "プロード」をクリックし、ダイアログを完了します。<br>すべてが正常であれば、サ"
 "ブスクリプションの詳細が記載された認証応答ファイルが送信されます。"
-
-msgid ""
-"After setting up a new service in PagerDuty you will receive an Integration "
-"key associated with that service. Copy that value here."
-msgstr ""
-"PagerDutyで新しいサービスを設定すると、そのサービスに関連付けられた統合キーを"
-"受け取ります。その値をここにコピーします。"
 
 #, python-format
 msgid ""
@@ -21716,10 +21706,6 @@ msgstr "エラー:スナップショットの作成を担当するプロセス�
 msgid "Error: Unknown time period id '%s'"
 msgstr "エラー:不明な期間ID '%s'"
 
-#, python-format
-msgid "Error: passwords.mk validation %s"
-msgstr ""
-
 msgid "Errors"
 msgstr "エラー"
 
@@ -23478,6 +23464,10 @@ msgid "File grouping"
 msgstr "ファイルのグループ化"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "ファイルのグループ化パターン"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "ファイルパターン"
 
@@ -23730,10 +23720,6 @@ msgid "Fingerprint: %s"
 msgstr "フィンガープリント: %s"
 
 msgid "Finished"
-msgstr "終了しました"
-
-#, fuzzy, python-format
-msgid "Finished %s"
 msgstr "終了しました"
 
 msgid "Finished."
@@ -31587,10 +31573,6 @@ msgstr ""
 msgid "In Progress"
 msgstr "進行中"
 
-#, fuzzy, python-format
-msgid "In Progress %s"
-msgstr "進行中"
-
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
@@ -32733,9 +32715,6 @@ msgstr "VM、クラウド、またはコンテナプラットフォームと統�
 
 msgid "Integrating Prometheus"
 msgstr "Prometheus統合"
-
-msgid "Integration Key"
-msgstr "統合キー"
 
 #, fuzzy
 msgid "Integration team"
@@ -47390,11 +47369,23 @@ msgid ""
 msgstr ""
 "10桁の小文字の16進数値（例：0x00000000、0x8004131f）を入力してください。"
 
+#, fuzzy
+msgid "Please enter a Service Integration Key"
+msgstr "PagerDutyサービス統合キー"
+
 msgid "Please enter a filename."
 msgstr "ファイル名を入力してください。"
 
 msgid "Please enter a time."
 msgstr "時間を入力してください。"
+
+#, fuzzy
+msgid "Please enter a valid REST endpoint"
+msgstr "有効な数値を入力してください"
+
+#, fuzzy
+msgid "Please enter a valid Webhook URL"
+msgstr "有効な数値を入力してください"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
 msgstr ""
@@ -49245,9 +49236,6 @@ msgstr "ホスト作成に成功しました"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: 楽観的ロックにHTTP Etags を使用する"
-
-msgid "REST Endpoint URL"
-msgstr "RESTエンドポイントURL"
 
 msgid "REWRITE"
 msgstr "リライト"
@@ -55522,6 +55510,10 @@ msgstr "全てのトピックを表示"
 msgid "Show bar visualization"
 msgstr "BIの視覚化"
 
+#, fuzzy
+msgid "Show batch details"
+msgstr "詳細を表示"
+
 msgid "Show check parameters"
 msgstr "チェックパラメータを表示する"
 
@@ -57741,7 +57733,8 @@ msgstr "Splunkライセンスの状態"
 msgid "Splunk License Usage"
 msgstr "Splunkライセンスの使用"
 
-msgid "Splunk On-Call REST Endpoint"
+#, fuzzy
+msgid "Splunk On-Call REST endpoint"
 msgstr "Splunk On-Call REST エンドポイント"
 
 msgid "Splunk instance to query."
@@ -61072,6 +61065,14 @@ msgstr "ピギーバックメカニズム"
 msgid "The Port Description"
 msgstr "ポートの説明"
 
+#, fuzzy
+msgid ""
+"The REST endpoint must begin with <tt>https://alert.victorops.com/"
+"integrations</tt>"
+msgstr ""
+"Webhook-URLは<tt>https://alert.victorops.com/integrations</tt>で始まる必要が"
+"あります"
+
 msgid ""
 "The Robotmk scheduler sets the variable ROBOCORP_HOME explicitely when "
 "running RCC commands. There is one ROBOCORP_HOME directory per user. The "
@@ -61211,13 +61212,6 @@ msgstr ""
 
 msgid "The User Base DN is not configured."
 msgstr "ユーザーベースDNが構成されていません。"
-
-msgid ""
-"The Webhook-URL must begin with <tt>https://alert.victorops.com/"
-"integrations</tt>"
-msgstr ""
-"Webhook-URLは<tt>https://alert.victorops.com/integrations</tt>で始まる必要が"
-"あります"
 
 #, fuzzy
 msgid ""
@@ -65133,6 +65127,10 @@ msgstr "この選択にはまだ要素が定義されていません。"
 
 msgid "There are no elements for selection."
 msgstr "選択する要素はありません。"
+
+#, fuzzy
+msgid "There are no passwords defined for this selection yet."
+msgstr "この選択にはまだ要素が定義されていません。"
 
 msgid "There are no rules defined in this folder."
 msgstr "このフォルダにはルールが定義されていません。"
@@ -73537,9 +73535,6 @@ msgstr "URLチェック"
 msgid "URL from host to remote site"
 msgstr "ホストからリモートサイトへのURL"
 
-msgid "URL from password store"
-msgstr "パスワードストアからのURL"
-
 msgid "URL not allowed"
 msgstr "許可されていないURL"
 
@@ -78262,9 +78257,6 @@ msgstr ""
 "Mattermostについては<a href=\"https://docs.mattermost.com/developer/webhooks-"
 "incoming.html\" target=\"_blank\">こちら</a><br />のドキュメントをご参照くだ"
 "さい。このURLはCheckmkのPassword Storeからも収集することができます。"
-
-msgid "Webhook-URL"
-msgstr "Webhook-URL"
 
 msgid "Wednesday"
 msgstr "水曜日"
@@ -84364,6 +84356,33 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#~ msgid ""
+#~ "After setting up a new service in PagerDuty you will receive an "
+#~ "Integration key associated with that service. Copy that value here."
+#~ msgstr ""
+#~ "PagerDutyで新しいサービスを設定すると、そのサービスに関連付けられた統合"
+#~ "キーを受け取ります。その値をここにコピーします。"
+
+#, fuzzy, python-format
+#~ msgid "Finished %s"
+#~ msgstr "終了しました"
+
+#, fuzzy, python-format
+#~ msgid "In Progress %s"
+#~ msgstr "進行中"
+
+#~ msgid "Integration Key"
+#~ msgstr "統合キー"
+
+#~ msgid "REST Endpoint URL"
+#~ msgstr "RESTエンドポイントURL"
+
+#~ msgid "URL from password store"
+#~ msgstr "パスワードストアからのURL"
+
+#~ msgid "Webhook-URL"
+#~ msgstr "Webhook-URL"
 
 #, fuzzy, python-format
 #~ msgid "Activation (%s)"

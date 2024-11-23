@@ -2067,17 +2067,20 @@ def _get_replication_dir_config_sync_file_infos_per_inode(
 
         for dir_name in dir_names:
             dir_path = os.path.join(root, dir_name)
-            if (
-                os.path.exists(dir_path)
-                and os.path.islink(dir_path)
-                and not dir_name == GENERAL_DIR_EXCLUDE
-            ):
-                inode_sync_states[os.stat(dir_path).st_ino] = _get_config_sync_file_info(dir_path)
+            try:
+                if os.path.islink(dir_path) and not dir_name == GENERAL_DIR_EXCLUDE:
+                    inode_sync_states[os.stat(dir_path).st_ino] = _get_config_sync_file_info(
+                        dir_path
+                    )
+            except FileNotFoundError:
+                pass  # Ignore directories vanishing during processing
 
         for file_name in file_names:
             file_path = os.path.join(root, file_name)
-            if os.path.exists(file_path):
+            try:
                 inode_sync_states[os.stat(file_path).st_ino] = _get_config_sync_file_info(file_path)
+            except FileNotFoundError:
+                pass  # Ignore files vanishing during processing
 
 
 def _prepare_for_activation_tasks(

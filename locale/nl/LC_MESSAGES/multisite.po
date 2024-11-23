@@ -22706,6 +22706,10 @@ msgid "File grouping"
 msgstr "Bestandsgroepering"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Patronen voor het groeperen van bestanden"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Bestandspatronen"
 

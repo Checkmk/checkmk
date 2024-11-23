@@ -22915,6 +22915,10 @@ msgid "File grouping"
 msgstr "Regroupement de fichiers"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Modèles de regroupement de fichiers"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Modèles de fichiers"
 

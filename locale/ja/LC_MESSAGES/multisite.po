@@ -21692,6 +21692,10 @@ msgid "File grouping"
 msgstr "ファイルのグループ化"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "ファイルのグループ化パターン"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "ファイルパターン"
 

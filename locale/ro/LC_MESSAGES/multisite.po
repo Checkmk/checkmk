@@ -22736,6 +22736,10 @@ msgid "File grouping"
 msgstr "Gruparea fișierelor"
 
 #, fuzzy
+msgid "File grouping patterns"
+msgstr "Modele de grupare a fișierelor"
+
+#, fuzzy
 msgid "File huge pages"
 msgstr "Reguli"
 

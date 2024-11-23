@@ -460,7 +460,10 @@ class JobRenderer:
                     progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
                 html.td(HTML.without_escaping(progress_text), css="job_last_progress")
 
-            html.td(HTMLWriter.render_br().join(loginfo["JobResult"]), css="job_result")
+            html.td(
+                HTML.without_escaping("<br>".join(loginfo["JobResult"])),
+                css="job_result",
+            )
         else:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")

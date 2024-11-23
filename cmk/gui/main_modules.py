@@ -104,7 +104,6 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 
         for plugin_package_name in _plugin_package_names(main_module_name):
             if not _is_plugin_namespace(plugin_package_name):
-                logger.debug("  Skip loading plug-ins from %s", plugin_package_name)
                 continue
 
             logger.debug("  Importing plug-ins from %s", plugin_package_name)

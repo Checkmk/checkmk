@@ -26,7 +26,6 @@ __all__ = [
     "AutocheckEntry",
     "AutochecksStore",
     "AutochecksManager",
-    "DiscoveredService",
     "remove_autochecks_of_host",
     "set_autochecks_for_effective_host",
     "set_autochecks_of_cluster",
@@ -211,12 +210,12 @@ def _consolidate_autochecks_of_real_hosts(
     existing_autochecks: Sequence[AutocheckEntry],
 ) -> Sequence[AutocheckEntry]:
     consolidated = {
-        DiscoveredService.id(discovered): DiscoveredService.newer(discovered)
+        discovered.newer.id(): discovered.newer
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
 
-    new_services = {DiscoveredService.id(x.service) for x in new_services_with_nodes}
+    new_services = {x.service.newer.id() for x in new_services_with_nodes}
     consolidated.update(
         (id_, ex)
         for ex in existing_autochecks
@@ -246,7 +245,7 @@ def set_autochecks_of_cluster(
             autochecks_owner=node,
             effective_host=hostname,
             new_services=[
-                DiscoveredService.newer(discovered)
+                discovered.newer  # TODO: really? new_er_?
                 for discovered, found_on_nodes in new_services_with_nodes_by_host[node]
                 if node in found_on_nodes
             ],
@@ -323,36 +322,6 @@ def remove_autochecks_of_host(
     store.write(new_entries)
 
     return len(existing_entries) - len(new_entries)
-
-
-class DiscoveredService:
-    @staticmethod
-    def check_plugin_name(discovered_item: DiscoveredItem[AutocheckEntry]) -> CheckPluginName:
-        return DiscoveredService.older(discovered_item).check_plugin_name
-
-    @staticmethod
-    def item(discovered_item: DiscoveredItem[AutocheckEntry]) -> Item:
-        return DiscoveredService.older(discovered_item).item
-
-    @staticmethod
-    def id(discovered_item: DiscoveredItem[AutocheckEntry]) -> ServiceID:
-        return DiscoveredService.older(discovered_item).id()
-
-    @staticmethod
-    def older(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
-        if discovered_item.previous is not None:
-            return discovered_item.previous
-        if discovered_item.new is not None:
-            return discovered_item.new
-        raise ValueError("Neither previous nor new service is set.")
-
-    @staticmethod
-    def newer(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
-        if discovered_item.new is not None:
-            return discovered_item.new
-        if discovered_item.previous is not None:
-            return discovered_item.previous
-        raise ValueError("Neither previous nor new service is set.")
 
 
 class DiscoveredLabelsCache:

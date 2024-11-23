@@ -40,7 +40,6 @@ from ._autochecks import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksStore,
-    DiscoveredService,
     merge_cluster_autochecks,
     remove_autochecks_of_host,
     set_autochecks_of_cluster,
@@ -222,7 +221,7 @@ def automation_discovery(
 
         existing_services_by_host = {
             h: {
-                DiscoveredService.id(x.service): x
+                x.service.older.id(): x
                 for x in itertools.chain(
                     services.get("changed", []),
                     services.get("unchanged", []),
@@ -262,12 +261,12 @@ def automation_discovery(
             (
                 x.service
                 for x in existing_services_by_host[host_name].values()
-                if DiscoveredService.id(x.service) not in final_services_by_host[host_name]
+                if x.service.newer.id() not in final_services_by_host[host_name]
             ),
             (
                 x.service
                 for x in final_services_by_host[host_name].values()
-                if DiscoveredService.id(x.service) not in existing_services_by_host[host_name]
+                if x.service.newer.id() not in existing_services_by_host[host_name]
             ),
         )
 
@@ -310,10 +309,12 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
             case "new":
                 if settings.add_new_services:
                     new = {
-                        DiscoveredService.id(s.service): s
+                        s.service.newer.id(): s
                         for s in discovered_services_with_nodes
                         if service_filters.new(
-                            get_service_description(host_name, *DiscoveredService.id(s.service))
+                            get_service_description(
+                                host_name, s.service.newer.check_plugin_name, s.service.newer.item
+                            )
                         )
                     }
                     result.self_new += len(new)
@@ -322,7 +323,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
             case "unchanged" | "ignored":
                 # keep currently existing valid services in any case
                 post_discovery_services.update(
-                    (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
+                    (s.service.newer.id(), s) for s in discovered_services_with_nodes
                 )
                 result.self_kept += len(discovered_services_with_nodes)
 
@@ -333,8 +334,8 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                     new_entry = AutocheckServiceWithNodes(
                         service=DiscoveredItem[AutocheckEntry](
                             new=AutocheckEntry(
-                                check_plugin_name=DiscoveredService.check_plugin_name(service),
-                                item=DiscoveredService.item(service),
+                                check_plugin_name=service.newer.check_plugin_name,
+                                item=service.newer.item,
                                 parameters=(
                                     service.new.parameters
                                     if settings.update_changed_service_parameters
@@ -350,7 +351,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                         ),
                         nodes=entry.nodes,
                     )
-                    post_discovery_services[DiscoveredService.id(service)] = new_entry
+                    post_discovery_services[service.newer.id()] = new_entry
                     if new_entry.service.new != new_entry.service.previous:
                         result.self_changed += 1
                     else:
@@ -361,11 +362,15 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 # otherwise fix it: remove ignored and non-longer existing services
                 for entry in discovered_services_with_nodes:
                     if settings.remove_vanished_services and service_filters.vanished(
-                        get_service_description(host_name, *DiscoveredService.id(entry.service))
+                        get_service_description(
+                            host_name,
+                            entry.service.newer.check_plugin_name,
+                            entry.service.newer.item,
+                        )
                     ):
                         result.self_removed += 1
                     else:
-                        post_discovery_services[DiscoveredService.id(entry.service)] = entry
+                        post_discovery_services[entry.service.newer.id()] = entry
 
                         result.self_kept += 1
 
@@ -373,7 +378,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
                     # Silently keep clustered services
                     post_discovery_services.update(
-                        (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
+                        (s.service.newer.id(), s) for s in discovered_services_with_nodes
                     )
                 match check_transition:
                     case "clustered_new":
@@ -408,17 +413,17 @@ def _make_diff(
                 *(f"Added host label: '{l.label}'." for l in labels_new),
                 *(
                     (
-                        f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
-                        if DiscoveredService.item(s) is None
-                        else f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        f"Removed service: Check plug-in '{s.newer.check_plugin_name}'."
+                        if s.newer.item is None
+                        else f"Removed service: Check plug-in '{s.newer.check_plugin_name}' / item '{s.newer.item}'."
                     )
                     for s in services_vanished
                 ),
                 *(
                     (
-                        f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
-                        if DiscoveredService.item(s) is None
-                        else f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        f"Added service: Check plug-in '{s.newer.check_plugin_name}'."
+                        if s.newer.item is None
+                        else f"Added service: Check plug-in '{s.newer.check_plugin_name}' / item '{s.newer.item}'."
                     )
                     for s in services_new
                 ),
@@ -687,14 +692,14 @@ def make_table(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
     return {
-        DiscoveredService.id(entry): ServicesTableEntry(
+        entry.newer.id(): ServicesTableEntry(
             transition=_node_service_source(
                 host_name,
                 ignore_service=ignore_service,
                 ignore_plugin=ignore_plugin,
                 check_source=service_transition,
                 cluster_name=get_effective_host(host_name, service_name),
-                check_plugin_name=DiscoveredService.check_plugin_name(entry),
+                check_plugin_name=entry.newer.check_plugin_name,
                 service_name=service_name,
             ),
             autocheck=entry,
@@ -703,7 +708,7 @@ def make_table(
         for service_transition, entry in entries.chain_with_transition()
         if (
             service_name := get_service_description(
-                host_name, DiscoveredService.check_plugin_name(entry), DiscoveredService.item(entry)
+                host_name, entry.newer.check_plugin_name, entry.newer.item
             )
         )
     }
@@ -754,7 +759,7 @@ def _make_cluster_table(
             ],
         )
         for service_transition, entry in entries.chain_with_transition()
-        for sid in (DiscoveredService.id(entry),)
+        for sid in (entry.newer.id(),)
     }
 
 

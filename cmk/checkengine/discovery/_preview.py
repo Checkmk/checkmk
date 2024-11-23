@@ -38,7 +38,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckEntry, AutochecksStore, DiscoveredService
+from ._autochecks import AutocheckEntry, AutochecksStore
 from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
@@ -180,16 +180,18 @@ def get_check_preview(
                 h,
                 check_plugins=check_plugins,
                 service=ConfiguredService(
-                    check_plugin_name=DiscoveredService.check_plugin_name(entry),
-                    item=DiscoveredService.item(entry),
-                    description=find_service_description(h, *DiscoveredService.id(entry)),
-                    parameters=compute_check_parameters(h, DiscoveredService.older(entry)),
-                    discovered_parameters=DiscoveredService.older(entry).parameters,
-                    discovered_labels=DiscoveredService.older(entry).service_labels,
+                    check_plugin_name=entry.newer.check_plugin_name,
+                    item=entry.newer.item,
+                    description=find_service_description(
+                        h, entry.newer.check_plugin_name, entry.newer.item
+                    ),
+                    parameters=compute_check_parameters(h, entry.older),
+                    discovered_parameters=entry.older.parameters,
+                    discovered_labels=entry.older.service_labels,
                     is_enforced=False,
                 ),
-                new_discovered_parameters=DiscoveredService.newer(entry).parameters,
-                new_service_labels=DiscoveredService.newer(entry).service_labels,
+                new_discovered_parameters=entry.newer.parameters,
+                new_service_labels=entry.newer.service_labels,
                 check_source=check_source,
                 providers=providers,
                 found_on_nodes=found_on_nodes,

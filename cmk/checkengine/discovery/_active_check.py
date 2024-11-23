@@ -30,7 +30,7 @@ from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_p
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckServiceWithNodes, AutochecksStore, DiscoveredService
+from ._autochecks import AutocheckServiceWithNodes, AutochecksStore
 from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
@@ -223,9 +223,9 @@ def _check_service_lists(
         filtered = True
 
         for service, _found_on_nodes in discovered_services:
-            check_plugin_name = DiscoveredService.check_plugin_name(service)
+            check_plugin_name = service.newer.check_plugin_name
             service_description = find_service_description(
-                host_name, *DiscoveredService.id(service)
+                host_name, service.newer.check_plugin_name, service.newer.item
             )
             service_result = _make_service_result(
                 transition.title, check_plugin_name, service_description=service_description
@@ -246,8 +246,10 @@ def _check_service_lists(
     modified_params = False
     for service, _found_on_nodes in services_by_transition.get("changed", []):
         modified = False
-        check_plugin_name = DiscoveredService.check_plugin_name(service)
-        service_description = find_service_description(host_name, *DiscoveredService.id(service))
+        check_plugin_name = service.newer.check_plugin_name
+        service_description = find_service_description(
+            host_name, service.newer.check_plugin_name, service.newer.item
+        )
         assert service.previous is not None and service.new is not None
 
         subresults.append(
@@ -291,9 +293,9 @@ def _check_service_lists(
     subresults.extend(
         _make_service_result(
             "ignored",
-            DiscoveredService.check_plugin_name(ignored_service),
+            ignored_service.newer.check_plugin_name,
             service_description=find_service_description(
-                host_name, *DiscoveredService.id(ignored_service)
+                host_name, ignored_service.newer.check_plugin_name, ignored_service.newer.item
             ),
         )
         for ignored_service, _found_on_nodes in services_by_transition.get("ignored", [])

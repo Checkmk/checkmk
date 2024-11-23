@@ -47,7 +47,6 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._active_check import _check_host_labels, _check_service_lists
-from cmk.checkengine.discovery._autochecks import DiscoveredService
 from cmk.checkengine.discovery._autodiscovery import (
     _get_post_discovery_autocheck_services,
     _group_by_transition,
@@ -597,7 +596,7 @@ def test__get_post_discovery_services(
     service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
-        DiscoveredService.item(entry.service) or ""
+        entry.service.newer.item or ""
         for entry in _get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,

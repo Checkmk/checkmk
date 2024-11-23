@@ -126,6 +126,16 @@ _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
 class DiscoveredItem(Generic[_DiscoveredItem]):
     previous: _DiscoveredItem | None
     new: _DiscoveredItem | None
+    older: _DiscoveredItem = dataclasses.field(init=False)
+    newer: _DiscoveredItem = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        older = self.new if self.previous is None else self.previous
+        newer = self.previous if self.new is None else self.new
+        if older is None or newer is None:
+            raise ValueError("Either 'previous' or 'new' must be set.")
+        self.older = older
+        self.newer = newer
 
 
 class QualifiedDiscovery(Generic[_DiscoveredItem]):

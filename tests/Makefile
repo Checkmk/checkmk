@@ -313,7 +313,7 @@ test-update-cross-edition-cme: # from CEE to CME
 	--latest-base-version --target-edition=CME --disable-interactive-mode --session-timeout 5400
 
 test-schemathesis-openapi:
-	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
+	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi) -p schemathesis
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \

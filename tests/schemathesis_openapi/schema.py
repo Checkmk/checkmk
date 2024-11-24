@@ -196,8 +196,7 @@ def get_schema() -> schemas.BaseOpenAPISchema:
             case.headers["Authorization"] = token
             case.headers["Content-Type"] = "application/json"
 
-    site_id = site.id
-    api_url = f"http://localhost/{site_id}/check_mk/api/1.0"
+    api_url = f"http://localhost:{site.apache_port}/{site.id}/check_mk/api/1.0"
     schema_filename = "openapi-swagger-ui"
     schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", "")
     if os.path.exists(f"{schema_filedir}/{schema_filename}.json"):

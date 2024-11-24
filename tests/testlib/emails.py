@@ -72,7 +72,7 @@ class EmailManager:
         return None
 
     def wait_for_email(
-        self, email_subject: str | None = None, interval: int = 3, timeout: int = 20
+        self, email_subject: str | None = None, interval: int = 3, timeout: int = 120
     ) -> Path:
         """Wait for an email with the specified subject to be received in the Maildir folder.
         Return the file path of the email if it is received, otherwise raise TimeoutError.

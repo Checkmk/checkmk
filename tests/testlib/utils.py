@@ -28,6 +28,8 @@ from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.ccc.version import Edition
 
+from cmk import trace
+
 logger = logging.getLogger(__name__)
 
 
@@ -232,6 +234,7 @@ def run(
     **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     """Run a process and return a `subprocess.CompletedProcess` object."""
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
     args_ = _extend_command(args, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["capture_output"] = capture_output
@@ -253,10 +256,23 @@ def execute(
     The method wraps `subprocess.Popen` and initializes some `kwargs` by default.
     NOTE: use it as a contextmanager; `with execute(...) as process: ...`
     """
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
     cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
     return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
+
+
+def _add_trace_context(
+    kwargs: dict, preserve_env: list[str] | None, sudo: bool
+) -> tuple[list[str] | None, dict]:
+    if trace_env := trace.context_for_environment():
+        kwargs["env"] = {**kwargs.get("env", os.environ), **trace_env}
+        if sudo and preserve_env is not None:
+            preserve_env.extend(trace_env.keys())
+        elif sudo:
+            preserve_env = list(trace_env.keys())
+    return preserve_env, kwargs
 
 
 def _extend_command(
@@ -399,6 +415,7 @@ def check_output(
 
     Returns the stdout of the process.
     """
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
     cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding

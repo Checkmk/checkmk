@@ -13,8 +13,8 @@ from the configuration.
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.paths import checks_dir, local_checks_dir
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.servicename import Item
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -61,24 +61,6 @@ def get_ruleset_matcher() -> RulesetMatcher:
     """Return a helper object to perform matching on Checkmk rulesets"""
     _load_config()
     return config.get_config_cache().ruleset_matcher
-
-
-def ruleset_match_object_of_service(
-    hostname: HostName, svc_desc: ServiceName, svc_labels: Labels
-) -> RulesetMatchObject:
-    """Construct the object that is needed to match service rulesets"""
-    matcher = get_ruleset_matcher()
-    matcher.cache_service_labels(hostname, svc_desc, svc_labels)
-    return matcher._service_match_object(hostname, svc_desc)
-
-
-def ruleset_match_object_for_checkgroup_parameters(
-    hostname: HostName, item: Item, svc_desc: ServiceName, svc_labels: Labels
-) -> RulesetMatchObject:
-    """Construct the object that is needed to match checkgroup parameter rulesets"""
-    matcher = get_ruleset_matcher()
-    matcher.cache_service_checkgroup(hostname, svc_desc, item, svc_labels)
-    return matcher._checkgroup_match_object(hostname, svc_desc, item)
 
 
 def get_host_labels(hostname: HostName) -> Labels:

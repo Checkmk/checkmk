@@ -1313,14 +1313,14 @@ class Rule:
         elif self.ruleset.item_type() == "service":
             if svc_desc_or_item is None:
                 raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = cmk.base.export.ruleset_match_object_of_service(
-                hostname, svc_desc_or_item, svc_labels=service_labels
+            match_object = ruleset_matcher.RulesetMatchObject(
+                hostname, svc_desc_or_item, service_labels
             )
         elif self.ruleset.item_type() == "item":
             if svc_desc is None:
                 raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
-                hostname, svc_desc_or_item, svc_desc, svc_labels=service_labels
+            match_object = ruleset_matcher.RulesetMatchObject(
+                hostname, svc_desc_or_item, service_labels
             )
         elif not self.ruleset.item_type():
             match_object = ruleset_matcher.RulesetMatchObject(hostname)

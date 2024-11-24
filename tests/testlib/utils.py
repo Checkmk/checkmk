@@ -31,6 +31,7 @@ from cmk.ccc.version import Edition
 from cmk import trace
 
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer()
 
 
 def verbose_called_process_error(excp: subprocess.CalledProcessError) -> str:
@@ -240,7 +241,9 @@ def run(
     kwargs["capture_output"] = capture_output
     kwargs["encoding"] = encoding
     kwargs["input"] = input
-    return subprocess.run(args_, check=check, **kwargs)
+
+    with tracer.start_as_current_span("run", attributes={"cmk.command": repr(args_)}):
+        return subprocess.run(args_, check=check, **kwargs)
 
 
 def execute(
@@ -260,7 +263,9 @@ def execute(
     cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
-    return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
+
+    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+        return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
 
 
 def _add_trace_context(
@@ -420,7 +425,9 @@ def check_output(
 
     kwargs["encoding"] = encoding
     kwargs["input"] = input
-    return subprocess.check_output(cmd_, **kwargs)
+
+    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+        return subprocess.check_output(cmd_, **kwargs)
 
 
 def write_file(

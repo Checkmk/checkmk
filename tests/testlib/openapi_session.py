@@ -18,7 +18,10 @@ from tests.testlib.version import CMKVersion
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
 
+from cmk import trace
+
 logger = logging.getLogger("rest-session")
+tracer = trace.get_tracer()
 
 
 class RequestSessionRequestHandler(RequestHandler):
@@ -182,6 +185,7 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
+    @tracer.start_as_current_span("activate_changes_and_wait_for_completion")
     def activate_changes_and_wait_for_completion(
         self,
         sites: list[str] | None = None,
@@ -406,6 +410,7 @@ class CMKOpenApiSession(requests.Session):
         if not response.status_code == 200:
             raise UnexpectedResponse.from_response(response)
 
+    @tracer.start_as_current_span("rename_host_and_wait_for_completion")
     def rename_host_and_wait_for_completion(
         self,
         *,
@@ -469,6 +474,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
+    @tracer.start_as_current_span("bulk_discover_services_and_wait_for_completion")
     def bulk_discover_services_and_wait_for_completion(
         self,
         hostnames: list[str],
@@ -546,6 +552,7 @@ class CMKOpenApiSession(requests.Session):
         job_status_response: dict = response.json()
         return job_status_response
 
+    @tracer.start_as_current_span("discover_services_and_wait_for_completion")
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:

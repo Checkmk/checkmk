@@ -126,12 +126,13 @@ def add_links(
             elif parameter_pattern and parameter_pattern != property_pattern:
                 logger.warning(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
-                    ' "%s" has a different pattern!',
+                    ' "%s" has a different pattern "%s"!',
                     method.upper(),
                     endpoint["target"],
                     parameter_pattern,
                     endpoint["source"],
                     property_id,
+                    property_pattern,
                 )
             schema.add_link(
                 source=schema[endpoint["source"]]["POST"],

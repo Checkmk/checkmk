@@ -24,7 +24,7 @@ def _formspec_fritzbox():
                         "is not a total timeout, instead it is applied to each API call."
                     ),
                     prefill=form_specs.DefaultValue(10.0),
-                    custom_validate=(form_specs.validators.NumberInRange(1.0, float("inf")),),
+                    custom_validate=(form_specs.validators.NumberInRange(1.0, None),),
                     migrate=float,  # type: ignore[arg-type]
                 ),
             ),

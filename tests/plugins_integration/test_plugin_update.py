@@ -17,9 +17,11 @@ logger = logging.getLogger(__name__)
 # * Arista dumps containing several checks that have been removed after 2.3.0.
 # * BIG-IP cluster containing several checks remaining in PEND state, leading to assertion-error
 #   after update. See CMK-19103.
+# * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
 SKIPPED_DUMPS = [
     "snmp-sw-arista.demo.checkmk.com_2_2_p12",
     "snmp-f5-bigip-failover-cluster",
+    "agent-2.2.0p8-ceph-17.2.6",
 ]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.

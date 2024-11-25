@@ -1,0 +1,10 @@
+Title: Custom host attributes: Allow non-ASCII characters
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1732543781
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Currently it was not possible to assign values with non-ASCII characters to a custom host attribute, while custom service attributes supported it. This change fixes the limitation by allowing the user to enter non-ASCII character values in those attributes.

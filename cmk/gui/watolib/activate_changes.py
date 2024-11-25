@@ -48,6 +48,10 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
+from cmk.utils.certs import (
+    CustomerBrokerCA,
+    SiteBrokerCA,
+)
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -131,7 +135,6 @@ from cmk.gui.watolib.snapshots import SnapshotManager
 
 from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
-from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
 
@@ -2258,8 +2261,8 @@ def sync_and_activate(
 
 def create_broker_certificates(
     broker_cert_sync: BrokerCertificateSync,
-    central_ca: CertificateWithPrivateKey,
-    customer_ca: CertificateWithPrivateKey | None,
+    central_ca: SiteBrokerCA,
+    customer_ca: CustomerBrokerCA | None,
     settings: SiteConfiguration,
     site_activation_state: SiteActivationState,
     origin_span: trace.Span,
@@ -2312,7 +2315,7 @@ def _create_broker_certificates_for_remote_sites(
                 (
                     broker_sync,
                     central_ca,
-                    customer_ca,
+                    customer_ca.cert_bundle if customer_ca else None,
                     settings,
                     site_activation_states[site_id],
                     trace.get_current_span(),

@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, Self
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
@@ -22,7 +22,13 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk import messaging
+from cmk.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    PersistedCertificateWithPrivateKey,
+)
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 
@@ -215,3 +221,211 @@ class CertManagementEvent(SecurityEvent):
             details,
             SecurityEvent.Domain.cert_management,
         )
+
+
+class SiteBrokerCertificate:
+    def __init__(self, bundle: CertificateWithPrivateKey) -> None:
+        self.cert_bundle = bundle
+
+    @classmethod
+    def key_path(cls, omd_root: Path) -> Path:
+        return messaging.site_key_file(omd_root)
+
+    @classmethod
+    def cert_path(cls, omd_root: Path) -> Path:
+        return messaging.site_cert_file(omd_root)
+
+    @classmethod
+    def create(cls, site_name: str, omd_root: Path, issuer: CertificateWithPrivateKey) -> Self:
+        """Have the site's certificate issued by the given CA.
+
+        The certificate and key are not persisted to disk directly because this method is also used
+        to create certificates for remote sites.
+        """
+        common_name = site_name  # Note: this is used to identify the rabbitmq user
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=2)
+        is_ca = False
+        key_size = 4096
+
+        cert_bundle = issuer.issue_new_certificate(
+            common_name=common_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+        return cls(cert_bundle)
+
+    def persist(self, omd_root: Path) -> None:
+        cert_path = self.cert_path(omd_root)
+        key_path = self.key_path(omd_root)
+
+        cert_path.parent.mkdir(parents=True, exist_ok=True)
+        PersistedCertificateWithPrivateKey.persist(self.cert_bundle, cert_path, key_path)
+
+    @classmethod
+    def persist_broker_certificates(
+        cls,
+        omd_root: Path,
+        received: messaging.BrokerCertificates,
+    ) -> None:
+        """Persist the received certificates to disk."""
+        cert_path = cls.cert_path(omd_root)
+        key_path = cls.key_path(omd_root)
+
+        ca = Certificate.load_pem(CertificatePEM(received.signing_ca))
+        Certificate.load_pem(CertificatePEM(received.cert)).verify_is_signed_by(ca)
+
+        cert_path.parent.mkdir(parents=True, exist_ok=True)
+
+        MessagingTrustedCAs.write(omd_root, received.signing_ca + received.additionally_trusted_ca)
+        cert_path.write_bytes(received.cert)
+        key_path.write_bytes(received.key)
+
+
+class SiteBrokerCA:
+    def __init__(self, bundle: PersistedCertificateWithPrivateKey) -> None:
+        self.cert_bundle = bundle
+
+    @classmethod
+    def key_path(cls, omd_root: Path) -> Path:
+        return messaging.ca_key_file(omd_root)
+
+    @classmethod
+    def cert_path(cls, omd_root: Path) -> Path:
+        return messaging.cacert_file(omd_root)
+
+    @classmethod
+    def create_and_persist(cls, site_name: str, omd_root: Path) -> Self:
+        common_name = f"Site '{site_name}' broker CA"
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=5)
+        key_size = 4096
+        is_ca = True
+
+        cert_path = cls.cert_path(omd_root)
+        key_path = cls.key_path(omd_root)
+
+        cert = CertificateWithPrivateKey.generate_self_signed(
+            common_name=common_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+        cert_path.parent.mkdir(parents=True, exist_ok=True)
+        return cls(PersistedCertificateWithPrivateKey.persist(cert, cert_path, key_path))
+
+    @classmethod
+    def load(cls, omd_root: Path) -> Self:
+        return cls(
+            PersistedCertificateWithPrivateKey.read_files(
+                cls.cert_path(omd_root),
+                cls.key_path(omd_root),
+            )
+        )
+
+    def write_trusted_cas_file(self, omd_root: Path) -> None:
+        messaging.trusted_cas_file(omd_root).write_text(
+            self.cert_bundle.certificate_path.read_text()
+        )
+
+    @classmethod
+    def delete(cls, omd_root: Path) -> None:
+        cls.cert_path(omd_root).unlink(missing_ok=True)
+        cls.key_path(omd_root).unlink(missing_ok=True)
+
+
+class CustomerBrokerCA:
+    def __init__(self, bundle: PersistedCertificateWithPrivateKey) -> None:
+        self.cert_bundle = bundle
+
+    @classmethod
+    def key_path(cls, omd_root: Path, customer: str) -> Path:
+        return messaging.multisite_ca_key_file(omd_root, customer)
+
+    @classmethod
+    def cert_path(cls, omd_root: Path, customer: str) -> Path:
+        return messaging.multisite_cacert_file(omd_root, customer)
+
+    @classmethod
+    def create_and_persist(cls, customer: str, site_name: str, omd_root: Path) -> Self:
+        common_name = f"Message broker '{customer}' CA"
+        organization = f"Checkmk Site {site_name}"
+        expires = relativedelta(years=5)
+        key_size = 4096
+        is_ca = True
+
+        cert_path = cls.cert_path(omd_root, customer)
+        key_path = cls.key_path(omd_root, customer)
+
+        cert = CertificateWithPrivateKey.generate_self_signed(
+            common_name=common_name,
+            organization=organization,
+            expiry=expires,
+            key_size=key_size,
+            is_ca=is_ca,
+        )
+
+        cert_path.parent.mkdir(parents=True, exist_ok=True)
+        return cls(PersistedCertificateWithPrivateKey.persist(cert, cert_path, key_path))
+
+    @classmethod
+    def load(cls, customer: str, omd_root: Path) -> Self:
+        return cls(
+            PersistedCertificateWithPrivateKey.read_files(
+                cls.cert_path(omd_root, customer),
+                cls.key_path(omd_root, customer),
+            )
+        )
+
+    @classmethod
+    def delete(cls, customer: str, omd_root: Path) -> None:
+        cls.cert_path(omd_root, customer).unlink(missing_ok=True)
+        cls.key_path(omd_root, customer).unlink(missing_ok=True)
+
+
+class LocalBrokerCertificate:
+    @classmethod
+    def cert_path(cls, omd_root: Path, site_name: str) -> Path:
+        return messaging.multisite_cert_file(omd_root, site_name)
+
+    @classmethod
+    def load(cls, site_name: str, omd_root: Path) -> Certificate:
+        return Certificate.load_pem(CertificatePEM(cls.cert_path(omd_root, site_name).read_bytes()))
+
+    @classmethod
+    def write(cls, site_name: str, omd_root: Path, cert: bytes) -> None:
+        save_single_cert(
+            cls.cert_path(omd_root, site_name),
+            Certificate.load_pem(CertificatePEM(cert)),
+        )
+
+    @classmethod
+    def exists(cls, site_name: str, omd_root: Path) -> bool:
+        return cls.cert_path(omd_root, site_name).exists()
+
+
+class MessagingTrustedCAs:
+    @classmethod
+    def path(cls, omd_root: Path) -> Path:
+        return messaging.trusted_cas_file(omd_root)
+
+    @classmethod
+    def write(cls, omd_root: Path, certs: bytes) -> None:
+        cls.path(omd_root).write_bytes(certs)
+
+    @classmethod
+    def update_trust_cme(cls, omd_root: Path) -> None:
+        """Add all customer CAs to the trusted CAs file. Only relevant in a multisite setup."""
+        trusted_cas = [SiteBrokerCA.cert_path(omd_root).read_bytes()]
+        for path in messaging.all_cme_cacert_files(omd_root):
+            try:
+                trusted_cas.append(path.read_bytes())
+            except FileNotFoundError:
+                pass
+
+        cls.write(omd_root, b"".join(trusted_cas))

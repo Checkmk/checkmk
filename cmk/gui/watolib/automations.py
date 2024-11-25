@@ -18,7 +18,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from io import BytesIO
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import requests
 import urllib3
@@ -68,8 +68,11 @@ from cmk.gui.watolib.utils import mk_repr
 
 from cmk import trace
 
-from . import automation_subprocess
+from . import automation_helper, automation_subprocess
 from .automation_executor import AutomationExecutor
+
+# INFO: flag for activating automation helper, which is necessary for testing helper locally.
+USE_AUTOMATION_HELPER_EXECUTOR: Final = False
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
@@ -109,7 +112,12 @@ def check_mk_local_automation_serialized(
         if command in ["restart", "reload"]:
             call_hook_pre_activate_changes()
 
-        executor: AutomationExecutor = automation_subprocess.SubprocessExecutor()
+        executor: AutomationExecutor = (
+            automation_helper.HelperExecutor()
+            if USE_AUTOMATION_HELPER_EXECUTOR
+            else automation_subprocess.SubprocessExecutor()
+        )
+
         try:
             result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:

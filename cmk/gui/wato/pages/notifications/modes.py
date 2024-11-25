@@ -78,7 +78,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.notifications import (
     get_disabled_notifications_infos,
     get_failed_notification_count,
-    get_total_send_notifications,
+    get_total_sent_notifications,
     OPTIMIZE_NOTIFICATIONS_ENTRIES,
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
@@ -985,6 +985,7 @@ def _fallback_mail_contacts_configured() -> bool:
 
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
+    total_send_notifications = get_total_sent_notifications()
     return Notifications(
         overview_title_i18n=_("Notification overview"),
         fallback_warning=(
@@ -1016,7 +1017,9 @@ def _get_vue_data() -> Notifications:
             else None
         ),
         notification_stats=NotificationStats(
-            num_sent_notifications=get_total_send_notifications()[0][0],
+            num_sent_notifications=total_send_notifications[0][0]
+            if total_send_notifications
+            else 0,
             num_failed_notifications=get_failed_notification_count(),
             sent_notification_link=makeuri_contextless(
                 request,

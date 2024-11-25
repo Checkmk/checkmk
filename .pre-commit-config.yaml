@@ -129,3 +129,9 @@ repos:
             language: script
             types: ["bazel", "file", "non-executable", "text"]
             verbose: true
+          - id: pipfile-locking
+            name: Pipfile.lock
+            entry: pipenv verify
+            language: script
+            files: Pipfile
+            verbose: true

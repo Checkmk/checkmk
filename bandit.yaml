@@ -99,7 +99,6 @@ skips:
 # medium severity tests excluded for now; enable step-by-step
 
   - B302  # marshal
-  - B608  # hardcoded_sql_expressions
 
 ### (optional) plugin settings - some test plugins require configuration data
 ### that may be given here, per-plugin. All bandit test plugins have a built in

@@ -256,8 +256,8 @@ class PostgresBase:
         condition = "%s = %s" % (row, idle)
 
         sql_cmd = (
-            "SELECT %s, count(*) FROM pg_stat_activity " "WHERE %s IS NOT NULL GROUP BY (%s);"
-        ) % (condition, row, condition)
+            "SELECT %s, count(*) FROM pg_stat_activity WHERE %s IS NOT NULL GROUP BY (%s);"
+        ) % (condition, row, condition)  # nosec B608 # BNS:fa3c6c
 
         out = self.run_sql_as_db_user(
             sql_cmd, quiet=False, extra_args="--variable ON_ERROR_STOP=1", field_sep=" "

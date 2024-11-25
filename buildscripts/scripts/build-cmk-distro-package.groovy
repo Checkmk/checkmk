@@ -130,7 +130,7 @@ def main() {
                     dependency_paths: [
                         "agents/wnx",
                         "agents/windows",
-                        "packages/cmk-agent-ctl",
+                        "packages/host/cmk-agent-ctl",
                         "packages/mk-sql"
                     ],
                     dest: "artifacts/winagt-build",

@@ -9,7 +9,7 @@ import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, TypeAdapter
 
 from .markup import markdown_to_html, nowiki_to_markdown
 
@@ -140,3 +140,9 @@ class WebsiteWerk(WerkV2Base):
 
     versions: dict[str, str]
     product: Literal["cmk", "cma", "checkmk_kube_agent"]
+
+
+# ATTENTION! If you change this model, you have to inform
+# the website team first! They rely on those fields.
+# The key of the dict is the werk id
+AllWerks = TypeAdapter(dict[str, WebsiteWerk])

@@ -5,6 +5,8 @@
 
 """Central module for common (non-edition specific) registrations"""
 
+from collections.abc import Callable
+
 from cmk.ccc.crash_reporting import CrashReportRegistry
 from cmk.ccc.version import edition
 
@@ -145,9 +147,10 @@ def register(
     folder_validators_registry: FolderValidatorsRegistry,
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
+    help_info_line: Callable[[], str],
 ) -> None:
     pagetypes.register(mega_menu_registry)
-    help_menu.register(mega_menu_registry)
+    help_menu.register(mega_menu_registry, help_info_line)
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()

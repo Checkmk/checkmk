@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 from cmk.ccc.version import __version__, Edition, edition
 
 from cmk.utils import paths
@@ -21,7 +23,7 @@ if edition(paths.omd_root) is Edition.CSE:
     from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 
 
-def register(mega_menu_registry: MegaMenuRegistry) -> None:
+def register(mega_menu_registry: MegaMenuRegistry, info_line: Callable[[], str]) -> None:
     mega_menu_registry.register(
         MegaMenu(
             name="help_links",
@@ -29,9 +31,13 @@ def register(mega_menu_registry: MegaMenuRegistry) -> None:
             icon="main_help",
             sort_index=18,
             topics=_help_menu_topics,
-            info_line=lambda: f"{edition(paths.omd_root).title} {__version__}{_license_status()}",
+            info_line=info_line,
         )
     )
+
+
+def default_info_line() -> str:
+    return f"{edition(paths.omd_root).title} {__version__}{_license_status()}"
 
 
 def _help_menu_topics() -> list[TopicMenuTopic]:

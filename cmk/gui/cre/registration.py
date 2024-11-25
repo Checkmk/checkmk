@@ -21,6 +21,7 @@ from cmk.gui.customer import customer_api_registry, CustomerAPIStub
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
+from cmk.gui.help_menu import default_info_line
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
@@ -151,6 +152,7 @@ def register(edition: Edition) -> None:
         folder_validators_registry,
         user_attribute_registry,
         quick_setup_registry,
+        default_info_line,
     )
 
     features_registry.register(

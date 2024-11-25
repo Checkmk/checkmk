@@ -18,7 +18,7 @@ const props = defineProps<{
   spec: FormSpec
   data: unknown
   backendValidation: ValidationMessages
-  renderMode: 'edit' | 'readonly' | 'both'
+  displayMode: 'edit' | 'readonly' | 'both'
 }>()
 
 const dataRef = ref()
@@ -30,7 +30,7 @@ immediateWatch(
 )
 
 immediateWatch(
-  () => props.renderMode,
+  () => props.displayMode,
   (newValue) => {
     activeMode.value = newValue
   }
@@ -83,7 +83,7 @@ const { ErrorBoundary } = useErrorBoundary()
               <td>
                 <FormEdit
                   v-model:data="dataRef"
-                  :v-if="renderMode === 'edit' || renderMode === 'both'"
+                  :v-if="displayMode === 'edit' || displayMode === 'both'"
                   :backend-validation="backendValidation"
                   :spec="spec"
                 />

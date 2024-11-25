@@ -8,7 +8,7 @@ import pprint
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Literal, TypeVar
+from typing import Any, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -146,13 +146,25 @@ from .visitors._type_defs import FormSpecValidationError as FormSpecValidationEr
 T = TypeVar("T")
 
 
+class DisplayMode(Enum):
+    EDIT = "edit"
+    READONLY = "readonly"
+    BOTH = "both"
+
+
+class RenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
     spec: shared_type_defs.FormSpec
     data: Any
     validation: Any
-    render_mode: Literal["edit", "readonly", "both"]
+    display_mode: str
 
 
 def register_form_specs():
@@ -264,19 +276,13 @@ def get_vue_value(field_id: str, fallback_value: Any) -> Any:
     return fallback_value
 
 
-class RenderMode(Enum):
-    EDIT = "edit"
-    READONLY = "readonly"
-    BOTH = "both"
-
-
 def render_form_spec(
     form_spec: FormSpec[T],
     field_id: str,
     value: Any,
     origin: DataOrigin,
     do_validate: bool,
-    display_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
     vue_app_config = serialize_data_for_frontend(
@@ -319,7 +325,7 @@ def serialize_data_for_frontend(
     origin: DataOrigin,
     do_validate: bool,
     value: Any = DEFAULT_VALUE,
-    render_mode: RenderMode = RenderMode.EDIT,
+    display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> VueAppConfig:
     """Serializes backend value to vue app compatible config."""
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
@@ -334,5 +340,5 @@ def serialize_data_for_frontend(
         spec=vue_component,
         data=vue_value,
         validation=validation,
-        render_mode=render_mode.value,
+        display_mode=display_mode.value,
     )

@@ -44,7 +44,7 @@ function setupVue() {
             // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
             data: appData.data,
             backendValidation: appData.validation,
-            renderMode: appData.render_mode
+            displayMode: appData.display_mode
           })
           break
         }

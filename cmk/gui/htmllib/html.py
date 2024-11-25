@@ -12,7 +12,6 @@ import re
 import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, overload
@@ -20,7 +19,6 @@ from typing import Any, Literal, overload
 from flask import current_app, session
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 
@@ -28,7 +26,6 @@ from cmk.gui import log, utils
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -64,35 +61,10 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
-class ExperimentalRenderMode(Enum):
-    BACKEND = "backend"
-    FRONTEND = "frontend"
-    BACKEND_AND_FRONTEND = "backend_and_frontend"
-
-
 class _Manifest(typing.NamedTuple):
     main: str
     main_stylesheets: list[str]
     stage1: str
-
-
-@request_memoize()
-def get_render_mode() -> ExperimentalRenderMode:
-    # Settings via url overwrite config based settings
-    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
-        rendering_mode = active_config.experimental_features.get(
-            "render_mode", ExperimentalRenderMode.BACKEND.value
-        )
-
-    match rendering_mode:
-        case ExperimentalRenderMode.BACKEND.value:
-            return ExperimentalRenderMode.BACKEND
-        case ExperimentalRenderMode.FRONTEND.value:
-            return ExperimentalRenderMode.FRONTEND
-        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
-            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
-        case _:
-            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
 
 
 def inject_js_profiling_code():

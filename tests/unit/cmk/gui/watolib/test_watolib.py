@@ -215,7 +215,7 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
-        "experimental_features",
+        "vue_experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
         "automation_helper_active",

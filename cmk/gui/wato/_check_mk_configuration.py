@@ -841,17 +841,17 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
         return ConfigDomainGUI()
 
     def ident(self) -> str:
-        return "experimental_features"
+        return "vue_experimental_features"
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Experimental rendering"),
+            title=_("Vue experimental features"),
             help=_("These settings only affect features that are currently under development."),
             elements=[
                 (
-                    "render_mode",
+                    "rule_render_mode",
                     DropdownChoice(
-                        title=_("Form specs"),
+                        title=_("Rule rendering mode"),
                         help=_(
                             "Enable experimental rendering modes for form specs. Keep in mind that"
                             "some form specs are always rendered in the frontend, regardless "

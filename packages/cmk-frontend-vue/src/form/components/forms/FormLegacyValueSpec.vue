@@ -83,12 +83,7 @@ function collectData() {
 
 <template>
   <!-- eslint-disable vue/no-v-html -->
-  <form
-    ref="legacyDOM"
-    style="background: #595959"
-    class="legacy_valuespec"
-    v-html="inputHtml"
-  ></form>
+  <form ref="legacyDOM" class="legacy_valuespec" v-html="inputHtml"></form>
   <!--eslint-enable-->
   <FormValidation :validation="validation"></FormValidation>
 </template>

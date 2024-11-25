@@ -373,8 +373,13 @@ Please verify the logs if this error persists.`
     const errs = err as AllStagesValidationError
 
     for (const stageError of errs.all_stage_errors) {
-      stages.value[stageError.stage_index]!.errors = stageError.stage_errors
-      stages.value[stageError.stage_index]!.form_spec_errors = stageError.formspec_errors
+      const stageIndex =
+        typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
+          ? stageError.stage_index
+          : stages.value.length - 1
+
+      stages.value[stageIndex]!.errors = stageError.stage_errors
+      stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
     }
   } else {
     stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors

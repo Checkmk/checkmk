@@ -103,7 +103,7 @@ export interface QsStageValidationError {
 }
 
 interface QsStageValidationIndexError extends QsStageValidationError {
-  stage_index: number
+  stage_index?: number | null
 }
 
 export interface RestApiError {

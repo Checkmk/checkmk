@@ -9023,10 +9023,6 @@ msgid "Batch Requests/sec"
 msgstr "Batch verzoeken/sec"
 
 #, fuzzy
-msgid "Batch id"
-msgstr "Pad ID"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Wedstrijd"
 
@@ -51199,6 +51195,10 @@ msgstr "Recente gebeurtenissen"
 msgid "Recent processing batches"
 msgstr "Verwerkingstijd van gebeurtenissen"
 
+#, fuzzy
+msgid "Recent processing transactions"
+msgstr "Verwerkingstijd van gebeurtenissen"
+
 msgid "Recently changed services"
 msgstr "Onlangs gewijzigde diensten"
 
@@ -56920,10 +56920,6 @@ msgstr "Toon alle"
 msgid "Show all %s topics"
 msgstr "Toon alle %s onderwerpen"
 
-#, fuzzy
-msgid "Show all batches"
-msgstr "Toon alle onderwerpen"
-
 msgid "Show all hosts"
 msgstr "Toon alle gastheren"
 
@@ -56938,6 +56934,10 @@ msgstr "Toon alle regels"
 
 msgid "Show all topics"
 msgstr "Toon alle onderwerpen"
+
+#, fuzzy
+msgid "Show all transactions"
+msgstr "Toon alle resultaten"
 
 #, fuzzy
 msgid "Show bar visualization"
@@ -75015,6 +75015,10 @@ msgid "Transaction count"
 msgstr "Aantal transacties"
 
 #, fuzzy
+msgid "Transaction id"
+msgstr "Transacties"
+
+#, fuzzy
 msgid "Transaction logs disk usage"
 msgstr "Transactie Logs Schijf Gebruik"
 
@@ -86550,6 +86554,14 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Batch id"
+#~ msgstr "Pad ID"
+
+#, fuzzy
+#~ msgid "Show all batches"
+#~ msgstr "Toon alle onderwerpen"
 
 #, fuzzy
 #~ msgid ""

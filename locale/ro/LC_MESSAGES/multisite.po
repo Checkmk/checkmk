@@ -9014,10 +9014,6 @@ msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
 
 #, fuzzy
-msgid "Batch id"
-msgstr "ID-ul căii"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Potriviri"
 
@@ -51264,6 +51260,10 @@ msgstr "Istoricul evenimentelor recente"
 msgid "Recent processing batches"
 msgstr "Timpul de procesare a evenimentelor"
 
+#, fuzzy
+msgid "Recent processing transactions"
+msgstr "Timpul de procesare a evenimentelor"
+
 msgid "Recently changed services"
 msgstr "Servicii schimbate recent"
 
@@ -57049,10 +57049,6 @@ msgstr "Arată tot"
 msgid "Show all %s topics"
 msgstr "Afișați toate subiectele %s"
 
-#, fuzzy
-msgid "Show all batches"
-msgstr "Afișați toate subiectele"
-
 msgid "Show all hosts"
 msgstr "Afișați toate gazdele"
 
@@ -57067,6 +57063,10 @@ msgstr "Afișați toate regulile"
 
 msgid "Show all topics"
 msgstr "Afișați toate subiectele"
+
+#, fuzzy
+msgid "Show all transactions"
+msgstr "Afișați toate rezultatele"
 
 msgid "Show bar visualization"
 msgstr "Afișați vizualizarea barei"
@@ -75188,6 +75188,10 @@ msgstr "Jurnalele de tranzacții"
 msgid "Transaction count"
 msgstr "Numărul de tranzacții"
 
+#, fuzzy
+msgid "Transaction id"
+msgstr "Tranzacții"
+
 msgid "Transaction logs disk usage"
 msgstr "Jurnalele de tranzacție utilizarea discului"
 
@@ -86722,6 +86726,14 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Batch id"
+#~ msgstr "ID-ul căii"
+
+#, fuzzy
+#~ msgid "Show all batches"
+#~ msgstr "Afișați toate subiectele"
 
 #, fuzzy
 #~ msgid ""

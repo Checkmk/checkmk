@@ -8658,10 +8658,6 @@ msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
 
 #, fuzzy
-msgid "Batch id"
-msgstr "パスID"
-
-#, fuzzy
 msgid "Batches"
 msgstr "一致"
 
@@ -49810,6 +49806,10 @@ msgstr "最近のイベント履歴"
 msgid "Recent processing batches"
 msgstr "イベント処理時間"
 
+#, fuzzy
+msgid "Recent processing transactions"
+msgstr "イベント処理時間"
+
 msgid "Recently changed services"
 msgstr "最近変更されたサービス"
 
@@ -55487,10 +55487,6 @@ msgstr "すべて表示する"
 msgid "Show all %s topics"
 msgstr "すべての %s トピックを表示"
 
-#, fuzzy
-msgid "Show all batches"
-msgstr "全てのトピックを表示"
-
 msgid "Show all hosts"
 msgstr "すべてのホストを表示"
 
@@ -55505,6 +55501,10 @@ msgstr "すべてのルールを表示"
 
 msgid "Show all topics"
 msgstr "全てのトピックを表示"
+
+#, fuzzy
+msgid "Show all transactions"
+msgstr "すべての結果を表示"
 
 #, fuzzy
 msgid "Show bar visualization"
@@ -73094,6 +73094,10 @@ msgid "Transaction count"
 msgstr "トランザクション数"
 
 #, fuzzy
+msgid "Transaction id"
+msgstr "トランザクション"
+
+#, fuzzy
 msgid "Transaction logs disk usage"
 msgstr "トランザクションログディスク使用量"
 
@@ -84356,6 +84360,14 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Batch id"
+#~ msgstr "パスID"
+
+#, fuzzy
+#~ msgid "Show all batches"
+#~ msgstr "全てのトピックを表示"
 
 #~ msgid ""
 #~ "After setting up a new service in PagerDuty you will receive an "

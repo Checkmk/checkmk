@@ -9032,10 +9032,6 @@ msgid "Batch Requests/sec"
 msgstr "Pedidos de lote/segundo"
 
 #, fuzzy
-msgid "Batch id"
-msgstr "Identificação do caminho"
-
-#, fuzzy
 msgid "Batches"
 msgstr "Jogo"
 
@@ -51168,6 +51164,10 @@ msgstr "Histórico de eventos recentes"
 msgid "Recent processing batches"
 msgstr "Tempo de processamento de eventos"
 
+#, fuzzy
+msgid "Recent processing transactions"
+msgstr "Tempo de processamento de eventos"
+
 msgid "Recently changed services"
 msgstr "Serviços alterados recentemente"
 
@@ -56906,10 +56906,6 @@ msgstr "Mostrar tudo"
 msgid "Show all %s topics"
 msgstr "Mostrar todos os %s tópicos"
 
-#, fuzzy
-msgid "Show all batches"
-msgstr "Mostrar todos os tópicos"
-
 msgid "Show all hosts"
 msgstr "Mostrar todos os anfitriões"
 
@@ -56924,6 +56920,10 @@ msgstr "Mostrar todas as regras"
 
 msgid "Show all topics"
 msgstr "Mostrar todos os tópicos"
+
+#, fuzzy
+msgid "Show all transactions"
+msgstr "Mostrar todos os resultados"
 
 #, fuzzy
 msgid "Show bar visualization"
@@ -74974,6 +74974,10 @@ msgid "Transaction count"
 msgstr "Contagem das transações"
 
 #, fuzzy
+msgid "Transaction id"
+msgstr "Transacções"
+
+#, fuzzy
 msgid "Transaction logs disk usage"
 msgstr "Logs de Transacção Utilização do Disco"
 
@@ -86446,6 +86450,14 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Batch id"
+#~ msgstr "Identificação do caminho"
+
+#, fuzzy
+#~ msgid "Show all batches"
+#~ msgstr "Mostrar todos os tópicos"
 
 #, fuzzy
 #~ msgid ""

@@ -94,9 +94,10 @@ skips:
   - B415  # pyghmi is needed by our core
   - B314  # xml_bad_ElementTree consider safe since python 3.6 >= ref: CMK-15194
   - B318  # xml_bad_minidom same as above
+  - B104  # hardcoded_bind_all_interfaces -> high false-positive rate ref: CMK-15199
+
 # medium severity tests excluded for now; enable step-by-step
 
-  - B104  # hardcoded_bind_all_interfaces
   - B302  # marshal
   - B608  # hardcoded_sql_expressions
 

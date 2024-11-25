@@ -93,3 +93,9 @@ repos:
             language: script
             types: [file, python]
             verbose: true
+          - id: pipfile-locking
+            name: Pipfile.lock
+            entry: pipenv verify
+            language: script
+            files: Pipfile
+            verbose: true

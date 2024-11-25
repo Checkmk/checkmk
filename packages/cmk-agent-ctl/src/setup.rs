@@ -223,18 +223,20 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    match env::var(constants::ENV_HOME_DIR) {
+    if let Ok(debug_home_dir) = env::var(constants::ENV_HOME_DIR) {
         // Alternative home dir can be passed for testing/debug reasons
-        Ok(debug_home_dir) => {
-            debug!("Skipping to change user and using debug HOME_DIR: {}", debug_home_dir);
-            Ok(PathResolver::from_home_dir(Path::new(&debug_home_dir)))
-        },
-        // Normal/prod home dir
-        Err(_) => become_user(constants::CMK_AGENT_USER).context(format!(
-                "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
-                constants::CMK_AGENT_USER,
-            )).and_then(determine_paths),
+        debug!(
+            "Skipping to change user and using debug HOME_DIR: {}",
+            debug_home_dir
+        );
+        return Ok(PathResolver::from_home_dir(Path::new(&debug_home_dir)));
     }
+
+    // Normal/prod home dir
+    become_user(constants::CMK_AGENT_USER).context(format!(
+            "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+            constants::CMK_AGENT_USER,
+        )).and_then(determine_paths)
 }
 
 #[cfg(windows)]

@@ -101,7 +101,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     , state_file_created_{state_file_created}
     , _store(this) {
     for (::host *hst = host_list; hst != nullptr; hst = hst->next) {
-        ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst);
+        ihosts_by_handle_[hst] = std::make_unique<NebHost>(*hst, *this);
         if (const char *address = hst->address) {
             _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
         }
@@ -112,24 +112,25 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     }
 
     for (::service *svc = service_list; svc != nullptr; svc = svc->next) {
-        iservices_by_handle_[svc] = std::make_unique<NebService>(*svc);
+        iservices_by_handle_[svc] = std::make_unique<NebService>(*svc, *this);
     }
 
     for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg);
+        ihostgroups_by_handle_[hg] = std::make_unique<NebHostGroup>(*hg, *this);
     }
 
     for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        iservicegroups_by_handle_[sg] = std::make_unique<NebServiceGroup>(*sg);
+        iservicegroups_by_handle_[sg] =
+            std::make_unique<NebServiceGroup>(*sg, *this);
     }
 
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        icontacts_[ctc] = std::make_unique<NebContact>(*ctc);
+        icontacts_by_handle_[ctc] = std::make_unique<NebContact>(*ctc);
     }
 
     for (const ::contactgroup *cg = contactgroup_list; cg != nullptr;
          cg = cg->next) {
-        icontactgroups_[cg] = std::make_unique<NebContactGroup>(*cg);
+        icontactgroups_by_handle_[cg] = std::make_unique<NebContactGroup>(*cg);
     }
 }
 
@@ -201,12 +202,17 @@ const IService *NebCore::find_service(
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
+const IContactGroup *NebCore::icontactgroup(
+    const ::contactgroup *handle) const {
+    auto it = icontactgroups_by_handle_.find(handle);
+    return it == icontactgroups_by_handle_.end() ? nullptr : it->second.get();
+}
+
 const IContactGroup *NebCore::find_contactgroup(const std::string &name) const {
-    auto it = icontactgroups_.find(
-        // Older Nagios headers are not const-correct... :-P
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-        ::find_contactgroup(const_cast<char *>(name.c_str())));
-    return it == icontactgroups_.end() ? nullptr : it->second.get();
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    const auto *handle = ::find_contactgroup(const_cast<char *>(name.c_str()));
+    return handle == nullptr ? nullptr : icontactgroup(handle);
 }
 
 const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
@@ -217,16 +223,17 @@ const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
 }
 
 const IContact *NebCore::find_contact(const std::string &name) const {
-    // Older Nagios headers are not const-correct... :-P
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-    auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
-    return it == icontacts_.end() ? nullptr : it->second.get();
+    auto it = icontacts_by_handle_.find(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        ::find_contact(const_cast<char *>(name.c_str())));
+    return it == icontacts_by_handle_.end() ? nullptr : it->second.get();
 }
 
 bool NebCore::all_of_contacts(
     const std::function<bool(const IContact &)> &pred) const {
     return std::all_of(
-        icontacts_.cbegin(), icontacts_.cend(),
+        icontacts_by_handle_.cbegin(), icontacts_by_handle_.cend(),
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
@@ -388,7 +395,7 @@ bool NebCore::all_of_timeperiods(
 bool NebCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
     return std::all_of(
-        icontactgroups_.cbegin(), icontactgroups_.cend(),
+        icontactgroups_by_handle_.cbegin(), icontactgroups_by_handle_.cend(),
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 

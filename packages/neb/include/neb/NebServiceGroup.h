@@ -14,8 +14,8 @@
 
 class NebServiceGroup : public IServiceGroup {
 public:
-    explicit NebServiceGroup(const servicegroup &service_group)
-        : service_group_{service_group} {}
+    NebServiceGroup(const servicegroup &service_group, const NebCore &core)
+        : service_group_{service_group}, core_{core} {}
 
     [[nodiscard]] std::string name() const override {
         return service_group_.group_name;
@@ -39,7 +39,7 @@ public:
     bool all(const std::function<bool(const IService &)> &pred) const override {
         for (const auto *member = service_group_.members; member != nullptr;
              member = member->next) {
-            if (!pred(NebService{*member->service_ptr})) {
+            if (!pred(*core_.iservice(member->service_ptr))) {
                 return false;
             }
         }
@@ -48,6 +48,7 @@ public:
 
 private:
     const servicegroup &service_group_;
+    const NebCore &core_;
 };
 
 #endif  // NebServiceGroup_h

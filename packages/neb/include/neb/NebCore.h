@@ -94,12 +94,11 @@ public:
             std::string edition,
             std::chrono::system_clock::time_point state_file_created);
 
-    // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
     const IHostGroup *ihostgroup(const ::hostgroup *handle) const;
-
     const IService *iservice(const ::service *handle) const;
     const IServiceGroup *iservicegroup(const ::servicegroup *handle) const;
+    const IContactGroup *icontactgroup(const ::contactgroup *handle) const;
 
     [[nodiscard]] const IHost *find_host(
         const std::string &name) const override;
@@ -268,9 +267,10 @@ private:
         iservicegroups_by_handle_;
     // host is never nullptr
 
-    std::unordered_map<const ::contact *, std::unique_ptr<IContact>> icontacts_;
+    std::unordered_map<const ::contact *, std::unique_ptr<IContact>>
+        icontacts_by_handle_;
     std::unordered_map<const ::contactgroup *, std::unique_ptr<IContactGroup>>
-        icontactgroups_;
+        icontactgroups_by_handle_;
     Triggers _triggers;
 
     // Nagios is not thread-safe, so this mutex protects calls to

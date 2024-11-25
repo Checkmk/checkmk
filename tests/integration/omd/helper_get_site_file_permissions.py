@@ -5,18 +5,21 @@
 
 from collections.abc import Iterator
 from pathlib import Path
+from stat import S_ISDIR, S_ISLNK
 
 import cmk.utils.paths
 
 
 def iter_dir(path: Path) -> Iterator[tuple[int, Path]]:
     for sub_path in path.iterdir():
-        if sub_path.is_symlink():
-            continue
-
-        yield sub_path.stat().st_mode, sub_path
-        if sub_path.is_dir():
-            yield from iter_dir(sub_path)
+        try:
+            mode = sub_path.lstat().st_mode
+            if not S_ISLNK(mode):
+                yield mode, sub_path
+                if S_ISDIR(mode):
+                    yield from iter_dir(sub_path)
+        except FileNotFoundError:
+            pass  # ignore vanished files during iteration
 
 
 site_dir = cmk.utils.paths.omd_root

@@ -133,7 +133,7 @@ setup_npm() {
 }
 
 run_clean() {
-    rm -rf dist node_modules
+    rm -rf dist node_modules dist-dev
 }
 
 run_build() {
@@ -143,7 +143,7 @@ run_build() {
 
 run_build_dev() {
     setup_npm
-    NODE_ENV=dev npm run build
+    NODE_ENV=dev npm run build -- --outDir dist-dev
 }
 
 run_check_format() {

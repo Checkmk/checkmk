@@ -73,7 +73,6 @@ def create_new_user(
     users_page.activate_changes()
 
 
-@pytest.mark.skip(reason="Pending investigation; CMK-20395")
 @pytest.mark.parametrize(
     "new_role, new_user",
     [

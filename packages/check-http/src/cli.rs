@@ -210,13 +210,13 @@ pub struct Cli {
     pub min_tls_version: Option<TlsVersion>,
 
     /// Print HTTP headers to stderr.
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     pub debug_headers: bool,
 
     /// Print page content to stderr.
     ///
     /// Note: Avoid setting --without-body.
-    #[arg(short, long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     pub debug_content: bool,
 
     /// Enable verbosity output to stderr.

@@ -25,7 +25,7 @@ AGENT_CTL_GZ := $(AGENT_CTL).gz
 AGENT_CTL_DIR := $(REPO_PATH)/packages/host/cmk-agent-ctl
 
 MK_SQL := $(AGENTS_DIR)/linux/mk-sql
-MK_SQL_DIR := $(REPO_PATH)/packages/mk-sql
+MK_SQL_DIR := $(REPO_PATH)/packages/host/mk-sql
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -104,7 +104,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(MK_SQL):
 	$(MK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(BAZEL_BIN)/packages/mk-sql/mk-sql $(MK_SQL)
+	install -m 755 $(BAZEL_BIN)/packages/host/mk-sql/mk-sql $(MK_SQL)
 	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

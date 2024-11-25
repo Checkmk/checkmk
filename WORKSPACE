@@ -212,6 +212,7 @@ create_python_requirements(
         "livestatus-client",
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
+        "numpy",  # temporary build from fork as build requirement to ninja is broken
     ],
     # TODO: Use the already existing requirements_lock.txt generated from _generate_requirements_in
     pipfile_lock = "//:Pipfile.lock",

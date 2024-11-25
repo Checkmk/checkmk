@@ -80,6 +80,39 @@ build_python_module(
     }),
 )
 
+MODULE_NUMPY = "numpy"
+
+MODULE_NUMPY_SOURCE = "git+https://github.com/TimotheusBachinger/numpy.git@60edb77a5b1580966bf2078bf13de2cca3461981"
+
+build_python_module(
+    name = "%s_compile" % MODULE_NUMPY,
+    srcs = [
+        "@freetds",
+        "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@openssl",
+        "@python",
+    ],
+    outs = [
+        "compiled_%s.tar" % MODULE_NUMPY,
+    ],
+    cmd = select({
+        "//conditions:default": build_cmd.format(
+            git_ssl_no_verify = "",
+            module_name = MODULE_NUMPY,
+            pip_add_opts = get_pip_options(MODULE_NUMPY),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            requirements = MODULE_NETAPP_SOURCE,
+        ),
+        ":git_ssl_no_verify": build_cmd.format(
+            git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = MODULE_NUMPY,
+            pip_add_opts = get_pip_options(MODULE_NUMPY),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            requirements = MODULE_NUMPY_SOURCE,
+        ),
+    }),
+)
+
 genrule(
     name = "python3-modules",
     srcs = [

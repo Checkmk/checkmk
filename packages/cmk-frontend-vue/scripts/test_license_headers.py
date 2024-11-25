@@ -50,6 +50,7 @@ ROOT_FOLDERS_IGNORED = set(
     [
         "node_modules",
         "dist",
+        "dist-dev",
     ]
 )
 

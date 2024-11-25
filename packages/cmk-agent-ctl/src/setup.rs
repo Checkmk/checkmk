@@ -19,6 +19,8 @@ use nix::unistd;
 use std::env;
 use std::env::ArgsOs;
 use std::io::{self, Write};
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 // TODO(sk): estimate to move in constants
@@ -60,6 +62,19 @@ impl PathResolver {
             pre_configured_connections_path: home_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
+        }
+    }
+
+    #[cfg(unix)]
+    pub fn from_installdir(installdir: &Path) -> PathResolver {
+        let config_dir = installdir.join("package/config");
+        PathResolver {
+            config_path: config_dir.join(constants::CONFIG_FILE),
+            pre_configured_connections_path: config_dir
+                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            registry_path: installdir
+                .join("runtime/controller")
+                .join(constants::REGISTRY_FILE),
         }
     }
 }
@@ -168,10 +183,20 @@ fn init_logging(
 }
 
 #[cfg(unix)]
-fn become_user(username: &str) -> AnyhowResult<unistd::User> {
-    let target_user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {username}"
-    ))?;
+enum UserRepr {
+    Uid(nix::unistd::Uid),
+    Name(String),
+}
+
+#[cfg(unix)]
+fn become_user(user: UserRepr) -> AnyhowResult<unistd::User> {
+    let target_user = match user {
+        UserRepr::Uid(uid) => unistd::User::from_uid(uid)?
+            .context(format!("Could not find Checkmk agent user with uid {uid}"))?,
+        UserRepr::Name(name) => unistd::User::from_name(&name)?.context(format!(
+            "Could not find dedicated Checkmk agent user {name}"
+        ))?,
+    };
 
     // If we already are the right user, return early. Otherwise, eg. setting the supplementary
     // group ids will fail due to insufficient permissions.
@@ -223,8 +248,12 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
+    if let Some(installdir) = setup_single_directory() {
+        return Ok(PathResolver::from_installdir(&installdir));
+    }
+
+    // Alternative home dir can be passed for testing/debug reasons
     if let Ok(debug_home_dir) = env::var(constants::ENV_HOME_DIR) {
-        // Alternative home dir can be passed for testing/debug reasons
         debug!(
             "Skipping to change user and using debug HOME_DIR: {}",
             debug_home_dir
@@ -233,10 +262,35 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     }
 
     // Normal/prod home dir
-    become_user(constants::CMK_AGENT_USER).context(format!(
-            "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
-            constants::CMK_AGENT_USER,
-        )).and_then(determine_paths)
+    become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
+                "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
+                constants::CMK_AGENT_USER,
+            )).and_then(determine_paths)
+}
+
+#[cfg(unix)]
+fn setup_single_directory() -> Option<PathBuf> {
+    let exe = std::env::current_exe()
+        .and_then(std::fs::canonicalize)
+        .ok()?;
+    let installdir = exe.parent()?.parent()?.parent()?;
+
+    if !installdir
+        .join("package")
+        .join("config")
+        .join(constants::CONFIG_FILE)
+        .exists()
+    {
+        return None;
+    };
+
+    let owning_user = UserRepr::Uid(nix::unistd::Uid::from_raw(
+        std::fs::metadata(installdir.join("runtime")).ok()?.uid(),
+    ));
+
+    become_user(owning_user).ok()?;
+
+    Some(installdir.to_owned())
 }
 
 #[cfg(windows)]

@@ -443,7 +443,7 @@ class Rulespec(abc.ABC):
         return self._is_binary_ruleset
 
     @property
-    def item_type(self) -> str | None:
+    def item_type(self) -> Literal["service", "item"] | None:
         return self._item_type
 
     @property

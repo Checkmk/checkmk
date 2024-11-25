@@ -16,7 +16,7 @@ import subprocess
 from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, assert_never, cast, Final
+from typing import Any, assert_never, cast, Final, Literal
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -970,7 +970,7 @@ class Ruleset:
     def title(self) -> str | None:
         return self.rulespec.title
 
-    def item_type(self) -> str | None:
+    def item_type(self) -> Literal["service", "item"] | None:
         return self.rulespec.item_type
 
     def item_name(self) -> str | None:
@@ -1297,7 +1297,14 @@ class Rule:
         only_host_conditions: bool,
         service_labels: Labels,
     ) -> bool:
-        """Wether a given host or service/item matches this rule"""
+        """Whether a given host or service/item matches this rule"""
+        matcher = _get_ruleset_matcher()
+        ruleset = self.to_single_base_ruleset()
+
+        def bool_(rules: Sequence[object]) -> bool:
+            """Just for the signature, make sure we don't call `bool` on a generator"""
+            return bool(rules)
+
         # BE AWARE: Depending on the service ruleset the service_description of
         # the rules is only a check item or a full service name. For
         # example the check parameters rulesets only use the item, and other
@@ -1308,39 +1315,26 @@ class Rule:
         # either the item or the full service name, depending on the
         # ruleset, but the labels of a service need to be gathered using the
         # real service name.
-        if only_host_conditions:
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        elif self.ruleset.item_type() == "service":
-            if svc_desc_or_item is None:
-                raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = ruleset_matcher.RulesetMatchObject(
-                hostname, svc_desc_or_item, service_labels
-            )
-        elif self.ruleset.item_type() == "item":
-            if svc_desc is None:
-                raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = ruleset_matcher.RulesetMatchObject(
-                hostname, svc_desc_or_item, service_labels
-            )
-        elif not self.ruleset.item_type():
-            match_object = ruleset_matcher.RulesetMatchObject(hostname)
-        else:
-            raise NotImplementedError()
+        if not self.ruleset.rulespec.is_for_services or only_host_conditions:
+            return bool_(matcher.get_host_values(hostname, ruleset))
 
-        match_service_conditions = self.ruleset.rulespec.is_for_services
-        if only_host_conditions:
-            match_service_conditions = False
-
-        return self._matches_match_object(match_object, match_service_conditions)
-
-    def _matches_match_object(
-        self, match_object: ruleset_matcher.RulesetMatchObject, match_service_conditions: bool
-    ) -> bool:
-        matcher = _get_ruleset_matcher()
-        ruleset = self.to_single_base_ruleset()
-        if match_service_conditions:
-            return bool(list(matcher.get_service_ruleset_values(match_object, ruleset)))
-        return bool(list(matcher.get_host_values(match_object.host_name, ruleset)))
+        match self.ruleset.item_type():
+            case "service":
+                if svc_desc_or_item is None:
+                    raise TypeError("svc_desc_or_item must be set for service rulesets")
+                return bool_(matcher.service_extra_conf(hostname, svc_desc_or_item, ruleset))
+            case "item":
+                if svc_desc is None:
+                    raise TypeError("svc_desc_or_item must be set for service rulesets")
+                return bool_(
+                    list(
+                        matcher.get_checkgroup_ruleset_values(
+                            hostname, svc_desc, svc_desc_or_item, ruleset
+                        )
+                    )
+                )
+            case None:
+                return bool_(matcher.service_extra_conf(hostname, None, ruleset))
 
     def matches_search(  # pylint: disable=too-many-branches
         self,

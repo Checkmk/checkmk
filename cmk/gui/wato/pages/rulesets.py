@@ -2538,9 +2538,6 @@ class VSExplicitConditions(Transform):
         if item_type == "service":
             return _("Services")
 
-        if item_type == "checktype":
-            return _("Check types")
-
         if item_type == "item":
             return self._rulespec.item_name
 

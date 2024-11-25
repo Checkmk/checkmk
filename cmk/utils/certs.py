@@ -282,7 +282,8 @@ class SiteBrokerCertificate:
 
         MessagingTrustedCAs.write(omd_root, received.signing_ca + received.additionally_trusted_ca)
         cert_path.write_bytes(received.cert)
-        key_path.write_bytes(received.key)
+        if received.key:
+            key_path.write_bytes(received.key)
 
 
 class SiteBrokerCA:

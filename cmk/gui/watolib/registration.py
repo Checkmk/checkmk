@@ -48,7 +48,10 @@ from .automations import (
     AutomationCheckmkAutomationStart,
     CheckmkAutomationBackgroundJob,
 )
-from .broker_certificates import AutomationStoreBrokerCertificates
+from .broker_certificates import (
+    AutomationCreateBrokerCertificates,
+    AutomationStoreBrokerCertificates,
+)
 from .bulk_discovery import BulkDiscoveryBackgroundJob
 from .config_domain_name import (
     ConfigDomainRegistry,
@@ -144,6 +147,7 @@ def register(
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
     automation_command_registry.register(PushUserProfilesToSite)
     automation_command_registry.register(AutomationStoreBrokerCertificates)
+    automation_command_registry.register(AutomationCreateBrokerCertificates)
     automation_command_registry.register(AutomationGetConfigSyncState)
     automation_command_registry.register(AutomationReceiveConfigSync)
     automation_command_registry.register(AutomationRemoveTLSRegistration)

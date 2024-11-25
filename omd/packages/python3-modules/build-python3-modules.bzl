@@ -102,6 +102,10 @@ build_cmd = """
     # install requirements
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
+
+    echo "ninja==1.11.1.1" > $$TMPDIR/constraints.txt
+    export PIP_CONSTRAINT="$$TMPDIR/constraints.txt"
+
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
@@ -114,6 +118,7 @@ build_cmd = """
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\
       -i {pypi_mirror} \\
+      --constraint "$$TMPDIR/constraints.txt" \\
       {pip_add_opts} \\
       $$REQUIREMENTS 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

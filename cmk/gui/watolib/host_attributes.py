@@ -767,17 +767,10 @@ def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag
 
 def declare_custom_host_attrs() -> None:
     for attr in transform_pre_16_host_topics(active_config.wato_host_attrs):
-        if attr["type"] == "TextAscii":
-            # Hack: The API does not perform validate_datatype and we can currently not enable
-            # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
-            # As a local workaround we use a custom validate function here to ensure we only get ascii characters
-            vs = TextInput(
-                title=attr["title"],
-                help=attr["help"],
-                validate=_validate_is_ascii,
-            )
-        else:
-            raise NotImplementedError()
+        vs = TextInput(
+            title=attr["title"],
+            help=attr["help"],
+        )
 
         a: type[ABCHostAttributeValueSpec]
         if attr["add_custom_macro"]:
@@ -799,22 +792,7 @@ def declare_custom_host_attrs() -> None:
         )
 
 
-def _validate_is_ascii(value: str, varprefix: str) -> None:
-    if isinstance(value, str):
-        try:
-            value.encode("ascii")
-        except UnicodeEncodeError:
-            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-    elif isinstance(value, bytes):
-        try:
-            value.decode("ascii")
-        except UnicodeDecodeError:
-            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-
-
-def transform_pre_16_host_topics(
-    custom_attributes: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
+def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Previous to 1.6 the titles of the host attribute topics were stored.
 
     This lead to issues with localized topics. We now have internal IDs for

@@ -538,7 +538,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "match_host_groups": DictElement(
                                     parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Match host groups"),
+                                        title=Title("Host groups"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=group_name,
@@ -552,7 +552,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "match_hosts": DictElement(  # TODO: Waiting on team engelbart
                                     parameter_form=FixedValue(
-                                        title=Title("Match hosts"),
+                                        title=Title("Hosts"),
                                         help_text=Help("Waiting on team Engelbart"),
                                         value=None,
                                     ),
@@ -588,7 +588,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=AdaptiveMultipleChoice(
-                                                title=Title("Match service groups"),
+                                                title=Title("Service groups"),
                                                 elements=[
                                                     MultipleChoiceElement(
                                                         name=group_name,
@@ -616,7 +616,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                         "match_services": DictElement(
                                             parameter_form=ListOfStrings(
-                                                title=Title("Match services"),
+                                                title=Title("Services"),
                                                 string_spec=String(
                                                     field_size=FieldSize.MEDIUM,
                                                 ),
@@ -702,7 +702,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         help_text=Help(
                                             "Describes the business impact of a host or service"
                                         ),
-                                        title=Title("Match service level"),
+                                        title=Title("Service level"),
                                         elements=[
                                             CascadingSingleChoiceElement(
                                                 name="explicit",
@@ -716,7 +716,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name="range",
                                                 title=Title("Range"),
                                                 parameter_form=Tuple(
-                                                    title=Title("Match service level"),
+                                                    title=Title("Service level"),
                                                     elements=[
                                                         SingleChoiceExtended(
                                                             title=Title("From:"),
@@ -750,7 +750,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "sites": DictElement(
                                     parameter_form=AdaptiveMultipleChoice(
-                                        title=Title("Match sites"),
+                                        title=Title("Sites"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=name,
@@ -765,7 +765,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 # TODO disabled until we found a solution to load on demand or faster
                                 # "check_type_plugin": DictElement(
                                 #    parameter_form=AdaptiveMultipleChoice(
-                                #        title=Title("Match check types"),
+                                #        title=Title("Check types"),
                                 #        elements=[
                                 #            MultipleChoiceElement(
                                 #                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.

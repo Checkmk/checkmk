@@ -66,11 +66,9 @@ def _increased_logging_level(site: Site) -> Iterator[None]:
     try:
         global_setting["log_levels"] = _TEST_SITES_LOGGING_LEVELS
         _write_global_settings(site, global_settings_rel_path, global_setting)
-        site.omd("restart", "apache")
         yield
     finally:
         _write_global_settings(site, global_settings_rel_path, ori_global_setting)
-        site.omd("restart", "apache")
 
 
 @pytest.fixture(name="central_site", scope="session")

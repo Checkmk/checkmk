@@ -15,6 +15,8 @@ common --local_resources=memory=HOST_RAM*.5
 common --@//:filesystem_layout=lsb
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
+# Do not upload artifacts other than from CI, see below, CMK-18656
+common --remote_upload_local_results=false
 
 ## For specific commands
 # Always require debug info.
@@ -44,6 +46,9 @@ common:ci --extra_toolchains="//bazel/toolchains/cc:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
 common:ci --lockfile_mode=error
+# the later flags will override the previous flags
+# upload artifacts only from CI, CMK-18656
+common:ci --remote_upload_local_results=true
 
 # No standard in the CI where we must explicitly differentiate between LSB and FHS.
 common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID

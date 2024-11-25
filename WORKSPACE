@@ -101,10 +101,6 @@ load("@cargo_deps_host//:defs.bzl", host_crate_repository = "crate_repositories"
 
 host_crate_repository()
 
-load("//omd/packages/patch:patch_http.bzl", "patch_workspace")
-
-patch_workspace()
-
 load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
 redis_workspace()

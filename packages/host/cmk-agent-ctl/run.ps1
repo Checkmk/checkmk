@@ -137,21 +137,26 @@ function Start-ShortenPath($tgt_link, $path) {
 }
 
 
-function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package_name" -ForegroundColor White
-    & cargo $cmd
+function Invoke-Cargo {
+    param(
+        [Parameter(
+            Mandatory=$True,
+            Position = 0
+        )]
+        $cmd,
+        [Parameter(
+            Mandatory=$False,
+            ValueFromRemainingArguments=$true,
+            Position = 1
+        )]
+        $further_args
+    )
+    $further_args_string = $further_args -join ' '
+    Write-Host "${package_name}: $cmd $further_args_string" -ForegroundColor White
+    & cargo $cmd $further_args
 
     if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
-    }
-}
-
-function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package_name" -ForegroundColor White
-    & cargo $cmd
-
-    if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
+        Write-Error "${package_name}: Failed to $cmd $further_args_string with code $lastexitcode" -ErrorAction Stop
     }
 }
 
@@ -214,16 +219,10 @@ try {
         $cwd = Get-Location
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
-        &cargo build --release --target $cargo_target
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop
-        }
+        Invoke-Cargo "build" "--release" "--target" $cargo_target
     }
     if ($packClippy) {
-        &cargo clippy --release --target $cargo_target --tests -- --deny warnings
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to clippy $package_name with code $lastexitcode" -ErrorAction Stop
-        }
+        Invoke-Cargo "clippy" "--release" "--target" $cargo_target "--tests" "--" "--deny" "warnings"
     }
 
     if ($packFormat) {
@@ -231,20 +230,13 @@ try {
     }
 
     if ($packCheckFormat) {
-        Write-Host "test format $package_name" -ForegroundColor White
-        cargo fmt -- --check
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test format $package_name" -ErrorAction Stop
-        }
+        Invoke-Cargo "fmt" "--" "--check"
     }
     if ($packTest) {
         if (-not (Test-Administrator)) {
             Write-Error "Testing must be executed as Administrator." -ErrorAction Stop
         }
-        cargo test --release --target $cargo_target -- --test-threads=4
-        if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test $package_name" -ErrorAction Stop
-        }
+        Invoke-Cargo "test" "--release" "--target" $cargo_target "--" "--test-threads=4"
     }
     if ($packBuild -and $packTest -and $packClippy) {
         Write-Host "Uploading artifacts: [ $exe_dir/$exe_name -> $arte_dir/$exe_name ] ..." -Foreground White

@@ -14,7 +14,10 @@ from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.email import EmailPage
 from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
-from tests.testlib.playwright.pom.setup.edit_notification_rule import EditNotificationRule
+from tests.testlib.playwright.pom.setup.edit_notification_rule import (
+    AddNotificationRule,
+)
+from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
 from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.site import Site
 
@@ -26,7 +29,6 @@ def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
     yield from create_notification_user(test_site)
 
 
-@pytest.mark.skip(reason="New email templates need adjustments")
 def test_filesystem_email_notifications(
     dashboard_page: Dashboard,
     linux_hosts: list[str],
@@ -45,12 +47,22 @@ def test_filesystem_email_notifications(
     host_name = linux_hosts[0]
     service_name = "Filesystem /"
     expected_event = "OK -> WARN"
-    expected_notification_subject = f"Check_MK: {host_name}/{service_name} {expected_event}"
+    expected_notification_subject = f"Checkmk: {host_name}/{service_name} {expected_event}"
     filesystem_rule_description = "Test rule for email notifications"
     used_space = "10"
+    notification_description = "Test rule for email notifications"
 
-    edit_notification_rule_page = EditNotificationRule(dashboard_page.page, 0)
-    edit_notification_rule_page.modify_notification_rule([username], [f"{service_name}$"])
+    notification_configuration_page = NotificationConfiguration(dashboard_page.page)
+    # The scrollbar interrupts the interaction with rule edit button -> collapse overview
+    notification_configuration_page.collapse_notification_overview(True)
+    notification_configuration_page.notification_rule_copy_button(0).click()
+
+    add_notification_rule_page = AddNotificationRule(
+        notification_configuration_page.page, navigate_to_page=False
+    )
+    add_notification_rule_page.modify_notification_rule(
+        username, f"{service_name}$", notification_description
+    )
 
     logger.info(
         "Add rule for filesystems to change status '%s' when used space is more then %s percent",
@@ -70,7 +82,9 @@ def test_filesystem_email_notifications(
         logger.info("Reschedule the 'Check_MK' service to trigger the notification")
         service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
         service_search_page.reschedule_check(host_name, "Check_MK")
-        service_summary = service_search_page.service_summary(host_name, service_name).inner_text()
+        service_summary = service_search_page.wait_for_check_status_update(
+            host_name, service_name, "warn/crit at"
+        )
 
         email_file_path = email_manager.wait_for_email(expected_notification_subject)
         expected_fields = {"To": email}
@@ -79,23 +93,21 @@ def test_filesystem_email_notifications(
             "Service": service_name,
             "Event": expected_event,
             "Address": test_site.http_address,
-            "Summary": service_summary.replace(
-                ",", f" (warn/crit at {float(used_space):.2f}%/90.00% used)(!),", 1
-            ),
+            "Summary": service_summary.replace("WARN", "(!)"),
         }
         email_manager.check_email_content(email_file_path, expected_fields, expected_content)
 
         html_file_path = email_manager.copy_html_content_into_file(email_file_path)
-        expected_content["Event"] = "OK → WARNING"
-        expected_content["Summary"] = expected_content["Summary"].replace("(!)", "WARN", 1)
+        expected_content["Event"] = "OK–›WARN"
+        expected_content["Summary"] = service_summary
 
         with manage_new_page_from_browser_context(service_search_page.page.context) as new_page:
             email_page = EmailPage(new_page, html_file_path)
             email_page.check_table_content(expected_content)
 
     finally:
-        edit_notification_rule_page.navigate()
-        edit_notification_rule_page.restore_notification_rule(True, True)
+        notification_configuration_page.navigate()
+        notification_configuration_page.delete_notification_rule(notification_description)
 
         if service_search_page is not None:
             filesystems_rules_page = Ruleset(

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from abc import abstractmethod
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
@@ -15,7 +16,208 @@ from tests.testlib.playwright.pom.setup.notification_configuration import Notifi
 logger = logging.getLogger(__name__)
 
 
-class EditNotificationRule(CmkPage):
+class BaseNotificationPage(CmkPage):
+    """Base class for Notification Quick Setup pages."""
+
+    page_title = ""
+
+    @abstractmethod
+    def navigate(self) -> None:
+        pass
+
+    def _validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        self.main_area.check_page_title(self.page_title)
+        expect(self.overview_mode_button).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    def _get_row(self, row_name: str) -> Locator:
+        return self.main_area.locator(
+            f'table[class*="form-dictionary"] >> tr:has(span:text-is("{row_name}"))'
+        )
+
+    @property
+    def overview_mode_button(self) -> Locator:
+        return self.main_area.locator().get_by_label("Toggle Overview mode")
+
+    # stage 1
+    @property
+    def host_events_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("checkbox", name="Host events")
+
+    @property
+    def _host_events_rows(self) -> Locator:
+        return self._get_row("Host events").locator("table > tr")
+
+    @property
+    def _service_events_rows(self) -> Locator:
+        return self._get_row("Service events").locator("table > tr")
+
+    @property
+    def _add_service_event_button(self) -> Locator:
+        return self._get_row("Service events").get_by_role("button", name="Add event")
+
+    def _service_event_dropdown(self, index: int = 0) -> Locator:
+        return self._service_events_rows.nth(index).get_by_role("combobox").nth(0)
+
+    def _service_event_row_dropdown_option(self, option: str, index: int = 0) -> Locator:
+        return self._service_events_rows.nth(index).get_by_role("option", name=option)
+
+    def _service_event_first_dropdown(self, index: int = 0) -> Locator:
+        return self._service_events_rows.nth(index).get_by_role("combobox").nth(1)
+
+    def _service_event_second_dropdown(self, index: int = 0) -> Locator:
+        return self._service_events_rows.nth(index).get_by_role("combobox").nth(2)
+
+    # stage 2
+    @property
+    def _service_filters_button(self) -> Locator:
+        return self.main_area.locator().get_by_role("button", name="Service filters")
+
+    @property
+    def _assignee_filters_button(self):
+        return self.main_area.locator().get_by_role("button", name="Assignee filters")
+
+    @property
+    def services_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_label("Services", exact=True)
+
+    def _match_services_text_field(self, index: int = 0) -> Locator:
+        return self._get_row("Services").locator("input").nth(index)
+
+    # stage 3
+    @property
+    def stage_three_locator(self):
+        return self.main_area.locator("li").filter(has_text="Notification method (plug-in)")
+
+    @property
+    def select_email_parameter_dropdown(self):
+        return self.stage_three_locator.get_by_role("combobox").nth(1)
+
+    def notification_method_option(self, option: str) -> Locator:
+        return self.stage_three_locator.get_by_role("option", name=option)
+
+    # stage 4
+    @property
+    def _stage_four_locator(self) -> Locator:
+        return self.main_area.locator("li").filter(has_text="Recipient")
+
+    @property
+    def _add_recipient_button(self) -> Locator:
+        return self._stage_four_locator.get_by_role("button", name="Add recipient")
+
+    @property
+    def _recipients_rows(self) -> Locator:
+        return self._stage_four_locator.locator("div[aria-label='Select recipient'] > table > tr")
+
+    def _delete_recipient_button(self, index: int = 0) -> Locator:
+        return self._recipients_rows.nth(index).get_by_role("button").nth(0)
+
+    def _select_recipient_dropdown(self, index: int = 0) -> Locator:
+        return self._recipients_rows.nth(index).get_by_role("combobox").nth(0)
+
+    def _select_recipient_option(self, index: int, option: str) -> Locator:
+        return self._recipients_rows.nth(index).get_by_role("option", name=option)
+
+    def _add_new_entry_button(self, index: int = 0) -> Locator:
+        return self._recipients_rows.nth(index).get_by_role("button", name="Add new entry")
+
+    def _recipient_first_dropdown(self, index: int = 0) -> Locator:
+        return self._recipients_rows.nth(index).get_by_role("combobox").nth(1)
+
+    @property
+    def apply_and_create_another_rule_button(self) -> Locator:
+        return self.main_area.locator().get_by_text("Apply & create another rule")
+
+    def delete_all_service_events(self) -> None:
+        for _ in self._service_events_rows.all():
+            self._service_events_rows.nth(0).get_by_role("button").click()
+
+    # stage 6
+    @property
+    def description_text_field(self) -> Locator:
+        return self.main_area.locator().get_by_label("Description")
+
+    def add_service_event(
+        self,
+        index: int,
+        service_event_name: str,
+        first_option: str | None = None,
+        second_option: str | None = None,
+    ) -> None:
+        self._add_service_event_button.click()
+        self._service_event_dropdown(index).click()
+        self._service_event_row_dropdown_option(service_event_name, index).click()
+        if first_option:
+            self._service_event_first_dropdown(index).click()
+            self._service_event_row_dropdown_option(first_option, index).click()
+        if second_option:
+            self._service_event_second_dropdown(index).click()
+            self._service_event_row_dropdown_option(second_option, index).click()
+
+    def expand_service_filters(self) -> None:
+        if self.services_checkbox.is_hidden():
+            self._service_filters_button.click()
+        # The scrollbar interrupts the interaction with services checkbox -> scroll into view
+        self._assignee_filters_button.scroll_into_view_if_needed()
+
+    def apply_services_filter(self, service_name: str) -> None:
+        self.expand_service_filters()
+        self.services_checkbox.set_checked(True)
+        self._match_services_text_field(0).fill(service_name)
+
+    def delete_all_recipients(self) -> None:
+        for _ in self._recipients_rows.all():
+            self._delete_recipient_button(0).click()
+
+    def add_recipient(
+        self, index: int, recipient_option_name: str, recipient_value: str | None = None
+    ) -> None:
+        self._add_recipient_button.click()
+        self._select_recipient_dropdown(index).click()
+        self._select_recipient_option(index, recipient_option_name).click()
+        if recipient_value:
+            self._add_new_entry_button(index).click()
+            self._recipient_first_dropdown(index).click()
+            self._select_recipient_option(index, recipient_value).click()
+
+    def modify_notification_rule(self, user: str, service: str, description: str) -> None:
+        """Modify the default notification rule.
+
+        Modify the default notification rule to notify the specified user and about the
+        specified service.
+        """
+        logger.info("Switch to the overview mode")
+        self.overview_mode_button.click()
+
+        logger.info("Disable host events filter")
+        self.host_events_checkbox.set_checked(False)
+
+        logger.info("Add status event filter: status changes from ANY to WARN")
+        self.delete_all_service_events()
+        self.add_service_event(0, "Status change", "Any", "WARN")
+
+        logger.info("Apply service filter: '%s'", service)
+        self.apply_services_filter(service)
+
+        logger.info("Select default email parameter")
+        self.select_email_parameter_dropdown.click()
+        self.notification_method_option("Default").click()
+
+        logger.info("Add recipient: '%s'", user)
+        self.delete_all_recipients()
+        self.add_recipient(0, "Specific users", user)
+
+        logger.info("Add description: '%s'", description)
+        self.description_text_field.fill(description)
+
+        logger.info("Save the changes")
+        self.apply_and_create_another_rule_button.click()
+
+
+class EditNotificationRule(BaseNotificationPage):
     """Represent the 'Edit notification rule' page.
 
     To navigate: `Setup > Notifications > Edit this notification rule`.
@@ -28,107 +230,27 @@ class EditNotificationRule(CmkPage):
 
     def navigate(self) -> None:
         notification_configuration_page = NotificationConfiguration(self.page)
+        # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
+        notification_configuration_page.collapse_notification_overview(True)
         notification_configuration_page.notification_rule_edit_button(self.rule_position).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("mode=notification_rule")), wait_until="load"
+            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
         )
+        self._validate_page()
 
-    def _validate_page(self) -> None:
-        logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
-        expect(self.notification_method_field).to_be_visible()
-        expect(self._notify_all_contact_of_the_notified_host_or_service_checkbox).to_be_visible()
 
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
+class AddNotificationRule(BaseNotificationPage):
+    """Represent the 'Add notification rule' page.
 
-    @property
-    def save_button(self) -> Locator:
-        return self.main_area.get_suggestion("Save")
+    To navigate: `Setup > Notifications > Add notification rule`.
+    """
 
-    @property
-    def description_text_field(self) -> Locator:
-        return self.main_area.get_input("rule_p_description")
+    page_title = "Add notification rule"
 
-    @property
-    def notification_method_field(self) -> Locator:
-        return self.main_area.locator("span[id*='rule_p_notify_plugin_sel']")
-
-    def _checkbox_locator(self, name: str) -> Locator:
-        return self.main_area.locator().get_by_role("cell", name=name).locator("label")
-
-    @property
-    def _notify_all_contact_of_the_notified_host_or_service_checkbox(self) -> Locator:
-        return self._checkbox_locator("Notify all contacts of the notified host or service")
-
-    @property
-    def _the_following_users_checkbox(self) -> Locator:
-        return self._checkbox_locator("The following users")
-
-    @property
-    def _add_user_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Add user")
-
-    def user_field(self, index: int) -> Locator:
-        return self.main_area.locator("span[id*='rule_p_contact_users_']").nth(index)
-
-    def _option(self, option_name: str) -> Locator:
-        return self.main_area.locator().get_by_role("option", name=option_name)
-
-    @property
-    def _match_services_checkbox(self) -> Locator:
-        return self._checkbox_locator("Match services")
-
-    def match_services_text_field(self, index: int) -> Locator:
-        return self.main_area.locator(f"input[name*='rule_p_match_services_{index}']")
-
-    def check_notify_all_contact_of_the_notified_host_or_service(self, check: bool) -> None:
-        if self._notify_all_contact_of_the_notified_host_or_service_checkbox.is_checked() != check:
-            self._notify_all_contact_of_the_notified_host_or_service_checkbox.click()
-
-    def check_the_following_users(self, check: bool) -> None:
-        if self._the_following_users_checkbox.is_checked() != check:
-            self._the_following_users_checkbox.click()
-
-    def check_match_services(self, check: bool) -> None:
-        if self._match_services_checkbox.is_checked() != check:
-            self._match_services_checkbox.click()
-
-    def add_users(self, usernames: list[str]) -> None:
-        self.check_the_following_users(True)
-        for index, username in enumerate(usernames):
-            self._add_user_button.click()
-            self.user_field(index).click()
-            self._option(username).click()
-
-    def add_services(self, services: list[str]) -> None:
-        self.check_match_services(True)
-        for index, service in enumerate(services):
-            self.match_services_text_field(index).fill(service)
-
-    def modify_notification_rule(self, users: list[str] | None, services: list[str] | None) -> None:
-        """Modify the default notification rule.
-
-        Modify the default notification rule to notify the specified users and/or about the
-        specified services.
-        """
-        if users:
-            logger.info("Modify default notification rule to notify the following users: %s", users)
-            self.check_notify_all_contact_of_the_notified_host_or_service(False)
-            self.add_users(users)
-        if services:
-            logger.info(
-                "Modify default notification rule to match the following services: %s", services
-            )
-            self.add_services(services)
-        self.save_button.click()
-
-    def restore_notification_rule(self, users: bool, services: bool) -> None:
-        """Restore the default notification rule settings."""
-        logger.info("Restore default notification rule settings")
-        if users:
-            self.check_notify_all_contact_of_the_notified_host_or_service(True)
-            self.check_the_following_users(False)
-        if services:
-            self.check_match_services(False)
-        self.save_button.click()
+    def navigate(self) -> None:
+        notification_configuration_page = NotificationConfiguration(self.page)
+        notification_configuration_page.add_notification_rule_button.click()
+        self.page.wait_for_url(
+            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
+        )
+        self._validate_page()

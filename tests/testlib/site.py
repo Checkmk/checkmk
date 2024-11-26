@@ -1834,10 +1834,8 @@ class SiteFactory:
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
                 tracing_config=tracing_config,
+                auto_restart_httpd=auto_restart_httpd,
             )
-            site.start()
-            if auto_restart_httpd:
-                restart_httpd()
             logger.info(
                 'Site "%s" is ready!%s',
                 site.id,

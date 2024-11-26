@@ -40,28 +40,25 @@ def get_test_client(*, engine: AutomationEngine) -> TestClient:
 
 
 def test_automation_with_success() -> None:
-    client = get_test_client(engine=DummyAutomationEngineSuccess())
-
-    resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
 
 
 def test_automation_with_failure() -> None:
-    client = get_test_client(engine=DummyAutomationEngineFailure())
-
-    resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+    with get_test_client(engine=DummyAutomationEngineFailure()) as client:
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SYSTEM_EXIT, "output": ""}
 
 
 def test_automation_with_timeout() -> None:
-    client = get_test_client(engine=DummyAutomationEngineTimeout())
-    headers = {"keep-alive": "timeout=0"}
-
-    resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST, headers=headers)
+    with get_test_client(engine=DummyAutomationEngineTimeout()) as client:
+        headers = {"keep-alive": "timeout=0"}
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST, headers=headers)
 
     assert resp.status_code == 408
     assert resp.json() == {
@@ -71,9 +68,8 @@ def test_automation_with_timeout() -> None:
 
 
 def test_health_check() -> None:
-    client = get_test_client(engine=DummyAutomationEngineSuccess())
-
-    resp = client.get("/health")
+    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
+        resp = client.get("/health")
 
     assert resp.status_code == 200
     assert resp.json() == {"up": True}

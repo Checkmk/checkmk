@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    SNMPTree,
     State,
 )
 
@@ -20,6 +21,17 @@ from cmk.agent_based.v2 import (
 class Section(NamedTuple):
     uptime_sec: float | None
     message: str | None
+
+
+UPTIME_TREE = SNMPTree(
+    base=".1.3.6.1.2.1",
+    oids=[
+        # On Linux appliances: .1.3.6.1.2.1.1.3.0    means uptime of snmpd
+        #                      .1.3.6.1.2.1.25.1.1.0 means system uptime
+        "1.3",  # DISMAN-EVENT-MIB::sysUpTime
+        "25.1.1",  # HOST-RESOURCES-MIB::hrSystemUptime
+    ],
+)
 
 
 def discover(section: Section) -> DiscoveryResult:

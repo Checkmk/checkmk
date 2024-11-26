@@ -20,7 +20,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
 if edition(paths.omd_root) is Edition.CSE:
-    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
+    pass
 
 
 def register(mega_menu_registry: MegaMenuRegistry, info_line: Callable[[], str]) -> None:
@@ -30,7 +30,7 @@ def register(mega_menu_registry: MegaMenuRegistry, info_line: Callable[[], str])
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
-            topics=_help_menu_topics,
+            topics=_help_menu_topics(default_learning_items, default_developer_items),
             info_line=info_line,
         )
     )
@@ -40,8 +40,8 @@ def default_info_line() -> str:
     return f"{edition(paths.omd_root).title} {__version__}{_license_status()}"
 
 
-def _help_menu_topics() -> list[TopicMenuTopic]:
-    learning_items = [
+def default_learning_items() -> list[TopicMenuItem]:
+    return [
         TopicMenuItem(
             name="beginners_guide",
             title=_("Beginner's guide"),
@@ -76,104 +76,109 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if edition(paths.omd_root) == Edition.CSE and user_may_see_saas_onboarding(user.id):
-        learning_items.append(
-            TopicMenuItem(
-                name="getting_started", title=_("Getting started"), sort_index=10, url=""
-            ),
-        )
 
+def default_developer_items() -> list[TopicMenuItem]:
     return [
-        TopicMenuTopic(
-            name="learning_checkmk",
-            title=_("Learning Checkmk"),
-            icon="learning_checkmk",
-            items=learning_items,
+        TopicMenuItem(
+            name="plugin_api_introduction",
+            title=_("Check plug-in API introduction"),
+            url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+            target="_blank",
+            sort_index=10,
+            icon={
+                "icon": "services_green",
+                "emblem": "api",
+            },
         ),
-        TopicMenuTopic(
-            name="developer_resources",
-            title=_("Developer resources"),
-            icon="developer_resources",
-            items=[
-                TopicMenuItem(
-                    name="plugin_api_introduction",
-                    title=_("Check plug-in API introduction"),
-                    url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
-                    target="_blank",
-                    sort_index=10,
-                    icon={
-                        "icon": "services_green",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="plugin_api_reference",
-                    title=_("Plug-in API references"),
-                    url="plugin-api/",
-                    target="_blank",
-                    sort_index=20,
-                    icon={
-                        "icon": "services_green",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_introduction",
-                    title=_("REST API introduction"),
-                    url=doc_reference_url(DocReference.REST_API),
-                    target="_blank",
-                    sort_index=30,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_documentation",
-                    title=_("REST API documentation"),
-                    url="openapi/",
-                    target="_blank",
-                    sort_index=40,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_interactive_gui",
-                    title=_("REST API interactive GUI"),
-                    url="api/1.0/ui/",
-                    target="_blank",
-                    sort_index=50,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-            ],
+        TopicMenuItem(
+            name="plugin_api_reference",
+            title=_("Plug-in API references"),
+            url="plugin-api/",
+            target="_blank",
+            sort_index=20,
+            icon={
+                "icon": "services_green",
+                "emblem": "api",
+            },
         ),
-        TopicMenuTopic(
-            name="about_checkmk",
-            title=_("About Checkmk"),
-            icon="about_checkmk",
-            items=[
-                TopicMenuItem(
-                    name="info",
-                    title=_("Info"),
-                    url="info.py",
-                    sort_index=10,
-                    icon="checkmk_logo_min",
-                ),
-                TopicMenuItem(
-                    name="change_log",
-                    title=_("Change log (Werks)"),
-                    url="change_log.py",
-                    sort_index=20,
-                    icon="checkmk_logo_min",
-                ),
-            ],
+        TopicMenuItem(
+            name="rest_api_introduction",
+            title=_("REST API introduction"),
+            url=doc_reference_url(DocReference.REST_API),
+            target="_blank",
+            sort_index=30,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
+        ),
+        TopicMenuItem(
+            name="rest_api_documentation",
+            title=_("REST API documentation"),
+            url="openapi/",
+            target="_blank",
+            sort_index=40,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
+        ),
+        TopicMenuItem(
+            name="rest_api_interactive_gui",
+            title=_("REST API interactive GUI"),
+            url="api/1.0/ui/",
+            target="_blank",
+            sort_index=50,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
         ),
     ]
+
+
+def _help_menu_topics(
+    learning_items: Callable[[], list[TopicMenuItem]],
+    developer_items: Callable[[], list[TopicMenuItem]],
+) -> Callable[[], list[TopicMenuTopic]]:
+    def _fun():
+        return [
+            TopicMenuTopic(
+                name="learning_checkmk",
+                title=_("Learning Checkmk"),
+                icon="learning_checkmk",
+                items=learning_items(),
+            ),
+            TopicMenuTopic(
+                name="developer_resources",
+                title=_("Developer resources"),
+                icon="developer_resources",
+                items=developer_items(),
+            ),
+            TopicMenuTopic(
+                name="about_checkmk",
+                title=_("About Checkmk"),
+                icon="about_checkmk",
+                items=[
+                    TopicMenuItem(
+                        name="info",
+                        title=_("Info"),
+                        url="info.py",
+                        sort_index=10,
+                        icon="checkmk_logo_min",
+                    ),
+                    TopicMenuItem(
+                        name="change_log",
+                        title=_("Change log (Werks)"),
+                        url="change_log.py",
+                        sort_index=20,
+                        icon="checkmk_logo_min",
+                    ),
+                ],
+            ),
+        ]
+
+    return _fun
 
 
 def _license_status() -> HTML | str:

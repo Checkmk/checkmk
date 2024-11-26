@@ -10,6 +10,8 @@ from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
 import cmk.plugins.azure.rulesets.azure as azure_ruleset
 
+# pylint: disable=protected-access
+
 AZURE_VS_RULESET_VALUE: Final = {
     "authority": "global",
     "tenant": "my_tenant",
@@ -90,3 +92,10 @@ def test_vs_to_fs_update() -> None:
     assert value["config"] == AZURE_FS_RULESET_VALUE["config"]
     assert value["piggyback_vms"] == AZURE_FS_RULESET_VALUE["piggyback_vms"]
     assert value["import_tags"] == AZURE_FS_RULESET_VALUE["import_tags"]
+
+
+def test_migrate_keeps_values() -> None:
+    migrated = azure_ruleset._migrate_services_to_monitor(["Microsoft.DBforMySQL/flexibleServers"])
+    double_migrated = azure_ruleset._migrate_services_to_monitor(migrated)
+    assert migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
+    assert len(double_migrated) == 0  # TODO! this is a bug, it should be the same as migrated!

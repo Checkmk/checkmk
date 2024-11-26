@@ -8,7 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import type * as vue_formspec_components from '@/form/components/vue_formspec_components'
-import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -55,5 +56,7 @@ const data = ref<[string, unknown]>(['stringChoice', 'some string'])
 </script>
 
 <template>
-  <FormCascadingSingleChoice v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
+  <hr />
+  <FormReadonly :data="data" :spec="spec" :backend-validation="[]" />
 </template>

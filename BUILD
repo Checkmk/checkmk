@@ -123,6 +123,12 @@ copy_file(
     out = "cmc_proto/cycletime/v1/types.proto",
 )
 
+copy_file(
+    name = "_cmc_state_proto",
+    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/state/v1/types.proto",
+    out = "cmc_proto/state/v1/types.proto",
+)
+
 proto_library(
     name = "cycletime_proto",
     srcs = ["cmc_proto/cycletime/v1/types.proto"],
@@ -133,6 +139,18 @@ proto_library(
 proto_library(
     name = "config_proto",
     srcs = ["cmc_proto/config/v1/types.proto"],
+    strip_import_prefix = "cmc_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cycletime_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+proto_library(
+    name = "state_proto",
+    srcs = ["cmc_proto/state/v1/types.proto"],
     strip_import_prefix = "cmc_proto",
     visibility = ["//visibility:public"],
     deps = [

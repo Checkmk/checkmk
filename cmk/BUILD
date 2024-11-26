@@ -210,6 +210,12 @@ py_proto_library(
     deps = ["//:config_proto"],
 )
 
+py_proto_library(
+    name = "state_proto_pb2",
+    visibility = ["//tests:__subpackages__"],
+    deps = ["//:state_proto"],
+)
+
 [py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,

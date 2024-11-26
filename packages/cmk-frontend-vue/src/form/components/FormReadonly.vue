@@ -160,9 +160,6 @@ function renderTuple(
   const elementResults: VNode[] = []
   formSpec.elements.forEach((element, index) => {
     const renderResult = renderForm(element, value[index], elementValidations[index])
-    if (renderResult === null) {
-      return
-    }
     elementResults.push(h('td', renderResult))
     elementResults.push(h('td', ', '))
   })

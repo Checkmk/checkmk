@@ -984,6 +984,10 @@ msgstr "-.-- %"
 msgid "-.-- ms"
 msgstr "-.-- ms"
 
+#, fuzzy
+msgid "."
+msgstr "S."
+
 #, python-format
 msgid "... (%d more)"
 msgstr "... (%d más)"
@@ -9632,6 +9636,10 @@ msgstr ""
 "Botones para cambiar globalmente de estado, como la activación de controles "
 "y notificaciones"
 
+#, fuzzy
+msgid "Buy a license"
+msgstr "Nombre de la licencia"
+
 msgid "By"
 msgstr "Por"
 
@@ -12201,7 +12209,7 @@ msgid "Checkmk Appliance information"
 msgstr "Automatización de Checkmk"
 
 #, fuzzy
-msgid "Checkmk Cloud"
+msgid "Checkmk Cloud Trial"
 msgstr "Logotipo de Checkmk"
 
 msgid "Checkmk Configuration Files"
@@ -15938,10 +15946,6 @@ msgstr ""
 
 msgid "Creating dump file failed"
 msgstr "Fallo en la creación del archivo de volcado"
-
-#, python-format
-msgid "Creating scheduled report '%s'..."
-msgstr "Creando informe programado '%s'..."
 
 msgid "Creation"
 msgstr "Creación"
@@ -21097,10 +21101,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -32612,6 +32612,14 @@ msgstr ""
 "con el equipo de ventas de Checkmk en %s y renueve su licencia. Si adquirió "
 "su licencia a través de %s, póngase en contacto con ellos."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk, please contact the Checkmk sales "
+"team at %s."
+msgstr ""
+"Si desea seguir utilizando Checkmk, adquiera una licencia compatible con %s "
+"o póngase en contacto con el equipo de ventas de Checkmk en %s."
+
 #, python-format
 msgid ""
 "If you want to continue using Checkmk, please purchase a license supporting "
@@ -36901,6 +36909,14 @@ msgid "License expired: Renew license now"
 msgstr "Licencia expirada: Renovar licencia ahora"
 
 #, fuzzy
+msgid "License expired: Renew license now to avoid site deletion."
+msgstr "Licencia expirada: Renovar licencia ahora"
+
+#, fuzzy
+msgid "License expired: Renew license now to reactivate change activation."
+msgstr "Licencia expirada: Renovar licencia ahora"
+
+#, fuzzy
 msgid "License start"
 msgstr "Estado de la licencia"
 
@@ -36913,7 +36929,15 @@ msgstr "Estado de la licencia: Libre"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Licencia suspendida: 'Activar cambios' está bloqueado"
 
+#, fuzzy
+msgid "License suspended: 'Activate changes' is blocked."
+msgstr "Licencia suspendida: 'Activar cambios' está bloqueado"
+
 msgid "License suspended: Contact Checkmk sales team now"
+msgstr "Licencia suspendida: Contacta con el equipo de ventas de Checkmk"
+
+#, fuzzy
+msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Licencia suspendida: Contacta con el equipo de ventas de Checkmk"
 
 msgid "License usage"
@@ -36935,6 +36959,10 @@ msgstr "Verificación de licencia fallida: 'Activar cambios' está bloquedo"
 
 msgid "Licensed"
 msgstr "Licencia"
+
+#, fuzzy
+msgid "Licensed phase: too many services."
+msgstr "Ver todos los hosts y servicios"
 
 #, fuzzy
 msgid "Licensed services"
@@ -45211,6 +45239,11 @@ msgstr ""
 "aumentar el tiempo de ejecución de tu sincronización LDAP."
 
 msgid ""
+"Once you reach 100%, further change activations will be blocked. Avoid "
+"interruptions by upgrading your license to extend your service limit, "
+msgstr ""
+
+msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
 "this a GUI view. Please edit your view and choose another time range for "
 "your metric history painter to fix this issue."
@@ -48978,8 +49011,20 @@ msgid "Please add at least one column to your view."
 msgstr "Por favor, añada al menos una columna a su vista."
 
 #, fuzzy
+msgid "Please add at least one contact group"
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
+msgid "Please add at least one email address"
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
 msgid "Please add at least one endpoint to monitor"
 msgstr "Por favor, añada al menos una columna a su vista."
+
+#, fuzzy
+msgid "Please add at least one macro"
+msgstr "Por favor, añada al menos un nodo hijo."
 
 #, fuzzy
 msgid "Please add at least one recipient"
@@ -48987,6 +49032,10 @@ msgstr "Por favor, añada al menos un nodo hijo."
 
 #, fuzzy
 msgid "Please add at least one tag condition."
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
+msgid "Please add at least one user"
 msgstr "Por favor, añada al menos un nodo hijo."
 
 msgid ""
@@ -55993,6 +56042,9 @@ msgstr "Acuerdo de nivel de servicio"
 
 msgid "Service Level Agreements"
 msgstr "Acuerdos de nivel de servicio"
+
+msgid "Service Limit Reached: Action Required."
+msgstr ""
 
 msgid "Service Name"
 msgstr "Nombre del servicio"
@@ -73014,6 +73066,12 @@ msgstr ""
 "El valor debe ser una representación de cadena de una estructura de datos "
 "compatible con Python."
 
+msgid "To unlock higher limits, purchase a license "
+msgstr ""
+
+msgid "To unlock higher limits, upgrade your license "
+msgstr ""
+
 msgid "To:"
 msgstr "Para:"
 
@@ -75782,8 +75840,8 @@ msgid "Treshold"
 msgstr "Treshold"
 
 #, fuzzy
-msgid "Trial Phase"
-msgstr "Cambio trivial"
+msgid "Trial"
+msgstr "Serie"
 
 msgid "Trial expired"
 msgstr "La prueba ha caducado"
@@ -75802,7 +75860,14 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr "Periodo de prueba finalizado: Reducir el número de servicios"
 
+#, fuzzy
+msgid "Trial phase: too many services."
+msgstr "Ver todos los hosts y servicios"
+
 msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
+msgid "Trial time left is visible in the user admin panel"
 msgstr ""
 
 #, python-format
@@ -80266,6 +80331,10 @@ msgid "View timeline"
 msgstr "Ver cronología"
 
 #, fuzzy
+msgid "View trial details"
+msgstr "Opciones adicionales"
+
+#, fuzzy
 msgid "Viewport information"
 msgstr "Información sobre el host"
 
@@ -80868,6 +80937,10 @@ msgstr "Advertencia: Este host tiene una configuración no válida!"
 
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Advertencia: Este host tiene una configuración no válida: "
+
+#, python-format
+msgid "Warning: You are over 90% of your service limit."
+msgstr ""
 
 msgid "Warnings:"
 msgstr "Advertencias:"
@@ -82278,6 +82351,12 @@ msgstr ""
 "seguir consultando su configuración de destino y registrarse, pero no pueden "
 "descargar paquetes para su actualización."
 
+#, python-format
+msgid ""
+"With this activation you will have %s services activated which exceeds your "
+"limit of %s services."
+msgstr ""
+
 msgid ""
 "With this configuration, Checkmk will alert if the actual (not averaged) "
 "total CPU is exceeding a utilization threshold over an extended period of "
@@ -83384,6 +83463,9 @@ msgstr ""
 "conexión que quieras probar en la parte derecha de la pantalla y pulsa el "
 "botón \"Probar\". Los resultados se mostrarán aquí."
 
+msgid "You can easily increase your site's capacity by upgrading your plan."
+msgstr ""
+
 msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
 "predefined conditions, which may be handy if you have to configure the same "
@@ -84399,6 +84481,10 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Tienes permiso para este host."
 
+#, fuzzy, python-format
+msgid "You have reached your limit of %s. "
+msgstr "Ha seleccionado %d %s para la migración: %s"
+
 #, python-format
 msgid "You have selected %d %s for migration: %s"
 msgstr "Ha seleccionado %d %s para la migración: %s"
@@ -84820,6 +84906,10 @@ msgstr ""
 "href=\"https://checkmk.com/checkmk_support_contract.html\" target=\"_blank"
 "\">nuestro sitio web</a>."
 
+#, fuzzy, python-format
+msgid "Your current service limit is %s. "
+msgstr "Controlar los límites del servicio"
+
 msgid "Your end date is before your start date."
 msgstr "Su fecha de finalización es anterior a su fecha de inicio."
 
@@ -84829,6 +84919,11 @@ msgstr "Sus extensiones tienen un tamaño de %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Su nombre de archivo no debe terminar con una barra."
+
+msgid ""
+"Your free trial is active! Please note that your site will be deleted when "
+"the trial period ends. "
+msgstr ""
 
 #, fuzzy
 msgid "Your host name has an invalid format."
@@ -84869,6 +84964,14 @@ msgstr ""
 "Su licencia ha sido suspendida. Póngase en contacto con el equipo de ventas "
 "de Checkmk en %s."
 
+#, fuzzy, python-format
+msgid ""
+"Your license has been suspended. Please contact the Checkmk sales team at "
+"%s. "
+msgstr ""
+"Su licencia ha sido suspendida. Póngase en contacto con el equipo de ventas "
+"de Checkmk en %s."
+
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -84886,6 +84989,10 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid "Your license has expired on %s."
+msgstr "Tu %s ha sido guardado."
+
+#, fuzzy, python-format
+msgid "Your license has expired on %s. "
 msgstr "Tu %s ha sido guardado."
 
 #, python-format
@@ -85842,6 +85949,9 @@ msgstr "maneja"
 
 msgid "height"
 msgstr "altura"
+
+msgid "here"
+msgstr ""
 
 msgid "hide folder names"
 msgstr "ocultar los nombres de las carpetas"
@@ -87075,6 +87185,9 @@ msgstr "licencias no utilizadas"
 msgid "up"
 msgstr "Ok"
 
+msgid "upgrade here"
+msgstr ""
+
 msgid "upper limit"
 msgstr "límite superior"
 
@@ -87270,9 +87383,27 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit by "
+"deleting one or more hosts from your config."
+msgstr ""
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit. In case "
+"you want to increase your service limit, "
+msgstr ""
+
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, python-format
+#~ msgid "Creating scheduled report '%s'..."
+#~ msgstr "Creando informe programado '%s'..."
+
+#, fuzzy
+#~ msgid "Trial Phase"
+#~ msgstr "Cambio trivial"
 
 #, fuzzy
 #~ msgid "Batch id"

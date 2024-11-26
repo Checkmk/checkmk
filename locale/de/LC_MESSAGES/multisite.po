@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-11-25 15:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -985,6 +985,10 @@ msgstr "-.-- %"
 msgid "-.-- ms"
 msgstr "-.-- ms"
 
+#, fuzzy
+msgid "."
+msgstr "s."
+
 #, python-format
 msgid "... (%d more)"
 msgstr "... (%d mehr)"
@@ -1333,8 +1337,8 @@ msgstr ""
 "gefiltert. Andernfalls werden alle Instanzen erfasst.<br><br><b>Instanzen "
 "mit expliziten AWS-Service-Merkmalen überwachen, die allgemeinen Merkmal-"
 "Filter ignorieren:</b><br> Legen Sie explizite Merkmale für diese Services "
-"fest. Die allgemeinen Merkmale werden für diese Services "
-"ignoriert.<br><br><b>Instanzen mit expliziten Service-Namen überwachen, die "
+"fest. Die allgemeinen Merkmale werden für diese Services ignoriert."
+"<br><br><b>Instanzen mit expliziten Service-Namen überwachen, die "
 "allgemeinen Merkmal-Filter ignorieren:</b><br>Verwenden Sie diese Option, um "
 "explizite Namen anzugeben. Die allgemeinen Merkmale werden für diese "
 "Services ignoriert."
@@ -9181,6 +9185,10 @@ msgstr ""
 "Knöpfe für das globale Umschalten von Zuständen wie die Aktivierung von "
 "Checks und Benachrichtigungen"
 
+#, fuzzy
+msgid "Buy a license"
+msgstr "eine Lizenz kaufen"
+
 msgid "By"
 msgstr "Von"
 
@@ -11695,7 +11703,8 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Checkmk Appliance Information"
 
-msgid "Checkmk Cloud"
+#, fuzzy
+msgid "Checkmk Cloud Trial"
 msgstr "Checkmk Cloud"
 
 msgid "Checkmk Configuration Files"
@@ -15309,10 +15318,6 @@ msgstr ""
 
 msgid "Creating dump file failed"
 msgstr "Erstellen der Dump-Datei fehlgeschlagen"
-
-#, python-format
-msgid "Creating scheduled report '%s'..."
-msgstr "Geplanten Bericht '%s' erzeugen..."
 
 msgid "Creation"
 msgstr "Erstellung"
@@ -20179,11 +20184,6 @@ msgstr ""
 "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt, aber "
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
 
-#, python-format
-msgid "During the development phase, the number of services is limited to %s."
-msgstr ""
-"Während der Entwicklungsphase ist die Anzahl der Services auf %s begrenzt."
-
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
 
@@ -24266,8 +24266,8 @@ msgid ""
 "For information on AWS tag configuration, visit https://docs.aws.amazon.com/"
 "AWSEC2/latest/UserGuide/Using_Tags.html"
 msgstr ""
-"Wie man AWS-Merkmale konfiguriert, erfahren Sie unter https://docs.aws.amazon"
-".com/AWSEC2/latest/UserGuide/Using_Tags.html"
+"Wie man AWS-Merkmale konfiguriert, erfahren Sie unter https://docs.aws."
+"amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
 
 #, python-format
 msgid "For more help have a look at the %s."
@@ -26653,9 +26653,9 @@ msgstr ""
 "wenn Sie möchten, dass die Regel für alle durch die angegebenen Merkmale "
 "spezifizierten Hosts gilt. Die Namen, die Sie hier angeben, werden unter "
 "Unterscheidung von Groß-/Kleinschrift verglichen. Alternativ können Sie "
-"reguläre Ausdrücke angeben. Stellen Sie dazu dem Ausdruck eine Tilde "
-"(<tt>~</tt>) voran. Der reguläre Ausdruck muss dann auf den <i>Anfang</i> "
-"des Host-Namens passen."
+"reguläre Ausdrücke angeben. Stellen Sie dazu dem Ausdruck eine Tilde (<tt>~</"
+"tt>) voran. Der reguläre Ausdruck muss dann auf den <i>Anfang</i> des Host-"
+"Namens passen."
 
 msgid ""
 "Here you can enter either device state number (e.g. from SNMP devices) or "
@@ -31110,6 +31110,14 @@ msgstr ""
 "bitte das Checkmk-Verkaufsteam unter %s und erneuern Sie Ihre Lizenz. Wenn "
 "Sie Ihre Lizenz über %s erworben haben, kontaktieren Sie diesen."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk, please contact the Checkmk sales "
+"team at %s."
+msgstr ""
+"Wenn Sie Checkmk weiterhin nutzen möchten, erwerben Sie bitte eine Lizenz, "
+"die %s unterstützt oder kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
+
 #, python-format
 msgid ""
 "If you want to continue using Checkmk, please purchase a license supporting "
@@ -32619,8 +32627,8 @@ msgid ""
 "Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
 "<i>hl:</i> Host label, <i>sl:</i> Service label"
 msgstr ""
-"Interaktives Suchfeld für den direkten Zugriff auf Monitoring-Instanzen ("
-"Hosts, Services, Host- und Service-Gruppen).<br>Sie können die folgenden "
+"Interaktives Suchfeld für den direkten Zugriff auf Monitoring-Instanzen "
+"(Hosts, Services, Host- und Service-Gruppen).<br>Sie können die folgenden "
 "Filter verwenden: <i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host-"
 "Gruppe, <i>sg:</i> Service-Gruppe,<br><i>ad:</i> Adresse, <i>al:</i> Alias, "
 "<i>tg:</i> Host-Merkmal, <i>hl:</i> Host-Label, <i>sl:</i> Service-Label"
@@ -35218,6 +35226,14 @@ msgstr "Die Lizenz ist abgelaufen: 'Änderungen aktivieren' ist blockiert"
 msgid "License expired: Renew license now"
 msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
 
+#, fuzzy
+msgid "License expired: Renew license now to avoid site deletion."
+msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
+
+#, fuzzy
+msgid "License expired: Renew license now to reactivate change activation."
+msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
+
 msgid "License start"
 msgstr "Lizenzbeginn"
 
@@ -35230,7 +35246,15 @@ msgstr "Lizenzzustand: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert"
 
+#, fuzzy
+msgid "License suspended: 'Activate changes' is blocked."
+msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert"
+
 msgid "License suspended: Contact Checkmk sales team now"
+msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
+
+#, fuzzy
+msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
 
 msgid "License usage"
@@ -35251,6 +35275,10 @@ msgstr ""
 
 msgid "Licensed"
 msgstr "Lizenziert"
+
+#, fuzzy
+msgid "Licensed phase: too many services."
+msgstr "Beta-Phase: zu viele Services"
 
 msgid "Licensed services"
 msgstr "Lizenzierte Services"
@@ -43136,6 +43164,11 @@ msgstr ""
 "Ausführungszeit Ihrer LDAP-Synchronisierung erhöhen kann."
 
 msgid ""
+"Once you reach 100%, further change activations will be blocked. Avoid "
+"interruptions by upgrading your license to extend your service limit, "
+msgstr ""
+
+msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
 "this a GUI view. Please edit your view and choose another time range for "
 "your metric history painter to fix this issue."
@@ -46593,14 +46626,30 @@ msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 msgid "Please add at least one column to your view."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 
+#, fuzzy
+msgid "Please add at least one contact group"
+msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
+
+#, fuzzy
+msgid "Please add at least one email address"
+msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+
 msgid "Please add at least one endpoint to monitor"
 msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
+
+#, fuzzy
+msgid "Please add at least one macro"
+msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 
 msgid "Please add at least one recipient"
 msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 
 msgid "Please add at least one tag condition."
 msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
+
+#, fuzzy
+msgid "Please add at least one user"
+msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -50698,9 +50747,9 @@ msgid ""
 "Restrict fetched events by tags (API field <tt>tags</tt>). Events must have "
 "all of the configured tags in order to be fetched."
 msgstr ""
-"Einschränkung der abgerufenen Ereignisse nach Merkmalen (API-Feld "
-"<tt>tags</tt>). Die Ereignisse müssen alle konfigurierten Merkmale "
-"enthalten, um abgerufen zu werden."
+"Einschränkung der abgerufenen Ereignisse nach Merkmalen (API-Feld <tt>tags</"
+"tt>). Die Ereignisse müssen alle konfigurierten Merkmale enthalten, um "
+"abgerufen zu werden."
 
 msgid ""
 "Restrict fetched monitors by service and/or custom tags (API field "
@@ -50715,9 +50764,9 @@ msgid ""
 "Restrict fetched monitors by tags (API field <tt>tags</tt>). Monitors must "
 "have all of the configured tags in order to be fetched."
 msgstr ""
-"Einschränkung der abgerufenen Monitore durch Merkmale (API-Feld "
-"<tt>tags</tt>). Die Monitore müssen alle konfigurierten Merkmale aufweisen, "
-"um abgerufen werden zu können."
+"Einschränkung der abgerufenen Monitore durch Merkmale (API-Feld <tt>tags</"
+"tt>). Die Monitore müssen alle konfigurierten Merkmale aufweisen, um "
+"abgerufen werden zu können."
 
 msgid "Restrict generation of notifications"
 msgstr "Erstellung von Benachrichtigungen einschränken"
@@ -52810,8 +52859,8 @@ msgid ""
 msgstr ""
 "Wählen Sie Testfälle, die überhaupt nicht ausgeführt werden sollen, mit "
 "einem Merkmal aus. (<a href=\"https://robotframework.org/robotframework/"
-"latest/RobotFrameworkUserGuide.html#tagging-test-cases\" target=\"_blank\""
-">Über das Taggen von Testfällen</a>). Diese Tests werden nicht ausgeführt, "
+"latest/RobotFrameworkUserGuide.html#tagging-test-cases\" target=\"_blank"
+"\">Über das Taggen von Testfällen</a>). Diese Tests werden nicht ausgeführt, "
 "auch wenn sie mit <tt>--include</tt> eingeschlossen sind. Merkmale werden "
 "nach denselben Regeln wie bei <tt>--include</tt> abgeglichen."
 
@@ -53315,6 +53364,9 @@ msgstr "Service Level Agreement"
 
 msgid "Service Level Agreements"
 msgstr "Service Level Agreements"
+
+msgid "Service Limit Reached: Action Required."
+msgstr ""
 
 msgid "Service Name"
 msgstr "Service-Name"
@@ -56254,9 +56306,9 @@ msgid ""
 "mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</"
 "a> feature processes this filesystem."
 msgstr ""
-"Legt fest wie das <a href='wato."
-"py?mode=edit_ruleset&varname=filesystem_groups'>Dateisystem-"
-"Gruppierungsmuster</a> Feature dieses Dateisystem verarbeitet."
+"Legt fest wie das <a href='wato.py?"
+"mode=edit_ruleset&varname=filesystem_groups'>Dateisystem-Gruppierungsmuster</"
+"a> Feature dieses Dateisystem verarbeitet."
 
 msgid ""
 "Specifies the default layout to be used when an aggregation has no explicit "
@@ -63988,7 +64040,8 @@ msgstr ""
 
 #, python-format
 msgid "The tag ID \"%s\" does already exist in the list of auxiliary tags."
-msgstr "Die Merkmal-ID \"%s\" existiert bereits in der Liste der Hilfsmerkmale."
+msgstr ""
+"Die Merkmal-ID \"%s\" existiert bereits in der Liste der Hilfsmerkmale."
 
 #, python-format
 msgid "The tag ID \"%s\" is used twice."
@@ -70035,6 +70088,12 @@ msgstr ""
 "den Sie für eine gegebene Regel festlegen müssen. Der Wert muss in einer "
 "String-Darstellung einer kompatiblen Python-Datenstruktur vorliegen."
 
+msgid "To unlock higher limits, purchase a license "
+msgstr ""
+
+msgid "To unlock higher limits, upgrade your license "
+msgstr ""
+
 msgid "To:"
 msgstr "An:"
 
@@ -72263,8 +72322,9 @@ msgstr "Metriken aus Trends"
 msgid "Treshold"
 msgstr "Schwellwert"
 
-msgid "Trial Phase"
-msgstr "Testphase"
+#, fuzzy
+msgid "Trial"
+msgstr "Seriennummer"
 
 msgid "Trial expired"
 msgstr "Testversion abgelaufen"
@@ -72281,7 +72341,15 @@ msgstr "Testzeitraum beendet: Ein verteiltes Setup ist nicht erlaubt"
 msgid "Trial period ended: Reduce your number of services"
 msgstr "Testzeitraum beendet: Reduzieren Sie die Anzahl der Services"
 
+#, fuzzy
+msgid "Trial phase: too many services."
+msgstr "Beta-Phase: zu viele Services"
+
 msgid "Trial time is undefined during the beta phase"
+msgstr "Die Probezeit ist während der Beta-Phase nicht definiert"
+
+#, fuzzy
+msgid "Trial time left is visible in the user admin panel"
 msgstr "Die Probezeit ist während der Beta-Phase nicht definiert"
 
 #, python-format
@@ -76465,6 +76533,10 @@ msgstr "Regelbasierte effektive Parameter dieses Hosts anzeigen"
 msgid "View timeline"
 msgstr "Zeitleiste anzeigen"
 
+#, fuzzy
+msgid "View trial details"
+msgstr "Zusätzliche Details"
+
 msgid "Viewport information"
 msgstr "Viewport-Informationen"
 
@@ -77038,6 +77110,10 @@ msgstr "Warnung: Die Host-Konfiguration ist ungültig!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Warnung: Die Host-Konfiguration ist ungültig: "
 
+#, python-format
+msgid "Warning: You are over 90% of your service limit."
+msgstr ""
+
 msgid "Warnings:"
 msgstr "Warnungen:"
 
@@ -77609,11 +77685,11 @@ msgstr ""
 "aber Sie erhalten einen Knoten für jedes Child des gefundenen Hosts. Der "
 "Platzhalter <tt>$HOSTNAME$</tt> enthält den Namen des gefundenen Childs und "
 "der Platzhalter <tt>$HOSTALIAS$</tt> enthält dessen Alias.<br><br>Bei der "
-"Auswahl von <i>Die Parents der gefundenen Hosts</i> werden die Bedingungen ("
-"Merkmale und Host-Name) verwendet, um einen Host zu finden, aber es wird ein "
-"Knoten für jeden der Parent Hosts des gefundenen Hosts erstellt. Der "
-"Platzhalter <tt>$HOSTNAME$</tt> enthält den Namen des Child-Hosts und "
-"<tt>$2$</tt> den Namen des Parent Hosts."
+"Auswahl von <i>Die Parents der gefundenen Hosts</i> werden die Bedingungen "
+"(Merkmale und Host-Name) verwendet, um einen Host zu finden, aber es wird "
+"ein Knoten für jeden der Parent Hosts des gefundenen Hosts erstellt. Der "
+"Platzhalter <tt>$HOSTNAME$</tt> enthält den Namen des Child-Hosts und <tt>"
+"$2$</tt> den Namen des Parent Hosts."
 
 msgid ""
 "When sending notifications from the monitoring system to the event console "
@@ -78445,6 +78521,12 @@ msgstr ""
 "Mit dem Hauptschalter können Sie sofort Agentenupdates ein- oder "
 "ausschalten. Ist er ausgeschaltet, dann können Agenten lediglich Ihre "
 "Konfiguration abfragen, aber nicht die Updates herunterladen."
+
+#, python-format
+msgid ""
+"With this activation you will have %s services activated which exceeds your "
+"limit of %s services."
+msgstr ""
 
 msgid ""
 "With this configuration, Checkmk will alert if the actual (not averaged) "
@@ -79524,6 +79606,9 @@ msgstr ""
 "ausprobieren möchten und drücken den \"Test\"-Knopf. Die Ergebnisse werden "
 "hier angezeigt."
 
+msgid "You can easily increase your site's capacity by upgrading your plan."
+msgstr ""
+
 msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
 "predefined conditions, which may be handy if you have to configure the same "
@@ -79683,7 +79768,8 @@ msgstr ""
 
 #, python-format
 msgid "You can not override the builtin auxiliary tag \"%s\"."
-msgstr "Sie können das eingebaute Hilfsmerkmal \"%s\" nicht außer Kraft setzen."
+msgstr ""
+"Sie können das eingebaute Hilfsmerkmal \"%s\" nicht außer Kraft setzen."
 
 #, python-format
 msgid "You can not override the builtin tag group \"%s\"."
@@ -80072,17 +80158,17 @@ msgid ""
 "the value <tt>bar</tt> would result in the macro <tt>$_HOSTFOO$</tt> being "
 "replaced with <tt>bar</tt> "
 msgstr ""
-"Sie können hier Monitoring-Makros verwenden. Die wichtigsten "
-"sind:<ul><li><tt>$HOSTADDRESS$</tt>: IP-Adresse des "
-"Hosts</li><li><tt>$HOSTNAME$</tt>: Hostname</li><li><tt>$_HOSTTAGS$</tt>: "
-"Liste der Host-Merkmale</li><li><tt>$_HOSTADDRESS_4$</tt>: Die IPv4-Adresse "
-"des Hosts</li><li><tt>$_HOSTADDRESS_6$</tt>: Die IPv6-Adresse des "
-"Hosts</li><li><tt>$_HOSTADDRESS_FAMILY$</tt>: Die primäre Adress-Familie des "
-"Hosts</li></ul>Alle individuellen Attribute des Hosts sind per "
-"<tt>$_HOST[VARNAME]$</tt> verfügbar. Ersetzen Sie <tt>[VARNAME]</tt> mit dem "
-"<i>groß geschriebenen</i> Namen Ihrer Variable. Beispielsweise wird bei "
-"einem Host-Attribut <tt>foo</tt> mit dem Wert <tt>bar</tt> das Makro "
-"<tt>$_HOSTFOO$</tt> durch <tt>bar</tt> ersetzt. "
+"Sie können hier Monitoring-Makros verwenden. Die wichtigsten sind:"
+"<ul><li><tt>$HOSTADDRESS$</tt>: IP-Adresse des Hosts</li><li><tt>$HOSTNAME$</"
+"tt>: Hostname</li><li><tt>$_HOSTTAGS$</tt>: Liste der Host-Merkmale</"
+"li><li><tt>$_HOSTADDRESS_4$</tt>: Die IPv4-Adresse des Hosts</li><li><tt>"
+"$_HOSTADDRESS_6$</tt>: Die IPv6-Adresse des Hosts</li><li><tt>"
+"$_HOSTADDRESS_FAMILY$</tt>: Die primäre Adress-Familie des Hosts</li></"
+"ul>Alle individuellen Attribute des Hosts sind per <tt>$_HOST[VARNAME]$</tt> "
+"verfügbar. Ersetzen Sie <tt>[VARNAME]</tt> mit dem <i>groß geschriebenen</i> "
+"Namen Ihrer Variable. Beispielsweise wird bei einem Host-Attribut <tt>foo</"
+"tt> mit dem Wert <tt>bar</tt> das Makro <tt>$_HOSTFOO$</tt> durch <tt>bar</"
+"tt> ersetzt. "
 
 msgid ""
 "You can use other time period definitions to exclude the times defined in "
@@ -80549,6 +80635,10 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Für diesen Host haben Sie Berechtigungen."
 
+#, fuzzy, python-format
+msgid "You have reached your limit of %s. "
+msgstr "Sie haben %d %s für die Migration ausgewählt: %s"
+
 #, python-format
 msgid "You have selected %d %s for migration: %s"
 msgstr "Sie haben %d %s für die Migration ausgewählt: %s"
@@ -80991,6 +81081,10 @@ msgstr ""
 "interessieren, dann finden Sie Details auf <a href=\"https://checkmk.com/"
 "checkmk_support_contract.html\" target=\"_blank\">unserer Website</a>."
 
+#, fuzzy, python-format
+msgid "Your current service limit is %s. "
+msgstr "Überwache Service-Limits"
+
 msgid "Your end date is before your start date."
 msgstr "Ihr Enddatum ist vor dem Startdatum."
 
@@ -81000,6 +81094,11 @@ msgstr "Ihre Erweitrungen haben eine Größe von %s."
 
 msgid "Your filename must not end with a slash."
 msgstr "Ihre Dateiname darf nicht mit einem Schrägstrich enden."
+
+msgid ""
+"Your free trial is active! Please note that your site will be deleted when "
+"the trial period ends. "
+msgstr ""
 
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
@@ -81040,6 +81139,14 @@ msgstr ""
 "Ihre Lizenz wurde ausgesetzt. Bitte kontaktieren Sie das Checkmk-"
 "Vertriebsteam unter %s."
 
+#, fuzzy, python-format
+msgid ""
+"Your license has been suspended. Please contact the Checkmk sales team at "
+"%s. "
+msgstr ""
+"Ihre Lizenz wurde ausgesetzt. Bitte kontaktieren Sie das Checkmk-"
+"Vertriebsteam unter %s."
+
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
 "is blocked."
@@ -81058,6 +81165,10 @@ msgstr ""
 
 #, python-format
 msgid "Your license has expired on %s."
+msgstr "Ihre Lizenz ist am %s abgelaufen."
+
+#, fuzzy, python-format
+msgid "Your license has expired on %s. "
 msgstr "Ihre Lizenz ist am %s abgelaufen."
 
 #, python-format
@@ -81992,6 +82103,9 @@ msgstr "Handles"
 
 msgid "height"
 msgstr "Höhe"
+
+msgid "here"
+msgstr ""
 
 msgid "hide folder names"
 msgstr "blende Ordner-Namen aus"
@@ -83194,6 +83308,9 @@ msgstr "ungenutzte Lizenzen"
 msgid "up"
 msgstr "ein"
 
+msgid "upgrade here"
+msgstr ""
+
 msgid "upper limit"
 msgstr "Oberer Grenze"
 
@@ -83388,8 +83505,31 @@ msgstr "{} - {}"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit by "
+"deleting one or more hosts from your config."
+msgstr ""
+
+msgid ""
+"‘Activate changes' is blocked until you go below your service limit. In case "
+"you want to increase your service limit, "
+msgstr ""
+
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "Creating scheduled report '%s'..."
+#~ msgstr "Geplanten Bericht '%s' erzeugen..."
+
+#, python-format
+#~ msgid ""
+#~ "During the development phase, the number of services is limited to %s."
+#~ msgstr ""
+#~ "Während der Entwicklungsphase ist die Anzahl der Services auf %s begrenzt."
+
+#~ msgid "Trial Phase"
+#~ msgstr "Testphase"
 
 #, fuzzy
 #~ msgid "Batch id"

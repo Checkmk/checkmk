@@ -111,6 +111,42 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
+    developer_items = [
+        TopicMenuItem(
+            name="rest_api_introduction",
+            title=_("REST API introduction"),
+            url=doc_reference_url(DocReference.REST_API),
+            target="_blank",
+            sort_index=30,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
+        ),
+        TopicMenuItem(
+            name="rest_api_documentation",
+            title=_("REST API documentation"),
+            url="openapi/",
+            target="_blank",
+            sort_index=40,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
+        ),
+        TopicMenuItem(
+            name="rest_api_interactive_gui",
+            title=_("REST API interactive GUI"),
+            url="api/1.0/ui/",
+            target="_blank",
+            sort_index=50,
+            icon={
+                "icon": "global_settings",
+                "emblem": "api",
+            },
+        ),
+    ]
+
     if edition() == Edition.CSE and user_may_see_saas_onboarding(user.id):
         learning_items.append(
             TopicMenuItem(
@@ -118,6 +154,36 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
                 title=_("Getting started"),
                 sort_index=10,
                 url="",
+            ),
+        )
+
+    if edition() != Edition.CSE:
+        developer_items.insert(
+            0,
+            TopicMenuItem(
+                name="plugin_api_reference",
+                title=_("Plug-in API references"),
+                url="plugin-api/",
+                target="_blank",
+                sort_index=20,
+                icon={
+                    "icon": "services_green",
+                    "emblem": "api",
+                },
+            ),
+        )
+        developer_items.insert(
+            0,
+            TopicMenuItem(
+                name="plugin_api_introduction",
+                title=_("Check plug-in API introduction"),
+                url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+                target="_blank",
+                sort_index=10,
+                icon={
+                    "icon": "services_green",
+                    "emblem": "api",
+                },
             ),
         )
 
@@ -132,63 +198,7 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
             name="developer_resources",
             title=_("Developer resources"),
             icon="developer_resources",
-            items=[
-                TopicMenuItem(
-                    name="plugin_api_introduction",
-                    title=_("Check plug-in API introduction"),
-                    url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
-                    target="_blank",
-                    sort_index=10,
-                    icon={
-                        "icon": "services_green",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="plugin_api_reference",
-                    title=_("Plug-in API references"),
-                    url="plugin-api/",
-                    target="_blank",
-                    sort_index=20,
-                    icon={
-                        "icon": "services_green",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_introduction",
-                    title=_("REST API introduction"),
-                    url=doc_reference_url(DocReference.REST_API),
-                    target="_blank",
-                    sort_index=30,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_documentation",
-                    title=_("REST API documentation"),
-                    url="openapi/",
-                    target="_blank",
-                    sort_index=40,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-                TopicMenuItem(
-                    name="rest_api_interactive_gui",
-                    title=_("REST API interactive GUI"),
-                    url="api/1.0/ui/",
-                    target="_blank",
-                    sort_index=50,
-                    icon={
-                        "icon": "global_settings",
-                        "emblem": "api",
-                    },
-                ),
-            ],
+            items=developer_items,
         ),
         TopicMenuTopic(
             name="about_checkmk",

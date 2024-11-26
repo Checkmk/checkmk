@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
@@ -93,8 +93,9 @@ def _parameter_form() -> Dictionary:
             ),
             "no_cert_check": DictElement(
                 parameter_form=BooleanChoice(
-                    title=Title("SSL certificate verification"),
+                    title=Title("Skip SSL certificate verification"),
                     prefill=DefaultValue(False),
+                    label=Label("Skip verification (insecure)"),
                 ),
                 required=False,
             ),

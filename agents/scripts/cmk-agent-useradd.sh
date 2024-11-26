@@ -3,7 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-HOMEDIR="/var/lib/cmk-agent"
+: "${MK_INSTALLDIR:=""}"
+
+if [ -n "${MK_INSTALLDIR}" ]; then
+    HOMEDIR="${MK_INSTALLDIR}/runtime/controller"
+    CONTROLLER_BINARY="${MK_INSTALLDIR}/package/bin/cmk-agent-ctl"
+    OLD_HOMEDIR="/var/lib/cmk-agent"
+else
+    HOMEDIR="/var/lib/cmk-agent"
+    CONTROLLER_BINARY="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
+fi
 
 usage() {
     cat >&2 <<HERE
@@ -14,8 +23,8 @@ HERE
 }
 
 _allow_legacy_pull() {
-    if [ -x "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl ]; then
-        "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl delete-all --enable-insecure-connections
+    if [ -x "${CONTROLLER_BINARY}" ]; then
+        "${CONTROLLER_BINARY}" delete-all --enable-insecure-connections
     else
         cmk-agent-ctl delete-all --enable-insecure-connections
     fi
@@ -27,6 +36,30 @@ _issue_legacy_pull_warning() {
 WARNING: The agent controller is operating in an insecure mode! To secure the connection run \`cmk-agent-ctl register\`.
 
 HERE
+}
+
+_activate_single_dir() {
+    _set_user_permissions
+    _migrate_from_multi_dir
+}
+
+_set_user_permissions() {
+    # cmk-agent needs access to some files that belong to root in single directory deployment
+    chown :cmk-agent "${MK_INSTALLDIR}/package/config"
+    agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
+    [ -e "${agent_controller_config}" ] && chown :cmk-agent "${agent_controller_config}"
+    pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
+    [ -e "${pre_configured_connections}" ] && chown :cmk-agent "${pre_configured_connections}"
+}
+
+_migrate_from_multi_dir() {
+    old_registry="${OLD_HOMEDIR}/registered_connections.json"
+    new_registry="${HOMEDIR}/registered_connections.json"
+    [ -e "${old_registry}" ] && [ ! -e "${new_registry}" ] && {
+        printf "Found agent controller registered connections at legacy home directory %s, migrating to %s.\n" "${OLD_HOMEDIR}" "${HOMEDIR}"
+        mv "${old_registry}" "${HOMEDIR}"
+        rm -r "${OLD_HOMEDIR}"
+    }
 }
 
 main() {
@@ -63,6 +96,9 @@ main() {
     # because it might already exist with wrong ownership
     mkdir -p ${HOMEDIR}
     chown -R cmk-agent:cmk-agent ${HOMEDIR}
+
+    [ -n "${MK_INSTALLDIR}" ] && _activate_single_dir
+
     if [ "${user_is_new}" ]; then
         _allow_legacy_pull
         _issue_legacy_pull_warning

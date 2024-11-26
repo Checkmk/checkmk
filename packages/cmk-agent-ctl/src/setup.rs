@@ -285,7 +285,9 @@ fn setup_single_directory() -> Option<PathBuf> {
     };
 
     let owning_user = UserRepr::Uid(nix::unistd::Uid::from_raw(
-        std::fs::metadata(installdir.join("runtime")).ok()?.uid(),
+        std::fs::metadata(installdir.join("runtime").join("controller"))
+            .ok()?
+            .uid(),
     ));
 
     become_user(owning_user).ok()?;

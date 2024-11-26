@@ -47,7 +47,7 @@ function renderForm(
   formSpec: FormSpec,
   value: unknown,
   backendValidation: ValidationMessages = []
-): VNode | null {
+): VNode {
   switch (formSpec.type as Components['type']) {
     case 'dictionary':
       return renderDict(formSpec as Dictionary, value as Record<string, unknown>, backendValidation)
@@ -116,7 +116,7 @@ function renderOptionalChoice(
   formSpec: OptionalChoice,
   value: unknown,
   backendValidation: ValidationMessages = []
-): VNode | null {
+): VNode {
   if (value === null) {
     return h('div', formSpec.i18n.none_label)
   }
@@ -334,13 +334,13 @@ function renderList(
   formSpec: List,
   value: unknown[],
   backendValidation: ValidationMessages
-): VNode | null {
+): VNode {
   const [listValidations, elementValidations] = groupIndexedValidations(
     backendValidation,
     value.length
   )
   if (!value) {
-    return null
+    return h([])
   }
   const listResults = [h('label', [formSpec.element_template.title])]
   listValidations.forEach((validation: string) => {
@@ -365,13 +365,13 @@ function renderListOfStrings(
   formSpec: ListOfStrings,
   value: unknown[],
   backendValidation: ValidationMessages
-): VNode | null {
+): VNode {
   const [listValidations, elementValidations] = groupIndexedValidations(
     backendValidation,
     value.length
   )
   if (!value) {
-    return null
+    return h([])
   }
   const listResults = [h('label', [formSpec.string_spec.title])]
   listValidations.forEach((validation: string) => {
@@ -396,7 +396,7 @@ function renderCascadingSingleChoice(
   formSpec: CascadingSingleChoice,
   value: [string, unknown],
   backendValidation: ValidationMessages
-): VNode | null {
+): VNode {
   for (const element of formSpec.elements) {
     if (element.name === value[0]) {
       return h('div', [
@@ -406,7 +406,7 @@ function renderCascadingSingleChoice(
       ])
     }
   }
-  return null
+  return h([])
 }
 
 function renderTimeSpecific(

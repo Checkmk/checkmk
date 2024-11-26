@@ -43,7 +43,7 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.sites import site_management_registry
 
 
@@ -655,14 +655,18 @@ def add_changes_after_editing_site_connection(
         else _("Modified site connection %s") % site_id
     )
 
-    # Don't know exactly what have been changed, so better issue a change
-    # affecting all domains
     sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
         "edit-sites",
         change_message,
         sites=sites_to_update,
-        domains=ABCConfigDomain.enabled_domains(),
+        # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
+        # significant more time to restart than the other domains, we now try to be more specific
+        # and mention potentially affected domains instead. The list below is a best guess. We might
+        # have missed some domain, which would then result in changes not being applied properly
+        # during activation. If you extend this, please also check the other "add_change" calls
+        # triggered by the site management.
+        domains=[ConfigDomainGUI()],
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -670,7 +674,9 @@ def add_changes_after_editing_site_connection(
         clear_site_replication_status(site_id)
 
     if site_id != omd_site():
-        # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
+        affected_domains: list[ABCConfigDomain] = [ConfigDomainGUI()]
+        if (liveproxy := ConfigDomainLiveproxy()).enabled():
+            affected_domains.append(liveproxy)
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=affected_domains)
 
     return change_message

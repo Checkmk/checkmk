@@ -174,10 +174,11 @@ def _special_agents_azure_tag_based_config():
 
 def _migrate_services_to_monitor(values: object) -> list[str]:
     if isinstance(values, list):
-        valid_choices = {s[0] for s in get_azure_services()}
+        valid_choices = {_azure_service_name_to_valid_formspec(s[0]) for s in get_azure_services()}
+        # migrate from names that contain / and . to valid formspec names
+        values_migrated = [_azure_service_name_to_valid_formspec(value) for value in values]
         # silently drop values that are only valid in CCE if we're CEE now.
-        valid_values = [value for value in values if value in valid_choices]
-        result = [_azure_service_name_to_valid_formspec(value) for value in valid_values]
+        result = [value for value in valid_choices if value in values_migrated]
         return result
     raise TypeError(values)
 

@@ -98,4 +98,9 @@ def test_migrate_keeps_values() -> None:
     migrated = azure_ruleset._migrate_services_to_monitor(["Microsoft.DBforMySQL/flexibleServers"])
     double_migrated = azure_ruleset._migrate_services_to_monitor(migrated)
     assert migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
-    assert len(double_migrated) == 0  # TODO! this is a bug, it should be the same as migrated!
+    assert double_migrated == ["Microsoft_DBforMySQL_slash_flexibleServers"]
+
+
+def test_migrate_silently_drops_invalid_values() -> None:
+    migrated = azure_ruleset._migrate_services_to_monitor(["dadada"])
+    assert len(migrated) == 0

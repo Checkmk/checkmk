@@ -513,7 +513,7 @@ class SiteManagement:
             hooks.call("sites-saved", sites)
 
     @classmethod
-    def delete_site(cls, site_id):
+    def delete_site(cls, site_id: SiteId) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -573,8 +573,8 @@ class SiteManagement:
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 
     @classmethod
-    def _affected_config_domains(cls):
-        return [ConfigDomainGUI]
+    def _affected_config_domains(cls) -> list[ABCConfigDomain]:
+        return [ConfigDomainGUI()]
 
 
 class SiteManagementRegistry(Registry[SiteManagement]):

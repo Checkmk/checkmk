@@ -58,7 +58,9 @@ def main() {
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";
     for(cause in causes) {
-        triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
+        if (cause.upstreamProject != null) {
+            triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
+        }
     }
 
     print(

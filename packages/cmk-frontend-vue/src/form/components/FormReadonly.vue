@@ -160,6 +160,11 @@ function renderTuple(
   const elementResults: VNode[] = []
   formSpec.elements.forEach((element, index) => {
     const renderResult = renderForm(element, value[index], elementValidations[index])
+    // @ts-expect-error label does not exist on all element
+    const title: string = element.title || element['label']
+    if (formSpec.show_titles && title) {
+      elementResults.push(h('td', `${title}:`))
+    }
     elementResults.push(h('td', renderResult))
     elementResults.push(h('td', ', '))
   })
@@ -396,11 +401,15 @@ function renderCascadingSingleChoice(
 ): VNode {
   for (const element of formSpec.elements) {
     if (element.name === value[0]) {
-      return h('div', [
-        h('div', formSpec.title),
-        h('div', element.title),
-        renderForm(element.parameter_form, value[1], backendValidation)
-      ])
+      return h(
+        'div',
+        h('div', { class: `form-readonly__cascading-single-choice__layout-${formSpec.layout}` }, [
+          // notification explicitly defines empty string title:
+          [formSpec.title ? h('div', formSpec.title) : []],
+          h('div', element.title),
+          h('div', [renderForm(element.parameter_form, value[1], backendValidation)])
+        ])
+      )
     }
   }
   return h([])
@@ -619,5 +628,12 @@ table.form-readonly__table {
       margin-left: 0;
     }
   }
+}
+
+.form-readonly__cascading-single-choice__layout-horizontal {
+  display: flex;
+}
+.form-readonly__cascading-single-choice__layout-horizontal > div {
+  margin-right: var(--spacing-half);
 }
 </style>

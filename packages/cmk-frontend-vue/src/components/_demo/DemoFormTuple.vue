@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 import type { Tuple, String, SingleChoice } from '@/form/components/vue_formspec_components'
 
@@ -28,7 +29,7 @@ function getStringSpec(name: string): String {
 function getSingleChoiceSpec(name: string): SingleChoice {
   return {
     type: 'single_choice',
-    title: '',
+    title: 'sc title',
     help: '',
     validators: [],
     no_elements_text: '',
@@ -74,32 +75,40 @@ function getTupleSpec(
 }
 
 const layouts: Array<Tuple['layout']> = ['horizontal_titles_top', 'horizontal', 'vertical', 'float']
+const components: Array<[unknown, string]> = [
+  [FormEdit, 'FormEdit'],
+  [FormReadonly, 'FormReadonly']
+]
 </script>
 
 <template>
-  <div v-for="embeddedFormSpec in ['string', 'singleChoice']" :key="embeddedFormSpec">
-    {{ embeddedFormSpec }}
-    <table>
-      <thead>
-        <tr>
-          <td>layout</td>
-          <td>show_titles=true</td>
-          <td>show_titles=false</td>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="layout in layouts" :key="layout">
-          <td>{{ layout }}</td>
-          <td v-for="showTitles in [true, false]" :key="JSON.stringify(showTitles)">
-            <FormEdit
-              :spec="getTupleSpec(layout, showTitles, embeddedFormSpec)"
-              :backend-validation="[]"
-              :data="data"
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div v-for="[component, title] in components" :key="title">
+    <h2>{{ title }}</h2>
+    <div v-for="embeddedFormSpec in ['string', 'singleChoice']" :key="embeddedFormSpec">
+      {{ embeddedFormSpec }}
+      <table>
+        <thead>
+          <tr>
+            <td>layout</td>
+            <td>show_titles=true</td>
+            <td>show_titles=false</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="layout in layouts" :key="layout">
+            <td>{{ layout }}</td>
+            <td v-for="showTitles in [true, false]" :key="JSON.stringify(showTitles)">
+              <component
+                :is="component"
+                :spec="getTupleSpec(layout, showTitles, embeddedFormSpec)"
+                :backend-validation="[]"
+                :data="data"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <hr />

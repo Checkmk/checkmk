@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 // TODO: move this file CMK-19774
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import type * as vue_formspec_components from '@/form/components/vue_formspec_components'
 import FormReadonly from '@/form/components/FormReadonly.vue'
@@ -13,49 +13,61 @@ import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const spec = ref<vue_formspec_components.CascadingSingleChoice>({
-  type: 'cascading_single_choice',
-  title: 'some title',
-  help: 'some help',
-  validators: [],
-  label: 'some label',
-  layout: 'horizontal',
-  input_hint: '',
-  elements: [
-    {
-      name: 'integerChoice',
-      title: 'integerChoiceTitle',
-      default_value: 'bar',
-      parameter_form: {
-        type: 'integer',
-        title: 'nestedIntegerTitle',
-        label: 'nestedIntegerLabel',
-        help: 'nestedIntegerHelp',
-        validators: [],
-        input_hint: null,
-        unit: null
-      } as vue_formspec_components.Integer
-    },
-    {
-      name: 'stringChoice',
-      title: 'stringChoiceTitle',
-      default_value: 5,
-      parameter_form: {
-        type: 'string',
-        title: 'nestedStringTitle',
-        help: 'nestedStringHelp',
-        validators: [],
-        input_hint: 'nestedStringInputHint',
-        field_size: 'SMALL',
-        autocompleter: null
-      } as vue_formspec_components.String
-    }
-  ]
+const layout = ref<vue_formspec_components.CascadingSingleChoice['layout']>('horizontal')
+
+const spec = computed(() => {
+  return {
+    type: 'cascading_single_choice',
+    title: 'some title',
+    help: 'some help',
+    validators: [],
+    label: 'some label',
+    layout: layout.value,
+    input_hint: '',
+    elements: [
+      {
+        name: 'integerChoice',
+        title: 'integerChoiceTitle',
+        default_value: 'bar',
+        parameter_form: {
+          type: 'integer',
+          title: 'nestedIntegerTitle',
+          label: 'nestedIntegerLabel',
+          help: 'nestedIntegerHelp',
+          validators: [],
+          input_hint: null,
+          unit: null
+        } as vue_formspec_components.Integer
+      },
+      {
+        name: 'stringChoice',
+        title: 'stringChoiceTitle',
+        default_value: 5,
+        parameter_form: {
+          type: 'string',
+          title: 'nestedStringTitle',
+          help: 'nestedStringHelp',
+          validators: [],
+          input_hint: 'nestedStringInputHint',
+          field_size: 'SMALL',
+          autocompleter: null
+        } as vue_formspec_components.String
+      }
+    ]
+  }
 })
 const data = ref<[string, unknown]>(['stringChoice', 'some string'])
 </script>
 
 <template>
+  <label
+    >layout
+    <select v-model="layout">
+      <option value="horizontal">horizontal</option>
+      <option value="vertical">vertical</option>
+    </select>
+  </label>
+  <hr />
   <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
   <hr />
   <FormReadonly :data="data" :spec="spec" :backend-validation="[]" />

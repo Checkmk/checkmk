@@ -282,20 +282,20 @@
         },
         "ruff": {
             "hashes": [
-                "sha256:0e92dfb5f00eaedb1501b2f906ccabfd67b2355bdf117fea9719fc99ac2145bc",
-                "sha256:cd12e35031f5af6b9b93715d8c4f40360070b2041f81273d0527683d5708fce2"
+                "sha256:87a8e86bae0dbd749c815211ca11e3a7bd559b9710746c559ed63106d382bd9c",
+                "sha256:a7ccfe6331bf8c8dad715753e157457faf7351c2b69f62f32c165c2dbcbacd44"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==0.7.4"
+            "version": "==0.8.0"
         },
         "stevedore": {
             "hashes": [
-                "sha256:1efd34ca08f474dad08d9b19e934a22c68bb6fe416926479ba29e5013bcc8f78",
-                "sha256:9a64265f4060312828151c204efbe9b7a9852a0d9228756344dbc7e4023e375a"
+                "sha256:79e92235ecb828fe952b6b8b0c6c87863248631922c8e8e0fa5b17b232c4514d",
+                "sha256:b0be3c4748b3ea7b854b265dcb4caa891015e442416422be16f8b31756107857"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==5.3.0"
+            "markers": "python_version >= '3.9'",
+            "version": "==5.4.0"
         },
         "tomlkit": {
             "hashes": [

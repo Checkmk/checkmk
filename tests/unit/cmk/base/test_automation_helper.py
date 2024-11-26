@@ -8,7 +8,7 @@ import time
 
 from fastapi.testclient import TestClient
 
-from cmk.base import automation_helper
+from cmk.base.automation_helper._app import AutomationEngine, AutomationRequest, get_application
 from cmk.base.automations import AutomationExitCode
 
 
@@ -28,14 +28,14 @@ class DummyAutomationEngineTimeout:
         return AutomationExitCode.SUCCESS
 
 
-EXAMPLE_AUTOMATION_REQUEST = automation_helper.AutomationRequest(
+EXAMPLE_AUTOMATION_REQUEST = AutomationRequest(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
 
 
-def get_test_client(*, engine: automation_helper.AutomationEngine) -> TestClient:
+def get_test_client(*, engine: AutomationEngine) -> TestClient:
     """Helper for fetching fastapi test client."""
-    app = automation_helper.get_application(engine=engine, reload_config=lambda: None)
+    app = get_application(engine=engine, reload_config=lambda: None)
     return TestClient(app)
 
 

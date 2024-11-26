@@ -30,7 +30,6 @@ _TLS_PATH_MULTISITE_CERTS = (*_TLS_PATH, "multisite_certs")
 class BrokerCertificates(BaseModel):
     """The certificates for the messaging broker"""
 
-    key: bytes
     cert: bytes
     signing_ca: bytes
     additionally_trusted_ca: bytes = b""

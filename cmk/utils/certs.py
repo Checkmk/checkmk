@@ -273,7 +273,6 @@ class SiteBrokerCertificate:
     ) -> None:
         """Persist the received certificates to disk."""
         cert_path = cls.cert_path(omd_root)
-        key_path = cls.key_path(omd_root)
 
         ca = Certificate.load_pem(CertificatePEM(received.signing_ca))
         Certificate.load_pem(CertificatePEM(received.cert)).verify_is_signed_by(ca)
@@ -282,8 +281,6 @@ class SiteBrokerCertificate:
 
         MessagingTrustedCAs.write(omd_root, received.signing_ca + received.additionally_trusted_ca)
         cert_path.write_bytes(received.cert)
-        if received.key:
-            key_path.write_bytes(received.key)
 
 
 class SiteBrokerCA:

@@ -10,6 +10,9 @@ from dataclasses import dataclass
 from typing import IO, Literal
 
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import CertificateSigningRequest as x509CertificateSigningRequest
+from cryptography.x509 import load_pem_x509_csr
+from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -28,7 +31,7 @@ from cmk.gui.http import request as _request
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
-from cmk.crypto.certificate import CertificateSigningRequest, CertificateWithPrivateKey, X509Name
+from cmk.crypto.certificate import CertificateSigningRequest, X509Name
 from cmk.crypto.keys import PrivateKey
 from cmk.messaging import (
     all_cert_files,
@@ -99,12 +102,19 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
         central_ca: SiteBrokerCA,
         customer_ca: CustomerBrokerCA | None,
     ) -> None:
-        logger.debug("Start creating broker certificates for site %s", site_id)
-        remote_broker_certs = create_remote_broker_certs(central_ca, site_id, settings)
+        logger.info("Remote broker certificates creation for site %s", site_id)
+        csr = ask_remote_csr(settings)
+        signed = central_ca.cert_bundle.sign_csr(
+            CertificateSigningRequest(csr), relativedelta(years=2)
+        )
 
-        logger.debug("Start syncing broker certificates for site %s", site_id)
-        sync_remote_broker_certs(settings, remote_broker_certs)
-        logger.debug("Certificates synced")
+        remote_broker_certs = BrokerCertificates(
+            cert=signed.dump_pem().bytes,
+            signing_ca=central_ca.cert_bundle.certificate.dump_pem().bytes,
+        )
+
+        logger.info("Sending signed broker certificates for site %s", site_id)
+        sync_broker_certs(settings, remote_broker_certs)
 
         # the presence of the following cert is used to determine if the broker certificates need
         # to be created/synced, so only save it if the sync was successful
@@ -113,6 +123,30 @@ class DefaultBrokerCertificateSync(BrokerCertificateSync):
     def update_trusted_cas(self) -> None:
         # Only relevant for editions with different customers
         pass
+
+
+def sync_broker_certs(settings: SiteConfiguration, remote_broker_certs: BrokerCertificates) -> None:
+    do_remote_automation(
+        settings,
+        "store-broker-certs",
+        [("certificates", remote_broker_certs.model_dump_json()), ("site_id", omd_site())],
+        timeout=60,
+    )
+
+
+def ask_remote_csr(settings: SiteConfiguration) -> x509CertificateSigningRequest:
+    raw_response = do_remote_automation(
+        settings,
+        "create-broker-certs",
+        [],
+        timeout=60,
+    )
+
+    match raw_response:
+        case {"csr": bytes(raw_csr)}:
+            return load_pem_x509_csr(raw_csr)
+
+    raise ValueError(raw_response)
 
 
 def broker_certs_created(site_id: SiteId) -> bool:
@@ -129,7 +163,6 @@ def create_remote_broker_certs(
     site_cert = SiteBrokerCertificate.create(site_id, paths.omd_root, signing_ca.cert_bundle)
 
     return BrokerCertificates(
-        key=site_cert.cert_bundle.private_key.dump_pem(None).bytes,
         cert=site_cert.cert_bundle.certificate.dump_pem().bytes,
         signing_ca=signing_ca.cert_bundle.certificate.dump_pem().bytes,
     )
@@ -160,7 +193,7 @@ def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
             cert.unlink(missing_ok=True)
 
 
-def _create_message_broker_certs() -> CertificateWithPrivateKey:
+def _create_message_broker_certs() -> SiteBrokerCertificate:
     """Initialize the CA and create the certificate for use with the message broker.
     These might be replaced by the "store-broker-certs" automation.
     """
@@ -171,7 +204,7 @@ def _create_message_broker_certs() -> CertificateWithPrivateKey:
     site_cert = SiteBrokerCertificate.create(omd_site(), paths.omd_root, issuer=ca.cert_bundle)
     site_cert.persist(paths.omd_root)
 
-    return site_cert.cert_bundle
+    return site_cert
 
 
 def _create_csr(private_key: PrivateKey) -> CertificateSigningRequest:
@@ -252,5 +285,5 @@ class AutomationCreateBrokerCertificates(AutomationCommand[None]):
         pass
 
     def execute(self, api_request: None) -> BrokerCertsCSR:
-        private_key = _create_message_broker_certs().private_key
+        private_key = _create_message_broker_certs().cert_bundle.private_key
         return {"csr": _create_csr(private_key).csr.public_bytes(Encoding.PEM)}

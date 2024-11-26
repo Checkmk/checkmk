@@ -40,14 +40,13 @@ def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
     html.div(
         html.render_div(
             html.render_h2(
-                _("Configured with %s Quick setup") % ident["instance_id"],
+                _("Part of Quick setup: %s") % ident["instance_id"],
                 class_=["heading"],
             )
             + html.render_div(
                 _(
-                    "This {type_name} is part of the {qs_name} configuration using Quick setup. "
-                    "Some options cannot be edited to avoid conflicts.<br>Go to Quick "
-                    "setup to edit all parameters of {qs_name}."
+                    "This {type_name} is part of the {qs_name} configuration bundle.<br>"
+                    "It contains further parts that are accessible and summarized in an overview page."
                 ).format(
                     qs_name=ident["instance_id"],
                     type_name=type_name,
@@ -55,7 +54,7 @@ def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
             )
             + html.render_div(
                 html.render_a(
-                    html.render_b(_("Edit %s") % ident["instance_id"]),
+                    html.render_b(_("Go to %s overview") % ident["instance_id"]),
                     href=_quick_setup_link(ident),
                 ),
                 class_=["button-container"],

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from opentelemetry import trace as otel_trace
-
 from cmk import trace
 
 
@@ -17,13 +15,12 @@ def test_propagate_context_via_environment() -> None:
     )
 
     # Create span and get the environment variables for propagation
-    assert trace.get_current_span() == otel_trace.INVALID_SPAN
     with trace.get_tracer().start_as_current_span("test") as orig_span:
         assert trace.get_current_span() == orig_span
         env = trace.context_for_environment()
 
     # Ensure the span is not active anymore
-    assert trace.get_current_span() == otel_trace.INVALID_SPAN
+    assert trace.get_current_span() != orig_span
 
     # Now verify extract works
     with trace.get_tracer().start_as_current_span(

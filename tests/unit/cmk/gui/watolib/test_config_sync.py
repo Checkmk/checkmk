@@ -299,6 +299,7 @@ def _get_expected_paths(
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
         "var/check_mk/web/%s" % user_id,
+        "var/check_mk/web/%s/automation_user.mk" % user_id,
         "var/check_mk/web/%s/cached_profile.mk" % user_id,
         "var/check_mk/web/%s/enforce_pw_change.mk" % user_id,
         "var/check_mk/web/%s/last_pw_change.mk" % user_id,

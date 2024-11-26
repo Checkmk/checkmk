@@ -9,7 +9,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.utils import saveint
+from cmk.gui.utils import roles, saveint
 
 from .store import load_custom_attr, load_user, save_custom_attr
 
@@ -26,7 +26,7 @@ def need_to_change_pw(username: UserId, now: datetime) -> str | None:
     # Ignore the enforce_pw_change flag for automation users, they cannot change their passwords
     # themselves. (Password age is checked for them below though.)
     if (
-        not is_automation_user(user)
+        not roles.is_automation_user(username)
         and load_custom_attr(user_id=username, key="enforce_pw_change", parser=saveint) == 1
     ):
         return "enforced"
@@ -49,7 +49,3 @@ def need_to_change_pw(username: UserId, now: datetime) -> str | None:
 
 def _is_local_user(user: UserSpec) -> bool:
     return user.get("connector", "htpasswd") == "htpasswd"
-
-
-def is_automation_user(user: UserSpec) -> bool:
-    return "automation_secret" in user

@@ -18,7 +18,6 @@ from cmk.ccc import store
 from cmk.ccc.version import __version__, Edition, edition, Version
 
 import cmk.utils.paths
-from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
 
 from cmk.gui import hooks, permissions, site_config
@@ -117,8 +116,13 @@ class LoggedInUser:
     def reset_language(self) -> None:
         self._unset_attribute("language")
 
-    def is_automation_user(self) -> bool:
-        return AutomationUserSecret(self.ident).exists()
+    @property
+    def automation_user(self) -> bool:
+        return self.load_file("automation_user", False)
+
+    @automation_user.setter
+    def automation_user(self, value: bool) -> None:
+        self.save_file("automation_user", value)
 
     @property
     def show_mode(self) -> str:

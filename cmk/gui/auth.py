@@ -19,7 +19,7 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.utils import deprecation_warnings
-from cmk.utils.local_secrets import AutomationUserSecret, SiteInternalSecret
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
 
@@ -417,9 +417,7 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
         secret != ""
         and password_hash is not None
         and not password_hash.startswith("!")  # user is locked
-        and (stored_secret := AutomationUserSecret(user_id)).exists()
         and password_hashing.matches(Password(secret), password_hash)
-        and stored_secret.check(secret)
     )
 
 

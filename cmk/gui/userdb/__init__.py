@@ -74,9 +74,14 @@ from ._connector import (
 )
 from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
-from ._need_to_change_pw import is_automation_user, need_to_change_pw
+from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
-from ._roles import load_roles, register_userroles_config_file, UserRole, UserRolesConfigFile
+from ._roles import (
+    load_roles,
+    register_userroles_config_file,
+    UserRole,
+    UserRolesConfigFile,
+)
 from ._two_factor import (
     disable_two_factor_authentication,
     is_two_factor_backup_code_valid,
@@ -161,7 +166,6 @@ __all__ = [
     "GroupsToAttributes",
     "GroupsToContactGroups",
     "GroupsToSync",
-    "is_automation_user",
     "is_customer_user_allowed_to_login",
     "is_two_factor_backup_code_valid",
     "is_two_factor_login_enabled",

@@ -46,7 +46,7 @@ from cmk.gui.type_defs import (
     UserSpec,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
-from cmk.gui.utils.roles import roles_of_user
+from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
 
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
@@ -426,6 +426,8 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
             secret.save(user["automation_secret"])
         else:
             secret.delete()
+
+        AutomationUserFile(user_id).save("automation_secret" in user)
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce

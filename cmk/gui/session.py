@@ -79,7 +79,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             # No persistant sessions for RestAPI
             return False
 
-        return not self.user.is_automation_user()
+        return not self.user.automation_user
 
     def initialize(
         self,

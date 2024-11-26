@@ -61,6 +61,8 @@ def top_heading(
             browser_reload=browser_reload,
         )
 
+    _may_show_license_banner(writer)
+
     if page_state:
         PageStateRenderer().show(page_state)
 
@@ -93,6 +95,17 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
         ).header
     ) and (set(header_effect.roles).intersection(user.role_ids)):
         writer.show_warning(HTML.without_escaping(header_effect.message_html))
+
+
+def _may_show_license_banner(writer: HTMLWriter) -> None:
+    if (
+        header_effect := get_licensing_user_effect(
+            licensing_settings_link=makeuri_contextless(
+                _request, [("mode", "licensing")], filename="wato.py"
+            )
+        ).banner
+    ) and (set(header_effect.roles).intersection(user.role_ids)):
+        writer.write_html(HTML.without_escaping(header_effect.message_html))
 
 
 def _make_default_page_state(

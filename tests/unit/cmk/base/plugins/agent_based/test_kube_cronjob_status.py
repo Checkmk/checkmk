@@ -249,3 +249,64 @@ def test_kube_cronjob_with_no_pod() -> None:
 
     assert result.state == State.CRIT
     assert result.summary == "Latest job: Failed with no pod"
+
+
+def test_cron_job_status_with_failed_target_job() -> None:
+    cron_job_status = CronJobStatusFactory.build()
+    failure_reason = "reason"
+    waiting_container = _mocked_container_info_from_state(
+        state=ContainerWaitingState(reason=failure_reason, detail="detail")
+    )
+    latest_job = CronJobLatestJobFactory.build(
+        pods=[
+            JobPodFactory.build(
+                containers={waiting_container.container_id: waiting_container}, init_containers={}
+            )
+        ],
+        status=JobStatusFactory.build(
+            conditions=[
+                JobConditionFactory.build(
+                    type_=kube.JobConditionType.FAILURE_TARGET, status=kube.ConditionStatus.TRUE
+                )
+            ]
+        ),
+    )
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+    )
+    status_check_result = check_result[0]
+    assert isinstance(status_check_result, Result)
+    assert status_check_result.state == State.CRIT
+    assert status_check_result.summary == f"Latest job: Failed ({failure_reason})"
+
+
+def test_cron_job_status_with_success_criteria_met_job() -> None:
+    cron_job_status = CronJobStatusFactory.build()
+    failure_reason = "reason"
+    waiting_container = _mocked_container_info_from_state(
+        state=ContainerWaitingState(reason=failure_reason, detail="detail")
+    )
+    latest_job = CronJobLatestJobFactory.build(
+        pods=[
+            JobPodFactory.build(
+                containers={waiting_container.container_id: waiting_container}, init_containers={}
+            )
+        ],
+        status=JobStatusFactory.build(
+            conditions=[
+                JobConditionFactory.build(
+                    type_=kube.JobConditionType.SUCCESS_CRITERIA_MET,
+                    status=kube.ConditionStatus.TRUE,
+                )
+            ]
+        ),
+    )
+
+    check_result = list(
+        kube_cronjob_status._check_cron_job_status(Timestamp(2.0), {}, cron_job_status, latest_job)
+    )
+    status_check_result = check_result[0]
+    assert isinstance(status_check_result, Result)
+    assert status_check_result.state == State.OK
+    assert status_check_result.summary == "Latest job: Completed"

@@ -127,7 +127,7 @@ run_clean() {
 
 run_unit_tests() {
     setup_venv
-    pytest -p no:opentelemetry
+    pytest
 }
 
 run_check_format() {

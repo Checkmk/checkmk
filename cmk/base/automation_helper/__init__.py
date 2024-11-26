@@ -11,9 +11,12 @@ from typing import Final
 
 from setproctitle import setproctitle
 
+from cmk.utils.redis import get_redis_client
+
 from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
+from ._cache import Cache
 from ._log import configure_app_logger
 from ._server import ApplicationServer, ApplicationServerConfig
 
@@ -38,7 +41,14 @@ def main() -> int:
 
         configure_app_logger(log_directory)
 
-        app = get_application(engine=automations, reload_config=reload_automation_config)
+        redis_client = get_redis_client()
+        cache = Cache.setup(client=redis_client)
+
+        app = get_application(
+            engine=automations,
+            cache=cache,
+            reload_config=reload_automation_config,
+        )
 
         server_config = ApplicationServerConfig(
             daemon=True,

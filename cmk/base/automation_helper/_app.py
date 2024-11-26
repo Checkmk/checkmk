@@ -7,6 +7,7 @@ import asyncio
 import io
 import re
 import sys
+import time
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from typing import Callable, Coroutine, Final, Iterator, Protocol, Sequence
 
@@ -19,6 +20,7 @@ from cmk.utils import paths
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
+from ._cache import Cache
 from ._log import app_logger
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
@@ -34,6 +36,10 @@ class AutomationRequest(BaseModel, frozen=True):
 class AutomationResponse(BaseModel, frozen=True):
     exit_code: int
     output: str
+
+
+class HealthCheckResponse(BaseModel, frozen=True):
+    last_reload_at: float
 
 
 def reload_automation_config() -> None:
@@ -56,7 +62,9 @@ class AutomationEngine(Protocol):
     def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode: ...
 
 
-def get_application(*, engine: AutomationEngine, reload_config: Callable[[], None]) -> FastAPI:
+def get_application(
+    *, engine: AutomationEngine, cache: Cache, reload_config: Callable[[], None]
+) -> FastAPI:
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
     @app.middleware("http")
@@ -79,6 +87,7 @@ def get_application(*, engine: AutomationEngine, reload_config: Callable[[], Non
     @app.post("/automation")
     async def automation(request: AutomationRequest) -> AutomationResponse:
         # TODO: move this into the application lifespan once the watcher is integrated.
+        cache.store_last_automation_helper_reload(time.time())
         reload_config()
 
         app_logger.setLevel(request.log_level)
@@ -97,7 +106,7 @@ def get_application(*, engine: AutomationEngine, reload_config: Callable[[], Non
             return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
 
     @app.get("/health")
-    async def check_health():
-        return {"up": True}
+    async def check_health() -> HealthCheckResponse:
+        return HealthCheckResponse(last_reload_at=cache.last_automation_helper_reload)
 
     return app

@@ -6,9 +6,11 @@
 import logging
 import time
 
+from fakeredis import FakeRedis
 from fastapi.testclient import TestClient
 
 from cmk.base.automation_helper._app import AutomationEngine, AutomationRequest, get_application
+from cmk.base.automation_helper._cache import Cache
 from cmk.base.automations import AutomationExitCode
 
 
@@ -35,7 +37,9 @@ EXAMPLE_AUTOMATION_REQUEST = AutomationRequest(
 
 def get_test_client(*, engine: AutomationEngine) -> TestClient:
     """Helper for fetching fastapi test client."""
-    app = get_application(engine=engine, reload_config=lambda: None)
+    cache = Cache.setup(client=FakeRedis())
+    cache.store_last_automation_helper_reload(time.time())
+    app = get_application(engine=engine, cache=cache, reload_config=lambda: None)
     return TestClient(app)
 
 
@@ -71,5 +75,7 @@ def test_health_check() -> None:
     with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
         resp = client.get("/health")
 
+    last_reload_at = resp.json()["last_reload_at"]
+
     assert resp.status_code == 200
-    assert resp.json() == {"up": True}
+    assert last_reload_at and last_reload_at < time.time()

@@ -53,7 +53,7 @@ from cmk.gui.background_job import (
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -70,6 +70,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -728,10 +729,17 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 ],
                 filename="download_diagnostics_dump.py",
             )
-            button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
 
             job_interface.send_progress_update(_("Dump file: %s") % tarfile_path)
-            job_interface.send_result_message(_("%s Retrieve created dump file") % button)
+            job_interface.send_result_message(
+                _("%s Retrieve created dump file")
+                % HTMLGenerator.render_icon_button(
+                    url=download_url,
+                    title=_("Download"),
+                    icon="diagnostics_dump_file",
+                    theme=Theme(),
+                )
+            )
 
         else:
             job_interface.send_result_message(_("Creating dump file failed"))

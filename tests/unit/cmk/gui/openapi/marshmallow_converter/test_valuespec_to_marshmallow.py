@@ -44,4 +44,4 @@ def test_generate_openapi_spec(fake_user: LoggedInUser) -> None:
     """Test that the openapi spec can be generated without errors."""
     if fake_user.id:
         with gui_context(), UserContext(fake_user.id):
-            spec_generate([])
+            spec_generate()

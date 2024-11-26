@@ -59,6 +59,10 @@ CCE_AZURE_SERVICES: Final = [
 ]
 
 
+def _azure_service_name_to_valid_formspec(azure_service_name: str) -> str:
+    return azure_service_name.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
+
+
 def get_azure_services() -> Sequence[tuple[str, Title]]:
     if edition(paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
@@ -67,7 +71,7 @@ def get_azure_services() -> Sequence[tuple[str, Title]]:
 
 def get_azure_service_prefill() -> list[str]:
     return [
-        s[0].replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
+        _azure_service_name_to_valid_formspec(s[0])
         for s in get_azure_services()
         if s[0] not in {"users_count", "ad_connect", "app_registrations"}
     ]
@@ -76,7 +80,7 @@ def get_azure_service_prefill() -> list[str]:
 def get_azure_services_elements() -> Sequence[MultipleChoiceElement]:
     return [
         MultipleChoiceElement(
-            name=service_id.replace("Microsoft.", "Microsoft_").replace("/", "_slash_"),
+            name=_azure_service_name_to_valid_formspec(service_id),
             title=service_name,
         )
         for service_id, service_name in get_azure_services()
@@ -173,10 +177,8 @@ def _migrate_services_to_monitor(values: object) -> list[str]:
         valid_choices = {s[0] for s in get_azure_services()}
         # silently drop values that are only valid in CCE if we're CEE now.
         valid_values = [value for value in values if value in valid_choices]
-        return [
-            value.replace("Microsoft.", "Microsoft_").replace("/", "_slash_")
-            for value in valid_values
-        ]
+        result = [_azure_service_name_to_valid_formspec(value) for value in valid_values]
+        return result
     raise TypeError(values)
 
 

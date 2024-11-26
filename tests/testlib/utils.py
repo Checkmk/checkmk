@@ -272,7 +272,8 @@ def _add_trace_context(
     kwargs: dict, preserve_env: list[str] | None, sudo: bool
 ) -> tuple[list[str] | None, dict]:
     if trace_env := trace.context_for_environment():
-        kwargs["env"] = {**kwargs.get("env", os.environ), **trace_env}
+        orig_env = kwargs["env"] if kwargs.get("env") else dict(os.environ)
+        kwargs["env"] = {**orig_env, **trace_env}
         if sudo and preserve_env is not None:
             preserve_env.extend(trace_env.keys())
         elif sudo:

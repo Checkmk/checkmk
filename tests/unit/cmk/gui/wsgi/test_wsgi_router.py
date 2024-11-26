@@ -191,7 +191,7 @@ def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.options("/", status=404)
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header")
+@pytest.mark.usefixtures("suppress_license_expiry_header", "suppress_license_banner")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)

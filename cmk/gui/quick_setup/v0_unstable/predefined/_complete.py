@@ -120,18 +120,16 @@ def _normalize_folder_path_str(folder_path: str) -> str:
 def sanitize_folder_path(folder_path: str) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
-
     tree = folder_tree()
     sanitized_folder_path = _normalize_folder_path_str(folder_path)
     if sanitized_folder_path == "":
         return tree.root_folder()
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
+
     return tree.root_folder().create_subfolder(
         name=sanitized_folder_path,
-        title=sanitized_folder_path.split("/")[-1]
-        if "/" in sanitized_folder_path
-        else sanitized_folder_path,
+        title=sanitized_folder_path.replace("/", " / "),
         attributes={},
     )
 

@@ -41,7 +41,7 @@ import cmk.utils.paths
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
-from cmk.gui import sites, userdb, weblib
+from cmk.gui import sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
@@ -92,6 +92,7 @@ from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
@@ -1042,7 +1043,7 @@ class ListPage(Page, Generic[_T]):
                 if what != "builtin":
                     with html.form_context("bulk_delete", method="POST"):
                         self._show_table(instances, scope_instances, deletable=True)
-                        html.hidden_field("selection_id", weblib.selection_id())
+                        html.hidden_field("selection_id", SelectionId.from_request(request))
                         html.hidden_fields()
                         init_rowselect(self._type.type_name())
                 else:

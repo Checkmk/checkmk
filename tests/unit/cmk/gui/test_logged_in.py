@@ -126,7 +126,7 @@ def test_unauthenticated_users(
     assert user.stars == set()
     assert user.is_site_disabled(SiteId("any_site")) is False
 
-    assert user.load_file("any_file", "default") == "default"
+    assert user.load_file("unittest", "default") == "default"
     assert user.file_modified("any_file") == 0
 
     with pytest.raises(TypeError):
@@ -313,10 +313,10 @@ def test_monitoring_user_read_broken_file(
     request_context: None, monitoring_user: LoggedInUser
 ) -> None:
     assert monitoring_user.confdir
-    with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
+    with Path(monitoring_user.confdir, "unittest.mk").open("w") as f:
         f.write("%#%#%")
 
-    assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
+    assert monitoring_user.load_file("unittest", deflt="xyz") == "xyz"
 
 
 def test_monitoring_user_permissions(

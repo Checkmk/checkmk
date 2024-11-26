@@ -28,6 +28,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
@@ -475,7 +476,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
 
 
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    is_selected = user.get_rowselection(request.var("selection") or "", selection_key)
+    is_selected = user.get_rowselection(SelectionId.from_request(request), selection_key)
     return PageMenuTopic(
         title=_("Selection"),
         entries=[

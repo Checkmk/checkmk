@@ -15,7 +15,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.view_utils
-from cmk.gui import forms, weblib
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -51,6 +51,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import set_inpage_search_result_info
+from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -681,7 +682,7 @@ class ModeFolder(WatoMode):
                         add_vars=[
                             ("mode", mode_name),
                             ("search", search_text),
-                            ("selection", weblib.selection_id()),
+                            ("selection", SelectionId.from_request(request)),
                         ]
                     )
                 )
@@ -995,7 +996,7 @@ class ModeFolder(WatoMode):
                         contact_group_names,
                     )
 
-            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
 
         show_row_count(

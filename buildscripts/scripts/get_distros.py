@@ -60,7 +60,7 @@ def test_distro_lists():
         "editions"
     ]
     assert distros_for_use_case(edition_distros, "enterprise", "release") == [
-        # "almalinux-9", # disabled due to CMK-20297
+        "almalinux-9",
         "centos-8",
         "cma-3",
         "cma-4",

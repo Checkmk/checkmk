@@ -104,7 +104,7 @@ class InteractiveModeDistros:
 
         return yaml_file["common"]
 
-    DISTROS = ["ubuntu-22.04"]  # "almalinux-9", see CMK-20297
+    DISTROS = ["ubuntu-22.04", "almalinux-9"]
     assert set(DISTROS).issubset(set(get_supported_distros()))
 
 

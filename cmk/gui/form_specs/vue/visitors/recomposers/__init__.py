@@ -10,6 +10,7 @@ from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
 from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
+from .proxy import recompose as recompose_proxy
 from .regular_expression import recompose as recompose_regular_expression
 from .service_state import recompose as recompose_service_state
 from .single_choice import recompose as recompose_single_choice
@@ -22,6 +23,7 @@ __all__ = [
     "recompose_levels",
     "recompose_list",
     "recompose_percentage",
+    "recompose_proxy",
     "recompose_regular_expression",
     "recompose_single_choice",
     "recompose_unknown_form_spec",

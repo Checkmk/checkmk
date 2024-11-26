@@ -4,6 +4,7 @@ load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:proto.bzl", "py_proto_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
 genrule(
     name = "_generate_requirements_in",
@@ -196,6 +197,12 @@ py_library(
     deps = [
         "lib_cmk",
     ],
+)
+
+py_console_script_binary(
+    name = "protoc-gen-mypy",
+    pkg = requirement("mypy-protobuf"),
+    script = "protoc-gen-mypy",
 )
 
 py_proto_library(

@@ -33,5 +33,5 @@ const routes = computed(() => {
     </ul>
     <hr />
   </template>
-  <RouterView />
+  <RouterView :screenshot-mode="screenshotMode" />
 </template>

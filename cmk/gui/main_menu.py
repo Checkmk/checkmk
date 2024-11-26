@@ -230,7 +230,7 @@ def license_status() -> HTML | str:
     status_message: HTML | str = get_license_message()
     if not status_message:
         return ""
-    if user.may("wato.licensing"):
+    if edition() != Edition.CSE and user.may("wato.licensing"):
         status_message = HTMLWriter.render_a(
             status_message,
             makeuri_contextless(request, [("mode", "licensing")], filename="wato.py"),

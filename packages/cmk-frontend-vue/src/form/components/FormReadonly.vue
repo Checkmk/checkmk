@@ -152,25 +152,24 @@ function renderTuple(
     backendValidation,
     value.length
   )
-  const tupleResults: VNode[] = []
-  tupleValidations.forEach((validation: string) => {
-    tupleResults.push(h('label', [validation]))
-  })
-
-  const elementResults: VNode[] = []
-  formSpec.elements.forEach((element, index) => {
-    const renderResult = renderForm(element, value[index], elementValidations[index])
-    // @ts-expect-error label does not exist on all element
-    const title: string = element.title || element['label']
-    if (formSpec.show_titles && title) {
-      elementResults.push(h('td', `${title}:`))
-    }
-    elementResults.push(h('td', renderResult))
-    elementResults.push(h('td', ', '))
-  })
-  elementResults.pop() // Remove last comma
-  tupleResults.push(h('table', h('tr', elementResults)))
-  return h('span', tupleResults)
+  return h(
+    'div',
+    { class: `form-readonly__tuple form-readonly__tuple__layout-${formSpec.layout}` },
+    [
+      ...tupleValidations.map((validation: string) => {
+        return h('label', [validation])
+      }),
+      ...formSpec.elements.map((element, index) => {
+        // @ts-expect-error label does not exist on all element
+        const title: string = element.title || element['label']
+        return h('span', [
+          formSpec.show_titles && title ? `${title}: ` : h([]),
+          renderForm(element, value[index], elementValidations[index]),
+          index === formSpec.elements.length - 1 ? '' : ', '
+        ])
+      })
+    ]
+  )
 }
 
 function renderMultipleChoice(
@@ -635,5 +634,13 @@ table.form-readonly__table {
 }
 .form-readonly__cascading-single-choice__layout-horizontal > div {
   margin-right: var(--spacing-half);
+}
+
+.form-readonly__tuple > span > * {
+  display: inline;
+}
+
+.form-readonly__tuple__layout-vertical > span {
+  display: block;
 }
 </style>

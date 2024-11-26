@@ -63,7 +63,7 @@ from cmk.gui.utils.script_helpers import gui_context
 Ident = tuple[str, str]
 
 
-def main(args: Sequence[str]) -> int:
+def main() -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")
@@ -94,7 +94,7 @@ def _generate_spec(
     seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
     for endpoint in sorted(endpoint_registry, key=sort_key):
-        if target in endpoint.blacklist_in:
+        if target in endpoint.blacklist_in or endpoint.tag_group == "Undocumented Endpoint":
             continue
 
         for path, operation_dict in _operation_dicts(spec, endpoint):

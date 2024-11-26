@@ -118,9 +118,6 @@ class SectionStore(Generic[_T]):
         )
         result: MutableSectionMap[_T] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
-            if len(entry) == 2:
-                continue  # Skip entries of "old" format
-
             # Don't overwrite sections that have been received from the source with this call
             if section_name in sections:
                 self._logger.debug(

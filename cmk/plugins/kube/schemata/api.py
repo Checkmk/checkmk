@@ -924,6 +924,8 @@ class JobConditionType(enum.Enum):
     COMPLETE = "Complete"
     FAILED = "Failed"
     SUSPENDED = "Suspended"
+    SUCCESS_CRITERIA_MET = "Successcriteriamet"
+    FAILURE_TARGET = "Failuretarget"
 
 
 class JobCondition(BaseModel):

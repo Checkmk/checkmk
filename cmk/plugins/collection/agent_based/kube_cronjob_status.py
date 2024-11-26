@@ -166,6 +166,16 @@ def _determine_job_status(
             ):
                 return JobStatusType.COMPLETED
             if (
+                condition.type_ is JobConditionType.SUCCESS_CRITERIA_MET
+                and condition.status == ConditionStatus.TRUE
+            ):
+                return JobStatusType.COMPLETED
+            if (
+                condition.type_ is JobConditionType.FAILURE_TARGET
+                and condition.status == ConditionStatus.TRUE
+            ):
+                return JobStatusType.FAILED
+            if (
                 condition.type_ is JobConditionType.FAILED
                 and condition.status == ConditionStatus.TRUE
             ):

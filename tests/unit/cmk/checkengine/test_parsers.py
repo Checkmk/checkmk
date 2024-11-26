@@ -880,7 +880,7 @@ class TestSNMPParser:
                 "/tmp/store",
                 logger=logging.Logger("test"),
             ),
-            check_intervals={},
+            persist_periods={},
             host_check_interval=60,
             keep_outdated=True,
             logger=logging.Logger("test"),
@@ -916,7 +916,7 @@ class TestSNMPParser:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-        monkeypatch.setattr(parser, "check_intervals", defaultdict(lambda: 33))
+        monkeypatch.setattr(parser, "persist_periods", defaultdict(lambda: 33))
         monkeypatch.setattr(
             SectionStore,
             "load",
@@ -1168,7 +1168,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={},
+            persist_periods={},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1190,7 +1190,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={},
+            persist_periods={},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1210,7 +1210,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={},
+            persist_periods={},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1232,7 +1232,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={},
+            persist_periods={},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1263,7 +1263,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={SectionName("section"): 42},
+            persist_periods={SectionName("section"): 42},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1287,7 +1287,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={SectionName("section"): 42},
+            persist_periods={SectionName("section"): 42},
             host_check_interval=60,
             keep_outdated=False,
             logger=logger,
@@ -1311,7 +1311,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={SectionName("section"): 42},
+            persist_periods={SectionName("section"): 42},
             host_check_interval=60,
             keep_outdated=True,
             logger=logger,
@@ -1337,7 +1337,7 @@ class TestSNMPPersistedSectionHandling:
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
-            check_intervals={SectionName("section"): 100},
+            persist_periods={SectionName("section"): 100},
             host_check_interval=60,
             keep_outdated=False,
             logger=logger,

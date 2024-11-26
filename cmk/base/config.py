@@ -4037,7 +4037,7 @@ class ParserFactory:
         return SNMPParser(
             host_name,
             section_store,
-            check_intervals={
+            persist_periods={
                 section_name: self._config_cache.snmp_fetch_interval(host_name, section_name)
                 for section_name in checking_sections
             },

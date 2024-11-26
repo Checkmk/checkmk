@@ -964,8 +964,8 @@ class RulesetOptimizer:
 
         1. Discovered labels
         2. Ruleset "Host labels"
-        3. Explicit labels (via host/folder config)
-        4. Builtin labels
+        3. Builtin labels
+        4. Explicit labels (via host/folder config)
 
         Last one wins.
         """
@@ -976,8 +976,8 @@ class RulesetOptimizer:
         labels: dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
-        labels.update(self._label_manager.explicit_host_labels.get(hostname, {}))
         labels.update(self._builtin_labels_of_host())
+        labels.update(self._label_manager.explicit_host_labels.get(hostname, {}))
         return self.__labels_of_host.setdefault(hostname, labels)
 
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:

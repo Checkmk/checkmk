@@ -91,9 +91,18 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         },
         "options": {},
     },
-    # test implicit AND and unicode value match
+    # test overwritten builtin label match
     {
         "id": "id1",
+        "value": "some_other_site",
+        "condition": {
+            "host_label_groups": [("and", [("and", "cmk/site:some_site")])],
+        },
+        "options": {},
+    },
+    # test implicit AND and unicode value match
+    {
+        "id": "id2",
         "value": "abc",
         "condition": {
             "host_label_groups": [
@@ -110,7 +119,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     },
     # test negation of label
     {
-        "id": "id2",
+        "id": "id3",
         "value": "hu",
         "condition": {
             "host_label_groups": [("and", [("not", "hu:ha")])],
@@ -119,7 +128,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     },
     # test unconditional match
     {
-        "id": "id3",
+        "id": "id4",
         "value": "BLA",
         "condition": {},
         "options": {},
@@ -131,25 +140,27 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     "hostname, expected_result",
     [
         (HostName("host1"), ["os_linux", "abc", "BLA"]),
-        (HostName("host2"), ["hu", "BLA"]),
+        (HostName("host2"), ["some_other_site", "hu", "BLA"]),
+        (HostName("host3"), ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_host_values_labels(
     hostname: HostName, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
-        host_tags={HostName("host1"): {}, HostName("host2"): {}},
+        host_tags={HostName("host1"): {}, HostName("host2"): {}, HostName("host3"): {}},
         host_paths={},
         label_manager=LabelManager(
             explicit_host_labels={
                 HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
-                HostName("host2"): {},
+                HostName("host2"): {"cmk/site": "some_site"},
+                HostName("host3"): {},
             },
             host_label_rules=(),
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=frozenset([HostName("host1"), HostName("host2")]),
+        all_configured_hosts=frozenset([HostName("host1"), HostName("host2"), HostName("host3")]),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),

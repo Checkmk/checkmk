@@ -4,22 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree
+from cmk.agent_based.v2 import SimpleSNMPSection
 from cmk.plugins.lib import detection
-from cmk.plugins.lib.uptime import parse_snmp_uptime
+from cmk.plugins.lib.uptime import parse_snmp_uptime, UPTIME_TREE
 
 snmp_section_snmp_uptime = SimpleSNMPSection(
     name="snmp_uptime",
     parsed_section_name="uptime",
     parse_function=parse_snmp_uptime,
-    fetch=SNMPTree(
-        base=".1.3.6.1.2.1",
-        oids=[
-            # On Linux appliances: .1.3.6.1.2.1.1.3.0    means uptime of snmpd
-            #                      .1.3.6.1.2.1.25.1.1.0 means system uptime
-            "1.3",  # DISMAN-EVENT-MIB::sysUpTime
-            "25.1.1",  # HOST-RESOURCES-MIB::hrSystemUptime
-        ],
-    ),
+    fetch=UPTIME_TREE,
     detect=detection.HAS_SYSDESC,
 )

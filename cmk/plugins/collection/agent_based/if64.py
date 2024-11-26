@@ -16,8 +16,10 @@ from cmk.agent_based.v2 import (
     Result,
     RuleSetType,
     SimpleSNMPSection,
+    SNMPSection,
     SNMPTree,
     State,
+    StringByteTable,
     StringTable,
 )
 from cmk.plugins.lib import if64, interfaces, uptime
@@ -29,13 +31,30 @@ def parse_if64adm(string_table: StringTable) -> If64AdmSection:
     return [sub_table[0] for sub_table in string_table]
 
 
-snmp_section_if64 = SimpleSNMPSection(
+@dataclasses.dataclass(frozen=True)
+class If64WithUptime:
+    uptime: uptime.Section | None
+    interfaces: interfaces.Section[interfaces.InterfaceWithCounters]
+
+
+def parse_if64_with_uptime(string_table: Sequence[StringByteTable]) -> If64WithUptime:
+    raw_uptime, raw_if64 = string_table
+    return If64WithUptime(
+        uptime=uptime.parse_snmp_uptime([[str(w) for w in l] for l in raw_uptime]),
+        interfaces=if64.parse_if64(raw_if64),
+    )
+
+
+snmp_section_if64 = SNMPSection(
     name="if64",
-    parse_function=if64.parse_if64,
-    fetch=SNMPTree(
-        base=if64.BASE_OID,
-        oids=if64.END_OIDS,
-    ),
+    parse_function=parse_if64_with_uptime,
+    fetch=[
+        uptime.UPTIME_TREE,
+        SNMPTree(
+            base=if64.BASE_OID,
+            oids=if64.END_OIDS,
+        ),
+    ],
     detect=if64.HAS_ifHCInOctets,
     supersedes=["if", "statgrab_net"],
 )
@@ -72,16 +91,15 @@ def _uptime_or_server_time(now: float, section_uptime: uptime.Section | None) ->
 
 def discover_if64(
     params: Sequence[Mapping[str, Any]],
-    section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
+    section_if64: If64WithUptime | None,
     section_if64adm: If64AdmSection | None,
-    section_uptime: uptime.Section | None,
 ) -> DiscoveryResult:
     if section_if64 is None:
         return
-    _add_admin_status_to_ifaces(section_if64, section_if64adm)
+    _add_admin_status_to_ifaces(section_if64.interfaces, section_if64adm)
     yield from interfaces.discover_interfaces(
         params,
-        section_if64,
+        section_if64.interfaces,
     )
 
 
@@ -107,19 +125,18 @@ def _check_timestamp(timestamp: float, value_store: MutableMapping[str, Any]) ->
 def check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
+    section_if64: If64WithUptime | None,
     section_if64adm: If64AdmSection | None,
-    section_uptime: uptime.Section | None,
 ) -> CheckResult:
     if section_if64 is None:
         return
-    _add_admin_status_to_ifaces(section_if64, section_if64adm)
-    timestamp = _uptime_or_server_time(time.time(), section_uptime)
+    _add_admin_status_to_ifaces(section_if64.interfaces, section_if64adm)
+    timestamp = _uptime_or_server_time(time.time(), section_if64.uptime)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        section_if64,
-        timestamps=[timestamp] * len(section_if64),
+        section_if64.interfaces,
+        timestamps=[timestamp] * len(section_if64.interfaces),
     )
     yield from _check_timestamp(timestamp, get_value_store())
 
@@ -162,22 +179,24 @@ def _check_timestamps(
 def cluster_check_if64(
     item: str,
     params: Mapping[str, Any],
-    section_if64: Mapping[str, interfaces.Section[interfaces.TInterfaceType] | None],
+    section_if64: Mapping[str, If64WithUptime | None],
     section_if64adm: Mapping[str, If64AdmSection | None],
-    section_uptime: Mapping[str, uptime.Section | None],
 ) -> CheckResult:
-    sections_w_admin_status: dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
+    sections_w_admin_status: dict[str, interfaces.Section[interfaces.InterfaceWithCounters]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:
-            _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])
-            sections_w_admin_status[node_name] = node_section_if64
+            _add_admin_status_to_ifaces(node_section_if64.interfaces, section_if64adm[node_name])
+            sections_w_admin_status[node_name] = node_section_if64.interfaces
 
     ifaces = []
     timestamp_per_iface = []
     node_to_timestamp = {}
     now = time.time()
     for node, node_ifaces in sections_w_admin_status.items():
-        timestamp = _uptime_or_server_time(now, section_uptime[node])
+        timestamp = _uptime_or_server_time(
+            now,
+            None if (s := section_if64[node]) is None else s.uptime,
+        )
         node_to_timestamp[node] = timestamp
         for iface in node_ifaces or ():
             ifaces.append(
@@ -201,7 +220,7 @@ def cluster_check_if64(
 
 check_plugin_if64 = CheckPlugin(
     name="if64",
-    sections=["if64", "if64adm", "uptime"],
+    sections=["if64", "if64adm"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=RuleSetType.ALL,

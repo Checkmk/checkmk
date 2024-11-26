@@ -1192,12 +1192,10 @@ def test__find_candidates(
         ],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
-        CheckPluginName("if64"),
         CheckPluginName("kernel"),
         CheckPluginName("kernel_performance"),
         CheckPluginName("kernel_util"),
         CheckPluginName("mgmt_docker_container_status_uptime"),
-        CheckPluginName("mgmt_if64"),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("uptime"),

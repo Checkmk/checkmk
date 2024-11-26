@@ -14,7 +14,7 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
+from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -30,12 +30,24 @@ from cmk.gui.watolib.audit_log import log_audit
 
 from cmk import trace
 
-DomainSpec = dict
-
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains: dict[str, dict[str, Any]] = {}
+backup_domains: dict[str, "DomainSpec"] = {}
+
+
+class DomainSpec(TypedDict):
+    group: NotRequired[str]
+    title: str
+    prefix: Path | str
+    paths: list[tuple[Literal["file", "dir"], str]]
+    exclude: NotRequired[list[str]]
+    default: NotRequired[Literal[True]]
+    checksum: NotRequired[bool]
+    cleanup: NotRequired[bool]
+    deprecated: NotRequired[bool]
+    pre_restore: NotRequired[Callable[[], list[str]]]
+    post_restore: NotRequired[Callable[[], list[str]]]
 
 
 class SnapshotData(TypedDict, total=False):
@@ -475,7 +487,7 @@ def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
     raise MKGeneralException(_("Failed to extract %s") % filename)
 
 
-def _get_default_backup_domains() -> dict[str, dict[str, Any]]:
+def _get_default_backup_domains() -> dict[str, DomainSpec]:
     domains = {}
     for domain, value in backup_domains.items():
         if "default" in value and not value.get("deprecated"):
@@ -559,7 +571,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         if domain.get("cleanup") is False:
             return []
 
-        def path_valid(prefix: str, path: str) -> bool:
+        def path_valid(_prefix: str | Path, path: str) -> bool:
             if path.startswith("/") or path.startswith(".."):
                 return False
             return True
@@ -623,14 +635,14 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         (
             "Pre-Restore",
             True,
-            lambda domain, tar_member: execute_restore(domain, is_pre_restore=True),
+            lambda domain, _tar_member: execute_restore(domain, is_pre_restore=True),
         ),
-        ("Cleanup", False, lambda domain, tar_member: cleanup_domain(domain)),
+        ("Cleanup", False, lambda domain, _tar_member: cleanup_domain(domain)),
         ("Extract", False, extract_domain),
         (
             "Post-Restore",
             False,
-            lambda domain, tar_member: execute_restore(domain, is_pre_restore=False),
+            lambda domain, _tar_member: execute_restore(domain, is_pre_restore=False),
         ),
     ]:
         errors: list[str] = []

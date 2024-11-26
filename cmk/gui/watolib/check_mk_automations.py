@@ -493,11 +493,11 @@ def notification_analyse(notification_number: int) -> results.NotificationAnalys
     )
 
 
-def notification_test(raw_context: EventContext, dispatch: bool) -> results.NotificationTestResult:
+def notification_test(raw_context: EventContext, dispatch: str) -> results.NotificationTestResult:
     return _deserialize(
         _automation_serialized(
             "notification-test",
-            args=[json.dumps(raw_context), str(dispatch)],
+            args=[json.dumps(raw_context), dispatch],
         ),
         results.NotificationTestResult,
     )

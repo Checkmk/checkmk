@@ -1552,12 +1552,13 @@ class ModeTestNotifications(ModeNotifications):
 
         if self._test_notification_ongoing():
             if transactions.check_transaction():
+                context, dispatch = self._context_and_dispatch_from_vars()
                 return redirect(
                     mode_url(
                         "test_notifications",
                         test_notification="1",
-                        test_context=json.dumps(self._context_from_vars()),
-                        dispatch=request.var("dispatch", ""),
+                        test_context=json.dumps(context),
+                        dispatch=dispatch or "",
                     )
                 )
 
@@ -1600,7 +1601,8 @@ class ModeTestNotifications(ModeNotifications):
             return (
                 context,
                 notification_test(
-                    raw_context=context, dispatch=bool(request.var("dispatch"))
+                    raw_context=context,
+                    dispatch=request.var("dispatch", ""),
                 ).result,
             )
         return None, None
@@ -1633,17 +1635,35 @@ class ModeTestNotifications(ModeNotifications):
         html.open_div(class_="message_container")
         html.h2(_("Analysis results"))
         analyse_rules, analyse_resulting_notifications = analyse
+        match_count = len(tuple(entry for entry in analyse_rules if "match" in entry))
         html.write_text_permissive(
-            _("%s notification rules are matching")
-            % len(tuple(entry for entry in analyse_rules if "match" in entry))
+            _("%s notification %s")
+            % (
+                match_count,
+                ungettext(
+                    "rule matches",
+                    "rules are matching",
+                    match_count,
+                ),
+            )
         )
         html.br()
+        resulting_notifications_count = len(analyse_resulting_notifications)
         html.write_text_permissive(
-            _("%s resulting notifications") % len(analyse_resulting_notifications)
+            ("%d resulting %s")
+            % (
+                resulting_notifications_count,
+                ungettext(
+                    "notification",
+                    "notifications",
+                    resulting_notifications_count,
+                ),
+            )
         )
-        html.br()
-        if request.var("dispatch"):
+        if request.var("notify_plugin"):
             html.write_text_permissive(_("Notifications have been sent. "))
+        html.br()
+        html.br()
         html.write_text_permissive("View the following tables for more details.")
         html.close_div()
         html.close_div()
@@ -1740,7 +1760,7 @@ class ModeTestNotifications(ModeNotifications):
                 "general_opts",
                 self._get_default_options(request.var("host_name"), request.var("service_name")),
             )
-            self._vs_dispatched_option().render_input("dispatch", False)
+            self._vs_notify_plugin().render_input("notify_plugin", {})
             self._vs_advanced_test_options().render_input("advanced_opts", "")
             html.hidden_fields()
             forms.end()
@@ -1758,7 +1778,7 @@ class ModeTestNotifications(ModeNotifications):
             "_test_service_notifications"
         )
 
-    def _context_from_vars(self) -> dict[str, Any]:
+    def _context_and_dispatch_from_vars(self) -> tuple[dict[str, Any], str | None]:
         general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
         self._vs_general_test_options().validate_value(general_test_options, "general_opts")
 
@@ -1770,10 +1790,20 @@ class ModeTestNotifications(ModeNotifications):
             "HOSTNAME": hostname,
         }
 
+        notify_plugin = self._vs_notify_plugin().from_html_vars("notify_plugin")
+        dispatch = None
+        if notify_plugin:
+            method, parameter_id = notify_plugin["notify_plugin"]
+            dispatch = method
+            all_parameters = NotificationParameterConfigFile().load_for_reading()
+            method_parameters = all_parameters[method][parameter_id]["parameter_properties"]
+            context.update({key: str(value) for key, value in method_parameters.items()})
+
         simulation_mode = general_test_options["simulation_mode"]
         assert isinstance(simulation_mode, tuple)
         if "status_change" in simulation_mode:
             context["NOTIFICATIONTYPE"] = "PROBLEM"
+            context["HOSTPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
             context["PREVIOUSHOSTHARDSTATE"] = host_state_name(
                 int(simulation_mode[1]["host_states"][0])
             )
@@ -1827,7 +1857,7 @@ class ModeTestNotifications(ModeNotifications):
         else:
             context["HOSTOUTPUT"] = plugin_output
 
-        return context
+        return context, dispatch
 
     def _add_missing_host_context(self, context: NotificationContext) -> None:
         """We don't want to transport all possible informations via HTTP vars
@@ -1889,6 +1919,8 @@ class ModeTestNotifications(ModeNotifications):
         context["SERVICECHECKCOMMAND"] = resp[0][4]
         self._set_labels(context, resp[0][5], "SERVICE")
 
+        context["SERVICEPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
+
     def _set_labels(
         self,
         context: NotificationContext,
@@ -1918,6 +1950,34 @@ class ModeTestNotifications(ModeNotifications):
         html.close_td()
         html.close_tr()
         html.close_table()
+
+    def _notification_script_choices_with_parameters(self):
+        return_choices = []
+        all_parameters = NotificationParameterConfigFile().load_for_reading()
+        for script_name, title in notification_script_choices():
+            choices = []
+            if script_name in notification_parameter_registry and script_name in all_parameters:
+                for parameter_id in all_parameters[script_name]:
+                    choices.append(
+                        (
+                            parameter_id,
+                            all_parameters[script_name][parameter_id]["general"]["description"],
+                        )
+                    )
+
+            vs: DropdownChoice = DropdownChoice(
+                title=_("Notification parameter"),
+                choices=choices,
+                empty_text=_(
+                    "There are no parameters defined for this method yet. Please "
+                    '<a href="wato.py?mode=notification_parameters&method=%s">create</a> '
+                    "at least one first."
+                )
+                % script_name,
+            )
+
+            return_choices.append((script_name, title, vs))
+        return return_choices
 
     def _vs_general_test_options(self) -> Dictionary:
         return Dictionary(
@@ -2012,11 +2072,20 @@ class ModeTestNotifications(ModeNotifications):
             validate=_validate_general_opts,
         )
 
-    def _vs_dispatched_option(self) -> Checkbox:
-        return Checkbox(
-            title=_("Dispatch notification"),
-            label=_("Send out HTML/ASCII email notification according to notification rules"),
-            default_value=False,
+    def _vs_notify_plugin(self) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "notify_plugin",
+                    CascadingDropdown(
+                        label=_("Notification method and parameter"),
+                        title=_("Send out notification for specific method"),
+                        choices=self._notification_script_choices_with_parameters,
+                        default_value=("mail", None),
+                        orientation="horizontal",
+                    ),
+                ),
+            ],
         )
 
     def _vs_advanced_test_options(self) -> Foldable:

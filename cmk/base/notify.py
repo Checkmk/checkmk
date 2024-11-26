@@ -400,7 +400,7 @@ def notify_notify(
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     """
     This function processes one raw notification and decides wether it should be spooled or not.
@@ -485,7 +485,7 @@ def locally_deliver_raw_context(
     plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
@@ -614,7 +614,7 @@ def notification_test(
     backlog_size: int,
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
-    dispatch: bool,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
@@ -735,7 +735,7 @@ def notify_rulebased(
     plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> NotifyAnalysisInfo:
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
@@ -912,7 +912,7 @@ def _process_notifications(
     plugin_timeout: int,
     spooling: Literal["local", "remote", "both", "off"],
     analyse: bool,
-    dispatch: bool = False,
+    dispatch: str = "",
 ) -> list[NotifyPluginInfo]:
     # pylint: disable=too-many-branches
     plugin_info: list[NotifyPluginInfo] = []
@@ -953,11 +953,8 @@ def _process_notifications(
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
         for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
-            verb = (
-                "would notify"
-                if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"])
-                else "notifying"
-            )
+            would_notify = analyse and plugin_name != dispatch
+            verb = "would notify" if would_notify else "notifying"
             contactstxt = ", ".join(contacts)
             plugintxt = plugin_name
             # Hack for "Call with the following..." find a better solution
@@ -992,7 +989,7 @@ def _process_notifications(
                 for context in plugin_contexts:
                     plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
 
-                    if analyse and (not dispatch or plugin_name not in ["mail", "asciimail"]):
+                    if analyse and would_notify:
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
@@ -1003,6 +1000,8 @@ def _process_notifications(
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),
                         )
                     else:
+                        if dispatch and plugin_name != dispatch:
+                            continue
                         call_notification_script(
                             plugin_name, context, plugin_timeout=plugin_timeout
                         )

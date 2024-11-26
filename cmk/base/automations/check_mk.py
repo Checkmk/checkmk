@@ -2954,7 +2954,7 @@ class AutomationNotificationTest(Automation):
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
                 all_timeperiods=load_timeperiods(),
-                dispatch=dispatch == "True",
+                dispatch=dispatch,
             )
         )
 

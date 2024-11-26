@@ -30,7 +30,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
-    StageIndex,
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
@@ -74,7 +73,6 @@ def _validate_test_connection(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     error_message: str | None,
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []

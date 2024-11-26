@@ -5,7 +5,7 @@
 
 from collections.abc import Callable
 
-from cmk.ccc.version import __version__, Edition, edition
+from cmk.ccc.version import __version__, edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
@@ -19,18 +19,20 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
-if edition(paths.omd_root) is Edition.CSE:
-    pass
 
-
-def register(mega_menu_registry: MegaMenuRegistry, info_line: Callable[[], str]) -> None:
+def register(
+    mega_menu_registry: MegaMenuRegistry,
+    info_line: Callable[[], str],
+    learning_items: Callable[[], list[TopicMenuItem]],
+    developer_items: Callable[[], list[TopicMenuItem]],
+) -> None:
     mega_menu_registry.register(
         MegaMenu(
             name="help_links",
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
-            topics=_help_menu_topics(default_learning_items, default_developer_items),
+            topics=_help_menu_topics(learning_items, developer_items),
             info_line=info_line,
         )
     )

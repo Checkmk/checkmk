@@ -58,6 +58,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
+from cmk.gui.type_defs import TopicMenuItem
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
@@ -148,9 +149,13 @@ def register(
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
+    help_learning_items: Callable[[], list[TopicMenuItem]],
+    help_developer_items: Callable[[], list[TopicMenuItem]],
 ) -> None:
     pagetypes.register(mega_menu_registry)
-    help_menu.register(mega_menu_registry, help_info_line)
+    help_menu.register(
+        mega_menu_registry, help_info_line, help_learning_items, help_developer_items
+    )
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()

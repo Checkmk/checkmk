@@ -728,6 +728,10 @@ div.filter_buttons {
     width: 317px;
     padding: $spacing 0 0;
     border: $wato-a-border;
+
+    &.large {
+      height: 110px;
+    }
   }
 
   div {

@@ -621,7 +621,7 @@ class ModeConfigurationBundle(WatoMode):
                     ).format(password_title=password["title"]),
                 )
             )
-        TileMenuRenderer(bundle_entity_links).show()
+        TileMenuRenderer(bundle_entity_links, tile_size="large").show()
 
     def _page_section_bundle_configuration(self) -> None:
         with html.form_context("edit_bundle", method="POST"):

@@ -4093,7 +4093,6 @@ class FetcherFactory:
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
                 redetect=name in checking_sections and name in redetect_sections,
-                fetch_interval=self._config_cache.snmp_fetch_interval(host_name, name),
             )
             for name in (checking_sections | disabled_sections)
         }

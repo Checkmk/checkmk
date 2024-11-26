@@ -120,28 +120,13 @@ class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):  # pylint: 
             self._write_row(path, rowinfo)
 
 
-@dataclasses.dataclass(init=False)
+@dataclasses.dataclass(kw_only=True)
 class SNMPSectionMeta:
     """Metadata for the section names."""
 
     checking: bool
     disabled: bool
     redetect: bool
-    fetch_interval: int | None
-
-    def __init__(
-        self,
-        *,
-        checking: bool,
-        disabled: bool,
-        redetect: bool,
-        fetch_interval: int | None,
-    ) -> None:
-        # There does not seem to be a way to have kwonly dataclasses.
-        self.checking = checking
-        self.disabled = disabled
-        self.redetect = redetect
-        self.fetch_interval = fetch_interval
 
     def serialize(self) -> Mapping[str, Any]:
         return dataclasses.asdict(self)

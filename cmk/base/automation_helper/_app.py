@@ -8,8 +8,8 @@ import io
 import re
 import sys
 import time
-from contextlib import contextmanager, redirect_stderr, redirect_stdout
-from typing import Callable, Coroutine, Final, Iterator, Protocol, Sequence
+from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
+from typing import AsyncGenerator, Callable, Coroutine, Final, Iterator, Protocol, Sequence
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -65,7 +65,13 @@ class AutomationEngine(Protocol):
 def get_application(
     *, engine: AutomationEngine, cache: Cache, reload_config: Callable[[], None]
 ) -> FastAPI:
-    app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+        cache.store_last_automation_helper_reload(time.time())
+        reload_config()
+        yield
+
+    app = FastAPI(lifespan=lifespan, openapi_url=None, docs_url=None, redoc_url=None)
 
     @app.middleware("http")
     async def timeout_middleware(
@@ -86,7 +92,8 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: AutomationRequest) -> AutomationResponse:
-        # TODO: move this into the application lifespan once the watcher is integrated.
+        # TODO: when the watcher service is implemented, we will want to conditionally reload the
+        # configuration when we are out-of-sync, not everytime.
         cache.store_last_automation_helper_reload(time.time())
         reload_config()
 

@@ -101,6 +101,15 @@ const layouts: Array<Tuple['layout']> = ['horizontal_titles_top', 'horizontal', 
       </tbody>
     </table>
   </div>
+
+  <hr />
+  <h2>readonly tuple with backend validation result</h2>
+  THIS IS CURRENTLY BROKEN; BACKEND VALIDATION WILL NOT BE RENDERED
+  <FormReadonly
+    :spec="getTupleSpec('horizontal', true, 'string')"
+    :data="['one', 'two']"
+    :backend-validation="[{ location: ['1'], message: 'error', invalid_value: 'smth' }]"
+  />
 </template>
 
 <style scoped>

@@ -85,7 +85,6 @@ visuals_cache_dir = Path(tmp_dir, "visuals_cache")
 predictions_dir = Path(var_dir, "prediction")
 ec_main_config_file = Path(default_config_dir, "mkeventd.mk")
 ec_config_dir = Path(default_config_dir, "mkeventd.d")
-diskspace_config_dir = Path(default_config_dir, "diskspace.d/wato/")
 
 configuration_lockfile = Path(default_config_dir, "multisite.mk")
 

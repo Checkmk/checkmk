@@ -395,7 +395,6 @@ def _allow_for_cmk_update_config(
             _in_component(imported=imported, component=Component("cmk.base")),
             _in_component(imported=imported, component=Component("cmk.gui")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk")),
-            _in_component(imported=imported, component=Component("cmk.diskspace.config")),
         )
     )
 

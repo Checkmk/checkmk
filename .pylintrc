@@ -3,7 +3,8 @@
 init-hook=
     import sys;
     sys.path.insert(0, __file__[:__file__.rfind("/.venv")]);  # __file__ is somewhere deep inside the .venv
-    from tests.testlib.repo import add_python_paths;
+    from tests.testlib.repo import add_protocols_path, add_python_paths;
+    add_protocols_path();
     add_python_paths();
 load-plugins=
     tests.pylint.cmk_edition_ignores,

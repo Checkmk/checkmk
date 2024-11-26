@@ -43,9 +43,14 @@ def is_saas_repo() -> bool:
 def add_python_paths() -> None:
     sys.path.insert(0, str(repo_path()))
     if is_enterprise_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "cmc-protocols"))
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "cmk-update-agent"))
     sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
+
+
+def add_protocols_path():
+    sys.path.insert(0, str(repo_path()))
+    if is_enterprise_repo():
+        sys.path.insert(0, os.path.join(repo_path(), "non-free", "cmc-protocols"))
 
 
 def qa_test_data_path() -> Path:

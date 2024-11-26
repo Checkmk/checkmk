@@ -132,14 +132,12 @@ copy_file(
 proto_library(
     name = "cycletime_proto",
     srcs = ["cmc_proto/cycletime/v1/types.proto"],
-    strip_import_prefix = "cmc_proto",
     visibility = ["//visibility:public"],
 )
 
 proto_library(
     name = "config_proto",
     srcs = ["cmc_proto/config/v1/types.proto"],
-    strip_import_prefix = "cmc_proto",
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",
@@ -151,7 +149,6 @@ proto_library(
 proto_library(
     name = "state_proto",
     srcs = ["cmc_proto/state/v1/types.proto"],
-    strip_import_prefix = "cmc_proto",
     visibility = ["//visibility:public"],
     deps = [
         ":cycletime_proto",

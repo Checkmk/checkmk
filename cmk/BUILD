@@ -236,7 +236,14 @@ filegroup(
 
 py_proto_library(
     name = "config_proto_pb2",
+    visibility = ["//tests:__subpackages__"],
     deps = ["//:config_proto"],
+)
+
+py_proto_library(
+    name = "cycletime_proto_pb2",
+    visibility = ["//tests:__subpackages__"],
+    deps = ["//:cycletime_proto"],
 )
 
 py_proto_library(
@@ -274,6 +281,8 @@ py_library(
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "config_proto_pb2",
+            "cycletime_proto_pb2",
+            "state_proto_pb2",
         ],
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )

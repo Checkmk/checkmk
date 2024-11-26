@@ -59,7 +59,7 @@ pkg_filegroup(
         ":well_known_protos",
     ],
     prefix = "protobuf",
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__pkg__"],
 )
 
 pkg_tar(
@@ -68,5 +68,5 @@ pkg_tar(
         ":protobuf",
     ],
     package_file_name = "protobuf.tar",
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__pkg__"],
 )

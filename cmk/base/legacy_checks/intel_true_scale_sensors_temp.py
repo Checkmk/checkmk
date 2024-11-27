@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+
+check_info = {}
 
 # mypy: disable-error-code="var-annotated"
 
@@ -131,6 +132,7 @@ def check_intel_true_scale_sensors_temp(item, params, parsed):
 
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
+    name="intel_true_scale_sensors_temp",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=[
         SNMPTree(

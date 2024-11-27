@@ -5,11 +5,11 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, Mapping]]
 CheckResult = Iterable[tuple[int, str, list]]
@@ -37,6 +37,7 @@ def check_hitachi_hnas_bossock(
 
 
 check_info["hitachi_hnas_bossock"] = LegacyCheckDefinition(
+    name="hitachi_hnas_bossock",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.7.4.1",

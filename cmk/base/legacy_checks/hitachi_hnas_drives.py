@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 
 def inventory_hitachi_hnas_drives(info):
@@ -45,6 +45,7 @@ def check_hitachi_hnas_drives(_no_item, params, info):
 
 
 check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
+    name="hitachi_hnas_drives",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.3.4.2.1",

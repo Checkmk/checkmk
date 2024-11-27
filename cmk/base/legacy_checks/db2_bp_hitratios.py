@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 # <<<db2_bp_hitratios>>>
 # [[[db2taddm:CMDBS1]]]
@@ -92,6 +93,7 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
 
 
 check_info["db2_bp_hitratios"] = LegacyCheckDefinition(
+    name="db2_bp_hitratios",
     parse_function=parse_db2_bp_hitratios,
     service_name="DB2 BP-Hitratios %s",
     discovery_function=inventory_db2_bp_hitratios,

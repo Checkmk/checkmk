@@ -18,6 +18,7 @@ import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
@@ -940,6 +941,44 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
             ),
             id="TimePeriod",
+        ),
+        pytest.param(
+            Tuple(
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Minimal Tuple",
+        ),
+        pytest.param(
+            Tuple(
+                title=api_v1.Title("title"),
+                help_text=api_v1.Help("help text"),
+                show_titles=False,
+                layout="float",
+                elements=[
+                    api_v1.form_specs.String(),
+                    api_v1.form_specs.Integer(),
+                ],
+            ),
+            legacy_valuespecs.Tuple(
+                title="title",
+                help="help text",
+                show_titles=False,
+                orientation="float",
+                elements=[
+                    legacy_valuespecs.TextInput(placeholder="", size=35),
+                    legacy_valuespecs.Integer(),
+                ],
+            ),
+            id="Tuple",
         ),
     ],
 )
@@ -2372,7 +2411,7 @@ def test_level_conversion(
                 ),
             },
             {"a": 1, "b": 2, "c": 3},
-            {"DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2}, "c": 3},
+            {"DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1, "b": 2}, "c": 3},
             id="some elements grouped, some not",
         ),
         pytest.param(
@@ -2390,8 +2429,8 @@ def test_level_conversion(
             },
             {"a": 1, "b": 2},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1},
-                "DictGroup(title=Title('Grouptitle'),help_text=Help('Helptext'))": {"b": 2},
+                "DictGrouptitleTitleGrouptitlehelptextNone": {"a": 1},
+                "DictGrouptitleTitleGrouptitlehelptextHelpHelptext": {"b": 2},
             },
             id="different groups",
         ),
@@ -2426,10 +2465,10 @@ def test_level_conversion(
             },
             {"a": 1, "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4}},
             {
-                "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+                "DictGrouptitleTitleGrouptitlehelptextNone": {
                     "a": 1,
                     "b": {
-                        "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                        "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                             "a_nested": 2,
                             "b_nested": 3,
                         },
@@ -2494,10 +2533,10 @@ def test_dictionary_groups_ignored_elements() -> None:
         "c": 6,
     }
     form_model = {
-        "DictGroup(title=Title('Grouptitle'),help_text=None)": {
+        "DictGrouptitleTitleGrouptitlehelptextNone": {
             "a": 1,
             "b": {
-                "DictGroup(title=Title('Nestedgrouptitle'),help_text=None)": {
+                "DictGrouptitleTitleNestedgrouptitlehelptextNone": {
                     "a_nested": 2,
                     "b_nested": 3,
                 },
@@ -2552,7 +2591,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2562,7 +2601,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="no dictelement props",
@@ -2586,7 +2625,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2597,7 +2636,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="some required dictelements/vertical rendering",
@@ -2621,7 +2660,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2633,7 +2672,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="all required dictelements/horizontal rendering",
@@ -2656,7 +2695,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2667,7 +2706,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only dictelements",
@@ -2691,7 +2730,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            "DictGrouptitleTitleABChelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC"),
                                 elements=[
@@ -2703,7 +2742,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                         ),
                     ],
                     required_keys=[],
-                    hidden_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                    hidden_keys=["DictGrouptitleTitleABChelptextNone"],
                 ),
             ),
             id="render_only all dictelements",
@@ -2737,7 +2776,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                 legacy_valuespecs.Dictionary(
                     elements=[
                         (
-                            "DictGroup(title=Title('ABChidden'),help_text=None)",
+                            "DictGrouptitleTitleABChiddenhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC hidden"),
                                 elements=[
@@ -2748,7 +2787,7 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                         (
-                            "DictGroup(title=Title('ABCshown'),help_text=None)",
+                            "DictGrouptitleTitleABCshownhelptextNone",
                             legacy_valuespecs.Dictionary(
                                 title=_("ABC shown"),
                                 elements=[
@@ -2759,8 +2798,8 @@ def test_dictionary_groups_ignored_elements() -> None:
                             ),
                         ),
                     ],
-                    required_keys=["DictGroup(title=Title('ABCshown'),help_text=None)"],
-                    hidden_keys=["DictGroup(title=Title('ABChidden'),help_text=None)"],
+                    required_keys=["DictGrouptitleTitleABCshownhelptextNone"],
+                    hidden_keys=["DictGrouptitleTitleABChiddenhelptextNone"],
                 ),
             ),
             id="render_only some dictelements",
@@ -3096,3 +3135,21 @@ def test_dictionary_groups_validate(
     converted = convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     with pytest.raises(MKUserError):
         converted.validate_value(value_to_validate, "")
+
+
+def test_agent_config_rule_spec_transformations_work_with_previous_non_dict_values() -> None:
+    legacy_rulespec = convert_to_legacy_rulespec(
+        api_v1.rule_specs.AgentConfig(
+            name="test_rulespec",
+            title=api_v1.Title("rulespec title"),
+            topic=api_v1.rule_specs.Topic.GENERAL,
+            parameter_form=lambda: api_v1.form_specs.Dictionary(
+                elements={},
+                migrate=lambda _x: {},
+            ),
+            help_text=api_v1.Help("help text"),
+        ),
+        Edition.CRE,
+        translate_to_current_language,
+    )
+    assert legacy_rulespec.valuespec.transform_value(()) == {"cmk-match-type": "dict"}

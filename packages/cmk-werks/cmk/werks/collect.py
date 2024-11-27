@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import re
+import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -16,7 +16,7 @@ from git.repo import Repo
 
 from cmk.werks import load_werk, parse_werk
 
-from .models import WebsiteWerk
+from .models import AllWerks, WebsiteWerk
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             )
 
     werk_string = None
-    all_werks_by_id: dict[str, dict[str, object]] = {}
+    all_werks_by_id: dict[str, WebsiteWerk] = {}
     for werk_id, werk_by_branch in werk_files_by_id_and_branch.items():
         versions: dict[str, str] = {}
         # werks are defined multiple times, the werk that is defined in the "latest" branch wins.
@@ -156,6 +156,6 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             versions=versions,
             product=config.flavor,
             **werk_dict,  # type: ignore[arg-type]
-        ).model_dump(by_alias=True, mode="json")
+        )
 
-    print(json.dumps(all_werks_by_id))
+    sys.stdout.write(AllWerks.dump_json(all_werks_by_id, by_alias=True).decode("utf-8") + "\n")

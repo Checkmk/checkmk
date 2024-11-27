@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.scaleio import parse_scaleio, ScaleioSection
+
+check_info = {}
 
 # <<<scaleio_system:sep(9)>>>
 # SYSTEM 5914d6b47d479d5a:
@@ -47,6 +48,7 @@ def check_scaleio_system(item, params, parsed):
 
 
 check_info["scaleio_system"] = LegacyCheckDefinition(
+    name="scaleio_system",
     parse_function=parse_scaleio_system,
     service_name="ScaleIO System %s",
     discovery_function=inventory_scaleio_system,

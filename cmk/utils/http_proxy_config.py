@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, MutableMapping
-from typing import Protocol
+from typing import Literal, Protocol
 
 
 class HTTPProxyConfig(Protocol):
@@ -81,7 +81,12 @@ def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyCon
 
 
 def http_proxy_config_from_user_setting(
-    rulespec_value: tuple[str, str | None],
+    rulespec_value: tuple[str, str | None]
+    | tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
+    ],
     http_proxies_global_settings: Mapping[str, Mapping[str, str]],
 ) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
@@ -92,7 +97,20 @@ def http_proxy_config_from_user_setting(
     if not isinstance(rulespec_value, tuple):
         return EnvironmentProxyConfig()
 
-    proxy_type, value = rulespec_value
+    match rulespec_value:
+        case ("cmk_postprocessed", p_type, p_value):
+            # FormSpec format
+            assert p_type is not None
+            proxy_type = {
+                "stored_proxy": "global",
+                "explicit_proxy": "url",
+                "no_proxy": "no_proxy",
+            }.get(p_type, "environment")
+            value = p_value
+        # Valuespec format
+        case (p_type, p_value):
+            assert len(rulespec_value) == 2
+            proxy_type, value = rulespec_value
 
     if proxy_type == "environment":
         return EnvironmentProxyConfig()

@@ -44,15 +44,14 @@ def execute_host_removal_background_job() -> None:
     if is_wato_slave_site():
         return
 
-    job = HostRemovalBackgroundJob()
-    if job.is_active():
-        _LOGGER.debug("Another host removal job is already running, skipping this time.")
+    if not _load_automatic_host_removal_ruleset():
+        _LOGGER.debug("Automatic host removal not configured")
         return
 
-    job.start(
+    HostRemovalBackgroundJob().start(
         _do_remove_hosts,
         InitialStatusArgs(
-            title=job.gui_title(),
+            title=HostRemovalBackgroundJob.gui_title(),
             lock_wato=False,
             stoppable=False,
             user=str(user.id) if user.id else None,

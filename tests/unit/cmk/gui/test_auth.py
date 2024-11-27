@@ -10,7 +10,8 @@ import pytest
 
 from cmk.utils.local_secrets import SiteInternalSecret
 
-from cmk.gui.auth import _check_internal_token, SiteInternalPseudoUser
+from cmk.gui.auth import _check_internal_token
+from cmk.gui.pseudo_users import SiteInternalPseudoUser
 
 
 def test_check_internal_token(

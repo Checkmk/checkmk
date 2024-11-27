@@ -18,31 +18,34 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never
 
+import cmk.ccc.debug
 from cmk.ccc import store
 
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import tty
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.inventory import InventoryPluginName
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
-from cmk.base import server_side_calls
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin,
+    InventoryPlugin,
+    LegacyPluginLocation,
+    SectionPlugin,
+)
 from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
 from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls_backend import load_special_agents
 
 from ._host_check_config import HostCheckConfig
 
@@ -108,8 +111,7 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
-    legacy_check_plugin_files: Mapping[str, str],
+    plugins: agent_based_register.AgentBasedPlugins,
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
@@ -135,8 +137,7 @@ def precompile_hostchecks(
                 config_cache,
                 config_path,
                 hostname,
-                legacy_check_plugin_names,
-                legacy_check_plugin_files,
+                plugins,
                 precompile_mode=precompile_mode,
             )
             if host_check is None:
@@ -157,61 +158,16 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
-    legacy_check_plugin_files: Mapping[str, str],
+    plugins: agent_based_register.AgentBasedPlugins,
     *,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
 ) -> str | None:
-    (
-        needed_legacy_check_plugin_names,
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname, legacy_check_plugin_names)
-
-    if hostname in config_cache.hosts_config.clusters:
-        assert config_cache.nodes(hostname)
-        for node in config_cache.nodes(hostname):
-            (
-                node_needed_legacy_check_plugin_names,
-                node_needed_agent_based_check_plugin_names,
-                node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node, legacy_check_plugin_names)
-            needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
-            needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
-            needed_agent_based_inventory_plugin_names.update(
-                node_needed_agent_based_inventory_plugin_names
-            )
-
-    needed_legacy_check_plugin_names.update(
-        _get_required_legacy_check_sections(
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-        )
+    locations, legacy_checks_to_load = _make_needed_plugins_locations(
+        config_cache, hostname, plugins
     )
-
-    if not any(
-        (
-            needed_legacy_check_plugin_names,
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-        )
-    ):
+    if not locations and not legacy_checks_to_load:
         return None
-
-    locations = _get_needed_agent_based_locations(
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-    )
-
-    checks_to_load = sorted(
-        _get_legacy_check_file_names_to_load(
-            needed_legacy_check_plugin_names, legacy_check_plugin_files
-        )
-    )
-
-    for check_plugin_name in sorted(needed_legacy_check_plugin_names):
-        console.verbose_no_lf(f" {tty.green}{check_plugin_name}{tty.normal}", file=sys.stderr)
 
     # IP addresses
     # FIXME:
@@ -270,7 +226,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         dst=str(HostCheckStore.host_check_file_path(config_path, hostname)),
         verify_site_python=verify_site_python,
         locations=locations,
-        checks_to_load=checks_to_load,
+        checks_to_load=legacy_checks_to_load,
         ipaddresses=needed_ipaddresses,  # type: ignore[arg-type]  # see FIXME above.
         ipv6addresses=needed_ipv6addresses,  # type: ignore[arg-type]  # see FIXME above.
         hostname=hostname,
@@ -286,18 +242,45 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     )
 
 
-def _get_needed_plugin_names(
+def _make_needed_plugins_locations(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    plugins: agent_based_register.AgentBasedPlugins,
+) -> tuple[  # we need `list` for the weird template replacement technique
+    list[PluginLocation],
+    list[str],  # TODO: change this to `LegacyPluginLocation` once the special agents are migrated
+]:
+    needed_agent_based_plugins = _get_needed_plugins(config_cache, hostname, plugins)
+
+    if hostname in config_cache.hosts_config.clusters:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
+            # we're deduplicating later.
+            needed_agent_based_plugins.extend(_get_needed_plugins(config_cache, node, plugins))
+
+    needed_legacy_special_agents = _get_needed_legacy_special_agents(config_cache, hostname)
+
+    needed_agent_based_sections = agent_based_register.filter_relevant_raw_sections(
+        consumers=needed_agent_based_plugins,
+        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+    ).values()
+
+    return (
+        _get_needed_agent_based_locations(
+            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins)
+        ),
+        _get_needed_legacy_check_files(
+            itertools.chain(needed_agent_based_sections, needed_agent_based_plugins),
+            needed_legacy_special_agents,
+        ),
+    )
+
+
+def _get_needed_plugins(
     config_cache: ConfigCache,
     host_name: HostName,
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
-) -> tuple[set[str], set[CheckPluginName], set[InventoryPluginName]]:
-    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
-    needed_legacy_check_plugin_names = {
-        f"agent_{name}"
-        for name, _p in config_cache.special_agents(host_name)
-        if name not in ssc_api_special_agents
-    }
-
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> list[CheckPlugin | InventoryPlugin]:
     # Collect the needed check plug-in names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
     # In those cases, the module attribute will be `None`, so nothing will
@@ -305,127 +288,53 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = config_cache.check_table(
-        host_name,
-        filter_mode=FilterMode.INCLUDE_CLUSTERED,
-        skip_ignored=False,
-    ).needed_check_names()
-
-    legacy_names = (
-        _resolve_legacy_plugin_name(pn, legacy_check_plugin_names)
-        for pn in needed_agent_based_check_plugin_names
-    )
-    needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
-
-    # Inventory plugins get passed parsed data these days.
-    # Load the required sections, or inventory plugins will crash upon unparsed data.
-    needed_agent_based_inventory_plugin_names: set[InventoryPluginName] = set()
-    if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory:
-        for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
-            needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
-            for parsed_section_name in inventory_plugin.sections:
-                # check if we must add the legacy check plug-in:
-                legacy_check_name = legacy_check_plugin_names.get(
-                    CheckPluginName(str(parsed_section_name))
-                )
-                if legacy_check_name is not None:
-                    needed_legacy_check_plugin_names.add(legacy_check_name)
-
-    return (
-        needed_legacy_check_plugin_names,
-        needed_agent_based_check_plugin_names,
-        needed_agent_based_inventory_plugin_names,
-    )
+    return [
+        *(
+            plugin
+            for name in config_cache.check_table(
+                host_name,
+                filter_mode=FilterMode.INCLUDE_CLUSTERED,
+                skip_ignored=False,
+            ).needed_check_names()
+            if (plugin := agent_based_plugins.check_plugins.get(name))
+        ),
+        *(
+            agent_based_plugins.inventory_plugins.values()
+            if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory
+            else ()
+        ),
+    ]
 
 
-def _resolve_legacy_plugin_name(
-    check_plugin_name: CheckPluginName, legacy_check_plugin_names: Mapping[CheckPluginName, str]
-) -> str | None:
-    legacy_name = legacy_check_plugin_names.get(check_plugin_name)
-    if legacy_name:
-        return legacy_name
-
-    if not check_plugin_name.is_management_name():
-        return None
-
-    # See if me must include a legacy plug-in from which we derived the given one:
-    # A management plug-in *could have been* created on the fly, from a 'regular' legacy
-    # check plug-in. In this case, we must load that.
-    plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if not plugin or plugin.location is not None:
-        # it does *not* result from a legacy plugin, if module is not None
-        return None
-
-    # just try to get the legacy name of the 'regular' plugin:
-    return legacy_check_plugin_names.get(check_plugin_name.create_basic_name())
-
-
-def _get_legacy_check_file_names_to_load(
-    needed_check_plugin_names: set[str],
-    legacy_check_plugin_files: Mapping[str, str],
-) -> set[str]:
-    # check info table
-    # We need to include all those plugins that are referenced in the hosts
-    # check table.
+def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: HostName) -> set[str]:
+    ssc_api_special_agents = {
+        p.name for p in load_special_agents(raise_errors=cmk.ccc.debug.enabled()).values()
+    }
     return {
-        filename
-        for check_plugin_name in needed_check_plugin_names
-        for filename in _find_check_plugins(check_plugin_name, legacy_check_plugin_files)
+        f"agent_{name}"
+        for name, _p in config_cache.special_agents(host_name)
+        if name not in ssc_api_special_agents
     }
 
 
-def _find_check_plugins(checktype: str, legacy_check_plugin_files: Mapping[str, str]) -> set[str]:
-    """Find files to be included in precompile host check for a certain
-    check (for example df or mem.used).
-
-    In case of checks with a period (subchecks) we might have to include both "mem" and "mem.used".
-    The subcheck *may* be implemented in a separate file."""
-    return {
-        filename
-        for candidate in (section_name_of(checktype), checktype)
-        # in case there is no "main check" anymore, the lookup fails -> skip.
-        if (filename := legacy_check_plugin_files.get(candidate)) is not None
-    }
+def _get_needed_legacy_check_files(
+    # Note: we don't *have* any InventoryPlugins that match the condition below, but
+    # it's easier to type it like this.
+    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
+    legacy_special_agent_names: set[str],
+) -> list[str]:
+    return sorted(
+        {p.location.file_name for p in plugins if isinstance(p.location, LegacyPluginLocation)}
+        | {
+            f"{os.path.join(base, name)}.py"
+            for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+            for name in legacy_special_agent_names
+        }
+    )
 
 
 def _get_needed_agent_based_locations(
-    check_plugin_names: set[CheckPluginName],
-    inventory_plugin_names: set[InventoryPluginName],
+    plugins: Iterable[SectionPlugin | CheckPlugin | InventoryPlugin],
 ) -> list[PluginLocation]:
-    modules = {
-        plugin.location
-        for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and plugin.location is not None
-    }
-    modules.update(
-        plugin.location
-        for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and plugin.location is not None
-    )
-    modules.update(
-        section.location
-        for section in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=check_plugin_names,
-            inventory_plugin_names=inventory_plugin_names,
-        ).values()
-        if section.location is not None
-    )
-
+    modules = {plugin.location for plugin in plugins if isinstance(plugin.location, PluginLocation)}
     return sorted(modules, key=lambda l: (l.module, l.name or ""))
-
-
-def _get_required_legacy_check_sections(
-    check_plugin_names: set[CheckPluginName],
-    inventory_plugin_names: set[InventoryPluginName],
-) -> set[str]:
-    """
-    new style plug-in may have a dependency to a legacy check
-    """
-    required_legacy_check_sections = set()
-    for section in agent_based_register.get_relevant_raw_sections(
-        check_plugin_names=check_plugin_names,
-        inventory_plugin_names=inventory_plugin_names,
-    ).values():
-        if section.location is None:
-            required_legacy_check_sections.add(str(section.name))
-    return required_legacy_check_sections

@@ -7,6 +7,7 @@ rust_library(
         "src/check.rs",
         "src/checker/certificate.rs",
         "src/checker/fetcher.rs",
+        "src/checker/info.rs",
         "src/checker/verification.rs",
         "src/fetcher.rs",
         "src/lib.rs",

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines
+
+check_info = {}
 
 
 def check_couchbase_nodes_status(item, params, parsed):
@@ -47,6 +47,7 @@ def discover_couchbase_nodes_info(section):
 
 
 check_info["couchbase_nodes_info"] = LegacyCheckDefinition(
+    name="couchbase_nodes_info",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase %s Info",
     discovery_function=discover_couchbase_nodes_info,

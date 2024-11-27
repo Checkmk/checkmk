@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
+
+check_info = {}
 
 
 def inventory_enterasys_cpu_util(info):
@@ -30,6 +31,7 @@ def parse_enterasys_cpu_util(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
+    name="enterasys_cpu_util",
     parse_function=parse_enterasys_cpu_util,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

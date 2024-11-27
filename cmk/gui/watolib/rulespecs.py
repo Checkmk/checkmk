@@ -21,6 +21,7 @@ from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, Rule
 
 from cmk.gui.form_specs.converter import Tuple as FSTuple
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.private.time_specific import TimeSpecific
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -958,9 +959,16 @@ def _wrap_valuespec_in_timeperiod_valuespec(valuespec: ValueSpec) -> ValueSpec:
     return TimeperiodValuespec(valuespec)
 
 
-def _wrap_form_spec_in_timeperiod_form_spec(form_spec: FormSpec) -> FormSpec:
-    # TODO: implement, don't forget to use Title and Help from embedded form_spec
-    return form_spec
+def _wrap_form_spec_in_timeperiod_form_spec(form_spec: FormSpec) -> TimeSpecific:
+    """Enclose the parameter form_spec with a TimeSpecific form spec.
+    The given form_spec will be transformed to a list of form specs,
+    whereas each element can be set to a specific timeperiod.
+    """
+    if isinstance(form_spec, TimeSpecific):
+        # Legacy check parameters registered through register_check_parameters() already
+        # have their form_spec wrapped in TimeSpecific.
+        return form_spec
+    return TimeSpecific(parameter_form=form_spec)
 
 
 class ManualCheckParameterRulespec(HostRulespec):

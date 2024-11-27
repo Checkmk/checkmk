@@ -23,10 +23,10 @@
 # This version of the check currently only handles output of the first type
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_3ware_info(info):
@@ -51,6 +51,7 @@ def parse_3ware_info(string_table: StringTable) -> StringTable:
 
 
 check_info["3ware_info"] = LegacyCheckDefinition(
+    name="3ware_info",
     parse_function=parse_3ware_info,
     service_name="RAID 3ware controller %s",
     discovery_function=inventory_3ware_info,

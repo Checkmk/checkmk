@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+check_info = {}
 
 
 def parse_mcafee_emailgateway_spam_mcafee(string_table: StringTable) -> StringTable | None:
@@ -25,6 +25,7 @@ def check_mcafee_emailgateway_spam_mcafee(item, params, info):
 
 
 check_info["mcafee_emailgateway_spam_mcafee"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_spam_mcafee",
     parse_function=parse_mcafee_emailgateway_spam_mcafee,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

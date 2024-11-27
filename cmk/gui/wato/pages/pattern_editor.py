@@ -5,10 +5,11 @@
 """Mode for trying out the logwatch patterns"""
 
 import re
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Sequence
+
+from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
@@ -38,7 +39,7 @@ from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -217,19 +218,18 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        service_labels: Labels = {}
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        if self._hostname:
-            service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
-            host = folder.host(self._hostname)
-            if not host:
-                raise MKUserError("host", _("The given host does not exist"))
-            service_labels = analyse_service(
-                host.site_id(),
-                self._hostname,
-                service_desc,
-            ).labels
-        for folder, folder_rules in rules_grouped_by_folder(ruleset.get_rules(), folder):
+
+        rules = ruleset.get_rules()
+        rule_match_results = (
+            self._analyze_rule_matches(
+                self._host.site_id(), self._hostname, self._item, [r[2] for r in rules]
+            )
+            if self._hostname and self._host
+            else {}
+        )
+
+        for folder, folder_rules in rules_grouped_by_folder(rules, folder):
             with table_element(
                 f"logfile_patterns_{folder.ident()}",
                 title="%s %s (%d)"
@@ -246,23 +246,8 @@ class ModePatternEditor(WatoMode):
                 omit_update_header=True,
             ) as table:
                 for _folder, rulenr, rule in folder_rules:
-                    # Check if this rule applies to the given host/service
-                    if self._hostname:
-                        service_desc = self._get_service_description(
-                            self._hostname, "logwatch", self._item
-                        )
-
-                        # If hostname (and maybe filename) try match it
-                        rule_matches = rule.matches_host_and_item(
-                            folder_from_request(request.var("folder"), self._hostname),
-                            self._hostname,
-                            self._item,
-                            service_desc,
-                            service_labels=service_labels,
-                        )
-                    else:
-                        # If no host/file given match all rules
-                        rule_matches = True
+                    # If no host/file given match all rules
+                    rule_matches = rule_match_results[rule.id] if rule_match_results else False
 
                     abs_rulenr += 1
 
@@ -357,10 +342,28 @@ class ModePatternEditor(WatoMode):
                     )
                     html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-    def _get_service_description(
-        self, hostname: HostName, check_plugin_name: str, item: Item
-    ) -> ServiceName:
-        return cmk.base.export.service_description(hostname, check_plugin_name, item)
+    def _analyze_rule_matches(
+        self, site_id: SiteId, host_name: HostName, item: Item, rules: Sequence[Rule]
+    ) -> dict[str, bool]:
+        service_desc = self._get_service_description(host_name, item)
+        service_labels = analyse_service(
+            site_id,
+            host_name,
+            service_desc,
+        ).labels
+
+        return {
+            rule.id: rule.matches_host_and_item(
+                host_name,
+                item,
+                service_desc,
+                service_labels=service_labels,
+            )
+            for rule in rules
+        }
+
+    def _get_service_description(self, hostname: HostName, item: Item) -> ServiceName:
+        return cmk.base.export.logwatch_service_description(hostname, item)
 
 
 class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):

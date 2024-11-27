@@ -16,10 +16,10 @@
 # 6 Number of inactive Terminal Services sessions.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_winperf_ts_sessions(info):
@@ -61,6 +61,7 @@ def parse_winperf_ts_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
+    name="winperf_ts_sessions",
     parse_function=parse_winperf_ts_sessions,
     service_name="Sessions",
     discovery_function=inventory_winperf_ts_sessions,

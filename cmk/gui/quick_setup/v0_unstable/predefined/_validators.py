@@ -30,7 +30,6 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
-    StageIndex,
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
@@ -74,7 +73,6 @@ def _validate_test_connection(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     error_message: str | None,
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
@@ -99,12 +97,11 @@ def _validate_test_connection(
 
 def validate_unique_id(
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
-        return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
+        return [f"Expected the key '{UniqueBundleIDStr}' in the form data."]
 
     if bundle_id in ConfigBundleStore().load_for_reading():
         return [f'Configuration bundle "{bundle_id}" already exists.']
@@ -114,7 +111,6 @@ def validate_unique_id(
 
 def validate_host_name_doesnt_exists(
     _quick_setup_id: QuickSetupId,
-    _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     host_name = _find_id_in_form_data(stages_form_data, QSHostName)

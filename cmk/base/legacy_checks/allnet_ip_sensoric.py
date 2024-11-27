@@ -7,10 +7,12 @@
 import re
 from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 
@@ -102,6 +104,7 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.tension"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_tension",
     # section already migrated!
     service_name="Electric Tension %s",
     sections=["allnet_ip_sensoric"],
@@ -140,6 +143,7 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_temp",
     # section already migrated!
     service_name="Temperature %s",
     sections=["allnet_ip_sensoric"],
@@ -177,6 +181,7 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.humidity"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_humidity",
     # section already migrated!
     service_name="Humidity %s",
     sections=["allnet_ip_sensoric"],
@@ -222,6 +227,7 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.pressure"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_pressure",
     # section already migrated!
     service_name="Pressure %s",
     sections=["allnet_ip_sensoric"],

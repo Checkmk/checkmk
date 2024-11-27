@@ -5,7 +5,7 @@
  */
 import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
 import type { ValidationMessage, Validator } from '@/form/components/vue_formspec_components'
-import { immediateWatch } from './watch'
+import { immediateWatch } from '@/lib/watch'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided
@@ -45,20 +45,20 @@ export function validateValue(newValue: unknown, validators: Validator[]): strin
       const checkValue = newValue as Array<unknown>
       const minValue = validator.min_value
       const maxValue = validator.max_value
-      if (minValue !== null && minValue !== undefined && checkValue.length < minValue) {
+      if (minValue !== null && checkValue.length < minValue) {
         errors.push(validator.error_message!)
       }
-      if (maxValue !== null && maxValue !== undefined && checkValue.length > maxValue) {
+      if (maxValue !== null && checkValue.length > maxValue) {
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'number_in_range') {
       const checkValue = newValue as number
       const minValue = validator.min_value
       const maxValue = validator.max_value
-      if (minValue !== null && minValue !== undefined && checkValue < minValue) {
+      if (minValue !== null && checkValue < minValue) {
         errors.push(validator.error_message!)
       }
-      if (maxValue !== null && maxValue !== undefined && checkValue > maxValue) {
+      if (maxValue !== null && checkValue > maxValue) {
         errors.push(validator.error_message!)
       }
     } else if (validator.type === 'is_integer') {
@@ -87,7 +87,7 @@ export function isFloat(value: string): boolean {
 export function requiresSomeInput(validators: Validator[]): boolean {
   return validators.some((validator) => {
     if (validator.type === 'length_in_range') {
-      if (validator.min_value === undefined) {
+      if (validator.min_value === null) {
         return false
       }
       return validator.min_value > 0
@@ -97,13 +97,13 @@ export function requiresSomeInput(validators: Validator[]): boolean {
 }
 
 export function groupDictionaryValidations(
-  elements: Array<{ ident: string }>,
+  elements: Array<{ name: string }>,
   newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {
   // Prepare all elements with an empty list of validation messages
   const elementValidations = elements.reduce(
     (elements, el) => {
-      elements[el.ident] = []
+      elements[el.name] = []
       return elements
     },
     {} as Record<string, ValidationMessages>
@@ -111,7 +111,7 @@ export function groupDictionaryValidations(
   const dictionaryValidations: ValidationMessages = []
 
   newValidation.forEach((msg) => {
-    if (msg.location.length == 0) {
+    if (msg.location.length === 0) {
       dictionaryValidations.push(msg)
       return
     }
@@ -142,8 +142,8 @@ export function groupIndexedValidations(
     elementValidations[i] = []
   }
   messages.forEach((msg) => {
-    const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
-    if (index == -1) {
+    const index = msg.location.length === 0 ? -1 : parseInt(msg.location[0]!)
+    if (index === -1) {
       ownValidations.push(msg.message)
       return
     }

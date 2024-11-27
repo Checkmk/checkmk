@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -101,6 +102,7 @@ def discover_esx_vsphere_datastores(section):
 
 
 check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
+    name="esx_vsphere_datastores",
     parse_function=parse_esx_vsphere_datastores,
     service_name="Filesystem %s",
     discovery_function=discover_esx_vsphere_datastores,

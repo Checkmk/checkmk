@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Sequence
-from typing import Iterable
+from collections.abc import Iterable, Sequence
 
 from livestatus import LivestatusResponse, OnlySites
 

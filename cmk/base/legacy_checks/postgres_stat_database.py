@@ -13,10 +13,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
+
+check_info = {}
 
 
 def parse_postgres_stat_database(string_table):
@@ -104,6 +104,7 @@ def check_postgres_stat_database(item, params, parsed):
 
 
 check_info["postgres_stat_database"] = LegacyCheckDefinition(
+    name="postgres_stat_database",
     parse_function=parse_postgres_stat_database,
     service_name="PostgreSQL DB %s Statistics",
     discovery_function=inventory_postgres_stat_database,
@@ -136,6 +137,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 
 
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
+    name="postgres_stat_database_size",
     service_name="PostgreSQL DB %s Size",
     sections=["postgres_stat_database"],
     discovery_function=inventory_postgres_stat_database_size,

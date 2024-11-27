@@ -72,6 +72,22 @@ def test_size_trend(args: ArgsDict) -> None:
     ]
 
 
+def test_size_trend_full_in_eternity(args: ArgsDict) -> None:
+    # size_trend returns generator, but we need to evaluate it
+    # so the valuestore is written properly
+    with suppress(GetRateError):
+        _call_size_trend_with(args)
+
+    # simulate a very low trend
+    args.update({"used_mb": 100.00001, "timestamp": 1.0 + 1800})
+    assert _call_size_trend_with(args) == [
+        Metric("growth", 0.0004800000001523585),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +21 B"),
+        Result(state=State.OK, summary="trend per 1 hour 0 minutes: +<0.01%"),
+        Metric("trend", 0.0004800000001523585),
+    ]
+
+
 def test_size_trend_growing(args: ArgsDict) -> None:
     with suppress(GetRateError):
         _call_size_trend_with(args)

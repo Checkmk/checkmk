@@ -20,6 +20,8 @@ case "$1" in
             echo "The port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
+
+        sed -ri 's/address: .*/address: "[::1]:'"$PORT"'"/' "$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

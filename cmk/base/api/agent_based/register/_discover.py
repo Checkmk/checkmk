@@ -4,10 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable
+from importlib import import_module
 from typing import assert_never
 
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin as BackendAgentSectionPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckPlugin as BackendCheckPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import (
+    SNMPSectionPlugin as BackendSNMPSectionPlugin,
+)
 
+from cmk import trace
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -37,30 +48,53 @@ from .section_plugins import create_agent_section_plugin, create_snmp_section_pl
 
 _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | InventoryPlugin
 
+tracer = trace.get_tracer()
 
-def load_all_plugins(*, raise_errors: bool) -> list[str]:
-    errors = []
-    for plugin_name, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plug-in {plugin_name}: {exception}")
-        if raise_errors:
-            raise exception
 
-    discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
-    )
-    errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
-    for location, plugin in discovered_plugins.plugins.items():
-        try:
-            register_plugin_by_type(location, plugin, validate=raise_errors)
-        except Exception as exc:
-            if raise_errors:
-                raise
-            errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
+@tracer.start_as_current_span("load_all_plugins")
+def load_all_plugins(
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    checks: Iterable[BackendCheckPlugin],
+    *,
+    raise_errors: bool,
+) -> list[str]:
+    with tracer.start_as_current_span("discover_plugins"):
+        discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
+            PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
+        )
 
+    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
+
+    with tracer.start_as_current_span("load_discovered_plugins"):
+        for location, plugin in discovered_plugins.plugins.items():
+            try:
+                _register_plugin_by_type(location, plugin, validate=raise_errors)
+            except Exception as exc:
+                if raise_errors:
+                    raise
+                errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
+
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
     return errors
 
 
-def register_plugin_by_type(
+def load_selected_plugins(
+    locations: Iterable[PluginLocation],
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+    checks: Iterable[BackendCheckPlugin],
+    *,
+    validate: bool,
+) -> None:
+    for location in locations:
+        module = import_module(location.module)
+        if location.name is not None:
+            _register_plugin_by_type(location, getattr(module, location.name), validate=validate)
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
+
+
+def _register_plugin_by_type(
     location: PluginLocation,
     plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
     *,
@@ -84,8 +118,8 @@ def register_agent_section(
 ) -> None:
     section_plugin = create_agent_section_plugin(section, location, validate=validate)
 
-    if is_registered_section_plugin(section_plugin.name):
-        if get_section_plugin(section_plugin.name).location == location:
+    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+        if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,
@@ -106,8 +140,8 @@ def register_snmp_section(
 ) -> None:
     section_plugin = create_snmp_section_plugin(section, location, validate=validate)
 
-    if is_registered_section_plugin(section_plugin.name):
-        if get_section_plugin(section_plugin.name).location == location:
+    if (existing_section := get_section_plugin(section_plugin.name)) is not None:
+        if existing_section.location == location:
             # This is relevant if we're loading the plugins twice:
             # Loading of v2 plugins is *not* a no-op the second time round.
             # But since we're storing the plugins in a global variable,
@@ -180,3 +214,29 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
         raise ValueError(f"duplicate inventory plug-in definition: {plugin.name}")
 
     add_inventory_plugin(plugin)
+
+
+def _add_sections_to_register(
+    sections: Iterable[BackendSNMPSectionPlugin | BackendAgentSectionPlugin],
+) -> None:
+    for section in sections:
+        if is_registered_section_plugin(section.name):
+            continue
+        add_section_plugin(section)
+
+
+def _add_checks_to_register(
+    checks: Iterable[BackendCheckPlugin],
+) -> None:
+    for check in checks:
+        present_plugin = get_check_plugin(check.name)
+        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
+            # location is PluginLocation => it's a new plug-in
+            # (allow loading multiple times, e.g. update-config)
+            # implemented here instead of the agent based register so that new API code does not
+            # need to include any handling of legacy cases
+            raise ValueError(
+                f"Legacy check plug-in still exists for check plug-in {check.name}. "
+                "Please remove legacy plug-in."
+            )
+        add_check_plugin(check)

@@ -6,9 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { LegacyValuespec } from '@/form/components/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { select } from 'd3-selection'
 import FormValidation from '@/form/components/FormValidation.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+
+const QUERY_INPUT_OBSERVER = 'select,input'
 
 const props = defineProps<{
   spec: LegacyValuespec
@@ -32,21 +33,47 @@ watch(
 const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
+const inputHtml = ref('')
+
+interface PreRenderedHtml {
+  input_html: string
+  readonly_html: string
+}
+
 onMounted(() => {
+  inputHtml.value = (data.value as PreRenderedHtml).input_html
   // @ts-expect-error comes from different javascript file
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
-  select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    element.addEventListener('input', collectData)
+  })
+
+  const observer = new MutationObserver(() => {
+    collectData()
+  })
+
+  observer.observe(legacyDOM.value!, {
+    attributes: true,
+    characterData: true,
+    childList: true,
+    subtree: true
+  })
+
+  // Always collect data on mount. Sometimes the observer is not triggered, when the
+  // legacyDOM does not contain input/select elements - like the FixedValue Valuespec
   collectData()
 })
 
 onBeforeUnmount(() => {
-  select(legacyDOM.value!).selectAll('input').on('input.observer', null)
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    element.removeEventListener('input', collectData)
+  })
 })
 
 function collectData() {
-  let result = Object.fromEntries(new FormData(legacyDOM.value))
+  const result = Object.fromEntries(new FormData(legacyDOM.value))
   data.value = {
     input_context: result,
     varprefix: props.spec.varprefix
@@ -60,7 +87,7 @@ function collectData() {
     ref="legacyDOM"
     style="background: #595959"
     class="legacy_valuespec"
-    v-html="spec.input_html"
+    v-html="inputHtml"
   ></form>
   <!--eslint-enable-->
   <FormValidation :validation="validation"></FormValidation>

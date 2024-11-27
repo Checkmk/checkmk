@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+
+check_info = {}
 
 
 def parse_ups_socomec_outphase(string_table):
@@ -35,6 +36,7 @@ def discover_ups_socomec_outphase(section):
 
 
 check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
+    name="ups_socomec_outphase",
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",

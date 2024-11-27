@@ -1,7 +1,9 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_py//:requirements.bzl", "requirement")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load("@rules_python//python:proto.bzl", "py_proto_library")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 genrule(
     name = "_generate_requirements_in",
@@ -18,26 +20,22 @@ genrule(
 FILTER_OUT = [
     # Provided elsewhere
     "rrdtool",
-    "protobuf",
 ]
 
 genrule(
     name = "_prune_requirements_in",
     srcs = ["requirements_in.orig"],
-    outs = ["requirements_in.txt"],
+    outs = ["requirements_pruned.txt"],
     cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
 )
 
-compile_pip_requirements(
-    name = "requirements",
-    timeout = "moderate",
-    env = {
-        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
-    },
-    requirements_in = "requirements_in.txt",
-    requirements_txt = "@//:requirements_lock.txt",
-    tags = ["manual"],
-    visibility = ["//visibility:public"],
+genrule(
+    name = "_pin_protobuf_requirement",
+    srcs = ["requirements_pruned.txt"],
+    outs = ["requirements.txt"],
+    # We go for "compatible release" with `~=`.
+    cmd = "cat $< <(echo protobuf~=%s) > $@" % PROTOBUF_PYTHON_VERSION,
+    visibility = ["//:__pkg__"],
 )
 
 REQUIRED_EXTERNAL_DEPS = [
@@ -121,7 +119,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "roman",
     "setproctitle",
     "setuptools-scm",
-    "six",
     "snmpsim-lextudio",
     "typing-extensions",
     "urllib3",
@@ -155,6 +152,22 @@ CSE_PY = glob([
     "**/cse.py",
 ])
 
+CMK_PACKAGES = [
+    "//packages/cmk-agent-based",
+    "//packages/cmk-agent-receiver",
+    "//packages/cmk-ccc",
+    "//packages/cmk-crypto",
+    "//packages/cmk-graphing",
+    "//packages/cmk-livestatus-client",
+    "//packages/cmk-livestatus-client:py_livestatus",
+    "//packages/cmk-messaging",
+    "//packages/cmk-mkp-tool",
+    "//packages/cmk-rulesets",
+    "//packages/cmk-server-side-calls",
+    "//packages/cmk-trace",
+    "//packages/cmk-werks",
+]
+
 py_library(
     name = "lib_cmk",
     srcs = glob(
@@ -162,26 +175,17 @@ py_library(
         include = ["**/*.py"],
         exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
     ),
+    data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
     visibility = [
         # for conftest
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-agent-based",
-        "//packages/cmk-agent-receiver",
-        "//packages/cmk-crypto",
-        "//packages/cmk-graphing",
-        "//packages/cmk-livestatus-client",
-        "//packages/cmk-livestatus-client:py_livestatus",
-        "//packages/cmk-messaging",
-        "//packages/cmk-mkp-tool",
-        "//packages/cmk-rulesets",
-        "//packages/cmk-server-side-calls",
-        "//packages/cmk-trace",
-        "//packages/cmk-werks",
         "@rrdtool_native//:rrdtool_python_lib",
-    ] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+        # `cmk.special_agent.agent_jolokia` imports `mk_jolokia`
+        "//agents/plugins:mk_jolokia",
+    ] + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 
 py_library(
@@ -194,14 +198,19 @@ py_library(
     ],
 )
 
+py_proto_library(
+    name = "config_proto_pb2",
+    deps = ["//:config_proto"],
+)
+
 [py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
     deps = [
+        "config_proto_pb2",
         "lib_cmk",
-        "//non-free/cmc-protocols/protocols:py_config_proto",
     ],
 ) for edition, srcs in [
     ("cce", CCE_PY),
@@ -209,6 +218,36 @@ py_library(
     ("cme", CME_PY),
     ("cse", CSE_PY),
 ]]
+
+py_library(
+    # The repo edition is only used for testing.
+    name = "lib_cmk_repo",
+    srcs = glob(["**/*.py"]),
+    data = ["gui/wsgi/applications/index.wsgi"],
+    imports = [".."],
+    visibility = ["//tests/unit:__pkg__"],
+    deps = [
+        "@rrdtool_native//:rrdtool_python_lib",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "config_proto_pb2",
+        ],
+    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_wheel(
+    name = "cmk_cre",
+    distribution = "checkmk",
+    requires = REQUIRED_EXTERNAL_DEPS,
+    # TODO(ml): cmk_version vs. PEP 440?
+    version = "1+cre",
+    visibility = ["//visibility:public"],
+    deps = [
+        "lib_cmk",
+        "lib_cmk_cre",
+    ],
+)
 
 [py_wheel(
     name = "cmk_" + edition,
@@ -220,11 +259,31 @@ py_library(
     deps = [
         "lib_cmk",
         "lib_cmk_" + edition,
+        "config_proto_pb2",
     ],
 ) for edition in [
-    "cre",
     "cce",
     "cee",
     "cme",
     "cse",
 ]]
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+        # pytest-xdist for `--numprocesses=NPROC`
+        requirement("pytest-xdist"),
+    ],
+)
+
+py_doc_test(
+    name = "doctest",
+    srcs = [
+        "//cmk:lib_cmk",
+        "//cmk:lib_cmk_cre",
+    ],
+    env = {
+        "PYTHONWARNINGS": "ignore",
+    },
+)

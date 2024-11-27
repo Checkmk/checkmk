@@ -5,10 +5,17 @@
  */
 import { render, screen } from '@testing-library/vue'
 import ListWidget from '@/quick-setup/components/quick-setup/widgets/ListWidget.vue'
+import { getWidget } from '@/quick-setup/components/quick-setup/widgets/utils'
+import { quickSetupGetWidgetKey } from '@/quick-setup/components/quick-setup/utils'
 
 describe('ListWidget', () => {
   it('renders items', async () => {
     render(ListWidget, {
+      global: {
+        provide: {
+          [quickSetupGetWidgetKey]: getWidget
+        }
+      },
       props: {
         list_type: 'bullet',
         items: [{ widget_type: 'text', text: 'Hello World' }]
@@ -22,6 +29,11 @@ describe('ListWidget', () => {
 
   it('number style renders a <ol>', async () => {
     render(ListWidget, {
+      global: {
+        provide: {
+          [quickSetupGetWidgetKey]: getWidget
+        }
+      },
       props: {
         list_type: 'ordered',
         items: [{ widget_type: 'text', text: 'Hello World' }]
@@ -34,6 +46,11 @@ describe('ListWidget', () => {
 
   it('bullet style renders a <ul>', async () => {
     render(ListWidget, {
+      global: {
+        provide: {
+          [quickSetupGetWidgetKey]: getWidget
+        }
+      },
       props: {
         list_type: 'bullet',
         items: [{ widget_type: 'text', text: 'Hello World' }]

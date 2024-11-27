@@ -3,10 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// wtools.h
-//
-// Windows Specific Tools
-//
 #pragma once
 
 #ifndef STOP_WATCH_H
@@ -130,6 +126,11 @@ public:
         pos_ = std::chrono::time_point<std::chrono::steady_clock>();
     }
 
+    std::chrono::time_point<std::chrono::steady_clock> pos() const {
+        std::lock_guard lk(lock_);
+        return pos_;
+    }
+
 private:
     mutable std::mutex lock_;
     uint64_t counter_ = 0;
@@ -137,10 +138,6 @@ private:
     std::chrono::microseconds last_{};
     bool started_ = false;
     std::chrono::time_point<std::chrono::steady_clock> pos_;
-#if defined(ENABLE_WHITE_BOX_TESTING)
-    friend class Wtools;
-    FRIEND_TEST(Wtools, StopWatch);
-#endif
 };
 
 }  // namespace wtools

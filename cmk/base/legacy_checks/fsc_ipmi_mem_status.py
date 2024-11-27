@@ -19,10 +19,10 @@
 # 05 = Prefail (module exceeded the correctable errors threshold)
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 fsc_ipmi_mem_status_levels = [
     # Status Code, Label
@@ -60,6 +60,7 @@ def parse_fsc_ipmi_mem_status(string_table: StringTable) -> StringTable:
 
 
 check_info["fsc_ipmi_mem_status"] = LegacyCheckDefinition(
+    name="fsc_ipmi_mem_status",
     parse_function=parse_fsc_ipmi_mem_status,
     service_name="IPMI Memory status %s",
     discovery_function=inventory_fsc_ipmi_mem_status,

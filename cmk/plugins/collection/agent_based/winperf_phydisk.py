@@ -579,7 +579,7 @@ def check_winperf_phydisk(
         except KeyError:
             return
 
-    yield from diskstat.check_diskstat_dict(
+    yield from diskstat.check_diskstat_dict_legacy(
         params=_with_average_in_seconds(params),
         disk=disk_with_rates,
         value_store=value_store,

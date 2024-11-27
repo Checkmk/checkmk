@@ -353,6 +353,18 @@ expected_attributes = {
         "show_inherited_value": False,
         "topic": "Creation / Locking",
     },
+    "waiting_for_discovery": {
+        "depends_on_roles": [],
+        "depends_on_tags": [],
+        "editable": False,
+        "from_config": False,
+        "show_in_folder": False,
+        "show_in_form": False,
+        "show_in_host_search": False,
+        "show_in_table": False,
+        "show_inherited_value": False,
+        "topic": "Custom attributes",
+    },
 }
 
 
@@ -564,6 +576,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         ],
         "custom_attributes": [
             "labels",
+            "waiting_for_discovery",
         ],
     }
 

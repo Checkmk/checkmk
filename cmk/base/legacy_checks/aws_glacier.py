@@ -6,11 +6,12 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping[str, Mapping]
 
@@ -71,6 +72,7 @@ def check_aws_glacier_archives(item, params, parsed):
 
 
 check_info["aws_glacier"] = LegacyCheckDefinition(
+    name="aws_glacier",
     parse_function=parse_aws_glacier,
     service_name="AWS/Glacier Vault: %s",
     discovery_function=inventory_aws_glacier,
@@ -119,15 +121,13 @@ def check_aws_glacier_summary(item, params, parsed):
     if largest_vault:
         yield (
             0,
-            "Largest vault: {} ({})".format(
-                largest_vault,
-                render.disksize(largest_vault_size),
-            ),
+            f"Largest vault: {largest_vault} ({render.disksize(largest_vault_size)})",
             [("aws_glacier_largest_vault_size", largest_vault_size)],
         )
 
 
 check_info["aws_glacier.summary"] = LegacyCheckDefinition(
+    name="aws_glacier_summary",
     service_name="AWS/Glacier Summary",
     sections=["aws_glacier"],
     discovery_function=discover_aws_glacier_summary,

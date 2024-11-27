@@ -7,10 +7,10 @@
 # 100
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def inventory_citrix_serverload(info):
@@ -41,6 +41,7 @@ def parse_citrix_serverload(string_table: StringTable) -> StringTable:
 
 
 check_info["citrix_serverload"] = LegacyCheckDefinition(
+    name="citrix_serverload",
     parse_function=parse_citrix_serverload,
     service_name="Citrix Serverload",
     discovery_function=inventory_citrix_serverload,

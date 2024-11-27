@@ -14,8 +14,9 @@
 #   '----------------------------------------------------------------------'
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_esx_vsphere_vm_mounted_devices(section):
@@ -55,6 +56,7 @@ def check_esx_vsphere_vm_mounted_devices(item, params, section):
 
 
 check_info["esx_vsphere_vm.mounted_devices"] = LegacyCheckDefinition(
+    name="esx_vsphere_vm_mounted_devices",
     service_name="ESX Mounted Devices",
     sections=["esx_vsphere_vm"],
     discovery_function=inventory_esx_vsphere_vm_mounted_devices,

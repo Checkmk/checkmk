@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.14"
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.17"
@@ -43,12 +43,9 @@ def check_infoblox_replication_status(item, _no_params, info):
             else:
                 state = 2
 
-            return state, "Status: {}, Queue from master: {} ({}), Queue to master: {} ({})".format(
-                status_readable,
-                queue_from_master,
-                time_from_master,
-                queue_to_master,
-                time_to_master,
+            return (
+                state,
+                f"Status: {status_readable}, Queue from master: {queue_from_master} ({time_from_master}), Queue to master: {queue_to_master} ({time_to_master})",
             )
     return None
 
@@ -58,6 +55,7 @@ def parse_infoblox_replication_status(string_table: StringTable) -> StringTable:
 
 
 check_info["infoblox_replication_status"] = LegacyCheckDefinition(
+    name="infoblox_replication_status",
     parse_function=parse_infoblox_replication_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

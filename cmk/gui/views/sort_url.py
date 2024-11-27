@@ -55,7 +55,7 @@ def compute_sort_url_parameter(
         return _encode_sorter_url(sorters)
 
     sorter: SorterName | tuple[SorterName, PainterParameters]
-    if issubclass(sorter_registry[sorter_name], ParameterizedSorter):
+    if isinstance(sorter_registry[sorter_name], ParameterizedSorter):
         assert painter_parameters is not None
         sorter = (painter_name, painter_parameters)
     else:

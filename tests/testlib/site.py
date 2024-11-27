@@ -16,8 +16,9 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
+from dataclasses import dataclass
 from getpass import getuser
 from pathlib import Path
 from pprint import pformat
@@ -52,13 +53,25 @@ import livestatus
 
 from cmk.ccc.version import Edition, Version
 
+from cmk import trace
 from cmk.crypto.secrets import Secret
 
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer()
 
 ADMIN_USER: Final[str] = "cmkadmin"
 AUTOMATION_USER: Final[str] = "automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
+
+
+@dataclass
+class TracingConfig:
+    collect_traces: bool
+    otlp_endpoint: str
+    extra_resource_attributes: Mapping[str, str]
+
+
+NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
 
 class Site:
@@ -75,7 +88,7 @@ class Site:
     ) -> None:
         assert site_id
         self.id = site_id
-        self.root = "/omd/sites/%s" % self.id
+        self.root = Path("/omd/sites") / self.id
         self.version: Final = version
 
         self.reuse = reuse
@@ -83,6 +96,7 @@ class Site:
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
         self._apache_port: int | None = None  # internal cache for the port
+        self._message_broker_port: int | None = None
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
@@ -119,6 +133,10 @@ class Site:
     def internal_url_mobile(self) -> str:
         return self.internal_url + "mobile.py"
 
+    @property
+    def licensing_dir(self) -> Path:
+        return self.root / "var" / "check_mk" / "licensing"
+
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
     # or internal_url.
@@ -139,6 +157,12 @@ class Site:
         )
         live.set_timeout(2)
         return live
+
+    @property
+    def message_broker_port(self) -> int:
+        if self._message_broker_port is None:
+            self._message_broker_port = int(self.get_config("RABBITMQ_PORT", "5672"))
+        return self._message_broker_port
 
     def url_for_path(self, path: str) -> str:
         """
@@ -182,6 +206,7 @@ class Site:
 
         assert config_reloaded()
 
+    @tracer.start_as_current_span("Site.restart_core")
     def restart_core(self) -> None:
         # Remember the time for the core reload check and wait a second because the program_start
         # is reported as integer and wait_for_core_reloaded() compares with ">".
@@ -190,6 +215,7 @@ class Site:
         self.omd("restart", "core")
         self.wait_for_core_reloaded(before_restart)
 
+    @tracer.start_as_current_span("Site.send_host_check_result")
     def send_host_check_result(
         self,
         hostname: str,
@@ -213,6 +239,7 @@ class Site:
             wait_timeout,
         )
 
+    @tracer.start_as_current_span("Site.send_service_check_result")
     def send_service_check_result(
         self,
         hostname: str,
@@ -239,6 +266,7 @@ class Site:
             wait_timeout,
         )
 
+    @tracer.start_as_current_span("Site.schedule_check")
     def schedule_check(
         self,
         hostname: str,
@@ -270,6 +298,7 @@ class Site:
             wait_timeout,
         )
 
+    @tracer.start_as_current_span("Site.reschedule_services")
     def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
         """Reschedule services in the test-site for a given host until no pending services are
         found."""
@@ -292,6 +321,7 @@ class Site:
             f"\n{pformat(pending_services)}\n"
         )
 
+    @tracer.start_as_current_span("Site.wait_for_service_state_update")
     def wait_for_services_state_update(
         self,
         hostname: str,
@@ -494,14 +524,19 @@ class Site:
     def run(
         self,
         args: list[str],
+        capture_output: bool = True,
+        check: bool = True,
+        encoding: str | None = "utf-8",
         input: str | None = None,  # pylint: disable=redefined-builtin
         preserve_env: list[str] | None = None,
         **kwargs: Any,
     ) -> subprocess.CompletedProcess:
         return run(
             args=args,
+            capture_output=capture_output,
+            check=check,
             input=input,
-            encoding="utf-8",
+            encoding=encoding,
             preserve_env=preserve_env,
             sudo=True,
             substitute_user=self.id,
@@ -552,16 +587,17 @@ class Site:
         return output
 
     @contextmanager
-    def copy_file(self, name: str, target: str | Path) -> Iterator[None]:
+    def copy_file(self, name: str | Path, target: str | Path) -> Iterator[None]:
         """Copies a file from the same directory as the caller to the site"""
         caller_file = Path(inspect.stack()[2].filename)
-        source = caller_file.parent / name
-        self.makedirs(Path(target).parent)
-        self.write_text_file(target, source.read_text())
+        source_path = caller_file.parent / name
+        target_path = Path(target)
+        self.makedirs(target_path.parent)
+        self.write_text_file(target_path, source_path.read_text())
         try:
             yield
         finally:
-            self.delete_file(target)
+            self.delete_file(target_path)
 
     def python_helper(self, name: str) -> PythonHelper:
         caller_file = Path(inspect.stack()[1].filename)
@@ -569,16 +605,15 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "omd", mode, self.id] + list(args)
+        cmd = ["omd", mode] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        completed_process = subprocess.run(
+        completed_process = self.run(
             cmd,
+            capture_output=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            encoding="utf-8",
             check=False,
         )
-
         log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
         logger.log(log_level, "Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
@@ -586,14 +621,25 @@ class Site:
         for line in completed_process.stdout.strip().split("\n"):
             logger.log(log_level, "> %s", line)
 
+        if mode == "status":
+            logger.info(
+                "OMD status: %d (%s)",
+                completed_process.returncode,
+                {
+                    0: "fully running",
+                    1: "fully stopped",
+                    2: "partially running",
+                }.get(completed_process.returncode, "unknown meaning"),
+            )
+
         return completed_process.returncode
 
-    def path(self, rel_path: str | Path) -> str:
-        return os.path.join(self.root, rel_path)
+    def path(self, rel_path: str | Path) -> Path:
+        return self.root / rel_path
 
     def read_file(self, rel_path: str | Path) -> str:
         try:
-            stdout = self.check_output(["cat", self.path(rel_path)])
+            stdout = self.check_output(["cat", self.path(rel_path).as_posix()])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
@@ -601,7 +647,7 @@ class Site:
 
     def read_binary_file(self, rel_path: str | Path) -> bytes:
         try:
-            stdout = self.check_output(["cat", self.path(rel_path)], encoding=None)
+            stdout = self.check_output(["cat", self.path(rel_path).as_posix()], encoding=None)
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
@@ -609,14 +655,14 @@ class Site:
 
     def delete_file(self, rel_path: str | Path) -> None:
         try:
-            _ = self.run(["rm", "-f", self.path(rel_path)])
+            _ = self.run(["rm", "-f", self.path(rel_path).as_posix()])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
 
     def delete_dir(self, rel_path: str | Path) -> None:
         try:
-            _ = self.run(["rm", "-rf", self.path(rel_path)])
+            _ = self.run(["rm", "-rf", self.path(rel_path).as_posix()])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to delete directory '{rel_path}'!")
             raise excp
@@ -636,27 +682,33 @@ class Site:
 
     def resolve_path(self, rel_path: str | Path) -> Path:
         try:
-            stdout = self.check_output(["readlink", "-e", self.path(rel_path)])
+            stdout = self.check_output(["readlink", "-e", self.path(rel_path).as_posix()])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read symlink at {rel_path}!")
             raise excp
         return Path(stdout.strip())
 
     def file_exists(self, rel_path: str | Path) -> bool:
-        p = self.run(["test", "-e", self.path(rel_path)], check=False)
+        p = self.run(["test", "-e", self.path(rel_path).as_posix()], check=False)
         return p.returncode == 0
 
     def is_file(self, rel_path: str | Path) -> bool:
-        return self.run(["test", "-f", self.path(rel_path)], check=False).returncode == 0
+        return self.run(["test", "-f", self.path(rel_path).as_posix()], check=False).returncode == 0
 
     def is_dir(self, rel_path: str | Path) -> bool:
-        return self.run(["test", "-d", self.path(rel_path)], check=False).returncode == 0
+        return self.run(["test", "-d", self.path(rel_path).as_posix()], check=False).returncode == 0
 
     def file_mode(self, rel_path: str | Path) -> int:
-        return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
+        return int(
+            self.check_output(["stat", "-c", "%f", self.path(rel_path).as_posix()]).rstrip(),
+            base=16,
+        )
+
+    def file_timestamp(self, rel_path: str | Path) -> int:
+        return int(self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()]).rstrip())
 
     def inode(self, rel_path: str | Path) -> int:
-        return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
+        return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())
 
     def makedirs(self, rel_path: str | Path) -> None:
         makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
@@ -665,7 +717,7 @@ class Site:
         self.run(["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password)
 
     def listdir(self, rel_path: str | Path) -> list[str]:
-        output = self.check_output(["ls", "-1", self.path(rel_path)])
+        output = self.check_output(["ls", "-1", self.path(rel_path).as_posix()])
         return output.strip().split("\n") if output else []
 
     def system_temp_dir(self) -> Iterator[str]:
@@ -695,6 +747,7 @@ class Site:
     def current_version_directory(self) -> str:
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
+    @tracer.start_as_current_span("Site.install_cmk")
     def install_cmk(self) -> None:
         if not self.version.is_installed():
             logger.info("Installing Checkmk version %s", self.version.version_directory())
@@ -712,13 +765,16 @@ class Site:
             except subprocess.CalledProcessError as excp:
                 excp.add_note("Execute 'tests/scripts/install-cmk.py' manually to debug the issue.")
                 if excp.returncode == 22:
-                    excp.add_note(f"Version {self.version.version} could not be installed!")
-                    raise RuntimeError from excp
+                    raise RuntimeError(
+                        f"Version {self.version.version} could not be installed!"
+                    ) from excp
                 if excp.returncode == 11:
-                    excp.add_note(f"Version {self.version.version} could not be downloaded!")
-                    raise FileNotFoundError from excp
+                    raise FileNotFoundError(
+                        f"Version {self.version.version} could not be downloaded!"
+                    ) from excp
                 raise excp
 
+    @tracer.start_as_current_span("Site.create")
     def create(self) -> None:
         self.install_cmk()
 
@@ -940,6 +996,7 @@ class Site:
             "log_rotation_method=n\n",
         )
 
+    @tracer.start_as_current_span("Site.rm")
     def rm(self, site_id: str | None = None) -> None:
         # Wait a bit to avoid unnecessarily stress testing the site.
         time.sleep(1)
@@ -955,6 +1012,7 @@ class Site:
             sudo=True,
         )
 
+    @tracer.start_as_current_span("Site.start")
     def start(self) -> None:
         if not self.is_running():
             logger.info("Starting site")
@@ -980,10 +1038,11 @@ class Site:
         else:
             logger.info("Site is already running")
 
-        assert os.path.ismount(
-            self.path("tmp")
+        assert (
+            self.path("tmp").is_mount()
         ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
+    @tracer.start_as_current_span("Site.stop")
     def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
@@ -1013,6 +1072,7 @@ class Site:
     def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)
 
+    @tracer.start_as_current_span("Site.ensure_running")
     def ensure_running(self) -> None:
         if not self.is_running():
             omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
@@ -1031,31 +1091,13 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return self._omd_status() == 0
+        return self.omd("status") == 0
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return self._omd_status() == 1
-
-    def _omd_status(self) -> int:
-        def _fmt_output(msg: str) -> str:
-            return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
-
-        try:
-            self.run(["omd", "status", "--bare"])
-            logger.info("Exit code was: 0 (fully running)")
-            return 0
-        except subprocess.CalledProcessError as e:
-            status_text = {
-                0: "fully running",
-                1: "fully stopped",
-                2: "partially running",
-            }.get(e.returncode, "unknown meaning")
-            logger.info("Exit code was: %d (%s)", e.returncode, status_text)
-            logger.debug(str(e))
-            return e.returncode
+        return self.omd("status") == 1
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -1083,17 +1125,18 @@ class Site:
     def core_name(self) -> Literal["cmc", "nagios"]:
         return "nagios" if self.version.is_raw_edition() else "cmc"
 
-    def core_history_log(self) -> str:
+    def core_history_log(self) -> Path:
         core = self.core_name()
         if core == "nagios":
-            return "var/log/nagios.log"
+            return self.path("var/log/nagios.log")
         if core == "cmc":
-            return "var/check_mk/core/history"
+            return self.path("var/check_mk/core/history")
         raise ValueError(f"Unhandled core: {core}")
 
     def core_history_log_timeout(self) -> int:
         return 10 if self.core_name() == "cmc" else 30
 
+    @tracer.start_as_current_span("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
         if self.enforce_english_gui:
@@ -1131,6 +1174,18 @@ class Site:
         # Verify the language is as expected now
         r = web.get("user_profile.py", allow_redirect_to_login=True)
         assert "Edit profile" in r.text, "Body: %s" % r.text
+
+    def send_traces_to_central_collector(self, endpoint: str) -> None:
+        """Configure the site to send traces to our central collector"""
+        logger.info("Send traces to central collector (collector: %s)", endpoint)
+        self.set_config("TRACE_SEND", "on")
+        self.set_config("TRACE_SEND_TARGET", endpoint)
+
+    def write_resource_config(self, extra_resource_attributes: Mapping[str, str]) -> None:
+        self.write_text_file(
+            "etc/omd/resource_attributes_from_config.json",
+            json.dumps(extra_resource_attributes) + "\n",
+        )
 
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
@@ -1188,10 +1243,14 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-        if os.path.exists(self.path("junit.xml")):
-            execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
+        if self.path("junit.xml").exists():
+            execute(
+                ["cp", self.path("junit.xml").as_posix(), self.result_dir().as_posix()], sudo=True
+            )
 
-        execute(["cp", "-r", self.path("var/log"), self.result_dir().as_posix()], sudo=True)
+        execute(
+            ["cp", "-r", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
+        )
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
@@ -1206,20 +1265,28 @@ class Site:
                     sudo=True,
                 )
 
-        for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
             execute(["cp", nagios_log_path, (self.result_dir() / "log").as_posix()], sudo=True)
 
         cmc_dir = self.result_dir() / "cmc"
         makedirs(cmc_dir, sudo=True)
 
         execute(
-            ["cp", self.path("var/check_mk/core/history"), (cmc_dir / "history").as_posix()],
+            [
+                "cp",
+                self.path("var/check_mk/core/history").as_posix(),
+                (cmc_dir / "history").as_posix(),
+            ],
             sudo=True,
         )
 
-        if os.path.exists(self.path("var/check_mk/core/core")):
+        if self.file_exists("var/check_mk/core/core"):
             execute(
-                ["cp", self.path("var/check_mk/core/core"), (cmc_dir / "core_dump").as_posix()],
+                [
+                    "cp",
+                    self.path("var/check_mk/core/core").as_posix(),
+                    (cmc_dir / "core_dump").as_posix(),
+                ],
                 sudo=True,
             )
 
@@ -1232,7 +1299,7 @@ class Site:
             [
                 "cp",
                 "-r",
-                Path(self.root, "var/check_mk/background_jobs").as_posix(),
+                self.path("var/check_mk/background_jobs").as_posix(),
                 self.result_dir().as_posix(),
             ],
             sudo=True,
@@ -1274,11 +1341,12 @@ class Site:
             )
 
     def result_dir(self) -> Path:
-        return Path(os.environ.get("RESULT_PATH") or repo_path() / "results" / self.id)
+        base_dir = Path(os.environ.get("RESULT_PATH") or (repo_path() / "results"))
+        return base_dir / self.id
 
     @property
     def crash_report_dir(self) -> Path:
-        return Path(self.root) / "var/check_mk/crashes"
+        return self.root / "var" / "check_mk" / "crashes"
 
     @property
     def crash_archive_dir(self) -> Path:
@@ -1286,7 +1354,7 @@ class Site:
 
     @property
     def logs_dir(self) -> Path:
-        return Path(self.root) / "var/log"
+        return self.root / "var" / "log"
 
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"
@@ -1306,6 +1374,7 @@ class Site:
 
         return Secret(secret)
 
+    @tracer.start_as_current_span("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
@@ -1318,7 +1387,7 @@ class Site:
             old_t = site.live.query_value("GET status\nColumns: program_start\n")
 
             logger.debug("Read replication changes of site")
-            base_dir = site.path("var/check_mk/wato")
+            base_dir = site.path("var/check_mk/wato").as_posix()
             for path in glob.glob(base_dir + "/replication_*"):
                 logger.debug("Replication file: %r", path)
                 with suppress(FileNotFoundError):
@@ -1337,7 +1406,7 @@ class Site:
                         )
 
             changed = self.openapi.activate_changes_and_wait_for_completion(
-                sites=[site.id], force_foreign_changes=allow_foreign_changes
+                force_foreign_changes=allow_foreign_changes
             )
             if changed:
                 logger.info("Waiting for core reloads of: %s", site.id)
@@ -1404,15 +1473,7 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(
-        self,
-        name: str,
-        start: bool = True,
-        init_livestatus: bool = True,
-        prepare_for_tests: bool = True,
-        activate_changes: bool = True,
-        auto_restart_httpd: bool = False,
-    ) -> Site:
+    def get_site(self, name: str) -> Site:
         site = self._site_obj(name)
 
         if self.version.is_saas_edition():
@@ -1421,9 +1482,25 @@ class SiteFactory:
             # before the site is created.
             create_cse_initial_config()
         site.create()
+        return site
 
+    def initialize_site(
+        self,
+        site: Site,
+        *,
+        start: bool = True,
+        init_livestatus: bool = True,
+        prepare_for_tests: bool = True,
+        activate_changes: bool = True,
+        auto_restart_httpd: bool = False,
+        tracing_config: TracingConfig = NO_TRACING,
+    ) -> Site:
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
+        if tracing_config.collect_traces:
+            site.send_traces_to_central_collector(tracing_config.otlp_endpoint)
+            if tracing_config.extra_resource_attributes:
+                site.write_resource_config(tracing_config.extra_resource_attributes)
 
         if not start:
             return site
@@ -1447,6 +1524,15 @@ class SiteFactory:
 
         logger.debug("Created site %s", site.id)
         return site
+
+    def setup_customers(self, site: Site, customers: Sequence[str]) -> None:
+        if not self.version.is_managed_edition():
+            return
+        customer_content = "\n".join(
+            f"customers.update({{'{customer}': {{'name': '{customer}', 'macros': [], 'customer_report_layout': 'default'}}}})"
+            for customer in customers
+        )
+        site.write_text_file("etc/check_mk/multisite.d/wato/customers.mk", customer_content)
 
     def get_existing_site(
         self,
@@ -1688,6 +1774,29 @@ class SiteFactory:
 
         return site
 
+    @contextmanager
+    def get_test_site_ctx(
+        self,
+        name: str = "central",
+        description: str = "",
+        auto_cleanup: bool = True,
+        auto_restart_httpd: bool = False,
+        init_livestatus: bool = True,
+        save_results: bool = True,
+        report_crashes: bool = True,
+        tracing_config: TracingConfig = NO_TRACING,
+    ) -> Iterator[Site]:
+        yield from self.get_test_site(
+            name=name,
+            description=description,
+            auto_cleanup=auto_cleanup,
+            auto_restart_httpd=auto_restart_httpd,
+            init_livestatus=init_livestatus,
+            save_results=save_results,
+            report_crashes=report_crashes,
+            tracing_config=tracing_config,
+        )
+
     def get_test_site(
         self,
         name: str = "central",
@@ -1697,6 +1806,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         save_results: bool = True,
         report_crashes: bool = True,
+        tracing_config: TracingConfig = NO_TRACING,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1715,34 +1825,38 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(
-                name,
+            site = self.get_site(name)
+
+        try:
+            self.setup_customers(site, ["customer1", "customer2"])
+            self.initialize_site(
+                site,
                 init_livestatus=init_livestatus,
                 prepare_for_tests=True,
+                tracing_config=tracing_config,
             )
-        site.start()
-        if auto_restart_httpd:
-            restart_httpd()
-        logger.info(
-            'Site "%s" is ready!%s',
-            site.id,
-            f" [{description}]" if description else "",
-        )
-        with (
-            cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-            if self.version.is_saas_edition()
-            else nullcontext()
-        ):
-            try:
+            site.start()
+            if auto_restart_httpd:
+                restart_httpd()
+            logger.info(
+                'Site "%s" is ready!%s',
+                site.id,
+                f" [{description}]" if description else "",
+            )
+            with (
+                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
+                if self.version.is_saas_edition()
+                else nullcontext()
+            ):
                 yield site
-            finally:
-                if save_results:
-                    site.save_results()
-                if report_crashes:
-                    site.report_crashes()
-                if auto_cleanup and cleanup_site:
-                    logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
-                    site.rm()
+        finally:
+            if save_results:
+                site.save_results()
+            if report_crashes:
+                site.report_crashes()
+            if auto_cleanup and cleanup_site:
+                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
@@ -1830,7 +1944,7 @@ class PythonHelper:
     def __init__(self, site: Site, helper_path: Path) -> None:
         self.site: Final = site
         self.helper_path: Final = helper_path
-        self.site_path: Final = Path(site.root, self.helper_path.name)
+        self.site_path: Final = site.root / self.helper_path.name
 
     @contextmanager
     def copy_helper(self) -> Iterator[None]:
@@ -1843,7 +1957,11 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self, input: str | None = None, encoding: str = "utf-8") -> str:  # pylint: disable=redefined-builtin
+    def check_output(
+        self,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        encoding: str = "utf-8",
+    ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
                 ["python3", str(self.site_path)],
@@ -1873,3 +1991,36 @@ def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
         assert "counters" in tmp_dirs
         assert "piggyback" in tmp_dirs
         assert "piggyback_sources" in tmp_dirs
+
+
+def tracing_config_from_env(env: Mapping[str, str]) -> TracingConfig:
+    return TracingConfig(
+        collect_traces=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", "") != "",
+        otlp_endpoint=env.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+        extra_resource_attributes=_resource_attributes_from_env(env),
+    )
+
+
+def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
+    """Extract tracing resource attributes from the process environment
+
+    This is meant to transport information exposed by the CI to tracing context in case the
+    information is available. In case it is not there, be silent and don't expose the missing
+    attribute.
+    """
+    logger.warning("Environment: %r", env)
+    return {
+        name: val
+        for name, val in [
+            ("cmk.version.version", env.get("VERSION")),
+            ("cmk.version.edition_short", env.get("EDITION")),
+            ("cmk.version.branch", env.get("BRANCH")),
+            ("cmk.version.distro", env.get("DISTRO")),
+            ("cmk.ci.node_name", env.get("CI_NODE_NAME")),
+            ("cmk.ci.workspace", env.get("CI_WORKSPACE")),
+            ("cmk.ci.job_name", env.get("CI_JOB_NAME")),
+            ("cmk.ci.build_number", env.get("CI_BUILD_NUMBER")),
+            ("cmk.ci.build_url", env.get("CI_BUILD_URL")),
+        ]
+        if val
+    }

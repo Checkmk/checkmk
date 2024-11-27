@@ -4,22 +4,40 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import LoadingIcon from '@/components/LoadingIcon.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
+import { onUnmounted, onBeforeMount } from 'vue'
 
 defineProps<QuickSetupAppProps>()
+
+let originalConsoleInfo: typeof console.info | undefined
+
+onBeforeMount(() => {
+  originalConsoleInfo = console.info
+  console.info = () => {}
+})
+
+onUnmounted(() => {
+  if (originalConsoleInfo) {
+    console.info = originalConsoleInfo
+  }
+})
 </script>
 <template>
   <Suspense>
-    <QuickSetupAsync :quick_setup_id="quick_setup_id" />
+    <QuickSetupAsync
+      :quick_setup_id="quick_setup_id"
+      :toggle-enabled="toggleEnabled"
+      :mode="mode"
+      :object-id="objectId"
+    />
     <template #fallback>
-      <LoadingIcon />
+      <CmkIcon name="load-graph" size="xxlarge" />
     </template>
   </Suspense>
 </template>
 
 <style>
-@import '@/assets/variables.css';
 @import './variables.css';
 </style>

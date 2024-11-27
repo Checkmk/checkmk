@@ -30,7 +30,7 @@ from cmk.plugins.aws.lib import (
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
@@ -192,7 +192,7 @@ def check_aws_rds_disk_io(
             continue
         disk_data[key] = metric * scale
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         params=params,
         disk=disk_data,
         value_store=get_value_store(),

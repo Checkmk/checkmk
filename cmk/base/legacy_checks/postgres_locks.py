@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.lib import postgres
+
+check_info = {}
 
 # <<<postgres_locks>>>
 # [databases_start]
@@ -74,6 +74,7 @@ def check_postgres_locks(item, params, parsed):
 
 
 check_info["postgres_locks"] = LegacyCheckDefinition(
+    name="postgres_locks",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Locks %s",
     discovery_function=inventory_postgres_locks,

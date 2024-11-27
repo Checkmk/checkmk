@@ -148,6 +148,9 @@ cc_binary(
     copts = [
         "-O2",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
     visibility = ["//visibility:public"],
     deps = [":rrdupd"],
 )
@@ -160,8 +163,11 @@ cc_binary(
         "-Wno-format-truncation",
         "-O2",
     ],
+    linkopts = [
+        "-lpthread",
+    ],
     visibility = ["//visibility:public"],
-    deps = [":rrd"],
+    deps = ["rrdgraph"],
 )
 
 cc_binary(
@@ -170,6 +176,9 @@ cc_binary(
     copts = [
         "-Wno-format-truncation",
         "-O2",
+    ],
+    linkopts = [
+        "-lpthread",
     ],
     local_defines = ["LOCALSTATEDIR="],
     visibility = ["//visibility:public"],
@@ -190,8 +199,8 @@ cc_library(
         "-O2",
     ],
     deps = [
-        ":rrd",
         ":rrd_config",
+        ":rrdgraph",
         "@rules_python//python/cc:current_py_cc_headers",
     ],
     alwayslink = True,

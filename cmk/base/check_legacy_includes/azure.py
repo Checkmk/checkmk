@@ -10,14 +10,14 @@ import time
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
+from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     IgnoreResultsError,
+    render,
+    Service,
 )
-
-from cmk.agent_based.v2 import render, Service
 from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 from cmk.plugins.lib.azure import iter_resource_attributes as iter_resource_attributes

@@ -16,7 +16,7 @@ else
 fi
 
 echo "Remove postfix..."
-apt remove -y postfix
+apt-get remove -y postfix
 apt-get purge postfix -y
 rm -rf /etc/postfix/
 rm -rf /var/lib/postfix

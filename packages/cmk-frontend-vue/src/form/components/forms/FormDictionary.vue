@@ -6,9 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { ref } from 'vue'
+import { useFormEditDispatcher } from '@/form/private'
 
-import FormEdit from '../FormEdit.vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
 import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -16,13 +16,16 @@ import {
 } from '@/form/components/utils/validation'
 import FormHelp from '../FormHelp.vue'
 import { useId } from '@/form/utils'
+import HelpText from '@/components/HelpText.vue'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
 const dictionaryVariants = cva('', {
   variants: {
     variant: {
-      one_column: '',
+      one_column: 'form-dictionary--one_column',
       two_columns: 'form-dictionary--two_columns'
     }
   },
@@ -56,7 +59,7 @@ const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 
 function getDefaultValue(key: string): unknown {
-  const element = props.spec.elements.find((element) => element.ident === key)
+  const element = props.spec.elements.find((element) => element.name === key)
   if (element === undefined) {
     return undefined
   }
@@ -82,10 +85,17 @@ immediateWatch(
   }
 )
 
+const getGroupKey = (element: DictionaryElement, index: number): string => {
+  if (variant === 'two_columns') {
+    return `${DICT_ELEMENT_NO_GROUP}${index}`
+  }
+  return element.group?.key ?? `${DICT_ELEMENT_NO_GROUP}${index}`
+}
+
 const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
   const groups: ElementsGroup[] = []
-  elements.forEach((element: DictionaryElement) => {
-    const groupKey = element.group?.key ?? DICT_ELEMENT_NO_GROUP
+  elements.forEach((element: DictionaryElement, index: number) => {
+    const groupKey = getGroupKey(element, index)
     if (!groups.some((group) => group.groupKey === groupKey)) {
       groups.push({
         groupKey: groupKey,
@@ -102,15 +112,13 @@ const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
 function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
-  props.spec.elements.forEach((element: DictionaryElement) => {
-    let isActive = element.ident in data.value ? true : element.required
-    if (isActive && data.value[element.ident] === undefined) {
-      data.value[element.ident] = JSON.parse(JSON.stringify(getDefaultValue(element.ident)))
+  props.spec.elements.forEach((element: DictionaryElement, index: number) => {
+    const isActive = element.name in data.value ? true : element.required
+    if (isActive && data.value[element.name] === undefined) {
+      data.value[element.name] = structuredClone(getDefaultValue(element.name))
     }
 
-    const groupIndex = groups.findIndex(
-      (group) => group.groupKey === (element.group?.key ?? DICT_ELEMENT_NO_GROUP)
-    )
+    const groupIndex = groups.findIndex((group) => group.groupKey === getGroupKey(element, index))
     if (groupIndex === -1) {
       throw new Error('Group not found')
     }
@@ -124,11 +132,7 @@ function getElementsInGroupsFromProps(): ElementsGroup[] {
   return groups
 }
 
-function toggleElement(event: MouseEvent, key: string) {
-  let target = event.target
-  if (!target) {
-    return
-  }
+function toggleElement(key: string) {
   if (key in data.value) {
     delete data.value[key]
   } else {
@@ -137,6 +141,10 @@ function toggleElement(event: MouseEvent, key: string) {
 }
 
 function indentRequired(element: DictionaryElement): boolean {
+  return labelRequired(element) && !(element.group && variant === 'one_column')
+}
+
+function labelRequired(element: DictionaryElement): boolean {
   return !(
     element.required &&
     element.parameter_form.title === '' &&
@@ -145,6 +153,9 @@ function indentRequired(element: DictionaryElement): boolean {
 }
 
 const componentId = useId()
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
@@ -154,39 +165,48 @@ const componentId = useId()
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <div
-            v-for="dict_element in group.elems"
-            :key="`${componentId}.${dict_element.dict_config.ident}`"
-            class="form-dictionary__group_elem"
-          >
-            <template v-if="indentRequired(dict_element.dict_config)">
-              <span class="checkbox">
-                <input
-                  v-if="!dict_element.dict_config.required"
-                  :id="`${componentId}.${dict_element.dict_config.ident}`"
-                  v-model="dict_element.is_active"
-                  :onclick="
-                    (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
-                  "
-                  type="checkbox"
-                />
-                <label :for="`${componentId}.${dict_element.dict_config.ident}`">
-                  {{ dict_element.dict_config.parameter_form.title }}
-                </label>
-              </span>
-            </template>
+          <div :class="dictionaryVariants({ variant })">
             <div
-              :class="{
-                indent: indentRequired(dict_element.dict_config),
-                dictelement: indentRequired(dict_element.dict_config)
-              }"
+              v-for="dict_element in group.elems"
+              :key="`${componentId}.${dict_element.dict_config.name}`"
+              class="form-dictionary__group_elem"
             >
-              <FormEdit
-                v-if="dict_element.is_active"
-                v-model:data="data[dict_element.dict_config.ident]"
-                :spec="dict_element.dict_config.parameter_form"
-                :backend-validation="elementValidation[dict_element.dict_config.ident]!"
-              />
+              <template v-if="labelRequired(dict_element.dict_config)">
+                <span
+                  v-if="
+                    !dict_element.dict_config.required ||
+                    dict_element.dict_config.parameter_form.title
+                  "
+                  class="checkbox"
+                >
+                  <label v-if="dict_element.dict_config.required">
+                    {{ dict_element.dict_config.parameter_form.title }}
+                  </label>
+                  <CmkCheckbox
+                    v-else
+                    v-model="dict_element.is_active"
+                    :label="dict_element.dict_config.parameter_form.title"
+                    @update:model-value="toggleElement(dict_element.dict_config.name)"
+                  />
+                  <CmkSpace size="small" />
+                  <HelpText :help="dict_element.dict_config.parameter_form.help" />
+                </span>
+              </template>
+              <div
+                :class="{
+                  indent: indentRequired(dict_element.dict_config),
+                  dictelement: indentRequired(dict_element.dict_config),
+                  'group-with-more-items': group.elems.length > 1
+                }"
+              >
+                <FormEditDispatcher
+                  v-if="dict_element.is_active"
+                  v-model:data="data[dict_element.dict_config.name]"
+                  :spec="dict_element.dict_config.parameter_form"
+                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                  :aria-label="dict_element.dict_config.parameter_form.title"
+                />
+              </div>
             </div>
           </div>
         </td>
@@ -202,33 +222,49 @@ const componentId = useId()
 }
 
 span.checkbox {
-  margin-bottom: 5px;
-  margin-right: 5px;
+  display: inline-block;
+  margin: 0 var(--spacing-half) var(--spacing-half) 0;
+
+  input + .form-dictionary__label {
+    cursor: pointer;
+  }
 }
 
 /* Variants */
-.form-dictionary--two_columns {
-  .form-dictionary__group_elem {
-    padding: 8px 0;
+.form-dictionary--two_columns > .form-dictionary__group_elem {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
 
-    span.checkbox {
-      display: inline-block;
-      float: left;
-      width: 130px;
-      margin: 0;
-      padding-top: 3px;
-      font-weight: bold;
-      word-wrap: break-word;
-      white-space: normal;
-    }
-
-    .dictelement.indent:not(div[id*='DictGroup']) {
-      display: inline-block;
-      margin: 0;
-      margin-left: 16px;
-      padding-left: 0;
-      border-left: none;
-    }
+  > span.checkbox {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 160px;
+    margin: 0;
+    padding-top: 3px;
+    font-weight: bold;
+    word-wrap: break-word;
+    white-space: normal;
   }
+
+  > .dictelement.indent {
+    display: inline-block;
+    margin: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+}
+.group-with-more-items {
+  border: none;
+  margin-left: 0;
+  margin-right: 8px;
+  padding-left: 0;
+}
+
+.form-dictionary--one_column {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5em;
 }
 </style>

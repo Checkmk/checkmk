@@ -4,15 +4,51 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
-import Button from '@/components/IconButton.vue'
-import LoadingIcon from '@/components/LoadingIcon.vue'
+import { computed, ref } from 'vue'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()
 
-const isLast = computed(() => props.index == props.numberOfStages - 1)
+const loadWaitLabel = ref('')
+
+const isSaveOverview = computed(
+  () => props.index === props.numberOfStages && props.mode === 'overview'
+)
+const showButtons = computed(() => props.mode === 'guided' || isSaveOverview.value)
+
+const filteredActions = computed(() => {
+  if (!props.actions) {
+    return []
+  }
+  return props.actions.filter((b) => !isSaveOverview.value || b.variant === 'save')
+})
+
+function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
+  icon: { name: string; rotate: number }
+} {
+  switch (variant) {
+    case 'prev':
+      return { icon: { name: 'back', rotate: 90 } }
+
+    case 'next':
+      return {
+        icon: { name: 'continue', rotate: 90 }
+      }
+    case 'save':
+      return {
+        icon: { name: 'save-to-services', rotate: 0 }
+      }
+  }
+  return { icon: { name: '', rotate: 0 } }
+}
+
+const invokeAction = (waitLabel: string, action: () => void) => {
+  loadWaitLabel.value = waitLabel
+  action()
+}
 </script>
 
 <template>
@@ -23,21 +59,29 @@ const isLast = computed(() => props.index == props.numberOfStages - 1)
       <p v-for="error in errors" :key="error">{{ error }}</p>
     </AlertBox>
 
-    <div v-if="mode === 'guided'">
+    <div v-if="showButtons">
       <div v-if="!loading" class="qs-stage-content__action">
-        <Button
-          v-for="button in buttons"
-          :key="button.label"
-          :label="button.label"
-          :variant="button.variant"
-          @click="button.action"
-        />
+        <CmkButton
+          v-for="{ action, buttonConfig } in filteredActions.map((act) => {
+            return { action: act, buttonConfig: getButtonConfig(act.variant) }
+          })"
+          :key="action.label"
+          :aria-label="action.ariaLabel"
+          :variant="
+            action.variant === 'next' || action.variant === 'save' ? 'primary' : 'secondary'
+          "
+          @click="invokeAction(action.waitLabel, action.action)"
+        >
+          <CmkIcon
+            :name="buttonConfig.icon.name"
+            :rotate="buttonConfig.icon.rotate"
+            variant="inline"
+          />{{ action.label }}
+        </CmkButton>
       </div>
       <div v-else class="qs-stage-content__loading">
-        <LoadingIcon size="lg" />
-        <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
-        <span v-if="isLast">This process may take several minutes, please wait...</span>
-        <span v-else>Please wait...</span>
+        <CmkIcon name="load-graph" variant="inline" size="xlarge" />
+        <span>{{ loadWaitLabel }}</span>
       </div>
     </div>
   </div>

@@ -6,10 +6,10 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 
@@ -34,6 +34,7 @@ def check_couchbase_buckets_cache(item, params, parsed):
 
 
 check_info["couchbase_buckets_cache"] = LegacyCheckDefinition(
+    name="couchbase_buckets_cache",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase Bucket %s Cache",
     discovery_function=discover_couchbase_buckets_cache,

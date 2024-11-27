@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.lib import postgres
+
+check_info = {}
 
 # <<<postgres_bloat>>>
 # [databases_start]
@@ -156,6 +156,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 
 
 check_info["postgres_bloat"] = LegacyCheckDefinition(
+    name="postgres_bloat",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Bloat %s",
     discovery_function=inventory_postgres_bloat,

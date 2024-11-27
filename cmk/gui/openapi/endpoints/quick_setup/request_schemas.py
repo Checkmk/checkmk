@@ -23,6 +23,11 @@ class QuickSetupRequest(BaseSchema):
         description="The quick setup id",
         example="aws",
     )
+    stage_action_id = fields.String(
+        required=True,
+        description="The id of the stage action to be performed",
+        example="test_connection",
+    )
 
     stages = fields.List(
         fields.Nested(

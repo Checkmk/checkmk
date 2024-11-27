@@ -9,12 +9,13 @@
 import re
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.brocade import DETECT_MLX
+
+check_info = {}
 
 # TODO refactoring: use parse-function
 
@@ -35,6 +36,7 @@ def parse_brocade_mlx(string_table: Sequence[StringTable]) -> Sequence[StringTab
 
 
 check_info["brocade_mlx"] = LegacyCheckDefinition(
+    name="brocade_mlx",
     parse_function=parse_brocade_mlx,
     detect=DETECT_MLX,
     fetch=[
@@ -101,6 +103,7 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 
 check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_status",
     service_name="Status Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module,
@@ -185,6 +188,7 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 
 check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_mem",
     service_name="Memory Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_mem,
@@ -264,6 +268,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 
 check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_cpu",
     service_name="CPU utilization Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_cpu,

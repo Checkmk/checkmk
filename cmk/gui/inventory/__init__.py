@@ -10,6 +10,7 @@ import shutil
 import time
 import xml.dom.minidom
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
@@ -25,7 +26,7 @@ from cmk.utils.structured_data import SDRawTree, serialize_tree
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -90,9 +91,16 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
     icon_and_action_registry: IconRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
-    register_job(execute_inventory_housekeeping_job)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_inventory_housekeeping_job",
+            callable=execute_inventory_housekeeping_job,
+            interval=timedelta(hours=12),
+        )
+    )
     visual_info_registry.register(VisualInfoInventoryHistory)
     filter_registry.register(FilterHasInv())
     filter_registry.register(FilterInvHasSoftwarePackage())
@@ -251,12 +259,6 @@ class InventoryHousekeeping:
         ):
             return
 
-        last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
-        # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
-            return
-
-        # TODO: remove with pylint 2
         inventory_archive_hosts = {
             x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
         }
@@ -285,9 +287,6 @@ class InventoryHousekeeping:
                     delete = True
                 if delete:
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
-
-        # TODO: remove with pylint 2
-        last_cleanup.touch()
 
     def _get_timestamps_for_host(self, hostname):
         timestamps = {"None"}  # 'None' refers to the histories start

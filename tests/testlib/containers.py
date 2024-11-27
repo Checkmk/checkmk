@@ -54,7 +54,8 @@ def execute_tests_in_container(
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version)
+    container_env = _container_env(version)
+    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version, container_env)
 
     # Start the container
     container: docker.Container
@@ -82,8 +83,8 @@ def execute_tests_in_container(
     ) as container:
         _prepare_testuser(container, _TESTUSER)
         _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
-        _cleanup_previous_virtual_environment(container, version)
-        _reuse_persisted_virtual_environment(container, version)
+        _cleanup_previous_virtual_environment(container, container_env)
+        _reuse_persisted_virtual_environment(container, container_env)
 
         if interactive:
             logger.info("+-------------------------------------------------")
@@ -133,7 +134,7 @@ def execute_tests_in_container(
             command,
             check=False,
             user=_TESTUSER,
-            environment=_container_env(version),
+            environment=container_env,
             workdir="/git",
             stream=True,
             tty=True,  # NOTE: Some tests require a tty (e.g. test-update)!
@@ -257,7 +258,11 @@ def container_name_suffix(distro_name: str, docker_tag: str) -> str:
 
 
 def _create_cmk_image(
-    client: docker.DockerClient, distro_name: str, docker_tag: str, version: CMKVersion
+    client: docker.DockerClient,
+    distro_name: str,
+    docker_tag: str,
+    version: CMKVersion,
+    container_env: Mapping[str, str],
 ) -> str:
     base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
@@ -270,10 +275,7 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name_with_tag = (
-        f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
-    )
-
+    image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version_rc_aware}:{docker_tag}"
     if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
@@ -308,6 +310,7 @@ def _create_cmk_image(
             "com.checkmk.base_image_hash": base_image.short_id,
             "com.checkmk.cmk_edition_short": version.edition.short,
             "com.checkmk.cmk_version": version.version,
+            "com.checkmk.cmk_version_rc_aware": version.version_rc_aware,
             "com.checkmk.cmk_branch": version.branch,
             # override the base image label
             "com.checkmk.image_type": "cmk-image",
@@ -321,19 +324,21 @@ def _create_cmk_image(
         ),
     ) as container:
         logger.info(
-            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
+            "Building in container %s (from [%s])",
+            container.short_id,
+            base_image_name_with_tag,
         )
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
-        _prepare_virtual_environment(container, version)
-        _persist_virtual_environment(container, version)
+        _prepare_virtual_environment(container, container_env)
+        _persist_virtual_environment(container, container_env)
 
         logger.info("Install Checkmk version")
         _exec_run(
             container,
             ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
             workdir="/git",
-            environment=_container_env(version),
+            environment=container_env,
             stream=True,
         )
 
@@ -362,15 +367,20 @@ def _create_cmk_image(
         labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
-
-        if not use_local_package:
+        if not use_local_package and not version.is_release_candidate():
             try:
-                logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+                logger.info(
+                    "Uploading [%s] to registry (%s)",
+                    image_name_with_tag,
+                    image.short_id,
+                )
                 client.images.push(image_name_with_tag)
                 logger.info("  Upload complete")
             except docker.errors.APIError as e:
                 logger.warning("  An error occurred")
                 _handle_api_error(e)
+        else:
+            logger.info("Skipping upload to registry (%s)", image.short_id)
 
     return image_name_with_tag
 
@@ -404,7 +414,10 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()
     logger.info(
-        "  CMK hash of image (%s): %s (%s)", image.short_id, cmk_hash_image, package_name_image
+        "  CMK hash of image (%s): %s (%s)",
+        image.short_id,
+        cmk_hash_image,
+        package_name_image,
     )
     cmk_hash_current = get_current_cmk_hash_for_artifact(version, package_name_image)
     logger.info("  Current CMK Hash of artifact: %s (%s)", cmk_hash_current, package_name_image)
@@ -423,7 +436,7 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) -> str:
     hash_file_name = f"{package_name}.hash"
     r = requests.get(
-        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version}/{hash_file_name}",
+        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version_rc_aware}/{hash_file_name}",
         auth=get_cmk_download_credentials(),
         timeout=30,
     )
@@ -483,6 +496,8 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
 
 
 def _container_env(version: CMKVersion) -> Mapping[str, str]:
+    # In addition to the ones defined here, some environment vars, like "DISTRO" are added through
+    # the docker image
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -492,6 +507,12 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
         "BRANCH": version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
+        "OTEL_EXPORTER_OTLP_ENDPOINT": os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+        "CI_NODE_NAME": os.environ.get("CI_NODE_NAME", ""),
+        "CI_WORKSPACE": os.environ.get("CI_WORKSPACE", ""),
+        "CI_JOB_NAME": os.environ.get("CI_JOB_NAME", ""),
+        "CI_BUILD_NUMBER": os.environ.get("CI_BUILD_NUMBER", ""),
+        "CI_BUILD_URL": os.environ.get("CI_BUILD_URL", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
         "PYTEST_ADDOPTS": os.environ.get("PYTEST_ADDOPTS", "") + " --junitxml=/results/junit.xml",
     }
@@ -649,7 +670,10 @@ def _copy_directory(
 
 
 def _prepare_git_overlay(
-    container: docker.Container, lower_path: str, target_path: str, username: str | None = None
+    container: docker.Container,
+    lower_path: str,
+    target_path: str,
+    username: str | None = None,
 ) -> None:
     """Prevent modification of git checkout volume contents
 
@@ -700,7 +724,7 @@ def _prepare_git_overlay(
     )
 
     if username:
-        _exec_run(container, ["chown", "-R", f"{username}:{username}", "/git"])
+        _exec_run(container, ["chown", f"{username}:{username}", "/git"])
 
 
 def _prepare_testuser(container: docker.Container, username: str) -> None:
@@ -713,9 +737,14 @@ def _prepare_testuser(container: docker.Container, username: str) -> None:
     gid = str(os.getgid())
     _exec_run(container, ["groupadd", "-g", gid, username], check=False)
     _exec_run(
-        container, ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username], check=False
+        container,
+        ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username],
+        check=False,
     )
-    _exec_run(container, ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'])
+    _exec_run(
+        container,
+        ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'],
+    )
 
     _exec_run(container, ["mkdir", "-p", f"/home/{username}/.cache"])
     _exec_run(container, ["chown", "-R", f"{username}:{username}", f"/home/{username}"])
@@ -724,31 +753,37 @@ def _prepare_testuser(container: docker.Container, username: str) -> None:
     _exec_run(container, ["chown", "-R", f"{username}:{username}", "/results"])
 
 
-def _prepare_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
+def _prepare_virtual_environment(
+    container: docker.Container, container_env: Mapping[str, str]
+) -> None:
     """Ensure the virtual environment is ready for use
 
     Because the virtual environment are in the /git path (which is not persisted),
     the initialized virtual environment will be copied to /.venv, which is
     persisted with the image. The test containers may use them.
     """
-    _cleanup_previous_virtual_environment(container, version)
-    _setup_virtual_environment(container, version)
+    _cleanup_previous_virtual_environment(container, container_env)
+    _setup_virtual_environment(container, container_env)
 
 
-def _setup_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
+def _setup_virtual_environment(
+    container: docker.Container, container_env: Mapping[str, str]
+) -> None:
     logger.info("Prepare virtual environment")
     _exec_run(
         container,
         ["make", ".venv"],
         workdir="/git",
-        environment=_container_env(version),
+        environment=container_env,
         stream=True,
     )
 
     _exec_run(container, ["test", "-d", "/git/.venv"])
 
 
-def _cleanup_previous_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
+def _cleanup_previous_virtual_environment(
+    container: docker.Container, container_env: Mapping[str, str]
+) -> None:
     """Delete existing .venv
 
     When the git is mounted to the test container for a node which already created it's virtual
@@ -762,14 +797,16 @@ def _cleanup_previous_virtual_environment(container: docker.Container, version: 
         container,
         ["rm", "-rf", ".venv"],
         workdir="/git",
-        environment=_container_env(version),
+        environment=container_env,
         stream=True,
     )
 
     _exec_run(container, ["test", "-n", "/.venv"])
 
 
-def _persist_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
+def _persist_virtual_environment(
+    container: docker.Container, container_env: Mapping[str, str]
+) -> None:
     """Persist the used venv in container image
 
     Copy the virtual environment that was used during image creation from /git/.venv (not persisted)
@@ -780,21 +817,23 @@ def _persist_virtual_environment(container: docker.Container, version: CMKVersio
         container,
         ["rsync", "-aR", ".venv", "/"],
         workdir="/git",
-        environment=_container_env(version),
+        environment=container_env,
         stream=True,
     )
 
     _exec_run(container, ["test", "-d", "/.venv"])
 
 
-def _reuse_persisted_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
+def _reuse_persisted_virtual_environment(
+    container: docker.Container, container_env: Mapping[str, str]
+) -> None:
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
     if (
         _exec_run(
             container,
             ["test", "-d", "/.venv"],
             workdir="/git",
-            environment=_container_env(version),
+            environment=container_env,
             check=False,
         )
         == 0
@@ -804,14 +843,14 @@ def _reuse_persisted_virtual_environment(container: docker.Container, version: C
             container,
             ["rsync", "-a", "/.venv", "/git"],
             workdir="/git",
-            environment=_container_env(version),
+            environment=container_env,
             stream=True,
         )
 
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current
         #  state, which is good for the most of the time.
-        _setup_virtual_environment(container, version)
+        _setup_virtual_environment(container, container_env)
 
 
 def _mirror_reachable() -> bool:

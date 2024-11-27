@@ -1,11 +1,14 @@
 [project]
 name = "cmk-livestatus-client"
 version = "1.0.0"
-dependencies = ["opentelemetry-api"]
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools]
 # cmk.livestatus_client was exposed as livestatus from the beginning of Checkmk.
@@ -73,6 +76,6 @@ disable = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+consider_namespace_packages = true
 testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

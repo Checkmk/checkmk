@@ -17,10 +17,10 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping[str, str | int]
 
@@ -64,6 +64,7 @@ def check_mongodb_mem(_no_item, params, parsed):
 
 
 check_info["mongodb_mem"] = LegacyCheckDefinition(
+    name="mongodb_mem",
     parse_function=parse_mongodb_mem,
     service_name="Memory used MongoDB",
     discovery_function=discover_mongodb_mem,

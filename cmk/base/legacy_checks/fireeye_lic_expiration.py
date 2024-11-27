@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 
 def inventory_fireeye_lic_expiration(info):
@@ -37,6 +37,7 @@ def parse_fireeye_lic_expiration(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
+    name="fireeye_lic_expiration",
     parse_function=parse_fireeye_lic_expiration,
     detect=DETECT,
     fetch=SNMPTree(

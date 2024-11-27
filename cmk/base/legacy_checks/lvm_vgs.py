@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_lvm_vgs(info):
@@ -30,6 +31,7 @@ def parse_lvm_vgs(string_table: StringTable) -> StringTable:
 
 
 check_info["lvm_vgs"] = LegacyCheckDefinition(
+    name="lvm_vgs",
     parse_function=parse_lvm_vgs,
     service_name="LVM VG %s",
     discovery_function=inventory_lvm_vgs,

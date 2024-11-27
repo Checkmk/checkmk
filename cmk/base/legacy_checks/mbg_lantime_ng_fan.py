@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 
 def parse_mbg_lantime_ng_fan(string_table):
@@ -69,6 +69,7 @@ def check_mbg_lantime_ng_fan(item, _no_params, parsed):
 
 
 check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_fan",
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",

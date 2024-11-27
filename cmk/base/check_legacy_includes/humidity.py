@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import check_levels
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, startswith
+from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.v2 import render, startswith
 
 DETECT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3")
 

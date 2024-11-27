@@ -5,9 +5,9 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from copy import deepcopy
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config

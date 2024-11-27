@@ -15,7 +15,6 @@ from cmk.gui.valuespec import (
     Integer,
     ValueSpec,
 )
-from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigVariable,
@@ -24,6 +23,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupNotifications
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.utils import site_neutral_path
 
 

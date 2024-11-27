@@ -11,10 +11,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 citrix_sessions_default_levels = {
     "total": (60, 65),
@@ -62,6 +62,7 @@ def parse_citrix_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["citrix_sessions"] = LegacyCheckDefinition(
+    name="citrix_sessions",
     parse_function=parse_citrix_sessions,
     service_name="Citrix Sessions",
     discovery_function=inventory_citrix_sessions,

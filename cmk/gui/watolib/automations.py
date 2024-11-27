@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import ast
 import json
-import logging
 import re
 import subprocess
 import time
@@ -19,12 +18,13 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from io import BytesIO
 from pathlib import Path
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 import requests
 import urllib3
+from pydantic import BaseModel, field_validator
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import sanitize_site_configuration, SiteConfiguration, SiteId
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
@@ -33,7 +33,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-from cmk.utils.log import VERBOSE
 from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
@@ -69,6 +68,12 @@ from cmk.gui.watolib.utils import mk_repr
 
 from cmk import trace
 
+from . import automation_helper, automation_subprocess
+from .automation_executor import AutomationExecutor
+
+# INFO: flag for activating automation helper, which is necessary for testing helper locally.
+USE_AUTOMATION_HELPER_EXECUTOR: Final = False
+
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
 
@@ -100,79 +105,49 @@ def check_mk_local_automation_serialized(
     ) as span:
         if args is None:
             args = []
-        new_args = list(args)
 
         if stdin_data is None:
             stdin_data = repr(indata)
 
-        if timeout:
-            new_args = ["--timeout", "%d" % timeout] + new_args
-
-        cmd = ["check_mk"]
-
-        if auto_logger.isEnabledFor(logging.DEBUG):
-            cmd.append("-vv")
-        elif auto_logger.isEnabledFor(VERBOSE):
-            cmd.append("-v")
-
-        cmd += ["--automation", command] + new_args
-
         if command in ["restart", "reload"]:
             call_hook_pre_activate_changes()
 
-        # This debug output makes problems when doing bulk inventory, because
-        # it garbles the non-HTML response output
-        # if config.debug:
-        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
-        auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        span.set_attribute("cmk.automation.command", subprocess.list2cmdline(cmd))
-        auto_logger.info("STDIN: %r" % stdin_data)
+        executor: AutomationExecutor = (
+            automation_helper.HelperExecutor()
+            if USE_AUTOMATION_HELPER_EXECUTOR
+            else automation_subprocess.SubprocessExecutor()
+        )
 
         try:
-            completed_process = subprocess.run(
-                cmd,
-                capture_output=True,
-                close_fds=True,
-                encoding="utf-8",
-                input=stdin_data,
-                check=False,
-            )
+            result = executor.execute(command, args, stdin_data, auto_logger, timeout)
         except Exception as e:
-            raise local_automation_failure(command=command, cmdline=cmd, exc=e)
-
-        span.set_attribute("cmk.automation.exit_code", completed_process.returncode)
-        auto_logger.info("FINISHED: %d" % completed_process.returncode)
-        auto_logger.debug("OUTPUT: %r" % completed_process.stdout)
-
-        if completed_process.stderr:
-            auto_logger.warning(
-                "'%s' returned '%s'"
-                % (
-                    " ".join(cmd),
-                    completed_process.stderr,
-                )
+            raise local_automation_failure(
+                command=command,
+                cmdline=executor.command_description(command, args, logger, timeout),
+                exc=e,
             )
-        if completed_process.returncode:
+
+        span.set_attribute("cmk.automation.exit_code", result.exit_code)
+        auto_logger.info("FINISHED: %d" % result.exit_code)
+        auto_logger.debug("OUTPUT: %r" % result.output)
+
+        if result.exit_code:
             auto_logger.error(
-                "Error running %r (exit code %d)"
-                % (
-                    subprocess.list2cmdline(cmd),
-                    completed_process.returncode,
-                )
+                "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
             )
             raise local_automation_failure(
                 command=command,
-                cmdline=cmd,
-                code=completed_process.returncode,
-                out=completed_process.stdout,
-                err=completed_process.stderr,
+                cmdline=result.command_description,
+                code=result.exit_code,
+                out=result.output,
+                err=result.error,
             )
 
         # On successful "restart" command execute the activate changes hook
         if command in ["restart", "reload"]:
             call_hook_activate_changes()
 
-        return cmd, SerializedResult(completed_process.stdout)
+        return result.command_description, SerializedResult(result.output)
 
 
 def local_automation_failure(
@@ -297,7 +272,7 @@ def _do_remote_automation_serialized(
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
 ) -> str:
-    auto_logger.info("RUN [%s]: %s", site, command)
+    auto_logger.info("RUN [%s]: %s", sanitize_site_configuration(site), command)
     auto_logger.debug("VARS: %r", vars_)
 
     base_url = site["multisiteurl"]
@@ -404,7 +379,15 @@ def get_url_raw(
     data: Mapping[str, str] | None = None,
     files: Mapping[str, BytesIO] | None = None,
     timeout: float | None = None,
+    add_headers: dict[str, str] | None = None,
 ) -> requests.Response:
+    headers_ = {
+        "x-checkmk-version": cmk_version.__version__,
+        "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
+        "x-checkmk-license-state": get_license_state().readable,
+    }
+    headers_.update(add_headers or {})
+
     response = requests.post(
         url,
         data=data,
@@ -412,11 +395,7 @@ def get_url_raw(
         auth=auth,
         files=files,
         timeout=timeout,
-        headers={
-            "x-checkmk-version": cmk_version.__version__,
-            "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
-            "x-checkmk-license-state": get_license_state().readable,
-        },
+        headers=headers_,
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8
@@ -543,17 +522,6 @@ def get_url(
     timeout: float | None = None,
 ) -> str:
     return get_url_raw(url, insecure, auth, data, files, timeout).text
-
-
-def get_url_json(
-    url: str,
-    insecure: bool,
-    auth: tuple[str, str] | None = None,
-    data: Mapping[str, str] | None = None,
-    files: Mapping[str, BytesIO] | None = None,
-    timeout: float | None = None,
-) -> object:
-    return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
 def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
@@ -873,3 +841,36 @@ def compatible_with_central_site(
         return licensing_compatibility
 
     return cmk_version.VersionsCompatible()
+
+
+class LastKnownCentralSiteVersion(BaseModel):
+    """information about the central site
+
+    this is currently only used to store the central site info. We need that info in order to
+    communicate to the central site e.g. with the updater-registration (CEE freature). There we
+    decide on the auth scheme based on that info.
+
+    As of now this can go with 2.5 since then it is certain the central site supports the new
+    scheme. In 2.4 we could encounter a 2.3 central site that does not support the new scheme."""
+
+    version_str: str
+
+    @property
+    def cmk_version(self) -> cmk_version.Version:
+        return cmk_version.Version.from_str(self.version_str)
+
+    @field_validator("version_str")
+    @classmethod
+    def _validate_version(cls, v: str) -> str:
+        # just check if it is parse able...
+        cmk_version.Version.from_str(v)
+        return v
+
+
+class LastKnownCentralSiteVersionStore(store.PydanticStore):
+    def __init__(self) -> None:
+        super().__init__(self.get_path(), model=LastKnownCentralSiteVersion)
+
+    @staticmethod
+    def get_path() -> Path:
+        return Path(paths.var_dir) / "last_known_site_version.json"

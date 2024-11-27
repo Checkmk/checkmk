@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+
+check_info = {}
 
 
 def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
@@ -35,6 +36,7 @@ def parse_innovaphone_channels(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_channels"] = LegacyCheckDefinition(
+    name="innovaphone_channels",
     parse_function=parse_innovaphone_channels,
     service_name="Channel %s",
     discovery_function=discover_innovaphone_channels,

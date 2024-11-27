@@ -36,7 +36,7 @@ def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
         attributes={"ipaddress": site.http_address},
         bake_agent=True,
     )
-    site.activate_changes_and_wait_for_core_reload()
+    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
     # A baking job just got triggered automatically after adding the host. wait for it to finish.
     wait_for_baking_job(site, start_time)

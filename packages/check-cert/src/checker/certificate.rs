@@ -66,7 +66,7 @@ fn handle_empty(s: &str) -> &str {
 fn format_oid(oid: &oid_registry::Oid) -> String {
     match oid2sn(oid, oid_registry()) {
         Ok(s) => s.to_owned(),
-        _ => format!("{}", oid),
+        _ => format!("{oid}"),
     }
 }
 
@@ -76,36 +76,24 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         Err(_) => check::abort("Failed to parse certificate"),
     };
 
+    let subject_cn = first_of(&mut cert.subject().iter_common_name());
+    let issuer_cn = first_of(&mut cert.issuer().iter_common_name());
+
     Collection::from(&mut unwrap_into!(
-        config.subject_cn.map(|expected| {
-            let name = "Subject CN";
-            let value = first_of(&mut cert.subject().iter_common_name());
-            if expected == value {
-                SimpleCheckResult::ok_with_details(
-                    format!("CN={}", value),
-                    format!("{}: {}", name, value),
-                )
-            } else {
-                SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
-                    handle_empty(value),
-                    expected
-                ))
-            }
-        }),
+        Some(check_subject_cn(subject_cn, config.subject_cn)),
+        Some(SimpleCheckResult::notice(format!(
+            "Subject CN: {subject_cn}"
+        ))),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
             let name = "Subject O";
             let value = first_of(&mut cert.subject().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -113,42 +101,25 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Subject OU";
             let value = first_of(&mut cert.subject().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
         check_serial(cert.raw_serial_as_string(), config.serial),
-        config.issuer_cn.map(|expected| {
-            let name = "Issuer CN";
-            let value = first_of(&mut cert.issuer().iter_common_name());
-            if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
-            } else {
-                SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
-                    handle_empty(value),
-                    expected
-                ))
-            }
-        }),
+        Some(check_issuer_cn(issuer_cn, config.issuer_cn)),
         config.issuer_o.map(|expected| {
             let name = "Issuer O";
             let value = first_of(&mut cert.issuer().iter_organization());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -156,13 +127,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer OU";
             let value = first_of(&mut cert.issuer().iter_organizational_unit());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -170,13 +139,11 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer ST";
             let value = first_of(&mut cert.issuer().iter_state_or_province());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
@@ -184,28 +151,23 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             let name = "Issuer C";
             let value = first_of(&mut cert.issuer().iter_country());
             if expected == value {
-                SimpleCheckResult::notice(format!("{}: {}", name, value))
+                SimpleCheckResult::notice(format!("{name}: {value}"))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} but expected {}",
-                    name,
+                    "{name}: {} but expected {expected}",
                     handle_empty(value),
-                    expected
                 ))
             }
         }),
         config.signature_algorithm.map(|expected| {
-            let name = "Signature algorithm";
+            let name = "Certificate signature algorithm";
             let value = &cert.signature_algorithm.algorithm;
             if expected == value.to_string() {
-                SimpleCheckResult::notice(format!("{}: {}", name, format_oid(value)))
+                SimpleCheckResult::notice(format!("{name}: {}", format_oid(value)))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "{} is {} ({}) but expected {}",
-                    name,
+                    "{name}: {} ({value}) but expected {expected}",
                     handle_empty(&format_oid(value)),
-                    value,
-                    expected
                 ))
             }
         }),
@@ -223,11 +185,46 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let name = "Serial";
+        let name = "Serial number";
         if serial.to_lowercase() == expected.to_lowercase() {
-            SimpleCheckResult::notice(format!("{}: {}", name, serial))
+            SimpleCheckResult::notice(format!("{name}: {serial}"))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, serial, expected))
+            SimpleCheckResult::warn(format!("{name}: {serial} but expected {expected}"))
+        }
+    })
+}
+
+fn check_subject_cn(subject_cn: &str, expected: Option<String>) -> SimpleCheckResult {
+    let name = "Subject CN";
+    expected.map_or(
+        SimpleCheckResult::ok(format!("{name}: {subject_cn}")),
+        |expected| {
+            if expected == subject_cn {
+                SimpleCheckResult::ok(format!("{name}: {subject_cn}"))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{name}: {} but expected {expected}",
+                    handle_empty(subject_cn),
+                ))
+            }
+        },
+    )
+}
+
+fn check_issuer_cn(issuer_cn: &str, expected: Option<String>) -> SimpleCheckResult {
+    let name = "Issuer CN";
+    let details = format!("{name}: {issuer_cn}");
+    expected.map_or(SimpleCheckResult::notice(&details), |expected| {
+        if expected == issuer_cn {
+            SimpleCheckResult::notice(&details)
+        } else {
+            SimpleCheckResult::warn_with_details(
+                format!(
+                    "{name}: {} but expected {expected}",
+                    handle_empty(issuer_cn),
+                ),
+                &details,
+            )
         }
     })
 }
@@ -236,13 +233,14 @@ fn check_subject_alt_names(
     alt_names: Result<Option<BasicExtension<&SubjectAlternativeName<'_>>>, X509Error>,
     expected: Option<Vec<String>>,
 ) -> Option<SimpleCheckResult> {
+    let name = "Certificate subject alternative names";
     expected.map(|expected| match alt_names {
-        Err(err) => SimpleCheckResult::crit(format!("Subject alt names: {}", err)),
+        Err(err) => SimpleCheckResult::crit(format!("{name}: {err}")),
         Ok(None) => {
             if expected.is_empty() {
-                SimpleCheckResult::notice("No subject alt names")
+                SimpleCheckResult::notice(format!("No {}", name.to_lowercase()))
             } else {
-                SimpleCheckResult::warn("No subject alt names")
+                SimpleCheckResult::warn(format!("No {}", name.to_lowercase()))
             }
         }
         Ok(Some(ext)) => {
@@ -252,13 +250,13 @@ fn check_subject_alt_names(
                     _ => None,
                 },
             ));
-            let expected = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
-            if found.is_superset(&expected) {
-                SimpleCheckResult::notice("Subject alt names present")
+            let expected_set = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
+            if found.is_superset(&expected_set) {
+                SimpleCheckResult::notice(format!("{name}: {}", expected.join(", ")))
             } else {
                 SimpleCheckResult::warn(format!(
-                    "Subject alt names: missing {}",
-                    expected
+                    "{name}: missing {}",
+                    expected_set
                         .difference(&found)
                         .map(|s| format!(r#""{s}""#))
                         .collect::<Vec<_>>()
@@ -285,9 +283,9 @@ fn check_pubkey_algorithm(
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
         if expected == value {
-            SimpleCheckResult::notice(format!("{}: {}", name, value))
+            SimpleCheckResult::notice(format!("{name}: {value}"))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{name}: {value} but expected {expected}"))
         }
     })
 }
@@ -309,9 +307,9 @@ fn check_pubkey_size(
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
         if expected == value {
-            SimpleCheckResult::notice(format!("{}: {}", name, value))
+            SimpleCheckResult::notice(format!("{name}: {value}"))
         } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+            SimpleCheckResult::warn(format!("{name}: {value} but expected {expected}"))
         }
     })
 }
@@ -322,11 +320,11 @@ fn check_validity_not_after(
     not_after: ASN1Time,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
+        None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
             OutputType::Summary(format!(
-                "Certificate expires in {} day(s) ({})",
+                "Remaining validity: {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after
             )),
@@ -346,11 +344,11 @@ fn check_max_validity(
         if let Some(total_validity) = validity.not_after - validity.not_before {
             match total_validity <= max_validity {
                 true => SimpleCheckResult::notice(format!(
-                    "Max validity {} days",
+                    "Allowed validity: {} day(s)",
                     total_validity.whole_days()
                 )),
                 false => SimpleCheckResult::warn(format!(
-                    "Max validity is {} days but expected at most {}",
+                    "Allowed validity: {} day(s) but expected at most {}",
                     total_validity.whole_days(),
                     max_validity.whole_days(),
                 )),
@@ -373,19 +371,19 @@ mod test_check_serial {
     fn test_case_insensitive() {
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("aa:11:bb:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
+            Some(SimpleCheckResult::notice("Serial number: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:BB:22:CC"), Some(s("aa:11:bb:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: AA:11:BB:22:CC"))
+            Some(SimpleCheckResult::notice("Serial number: AA:11:BB:22:CC"))
         );
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("AA:11:BB:22:CC"))),
-            Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"))
+            Some(SimpleCheckResult::notice("Serial number: aa:11:bb:22:cc"))
         );
         assert_eq!(
             check_serial(s("AA:11:bb:22:CC"), Some(s("aa:11:BB:22:cc"))),
-            Some(SimpleCheckResult::notice("Serial: AA:11:bb:22:CC"))
+            Some(SimpleCheckResult::notice("Serial number: AA:11:bb:22:CC"))
         );
     }
 }

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { RuleSection } from '@/form/components/vue_formspec_components'
+import type { RuleSection } from '@/notification/type_defs'
 
 defineProps<{
   rule_sections: RuleSection[]
@@ -58,6 +58,9 @@ div.notification_rules {
       margin-top: 0;
       width: auto;
     }
+  }
+  div.ruleset > div.text {
+    max-width: calc(100% - 20px);
   }
 
   .ruleset_section {

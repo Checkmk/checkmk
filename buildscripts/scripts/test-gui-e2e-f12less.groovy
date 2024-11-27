@@ -26,7 +26,14 @@ def main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
-    def make_target = "test-gui-e2e-docker";
+    short_editions = [
+        'enterprise': 'cee',
+        'cloud': 'cce',
+        'managed': 'cme',
+        'saas': 'cse',
+    ];
+    def make_target = "test-gui-e2e-${short_editions[edition]}-docker";
+    def download_dir = "package_download";
 
     currentBuild.description += (
         """
@@ -72,6 +79,9 @@ def main() {
                 // runs somehow affecting the current run.
                 sh("rm -rf ${WORKSPACE}/test-results");
 
+                /// remove downloaded packages since they consume dozens of MiB
+                sh("""rm -rf "${checkout_dir}/${download_dir}" """);
+
                 // Initialize our virtual environment before parallelization
                 sh("make .venv");
 
@@ -85,7 +95,7 @@ def main() {
                             EDITION: edition,
                             DISTRO: distro,
                         ],
-                        dest: "package_download",
+                        dest: download_dir,
                     );
                 }
                 try {

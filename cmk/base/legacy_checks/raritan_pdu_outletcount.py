@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_raritan_pdu_outletcount(info):
@@ -30,6 +30,7 @@ def parse_raritan_pdu_outletcount(string_table: StringTable) -> StringTable:
 
 
 check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
+    name="raritan_pdu_outletcount",
     parse_function=parse_raritan_pdu_outletcount,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),

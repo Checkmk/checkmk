@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_temp,
@@ -11,10 +10,12 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.raritan import DETECT_RARITAN
+
+check_info = {}
 
 
 def discover_raritan_px2_sensors(parsed):
@@ -34,6 +35,7 @@ def discover_raritan_px2_sensors(parsed):
 
 
 check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors",
     detect=DETECT_RARITAN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
@@ -75,6 +77,7 @@ def discover_raritan_px2_sensors_airflow(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_airflow",
     service_name="Air flow %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_airflow,
@@ -97,6 +100,7 @@ def discover_raritan_px2_sensors_humidity(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_humidity,
@@ -119,6 +123,7 @@ def discover_raritan_px2_sensors_pressure(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_pressure",
     service_name="Pressure %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_pressure,

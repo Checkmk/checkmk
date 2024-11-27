@@ -24,10 +24,12 @@ class Ruleset(CmkPage):
         page: Page,
         rule_name: str,
         section_name: str | None = None,
+        exact_rule: bool = False,
         navigate_to_page: bool = True,
     ) -> None:
         self.rule_name = rule_name
         self.section_name = section_name
+        self._exact = exact_rule
         super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
@@ -35,7 +37,7 @@ class Ruleset(CmkPage):
         self.main_menu.setup_searchbar.fill(self.rule_name)
         if self.section_name:
             self.main_menu.locator(f"div[id='{self.section_name}']").get_by_role(
-                role="link", name=self.rule_name
+                role="link", name=self.rule_name, exact=self._exact
             ).click()
         else:
             self.main_menu.locator().get_by_role(role="link", name=self.rule_name).click()
@@ -106,6 +108,9 @@ class Ruleset(CmkPage):
 
     def rule_position(self, rule_description: str) -> Locator:
         return self._rule_row(rule_description).locator("td[class*='narrow']")
+
+    def rule_source(self, rule_id: str | int) -> Locator:
+        return self._rule_row(rule_id).locator("td[class*='source']")
 
     def rule_values(self, rule_id: str | int) -> Locator:
         return self._rule_row(rule_id).locator("td[class*='value']")

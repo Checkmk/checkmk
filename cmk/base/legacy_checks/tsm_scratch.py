@@ -8,8 +8,9 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_tsm_scratch(string_table):
@@ -51,6 +52,7 @@ def check_tsm_scratch(item, _no_params, parsed):
 
 
 check_info["tsm_scratch"] = LegacyCheckDefinition(
+    name="tsm_scratch",
     parse_function=parse_tsm_scratch,
     service_name="Scratch Pool %s",
     discovery_function=inventory_tsm_scratch,

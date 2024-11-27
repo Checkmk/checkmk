@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.sophos import DETECT_SOPHOS
+
+check_info = {}
 
 
 def parse_sophos_memory(string_table):
@@ -33,6 +33,7 @@ def discover_sophos_memory(parsed):
 
 
 check_info["sophos_memory"] = LegacyCheckDefinition(
+    name="sophos_memory",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.4",

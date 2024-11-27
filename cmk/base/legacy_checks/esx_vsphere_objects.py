@@ -21,8 +21,9 @@
 
 import collections
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 vsphere_object_names = {
     "hostsystem": "HostSystem",
@@ -32,7 +33,7 @@ vsphere_object_names = {
 
 def parse_esx_vsphere_objects(string_table):
     parsed = {}
-    Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    Obj = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
         "Obj", ["name", "hostsystem", "state"]
     )
     for line in string_table:
@@ -91,6 +92,7 @@ def check_esx_vsphere_objects(item, params, parsed):
 
 
 check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
+    name="esx_vsphere_objects",
     parse_function=parse_esx_vsphere_objects,
     service_name="%s",
     discovery_function=inventory_esx_vsphere_objects,
@@ -140,6 +142,7 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
+    name="esx_vsphere_objects_count",
     service_name="Object count",
     sections=["esx_vsphere_objects"],
     discovery_function=inventory_esx_vsphere_objects_count,

@@ -99,10 +99,10 @@
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def parse_msexch_dag(string_table: StringTable) -> StringTable:
@@ -110,6 +110,7 @@ def parse_msexch_dag(string_table: StringTable) -> StringTable:
 
 
 check_info["msexch_dag"] = LegacyCheckDefinition(
+    name="msexch_dag",
     parse_function=parse_msexch_dag,
 )
 
@@ -157,6 +158,7 @@ def check_msexch_dag_dbcopy(item, params, info):
 
 
 check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
+    name="msexch_dag_dbcopy",
     service_name="Exchange DAG DBCopy for %s",
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_dbcopy,
@@ -198,6 +200,7 @@ def check_msexch_dag_contentindex(item, _no_params, info):
 
 
 check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
+    name="msexch_dag_contentindex",
     service_name="Exchange DAG ContentIndex of %s",
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_contentindex,
@@ -241,6 +244,7 @@ def check_msexch_dag_copyqueue(item, params, info):
 
 
 check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
+    name="msexch_dag_copyqueue",
     service_name="Exchange DAG CopyQueue of %s",
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_copyqueue,

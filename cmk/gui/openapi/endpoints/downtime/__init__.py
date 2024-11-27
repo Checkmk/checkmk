@@ -30,8 +30,8 @@ Downtime object can have the following relations:
 
 import datetime as dt
 import json
-from collections.abc import Callable, Mapping
-from typing import Any, Iterable, Literal
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Literal
 
 from livestatus import SiteId
 
@@ -47,7 +47,6 @@ from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.downtime.request_schemas import (
     CreateHostRelatedDowntime,
     CreateServiceRelatedDowntime,
@@ -340,8 +339,6 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
                 presence="should_exist",
             )
         },
-        field_include_links(),
-        field_include_extensions(),
     ],
     response_schema=DowntimeCollection,
     permissions_required=PERMISSIONS,
@@ -401,9 +398,7 @@ def _show_downtimes(param: Mapping[str, Any]) -> Response:
     _site_id: SiteId | None = param.get("site_id")
     return serve_json(
         _serialize_downtimes(
-            q.fetchall(sites.live(), True, [_site_id] if _site_id is not None else _site_id),
-            include_links=param["include_links"],
-            include_extensions=param["include_extensions"],
+            q.fetchall(sites.live(), True, [_site_id] if _site_id is not None else _site_id)
         )
     )
 
@@ -565,58 +560,44 @@ def _generate_target_downtimes_query(
     return query_expr, site_id
 
 
-def _serialize_downtimes(
-    downtimes: Iterable[ResultRow], *, include_links: bool = True, include_extensions: bool = True
-) -> CollectionObject:
+def _serialize_downtimes(downtimes: Iterable[ResultRow]) -> CollectionObject:
     return constructors.collection_object(
         "downtime",
-        value=[
-            _serialize_single_downtime(
-                downtime, include_links=include_links, include_extensions=include_extensions
-            )
-            for downtime in downtimes
-        ],
+        value=[_serialize_single_downtime(downtime) for downtime in downtimes],
     )
 
 
-def _serialize_single_downtime(
-    downtime: ResultRow, *, include_links: bool = True, include_extensions: bool = True
-) -> DomainObject:
-    downtime_id = downtime["id"]
+def _serialize_single_downtime(downtime: ResultRow) -> DomainObject:
     links = []
-    if include_links:
+    if downtime["is_service"]:
+        downtime_detail = f"service: {downtime['service_description']}"
+    else:
+        host_name = downtime["host_name"]
+        downtime_detail = f"host: {host_name}"
         links.append(
+            constructors.link_rel(
+                rel="cmk/host_config",
+                href=constructors.object_href("host_config", host_name),
+                title="This host of this downtime.",
+                method="get",
+            )
+        )
+
+    downtime_id = downtime["id"]
+    return constructors.domain_object(
+        domain_type="downtime",
+        identifier=str(downtime_id),
+        title="Downtime for %s" % downtime_detail,
+        extensions=_downtime_properties(downtime),
+        links=[
             constructors.link_rel(
                 rel=".../delete",
                 href=constructors.domain_type_action_href("downtime", "delete"),
                 method="post",
                 title="Delete the downtime",
                 body_params={"delete_type": "by_id", "downtime_id": downtime_id},
-            )
-        )
-
-    if downtime["is_service"]:
-        downtime_detail = f"service: {downtime['service_description']}"
-    else:
-        host_name = downtime["host_name"]
-        downtime_detail = f"host: {host_name}"
-        if include_links:
-            links.append(
-                constructors.link_rel(
-                    rel="cmk/host_config",
-                    href=constructors.object_href("host_config", host_name),
-                    title="This host of this downtime.",
-                    method="get",
-                )
-            )
-
-    return constructors.domain_object(
-        domain_type="downtime",
-        identifier=str(downtime_id),
-        title="Downtime for %s" % downtime_detail,
-        extensions=_downtime_properties(downtime) if include_extensions else None,
-        links=links,
-        include_links=include_links,
+            ),
+        ],
         editable=False,
         deletable=False,
     )

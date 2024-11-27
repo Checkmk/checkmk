@@ -6,12 +6,14 @@
 
 import abc
 import json
+import re
 import time
 from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any, cast, Literal, NamedTuple, overload
+from urllib.parse import urlencode
 
 from livestatus import LivestatusResponse, SiteId
 
@@ -23,11 +25,13 @@ from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import (
     EventRule,
+    get_rules_related_to_parameter,
     is_always_bulk,
     NotificationParameterGeneralInfos,
     NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterSpecs,
+    NotificationPluginNameStr,
     NotifyAnalysisInfo,
 )
 from cmk.utils.statename import host_state_name, service_state_name
@@ -40,24 +44,10 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, Topic
-from cmk.gui.form_specs.private.definitions import CommentTextArea
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private import Catalog, LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
-from cmk.gui.form_specs.vue.shared_type_defs import (
-    CoreStats,
-    CoreStatsI18n,
-    FallbackWarning,
-    FallbackWarningI18n,
-    NotificationParametersOverview,
-    Notifications,
-    NotificationStats,
-    NotificationStatsI18n,
-    Rule,
-    RuleSection,
-    RuleTopic,
-)
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -76,6 +66,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
@@ -83,10 +74,11 @@ from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.notifications import (
     get_disabled_notifications_infos,
     get_failed_notification_count,
-    get_total_send_notifications,
+    get_total_sent_notifications,
     OPTIMIZE_NOTIFICATIONS_ENTRIES,
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
@@ -130,10 +122,6 @@ from cmk.gui.valuespec import (
     UUID,
 )
 from cmk.gui.wato._group_selection import ContactGroupSelection
-from cmk.gui.wato._notification_parameter import (
-    notification_parameter_registry,
-    NotificationParameter,
-)
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
@@ -146,6 +134,22 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.notification_parameter import (
+    notification_parameter_registry,
+)
+from cmk.gui.watolib.notification_types import (
+    CoreStats,
+    CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
+    NotificationParametersOverview,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     NotificationParameterConfigFile,
@@ -157,16 +161,21 @@ from cmk.gui.watolib.sample_config import (
     new_notification_parameter_id,
     new_notification_rule_id,
 )
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItemGeneratorRegistry,
+    MatchItems,
+)
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
-from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String
-from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 
-
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     mode_registry.register(ModeNotifications)
     mode_registry.register(ModeAnalyzeNotifications)
     mode_registry.register(ModeTestNotifications)
@@ -176,9 +185,14 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditUserNotificationRule)
     mode_registry.register(ModeEditPersonalNotificationRule)
     mode_registry.register(ModeNotificationParametersOverview)
+    mode_registry.register(ModeEditNotificationRuleQuickSetup)
 
     mode_registry.register(ModeNotificationParameters)
     mode_registry.register(ModeEditNotificationParameter)
+
+    match_item_generator_registry.register(
+        MatchItemGeneratorNotificationParameter("notification_parameter")
+    )
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -420,17 +434,29 @@ class ABCNotificationsMode(ABCEventsMode):
                 else:
                     html.empty_icon_button()
 
-                notify_method = rule["notify_plugin"]
-                # Catch rules with empty notify_plugin key
-                # Maybe this should be avoided somewhere else (e.g. rule editor)
-                if not notify_method:
-                    notify_method = (None, [])
-                notify_plugin = notify_method[0]
+                notify_plugin_name, notify_method = rule["notify_plugin"]
 
-                table.cell(_("Method"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
+                parameter_url = makeuri(
+                    request,
+                    [
+                        ("mode", "notification_parameters"),
+                        ("method", notify_plugin_name),
+                    ],
+                    filename="wato.py",
+                )
+                table.cell(
+                    _("Method"),
+                    HTMLWriter.render_a(
+                        self._method_name(notify_plugin_name),
+                        parameter_url,
+                        target="_blank",
+                        title=_("Go to parameters of this method"),
+                    ),
+                    css=["narrow nowrap"],
+                )
 
                 table.cell(_("Effect"), css=["narrow"])
-                if notify_method[1] is None:
+                if notify_method is None:
                     html.icon(
                         "cancel_notifications", _("Cancel notifications for this plug-in type")
                     )
@@ -480,6 +506,16 @@ class ABCNotificationsMode(ABCEventsMode):
                         html.write_text_permissive(vs_match_conditions.value_to_html(rule))
                 else:
                     html.i(_("(no conditions)"))
+
+    def _method_name(self, notify_plugin_name: NotificationPluginNameStr) -> str:
+        try:
+            return [
+                entry[1]
+                for entry in notification_script_choices()
+                if entry[0] == notify_plugin_name
+            ][0]
+        except IndexError:
+            return _("Plain email")
 
     def _add_change(self, log_what, log_text):
         _changes.add_change(log_what, log_text, need_restart=False)
@@ -553,7 +589,7 @@ class ABCNotificationsMode(ABCEventsMode):
         elif userid:
             mode = "user_notification_rule"
         else:
-            mode = "notification_rule"
+            mode = "notification_rule_quick_setup"
 
         back_mode = []
         mode_from_vars = request.var("mode")
@@ -641,7 +677,9 @@ class ModeNotifications(ABCNotificationsMode):
                                     title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -918,7 +956,7 @@ class ModeNotifications(ABCNotificationsMode):
                     contact = contact[7:]  # strip of fake-contact mailto:-prefix
                 table.cell(_("Recipient"), contact)
                 table.cell(_("Method"), self._vs_notification_scripts().value_to_html(plugin))
-                table.cell(_("Parameters"), ", ".join(parameters))
+                table.cell(_("Parameters"), ", ".join(list(parameters)))
                 table.cell(_("Bulking"))
                 if bulk:
                     html.write_text_permissive(_("Time horizon") + ": ")
@@ -947,7 +985,9 @@ def _fallback_mail_contacts_configured() -> bool:
 
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
+    total_send_notifications = get_total_sent_notifications()
     return Notifications(
+        overview_title_i18n=_("Notification overview"),
         fallback_warning=(
             FallbackWarning(
                 i18n=FallbackWarningI18n(
@@ -962,7 +1002,6 @@ def _get_vue_data() -> Notifications:
                     setup_link_title=_("Configure fallback email address"),
                     do_not_show_again_title=_("Do not show again"),
                 ),
-                user_id=str(user.id),
                 setup_link=makeuri_contextless(
                     request,
                     [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
@@ -978,17 +1017,20 @@ def _get_vue_data() -> Notifications:
             else None
         ),
         notification_stats=NotificationStats(
-            num_sent_notifications=get_total_send_notifications()[0][0],
+            num_sent_notifications=total_send_notifications[0][0]
+            if total_send_notifications
+            else 0,
             num_failed_notifications=get_failed_notification_count(),
             sent_notification_link=makeuri_contextless(
                 request,
                 [
-                    ("view_name", "alertstats"),
-                    ("_active", "logtime;log_notification_phase"),
-                    ("logtime_from_range", "86400"),
-                    ("is_log_notification_phase", "0"),
+                    ("view_name", "notifications"),
+                    ("_show_filter_form", "0"),
                     ("filled_in", "filter"),
+                    ("_active", "logtime;log_notification_phase;log_class"),
                     ("logtime_from", "7"),
+                    ("is_log_notification_phase", "0"),
+                    ("logclass3", "on"),
                 ],
                 filename="view.py",
             ),
@@ -1035,6 +1077,7 @@ def _get_vue_data() -> Notifications:
                 topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
             ),
         ],
+        user_id=str(user.id),
     )
 
 
@@ -1521,6 +1564,18 @@ class ModeTestNotifications(ModeNotifications):
         return redirect(self.mode_url())
 
     def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if message := request.var("result"):
+            # TODO Add notification rule number
+            html.javascript(
+                "cmk.wato.message(%s, %s, %s)"
+                % (
+                    json.dumps(message),
+                    json.dumps("success"),
+                    json.dumps("result"),
+                )
+            )
+
         self._render_test_notifications()
         context, analyse = self._result_from_request()
         self._show_notification_test_overview(context, analyse)
@@ -2788,6 +2843,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(log_what, self._log_text(self._edit_nr))
+        flash(
+            _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
+            if self._new
+            else _("Notification rule number #%d successfully edited!") % self._edit_nr,
+        )
 
         if back_mode := request.var("back_mode"):
             return redirect(mode_url(back_mode))
@@ -3010,10 +3070,13 @@ class ModeNotificationParametersOverview(WatoMode):
         self,
         all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
+        search_term = request.get_str_input("search", "")
+        search_term = search_term.lower() if search_term else ""
+        match_regex = re.compile(search_term, re.IGNORECASE)
         for script_name, title in notification_script_choices():
-            # TODO remove this if all NotificationParameters are converted to FormSpecs
-            if script_name != "mail":
+            if not match_regex.search(title):
                 continue
+
             method_parameters: dict[NotificationParameterID, NotificationParameterItem] | None = (
                 all_parameters.get(script_name)
             )
@@ -3032,18 +3095,21 @@ class ModeNotificationParametersOverview(WatoMode):
 
     def _get_notification_parameters_data(self) -> NotificationParametersOverview:
         all_parameters = NotificationParameterConfigFile().load_for_reading()
+        filtered_parameters = list(self._get_parameter_rulesets(all_parameters))
         return NotificationParametersOverview(
             parameters=[
                 RuleSection(
                     i18n=_("Parameters for"),
-                    topics=[
-                        RuleTopic(
-                            i18n=None,
-                            rules=list(self._get_parameter_rulesets(all_parameters)),
-                        )
-                    ],
+                    topics=[RuleTopic(i18n=None, rules=filtered_parameters)],
                 )
             ]
+            if filtered_parameters
+            else [],
+            i18n={
+                "no_parameter_match": _(
+                    "Found no matching parameters. Please try another search term."
+                )
+            },
         )
 
 
@@ -3080,7 +3146,7 @@ class ABCNotificationParameterMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
-        self._edit_nr = request.get_integer_input_mandatory("edit_nr", -1)
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._edit_parameter = request.get_str_input_mandatory("parameter", "")
         clone_id = request.get_str_input_mandatory("clone", "")
         self._clone_id = NotificationParameterID(clone_id)
@@ -3113,23 +3179,15 @@ class ABCNotificationParameterMode(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
-    def _form_spec(self) -> DictionaryExtended:
-        notification_parameter = self._notification_parameter()
+    def _spec(self) -> Dictionary | LegacyValueSpec:
         try:
-            return notification_parameter()._form_spec()  # pylint: disable=protected-access
-        except NotImplementedError:
-            raise MKUserError(
-                None,
-                _(
-                    "This page is currently not implemented, needs FormSpec "
-                    "migration of NotificationParameter."
-                ),
-            )
-
-    def _notification_parameter(self) -> type[NotificationParameter]:
-        try:
-            return notification_parameter_registry[self._method()]
+            return notification_parameter_registry[self._method()]().spec
         except KeyError:
+            if any(
+                self._method() == script_name
+                for script_name, _title in notification_script_choices()
+            ):
+                return recompose(notification_parameter_registry.parameter_called())
             raise MKUserError(
                 None, _("No notification parameters for method '%s' found") % self._method()
             )
@@ -3148,8 +3206,21 @@ class ABCNotificationParameterMode(WatoMode):
 
         method_parameter_list = list(method_parameters.items())
         if request.has_var("_delete"):
-            parameter_id = request.get_str_input_mandatory("_delete")
-            method_parameters.pop(NotificationParameterID(parameter_id), None)
+            parameter_id = request.get_validated_type_input_mandatory(
+                NotificationParameterID, "_delete"
+            )
+            rules = NotificationRuleConfigFile().load_for_reading()
+
+            if get_rules_related_to_parameter(rules, parameter_id):
+                return redirect(
+                    mode_url(
+                        "notification_parameters",
+                        method=self._method(),
+                        _parameter_id_with_related_rules=parameter_id,
+                    )
+                )
+
+            method_parameters.pop(parameter_id, None)
             self._parameters[self._method()] = method_parameters
             self._save_parameters(self._parameters)
 
@@ -3197,6 +3268,14 @@ class ABCNotificationParameterMode(WatoMode):
     def _method(self) -> str:
         return request.get_str_input_mandatory("method")
 
+    def _method_name(self) -> str:
+        try:
+            return [
+                entry[1] for entry in notification_script_choices() if entry[0] == self._method()
+            ][0]
+        except IndexError:
+            return self._method()
+
 
 class ModeNotificationParameters(ABCNotificationParameterMode):
     """Show notification parameter for a specific method"""
@@ -3214,7 +3293,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         return self.mode_url(method=self._method())
 
     def title(self) -> str:
-        return _("Parameters for %s") % request.var("method")
+        return _("Parameters for %s") % self._method_name()
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
@@ -3258,6 +3337,12 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         if self._method() not in load_notification_scripts():
             raise MKUserError(None, _("Notification method '%s' does not exist") % self._method())
 
+        if parameter_id_with_related_rules := request.var("_parameter_id_with_related_rules"):
+            parameter_id = NotificationParameterID(parameter_id_with_related_rules)
+            all_rules = NotificationRuleConfigFile().load_for_reading()
+            related_rules = get_rules_related_to_parameter(all_rules, parameter_id)
+            self._render_related_rule_error(related_rules)
+
         parameters = self._load_parameters()
         if not (method_parameters := parameters.get(self._method())):
             html.show_message(
@@ -3266,11 +3351,44 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             return
         self._render_notification_parameters(method_parameters)
 
+    def _render_related_rule_error(self, related_rules: list[EventRule]) -> None:
+        notifications_url = self.breadcrumb()[-3].url
+
+        def build_href(query: str) -> str:
+            return f"{notifications_url}&{urlencode({"search": query})}"
+
+        links_to_related_rules = HTML.with_escaping("").join(
+            html.render_li(html.render_a(rule["description"], href=build_href(rule["description"])))
+            for rule in related_rules
+            if rule["description"]
+        )
+
+        # If description not available, link to all rules filtered by their method, i.e. "mail".
+        if nondescript_rule_count := sum(not bool(rule["description"]) for rule in related_rules):
+            links_to_related_rules += html.render_li(
+                HTML.with_escaping("").join(
+                    (
+                        _("%d notification rule(s) ") % nondescript_rule_count,
+                        html.render_a(
+                            _("without a description were found"),
+                            href=build_href(query=self._method()),
+                        ),
+                    )
+                )
+            )
+
+        html.show_error(
+            _("This notification parameter is used by the following notification rule(s):")
+            + html.render_ul(links_to_related_rules)
+            + _("Only unused parameters can be deleted.")
+        )
+
     def _render_notification_parameters(
         self,
         parameters,
     ):
-        notification_parameter = self._notification_parameter()
+        spec = self._spec()
+        method_name = self._method_name()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
@@ -3286,7 +3404,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 html.element_dragger_url("tr", base_url=links.drag)
                 html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
 
-                table.cell(_("Method"), self._method())
+                table.cell(_("Method"), method_name)
 
                 table.cell(_("Description"))
                 url = parameter.get("docu_url")
@@ -3307,10 +3425,12 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     title=title,
                     indent=False,
                 ):
+                    if isinstance(spec, LegacyValueSpec):
+                        spec = spec.valuespec  # type: ignore[assignment]  # expects ValueSpec[Any]
+
+                    assert hasattr(spec, "value_to_html")
                     html.write_text_permissive(
-                        notification_parameter().spec.value_to_html(
-                            parameter["parameter_properties"]
-                        )
+                        spec.value_to_html(parameter["parameter_properties"])
                     )
 
     def _add_change(self, log_what, log_text):
@@ -3394,13 +3514,16 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     def title(self) -> str:
         if self._new:
-            return _("Add %s notification parameter") % self._method()
-        return _("Edit %s notification parameter %s") % (self._method(), self._edit_nr)
+            return _("Add %s notification parameter") % self._method_name()
+        return _("Edit %s notification parameter #%s") % (self._method_name(), self._edit_nr)
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
-        return _("Changed notification parameter %s") % edit_nr
+        return _("Changed notification parameter #%s") % edit_nr
+
+    def _form_spec(self) -> Catalog:
+        return notification_parameter_registry.form_spec(self._method())
 
     def action(self) -> ActionResult:
         check_csrf_token()
@@ -3409,7 +3532,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return self._back_mode()
 
         value = parse_data_from_frontend(
-            self._catalog(),
+            self._form_spec(),
             self._vue_field_id(),
         )
 
@@ -3435,70 +3558,113 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         return self._back_mode()
 
-    def _catalog(self) -> Catalog:
-        return Catalog(
-            topics=[
-                Topic(
-                    ident="general",
-                    dictionary=FormSpecDictionary(
-                        title=Title("Parameter properties"),
-                        elements={
-                            "description": DictElement(
-                                parameter_form=String(
-                                    title=Title("Description"),
-                                    field_size=FieldSize.LARGE,
-                                )
-                            ),
-                            "comment": DictElement(
-                                parameter_form=CommentTextArea(
-                                    title=Title("Comment"),
-                                )
-                            ),
-                            "docu_url": DictElement(
-                                parameter_form=String(
-                                    title=Title("Documentation URL"),
-                                    help_text=Help(
-                                        (
-                                            "An optional URL pointing to documentation or any other page. This will be "
-                                            "displayed as an icon and open "
-                                            "a new page when clicked. You can use either global URLs (beginning with "
-                                            "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                                            "URLs (that are relative to <tt>check_mk/</tt>)."
-                                        )
-                                    ),
-                                )
-                            ),
-                        },
-                    ),
-                ),
-                Topic(
-                    ident="parameter_properties",
-                    # TODO if sections are not rendered by fixed DictGroup(),
-                    # we will need this:
-                    # dictionary=FormSpecDictionary(
-                    #    title=Title("Parameter properties"),
-                    #    elements={
-                    #        "properties": DictElement(
-                    #            parameter_form=self._form_spec(),
-                    #        )
-                    #    },
-                    # ),
-                    dictionary=self._form_spec(),
-                ),
-            ]
-        )
+    def _validate_form_spec(self, origin: DataOrigin) -> bool:
+        return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
 
     def page(self) -> None:
         value, origin = self._get_parameter_value_and_origin()
 
         with html.form_context("parameter", method="POST"):
             render_form_spec(
-                self._catalog(),
+                self._form_spec(),
                 self._vue_field_id(),
                 value,
                 origin,
-                True,
+                self._validate_form_spec(origin),
             )
 
             forms.end()
             html.hidden_fields()
+
+
+class ModeEditNotificationRuleQuickSetup(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "notification_rule_quick_setup"
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotifications
+
+    def _from_vars(self) -> None:
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
+        self._new = self._edit_nr < 0
+        notifications_rules = list(NotificationRuleConfigFile().load_for_reading())
+        if self._edit_nr >= len(notifications_rules):
+            raise MKUserError(None, _("Notification rule does not exist."))
+        self._object_id: str | None = (
+            None if self._new else notifications_rules[self._edit_nr]["rule_id"]
+        )
+        quick_setup = quick_setup_registry["notification_rule"]
+        self._quick_setup_id = quick_setup.id
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["notifications"]
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule")
+        return _("Edit notification rule %d") % self._edit_nr
+
+    def breadcrumb(self) -> Breadcrumb:
+        with request.stashed_vars():
+            return super().breadcrumb()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            title=_("Notification rule"),
+            breadcrumb=breadcrumb,
+            add_cancel_link=True,
+            cancel_url=mode_url(mode_name=ModeNotifications.name()),
+        )
+
+    def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if message := request.var("result"):
+            # TODO Add notification rule number
+            html.javascript(
+                "cmk.wato.message(%s, %s, %s)"
+                % (
+                    json.dumps(message),
+                    json.dumps("success"),
+                    json.dumps("result"),
+                )
+            )
+
+        html.vue_app(
+            app_name="quick_setup",
+            data={
+                "quick_setup_id": self._quick_setup_id,
+                "mode": "guided" if self._new else "overview",
+                "toggle_enabled": True,
+                "object_id": self._object_id,
+            },
+        )
+
+
+class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        for script_name, script_title in notification_script_choices():
+            title = _("%s") % script_title
+            yield MatchItem(
+                title=title,
+                topic=_("Notification parameter"),
+                url=makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "notification_parameters"),
+                        ("method", script_name),
+                    ],
+                    filename="wato.py",
+                ),
+                match_texts=[title],
+            )
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True

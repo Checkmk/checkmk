@@ -6,6 +6,9 @@
 import failOnConsole from 'vitest-fail-on-console'
 import '@testing-library/jest-dom/vitest'
 
+// Mock the scrollIntoView method to prevent errors. jsdom has no concept of scrolling anyway
+window.HTMLElement.prototype.scrollIntoView = function () {}
+
 failOnConsole({
   shouldFailOnAssert: true,
   shouldFailOnDebug: true,

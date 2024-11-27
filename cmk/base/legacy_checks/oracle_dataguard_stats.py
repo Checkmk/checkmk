@@ -6,10 +6,10 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+
+check_info = {}
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -158,6 +158,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
+    name="oracle_dataguard_stats",
     # section is already migrated!
     service_name="ORA %s Dataguard-Stats",
     discovery_function=inventory_oracle_dataguard_stats,

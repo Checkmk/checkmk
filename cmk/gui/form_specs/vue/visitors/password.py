@@ -83,7 +83,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
         self, raw_value: object, parsed_value: ParsedPassword | EmptyValue
     ) -> tuple[VueComponents.Password, VuePassword]:
         title, help_text = get_title_and_help(self.form_spec)
-        value = (
+        value: VuePassword = (
             ("explicit_password", "", "", False)
             if isinstance(parsed_value, EmptyValue)
             else (
@@ -133,8 +133,6 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
         return []
 
     def _to_disk(self, raw_value: object, parsed_value: ParsedPassword) -> object:
-        if self.options.data_origin == DataOrigin.DISK:
-            return raw_value
         postprocessed, password_type, (password_id, password) = parsed_value
         if password_type == "explicit_password" and not password_id:
             password_id = ad_hoc_password_id()

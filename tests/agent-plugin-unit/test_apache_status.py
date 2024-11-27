@@ -89,7 +89,7 @@ def test_agent(
     captured_stdout = capsys.readouterr()[0]
     assert captured_stdout == (
         "<<<apache_status:sep(124)>>>\n"
-        + "\n".join(("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n")))
+        + "\n".join("127.0.0.1|None||%s" % line for line in RESPONSE.split("\n"))
         + "\n"
     )
 

@@ -14,7 +14,7 @@ from buildscripts.scripts.lib.common import flatten, load_editions_file
 
 
 def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
-    distros = flatten(loaded_yaml["internal_distros"])
+    distros = flatten(loaded_yaml.get("internal_distros", []))
     editions = flatten(loaded_yaml["internal_editions"])
 
     if args.as_codename:

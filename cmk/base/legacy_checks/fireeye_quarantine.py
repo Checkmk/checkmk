@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
@@ -34,6 +34,7 @@ def parse_fireeye_quarantine(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_quarantine"] = LegacyCheckDefinition(
+    name="fireeye_quarantine",
     parse_function=parse_fireeye_quarantine,
     detect=DETECT,
     fetch=SNMPTree(

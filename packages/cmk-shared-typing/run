@@ -6,6 +6,31 @@
 set -e
 
 JOBS=6
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+
+SOURCES=(
+    python/vue_formspec_components.py
+    python/configuration_entity.py
+    python/notifications.py
+    python/graph_designer.py
+    typescript/vue_formspec_components.ts
+    typescript/configuration_entity.ts
+    typescript/notifications.ts
+    typescript/graph_designer.ts
+)
+# you should also modify the following files if you change something here!
+# buildscripts/scripts/stages.yml
+# packages/cmk-frontend-vue/.prettierignore
+DESTINATIONS=(
+    ../../cmk/gui/form_specs/vue/shared_type_defs.py
+    ../../cmk/gui/watolib/configuration_entity/type_defs.py
+    ../../cmk/gui/watolib/notification_types.py
+    ../../cmk/gui/graphing/cee/_graph_designer_type_defs.py
+    ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+    ../../packages/cmk-frontend-vue/src/form/components/configuration_entity.ts
+    ../../packages/cmk-frontend-vue/src/notification/type_defs.ts
+    ../../packages/cmk-frontend-vue/src/graph-designer/type_defs.ts
+)
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -90,39 +115,24 @@ parse_options() {
     readonly RUN_CLEAN RUN_BUILD RUN_CHECK_FORMAT RUN_FORMAT JOBS
 }
 
-run_pipenv() {
-    PIPENV_CACHE_DIR="$(pwd)/.cache" \
-    PIPENV_VENV_IN_PROJECT=true \
-    PIPENV_NOSPIN=true \
-    PIPENV_HIDE_EMOJIS=true \
-    PIPENV_NO_INHERIT=true \
-    PIPENV_PIPFILE="$(pwd)/Pipfile" \
-    PIPENV_IGNORE_VIRTUALENVS=1 \
-        pipenv "$@"
+setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv_uv/bin/activate
+    SETUP_VENV_RAN=yes
+}
+
+setup_node_modules() {
+    test -d "node_modules" && return
+    npm ci --yes --unsafe-perm --audit=false
 }
 
 setup() {
-    test "${SETUP_RAN}" = "yes" && return
-    # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
-    # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
-    run_pipenv sync --dev >/dev/null
-    run_pipenv clean
-    # poor man's "activate", but without any danger of naming clashes
-    PATH="$(pwd)/.venv/bin:$PATH"
-    hash -r
-
-    if [ ! -d node_modules ]; then
-        ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
-        export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
-        export NODE_OPTIONS="--dns-result-order=ipv4first",
-        npm \
-            ci \
-            --yes \
-            --unsafe-perm \
-            --audit=false
-    fi
-
-    SETUP_RAN=yes
+    setup_venv
+    setup_node_modules
 }
 
 run_clean() {
@@ -139,39 +149,69 @@ run_build() {
         target_base=$(basename "${file}" .json)
         echo "Processing $file"
 
-        datamodel-codegen --input "$file" \
-            --input-file-type jsonschema \
-            --output "python/${target_base}.py" \
-            --target-python-version 3.12 \
-            --output-model-type=dataclasses.dataclass \
-            --use-title-as-name \
-            --use-double-quotes \
-            --use-default \
-            --use-standard-collections \
-            --use-one-literal-as-default \
-            --use-subclass-enum \
-            --use-title-as-name \
-            --custom-file-header-path header_py.txt \
-            --use-title-as-name \
-            --custom-formatters "utils.format"
-        npm run json2ts "${file}" -o "typescript/${target_base}.ts"
+        if [[ "$file" == "source/graph_designer.json" ]]; then
+            datamodel-codegen --input "$file" \
+                --input-file-type jsonschema \
+                --output "python/${target_base}.py" \
+                --target-python-version 3.12 \
+                --output-model-type=pydantic.BaseModel \
+                --collapse-root-models \
+                --use-field-description \
+                --use-title-as-name \
+                --use-double-quotes \
+                --use-default \
+                --use-one-literal-as-default \
+                --custom-file-header-path header_cee_py.txt \
+                --custom-formatters "utils.format" \
+                --enum-field-as-literal all \
+                --use-generic-container-types \
+                --use-union-operator
+            npm run json2ts -- \
+                --additionalProperties=false \
+                --declareExternallyReferenced \
+                --bannerComment "$(cat header_cee_ts.txt)" \
+                --cwd source/ "${file}" \
+                -o "typescript/${target_base}.ts"
+        else
+            datamodel-codegen --input "$file" \
+                --input-file-type jsonschema \
+                --output "python/${target_base}.py" \
+                --target-python-version 3.12 \
+                --output-model-type=dataclasses.dataclass \
+                --use-field-description \
+                --use-title-as-name \
+                --use-double-quotes \
+                --use-default \
+                --use-standard-collections \
+                --use-one-literal-as-default \
+                --use-subclass-enum \
+                --custom-file-header-path header_py.txt \
+                --custom-formatters "utils.format"
+            npm run json2ts -- \
+                --additionalProperties=false \
+                --declareExternallyReferenced \
+                --bannerComment "$(cat header_ts.txt)" \
+                --cwd source/ "${file}" \
+                -o "typescript/${target_base}.ts"
+        fi
     done
 
-    SOURCE_PYTHON=python/vue_formspec_components.py
-    SOURCE_TYPESCRIPT=typescript/vue_formspec_components.ts
-    # you should also modify uildscripts/scripts/stages.yml if you change the destination!
-    DESTINATION_PYTHON=../../cmk/gui/form_specs/vue/shared_type_defs.py
-    DESTINATION_TYPESCRIPT=../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
-
     if [ "$CI" == "true" ]; then
-        # this is a hack, we should create another "copy" or "diff" target
-        diff $SOURCE_PYTHON $DESTINATION_PYTHON
-        diff $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+        echo "Checking if the generated files are up-to-date..."
     else
-        echo "Copying vue type defs..."
-        cp $SOURCE_PYTHON $DESTINATION_PYTHON
-        cp $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+        echo "Copying the generated files..."
     fi
+
+    for i in "${!SOURCES[@]}"; do
+        SOURCE=${SOURCES[$i]}
+        DESTINATION=${DESTINATIONS[$i]}
+        if [ "$CI" == "true" ]; then
+            # this is a hack, we should create another "copy" or "diff" target
+            diff "$SOURCE" "$DESTINATION"
+        else
+            cp "$SOURCE" "$DESTINATION"
+        fi
+    done
 
     echo "Done."
 }

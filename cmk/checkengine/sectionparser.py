@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Generic, NamedTuple, TypeVar
+from typing import Any, Final, Generic, NamedTuple, Self, TypeVar
 
 from cmk.ccc import debug
 
@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
-from cmk import piggyback
+from cmk.piggyback.backend import store_piggyback_raw_data
 
 from .fetcher import HostKey, SourceType
 from .parser import HostSections
@@ -40,6 +40,14 @@ class SectionPlugin:
     # keep the smallest common type of all the unions defined over there.
     parse_function: Callable[..., object]
     parsed_section_name: ParsedSectionName
+
+    @classmethod
+    def trivial(cls, name: SectionName) -> Self:
+        return cls(
+            supersedes=set(),
+            parse_function=lambda x: x,
+            parsed_section_name=ParsedSectionName(str(name)),
+        )
 
 
 class _ParsingResult(NamedTuple):
@@ -77,11 +85,7 @@ class SectionsParser(Generic[_TSeq]):
         self.error_handling: Final = error_handling
 
     def __repr__(self) -> str:
-        return "{}(host_sections={!r}, host_name={!r})".format(
-            type(self).__name__,
-            self._host_sections,
-            self._host_name,
-        )
+        return f"{type(self).__name__}(host_sections={self._host_sections!r}, host_name={self._host_name!r})"
 
     def parse(
         self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
@@ -209,7 +213,7 @@ def store_piggybacked_sections(
             # management board (SNMP or IPMI) does not support piggybacking
             continue
 
-        piggyback.store_piggyback_raw_data(
+        store_piggyback_raw_data(
             host_key.hostname, host_sections.piggybacked_raw_data, time.time(), omd_root
         )
 

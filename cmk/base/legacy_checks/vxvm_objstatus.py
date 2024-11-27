@@ -12,10 +12,10 @@
 # v testgroup oravol-L02 ACTIVE ENABLED
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def vxvm_objstatus_disks(info):
@@ -65,6 +65,7 @@ def parse_vxvm_objstatus(string_table: StringTable) -> StringTable:
 
 
 check_info["vxvm_objstatus"] = LegacyCheckDefinition(
+    name="vxvm_objstatus",
     parse_function=parse_vxvm_objstatus,
     service_name="VXVM objstatus %s",
     discovery_function=inventory_vxvm_objstatus,

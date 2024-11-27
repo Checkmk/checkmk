@@ -13,25 +13,42 @@ from typing import Any, Literal, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
+from cmk.gui.form_specs.converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.form_specs.private import (
+    CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
+    ConditionChoices,
     DictionaryExtended,
+    Folder,
+    Labels,
     LegacyValueSpec,
     ListExtended,
     ListOfStrings,
+    ListUniqueSelection,
+    MultipleChoiceExtended,
     OptionalChoice,
+    SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
+    TimeSpecific,
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
+    recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
+    recompose_levels,
     recompose_list,
+    recompose_multiple_choice,
     recompose_percentage,
     recompose_regular_expression,
     recompose_service_state,
@@ -54,6 +71,7 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     HostState,
     Integer,
+    Levels,
     List,
     MultilineText,
     MultipleChoice,
@@ -61,6 +79,7 @@ from cmk.rulesets.v1.form_specs import (
     Percentage,
     RegularExpression,
     ServiceState,
+    SimpleLevels,
     SingleChoice,
     String,
     TimeSpan,
@@ -82,24 +101,31 @@ from .visitors import (
     DictionaryVisitor,
     FixedValueVisitor,
     FloatVisitor,
+    FolderVisitor,
     get_visitor,
     IntegerVisitor,
+    LabelsVisitor,
     LegacyValuespecVisitor,
     ListOfStringsVisitor,
+    ListUniqueSelectionVisitor,
     ListVisitor,
     MultilineTextVisitor,
     MultipleChoiceVisitor,
     OptionalChoiceVisitor,
     PasswordVisitor,
+    register_recomposer_function,
     register_visitor_class,
     SimplePasswordVisitor,
+    SingleChoiceEditableVisitor,
     SingleChoiceVisitor,
     StringVisitor,
     TimeSpanVisitor,
+    TimeSpecificVisitor,
     TransformVisitor,
     TupleVisitor,
 )
 from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
+from .visitors._type_defs import FormSpecValidationError as FormSpecValidationError
 
 T = TypeVar("T")
 
@@ -121,35 +147,45 @@ def register_form_specs():
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
     register_visitor_class(Password, PasswordVisitor)
-    register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
+    register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
-    register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)
-    register_visitor_class(MultipleChoice, MultipleChoiceVisitor)
+    register_visitor_class(ListUniqueSelection, ListUniqueSelectionVisitor)
     register_visitor_class(TimeSpan, TimeSpanVisitor)
-    register_visitor_class(TransformForLegacyData, TransformVisitor)
+    register_visitor_class(TransformDataForLegacyFormatOrRecomposeFunction, TransformVisitor)
     register_visitor_class(Tuple, TupleVisitor)
     register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
     register_visitor_class(SimplePassword, SimplePasswordVisitor)
     register_visitor_class(StringAutocompleter, StringVisitor)
+    register_visitor_class(ConditionChoices, ConditionChoicesVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
+    register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
+    register_visitor_class(Folder, FolderVisitor)
+    register_visitor_class(Labels, LabelsVisitor)
+    register_visitor_class(TimeSpecific, TimeSpecificVisitor)
 
     # Recomposed
-    register_visitor_class(String, StringVisitor, recompose_string)
-    register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
-    register_visitor_class(ServiceState, SingleChoiceVisitor, recompose_service_state)
-    register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)
-    register_visitor_class(List, ListVisitor, recompose_list)
-    register_visitor_class(Percentage, FloatVisitor, recompose_percentage)
-    register_visitor_class(UnknownFormSpec, LegacyValuespecVisitor, recompose_unknown_form_spec)
-    register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
+    register_recomposer_function(RegularExpression, recompose_regular_expression)
+    register_recomposer_function(MultipleChoice, recompose_multiple_choice)
+    register_recomposer_function(String, recompose_string)
+    register_recomposer_function(HostState, recompose_host_state)
+    register_recomposer_function(ServiceState, recompose_service_state)
+    register_recomposer_function(SingleChoice, recompose_single_choice)
+    register_recomposer_function(Levels, recompose_levels)
+    register_recomposer_function(SimpleLevels, recompose_levels)
+    register_recomposer_function(List, recompose_list)
+    register_recomposer_function(Percentage, recompose_percentage)
+    register_recomposer_function(UnknownFormSpec, recompose_unknown_form_spec)
+    register_recomposer_function(Dictionary, recompose_dictionary)
+    register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
 
 
 def register_validators():
@@ -182,6 +218,21 @@ def _process_validation_errors(
     )
 
 
+def process_validation_messages(
+    validation_messages: list[shared_type_defs.ValidationMessage],
+) -> None:
+    """Helper function to process validation errors in general use cases.
+
+    Args:
+        validation_messages: Validation messages returned by Visitor.validate
+
+    Raises:
+        FormSpecValidationError: An error storing the validation messages
+    """
+    if validation_messages:
+        raise FormSpecValidationError(validation_messages)
+
+
 def get_vue_value(field_id: str, fallback_value: Any) -> Any:
     """Returns the value of a vue formular field"""
     if request.has_var(field_id):
@@ -207,9 +258,10 @@ def render_form_spec(
     vue_app_config = serialize_data_for_frontend(
         form_spec, field_id, origin, do_validate, value, display_mode
     )
-    logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
-    logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
-    logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
+    if active_config.load_frontend_vue == "inject":
+        logger.warning("Vue app config:\n%s", pprint.pformat(vue_app_config, width=220, indent=2))
+        logger.warning("Vue value:\n%s", pprint.pformat(vue_app_config.data, width=220))
+        logger.warning("Vue validation:\n%s", pprint.pformat(vue_app_config.validation, width=220))
     html.vue_app(app_name="form_spec", data=asdict(vue_app_config))
 
 

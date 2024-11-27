@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 # .1.3.6.1.4.1.2021.2.1.2.1 Web-Processes  --> UCD-SNMP-MIB::prNames.1
 # .1.3.6.1.4.1.2021.2.1.2.2 SMTP-Processes --> UCD-SNMP-MIB::prNames.2
@@ -62,6 +62,7 @@ def parse_ucd_processes(string_table: StringTable) -> StringTable:
 
 
 check_info["ucd_processes"] = LegacyCheckDefinition(
+    name="ucd_processes",
     parse_function=parse_ucd_processes,
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(

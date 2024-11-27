@@ -23,18 +23,14 @@ TEST(WtoolsService, Ctor) {
         GTEST_SKIP();
     }
 
-    auto h = ws_main.handle_;
     WinService ws_double = std::move(ws_main);
     EXPECT_FALSE(ws_main.isOpened());
     EXPECT_TRUE(ws_double.isOpened());
-    EXPECT_EQ(h, ws_double.handle_);
 
     WinService ws_again(cma::srv::kServiceName);
     EXPECT_TRUE(ws_again.isOpened());
-    EXPECT_NE(ws_again.handle_, ws_double.handle_);
     {
         WinService ws(L"no such service");
-        ASSERT_EQ(ws.handle_, nullptr);
         EXPECT_FALSE(ws.isOpened());
     }
 }
@@ -147,20 +143,15 @@ TEST_F(WtoolsServiceFunc, ConfigService) {
     if (!ws_.isOpened()) {
         GTEST_SKIP();
     }
-    //
 
     struct CheckSet {
         uint32_t reg_value_main;
         uint32_t reg_value_delayed;
         WinService::StartMode mode;
-    } checks[] = {
-        //
-        {SERVICE_DISABLED, 0, WinService::StartMode::disabled},
-        {SERVICE_DEMAND_START, 0, WinService::StartMode::stopped},
-        {SERVICE_AUTO_START, 0, WinService::StartMode::started},
-        {SERVICE_AUTO_START, 1, WinService::StartMode::delayed}
-        //
-    };
+    } checks[] = {{SERVICE_DISABLED, 0, WinService::StartMode::disabled},
+                  {SERVICE_DEMAND_START, 0, WinService::StartMode::stopped},
+                  {SERVICE_AUTO_START, 0, WinService::StartMode::started},
+                  {SERVICE_AUTO_START, 1, WinService::StartMode::delayed}};
 
     if (!rs::any_of(checks, [this](auto check) {
             return check.reg_value_main == save_start_;

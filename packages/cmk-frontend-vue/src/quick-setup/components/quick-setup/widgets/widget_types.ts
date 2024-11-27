@@ -67,6 +67,17 @@ export interface CollapsibleWidgetProps extends CompositeWidgetProps {
 
   /** @property {string} title - Title of the collapsible element */
   title: string
+
+  /** @property {string} help_text - Help of the collapsible element */
+  help_text: string | null
+}
+
+/** The conditional notification event stage widgets are a really specific solution to a really
+ *  specific use case for the notification quick setup. Hence, we opted for a really specific
+ *  solution which exactly covers the three use cases we have in the notification quick setup.
+ *  A more generic approach has been rejected, but may be considered in the future. */
+export interface ConditionalNotificationStageWidgetProps extends CompositeWidgetProps {
+  condition: boolean
 }
 
 type SingleWidgetSpec =
@@ -75,12 +86,16 @@ type SingleWidgetSpec =
   | ListWidgetProps
   | FormSpecWidgetProps
   | FormSpecRecapWidgetProps
-type CompositeWidgetSpec = CollapsibleWidgetProps
+type CompositeWidgetSpec = CollapsibleWidgetProps | ConditionalNotificationStageWidgetProps
 
-type SingleWigetType = 'text' | 'note_text' | 'list_of_widgets' | 'form_spec' | 'form_spec_recap'
-type CompositeWidgetType = 'collapsible'
+type SingleWidgetType = 'text' | 'note_text' | 'list_of_widgets' | 'form_spec' | 'form_spec_recap'
+type CompositeWidgetType =
+  | 'collapsible'
+  | 'conditional_notification_host_event_stage_widget'
+  | 'conditional_notification_service_event_stage_widget'
+  | 'conditional_notification_ec_alert_stage_widget'
 
-type SingleComponentSpec = SingleWidgetSpec & { widget_type: SingleWigetType }
+type SingleComponentSpec = SingleWidgetSpec & { widget_type: SingleWidgetType }
 type CompositeComponentSpec = CompositeWidgetSpec & { widget_type: CompositeWidgetType }
 
 export type ComponentSpec = SingleComponentSpec | CompositeComponentSpec

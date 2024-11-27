@@ -21,7 +21,7 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
+from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
 
 from cmk.update_config.plugins.actions.tag_conditions import get_tag_config, transform_host_tags
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -72,7 +72,7 @@ def _update_site_specific_global_settings(logger: Logger) -> None:
 
 def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     """Update the site specific global settings in the central site configuration"""
-    site_mgmt = SiteManagementFactory().factory()
+    site_mgmt = site_management_registry["site_management"]
     configured_sites = site_mgmt.load_sites()
     for site_id, site_spec in configured_sites.items():
         if site_globals_editable(site_id, site_spec):

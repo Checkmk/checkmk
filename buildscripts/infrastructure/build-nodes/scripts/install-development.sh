@@ -52,16 +52,17 @@ install_packages() {
 install_basic_tools() {
     print_green "Installing common basic tools ..."
     local PACKAGES_TO_INSTALL=(
-        "binutils"    # "strip" required to cleanup during strip_binaries
-        "curl"        # curl is used to download artifacts from Nexus
-        "doxygen"     # to be able to create docs in the unlikely event
-        "gawk"        # TBC
-        "git"         # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
-        "gnupg"       # "apt-key" used by install-docker
-        "lsb-release" # lsb is used by install-[clang, docker, packer, nodejs].sh
-        "make"        # don't forget your towel when you're taveling :)
-        "sudo"        # some make calls require sudo
-        "wget"        # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "binutils"       # "strip" required to cleanup during strip_binaries
+        "curl"           # curl is used to download artifacts from Nexus
+        "doxygen"        # to be able to create docs in the unlikely event
+        "gawk"           # TBC
+        "git"            # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
+        "gnupg"          # "apt-key" used by install-docker
+        "lsb-release"    # lsb is used by install-[clang, docker, packer, nodejs].sh
+        "make"           # don't forget your towel when you're taveling :)
+        "sudo"           # some make calls require sudo
+        "wget"           # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "libglib2.0-dev" # required by packages/glib and therfore transitive by python unit tests
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
     print_green "Common basic tool installation done"
@@ -75,7 +76,7 @@ copy_files_around() {
     VERSION_NUMBER=$(lsb_release -sr)
     cp omd/distros/UBUNTU_"$VERSION_NUMBER".mk "${INSTALL_PATH}"
     # copy files to buildscripts/infrastructure/build-nodes/scripts
-    cp .bazelversion defines.make package_versions.bzl static_variables.bzl "${SCRIPT_DIR}"
+    cp .bazelversion defines.make package_versions.bzl "${SCRIPT_DIR}"
     print_green "Necessary file copying done"
 }
 
@@ -84,7 +85,6 @@ perform_cleanup() {
     rm -f "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
     rm -f "${SCRIPT_DIR}"/.bazelversion
     rm -f "${SCRIPT_DIR}"/defines.make
-    rm -f "${SCRIPT_DIR}"/static_variables.bzl
     rm -f "${SCRIPT_DIR}"/package_versions.bzl
     rm -f "${SCRIPT_DIR}"/*.mk
     print_green "Cleanup done"
@@ -94,6 +94,7 @@ setup_env_variables() {
     print_green "Setup env variables ..."
     DISTRO_NAME=$(lsb_release -is)
     VERSION_NUMBER=$(lsb_release -sr)
+    DISTRO_CODENAME=$(lsb_release -cs)
     BRANCH_NAME=$(get_version "$SCRIPT_DIR" BRANCH_NAME)
     BRANCH_VERSION=$(get_version "$SCRIPT_DIR" BRANCH_VERSION)
     CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
@@ -109,8 +110,10 @@ setup_env_variables() {
     export VIRTUALENV_VERSION
     export DISTRO_NAME
     export VERSION_NUMBER
+    export DISTRO_CODENAME
     print_debug "DISTRO                = ${DISTRO}"
     print_debug "DISTRO_NAME           = ${DISTRO_NAME}"
+    print_debug "DISTRO_CODENAME       = ${DISTRO_CODENAME}"
     print_debug "VERSION_NUMBER        = ${VERSION_NUMBER}"
     print_debug "NEXUS_ARCHIVES_URL    = ${NEXUS_ARCHIVES_URL}"
     print_debug "BRANCH_NAME           = ${BRANCH_NAME}"
@@ -270,7 +273,6 @@ install_for_cpp_dev() {
     "${SCRIPT_DIR}"/install-cmake.sh
     "${SCRIPT_DIR}"/install-clang.sh
     "${SCRIPT_DIR}"/install-protobuf-cpp.sh
-    "${SCRIPT_DIR}"/install-freetds.sh
 
     if [[ $STRIP_LATER -eq 1 ]]; then
         print_blue "strip_binaries during CPP setup"
@@ -280,7 +282,6 @@ install_for_cpp_dev() {
         "${SCRIPT_DIR}"/install-cmake.sh link-only
         # no need to link aka install protobuf again
         # "${SCRIPT_DIR}"/install-protobuf-cpp.sh --link-only
-        "${SCRIPT_DIR}"/install-freetds.sh link-only
     fi
 
     "${SCRIPT_DIR}"/install-patchelf.sh
@@ -295,7 +296,6 @@ strip_for_cpp() {
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "valgrind-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "cmake-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "protobuf-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
 }
 
 install_for_gdb() {
@@ -335,7 +335,6 @@ install_for_rust_dev() {
     print_green "Installing everything for Rust development ..."
 
     export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-freetds.sh
     "${SCRIPT_DIR}"/install-rust-cargo.sh
 
     if [[ $STRIP_LATER -eq 1 ]]; then
@@ -352,7 +351,6 @@ install_for_rust_dev() {
 
 strip_for_rust() {
     # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
 }
 
@@ -379,10 +377,32 @@ install_for_bazel() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-bazel.sh
 
-    install_packages golang-go
+    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
+    # find the right repository name for the distro and version
+    # using "add-apt-repository" would require the installation of "software-properties-common"
+    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
+    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
+        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
+            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
+        fi
+    else
+        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
+    fi
+
+    local PACKAGES_TO_INSTALL=(
+        "golang-go"
+        "g++-13"
+        # required by packages/glib and therfore transitive by python unit tests
+        # this might not be installed if only bazel is installed
+        "libglib2.0-dev"
+    )
+    install_packages "${PACKAGES_TO_INSTALL[@]}"
 
     # install_packages golang-go
     "${SCRIPT_DIR}"/install-buildifier.sh
+
+    # buildifier is installed to /opt/bin by default
+    IMPORTANT_MESSAGES+=("Don't forget to call: export PATH=/opt/bin:\$PATH")
 
     print_green "Installation of Bazel/Bazelisk done"
 }
@@ -453,6 +473,7 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_RUST=1
             INSTALL_FOR_FRONTEND=1
             INSTALL_FOR_LOCALIZE=1
+            INSTALL_FOR_BAZEL=1
             ((STRIP_LATER += 5))
             ;;
         python)
@@ -550,7 +571,6 @@ if [[ $STRIP_LATER -gt 1 ]]; then
         "${SCRIPT_DIR}"/install-cmake.sh link-only
         # no need to link aka install protobuf again
         # "${SCRIPT_DIR}"/install-protobuf-cpp.sh link-only
-        "${SCRIPT_DIR}"/install-freetds.sh link-only
     fi
 
     if [[ $INSTALL_FOR_PYTHON -eq 1 && $INSTALLED_BY_PYENV -eq 0 ]]; then

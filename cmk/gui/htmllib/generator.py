@@ -62,6 +62,15 @@ def maybecall(entry: FinalJavaScript) -> str:
     return entry
 
 
+def _dump_standard_compliant_json(data: object) -> str:
+    # default json.dumps produces non standard compliant output: NaN, Infinity, -Infinity are not
+    # part of the JSON spec. in case you still serialize such a value with pythons default
+    # json.dumps you see very confusing parsing errors in the frontend.
+    # this function will make sure that a backend error is thrown if one of the three values is
+    # serialized, which makes it more obvious whats going wrong.
+    return json.dumps(data, allow_nan=False)
+
+
 class HTMLWriter:
     """Usage Notes:
 
@@ -204,8 +213,9 @@ class HTMLWriter:
         self,
         msg: HTML | str,
         msg_type: Literal["message", "warning", "error"],
+        flashed: bool = False,
     ) -> None:
-        self._write(self._render_message(msg, msg_type))
+        self._write(self._render_message(msg, msg_type, flashed))
 
     def show_message(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "message"))
@@ -216,19 +226,32 @@ class HTMLWriter:
     def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
-    def render_message(self, msg: HTML | str) -> HTML:
+    def render_message(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "message")
 
-    def render_error(self, msg: HTML | str) -> HTML:
+    def render_error(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "error")
 
-    def render_warning(self, msg: HTML | str) -> HTML:
+    def render_warning(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "warning")
 
     def _render_message(
         self,
         msg: HTML | str,
         msg_type: Literal["message", "warning", "error"] = "message",
+        flashed: bool = False,
     ) -> HTML:
         if msg_type == "message":
             cls = "success"
@@ -243,7 +266,7 @@ class HTMLWriter:
             raise TypeError(msg_type)
 
         if self.output_format == "html":
-            code = HTMLWriter.render_div(msg, class_=cls)
+            code = HTMLWriter.render_div(msg, class_=[cls, "flashed"] if flashed else cls)
             if self.mobile:
                 return HTMLWriter.render_center(code)
             return code
@@ -380,7 +403,10 @@ class HTMLWriter:
     def vue_app(self, app_name: str, data: dict[str, Any]) -> None:
         self.write_html(
             render_element(
-                "div", None, data_cmk_vue_app_name=app_name, data_cmk_vue_app_data=json.dumps(data)
+                "div",
+                None,
+                data_cmk_vue_app_name=app_name,
+                data_cmk_vue_app_data=_dump_standard_compliant_json(data),
             )
         )
 
@@ -666,7 +692,7 @@ class HTMLWriter:
         if arguments is None:
             json_arguments = "{}"
         else:
-            json_arguments = json.dumps(arguments)
+            json_arguments = _dump_standard_compliant_json(arguments)
         self.write_html(
             render_start_tag(
                 container,

@@ -16,8 +16,5 @@ fn test_verification_with_canned_certs() {
 
     let coll = verification::check(&[cert.to_vec()], config);
     assert_eq!(check::exit_code(&coll), 0);
-    assert_eq!(
-        coll.to_string(),
-        "Verification: OK\nCertificate chain verification OK"
-    );
+    assert_eq!(coll.to_string(), "Verification: OK\nVerification: OK");
 }

@@ -16,10 +16,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def _get_relative_date_human_readable(timestamp: float) -> str:
@@ -183,6 +183,7 @@ def parse_ad_replication(string_table: StringTable) -> StringTable:
 
 
 check_info["ad_replication"] = LegacyCheckDefinition(
+    name="ad_replication",
     parse_function=parse_ad_replication,
     service_name="AD Replication %s",
     discovery_function=inventory_ad_replication,

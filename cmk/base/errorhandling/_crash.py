@@ -24,7 +24,7 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.piggyback import get_messages_for
+from cmk.piggyback.backend import get_messages_for
 
 CrashReportStore = crash_reporting.CrashReportStore
 

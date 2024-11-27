@@ -100,8 +100,8 @@ def _resolve_paths() -> None:
             if path[0] != "/":
                 path = str(omd_root / path)
 
-            # This resolves given path patterns to really existing files.
-            # It also ensures that the files in the resolved list do really exist.
+            # Resolve given path pattern to really existing files.
+            # Also ensure that the files in the resolved list do really exist.
             resolved += glob.glob(path)
 
         if resolved:
@@ -149,8 +149,7 @@ def _collect_file_infos() -> None:
             plugin["file_infos"][path] = file_infos_value
 
 
-def _get_free_space():
-    # FIXME: Take possible root reserved space into account
+def _get_free_space() -> int:
     for filesystem in subprocess.check_output(
         [
             "df",
@@ -163,7 +162,7 @@ def _get_free_space():
         if filesystem[0] == "/":
             _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = filesystem.split()
             return int(free_bytes)
-    return None
+    raise RuntimeError(f"Failed to determine free disk space of volume containing {omd_root}")
 
 
 def _above_threshold(bytes_free: int) -> bool:
@@ -176,7 +175,7 @@ def _delete_file(path: str, reason: str) -> bool:
         _log(f"Deleting file ({reason}): {path}")
         os.unlink(path)
 
-        # Also delete any .info files which are connected to the rrd file
+        # Also delete any .info files which are connected to the RRD file
         if path.endswith(".rrd"):
             path = "%sinfo" % path[:-3]
             if os.path.exists(path):
@@ -192,7 +191,7 @@ def _delete_file(path: str, reason: str) -> bool:
 def _delete_files_and_base_directory(path: str, reason: str) -> bool:
     """
     Deletes files in a directory and the directory itself
-    (not recursing into sub directories. Failing instead)
+    (not walk into subdirectories. Failing instead)
     """
     try:
         _log(f"Deleting directory and files ({reason}): {path}")
@@ -328,10 +327,12 @@ def _do_cleanup_abandoned_host_files() -> None:
     """
     The mechanism is like this:
     - Get the list of configured hosts (also temporarily disabled ones)
-    - Scan the configured paths for files related to not known hosts
+      - On central (or standalone) sites: Get all hosts
+      - On remote sites: Get only the hosts that are known on the local site
+    - Scan known paths for files related unknown hosts.
     - Check the age of the found files and delete them when they are too old
-    - Additionally: Call the Check_MK-Automation to cleanup more files of
-      the hosts which files have been deleted for.
+    - Additionally call the Checkmk automation to clean up files from paths
+      which are internal to Checkmk.
     """
     if not cleanup_abandoned_host_files:
         return
@@ -348,8 +349,7 @@ def _do_cleanup_abandoned_host_files() -> None:
 
     cleanup_hosts = all_hosts if not is_wato_remote_site else local_site_hosts
 
-    # Base directories where each host has a sub-directory below with
-    # host related files inside
+    # Base directories where each host has a subdirectory below with host related files inside
     path_patterns: list[str] = [
         "%s/inventory_archive" % var_dir,
         "%s/rrd" % var_dir,
@@ -388,7 +388,7 @@ def _do_cleanup_abandoned_host_files() -> None:
 
 def _cleanup_aged() -> None:
     """
-    Loop all files to check wether or not files are older than
+    Loop all files to check whether files are older than
     max_age. Simply remove all of them.
 
     """
@@ -414,7 +414,7 @@ def _cleanup_oldest_files() -> None:
         _verbose("Not cleaning up oldest files of plugins (not enabled)")
         return
 
-    # check diskspace against configuration
+    # check disk space against configuration
     bytes_free: int = _get_free_space()
     if not opt_force and _above_threshold(bytes_free):
         _verbose(
@@ -424,7 +424,7 @@ def _cleanup_oldest_files() -> None:
 
     # the scheduling of the cleanup job is supposed to be equal for
     # all sites. To ensure that not only one single site is always
-    # cleaning up, we add a a random wait before cleanup.
+    # cleaning up, we add a random wait before cleanup.
     sleep_sec = float(random.randint(0, 10000)) / 1000
     _verbose("Sleeping for %0.3f seconds" % sleep_sec)
     time.sleep(sleep_sec)
@@ -447,7 +447,7 @@ def main() -> None:
 
     _do_cleanup_abandoned_host_files()
 
-    # get used diskspace of the sites volume
+    # get used disk space of the sites volume
     bytes_free = _get_free_space()
     _verbose("Free space: %s" % fmt_bytes(bytes_free))
 

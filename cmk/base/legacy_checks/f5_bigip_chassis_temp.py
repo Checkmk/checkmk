@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_f5_bigip_chassis_temp(info):
@@ -29,6 +30,7 @@ def parse_f5_bigip_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_chassis_temp"] = LegacyCheckDefinition(
+    name="f5_bigip_chassis_temp",
     parse_function=parse_f5_bigip_chassis_temp,
     detect=DETECT,
     fetch=SNMPTree(

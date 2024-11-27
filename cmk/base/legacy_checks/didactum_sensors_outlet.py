@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.didactum import DETECT_DIDACTUM
+
+check_info = {}
 
 
 def inventory_didactum_sensors_outlet_relay(parsed):
@@ -27,6 +28,7 @@ def check_didactum_sensors_outlet_relay(item, params, parsed):
 
 
 check_info["didactum_sensors_outlet"] = LegacyCheckDefinition(
+    name="didactum_sensors_outlet",
     detect=DETECT_DIDACTUM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.46501.5.3.1",

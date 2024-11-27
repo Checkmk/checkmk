@@ -22,6 +22,11 @@ class QuickSetupStageOverviewResponse(BaseSchema):
 
 
 class Errors(BaseSchema):
+    stage_index = fields.Integer(
+        example=0,
+        description="Index of the stage containing errors.",
+        allow_none=True,
+    )
     formspec_errors = fields.Dict(
         example={},
         description="A mapping of formspec ids to formspec validation errors",
@@ -33,14 +38,36 @@ class Errors(BaseSchema):
     )
 
 
-class QuickSetupCompleteButton(BaseSchema):
+class QuickSetupButton(BaseSchema):
     id = fields.String(
-        example="save",
+        example="next",
         description="The button id",
+        allow_none=True,
     )
     label = fields.String(
-        example="Save configuration",
-        description="The label of the complete button of the overall Quick setup",
+        example="Next",
+        description="The label of the button",
+    )
+    aria_label = fields.String(
+        example="Next",
+        description="The aria label of the button",
+        allow_none=True,
+    )
+
+
+class Action(BaseSchema):
+    id = fields.String(
+        example="action",
+        description="The action id",
+    )
+    button = fields.Nested(
+        QuickSetupButton,
+        example={"label": "Next", "aria_label": "Next"},
+        description="Definition of the action button",
+    )
+    load_wait_label = fields.String(
+        example="Please wait...",
+        description="A string to display while waiting for the next stage",
     )
 
 
@@ -50,9 +77,15 @@ class QuickSetupNextStageStructure(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
-    button_label = fields.String(
-        example="Next",
-        description="The text of the button",
+    actions = fields.List(
+        fields.Nested(Action),
+        example=[],
+        description="A collection of stage actions",
+    )
+    prev_button = fields.Nested(
+        QuickSetupButton,
+        example={"id": "prev", "label": "Back"},
+        description="Definition of the `go to previous stage` button",
         allow_none=True,
     )
 
@@ -65,7 +98,7 @@ class QuickSetupStageResponse(BaseSchema):
     )
     next_stage_structure = fields.Nested(
         QuickSetupNextStageStructure,
-        example={"components": [], "button_label": ""},
+        example={"components": [], "button_label": "", "prev_button_label": ""},
         description="The next stage structure",
     )
     errors = fields.Nested(
@@ -91,9 +124,15 @@ class QuickSetupCompleteStageResponse(BaseSchema):
         example=[],
         description="A collection of stage components",
     )
-    button_label = fields.String(
-        example="Next",
-        description="The text of the button",
+    actions = fields.List(
+        fields.Nested(Action),
+        example=[],
+        description="A collection of stage actions",
+    )
+    prev_button = fields.Nested(
+        QuickSetupButton,
+        example={"id": "prev", "label": "Back"},
+        description="Definition of the `go to previous stage` button",
         allow_none=True,
     )
 
@@ -103,10 +142,27 @@ class QuickSetupBaseResponse(BaseSchema):
         example="aws_quicksetup",
         description="The quicksetup id",
     )
-    complete_buttons = fields.List(
-        fields.Nested(QuickSetupCompleteButton),
+    actions = fields.List(
+        fields.Nested(Action),
         example=[{"id": "save", "label": "Save configuration"}],
-        description="A list of all complete buttons",
+        description="A list of all complete actions",
+    )
+
+    prev_button = fields.Nested(
+        QuickSetupButton,
+        example={"id": "prev", "label": "Back", "aria_label": "Back"},
+        description="Definition of the `go to previous stage` button",
+        allow_none=True,
+    )
+
+    guided_mode_string = fields.String(
+        example="Guided mode",
+        description="The string for the guided mode label",
+    )
+
+    overview_mode_string = fields.String(
+        example="Overview mode",
+        description="The string for the overview mode label",
     )
 
 
@@ -147,8 +203,19 @@ class QuickSetupResponse(OneOfSchema):
         raise Exception("Unknown object type: %s" % repr(obj))
 
 
-class QuickSetupSaveResponse(BaseSchema):
+class QuickSetupCompleteResponse(BaseSchema):
     redirect_url = fields.String(
         example="http://save/url",
         description="The url to redirect to after saving the quicksetup",
+    )
+
+    all_stage_errors = fields.List(
+        fields.Nested(
+            Errors,
+            example={},
+            description="Formspec errors and general stage errors",
+            allow_none=True,
+        ),
+        description="A list of stage errors",
+        example=[],
     )

@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
+
+check_info = {}
 
 # Example for info:
 # [[[u'1.1.1', u'4', u'0'],
@@ -78,6 +78,7 @@ def check_raritan_pdu_ocprot(item, params, parsed):
 
 
 check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
+    name="raritan_pdu_ocprot",
     detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
     fetch=[
         SNMPTree(

@@ -47,6 +47,7 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/cmk-agent-ctl.gz
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
+/var/lib/cmk-agent/scripts/migrate.sh
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket.fallback
@@ -66,6 +67,12 @@ if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
 fi
 
 %posttrans
+
+# Migration is currently only used for migrating runtime files from muliple directory deployment
+# to single directory deployment, but may be augmented by further migration actions in the future.
+# This should run as the first action after files have been placed
+# by the package manager, in order to provide a clean structure for all further scripts.
+/bin/sh /var/lib/cmk-agent/scripts/migrate.sh
 
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy

@@ -8,11 +8,11 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.lib.oracle import OraErrors
@@ -39,9 +39,9 @@ from cmk.plugins.oracle.agent_based.oracle_processes import OracleProcess, Secti
 def test_parse_oracle_processes(
     info: StringTable,
     parse_result: SectionOracleProcesses,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    check = fix_register.agent_sections[SectionName("oracle_processes")]
+    check = agent_based_plugins.agent_sections[SectionName("oracle_processes")]
     assert check.parse_function(info) == parse_result
 
 
@@ -61,9 +61,9 @@ def test_parse_oracle_processes(
 def test_parse_error_oracle_processes(
     info: StringTable,
     parse_result: SectionOracleProcesses,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    check = fix_register.agent_sections[SectionName("oracle_processes")]
+    check = agent_based_plugins.agent_sections[SectionName("oracle_processes")]
     process_name = info[0][0]
 
     parse_value = check.parse_function(info).error_processes[process_name]
@@ -109,9 +109,9 @@ def test_parse_error_oracle_processes(
 def test_discover_oracle_processes(
     section: SectionOracleProcesses,
     discovered_item: Sequence[Service],
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("oracle_processes")]
+    check = agent_based_plugins.check_plugins[CheckPluginName("oracle_processes")]
     assert list(check.discovery_function(section)) == discovered_item
 
 
@@ -193,9 +193,9 @@ def test_check_oracle_processes(
     section: SectionOracleProcesses,
     item: str,
     check_result: Sequence[Result | Metric],
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("oracle_processes")]
+    check = agent_based_plugins.check_plugins[CheckPluginName("oracle_processes")]
     assert (
         list(check.check_function(item=item, params={"levels": (70.0, 90.0)}, section=section))
         == check_result

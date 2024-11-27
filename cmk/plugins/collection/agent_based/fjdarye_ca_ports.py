@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.diskstat import check_diskstat_dict_legacy
 
 FJDARYE_SUPPORTED_DEVICES = [
     ".1.3.6.1.4.1.211.1.21.1.150",  # fjdarye500
@@ -125,7 +125,7 @@ def check_fjdarye_ca_ports(
 
     yield Result(state=State.OK, summary=f"Mode: {disk['mode']}")
 
-    yield from check_diskstat_dict(
+    yield from check_diskstat_dict_legacy(
         disk={k: v for k, v in disk.items() if k != "mode" and isinstance(v, float)},
         params=params,
         value_store=get_value_store(),

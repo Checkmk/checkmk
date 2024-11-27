@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.3.1 Power Supply A --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyStatusDescr.1
 # .1.3.6.1.4.1.9148.3.3.1.5.1.1.3.2 Power Supply B --> ACMEPACKET-ENVMON-MIB::apEnvMonPowerSupplyStatusDescr.2
@@ -33,6 +33,7 @@ def parse_acme_powersupply(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_powersupply"] = LegacyCheckDefinition(
+    name="acme_powersupply",
     parse_function=parse_acme_powersupply,
     detect=DETECT_ACME,
     fetch=SNMPTree(

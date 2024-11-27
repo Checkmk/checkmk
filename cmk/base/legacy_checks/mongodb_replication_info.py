@@ -17,10 +17,10 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 Section = Mapping
 
@@ -141,6 +141,7 @@ def _get_as_int(data, key):
 
 
 check_info["mongodb_replication_info"] = LegacyCheckDefinition(
+    name="mongodb_replication_info",
     parse_function=parse_mongodb_replication_info,
     service_name="MongoDB Replication Info",
     discovery_function=discover_mongodb_replication_info,

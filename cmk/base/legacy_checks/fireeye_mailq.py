@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.13.1.44.0 0
 # .1.3.6.1.4.1.25597.13.1.45.0 603
@@ -40,6 +40,7 @@ def check_fireeye_mailq(_no_item, params, parsed):
 
 
 check_info["fireeye_mailq"] = LegacyCheckDefinition(
+    name="fireeye_mailq",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",

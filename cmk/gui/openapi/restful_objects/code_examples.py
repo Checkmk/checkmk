@@ -17,10 +17,14 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
+from apispec.ext.marshmallow import (  # type: ignore[attr-defined,unused-ignore]
+    resolve_schema_instance,
+)
 from marshmallow import Schema
 
 from cmk.ccc.site import omd_site
+
+from cmk.utils.jsontype import JsonSerializable
 
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
@@ -391,14 +395,14 @@ def _transform_params(param_list):
     }
 
 
-JsonObject: TypeAlias = dict[
-    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
-]
+JsonObject: TypeAlias = dict[str, JsonSerializable]
 
 
 def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
     for key, example in field.items():
         match example:
+            case None:
+                lines.append(prefix + key + ":=null")
             case bool():
                 lines.append(prefix + key + ":=" + str(example).lower())
             case int() | float():
@@ -431,6 +435,8 @@ def httpie_request_body(examples: JsonObject) -> str:
     "foo='bar bar bar'"
     >>> httpie_request_body({"foo": 5})
     'foo:=5'
+    >>> httpie_request_body({"foo": None})
+    'foo:=null'
     >>> httpie_request_body({"foo": False})
     'foo:=false'
     >>> httpie_request_body({"foo": [1,2,3]})

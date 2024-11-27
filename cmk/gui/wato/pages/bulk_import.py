@@ -531,7 +531,7 @@ class ModeBulkImport(WatoMode):
                 # Render attribute selection fields
                 table.row()
                 for col_num in range(num_columns):
-                    header = headers[col_num] if len(headers) > col_num else None
+                    header = headers[col_num] if len(headers) > col_num else ""
                     table.cell(escape_to_html_permissive(header))
                     attribute_varname = "attribute_%d" % col_num
                     if request.var(attribute_varname):

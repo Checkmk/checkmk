@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to_nagios
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.checkpoint import DETECT
+
+check_info = {}
 
 
 def format_item_checkpoint_temp(name):
@@ -47,6 +48,7 @@ def parse_checkpoint_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_temp"] = LegacyCheckDefinition(
+    name="checkpoint_temp",
     parse_function=parse_checkpoint_temp,
     detect=DETECT,
     fetch=SNMPTree(

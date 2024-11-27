@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -64,6 +65,7 @@ def parse_genua_fan(string_table: Sequence[StringTable]) -> Sequence[StringTable
 
 
 check_info["genua_fan"] = LegacyCheckDefinition(
+    name="genua_fan",
     parse_function=parse_genua_fan,
     detect=DETECT_GENUA,
     fetch=[

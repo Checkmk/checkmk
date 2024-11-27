@@ -67,15 +67,15 @@ from cmk.gui.wato._main_module_topics import (
     MainModuleTopicServices,
     MainModuleTopicUsers,
 )
-
-from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
-from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
-from ._http_proxy import HTTPProxyInput, HTTPProxyReference
-from ._notification_parameter import (
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     NotificationParameter,
     register_notification_parameters,
 )
+
+from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
+from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._http_proxy import HTTPProxyInput, HTTPProxyReference
 from ._permissions import PermissionSectionWATO
 from ._rulespec_groups import (
     RulespecGroupActiveChecks,

@@ -203,7 +203,10 @@ def discover_logwatch_ec_common(
         return
 
     if mode == "groups":
-        yield Service(parameters={"expected_logfiles": sorted(forwarded_logs)})
+        yield Service(
+            parameters={"expected_logfiles": sorted(forwarded_logs)},
+            labels=logwatch.NEVER_DISCOVER_SERVICE_LABELS,
+        )
         return
 
     single_log_params = logwatch.CommonLogwatchEc()
@@ -219,7 +222,11 @@ def discover_logwatch_ec_common(
             single_log_params[key] = merged_rules[key]  # type: ignore[literal-required]
     for log in forwarded_logs:
         single_log_params["expected_logfiles"] = [log]
-        yield Service(item=log, parameters=single_log_params.copy())
+        yield Service(
+            item=log,
+            parameters=single_log_params.copy(),
+            labels=logwatch.NEVER_DISCOVER_SERVICE_LABELS,
+        )
 
 
 @dataclass

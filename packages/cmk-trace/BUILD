@@ -1,18 +1,32 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
+
+exports_files([
+    "pyproject.toml",
+    "requirements.txt",
+])
 
 py_library(
     name = "cmk-trace",
     srcs = [
         "cmk/trace/__init__.py",
         "cmk/trace/_config.py",
+        "cmk/trace/_propagate.py",
         "cmk/trace/export.py",
         "cmk/trace/logs.py",
         "cmk/trace/py.typed",
     ],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("opentelemetry-api"),
+        requirement("opentelemetry-sdk"),
+        requirement("opentelemetry-exporter-otlp"),
+        requirement("opentelemetry-exporter-otlp-proto-grpc"),
+        requirement("opentelemetry-semantic-conventions"),
+    ],
 )
 
 py_wheel(

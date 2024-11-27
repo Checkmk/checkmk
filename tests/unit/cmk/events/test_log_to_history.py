@@ -23,10 +23,14 @@ class FakeLocalConnection:
     sent_command = None
     timeout = None
 
-    def command(self, command, site=None):
+    def command(
+        self,
+        command: str,
+        site: livestatus.SiteId | None = None,  # pylint: disable=unused-argument
+    ) -> None:
         self.__class__.sent_command = command
 
-    def set_timeout(self, timeout):
+    def set_timeout(self, timeout: int) -> None:
         self.__class__.timeout = timeout
 
 

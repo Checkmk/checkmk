@@ -22,7 +22,7 @@ class TestCase:
 
 class TestSuite:
     name: str
-    suites: Sequence["TestSuite"]
+    suites: Sequence[TestSuite]
     tests: Sequence[TestCase]
 
 class Message:
@@ -35,7 +35,7 @@ class Keyword(BodyItem):
     messages: Sequence[Message]
 
 class Result:
-    def visit(self, visitor: "ResultVisitor") -> None: ...
+    def visit(self, visitor: ResultVisitor) -> None: ...
 
 class ResultVisitor: ...
 

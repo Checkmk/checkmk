@@ -514,4 +514,4 @@ def test_pod_resource_fields() -> None:
     _POD_RESOURCES_FIELDS is used, if do not have an instance of type PodResources. Instead, we
     could use the method below, but we don't want to rely on it's behaviour.
     """
-    assert _POD_RESOURCES_FIELDS == tuple(PodResources.model_fields)
+    assert _POD_RESOURCES_FIELDS == tuple(PodResources.__pydantic_fields__)

@@ -11,11 +11,11 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.mongodb import parse_date
+
+check_info = {}
 
 
 def parse_mongodb_collections(string_table):
@@ -216,6 +216,7 @@ def _mongodb_collections_get_as_int(data, key):
 
 
 check_info["mongodb_collections"] = LegacyCheckDefinition(
+    name="mongodb_collections",
     parse_function=parse_mongodb_collections,
     service_name="MongoDB Collection: %s",
     discovery_function=inventory_mongodb_collections,

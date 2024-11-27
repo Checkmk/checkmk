@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from '@/form/components/vue_formspec_components'
-import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
-import FormEdit from '@/form/components/FormEdit.vue'
+import { type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
-import { ref } from 'vue'
-import { immediateWatch } from '../utils/watch'
-import { useId } from '@/form/utils'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
+import { watch, ref } from 'vue'
+import { immediateWatch } from '../../../lib/watch'
+import HelpText from '@/components/HelpText.vue'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice
@@ -18,53 +19,55 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-const [validation, value] = useValidation<unknown>(
-  data,
-  props.spec.validators,
-  () => props.backendValidation
-)
 
 const embeddedValidation = ref<ValidationMessages>([])
+const localValidation = ref<string[]>([])
+const checkboxValue = ref<boolean>(data.value !== null)
 
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    embeddedValidation.value = newValidation
-      .filter((msg) => msg.location.length > 1)
-      .map((msg) => {
-        return {
+    embeddedValidation.value = []
+    localValidation.value = []
+    newValidation.forEach((msg) => {
+      if (msg.location.length === 0) {
+        localValidation.value.push(msg.message)
+      } else {
+        embeddedValidation.value.push({
           location: msg.location.slice(1),
           message: msg.message,
           invalid_value: msg.invalid_value
-        }
-      })
+        })
+      }
+    })
   }
 )
 
-const componentId = useId()
+watch(checkboxValue, (newValue: boolean) => {
+  if (newValue) {
+    data.value = props.spec.parameter_form_default_value
+  } else {
+    data.value = null
+  }
+})
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <input
-    :id="`${componentId}_input`"
-    :checked="value !== null"
-    type="checkbox"
-    @change="value = value === null ? spec.parameter_form_default_value : null"
-  />
-  <label :for="`${componentId}_input`">
-    {{ spec.i18n.label }}
-  </label>
-  <div v-if="value !== null" class="embedded">
+  <CmkCheckbox v-model="checkboxValue" :label="spec.i18n.label" />
+  <HelpText :help="spec.help" />
+  <div v-if="data !== null" class="embedded">
     <span v-if="spec.parameter_form.title" class="embedded_title">
       {{ spec.parameter_form.title }}
     </span>
-    <FormEdit
-      v-model:data="value"
+    <FormEditDispatcher
+      v-model:data="data"
       :spec="spec.parameter_form"
       :backend-validation="embeddedValidation"
     />
   </div>
-  <FormValidation :validation="validation"></FormValidation>
+  <FormValidation :validation="localValidation"></FormValidation>
 </template>
 
 <style scoped>

@@ -6,14 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
+import re
 import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition, regex
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, IgnoreResults, render
+
+check_info = {}
 
 # <<<omd_apache:sep(124)>>>
 # [heute]
@@ -27,19 +28,22 @@ from cmk.agent_based.v2 import get_value_store, IgnoreResults, render
 
 omd_apache_patterns = [
     # perf keys         url matching regex
-    ("cmk_views", r"^check_mk/view\.py"),
-    ("cmk_wato", r"^check_mk/wato\.py"),
-    ("cmk_bi", r"^check_mk/bi\.py"),
-    ("cmk_snapins", r"^check_mk/sidebar_snapin\.py"),
-    ("cmk_dashboards", r"^check_mk/dashboard\.py"),
-    ("cmk_other", r"^check_mk/.*\.py"),
-    ("nagvis_snapin", r"^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps"),
-    ("nagvis_ajax", r"^nagvis/server/core/ajax_handler\.php"),
-    ("nagvis_other", r"^nagvis/.*\.php"),
-    ("images", r"\.(jpg|png|gif)$"),
-    ("styles", r"\.css$"),
-    ("scripts", r"\.js$"),
-    ("other", ".*"),
+    ("cmk_views", re.compile(r"^check_mk/view\.py")),
+    ("cmk_wato", re.compile(r"^check_mk/wato\.py")),
+    ("cmk_bi", re.compile(r"^check_mk/bi\.py")),
+    ("cmk_snapins", re.compile(r"^check_mk/sidebar_snapin\.py")),
+    ("cmk_dashboards", re.compile(r"^check_mk/dashboard\.py")),
+    ("cmk_other", re.compile(r"^check_mk/.*\.py")),
+    (
+        "nagvis_snapin",
+        re.compile(r"^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps"),
+    ),
+    ("nagvis_ajax", re.compile(r"^nagvis/server/core/ajax_handler\.php")),
+    ("nagvis_other", re.compile(r"^nagvis/.*\.php")),
+    ("images", re.compile(r"\.(jpg|png|gif)$")),
+    ("styles", re.compile(r"\.css$")),
+    ("scripts", re.compile(r"\.js$")),
+    ("other", re.compile(".*")),
 ]
 
 
@@ -60,7 +64,7 @@ def _compute_rate(
 def check_omd_apache(item, _no_params, parsed):
     # First initialize all possible values to be able to always report all perf keys
     stats = {"requests": {}, "secs": {}, "bytes": {}}
-    for key, pattern in omd_apache_patterns:
+    for key, _pattern in omd_apache_patterns:
         stats["requests"][key] = 0
         stats["secs"][key] = 0
         stats["bytes"][key] = 0
@@ -82,7 +86,7 @@ def check_omd_apache(item, _no_params, parsed):
 
         for key, pattern in omd_apache_patterns:
             # make url relative to site directory
-            if regex(pattern).search(url[len("/" + item + "/") :]):
+            if pattern.search(url[len("/" + item + "/") :]):
                 stats["requests"].setdefault(key, 0)
                 stats["requests"][key] += 1
 
@@ -118,6 +122,7 @@ def check_omd_apache(item, _no_params, parsed):
 
 # This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!
 check_info["omd_apache"] = LegacyCheckDefinition(
+    name="omd_apache",
     service_name="OMD %s apache",
     discovery_function=inventory_omd_apache,
     check_function=check_omd_apache,

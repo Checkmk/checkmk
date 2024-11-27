@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import enum
 import itertools
 import logging
 import os
@@ -15,7 +16,7 @@ from contextlib import suppress
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
+from typing import Final, Literal, NamedTuple, Protocol, TypedDict, TypeVar
 
 import livestatus
 
@@ -80,7 +81,11 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import inventory
-from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
+from cmk.checkengine.checking import (
+    CheckPluginName,
+    execute_checkmk_checks,
+    make_timing_results,
+)
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     commandline_discovery,
@@ -106,7 +111,12 @@ import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.parent_scan
 from cmk.base import config, profiling, sources
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    CheckPlugin,
+    SNMPSectionPlugin,
+)
+from cmk.base.api.agent_based.plugin_classes import InventoryPlugin as InventoryPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -127,15 +137,18 @@ from cmk.base.config import (
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
-from cmk import piggyback
+from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.piggyback import backend as piggyback_backend
+from cmk.server_side_calls_backend import load_active_checks
 
 from ._localize import do_localize
+
+tracer = trace.get_tracer()
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -342,7 +355,10 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
-    config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
+    config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
+    hostgroups: list[str],
+    options: dict,
 ) -> list[HostName]:
     hosts_config = config_cache.hosts_config
     hostnames: Iterable[HostName]
@@ -465,51 +481,101 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+class _DSType(enum.Enum):
+    ACTIVE = enum.auto()
+    SNMP = enum.auto()
+    AGENT = enum.auto()
+    AGENT_SNMP = enum.auto()
+
+
+@dataclasses.dataclass(frozen=True)
+class _TableRow:
+    name: str
+    ds_type: _DSType
+    title: str
+
+    def render_tty(self) -> str:
+        return f"{self._render_name()}{self._render_ds_type()}{self._render_title()}"
+
+    def _render_name(self) -> str:
+        return f"{tty.bold}{self.name!s:44}"
+
+    def _render_ds_type(self) -> str:
+        match self.ds_type:
+            case _DSType.ACTIVE:
+                return f"{tty.blue}{'active':10}"
+            case _DSType.SNMP:
+                return f"{tty.magenta}{'snmp':10}"
+            case _DSType.AGENT:
+                return f"{tty.yellow}{'agent':10}"
+            case _DSType.AGENT_SNMP:
+                return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
+
+    def _render_title(self) -> str:
+        return f"{tty.normal}{self.title}"
+
+
+def _get_ds_type(
+    check: CheckPlugin, sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin]
+) -> _DSType:
+    raw_section_is_snmp = {
+        isinstance(s, SNMPSectionPlugin)
+        for s in agent_based_register.filter_relevant_raw_sections(
+            consumers=(check,),
+            sections=sections,
+        ).values()
+    }
+    if all(raw_section_is_snmp):
+        return _DSType.SNMP
+    if not any(raw_section_is_snmp):
+        return _DSType.AGENT
+    return _DSType.AGENT_SNMP
+
+
 def mode_list_checks() -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
+
+    plugins = agent_based_register.get_previously_loaded_plugins()
+    section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
+        *plugins.agent_sections.values(),
+        *plugins.snmp_sections.values(),
+    ]
 
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         ).items()
     }
 
-    all_checks: list[CheckPluginName | str] = [
-        p.name for p in agent_based_register.iter_all_check_plugins()
+    def _get_title(plugin_name: str) -> str:
+        try:
+            return all_check_manuals[plugin_name].title
+        except KeyError:
+            return "(no man page present)"
+
+    table = [
+        *(
+            _TableRow(
+                name=(name := f"check_{p.name}"),
+                ds_type=_DSType.ACTIVE,
+                title=_get_title(name),
+            )
+            for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
+        ),
+        *(
+            _TableRow(
+                name=str(plugin.name),
+                ds_type=_get_ds_type(plugin, section_plugins),
+                title=_get_title(str(plugin.name)),
+            )
+            for plugin in plugins.check_plugins.values()
+        ),
     ]
 
-    all_checks.extend("check_" + p.name for p in load_active_checks()[1].values())
-
-    for plugin_name in sorted(all_checks, key=str):
-        ds_protocol = _get_ds_protocol(plugin_name)
-        try:
-            title = all_check_manuals[str(plugin_name)].title
-        except KeyError:
-            title = "(no man page present)"
-
-        print_(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
-
-
-def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
-    if isinstance(check_name, str):  # active check
-        return f"{tty.blue}{'active':10}"
-
-    raw_section_is_snmp = {
-        isinstance(s, SNMPSectionPlugin)
-        for s in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(check_name,),
-            inventory_plugin_names=(),
-        ).values()
-    }
-
-    if not any(raw_section_is_snmp):
-        return f"{tty.yellow}{'agent':10}"
-
-    if all(raw_section_is_snmp):
-        return f"{tty.magenta}{'snmp':10}"
-
-    return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
+    for e in sorted(table, key=lambda e: e.name):
+        print_(f"{e.render_tty()}\n")
 
 
 modes.register(
@@ -544,6 +610,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     try:
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         hosts_config = config.make_hosts_config()
         if hostname in hosts_config.clusters:
@@ -577,6 +644,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         has_errors = False
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         for source in sources.make_sources(
+            plugins,
             hostname,
             ipaddress,
             ip_stack_config,
@@ -635,7 +703,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     source_info.hostname,
                     source_info.fetcher_type,
                     checking_sections=config_cache.make_checking_sections(
-                        hostname, selected_sections=NO_SELECTION
+                        plugins, hostname, selected_sections=NO_SELECTION
                     ),
                     persisted_section_dir=make_persisted_section_dir(
                         source_info.hostname,
@@ -703,6 +771,7 @@ modes.register(
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     hosts_config = config_cache.hosts_config
     all_hosts = {
         hn
@@ -717,7 +786,9 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     for hostname in sorted(hosts - all_hosts):
         sys.stderr.write(f"unknown host: {hostname}\n")
     for hostname in sorted(hosts & all_hosts):
-        cmk.base.dump_host.dump_host(config_cache, hostname, simulation_mode=config.simulation_mode)
+        cmk.base.dump_host.dump_host(
+            config_cache, plugins, hostname, simulation_mode=config.simulation_mode
+        )
 
 
 modes.register(
@@ -828,7 +899,7 @@ def mode_update_dns_cache() -> None:
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,
-        override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
+        override_dns=(HostAddress(config.fake_dns) if config.fake_dns is not None else None),
     )
 
 
@@ -853,7 +924,7 @@ modes.register(
 
 def mode_cleanup_piggyback() -> None:
     max_age = config.get_config_cache().get_definitive_piggybacked_data_expiry_age()
-    piggyback.cleanup_piggyback_files(
+    piggyback_backend.cleanup_piggyback_files(
         cut_off_timestamp=time.time() - max_age, omd_root=cmk.utils.paths.omd_root
     )
 
@@ -966,7 +1037,9 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     # TODO: What about SNMP management boards?
     try:
         _do_snmpwalk_on(
-            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+            options,
+            cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
+            backend=backend,
         )
     except Exception as e:
         console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
@@ -1164,7 +1237,6 @@ modes.register(
 def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    ruleset_matcher = config_cache.ruleset_matcher
 
     if not hosts:
         hosts = sorted(
@@ -1205,7 +1277,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 print_(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
-        d = piggyback.remove_source_status_file(host, cmk.utils.paths.omd_root)
+        d = piggyback_backend.remove_source_status_file(host, cmk.utils.paths.omd_root)
         if d:
             print_(tty.bold + tty.magenta + " piggyback(1)")
 
@@ -1229,8 +1301,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
             remove_autochecks_of_host(
                 node,
                 host,
-                config_cache.effective_host,
-                partial(config.service_description, ruleset_matcher),
+                config_cache.effective_host_of_autocheck,
             )
             for node in config_cache.nodes(host) or [host]
         )
@@ -1375,8 +1446,9 @@ def mode_update() -> None:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
-                ip_address_of=ip_address_of,
                 config_cache=config_cache,
+                plugins=agent_based_register.get_previously_loaded_plugins(),
+                ip_address_of=ip_address_of,
                 all_hosts=hosts_config.hosts,
                 duplicates=sorted(
                     hosts_config.duplicates(
@@ -1528,7 +1600,8 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=cmk.ccc.debug.enabled()),
+        PluginGroup.CHECKMAN.value,
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
@@ -1599,7 +1672,8 @@ def mode_browse_man() -> None:
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         )
     )
 
@@ -1646,7 +1720,15 @@ def mode_automation(args: list[str]) -> None:
         log.logger.addHandler(logging.NullHandler())
         log.logger.setLevel(logging.INFO)
 
-    sys.exit(automations.automations.execute(args[0], args[1:]))
+    name, automation_args = args[0], args[1:]
+    with tracer.start_as_current_span(
+        f"mode_automation[{name}]",
+        attributes={
+            "cmk.automation.name": name,
+            "cmk.automation.args": automation_args,
+        },
+    ):
+        sys.exit(automations.automations.execute(name, automation_args))
 
 
 modes.register(
@@ -1704,6 +1786,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         host_parameters_cb=lambda hostname,
         plugin: config.get_config_cache().notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
+        parameters=config.notification_parameter,
         get_http_proxy=config.get_http_proxy,
         ensure_nagios=ensure_nagios,
         bulk_interval=config.notification_bulk_interval,
@@ -1766,13 +1849,16 @@ def mode_check_discovery(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     check_interval = config_cache.check_mk_check_interval(hostname)
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -1793,7 +1879,7 @@ def mode_check_discovery(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -1824,7 +1910,9 @@ def mode_check_discovery(
             fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
             summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                 operation="parsing",
                 section_name=section_name,
@@ -1832,12 +1920,12 @@ def mode_check_discovery(
                 host_name=hostname,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            ignore_service=config_cache.service_ignored,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            get_effective_host=config_cache.effective_host,
-            find_service_description=partial(config.service_description, ruleset_matcher),
+            autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(hostname),
         )
 
@@ -1863,7 +1951,9 @@ def register_mode_check_discovery(
         Mode(
             long_option="check-discovery",
             handler_function=partial(
-                mode_check_discovery, active_check_handler=active_check_handler, keepalive=keepalive
+                mode_check_discovery,
+                active_check_handler=active_check_handler,
+                keepalive=keepalive,
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -1950,26 +2040,23 @@ _option_detect_plugins = Option(
     argument_conv=_convert_detect_plugins_argument,
 )
 
-
-@overload
-def _extract_plugin_selection(
-    options: "_CheckingOptions | _DiscoveryOptions",
-    type_: type[CheckPluginName],
-) -> tuple[SectionNameCollection, Container[CheckPluginName]]:
-    pass
+_PluginName = TypeVar("_PluginName", CheckPluginName, InventoryPluginName)
 
 
-@overload
-def _extract_plugin_selection(
-    options: "_InventoryOptions",
-    type_: type[InventoryPluginName],
-) -> tuple[SectionNameCollection, Container[InventoryPluginName]]:
-    pass
+def _lookup_plugin(
+    plugin_name: _PluginName, plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI]
+) -> CheckPlugin | InventoryPluginAPI:
+    try:
+        return plugins[plugin_name]
+    except KeyError as exc:
+        raise MKBailOut(f"Unknown check plugin '{plugin_name}'") from exc
 
 
 def _extract_plugin_selection(
     options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
-    type_: type,
+    plugins: Mapping[_PluginName, CheckPlugin | InventoryPluginAPI],
+    sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
+    type_: type[_PluginName],
 ) -> tuple[SectionNameCollection, Container]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
@@ -1991,31 +2078,16 @@ def _extract_plugin_selection(
         # something different. Keeping this for compatibility with old --checks
         return NO_SELECTION, EVERYTHING
 
-    if type_ is CheckPluginName:
-        check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
-        return (
-            frozenset(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_plugin_names,
-                    inventory_plugin_names=(),
-                )
-            ),
-            check_plugin_names,
-        )
-
-    if type_ is InventoryPluginName:
-        inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
-        return (
-            frozenset(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=(),
-                    inventory_plugin_names=inventory_plugin_names,
-                )
-            ),
-            inventory_plugin_names,
-        )
-
-    raise NotImplementedError(f"unknown plug-in name {type_}")
+    plugin_names = {type_(p) for p in detect_plugins}
+    return (
+        frozenset(
+            agent_based_register.filter_relevant_raw_sections(
+                consumers=(_lookup_plugin(pn, plugins) for pn in plugin_names),
+                sections=sections,
+            )
+        ),
+        plugin_names,
+    )
 
 
 _DiscoveryOptions = TypedDict(
@@ -2064,6 +2136,7 @@ def _preprocess_hostnames(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
@@ -2090,12 +2163,17 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.check_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        CheckPluginName,
+    )
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2104,12 +2182,15 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=on_error,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
@@ -2127,7 +2208,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     ):
 
         def section_error_handling(
-            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = hostname
+            section_name: SectionName,
+            raw_data: Sequence[object],
+            host_name: HostName = hostname,
         ) -> str:
             return create_section_crash_dump(
                 operation="parsing",
@@ -2142,9 +2225,14 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             ruleset_matcher=config_cache.ruleset_matcher,
             parser=parser,
             fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=section_error_handling,
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=config_cache.ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
             run_plugin_names=run_plugin_names,
             ignore_plugin=config_cache.check_plugin_ignored,
@@ -2260,17 +2348,27 @@ def mode_check(
 
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
+
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.check_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        CheckPluginName,
+    )
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
@@ -2284,7 +2382,7 @@ def mode_check(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2333,7 +2431,9 @@ def mode_check(
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
                 summarizer=summarizer,
-                section_plugins=SectionPluginMapper(),
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
                 section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                     operation="parsing",
                     section_name=section_name,
@@ -2353,7 +2453,7 @@ def mode_check(
                     monitoring_core=config.monitoring_core,
                     dry_run=dry_run,
                     host_name=hostname,
-                    perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+                    perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
@@ -2483,6 +2583,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
 
     if args:
         hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
@@ -2502,16 +2603,24 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     if "force" in options:
         file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
-    selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(
+        options,
+        plugins.inventory_plugins,
+        itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
+        InventoryPluginName,
+    )
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
@@ -2521,7 +2630,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2531,7 +2640,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
-    section_plugins = SectionPluginMapper()
+    section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = InventoryPluginMapper()
 
     for hostname in hostnames:
@@ -2758,10 +2867,12 @@ def mode_inventory_as_check(
         raise MKBailOut("Unknown SNMP backend") from exc
 
     parameters = HWSWInventoryParameters.from_raw(options)
+    plugins = agent_based_register.get_previously_loaded_plugins()
 
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2777,7 +2888,7 @@ def mode_inventory_as_check(
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2806,7 +2917,9 @@ def mode_inventory_as_check(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
@@ -2914,10 +3027,11 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
 
     config.load()
     config_cache = config.get_config_cache()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2926,6 +3040,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -2968,7 +3083,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         process_hosts = EVERYTHING
 
-    section_plugins = SectionPluginMapper()
+    section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
     inventory_plugins = InventoryPluginMapper()
 
     start = time.monotonic()

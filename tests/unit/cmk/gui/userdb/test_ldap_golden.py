@@ -136,11 +136,11 @@ def _mock_simple_bind_s(mocker: MockerFixture, connector: LDAPUserConnector) -> 
 
 def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     ldap_result = [
-        ("user1", {"uid": ["USER1_ID"]}),
-        ("user2", {"uid": ["USER2_ID#"]}),  # user with invalid user ID
+        ("user1", {"uid": [b"USER1_ID"]}),
+        ("user2", {"uid": [b"USER2_ID#"]}),  # user with invalid user ID
     ]
     # note that the key is lower-cased due to 'lower_user_ids'
-    expected_result = {"user1_id": {"dn": "user1", "uid": ["USER1_ID"]}}
+    expected_result = {"user1_id": {"dn": ["user1"], "uid": ["USER1_ID"]}}
     add_filter = "my(*)filter"
     expected_filter = f"(&(objectclass=person){add_filter})"
 
@@ -210,7 +210,7 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
     connector.connect()
     assert connector._ldap_obj
 
-    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
     result = connector.check_credentials(UserId("carol"), Password("hunter2"))
 
     connector._ldap_obj.simple_bind_s.assert_any_call("carol", "hunter2")
@@ -222,7 +222,7 @@ def test_check_credentials_invalid(mocker: MockerFixture, request_context: None)
     connector.connect()
     assert connector._ldap_obj
 
-    _mock_result3(mocker, connector, [("carol", {"uid": ["CAROL_ID"]})])
+    _mock_result3(mocker, connector, [("carol", {"uid": [b"CAROL_ID"]})])
     _mock_simple_bind_s(mocker, connector)
     assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
 

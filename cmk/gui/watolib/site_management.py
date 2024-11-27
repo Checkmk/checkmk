@@ -10,6 +10,9 @@ from dataclasses import dataclass, field
 from typing import Any, cast, Literal
 
 from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    ConnectionId,
     LocalSocketInfo,
     NetworkSocketDetails,
     NetworkSocketInfo,
@@ -41,7 +44,7 @@ from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
 
 class SiteDoesNotExistException(Exception): ...
@@ -454,6 +457,7 @@ class ConfigurationConnection:
     user_sync: UserSync
     replicate_event_console: bool
     replicate_extensions: bool
+    message_broker_port: int
 
     @classmethod
     def from_internal(
@@ -472,6 +476,7 @@ class ConfigurationConnection:
             ),
             replicate_event_console=internal_config["replicate_ec"],
             replicate_extensions=internal_config.get("replicate_mkps", False),
+            message_broker_port=internal_config.get("message_broker_port", 5672),
         )
 
     @classmethod
@@ -497,6 +502,7 @@ class ConfigurationConnection:
             "user_sync": self.user_sync.to_internal(),
             "replicate_ec": self.replicate_event_console,
             "replicate_mkps": self.replicate_extensions,
+            "message_broker_port": self.message_broker_port,
         }
         return configconnection
 
@@ -550,7 +556,7 @@ class SiteConfig:
 
 class SitesApiMgr:
     def __init__(self) -> None:
-        self.site_mgmt = SiteManagementFactory().factory()
+        self.site_mgmt = site_management_registry["site_management"]
         self.all_sites = self.site_mgmt.load_sites()
 
     def get_all_sites(self) -> SiteConfigurations:
@@ -587,6 +593,30 @@ class SitesApiMgr:
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)
 
+    def get_connected_sites_to_update(
+        self,
+        new_or_deleted_connection: bool,
+        modified_site: SiteId,
+        current_site_config: SiteConfiguration,
+        old_site_config: SiteConfiguration | None,
+    ) -> set[SiteId]:
+        return self.site_mgmt.get_connected_sites_to_update(
+            new_or_deleted_connection, modified_site, current_site_config, old_site_config
+        )
+
+    def get_broker_connections(self) -> BrokerConnections:
+        return self.site_mgmt.get_broker_connections()
+
+    def validate_and_save_broker_connection(
+        self, connection_id: ConnectionId, broker_connection: BrokerConnection, is_new: bool
+    ) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.validate_and_save_broker_connection(
+            connection_id, broker_connection, is_new
+        )
+
+    def delete_broker_connection(self, connection_id: ConnectionId) -> tuple[SiteId, SiteId]:
+        return self.site_mgmt.delete_broker_connection(connection_id)
+
 
 def add_changes_after_editing_broker_connection(
     *,
@@ -606,7 +636,7 @@ def add_changes_after_editing_broker_connection(
         need_sync=True,
         need_restart=True,
         sites=[omd_site()] + sites,
-        domains=[ConfigDomainGUI],
+        domains=[ConfigDomainGUI()],
     )
 
     return change_message
@@ -627,7 +657,7 @@ def add_changes_after_editing_site_connection(
 
     # Don't know exactly what have been changed, so better issue a change
     # affecting all domains
-    sites_to_update = list(connected_sites | {site_id}) if connected_sites else [site_id]
+    sites_to_update = list((connected_sites or set()) | {site_id})
     add_change(
         "edit-sites",
         change_message,
@@ -641,6 +671,6 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI])
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI()])
 
     return change_message

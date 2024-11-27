@@ -5,12 +5,13 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.1 "BATT 3.0V"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.2 "STBY 12V"
@@ -104,6 +105,7 @@ def discover_fsc_sc2_voltage(section):
 
 
 check_info["fsc_sc2_voltage"] = LegacyCheckDefinition(
+    name="fsc_sc2_voltage",
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.3.1",

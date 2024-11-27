@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def check_netapp_cpu(item, params, info):
@@ -25,6 +26,7 @@ def discover_netapp_cpu(info):
 
 
 check_info["netapp_cpu"] = LegacyCheckDefinition(
+    name="netapp_cpu",
     parse_function=parse_netapp_cpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.2.1.3.0")

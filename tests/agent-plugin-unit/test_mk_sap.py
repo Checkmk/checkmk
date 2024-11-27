@@ -14,7 +14,7 @@ if sys.version_info[0] == 2:
 else:
     from agents.plugins import mk_sap
 
-Value = namedtuple("Value", ["value"])  # pylint: disable=collections-namedtuple-call
+Value = namedtuple("Value", ["value"])  # nosemgrep: typing-namedtuple-call
 
 
 class FakeConnectionTree:

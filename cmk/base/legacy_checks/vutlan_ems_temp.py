@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+
+check_info = {}
 
 # vutlan is not a typo!
 # MIB can also be browsed on
@@ -44,6 +45,7 @@ def check_vutlan_ems_temp(item, params, parsed):
 
 
 check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
+    name="vutlan_ems_temp",
     detect=DETECT_VUTLAN_EMS,
     fetch=[
         SNMPTree(

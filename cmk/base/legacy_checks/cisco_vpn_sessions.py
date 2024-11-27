@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_cisco_vpn_sessions(item, params, parsed):
@@ -39,6 +40,7 @@ def discover_cisco_vpn_sessions(section):
 
 
 check_info["cisco_vpn_sessions"] = LegacyCheckDefinition(
+    name="cisco_vpn_sessions",
     service_name="VPN Sessions %s",
     discovery_function=discover_cisco_vpn_sessions,
     check_function=check_cisco_vpn_sessions,

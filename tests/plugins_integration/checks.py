@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import yaml
 
 from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import Site
@@ -46,7 +45,6 @@ class CheckModes(IntEnum):
 @dataclass
 class CheckConfig:
     mode: CheckModes = CheckModes.DEFAULT
-    skip_masking: bool = False
     skip_cleanup: bool = False
     dump_types: list[str] | None = None
     data_dir: str | None = None
@@ -55,7 +53,7 @@ class CheckConfig:
     diff_dir: str | None = None
     host_names: list[str] | None = None
     check_names: list[str] | None = None
-    api_services_cols: list | None = None
+    api_services_cols: list[str] | None = None
 
     def load(self):
         data_dir_default = str(qa_test_data_path() / "plugins_integration")
@@ -97,7 +95,6 @@ class CheckConfig:
             "display_name",
             "has_been_checked",
             "labels",
-            "plugin_output",
             "state",
             "state_type",
             "tags",
@@ -111,48 +108,6 @@ class CheckConfig:
 config = CheckConfig()
 
 
-def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
-    """Apply regular expressions to the canon and result objects."""
-    regexp_filepath = f"{config.data_dir}/regexp.yaml"
-    if not os.path.exists(regexp_filepath):
-        return
-    with open(regexp_filepath, encoding="utf-8") as regexp_file:
-        all_patterns = yaml.safe_load(regexp_file)
-    # global regexps
-    patterns = all_patterns.get("*", {})
-    # pattern matches
-    patterns.update(
-        next((item for name, item in all_patterns.items() if re.match(name, identifier)), {})
-    )
-    # exact matches
-    patterns.update(all_patterns.get(identifier, {}))
-
-    for pattern_group in all_patterns:
-        if not (pattern_group == identifier or re.match(pattern_group, identifier)):
-            continue
-        patterns = all_patterns[pattern_group]
-
-        for field_name in patterns:
-            pattern = patterns[field_name]
-            logger.debug("> Applying regexp: %s", pattern)
-            if not canon.get(field_name):
-                logger.debug(
-                    '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
-                )
-                continue
-            if not result.get(field_name):
-                logger.debug(
-                    '> Field "%s" not found in result "%s", skipping...', field_name, identifier
-                )
-                continue
-            if match := re.search(pattern, result[field_name]):
-                canon[field_name] = re.sub(
-                    pattern,
-                    match.group(),
-                    canon[field_name],
-                )
-
-
 def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     """Return the current check results from the API."""
     try:
@@ -160,7 +115,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
             check["id"]: check
             for check in site.openapi.get_host_services(
                 host_name,
-                columns=config.api_services_cols,
+                columns=(config.api_services_cols or []) + ["plugin_output"],
                 pending=False,
             )
             if not config.check_names
@@ -264,6 +219,8 @@ def _verify_check_result(
         logger.error("[%s] Canon not found!", check_id)
         return False, ""
 
+    check_output = str(result_data.pop("plugin_output", ""))
+
     safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
     with open(
         json_result_file_path := str(output_dir / f"{safe_name}.result.json"),
@@ -272,16 +229,14 @@ def _verify_check_result(
     ) as json_file:
         json.dump(result_data, json_file, indent=4, sort_keys=True)
 
-    if mode != CheckModes.UPDATE:
-        # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore[operator]
-
-    if not config.skip_masking:
-        _apply_regexps(check_id, canon_data, result_data)
+    # ignore columns in the canon that are not supposed to be returned
+    canon_data = {_: canon_data[_] for _ in canon_data if _ in (config.api_services_cols or [])}
 
     if result_data and canon_data == result_data:
         # if the canon was just added or matches the result, there is nothing else to do
         return True, ""
+
+    logger.error("[%s] Plugin output: %s", check_id, check_output)
 
     with open(
         json_canon_file_path := str(output_dir / f"{safe_name}.canon.json"),
@@ -516,15 +471,15 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
         ).returncode
         == 0
     )
+    logger.info("Activating changes & reloading core...")
+    site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
+
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(source_host_name)
 
     try:
-        logger.info("Activating changes & reloading core...")
-        site.activate_changes_and_wait_for_core_reload()
-
-        _wait_for_piggyback_hosts_creation(site, source_host=source_host_name)
-        _wait_for_dcd_pend_changes(site)
+        _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
+        wait_for_dcd_pend_changes(site)
 
         hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
         for hostname in hostnames:
@@ -561,10 +516,10 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
             assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
 
             logger.info("Activating changes & reloading core...")
-            site.activate_changes_and_wait_for_core_reload()
+            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
             _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
-            _wait_for_dcd_pend_changes(site)
+            wait_for_dcd_pend_changes(site)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -646,31 +601,32 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
-def _wait_for_piggyback_hosts_creation(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
+    """Wait up to 60 seconds for DCD to discover new piggyback hosts."""
+    max_count = 60
     count = 0
     while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be created. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for piggyback hosts to be discovered. Count: %s/%s", count, max_count)
+        time.sleep(1)
         count += 1
     if strict:
         assert piggyback_hosts, "No piggyback hosts found."
 
 
-def _wait_for_piggyback_hosts_deletion(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:
+    max_count = 30
     count = 0
     while piggyback_hosts := get_piggyback_hosts(site, source_host) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be removed. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for all piggyback hosts to be removed. Count: %s/%s", count, max_count)
+        time.sleep(5)
         count += 1
     if strict:
         assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
 
 
-def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
+def wait_for_dcd_pend_changes(site: Site) -> None:
+    """Wait up to 60 seconds for DCD to activate changes."""
+    max_count = 60
     count = 0
     while (
         n_pending_changes := len(site.openapi.pending_changes([site.id]))
@@ -680,6 +636,6 @@ def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
             count,
             max_count,
         )
-        time.sleep(5)
+        time.sleep(1)
         count += 1
     assert n_pending_changes == 0, "Pending changes found!"

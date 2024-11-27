@@ -8,11 +8,11 @@ import calendar
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
+
+check_info = {}
 
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
@@ -62,6 +62,7 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_traffic"] = LegacyCheckDefinition(
+    name="graylog_cluster_traffic",
     parse_function=deserialize_and_merge_json,
     service_name="Graylog Cluster Traffic",
     discovery_function=discover_graylog_cluster_traffic,

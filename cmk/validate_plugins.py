@@ -9,7 +9,7 @@ import enum
 import os
 import sys
 from argparse import ArgumentParser
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.ccc import debug
@@ -20,18 +20,20 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
+from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-violation
+    InventoryPluginName,
+)
 
-from cmk.base import (  # pylint: disable=cmk-module-layer-violation
-    check_api,
-    server_side_calls,
+from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+    CheckPlugin,
+    InventoryPlugin,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
-    iter_all_check_plugins,
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
     iter_all_discovery_rulesets,
-    iter_all_inventory_plugins,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    check_info,
     load_all_plugins,
 )
 
@@ -52,6 +54,10 @@ from cmk.rulesets.v1.rule_specs import (
     DiscoveryParameters,
     InventoryParameters,
     SpecialAgent,
+)
+from cmk.server_side_calls_backend import (  # pylint: disable=cmk-module-layer-violation
+    load_active_checks,
+    load_special_agents,
 )
 
 _AgentBasedPlugins = (
@@ -87,7 +93,6 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
     errors = load_all_plugins(
-        check_api.get_check_api_context,
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )
@@ -96,12 +101,22 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
 
 
 def _validate_active_checks_loading() -> ActiveCheckResult:
-    errors, _ = server_side_calls.load_active_checks()
+    try:
+        _ = load_active_checks(raise_errors=True)
+    except Exception as error:
+        errors = [f"At least one error: {error}"]
+    else:
+        errors = []
     return to_result(ValidationStep.ACTIVE_CHECKS, errors)
 
 
-def _validate_special_agents_loading() -> ActiveCheckResult:
-    errors, _ = server_side_calls.load_special_agents()
+def _validate_special_agent_loading() -> ActiveCheckResult:
+    try:
+        _ = load_special_agents(raise_errors=True)
+    except Exception as error:
+        errors = [f"At least one error: {error}"]
+    else:
+        errors = []
     return to_result(ValidationStep.SPECIAL_AGENTS, errors)
 
 
@@ -267,27 +282,18 @@ def _check_if_referenced(
     return reference_errors
 
 
-def _validate_check_parameters_usage() -> Sequence[str]:
+def _validate_check_parameters_usage(check_plugins: Iterable[CheckPlugin]) -> Sequence[str]:
     discovered_check_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {CheckParameters: entry_point_prefixes()[CheckParameters]},
         raise_errors=False,
     )
 
-    agent_based_api_referenced_ruleset_names = [
+    referenced_ruleset_names = {
         str(plugin.check_ruleset_name)
-        for plugin in iter_all_check_plugins()
+        for plugin in check_plugins
         if plugin.check_ruleset_name is not None
-    ]
-    legacy_checks_referenced_ruleset_names = [
-        str(check.check_ruleset_name)
-        for check in check_info.values()
-        if hasattr(check, "check_ruleset_name")
-    ]
-
-    referenced_ruleset_names = set(
-        agent_based_api_referenced_ruleset_names + legacy_checks_referenced_ruleset_names
-    )
+    }
     return _check_if_referenced(discovered_check_parameters, referenced_ruleset_names)
 
 
@@ -301,7 +307,9 @@ def _validate_discovery_parameters_usage() -> Sequence[str]:
     return _check_if_referenced(discovered_discovery_parameters, referenced_ruleset_names)
 
 
-def _validate_inventory_parameters_usage() -> Sequence[str]:
+def _validate_inventory_parameters_usage(
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+) -> Sequence[str]:
     discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {InventoryParameters: entry_point_prefixes()[InventoryParameters]},
@@ -309,7 +317,7 @@ def _validate_inventory_parameters_usage() -> Sequence[str]:
     )
     referenced_ruleset_names = {
         str(plugin.inventory_ruleset_name)
-        for plugin in iter_all_inventory_plugins()
+        for plugin in inventory_plugins.values()
         if plugin.inventory_ruleset_name is not None
     }
     return _check_if_referenced(discovered_inventory_parameters, referenced_ruleset_names)
@@ -322,7 +330,7 @@ def _validate_active_check_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name for active_check in server_side_calls.load_active_checks()[1].values()
+        active_check.name for active_check in load_active_checks(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_active_checks, referenced_ruleset_names)
 
@@ -334,18 +342,18 @@ def _validate_special_agent_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name for active_check in server_side_calls.load_special_agents()[1].values()
+        active_check.name for active_check in load_special_agents(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_special_agents, referenced_ruleset_names)
 
 
-def _validate_rule_spec_usage() -> ActiveCheckResult:
+def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
     # only for ruleset API v1
     errors: list[str] = []
 
-    errors.extend(_validate_check_parameters_usage())
+    errors.extend(_validate_check_parameters_usage(plugins.check_plugins.values()))
     errors.extend(_validate_discovery_parameters_usage())
-    errors.extend(_validate_inventory_parameters_usage())
+    errors.extend(_validate_inventory_parameters_usage(plugins.inventory_plugins))
     errors.extend(_validate_active_check_usage())
     errors.extend(_validate_special_agent_usage())
 
@@ -353,14 +361,16 @@ def _validate_rule_spec_usage() -> ActiveCheckResult:
 
 
 def validate_plugins() -> ActiveCheckResult:
+    loading_subresult = _validate_agent_based_plugin_loading()
+    loaded_plugins = get_previously_loaded_plugins()
     sub_results = [
-        _validate_agent_based_plugin_loading(),
+        loading_subresult,
         _validate_active_checks_loading(),
-        _validate_special_agents_loading(),
+        _validate_special_agent_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),
-        _validate_rule_spec_usage(),
+        _validate_rule_spec_usage(loaded_plugins),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
 

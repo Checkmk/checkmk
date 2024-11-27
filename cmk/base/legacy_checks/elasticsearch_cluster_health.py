@@ -23,10 +23,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 cluster_info = {
     "status": "Status",
@@ -116,6 +116,7 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health"] = LegacyCheckDefinition(
+    name="elasticsearch_cluster_health",
     parse_function=parse_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Health",
     discovery_function=inventory_elasticsearch_cluster_health,
@@ -160,6 +161,7 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
+    name="elasticsearch_cluster_health_shards",
     service_name="Elasticsearch Cluster Shards",
     sections=["elasticsearch_cluster_health"],
     discovery_function=inventory_elasticsearch_cluster_health,
@@ -189,6 +191,7 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.tasks"] = LegacyCheckDefinition(
+    name="elasticsearch_cluster_health_tasks",
     service_name="Elasticsearch Cluster Tasks",
     sections=["elasticsearch_cluster_health"],
     discovery_function=inventory_elasticsearch_cluster_health,

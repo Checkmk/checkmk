@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 # very odd and confusing example outputs:
 
@@ -145,6 +146,7 @@ def check_watchdog_sensors(item, params, parsed):
 
 
 check_info["watchdog_sensors"] = LegacyCheckDefinition(
+    name="watchdog_sensors",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.5.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.42.1"),
@@ -199,6 +201,7 @@ def check_watchdog_sensors_temp(item, params, parsed):
 
 
 check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
+    name="watchdog_sensors_temp",
     service_name="%s ",
     sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_temp,
@@ -247,6 +250,7 @@ def check_watchdog_sensors_humidity(item, params, parsed):
 
 
 check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
+    name="watchdog_sensors_humidity",
     service_name="%s",
     sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_humidity,
@@ -290,6 +294,7 @@ def check_watchdog_sensors_dew(item, params, parsed):
 
 
 check_info["watchdog_sensors.dew"] = LegacyCheckDefinition(
+    name="watchdog_sensors_dew",
     service_name="%s",
     sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_dew,

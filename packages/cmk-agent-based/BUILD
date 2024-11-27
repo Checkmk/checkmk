@@ -1,22 +1,21 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
-load("@cmk_agent_based//:requirements.bzl", "requirement")
-load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-load(":linters.bzl", "ruff_test")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
-exports_files(["pyproject.toml"])
-
-compile_pip_requirements(
-    name = "requirements",
-    requirements_in = "pyproject.toml",
-    requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
-)
+exports_files([
+    "pyproject.toml",
+    "requirements.txt",
+])
 
 py_library(
     name = "cmk-agent-based",
     srcs = [
+        "cmk/agent_based/legacy/__init__.py",
+        "cmk/agent_based/legacy/_loading.py",
+        "cmk/agent_based/legacy/v0_unstable.py",
         "cmk/agent_based/prediction_backend.py",
         "cmk/agent_based/v1/__init__.py",
         "cmk/agent_based/v1/_check_levels.py",
@@ -45,24 +44,24 @@ py_library(
     ],
 )
 
-ruff_test(
-    name = "ruff_lint",
-    srcs = [
-        ":cmk-agent-based",
-        ":unit",
-    ],
+py_doc_test(
+    name = "doctest",
+    size = "small",
+    srcs = ["cmk-agent-based"],
+    tags = ["no-mypy"],
 )
 
 py_pytest_main(
     name = "__test__",
+    tags = ["no-mypy"],
 )
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
     args = ["--config-file=$(location pyproject.toml)"],
     data = ["pyproject.toml"],
-    imports = ["."],
     main = ":__test__.py",
     deps = [
         ":__test__",

@@ -420,7 +420,10 @@ pub mod registry {
         fn test_get_instances() {
             let infos = get_instances()
                 .into_iter()
-                .filter(|i| i.name != InstanceName::from("SQLEXPRESS_OLD"))
+                .filter(|i| {
+                    i.name != InstanceName::from("SQLEXPRESS_OLD")
+                        && i.name != InstanceName::from("SQLBAD")
+                })
                 .collect::<Vec<_>>();
             assert_eq!(infos.len(), 3usize);
         }

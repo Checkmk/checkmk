@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Any, AnyStr, NamedTuple
 
@@ -15,8 +16,12 @@ from tests.testlib.rest_api_client import RequestHandler, Response
 from tests.testlib.version import CMKVersion
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
+
+from cmk import trace
 
 logger = logging.getLogger("rest-session")
+tracer = trace.get_tracer()
 
 
 class RequestSessionRequestHandler(RequestHandler):
@@ -57,6 +62,10 @@ class UnexpectedResponse(RestSessionException):
     def __init__(self, status_code: int, response_text: str) -> None:
         super().__init__(f"[{status_code}] {response_text}")
         self.status_code = status_code
+
+
+class NoActiveChanges(RestSessionException):
+    pass
 
 
 class AuthorizationFailed(RestSessionException):
@@ -147,12 +156,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-    ) -> bool:
-        """
-        Returns
-            True if changes are activated
-            False if there are no changes to be activated
-        """
+    ) -> None:
         response = self.post(
             "/domain-types/activation_run/actions/activate-changes/invoke",
             json={
@@ -166,9 +170,10 @@ class CMKOpenApiSession(requests.Session):
             allow_redirects=False,
         )
         if response.status_code == 200:
-            return True  # changes are activated
+            logger.info("Activation id: %s", response.json()["id"])
+            return  # changes are activated
         if response.status_code == 422:
-            return False  # no changes
+            raise NoActiveChanges  # there are no changes
         if 300 <= response.status_code < 400:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
@@ -180,20 +185,32 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
+    @tracer.start_as_current_span("activate_changes_and_wait_for_completion")
     def activate_changes_and_wait_for_completion(
         self,
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
-        timeout: int = 60,
+        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
     ) -> bool:
-        logger.info("Activate changes and wait for completion...")
-        with self._wait_for_completion(timeout, "get"):
-            if activation_started := self.activate_changes(sites, force_foreign_changes):
-                pending_changes = self.pending_changes()
-                assert (
-                    len(pending_changes) == 0
-                ), f"There are pending changes that were not activated: {pending_changes}"
-            return activation_started
+        """Activate changes via REST API and wait for completion.
+
+        Returns:
+            * True if changes are activated
+            * False if there are no changes to be activated
+        """
+        logger.info("Activate changes and wait %ds for completion...", timeout)
+        with self._wait_for_completion(timeout, "get", "activate_changes"):
+            try:
+                self.activate_changes(sites, force_foreign_changes)
+            except NoActiveChanges:
+                return False
+
+        pending_changes = self.pending_changes()
+        assert (
+            not pending_changes
+        ), f"There are pending changes that were not activated: {pending_changes}"
+
+        return True
 
     def create_user(
         self,
@@ -203,6 +220,7 @@ class CMKOpenApiSession(requests.Session):
         email: str,
         contactgroups: list[str],
         customer: None | str = None,
+        roles: list[str] | None = None,
     ) -> None:
         body = {
             "username": username,
@@ -215,6 +233,7 @@ class CMKOpenApiSession(requests.Session):
                 "email": email,
             },
             "contactgroups": contactgroups,
+            "roles": roles or [],
         }
         if customer:
             body["customer"] = customer
@@ -391,16 +410,22 @@ class CMKOpenApiSession(requests.Session):
         if not response.status_code == 200:
             raise UnexpectedResponse.from_response(response)
 
+    @tracer.start_as_current_span("rename_host_and_wait_for_completion")
     def rename_host_and_wait_for_completion(
         self,
         *,
         hostname_old: str,
         hostname_new: str,
         etag: str,
-        timeout: int = 60,
+        timeout: int = 120,
     ) -> None:
-        logger.info("Rename host %s to %s and wait for completion...", hostname_old, hostname_new)
-        with self._wait_for_completion(timeout, "get"):
+        logger.info(
+            "Rename host %s to %s and wait %ds for completion...",
+            hostname_old,
+            hostname_new,
+            timeout,
+        )
+        with self._wait_for_completion(timeout, "get", "rename_host"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
             assert (
                 self.get_host(hostname_new) is not None
@@ -449,6 +474,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
+    @tracer.start_as_current_span("bulk_discover_services_and_wait_for_completion")
     def bulk_discover_services_and_wait_for_completion(
         self,
         hostnames: list[str],
@@ -526,47 +552,84 @@ class CMKOpenApiSession(requests.Session):
         job_status_response: dict = response.json()
         return job_status_response
 
+    @tracer.start_as_current_span("discover_services_and_wait_for_completion")
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:
-        with self._wait_for_completion(timeout, "get"):
+        with self._wait_for_completion(timeout, "get", "discover_services"):
             self.discover_services(hostname, mode)
             discovery_status = self.get_discovery_status(hostname)
             assert (
                 discovery_status == "finished"
             ), f"Unexpected service discovery status: {discovery_status}"
 
+    def service_discovery_result(self, hostname: str) -> Mapping[str, object]:
+        response = self.get(f"/objects/service_discovery/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
     @contextmanager
     def _wait_for_completion(
         self,
         timeout: int,
         http_method_for_redirection: HTTPMethod,
+        operation: str,
     ) -> Iterator[None]:
         start = time.time()
         try:
             yield None
         except Redirect as redirect:
-            if not redirect.redirect_url.startswith("http://"):
-                redirect_url = f"http://{self.host}:{self.port}{redirect.redirect_url}"
-            else:
-                redirect_url = redirect.redirect_url
+            self._handle_wait_redirect(
+                start,
+                timeout,
+                http_method_for_redirection,
+                operation,
+                redirect.redirect_url
+                if redirect.redirect_url.startswith("http://")
+                else f"http://{self.host}:{self.port}{redirect.redirect_url}",
+            )
+        else:
+            logger.info("Wait for completion finished instantly for %s", operation)
 
-            while redirect_url:
-                if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion timed out")
-                logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
-                response = self.request(
-                    method=http_method_for_redirection,
-                    url=redirect_url,
-                    allow_redirects=False,
+    def _handle_wait_redirect(
+        self,
+        start: float,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+        operation: str,
+        redirect_url: str,
+    ) -> None:
+        response = None
+        for attempt in itertools.count():
+            if (running_time := time.time() - start) > timeout:
+                msg = (
+                    f"Wait for completion timed out after {running_time}s / {attempt} attempts"
+                    f" for {operation}; URL={redirect_url}!"
                 )
-                if response.status_code == 204 and not response.content:  # job has finished
-                    break
+                if response and response.content:
+                    msg += f"; Last response: {response.status_code}; {response.content}"
+                raise TimeoutError(msg)
 
-                if not 300 <= response.status_code < 400:
-                    raise UnexpectedResponse.from_response(response)
+            logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
+            response = self.request(
+                method=http_method_for_redirection,
+                url=redirect_url,
+                allow_redirects=False,
+            )
+            if response.status_code == 204 and not response.content:
+                logger.info(
+                    "Wait for completion finished after %0.2fs / %s attempts for %s",
+                    running_time,
+                    attempt,
+                    operation,
+                )
+                return
 
-                time.sleep(0.5)
+            if not 300 <= response.status_code < 400:
+                raise UnexpectedResponse.from_response(response)
+
+            time.sleep(0.5)
 
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
@@ -676,6 +739,65 @@ class CMKOpenApiSession(requests.Session):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
+    def get_broker_connections(
+        self,
+    ) -> Sequence[Mapping[str, object]]:
+        response = self.get(
+            "/domain-types/broker_connection/collections/all",
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
+
+    def create_broker_connection(
+        self, connection_id: str, *, connecter: str, connectee: str
+    ) -> Mapping[str, object]:
+        response = self.post(
+            "/domain-types/broker_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_id": connection_id,
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def edit_broker_connection(
+        self, connection_id: str, *, connecter: str, connectee: str
+    ) -> Mapping[str, object]:
+        response = self.put(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def delete_broker_connection(self, connection_id: str) -> None:
+        response = self.delete(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def create_site(self, site_config: dict) -> None:
         response = self.post(
             "/domain-types/site_connection/collections/all",
@@ -686,6 +808,38 @@ class CMKOpenApiSession(requests.Session):
         )
 
         if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def update_site(self, site_id: str, site_config: dict) -> None:
+        response = self.put(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def show_site(self, site_id: str) -> dict[str, Any]:
+        response = self.get(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+    def delete_site(self, site_id: str) -> None:
+        if (
+            response := self.post(f"/objects/site_connection/{site_id}/actions/delete/invoke")
+        ).status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
     def login_to_site(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
@@ -864,3 +1018,27 @@ class CMKOpenApiSession(requests.Session):
         resp = self.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
+
+    def create_password(
+        self,
+        ident: str,
+        title: str,
+        comment: str,
+        password: str,
+        owner: str = "admin",
+    ) -> None:
+        """Create a password via REST API."""
+        response = self.post(
+            "/domain-types/password/collections/all",
+            json={
+                "ident": ident,
+                "title": title,
+                "comment": comment,
+                "documentation_url": "localhost",
+                "password": password,
+                "owner": owner,
+                "shared": ["all"],
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)

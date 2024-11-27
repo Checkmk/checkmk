@@ -52,41 +52,9 @@
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.1.0.0 6 --> JUNIPER-MIB::jnxFruState.9.1.0.0
 # .1.3.6.1.4.1.2636.3.1.15.1.8.9.2.0.0 6 --> JUNIPER-MIB::jnxFruState.9.2.0.0
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.plugins.lib.juniper import DETECT_JUNIPER
-
-#   .--psu-----------------------------------------------------------------.
-#   |                                                                      |
-#   |                           _ __  ___ _   _                            |
-#   |                          | '_ \/ __| | | |                           |
-#   |                          | |_) \__ \ |_| |                           |
-#   |                          | .__/|___/\__,_|                           |
-#   |                          |_|                                         |
-#   +----------------------------------------------------------------------+
-#   |                              main check                              |
-#   '----------------------------------------------------------------------'
-
-
-def parse_juniper_fru(string_table):
-    parsed = {}
-    for fru_name, fru_type, fru_state in string_table:
-        # jnxFruName is read-only, thus we can replace here
-        # some auto-generated declarations
-        name = (
-            fru_name.replace("Power Supply: Power Supply ", "")
-            .replace("FAN: Fan ", "")
-            .replace("@ ", "")
-            .replace("/*", "")
-            .strip()
-        )
-        parsed[name] = {
-            "fru_type": fru_type,
-            "fru_state": fru_state,
-        }
-    return parsed
+check_info = {}
 
 
 def inventory_juniper_fru(parsed, fru_types):
@@ -123,12 +91,8 @@ def discover_juniper_fru(info):
 
 
 check_info["juniper_fru"] = LegacyCheckDefinition(
-    detect=DETECT_JUNIPER,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.2636.3.1.15.1",
-        oids=["5", "6", "8"],
-    ),
-    parse_function=parse_juniper_fru,
+    name="juniper_fru",
+    # section already migrated!
     service_name="Power Supply FRU %s",
     discovery_function=discover_juniper_fru,
     check_function=check_juniper_fru,
@@ -150,6 +114,7 @@ def discover_juniper_fru_fan(info):
 #   '----------------------------------------------------------------------'
 
 check_info["juniper_fru.fan"] = LegacyCheckDefinition(
+    name="juniper_fru_fan",
     service_name="Fan FRU %s",
     sections=["juniper_fru"],
     discovery_function=discover_juniper_fru_fan,

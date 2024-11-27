@@ -29,7 +29,6 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
     ActivationRunResponse,
     PendingChangesCollection,
 )
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.utils import may_fail
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -149,9 +148,6 @@ def _completion_link(activation_id: str) -> LinkType:
 
 def _activation_run_domain_object(
     activation_response: ActivationRestAPIResponseExtensions,
-    *,
-    include_links: bool = True,
-    include_extensions: bool = True,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="activation_run",
@@ -161,15 +157,14 @@ def _activation_run_domain_object(
             if activation_response.is_running
             else "Activation status: Complete."
         ),
-        extensions=asdict(activation_response) if include_extensions else None,
+        extensions=asdict(activation_response),
         deletable=False,
         editable=False,
         links=(
             [_completion_link(activation_response.activation_id)]
-            if include_links and activation_response.is_running
+            if activation_response.is_running
             else []
         ),
-        include_links=include_links,
     )
 
 
@@ -252,21 +247,15 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     method="get",
     permissions_required=RO_PERMISSIONS,
     response_schema=ActivationRunCollection,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
-    include_links: bool = params["include_links"]
-    include_extensions: bool = params["include_extensions"]
+
     value = []
     for activation_id in get_activation_ids():
         try:
             value.append(
-                _activation_run_domain_object(
-                    get_restapi_response_for_activation_id(activation_id),
-                    include_links=include_links,
-                    include_extensions=include_extensions,
-                )
+                _activation_run_domain_object(get_restapi_response_for_activation_id(activation_id))
             )
         except MKUserError:
             pass

@@ -153,12 +153,72 @@ perfometer_user_system_streams = perfometers.Perfometer(
     ],
 )
 
-graph_cpu_utilization = graphs.Graph(
-    name="cpu_utilization",
+graph_util_average_1 = graphs.Graph(
+    name="util_average_1",
     title=Title("CPU utilization"),
+    minimal_range=graphs.MinimalRange(
+        0,
+        100,
+    ),
+    compound_lines=["util"],
     simple_lines=[
+        "util_average",
+        metrics.WarningOf("util"),
+        metrics.CriticalOf("util"),
+    ],
+    conflicting=[
+        "idle",
+        "cpu_util_guest",
+        "cpu_util_steal",
+        "io_wait",
+        "user",
+        "system",
+    ],
+)
+graph_cpu_utilization_numcpus = graphs.Graph(
+    name="cpu_utilization_numcpus",
+    title=Title("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
+    minimal_range=graphs.MinimalRange(
+        0,
+        100,
+    ),
+    compound_lines=[
+        "user",
+        metrics.Difference(
+            Title("Privileged"),
+            metrics.Color.ORANGE,
+            minuend="util_numcpu_as_max",
+            subtrahend="user",
+        ),
+    ],
+    simple_lines=[
+        "util_numcpu_as_max",
+        metrics.WarningOf("util_numcpu_as_max"),
+        metrics.CriticalOf("util_numcpu_as_max"),
+    ],
+    optional=["user"],
+)
+graph_cpu_utilization_simple = graphs.Graph(
+    name="cpu_utilization_simple",
+    title=Title("CPU utilization"),
+    minimal_range=graphs.MinimalRange(
+        0,
+        100,
+    ),
+    compound_lines=[
+        "user",
+        "system",
+    ],
+    simple_lines=[
+        "util_average",
         "util",
-        "engine_cpu_util",
+    ],
+    optional=["util_average"],
+    conflicting=[
+        "idle",
+        "cpu_util_guest",
+        "cpu_util_steal",
+        "io_wait",
     ],
 )
 graph_cpu_utilization_3 = graphs.Graph(
@@ -245,57 +305,6 @@ graph_cpu_utilization_5_util = graphs.Graph(
         "cpu_util_steal",
     ],
 )
-graph_cpu_utilization_6_guest = graphs.Graph(
-    name="cpu_utilization_6_guest",
-    title=Title("CPU utilization"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=[
-        "user",
-        "system",
-        "io_wait",
-        "cpu_util_guest",
-    ],
-    simple_lines=[
-        "util_average",
-        metrics.Sum(
-            Title("Total"),
-            metrics.Color.GREEN,
-            [
-                "user",
-                "system",
-                "io_wait",
-                "cpu_util_steal",
-            ],
-        ),
-    ],
-    optional=["util_average"],
-    conflicting=["util"],
-)
-graph_cpu_utilization_6_guest_util = graphs.Graph(
-    name="cpu_utilization_6_guest_util",
-    title=Title("CPU utilization"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=[
-        "user",
-        "system",
-        "io_wait",
-        "cpu_util_guest",
-    ],
-    simple_lines=[
-        "util_average",
-        "util",
-        metrics.WarningOf("util"),
-        metrics.CriticalOf("util"),
-    ],
-    optional=["util_average"],
-    conflicting=["cpu_util_steal"],
-)
 graph_cpu_utilization_6_steal = graphs.Graph(
     name="cpu_utilization_6_steal",
     title=Title("CPU utilization"),
@@ -349,6 +358,57 @@ graph_cpu_utilization_6_steal_util = graphs.Graph(
     ],
     optional=["util_average"],
     conflicting=["cpu_util_guest"],
+)
+graph_cpu_utilization_6_guest = graphs.Graph(
+    name="cpu_utilization_6_guest",
+    title=Title("CPU utilization"),
+    minimal_range=graphs.MinimalRange(
+        0,
+        100,
+    ),
+    compound_lines=[
+        "user",
+        "system",
+        "io_wait",
+        "cpu_util_guest",
+    ],
+    simple_lines=[
+        "util_average",
+        metrics.Sum(
+            Title("Total"),
+            metrics.Color.GREEN,
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_steal",
+            ],
+        ),
+    ],
+    optional=["util_average"],
+    conflicting=["util"],
+)
+graph_cpu_utilization_6_guest_util = graphs.Graph(
+    name="cpu_utilization_6_guest_util",
+    title=Title("CPU utilization"),
+    minimal_range=graphs.MinimalRange(
+        0,
+        100,
+    ),
+    compound_lines=[
+        "user",
+        "system",
+        "io_wait",
+        "cpu_util_guest",
+    ],
+    simple_lines=[
+        "util_average",
+        "util",
+        metrics.WarningOf("util"),
+        metrics.CriticalOf("util"),
+    ],
+    optional=["util_average"],
+    conflicting=["cpu_util_steal"],
 )
 graph_cpu_utilization_7 = graphs.Graph(
     name="cpu_utilization_7",
@@ -416,74 +476,6 @@ graph_cpu_utilization_8 = graphs.Graph(
         "interrupt",
     ],
 )
-graph_cpu_utilization_numcpus = graphs.Graph(
-    name="cpu_utilization_numcpus",
-    title=Title("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=[
-        "user",
-        metrics.Difference(
-            Title("Privileged"),
-            metrics.Color.ORANGE,
-            minuend="util_numcpu_as_max",
-            subtrahend="user",
-        ),
-    ],
-    simple_lines=[
-        "util_numcpu_as_max",
-        metrics.WarningOf("util_numcpu_as_max"),
-        metrics.CriticalOf("util_numcpu_as_max"),
-    ],
-    optional=["user"],
-)
-graph_cpu_utilization_simple = graphs.Graph(
-    name="cpu_utilization_simple",
-    title=Title("CPU utilization"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=[
-        "user",
-        "system",
-    ],
-    simple_lines=[
-        "util_average",
-        "util",
-    ],
-    optional=["util_average"],
-    conflicting=[
-        "idle",
-        "cpu_util_guest",
-        "cpu_util_steal",
-        "io_wait",
-    ],
-)
-graph_util_average_1 = graphs.Graph(
-    name="util_average_1",
-    title=Title("CPU utilization"),
-    minimal_range=graphs.MinimalRange(
-        0,
-        100,
-    ),
-    compound_lines=["util"],
-    simple_lines=[
-        "util_average",
-        metrics.WarningOf("util"),
-        metrics.CriticalOf("util"),
-    ],
-    conflicting=[
-        "idle",
-        "cpu_util_guest",
-        "cpu_util_steal",
-        "io_wait",
-        "user",
-        "system",
-    ],
-)
 graph_util_fallback = graphs.Graph(
     name="util_fallback",
     title=Title("CPU utilization"),
@@ -499,6 +491,14 @@ graph_util_fallback = graphs.Graph(
     conflicting=[
         "util_average",
         "system",
+        "engine_cpu_util",
+    ],
+)
+graph_cpu_utilization = graphs.Graph(
+    name="cpu_utilization",
+    title=Title("CPU utilization"),
+    simple_lines=[
+        "util",
         "engine_cpu_util",
     ],
 )

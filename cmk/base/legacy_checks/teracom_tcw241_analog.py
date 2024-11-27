@@ -6,12 +6,12 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
 
-AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+check_info = {}
+
+AnalogSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "AnalogSensor", "description maximum minimum voltage"
 )
 
@@ -90,6 +90,7 @@ def discover_teracom_tcw241_analog(section):
 
 
 check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
+    name="teracom_tcw241_analog",
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     fetch=[
         *(

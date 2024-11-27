@@ -5,14 +5,14 @@
 
 from logging import Logger
 
-from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 
 class UpdateMessageBrokerPort(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        site_mgmt = SiteManagementFactory().factory()
+        site_mgmt = site_management_registry["site_management"]
         configured_sites = site_mgmt.load_sites()
         for site_spec in configured_sites.values():
             site_spec.setdefault("message_broker_port", 5672)

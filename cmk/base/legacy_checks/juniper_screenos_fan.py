@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
+
+check_info = {}
 
 
 def inventory_juniper_screenos_fan(info):
@@ -32,6 +32,7 @@ def parse_juniper_screenos_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["juniper_screenos_fan"] = LegacyCheckDefinition(
+    name="juniper_screenos_fan",
     parse_function=parse_juniper_screenos_fan,
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.qnap import DETECT_QNAP
+
+check_info = {}
 
 
 def parse_qnap_fans(string_table):
@@ -33,6 +34,7 @@ def discover_qnap_fans(section):
 
 
 check_info["qnap_fans"] = LegacyCheckDefinition(
+    name="qnap_fans",
     detect=DETECT_QNAP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.15.1",

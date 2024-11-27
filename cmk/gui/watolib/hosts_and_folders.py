@@ -17,6 +17,7 @@ import time
 import uuid
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
@@ -27,7 +28,9 @@ from livestatus import SiteId
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import edition
 
 import cmk.utils.paths
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
@@ -49,7 +52,7 @@ from cmk.utils.host_storage import (
 )
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
-from cmk.utils.object_diff import make_diff_text
+from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.tags import TagGroupID, TagID
@@ -89,6 +92,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
     HostAttributes,
     HostContactGroupSpec,
+    mask_attributes,
     MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -926,7 +930,7 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
 
 
 def _generate_domain_settings(
-    ident: ConfigDomainName, hostnames: Iterable[HostName]
+    ident: ConfigDomainName, hostnames: Sequence[HostName]
 ) -> SerializedSettings:
     return {ident: generate_hosts_to_update_settings(hostnames)}
 
@@ -1124,15 +1128,6 @@ def disk_or_search_base_folder_from_request(
 class Folder(FolderProtocol):
     """This class represents a Setup folder that contains other folders and hosts."""
 
-    validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
-    validate_create_hosts: Callable[
-        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
-    ]
-    validate_create_subfolder: Callable[[Folder, HostAttributes], None]
-    validate_edit_folder: Callable[[Folder, HostAttributes], None]
-    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder], None]
-    validate_move_subfolder_to: Callable[[Folder, Folder], None]
-
     @classmethod
     def new(
         cls,
@@ -1147,6 +1142,7 @@ class Folder(FolderProtocol):
             tree=tree,
             name=name,
             parent_folder=parent_folder,
+            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
             folder_id=uuid.uuid4().hex,
             folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
             title=title or _fallback_title(folder_path),
@@ -1174,6 +1170,7 @@ class Folder(FolderProtocol):
             tree=tree,
             name=name,
             parent_folder=parent_folder,
+            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
             # Cleanup this compatibility code by adding a cmk-update-config action
             folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
             folder_path=folder_path,
@@ -1197,6 +1194,7 @@ class Folder(FolderProtocol):
         folder_id: str,
         folder_path: str,
         parent_folder: Folder | None,
+        validators: FolderValidators,
         title: str,
         attributes: HostAttributes,
         locked: bool,
@@ -1207,6 +1205,7 @@ class Folder(FolderProtocol):
         super().__init__()
         self.effective_attributes = EffectiveAttributes(self._compute_effective_attributes)
         self.permissions = PermissionChecker(self._user_needs_permission)
+        self.validators = validators
         self.tree = tree
         self._name = name
         self._id = folder_id
@@ -1469,7 +1468,7 @@ class Folder(FolderProtocol):
 
     def save(self) -> None:
         self.save_folder_attributes()
-        folder_tree().invalidate_caches()
+        self.tree.invalidate_caches()
         self.save_hosts()
 
     def serialize(self) -> WATOFolderInfo:
@@ -1629,7 +1628,7 @@ class Folder(FolderProtocol):
         return len(self.hosts()) != 0
 
     def host_validation_errors(self) -> dict[HostName, list[str]]:
-        return validate_all_hosts(self.host_names())
+        return validate_all_hosts(self.tree, self.host_names())
 
     def has_parent(self) -> bool:
         return self.parent() is not None
@@ -1808,7 +1807,7 @@ class Folder(FolderProtocol):
                 get_wato_redis_client(self.tree).choices_for_moving(self.path(), _MoveType(what))
             )
 
-        for folder in folder_tree().all_folders().values():
+        for folder in self.tree.all_folders().values():
             if not folder.permissions.may("write"):
                 continue
             if folder.is_same_as(self):
@@ -2160,6 +2159,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
+        self.validators.validate_create_subfolder(self, attributes)
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         attributes = update_metadata(attributes, created_by=user.id)
@@ -2175,10 +2175,7 @@ class Folder(FolderProtocol):
             _l("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
-            diff_text=make_diff_text(
-                make_folder_audit_log_object({}),
-                make_folder_audit_log_object(new_subfolder.attributes),
-            ),
+            diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
         )
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
@@ -2207,7 +2204,7 @@ class Folder(FolderProtocol):
         )
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
-        folder_tree().invalidate_caches()
+        self.tree.invalidate_caches()
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
@@ -2219,6 +2216,7 @@ class Folder(FolderProtocol):
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write")  # Inheritance is changed
+        self.validators.validate_move_subfolder_to(subfolder, target_folder)
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -2252,7 +2250,7 @@ class Folder(FolderProtocol):
         old_filesystem_path = subfolder.filesystem_path()
         shutil.move(old_filesystem_path, target_folder.filesystem_path())
 
-        folder_tree().invalidate_caches()
+        self.tree.invalidate_caches()
 
         # Since redis only updates on the next request, we can no longer use it here
         # We COULD enforce a redis update here, but this would take too much time
@@ -2261,9 +2259,9 @@ class Folder(FolderProtocol):
             # Reload folder at new location and rewrite host files
             # Again, some special handling because of the missing slash in the main folder
             if not target_folder.is_root():
-                moved_subfolder = folder_tree().folder(f"{target_folder.path()}/{subfolder.name()}")
+                moved_subfolder = self.tree.folder(f"{target_folder.path()}/{subfolder.name()}")
             else:
-                moved_subfolder = folder_tree().folder(subfolder.name())
+                moved_subfolder = self.tree.folder(subfolder.name())
 
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
@@ -2284,6 +2282,7 @@ class Folder(FolderProtocol):
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
         self.need_unlocked()
+        self.validators.validate_edit_folder(self, new_attributes)
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
@@ -2311,7 +2310,7 @@ class Folder(FolderProtocol):
         # to the new mapping.
         affected_sites = self.all_site_ids()
 
-        old_object = make_folder_audit_log_object(self.attributes)
+        diff = diff_attributes(self.attributes, None, new_attributes, None)
 
         self._title = new_title
         self.attributes = new_attributes
@@ -2320,7 +2319,7 @@ class Folder(FolderProtocol):
         # might need to be rewritten in order to reflect Changes
         # in Nagios-relevant attributes.
         self.save_folder_attributes()
-        folder_tree().invalidate_caches()
+        self.tree.invalidate_caches()
         self.recursively_save_hosts()
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
@@ -2329,7 +2328,7 @@ class Folder(FolderProtocol):
             _l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, make_folder_audit_log_object(self.attributes)),
+            diff_text=diff,
         )
 
     def prepare_create_hosts(self) -> None:
@@ -2355,6 +2354,7 @@ class Folder(FolderProtocol):
         """
         # 1. Check preconditions
         self.prepare_create_hosts()
+        self.validators.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
             [
@@ -2403,14 +2403,13 @@ class Folder(FolderProtocol):
         assert self._hosts is not None
         self._hosts[host_name] = host
         self._num_hosts = len(self._hosts)
+
         add_change(
             "create-host",
             _l("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
-            diff_text=make_diff_text(
-                {}, make_host_audit_log_object(host.attributes, host.cluster_nodes())
-            ),
+            diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
             domain_settings=_generate_domain_settings("check_mk", [host_name]),
         )
 
@@ -2460,7 +2459,7 @@ class Folder(FolderProtocol):
             errors.extend(_("%s is locked by Quick setup.") % host_name for host_name in hosts)
 
         # 2. check if hosts have parents
-        if hosts_with_children := self._get_parents_of_hosts(host_names):
+        if hosts_with_children := self._get_parents_of_hosts(self.tree, host_names):
             errors.extend(
                 _("%s is parent of %s.") % (parent, ", ".join(children))
                 for parent, children in sorted(hosts_with_children.items())
@@ -2481,11 +2480,13 @@ class Folder(FolderProtocol):
         ]
 
     @staticmethod
-    def _get_parents_of_hosts(host_names: Collection[HostName]) -> dict[HostName, list[HostName]]:
+    def _get_parents_of_hosts(
+        tree: FolderTree, host_names: Collection[HostName]
+    ) -> dict[HostName, list[HostName]]:
         # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
         hosts_with_children: dict[HostName, list[HostName]] = {}
-        for child_key, child in folder_tree().root_folder().all_hosts_recursively().items():
+        for child_key, child in tree.root_folder().all_hosts_recursively().items():
             for host_name in host_names:
                 if host_name in child.parents():
                     hosts_with_children.setdefault(host_name, [])
@@ -2529,6 +2530,7 @@ class Folder(FolderProtocol):
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
+        self.validators.validate_move_hosts(self, host_names, target_folder)
 
         # 2. Actual modification
         for host_name in host_names:
@@ -2540,8 +2542,8 @@ class Folder(FolderProtocol):
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
-            old_folder_text = self.path() or folder_tree().root_folder().title()
-            new_folder_text = target_folder.path() or folder_tree().root_folder().title()
+            old_folder_text = self.path() or self.tree.root_folder().title()
+            new_folder_text = target_folder.path() or self.tree.root_folder().title()
             add_change(
                 "move-host",
                 _l('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
@@ -2597,6 +2599,7 @@ class Folder(FolderProtocol):
         if not changed:
             return False
 
+        self.attributes["parents"] = [HostName(h) for h in new_parents]
         add_change(
             "rename-parent",
             _l('Renamed parent from %s to %s in folder "%s"')
@@ -2890,7 +2893,7 @@ class SearchFolder(FolderProtocol):
         return self._found_hosts
 
     def host_validation_errors(self) -> dict[HostName, list[str]]:
-        return validate_all_hosts(list(self.hosts().keys()))
+        return validate_all_hosts(self.tree, list(self.hosts().keys()))
 
     def load_host(self, host_name: HostName) -> Host:
         try:
@@ -3215,6 +3218,9 @@ class Host:
     def discovery_failed(self) -> bool:
         return self.attributes.get("inventory_failed", False)
 
+    def is_waiting_for_discovery(self) -> bool:
+        return self.attributes.get("waiting_for_discovery", False)
+
     def validation_errors(self) -> list[str]:
         if hooks.registered("validate-host"):
             errors = []
@@ -3333,27 +3339,28 @@ class Host:
         self.permissions.need_permission("write")
         self.need_unlocked()
 
-        Folder.validate_edit_host(self.folder().site_id(), self.name(), attributes)
+        folder = self.folder()
+        folder.validators.validate_edit_host(folder.site_id(), self.name(), attributes)
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
         )
 
-        old_object = make_host_audit_log_object(self.attributes, self._cluster_nodes)
-        new_object = make_host_audit_log_object(attributes, cluster_nodes)
+        diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
         self.attributes = attributes
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        self.folder().save_hosts()
+        folder.save_hosts()
+
         add_change(
             "edit-host",
             _l("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, new_object),
+            diff_text=diff,
             domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
 
@@ -3368,7 +3375,8 @@ class Host:
             self._need_folder_write_permissions()
         self.need_unlocked()
 
-        old = make_host_audit_log_object(self.attributes.copy(), self._cluster_nodes)
+        old_attrs = self.attributes.copy()
+        old_nodes = self._cluster_nodes
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -3378,14 +3386,13 @@ class Host:
                 del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
+
         add_change(
             "edit-host",
             _l("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(
-                old, make_host_audit_log_object(self.attributes, self._cluster_nodes)
-            ),
+            diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
         )
 
     def _need_folder_write_permissions(self) -> None:
@@ -3469,22 +3476,35 @@ class Host:
         self._name = new_name
 
 
-def make_host_audit_log_object(
-    attributes: Mapping[str, object], cluster_nodes: Sequence[HostName] | None
-) -> dict[str, object]:
-    """The resulting object is used for building object diffs"""
-    obj = {**attributes}
-    if cluster_nodes:
-        obj["nodes"] = cluster_nodes
-    obj.pop("meta_data", None)
-    return obj
+def diff_attributes(
+    left_attributes: Mapping[str, object],
+    left_cluster_nodes: Sequence[HostName] | None,
+    right_attributes: Mapping[str, object],
+    right_cluster_nodes: Sequence[HostName] | None,
+) -> str:
+    """Diff two sets of host attributes, masking secrets"""
+    # The diff has no type infomation, so in order to detect secrets, we have to mask them before
+    # diffing. However, all masked secrets look the same in the diff, so then we couldn't detect
+    # the changes anymore.
+    # To add them manually, see if masking changes the diff. If so, secrets must have changed.
+    (left_attributes := dict(left_attributes)).pop("meta_data", None)
+    if left_cluster_nodes:
+        left_attributes["nodes"] = left_cluster_nodes
+    (right_attributes := dict(right_attributes)).pop("meta_data", None)
+    if right_cluster_nodes:
+        right_attributes["nodes"] = right_cluster_nodes
 
+    unmasked_diff = make_diff(left_attributes, right_attributes)
+    masked_diff = make_diff(
+        left_masked := mask_attributes(left_attributes),
+        right_masked := mask_attributes(right_attributes),
+    )
 
-def make_folder_audit_log_object(attributes: Mapping[str, object]) -> dict[str, object]:
-    """The resulting object is used for building object diffs"""
-    obj = {**attributes}
-    obj.pop("meta_data", None)
-    return obj
+    if unmasked_diff == masked_diff:
+        # no special treatment needed
+        return make_diff_text(left_masked, right_masked)
+
+    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def _validate_contact_group_modification(
@@ -3537,7 +3557,7 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 
     # The same with all hosts!
     if hooks.registered("all-hosts-changed"):
-        hosts = _collect_hosts(folder_tree().root_folder())
+        hosts = _collect_hosts(folder.tree.root_folder())
         hooks.call("all-hosts-changed", hosts)
 
 
@@ -3546,11 +3566,11 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
 def validate_all_hosts(
-    hostnames: Sequence[HostName], force_all: bool = False
+    tree: FolderTree, hostnames: Sequence[HostName], force_all: bool = False
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}
-        all_hosts = _collect_hosts(folder_tree().root_folder())
+        all_hosts = _collect_hosts(tree.root_folder())
 
         if force_all:
             hostnames = list(all_hosts.keys())
@@ -3805,3 +3825,24 @@ def find_usages_of_contact_group_in_hosts_and_folders(
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
+
+
+@dataclass(frozen=True)
+class FolderValidators:
+    ident: str
+    validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
+    validate_create_hosts: Callable[
+        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
+    ]
+    validate_create_subfolder: Callable[[Folder, HostAttributes], None]
+    validate_edit_folder: Callable[[Folder, HostAttributes], None]
+    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder], None]
+    validate_move_subfolder_to: Callable[[Folder, Folder], None]
+
+
+class FolderValidatorsRegistry(Registry[FolderValidators]):
+    def plugin_name(self, instance: FolderValidators) -> str:
+        return instance.ident
+
+
+folder_validators_registry = FolderValidatorsRegistry()

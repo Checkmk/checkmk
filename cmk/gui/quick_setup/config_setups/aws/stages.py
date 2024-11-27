@@ -12,19 +12,30 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
-from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
-from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
     complete,
     recaps,
+    utils,
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupActionMode,
+    QuickSetupStage,
+    QuickSetupStageAction,
+)
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
+    ParsedFormData,
+    QuickSetupId,
+    ServiceInterest,
+    StageIndex,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -33,17 +44,13 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
-    DictElement,
-    Dictionary,
-    InputHint,
-    SingleChoice,
-    SingleChoiceElement,
-)
+from cmk.rulesets.v1.form_specs import Dictionary
+
+NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
+PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
+PREV_BUTTON_LABEL = _("Back")
 
 
 def prepare_aws() -> QuickSetupStage:
@@ -66,7 +73,7 @@ def prepare_aws() -> QuickSetupStage:
                     Text(text=_("Note down the generated Access key ID and Secret access key.")),
                     Text(
                         text=_(
-                            "Return to Checkmk, define a unique AWS account name, and use the "
+                            "Return to Checkmk, define a unique configuration name, and use the "
                             "Access key ID and Secret access key below."
                         )
                     ),
@@ -84,24 +91,28 @@ def prepare_aws() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[
-            qs_validators.validate_unique_id,
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                custom_collect_params=aws_collect_params_with_defaults,
-                error_message=_(
-                    "Could not access your AWS account. Please check your Access and Secret key and try again."
-                ),
-            ),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("connection_test"),
+                custom_validators=[
+                    qs_validators.validate_unique_id,
+                    qs_validators.validate_test_connection_custom_collect_params(
+                        rulespec_name=RuleGroup.SpecialAgents("aws"),
+                        parameter_form=quick_setup_aws_form_spec(),
+                        custom_collect_params=aws_collect_params_with_defaults,
+                        error_message=_(
+                            "Could not access your AWS account. Please check your Access and Secret key and try again."
+                        ),
+                    ),
+                ],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure host and regions"),
+            )
         ],
-        recap=[recaps.recaps_form_spec],
-        button_label="Configure host and regions",
     )
 
 
 def configure_host_and_regions() -> QuickSetupStage:
-    site_default_value = site_attribute_default_value()
     return QuickSetupStage(
         title=_("Configure host and regions"),
         sub_title=_(
@@ -112,42 +123,21 @@ def configure_host_and_regions() -> QuickSetupStage:
             FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
                 form_spec=DictionaryExtended(
-                    elements=aws.quick_setup_stage_2(),
+                    elements=aws.quick_setup_stage_2(max_regions=5),
                     layout=DictionaryLayout.two_columns,
                 ),
             ),
-            FormSpecWrapper(
-                id=FormSpecId("site"),
-                form_spec=DictionaryExtended(
-                    elements={
-                        QSSiteSelection: DictElement(
-                            parameter_form=SingleChoice(
-                                elements=[
-                                    SingleChoiceElement(
-                                        name=site_id,
-                                        title=Title(  # pylint: disable=localization-of-non-literal-string
-                                            title
-                                        ),
-                                    )
-                                    for site_id, title in get_configured_site_choices()
-                                ],
-                                title=Title("Site selection"),
-                                prefill=(
-                                    DefaultValue(site_default_value)
-                                    if site_default_value
-                                    else InputHint(Title("Please choose"))
-                                ),
-                            ),
-                            required=True,
-                        )
-                    },
-                    layout=DictionaryLayout.two_columns,
-                ),
-            ),
+            widgets.site_formspec_wrapper(),
         ],
-        custom_validators=[qs_validators.validate_host_name_doesnt_exists],
-        recap=[recaps.recaps_form_spec],
-        button_label="Configure services to monitor",
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("host_name"),
+                custom_validators=[qs_validators.validate_host_name_doesnt_exists],
+                recap=[recaps.recaps_form_spec],
+                next_button_label=_("Configure services to monitor"),
+            )
+        ],
+        prev_button_label=PREV_BUTTON_LABEL,
     )
 
 
@@ -158,20 +148,17 @@ def _configure() -> Sequence[Widget]:
             form_spec=DictionaryExtended(
                 elements=aws.quick_setup_stage_3(),
                 layout=DictionaryLayout.two_columns,
+                custom_validate=[],
             ),
         ),
         Collapsible(
             title="Other options",
             items=[
                 FormSpecWrapper(
-                    id=FormSpecId("aws_tags"),
+                    id=FormSpecId("aws_other_options"),
                     form_spec=DictionaryExtended(
                         elements={
-                            "overall_tags": DictElement(
-                                parameter_form=ruleset_helper.formspec_aws_tags(
-                                    Title("Restrict monitoring services by one of these AWS tags")
-                                ),
-                            ),
+                            **aws.formspec_aws_overall_tags(),
                         },
                         layout=DictionaryLayout.two_columns,
                     ),
@@ -183,42 +170,113 @@ def _configure() -> Sequence[Widget]:
 
 def configure_services_to_monitor() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Configure services to monitor"),
-        sub_title=_("Select and configure AWS services you would like to monitor"),
+        title=_("Configure services to monitor & other options"),
+        sub_title=_(
+            "Select and configure AWS services you would like to monitor, and set other "
+            "options such as AWS tags or a proxy server."
+        ),
         configure_components=_configure,
-        custom_validators=[],
-        recap=[
-            recaps.recaps_form_spec,
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recaps.recaps_form_spec,
+                ],
+                next_button_label=_("Review and test configuration"),
+            )
         ],
-        button_label="Review & run preview service discovery",
+        prev_button_label=PREV_BUTTON_LABEL,
     )
+
+
+def recap_found_services(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    parsed_data: ParsedFormData,
+) -> Sequence[Widget]:
+    service_discovery_result = utils.get_service_discovery_preview(
+        rulespec_name=RuleGroup.SpecialAgents("aws"),
+        all_stages_form_data=parsed_data,
+        parameter_form=quick_setup_aws_form_spec(),
+        collect_params=aws_collect_params_with_defaults,
+    )
+    aws_service_interest = ServiceInterest(r"(?i).*aws.*", "services")
+    filtered_groups_of_services, _other_services = utils.group_services_by_interest(
+        services_of_interest=[aws_service_interest],
+        service_discovery_result=service_discovery_result,
+    )
+    if len(filtered_groups_of_services[aws_service_interest]):
+        return [
+            Text(text=_("AWS services found!")),
+            Text(
+                text=_(
+                    "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
+                )
+            ),
+        ]
+    return [
+        Text(text=_("No AWS services found.")),
+        Text(
+            text=_(
+                "The connection to AWS was successful, but no services were found. If this is unintentional, please verify your configuration."
+            )
+        ),
+    ]
 
 
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Review and run preview service discovery"),
-        sub_title=_("Review your configuration and run preview service discovery"),
+        title=_("Review and test configuration"),
+        sub_title=_("Test the AWS connection based on your configuration settings"),
         configure_components=[],
-        custom_validators=[],
-        recap=[
-            recaps.recap_service_discovery_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
+        actions=[
+            QuickSetupStageAction(
+                id=ActionId("action"),
+                custom_validators=[],
+                recap=[
+                    recap_found_services,
+                ],
+                load_wait_label=_("This process may take several minutes, please wait..."),
+                next_button_label=_("Test configuration"),
+            ),
+            QuickSetupStageAction(
+                id=ActionId("skip_configuration_test"),
+                custom_validators=[],
+                recap=[
+                    lambda __, ___, ____: [
+                        Text(text=_("Skipped the configuration test.")),
+                        Text(
+                            text=_(
+                                "Save your progress and go to the Activate Changes page to enable it."
+                            )
+                        ),
+                    ]
+                ],
+                next_button_label=_("Skip test"),
+            ),
+        ],
+        prev_button_label=PREV_BUTTON_LABEL,
+    )
+
+
+def action(
+    all_stages_form_data: ParsedFormData,
+    mode: QuickSetupActionMode,
+    object_id: str | None,
+) -> str:
+    match mode:
+        case QuickSetupActionMode.SAVE:
+            return complete.create_and_save_special_agent_bundle_custom_collect_params(
+                special_agent_name="aws",
                 parameter_form=quick_setup_aws_form_spec(),
-                services_of_interest=[ServiceInterest(".*", "services")],
+                all_stages_form_data=all_stages_form_data,
                 custom_collect_params=aws_collect_params,
             )
-        ],
-        button_label="Run preview service discovery",
-    )
-
-
-def save_action(all_stages_form_data: ParsedFormData) -> str:
-    return complete.create_and_save_special_agent_bundle_custom_collect_params(
-        special_agent_name="aws",
-        parameter_form=quick_setup_aws_form_spec(),
-        all_stages_form_data=all_stages_form_data,
-        custom_collect_params=aws_collect_params,
-    )
+        case QuickSetupActionMode.EDIT:
+            raise ValueError("Edit mode not supported")
+        case _:
+            raise ValueError(f"Unknown mode {mode}")
 
 
 def aws_collect_params(
@@ -246,6 +304,8 @@ def _migrate_aws_service(service: str) -> object:
     # Regional
     if service == "wafv2":
         return {"selection": "all", "limits": True, "cloudfront": None}
+    if service == "cloudwatch_alarms":
+        return {"alarms": "all", "limits": True}
     return {"selection": "all", "limits": True}
 
 
@@ -264,13 +324,16 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "secret_access_key": params["secret_access_key"],
         "global_services": {k: _migrate_aws_service(k) for k in global_services},
         "regions": [region.replace("_", "-") for region in regions_to_monitor],
-        "access": {},  # TODO required key but not yet implemented. It's part of quick_setup_advanced()
+        "access": {},
+        # TODO required key but not yet implemented. It's part of quick_setup_advanced()
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
     }
     if overall_tags is not None:
-        assert isinstance(overall_tags, list)
-        params["overall_tags"] = [(tag["key"], tag["values"]) for tag in overall_tags]
+        assert isinstance(overall_tags, dict)
+        if (restriction_tags := overall_tags.get("restriction_tags")) is not None:
+            assert isinstance(restriction_tags, list)
+            params["overall_tags"] = [(tag["key"], tag["values"]) for tag in restriction_tags]
 
     return params
 
@@ -284,11 +347,11 @@ quick_setup_aws = QuickSetup(
         configure_services_to_monitor,
         review_and_run_preview_service_discovery,
     ],
-    save_actions=[
-        QuickSetupSaveAction(
-            id="activate_changes",
+    actions=[
+        QuickSetupAction(
+            id=ActionId("activate_changes"),
             label=_("Save & go to Activate changes"),
-            action=save_action,
+            action=action,
         ),
     ],
 )

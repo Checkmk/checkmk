@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterator
-from typing import Any, cast, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any, cast
 
 from cmk.utils.hostaddress import HostName
 
@@ -15,6 +15,7 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
+from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
@@ -159,7 +160,7 @@ def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
 
 def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
     for component in components:
-        if isinstance(component, (ListOfWidgets, Collapsible)):
+        if isinstance(component, (ListOfWidgets, Collapsible, ConditionalNotificationStageWidget)):
             yield from iter(_flatten_formspec_wrappers(component.items))
 
         if isinstance(component, FormSpecWrapper):

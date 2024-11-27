@@ -187,11 +187,7 @@ def host_service_perfdata_toggle(on: bool) -> FilterHeader:
 def staleness(obj: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
     def toggler(on: bool) -> FilterHeader:
         operator = ">=" if on else "<"
-        return "Filter: {}_staleness {} {:0.2f}\n".format(
-            obj,
-            operator,
-            active_config.staleness_threshold,
-        )
+        return f"Filter: {obj}_staleness {operator} {active_config.staleness_threshold:0.2f}\n"
 
     return toggler
 
@@ -466,12 +462,7 @@ class TextQuery(Query):
         return "!" if self.negateable and value.get(self.request_vars[1]) else ""
 
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return "Filter: {} {}{} {}\n".format(
-            self.column,
-            self._negate_symbol(value),
-            self.op,
-            livestatus.lqencode(value[self.request_vars[0]]),
-        )
+        return f"Filter: {self.column} {self._negate_symbol(value)}{self.op} {livestatus.lqencode(value[self.request_vars[0]])}\n"
 
 
 class TableTextQuery(TextQuery):
@@ -517,11 +508,7 @@ def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], 
 
 class CheckCommandQuery(TextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return "Filter: {} {} ^{}(!.*)?\n".format(
-            self.column,
-            self.op,
-            livestatus.lqencode(value[self.request_vars[0]]),
-        )
+        return f"Filter: {self.column} {self.op} ^{livestatus.lqencode(value[self.request_vars[0]])}(!.*)?\n"
 
 
 class HostnameOrAliasQuery(TextQuery):

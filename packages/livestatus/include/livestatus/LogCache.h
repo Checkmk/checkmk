@@ -8,8 +8,10 @@
 
 #include <bitset>
 #include <chrono>
+#include <compare>
 #include <cstddef>
 #include <filesystem>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -17,6 +19,7 @@
 #include "livestatus/Logfile.h"
 class ICore;
 class Logger;
+class Query;
 
 // We keep this on top level to make forward declarations possible.
 class LogFiles {
@@ -33,13 +36,26 @@ private:
     const container *log_files_;
 };
 
-class LogFilter {
+using LogEntryClasses = std::bitset<32>;
+
+class LogRestrictions {
 public:
     size_t max_lines_per_log_file{};
-    std::bitset<32> log_entry_classes;
+    LogEntryClasses log_entry_classes;
+};
+
+// This represents the half-open interval {t | since <= t < until}.
+class LogPeriod {
+public:
     std::chrono::system_clock::time_point since;
     std::chrono::system_clock::time_point until;
+
+    static LogPeriod make(const Query &query);
+    [[nodiscard]] bool empty() const { return since >= until; }
+    [[nodiscard]] auto duration() const { return until - since; }
 };
+
+std::ostream &operator<<(std::ostream &os, const LogPeriod &p);
 
 // NOTE: This class is currently broken due to race conditions: Although it uses
 // a lock internally to guard against concurrent modifications happening by its
@@ -63,7 +79,7 @@ public:
     // keep the number of cached log entries under control. Used by
     // Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *log_file,
-                             std::bitset<32> log_entry_classes_to_keep);
+                             LogEntryClasses log_entry_classes_to_keep);
 
     // Call the given function with a locked and updated LogCache, keeping the
     // lock and the update function local.

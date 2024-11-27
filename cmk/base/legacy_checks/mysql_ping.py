@@ -6,11 +6,12 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 # <<<mysql_ping>>>
 # [[instance]]
@@ -42,6 +43,7 @@ def discover_mysql_ping(section):
 
 
 check_info["mysql_ping"] = LegacyCheckDefinition(
+    name="mysql_ping",
     parse_function=parse_mysql_ping,
     service_name="MySQL Instance %s",
     discovery_function=discover_mysql_ping,

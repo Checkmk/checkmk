@@ -15,10 +15,10 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
                 --cachehit_csv "${cache_hits_file}" \
                 --distro "${distro}"
             """);
-            stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*");
 
             // remove large execution log summary file to save some space, approx 1.6GB per workspace
             sh("rm -rf ${distro_dir}/${bazel_log_prefix}*.json");
+            stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*")
         }
     } catch (e) {
         print("Failed to parse bazel execution logs: ${e}");
@@ -44,7 +44,6 @@ def try_plot_cache_hits(bazel_log_prefix, distros) {
             description: 'Bazel Remote Cache Analysis',
             group: 'Bazel Cache',
             numBuilds: '30',
-            propertiesSeries: [[file: '', label: '']],
             style: 'line',
             title: 'Cache hits',
             yaxis: 'Cache hits in percent',

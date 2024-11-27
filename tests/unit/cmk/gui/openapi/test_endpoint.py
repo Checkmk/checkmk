@@ -367,9 +367,14 @@ def test_permission_exception(clients: ClientRegistry) -> None:
     assert resp.json["ext"]["exc_type"] == "RestAPIPermissionException"
     exc = resp.json["ext"]["details"]["rest_api_exception"]
     assert exc["description"] == "Permission mismatch"
-    assert (
-        exc["detail"]
-        == "There can be some causes for this error:\n* a permission which was required (successfully) was not declared\n* a permission which was declared (not optional) was not required\n* No permission was required at all, although permission were declared\nEndpoint: <Endpoint cmk.gui.openapi.endpoints.aux_tags:show_aux_tag>\nParams: {'aux_tag_id': 'ping'}\nRequired: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
+    assert exc["detail"] == (
+        "There can be some causes for this error:\n"
+        "* a permission which was required (successfully) was not declared\n"
+        "* a permission which was declared (not optional) was not required\n"
+        "* No permission was required at all, although permission were declared\n"
+        "Endpoint: <Endpoint cmk.gui.openapi.endpoints.aux_tags:show_aux_tag>\n"
+        "Params: {'aux_tag_id': 'ping'}\n"
+        "Required: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
     )
 
 
@@ -534,7 +539,7 @@ def test_reserved_endpoint_auth(
     mocked_secret_path.write_bytes(b"unittestsecret")
     monkeypatch.setattr(SiteInternalSecret, "path", mocked_secret_path)
 
-    res = api_client.request(
+    res_ = api_client.request(
         method="get",
         url="/i_am_reserved",
         headers={
@@ -543,4 +548,4 @@ def test_reserved_endpoint_auth(
         },
     )
 
-    assert res.status_code == 204
+    assert res_.status_code == 204

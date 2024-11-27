@@ -16,10 +16,10 @@
 #   normal(255)
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_ibm_rsa_health(info):
@@ -53,6 +53,7 @@ def parse_ibm_rsa_health(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_rsa_health"] = LegacyCheckDefinition(
+    name="ibm_rsa_health",
     parse_function=parse_ibm_rsa_health,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
     fetch=SNMPTree(

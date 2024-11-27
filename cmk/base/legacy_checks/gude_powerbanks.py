@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.
@@ -76,6 +77,7 @@ def inventory_gude_powerbanks(parsed):
 _TABLES = (19, 38)
 
 check_info["gude_powerbanks"] = LegacyCheckDefinition(
+    name="gude_powerbanks",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),

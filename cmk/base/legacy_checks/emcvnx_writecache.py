@@ -8,10 +8,10 @@
 # SPB Write Cache State               Enabled
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_emcvnx_writecache(info):
@@ -40,6 +40,7 @@ def parse_emcvnx_writecache(string_table: StringTable) -> StringTable:
 
 
 check_info["emcvnx_writecache"] = LegacyCheckDefinition(
+    name="emcvnx_writecache",
     parse_function=parse_emcvnx_writecache,
     service_name="Write Cache State %s",
     discovery_function=inventory_emcvnx_writecache,

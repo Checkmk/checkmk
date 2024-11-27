@@ -4,26 +4,28 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { FallbackWarning } from '@/form/components/vue_formspec_components'
-import Button from '@/components/IconButton.vue'
+import type { FallbackWarning } from '@/notification/type_defs'
+import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import CmkButton from '@/components/CmkButton.vue'
 
 const props = defineProps<{
   properties: FallbackWarning
+  user_id: string
 }>()
 
 import { ref, onMounted } from 'vue'
 
 const isContentVisible = ref(true)
+const localStorageKey = (userId: string) => `${userId}-notificationFallbackVisibility`
 
 function hideContent() {
   isContentVisible.value = false
-  localStorage.setItem(`${props.properties.user_id}-notificationFallbackVisibility`, 'hidden')
+  localStorage.setItem(localStorageKey(props.user_id), 'hidden')
 }
 
 onMounted(() => {
-  const savedState = localStorage.getItem(
-    `${props.properties.user_id}-notificationFallbackVisibility`
-  )
+  const savedState = localStorage.getItem(localStorageKey(props.user_id))
   if (savedState === 'hidden') {
     isContentVisible.value = false
   }
@@ -37,18 +39,19 @@ function openInNewTab(url: string) {
 <template>
   <div v-if="isContentVisible" class="help always_on">
     <div class="info_icon">
-      <img class="icon" />
+      <CmkIcon name="info" />
     </div>
     <div class="help_text">
       <p>{{ props.properties['i18n']['title'] }}</p>
       <p>{{ props.properties['i18n']['message'] }}</p>
       <div class="buttons">
-        <!-- TODO: Change buttons to a new implementation -->
-        <Button
-          :label="properties['i18n']['setup_link_title']"
-          @click="openInNewTab(properties['setup_link'])"
-        />
-        <Button :label="properties['i18n']['do_not_show_again_title']" @click="hideContent" />
+        <CmkButton variant="info" @click="openInNewTab(properties['setup_link'])">
+          {{ properties['i18n']['setup_link_title'] }}
+        </CmkButton>
+        <CmkSpace />
+        <CmkButton @click="hideContent">
+          {{ properties['i18n']['do_not_show_again_title'] }}
+        </CmkButton>
       </div>
     </div>
   </div>
@@ -59,13 +62,9 @@ div.help {
   display: flex;
   margin-bottom: 24px;
 
-  div.info_icon img {
-    content: var(--icon-info);
-  }
-
   div.help_text {
-    background-color: rgb(38 47 56);
-    color: var(--white);
+    background-color: var(--help-text-bg-color);
+    color: var(--help-text-font-color);
   }
 
   p {
@@ -82,12 +81,6 @@ div.help {
 
   a:first-child {
     margin-right: var(--spacing);
-  }
-
-  .button {
-    background-color: rgb(6 103 193);
-    color: var(--white);
-    border: unset;
   }
 }
 </style>

@@ -28,9 +28,8 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 
-from cmk.piggyback import PiggybackMetaData
-from cmk.piggyback.config import Config as PiggybackConfig
-from cmk.piggyback.config import PiggybackTimeSettings
+from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 

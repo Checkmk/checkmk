@@ -24,8 +24,9 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_rabbitmq_vhosts(string_table):
@@ -103,6 +104,7 @@ def discover_rabbitmq_vhosts(section):
 
 
 check_info["rabbitmq_vhosts"] = LegacyCheckDefinition(
+    name="rabbitmq_vhosts",
     parse_function=parse_rabbitmq_vhosts,
     service_name="RabbitMQ Vhost %s",
     discovery_function=discover_rabbitmq_vhosts,

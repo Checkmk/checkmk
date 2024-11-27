@@ -23,7 +23,7 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
@@ -38,9 +38,9 @@ from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import (
     AutocheckEntry,
+    AutochecksConfig,
     AutocheckServiceWithNodes,
     AutochecksStore,
-    DiscoveredService,
     merge_cluster_autochecks,
     remove_autochecks_of_host,
     set_autochecks_of_cluster,
@@ -120,10 +120,7 @@ def automation_discovery(
     section_plugins: SectionMap[SectionPlugin],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
     service_filters: _ServiceFilters | None,
@@ -149,9 +146,7 @@ def automation_discovery(
         if settings.update_changed_service_labels and settings.update_changed_service_parameters:
             results[host_name].self_removed += sum(
                 # this is cluster-aware!
-                remove_autochecks_of_host(
-                    node, host_name, get_effective_host, get_service_description
-                )
+                remove_autochecks_of_host(node, host_name, autochecks_config.effective_host)
                 for node in (cluster_nodes if is_cluster else [host_name])
             )
 
@@ -213,16 +208,13 @@ def automation_discovery(
             ),
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            ignore_service=ignore_service,
-            ignore_plugin=ignore_plugin,
-            get_effective_host=get_effective_host,
-            get_service_description=get_service_description,
+            autochecks_config=autochecks_config,
             enforced_services=enforced_services,
         )
 
         existing_services_by_host = {
             h: {
-                DiscoveredService.id(x.service): x
+                x.service.older.id(): x
                 for x in itertools.chain(
                     services.get("changed", []),
                     services.get("unchanged", []),
@@ -238,7 +230,7 @@ def automation_discovery(
                 s,
                 service_filters or _ServiceFilters.accept_all(),
                 results[h],
-                get_service_description,
+                autochecks_config.service_description,
                 settings,
                 keep_clustered_vanished_services,
             )
@@ -250,8 +242,7 @@ def automation_discovery(
                 cluster_nodes,
                 host_name,
                 new_services_by_host,
-                get_effective_host,
-                get_service_description,
+                autochecks_config.effective_host,
             )
         else:
             set_autochecks_of_real_hosts(host_name, new_services_by_host[host_name])
@@ -262,12 +253,12 @@ def automation_discovery(
             (
                 x.service
                 for x in existing_services_by_host[host_name].values()
-                if DiscoveredService.id(x.service) not in final_services_by_host[host_name]
+                if x.service.newer.id() not in final_services_by_host[host_name]
             ),
             (
                 x.service
                 for x in final_services_by_host[host_name].values()
-                if DiscoveredService.id(x.service) not in existing_services_by_host[host_name]
+                if x.service.newer.id() not in existing_services_by_host[host_name]
             ),
         )
 
@@ -289,7 +280,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, AutocheckEntry], ServiceName],
     settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
@@ -310,11 +301,9 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
             case "new":
                 if settings.add_new_services:
                     new = {
-                        DiscoveredService.id(s.service): s
+                        s.service.newer.id(): s
                         for s in discovered_services_with_nodes
-                        if service_filters.new(
-                            get_service_description(host_name, *DiscoveredService.id(s.service))
-                        )
+                        if service_filters.new(get_service_description(host_name, s.service.newer))
                     }
                     result.self_new += len(new)
                     post_discovery_services.update(new)
@@ -322,7 +311,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
             case "unchanged" | "ignored":
                 # keep currently existing valid services in any case
                 post_discovery_services.update(
-                    (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
+                    (s.service.newer.id(), s) for s in discovered_services_with_nodes
                 )
                 result.self_kept += len(discovered_services_with_nodes)
 
@@ -333,8 +322,8 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                     new_entry = AutocheckServiceWithNodes(
                         service=DiscoveredItem[AutocheckEntry](
                             new=AutocheckEntry(
-                                check_plugin_name=DiscoveredService.check_plugin_name(service),
-                                item=DiscoveredService.item(service),
+                                check_plugin_name=service.newer.check_plugin_name,
+                                item=service.newer.item,
                                 parameters=(
                                     service.new.parameters
                                     if settings.update_changed_service_parameters
@@ -350,7 +339,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                         ),
                         nodes=entry.nodes,
                     )
-                    post_discovery_services[DiscoveredService.id(service)] = new_entry
+                    post_discovery_services[service.newer.id()] = new_entry
                     if new_entry.service.new != new_entry.service.previous:
                         result.self_changed += 1
                     else:
@@ -361,11 +350,11 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 # otherwise fix it: remove ignored and non-longer existing services
                 for entry in discovered_services_with_nodes:
                     if settings.remove_vanished_services and service_filters.vanished(
-                        get_service_description(host_name, *DiscoveredService.id(entry.service))
+                        get_service_description(host_name, entry.service.newer)
                     ):
                         result.self_removed += 1
                     else:
-                        post_discovery_services[DiscoveredService.id(entry.service)] = entry
+                        post_discovery_services[entry.service.newer.id()] = entry
 
                         result.self_kept += 1
 
@@ -373,7 +362,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
                     # Silently keep clustered services
                     post_discovery_services.update(
-                        (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
+                        (s.service.newer.id(), s) for s in discovered_services_with_nodes
                     )
                 match check_transition:
                     case "clustered_new":
@@ -408,17 +397,17 @@ def _make_diff(
                 *(f"Added host label: '{l.label}'." for l in labels_new),
                 *(
                     (
-                        f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
-                        if DiscoveredService.item(s) is None
-                        else f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        f"Removed service: Check plug-in '{s.newer.check_plugin_name}'."
+                        if s.newer.item is None
+                        else f"Removed service: Check plug-in '{s.newer.check_plugin_name}' / item '{s.newer.item}'."
                     )
                     for s in services_vanished
                 ),
                 *(
                     (
-                        f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
-                        if DiscoveredService.item(s) is None
-                        else f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        f"Added service: Check plug-in '{s.newer.check_plugin_name}'."
+                        if s.newer.item is None
+                        else f"Added service: Check plug-in '{s.newer.check_plugin_name}' / item '{s.newer.item}'."
                     )
                     for s in services_new
                 ),
@@ -442,10 +431,7 @@ def autodiscovery(
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     schedule_discovery_check: Callable[[HostName], object],
     rediscovery_parameters: RediscoveryParameters,
     invalidate_host_config: Callable[[], object],
@@ -477,10 +463,7 @@ def autodiscovery(
         section_error_handling=section_error_handling,
         host_label_plugins=host_label_plugins,
         plugins=plugins,
-        ignore_service=ignore_service,
-        ignore_plugin=ignore_plugin,
-        get_effective_host=get_effective_host,
-        get_service_description=get_service_description,
+        autochecks_config=autochecks_config,
         settings=DiscoverySettings.from_vs(rediscovery_parameters.get("mode")),
         keep_clustered_vanished_services=rediscovery_parameters.get(
             "keep_clustered_vanished_services", True
@@ -603,10 +586,7 @@ def get_host_services_by_host_name(
     discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     enforced_services: Container[ServiceID],
 ) -> dict[HostName, ServicesByTransition]:
     services_by_host_name: dict[HostName, ServicesTable[_Transition]]
@@ -617,10 +597,7 @@ def get_host_services_by_host_name(
                 existing_services=existing_services,
                 discovered_services=discovered_services,
                 cluster_nodes=cluster_nodes,
-                ignore_plugin=ignore_plugin,
-                ignore_service=ignore_service,
-                get_effective_host=get_effective_host,
-                get_service_description=get_service_description,
+                autochecks_config=autochecks_config,
             )
         }
     else:
@@ -635,10 +612,7 @@ def get_host_services_by_host_name(
                         forget_existing=False,
                         keep_vanished=False,
                     ),
-                    ignore_service=ignore_service,
-                    ignore_plugin=ignore_plugin,
-                    get_effective_host=get_effective_host,
-                    get_service_description=get_service_description,
+                    autochecks_config,
                 )
             }
         }
@@ -680,55 +654,43 @@ def discovery_by_host(  # should go to a different file, I think.
 def make_table(
     host_name: HostName,
     entries: QualifiedDiscovery[AutocheckEntry],
-    *,
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
 ) -> ServicesTable[_Transition]:
     return {
-        DiscoveredService.id(entry): ServicesTableEntry(
+        entry.newer.id(): ServicesTableEntry(
             transition=_node_service_source(
                 host_name,
-                ignore_service=ignore_service,
-                ignore_plugin=ignore_plugin,
+                entry.newer,
+                ignore_service=autochecks_config.ignore_service,
+                ignore_plugin=autochecks_config.ignore_plugin,
                 check_source=service_transition,
-                cluster_name=get_effective_host(host_name, service_name),
-                check_plugin_name=DiscoveredService.check_plugin_name(entry),
-                service_name=service_name,
+                cluster_name=autochecks_config.effective_host(host_name, entry.newer),
             ),
             autocheck=entry,
             hosts=[host_name],
         )
         for service_transition, entry in entries.chain_with_transition()
-        if (
-            service_name := get_service_description(
-                host_name, DiscoveredService.check_plugin_name(entry), DiscoveredService.item(entry)
-            )
-        )
     }
 
 
 def _node_service_source(
     host_name: HostName,
+    entry: AutocheckEntry,
     *,
-    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_service: Callable[[HostName, AutocheckEntry], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     check_source: _BasicTransition,
     cluster_name: HostName,
-    check_plugin_name: CheckPluginName,
-    service_name: ServiceName,
 ) -> _Transition:
     if host_name == cluster_name:
         return (
             "ignored"
-            if ignore_plugin(host_name, check_plugin_name)
-            or ignore_service(host_name, service_name)
+            if ignore_plugin(host_name, entry.check_plugin_name) or ignore_service(host_name, entry)
             else check_source
         )
 
     # TODO: this does not make much sense. If the service is clustered, but ignored _on that cluster_, it should be shown there.
-    if ignore_service(cluster_name, service_name) or ignore_plugin(cluster_name, check_plugin_name):
+    if ignore_service(cluster_name, entry) or ignore_plugin(cluster_name, entry.check_plugin_name):
         return "ignored"
 
     if check_source == "vanished":
@@ -741,11 +703,11 @@ def _node_service_source(
 def _make_cluster_table(
     entries: QualifiedDiscovery[AutocheckEntry],
     node_tables: Mapping[HostName, ServicesTable[_Transition]],
-    is_ignored_on_cluster: Callable[[ServiceID], bool],
+    is_ignored_on_cluster: Callable[[AutocheckEntry], bool],
 ) -> ServicesTable[_Transition]:
     return {
-        sid: ServicesTableEntry(
-            transition="ignored" if is_ignored_on_cluster(sid) else service_transition,
+        (sid := entry.newer.id()): ServicesTableEntry(
+            transition="ignored" if is_ignored_on_cluster(entry.newer) else service_transition,
             autocheck=entry,
             hosts=[
                 hn
@@ -754,7 +716,6 @@ def _make_cluster_table(
             ],
         )
         for service_transition, entry in entries.chain_with_transition()
-        for sid in (DiscoveredService.id(entry),)
     }
 
 
@@ -776,22 +737,18 @@ def _get_cluster_services(
     cluster_nodes: Iterable[HostName],
     existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
     discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
 ) -> dict[HostName, ServicesTable[_Transition]]:
     # should/can we move these up the stack?
-    def is_ignored(hn: HostName, service_id: ServiceID, service_description: ServiceName) -> bool:
-        if ignore_plugin(hn, service_id[0]):
+    def is_ignored(hn: HostName, entry: AutocheckEntry) -> bool:
+        if autochecks_config.ignore_plugin(hn, entry.check_plugin_name):
             return True
-        return ignore_service(hn, service_description)
+        return autochecks_config.ignore_service(hn, entry)
 
-    def appears_on_cluster(hn: HostName, service_id: ServiceID) -> bool:
-        service_description = get_service_description(hn, *service_id)
+    def appears_on_cluster(node_name: HostName, entry: AutocheckEntry) -> bool:
         return (
-            not is_ignored(hn, service_id, service_description)
-            and get_effective_host(hn, service_description) == host_name
+            not is_ignored(node_name, entry)
+            and autochecks_config.effective_host(node_name, entry) == host_name
         )
 
     nodes_discovery_results = {
@@ -805,14 +762,7 @@ def _get_cluster_services(
         for node in cluster_nodes
     }
     node_tables = {
-        hn: make_table(
-            hn,
-            entries,
-            ignore_service=ignore_service,
-            ignore_plugin=ignore_plugin,
-            get_effective_host=get_effective_host,
-            get_service_description=get_service_description,
-        )
+        hn: make_table(hn, entries, autochecks_config)
         for hn, entries in nodes_discovery_results.items()
     }
     clusters_discovery_result = QualifiedDiscovery(
@@ -830,9 +780,7 @@ def _get_cluster_services(
         host_name: _make_cluster_table(
             clusters_discovery_result,
             node_tables,
-            is_ignored_on_cluster=lambda sid: is_ignored(
-                host_name, sid, get_service_description(host_name, *sid)
-            ),
+            is_ignored_on_cluster=lambda entry: is_ignored(host_name, entry),
         ),
         **node_tables,
     }

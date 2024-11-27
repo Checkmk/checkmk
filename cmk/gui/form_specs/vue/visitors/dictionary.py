@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from typing import Mapping
+from collections.abc import Mapping
+
+from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -89,9 +91,9 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
             else:
                 group = shared_type_defs.DictionaryGroup(
-                    title=localize(self.form_spec.title),
-                    help=localize(self.form_spec.help_text),
-                    key=localize(self.form_spec.title) + localize(self.form_spec.help_text),
+                    title=localize(dict_element.group.title),
+                    help=localize(dict_element.group.help_text),
+                    key=repr(dict_element.group.title) + repr(dict_element.group.help_text),
                 )
 
             if is_active:
@@ -99,7 +101,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
             elements_keyspec.append(
                 shared_type_defs.DictionaryElement(
-                    ident=key_name,
+                    name=key_name,
                     default_value=element_vue_value,
                     required=dict_element.required,
                     parameter_form=element_schema,
@@ -113,6 +115,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 title=title,
                 help=help_text,
                 elements=elements_keyspec,
+                no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
                 layout=self.form_spec.layout,
             ),
@@ -131,6 +134,14 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
         ]
         for key_name, dict_element in self.form_spec.elements.items():
             if key_name not in parsed_value:
+                if dict_element.required:
+                    element_validations.append(
+                        shared_type_defs.ValidationMessage(
+                            location=[key_name],
+                            message=_("Required field missing"),
+                            invalid_value=None,
+                        )
+                    )
                 continue
 
             element_visitor = get_visitor(dict_element.parameter_form, self.options)

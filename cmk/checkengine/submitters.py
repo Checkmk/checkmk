@@ -154,7 +154,7 @@ class Submitter(abc.ABC):
             _output_check_result(submittee, show_perfdata=self.show_perfdata)
 
         if formatted_submittees:
-            self._submit((s for s in formatted_submittees if not s.pending))
+            self._submit(s for s in formatted_submittees if not s.pending)
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None: ...

@@ -4,9 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { computed, ref, watch, toRaw } from 'vue'
+import { immediateWatch } from '@/lib/watch'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
@@ -15,11 +14,17 @@ import type {
 import { useId } from '@/form/utils'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
   backendValidation: ValidationMessages
 }>()
+
+const FILTER_SHOW_THRESHOLD = 5
 
 const validation = ref<Array<string>>([])
 const elementValidation = ref<ValidationMessages>([])
@@ -55,7 +60,7 @@ immediateWatch(
       if (data.value[0] === key) {
         currentValues[key] = data.value[1]
       } else {
-        currentValues[key] = element.default_value
+        currentValues[key] = structuredClone(toRaw(element.default_value))
       }
     })
   }
@@ -97,34 +102,73 @@ const activeElement = computed((): ActiveElement | null => {
 })
 
 const componentId = useId()
+
+interface LayoutSettings {
+  cascade_display_style: string
+  cascade_margin_top: string
+  side_by_side: boolean
+}
+
+const layoutSettings = computed((): LayoutSettings => {
+  return {
+    cascade_display_style: props.spec.layout === 'vertical' ? 'block' : 'inline-block',
+    cascade_margin_top: props.spec.layout === 'vertical' ? '4px' : '0',
+    side_by_side: props.spec.layout === 'button_group'
+  }
+})
+
+const buttonGroupButtons = computed((): Array<{ label: string; value: string }> => {
+  return props.spec.elements.map((element: CascadingSingleChoiceElement) => {
+    return { label: element.title, value: element.name }
+  })
+})
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <div class="choice">
-    <select :id="componentId" v-model="selectedOption">
-      <option v-if="activeElement == null" disabled selected hidden value="">
-        {{ props.spec.input_hint }}
-      </option>
-      <option v-for="element in spec.elements" :key="element.name" :value="element.name">
-        {{ element.title }}
-      </option>
-    </select>
+  <span class="form-cascading-single-choice__choice">
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
-  </div>
-  <template v-if="activeElement != null">
-    <FormEdit
-      :key="data[0]"
-      v-model:data="data[1]"
-      :spec="activeElement.spec"
-      :backend-validation="elementValidation"
-    ></FormEdit>
-    <FormValidation :validation="validation"></FormValidation>
-  </template>
+    <template v-if="!layoutSettings.side_by_side">
+      <CmkDropdown
+        v-model:selected-option="selectedOption"
+        :component-id="componentId"
+        :options="spec.elements"
+        :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
+        :input-hint="props.spec.input_hint as string"
+      />
+    </template>
+    <template v-else>
+      <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
+    </template>
+  </span>
+  <span class="form-cascading-single-choice__cascade">
+    <template v-if="activeElement !== null">
+      <HelpText :help="activeElement.spec.help" />
+      <FormEditDispatcher
+        :key="data[0]"
+        v-model:data="data[1]"
+        :spec="activeElement.spec"
+        :backend-validation="elementValidation"
+      />
+
+      <FormValidation :validation="validation"></FormValidation>
+    </template>
+  </span>
 </template>
 
 <style scoped>
-div.choice {
-  margin-bottom: 5px;
+span.form-cascading-single-choice__choice,
+span.form-cascading-single-choice__cascade {
+  vertical-align: top;
+}
+
+span.form-cascading-single-choice__choice {
   margin-right: 5px;
+}
+
+span.form-cascading-single-choice__cascade {
+  display: v-bind('layoutSettings.cascade_display_style');
+  margin-top: v-bind('layoutSettings.cascade_margin_top');
 }
 </style>

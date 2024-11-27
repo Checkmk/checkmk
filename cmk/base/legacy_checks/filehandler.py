@@ -15,10 +15,10 @@
 # 9376        0        817805
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_filehandler(info):
@@ -47,6 +47,7 @@ def parse_filehandler(string_table: StringTable) -> StringTable:
 
 
 check_info["filehandler"] = LegacyCheckDefinition(
+    name="filehandler",
     parse_function=parse_filehandler,
     service_name="Filehandler",
     discovery_function=inventory_filehandler,

@@ -49,8 +49,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_pvecm_nodes(string_table):
@@ -115,6 +116,7 @@ def check_pvecm_nodes(item, _no_params, parsed):
 
 
 check_info["pvecm_nodes"] = LegacyCheckDefinition(
+    name="pvecm_nodes",
     parse_function=parse_pvecm_nodes,
     service_name="PVE Node %s",
     discovery_function=inventory_pvecm_nodes,

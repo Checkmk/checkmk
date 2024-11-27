@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_dynamodb_table(string_table):
@@ -46,6 +47,7 @@ def parse_aws_dynamodb_table(string_table):
 
 
 check_info["aws_dynamodb_table"] = LegacyCheckDefinition(
+    name="aws_dynamodb_table",
     parse_function=parse_aws_dynamodb_table,
 )
 
@@ -176,6 +178,7 @@ def discover_aws_dynamodb_table_read_capacity(p):
 
 
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
+    name="aws_dynamodb_table_read_capacity",
     service_name="AWS/DynamoDB Read Capacity",
     sections=["aws_dynamodb_table"],
     discovery_function=discover_aws_dynamodb_table_read_capacity,
@@ -201,6 +204,7 @@ def discover_aws_dynamodb_table_write_capacity(p):
 
 
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
+    name="aws_dynamodb_table_write_capacity",
     service_name="AWS/DynamoDB Write Capacity",
     sections=["aws_dynamodb_table"],
     discovery_function=discover_aws_dynamodb_table_write_capacity,
@@ -221,6 +225,7 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
 )
 
 check_info["aws_dynamodb_table.latency"] = LegacyCheckDefinition(
+    name="aws_dynamodb_table_latency",
     service_name="AWS/DynamoDB Latency",
     sections=["aws_dynamodb_table"],
     discovery_function=inventory_aws_dynamodb_latency,

@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+
+check_info = {}
 
 # .1.3.6.1.4.1.10222.2.1.5.1.0 1 --> ICS-CHASSIS-MIB::icsChassisTemperatureStatus.0
 # .1.3.6.1.4.1.10222.2.1.5.2.0 0 --> ICS-CHASSIS-MIB::icsChassisTemperatureWarning.0
@@ -37,10 +37,7 @@ def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
     }
 
     state, state_readable = map_status[info[0][0]]
-    return state, "Status: {}, Warning configuration: {}".format(
-        state_readable,
-        map_warn_config[info[0][1]],
-    )
+    return state, f"Status: {state_readable}, Warning configuration: {map_warn_config[info[0][1]]}"
 
 
 def parse_intel_true_scale_chassis_temp(string_table: StringTable) -> StringTable:
@@ -48,6 +45,7 @@ def parse_intel_true_scale_chassis_temp(string_table: StringTable) -> StringTabl
 
 
 check_info["intel_true_scale_chassis_temp"] = LegacyCheckDefinition(
+    name="intel_true_scale_chassis_temp",
     parse_function=parse_intel_true_scale_chassis_temp,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(

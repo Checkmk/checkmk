@@ -8,7 +8,8 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import type { Password } from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
-import { immediateWatch } from '@/form/components/utils/watch'
+import { immediateWatch } from '@/lib/watch'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 
 const props = defineProps<{
   spec: Password
@@ -62,13 +63,37 @@ const passwordStoreChoice = computed({
     data.value[3] = false
   }
 })
+
+const passwordTypeOptions = computed(() => {
+  return [
+    {
+      name: 'explicit_password',
+      title: props.spec.i18n.explicit_password
+    },
+    {
+      name: 'stored_password',
+      title: props.spec.i18n.password_store
+    }
+  ]
+})
+
+const passwordStoreOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  return props.spec.password_store_choices.map(({ password_id, name }) => {
+    return {
+      name: password_id,
+      title: name
+    }
+  })
+})
 </script>
 
 <template>
-  <select v-model="passwordType">
-    <option value="explicit_password">{{ props.spec.i18n.explicit_password }}</option>
-    <option value="stored_password">{{ props.spec.i18n.password_store }}</option>
-  </select>
+  <CmkDropdown
+    v-model:selected-option="passwordType"
+    :options="passwordTypeOptions"
+    :show-filter="false"
+  />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
     <input
@@ -82,15 +107,12 @@ const passwordStoreChoice = computed({
     <template v-if="props.spec.password_store_choices.length === 0">
       {{ props.spec.i18n.no_password_store_choices }}
     </template>
-    <select v-else v-model="passwordStoreChoice" aria-label="password store choice">
-      <option
-        v-for="{ password_id, name } in props.spec.password_store_choices"
-        :key="password_id"
-        :value="password_id"
-      >
-        {{ name }}
-      </option>
-    </select>
+    <CmkDropdown
+      v-else
+      v-model:selected-option="passwordStoreChoice"
+      :options="passwordStoreOptions"
+      :show-filter="false"
+    />
   </template>
   <FormValidation :validation="validation"></FormValidation>
 </template>

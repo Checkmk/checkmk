@@ -6,13 +6,14 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_hp_hh3c_ext(string_table):
@@ -66,6 +67,7 @@ def check_hp_hh3c_ext(item, params, parsed):
 
 
 check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
+    name="hp_hh3c_ext",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
@@ -140,6 +142,7 @@ def check_hp_hh3c_ext_states(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
+    name="hp_hh3c_ext_states",
     service_name="Status %s",
     sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_states,
@@ -174,6 +177,7 @@ def check_hp_hh3c_ext_cpu(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
+    name="hp_hh3c_ext_cpu",
     service_name="CPU utilization %s",
     sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_cpu,
@@ -216,6 +220,7 @@ def check_hp_hh3c_ext_mem(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
+    name="hp_hh3c_ext_mem",
     service_name="Memory %s",
     sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_mem,

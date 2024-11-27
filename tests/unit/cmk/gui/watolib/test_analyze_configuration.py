@@ -12,7 +12,6 @@ from cmk.gui.watolib.analyze_configuration import ac_test_registry
 
 def test_registered_ac_tests() -> None:
     expected_ac_tests = [
-        "ACTestAlertHandlerEventTypes",
         "ACTestApacheNumberOfProcesses",
         "ACTestApacheProcessUsage",
         "ACTestBackupConfigured",
@@ -43,6 +42,7 @@ def test_registered_ac_tests() -> None:
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected_ac_tests += [
+            "ACTestAlertHandlerEventTypes",
             "ACTestSecureAgentUpdaterTransport",
         ]
 

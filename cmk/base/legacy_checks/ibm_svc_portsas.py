@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
@@ -91,6 +93,7 @@ def check_ibm_svc_portsas(item, params, parsed):
 
 
 check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
+    name="ibm_svc_portsas",
     parse_function=parse_ibm_svc_portsas,
     service_name="SAS %s",
     discovery_function=inventory_ibm_svc_portsas,

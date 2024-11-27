@@ -4,9 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { mount } from '@vue/test-utils'
 import FormList from '@/form/components/forms/FormList.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
+import FormDataVisualizer from '../FormDataVisualizer.vue'
 
 const stringValidators: FormSpec.Validator[] = [
   {
@@ -22,7 +25,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'barTitle',
   help: 'barHelp',
   validators: stringValidators,
-  input_hint: ''
+  input_hint: '',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
@@ -38,11 +43,35 @@ const spec: FormSpec.List = {
   validators: [],
   element_template: stringFormSpec,
   element_default_value: '',
-  editable_order: false,
+  editable_order: true,
   add_element_label: 'Add element',
   remove_element_label: 'Remove element',
   no_element_label: 'No element'
 }
+
+test('List elements are draggable', async () => {
+  // It's horrible that we need to drop down to vue test utils here.
+  // The documented way of specifying event options with @testing-library/vue doesn't work.
+  // And we are STILL not testing the actual UI behavior, but only the handling of the drag
+  // event. The UI for example is not draggable without deleting the pointer-events in the
+  // nested img or draggable="true", but this test still passes.
+  const wrapper = mount(FormDataVisualizer, {
+    props: {
+      spec,
+      data: ['first_value', 'second_value'],
+      backendValidation: []
+    }
+  })
+
+  const draggables = wrapper.findAll('[aria-label="Drag to reorder"]')
+  draggables[0]!.trigger('dragstart')
+  draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
+  draggables[0]!.trigger('dragend')
+
+  wrapper.vm.$nextTick(() => {
+    expect(wrapper.find('[data-testid="test-data"]').text()).toBe('["second_value","first_value"]')
+  })
+})
 
 test('FormList renders backend validation messages', async () => {
   render(FormList, {
@@ -81,7 +110,7 @@ test.skip('FormList updated backend child validation shows validation error', as
 })
 
 test('FormList local child validation overwrites backend validation', async () => {
-  render(FormList, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some value'],
@@ -99,7 +128,7 @@ test('FormList local child validation overwrites backend validation', async () =
 })
 
 test('FormList shows frontend validation on existing element', async () => {
-  render(FormList, {
+  render(FormEdit, {
     props: {
       spec,
       data: ['some_value'],
@@ -120,9 +149,11 @@ const dictSpec: FormSpec.Dictionary = {
   layout: 'one_column',
   validators: [],
   groups: [],
+  no_elements_text: 'no_text',
+  additional_static_elements: null,
   elements: [
     {
-      ident: 'bar',
+      name: 'bar',
       required: true,
       default_value: 'baz',
       parameter_form: stringFormSpec,

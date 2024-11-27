@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
+
+check_info = {}
 
 
 def parse_ups_cps_battery(string_table):
@@ -53,6 +54,7 @@ def check_ups_cps_battery_temp(item, params, parsed):
 
 
 check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
+    name="ups_cps_battery_temp",
     service_name="Temperature %s",
     sections=["ups_cps_battery"],
     discovery_function=inventory_ups_cps_battery_temp,
@@ -108,6 +110,7 @@ def check_ups_cps_battery(item, params, parsed):
 
 
 check_info["ups_cps_battery"] = LegacyCheckDefinition(
+    name="ups_cps_battery",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.2.2",

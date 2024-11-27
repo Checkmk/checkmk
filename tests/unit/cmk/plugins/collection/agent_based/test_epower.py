@@ -12,10 +12,18 @@ import pytest
 
 from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
 
-from cmk.utils.sectionname import SectionName
-
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    State,
+)
+from cmk.plugins.collection.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
 from cmk.plugins.collection.agent_based.epower import check_epower, discover_epower
+from cmk.plugins.collection.agent_based.ups_power import snmp_section_ups_power
 
 # SUP-12323
 APC_SYMMETRA_0 = """
@@ -65,11 +73,11 @@ UPS_POWER_1 = """
 
 
 @pytest.mark.parametrize(
-    "walk, section_name, result",
+    "walk, section, result",
     [
         pytest.param(
             APC_SYMMETRA_0,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             [
                 Service(item="1"),
                 Service(item="2"),
@@ -79,7 +87,7 @@ UPS_POWER_1 = """
         ),
         pytest.param(
             APC_SYMMETRA_1,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             [
                 Service(item="1"),
                 Service(item="2"),
@@ -89,7 +97,7 @@ UPS_POWER_1 = """
         ),
         pytest.param(
             UPS_POWER_0,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             [
                 Service(item="1"),
                 Service(item="2"),
@@ -99,24 +107,23 @@ UPS_POWER_1 = """
         ),
     ],
 )
-@pytest.mark.usefixtures("fix_register")
 def test_power_discover(
     walk: str,
-    section_name: SectionName,
+    section: SimpleSNMPSection,
     result: DiscoveryResult,
     as_path: Callable[[str], Path],
 ) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section, as_path(walk)))
 
     assert list(discover_epower(parsed)) == result
 
 
 @pytest.mark.parametrize(
-    "walk, section_name, item, params, result",
+    "walk, section, item, params, result",
     [
         pytest.param(
             APC_SYMMETRA_0,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             "1",
             {
                 "levels_lower": (20, 1),
@@ -130,7 +137,7 @@ def test_power_discover(
         ),
         pytest.param(
             APC_SYMMETRA_1,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             "2",
             {"levels_lower": (20, 1), "levels_upper": None},
             [
@@ -141,7 +148,7 @@ def test_power_discover(
         ),
         pytest.param(
             APC_SYMMETRA_1,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             "2",
             {"levels_lower": (3000, 2000), "levels_upper": None},
             [
@@ -152,7 +159,7 @@ def test_power_discover(
         ),
         pytest.param(
             APC_SYMMETRA_1,
-            SectionName("apc_symmetra_power"),
+            snmp_section_apc_symmetra_power,
             "2",
             {"levels_lower": (6000, 3000), "levels_upper": None},
             [
@@ -163,7 +170,7 @@ def test_power_discover(
         ),
         pytest.param(
             UPS_POWER_0,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             "2",
             {"levels_lower": (20, 1), "levels_upper": None},
             [
@@ -174,7 +181,7 @@ def test_power_discover(
         ),
         pytest.param(
             UPS_POWER_0,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             "2",
             {"levels_lower": (4000, 3000), "levels_upper": None},
             [
@@ -185,7 +192,7 @@ def test_power_discover(
         ),
         pytest.param(
             UPS_POWER_0,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             "2",
             {"levels_lower": (6000, 4000), "levels_upper": None},
             [
@@ -196,7 +203,7 @@ def test_power_discover(
         ),
         pytest.param(
             UPS_POWER_1,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             "1",
             {"levels_lower": (4000, 3000), "levels_upper": None},
             [
@@ -207,7 +214,7 @@ def test_power_discover(
         ),
         pytest.param(
             UPS_POWER_0,
-            SectionName("ups_power"),
+            snmp_section_ups_power,
             "2",
             {"levels_lower": (3000, 2000), "levels_upper": (3000, 4000)},
             [
@@ -218,15 +225,14 @@ def test_power_discover(
         ),
     ],
 )
-@pytest.mark.usefixtures("fix_register")
 def test_epower_check(
     walk: str,
-    section_name: SectionName,
+    section: SimpleSNMPSection,
     item: str,
     params: Any,
     result: CheckResult,
     as_path: Callable[[str], Path],
 ) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section, as_path(walk)))
 
     assert list(check_epower(item=item, params=params, section=parsed)) == result

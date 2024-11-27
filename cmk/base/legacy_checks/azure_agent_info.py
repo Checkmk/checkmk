@@ -9,11 +9,12 @@
 import json
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store
+
+check_info = {}
 
 
 def _update_remaining_reads(parsed, value):
@@ -161,6 +162,7 @@ def check_azure_agent_info(_no_item, params, parsed):
 
 
 check_info["azure_agent_info"] = LegacyCheckDefinition(
+    name="azure_agent_info",
     parse_function=parse_azure_agent_info,
     service_name="Azure Agent Info",
     discovery_function=discovery_azure_agent_info,

@@ -19,6 +19,8 @@ use nix::unistd;
 use std::env;
 use std::env::ArgsOs;
 use std::io::{self, Write};
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 // TODO(sk): estimate to move in constants
@@ -48,37 +50,35 @@ fn is_os_supported() -> bool {
 }
 
 pub struct PathResolver {
-    pub home_dir: PathBuf,
     pub config_path: PathBuf,
     pub pre_configured_connections_path: PathBuf,
     pub registry_path: PathBuf,
 }
 
-#[cfg(unix)]
 impl PathResolver {
-    pub fn new(home_dir: &Path) -> PathResolver {
+    pub fn from_home_dir(home_dir: &Path) -> PathResolver {
         PathResolver {
-            home_dir: PathBuf::from(home_dir),
             config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
         }
     }
-}
 
-#[cfg(windows)]
-impl PathResolver {
-    pub fn new(home_dir: &Path) -> PathResolver {
+    #[cfg(unix)]
+    pub fn from_installdir(installdir: &Path) -> PathResolver {
+        let config_dir = installdir.join("package/config");
         PathResolver {
-            home_dir: PathBuf::from(home_dir),
-            config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
-            pre_configured_connections_path: home_dir
-                .join(Path::new(constants::PRE_CONFIGURED_CONNECTIONS_FILE)),
-            registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
+            config_path: config_dir.join(constants::CONFIG_FILE),
+            pre_configured_connections_path: config_dir
+                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            registry_path: installdir
+                .join("runtime/controller")
+                .join(constants::REGISTRY_FILE),
         }
     }
 }
+
 trait ExistsOr {
     fn exists_or(self, other_path: PathBuf) -> PathBuf;
 }
@@ -183,10 +183,20 @@ fn init_logging(
 }
 
 #[cfg(unix)]
-fn become_user(username: &str) -> AnyhowResult<unistd::User> {
-    let target_user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {username}"
-    ))?;
+enum UserRepr {
+    Uid(nix::unistd::Uid),
+    Name(String),
+}
+
+#[cfg(unix)]
+fn become_user(user: UserRepr) -> AnyhowResult<unistd::User> {
+    let target_user = match user {
+        UserRepr::Uid(uid) => unistd::User::from_uid(uid)?
+            .context(format!("Could not find Checkmk agent user with uid {uid}"))?,
+        UserRepr::Name(name) => unistd::User::from_name(&name)?.context(format!(
+            "Could not find dedicated Checkmk agent user {name}"
+        ))?,
+    };
 
     // If we already are the right user, return early. Otherwise, eg. setting the supplementary
     // group ids will fail due to insufficient permissions.
@@ -212,7 +222,7 @@ fn become_user(username: &str) -> AnyhowResult<unistd::User> {
 
 #[cfg(unix)]
 fn determine_paths(user: unistd::User) -> AnyhowResult<PathResolver> {
-    Ok(PathResolver::new(&user.dir))
+    Ok(PathResolver::from_home_dir(&user.dir))
 }
 
 #[cfg(windows)]
@@ -220,14 +230,14 @@ fn determine_paths() -> AnyhowResult<PathResolver> {
     // Alternative home dir can be passed for testing/debug reasons
     if let Ok(debug_home_dir) = std::env::var(constants::ENV_HOME_DIR) {
         info!("Using debug HOME_DIR: {}", debug_home_dir);
-        return Ok(PathResolver::new(&PathBuf::from(debug_home_dir)));
+        return Ok(PathResolver::from_home_dir(&PathBuf::from(debug_home_dir)));
     }
 
     // Normal/prod home dir
     let program_data_path = std::env::var(constants::ENV_PROGRAM_DATA)
         .unwrap_or_else(|_| String::from("c:\\ProgramData"));
     let home = PathBuf::from(program_data_path + constants::WIN_AGENT_HOME_DIR);
-    Ok(PathResolver::new(&home))
+    Ok(PathResolver::from_home_dir(&home))
 }
 
 #[cfg(unix)]
@@ -238,18 +248,51 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    match env::var(constants::ENV_HOME_DIR) {
-        // Alternative home dir can be passed for testing/debug reasons
-        Ok(debug_home_dir) => {
-            debug!("Skipping to change user and using debug HOME_DIR: {}", debug_home_dir);
-            Ok(PathResolver::new(Path::new(&debug_home_dir)))
-        },
-        // Normal/prod home dir
-        Err(_) => become_user(constants::CMK_AGENT_USER).context(format!(
+    if let Some(installdir) = setup_single_directory() {
+        return Ok(PathResolver::from_installdir(&installdir));
+    }
+
+    // Alternative home dir can be passed for testing/debug reasons
+    if let Ok(debug_home_dir) = env::var(constants::ENV_HOME_DIR) {
+        debug!(
+            "Skipping to change user and using debug HOME_DIR: {}",
+            debug_home_dir
+        );
+        return Ok(PathResolver::from_home_dir(Path::new(&debug_home_dir)));
+    }
+
+    // Normal/prod home dir
+    become_user(UserRepr::Name(constants::CMK_AGENT_USER.to_owned())).context(format!(
                 "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
                 constants::CMK_AGENT_USER,
-            )).and_then(determine_paths),
-    }
+            )).and_then(determine_paths)
+}
+
+#[cfg(unix)]
+fn setup_single_directory() -> Option<PathBuf> {
+    let exe = std::env::current_exe()
+        .and_then(std::fs::canonicalize)
+        .ok()?;
+    let installdir = exe.parent()?.parent()?.parent()?;
+
+    if !installdir
+        .join("package")
+        .join("config")
+        .join(constants::CONFIG_FILE)
+        .exists()
+    {
+        return None;
+    };
+
+    let owning_user = UserRepr::Uid(nix::unistd::Uid::from_raw(
+        std::fs::metadata(installdir.join("runtime").join("controller"))
+            .ok()?
+            .uid(),
+    ));
+
+    become_user(owning_user).ok()?;
+
+    Some(installdir.to_owned())
 }
 
 #[cfg(windows)]
@@ -289,7 +332,11 @@ mod tests {
     #[test]
     fn test_paths() {
         let home_dir = std::path::Path::new("/a/b/c");
-        assert_eq!(PathResolver::new(home_dir).home_dir, home_dir);
+        let config_path = std::path::Path::new("/a/b/c/").join(crate::constants::CONFIG_FILE);
+        assert_eq!(
+            PathResolver::from_home_dir(home_dir).config_path,
+            config_path
+        );
     }
 
     #[cfg(windows)]
@@ -297,7 +344,10 @@ mod tests {
     fn test_windows_paths() {
         let p = determine_paths().unwrap();
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
-        assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
+        assert_eq!(
+            p.config_path,
+            std::path::PathBuf::from(&home).join("cmk-agent-ctl.toml")
+        );
         assert_eq!(
             p.pre_configured_connections_path,
             std::path::PathBuf::from(&home).join("pre_configured_connections.json")

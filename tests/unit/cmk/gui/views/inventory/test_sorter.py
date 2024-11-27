@@ -6,12 +6,7 @@
 from cmk.utils.structured_data import ImmutableTree, SDKey
 
 from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
-from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.utils.theme import theme
+from cmk.gui.http import request
 from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
@@ -34,16 +29,14 @@ def test_registered_sorter_cmp() -> None:
         is_show_more=False,
     )
     _register_sorter("inv_key", attribute_sorter_from_hint((), SDKey("key"), hint))
-    sorter_cls = sorter_registry.get("inv_key")
-    assert sorter_cls is not None
+    sorter = sorter_registry["inv_key"]
     assert (
-        sorter_cls(
-            user=user,
+        sorter.cmp(
+            {"host_inventory": ImmutableTree()},
+            {"host_inventory": ImmutableTree()},
+            parameters=None,
             config=active_config,
             request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        ).cmp({"host_inventory": ImmutableTree()}, {"host_inventory": ImmutableTree()}, None)
+        )
         == 0
     )

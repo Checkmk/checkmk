@@ -2,12 +2,17 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Sequence
+from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
+from cmk.gui.form_specs.converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.form_specs.private import (
     not_empty,
     SingleChoiceElementExtended,
@@ -255,7 +260,7 @@ def create_snmp_credentials(
     only_v3: bool = False,
     allow_none: bool = False,
     for_ec: bool = False,
-) -> TransformForLegacyData:
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
     elements = _get_elements(only_v3, allow_none, for_ec)
 
     if default_value is None:
@@ -266,7 +271,7 @@ def create_snmp_credentials(
         else:
             default_value = "community"
 
-    return TransformForLegacyData(
+    return TransformDataForLegacyFormatOrRecomposeFunction(
         title=title,
         help_text=help_text,
         from_disk=lambda value: convert_from_disk(value, only_v3, allow_none),

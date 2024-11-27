@@ -6,11 +6,11 @@
 # .1.3.6.1.4.1.20632.2.5 2
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+
+check_info = {}
 
 
 def inventory_barracuda_mail_latency(info):
@@ -32,6 +32,7 @@ def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable | Non
 
 
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
+    name="barracuda_mail_latency",
     parse_function=parse_barracuda_mail_latency,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error

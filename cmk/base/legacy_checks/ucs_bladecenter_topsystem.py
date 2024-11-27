@@ -7,10 +7,10 @@
 # topSystem   Address 172.20.33.175   CurrentTime 2015-07-15T16:40:27.600 Ipv6Addr :: Mode cluster    Name svie23ucsfi01  SystemUpTime 125:16:10:53
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_ucs_bladecenter_topsystem(info):
@@ -29,6 +29,7 @@ def parse_ucs_bladecenter_topsystem(string_table: StringTable) -> StringTable:
 
 
 check_info["ucs_bladecenter_topsystem"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_topsystem",
     parse_function=parse_ucs_bladecenter_topsystem,
     service_name="UCS TopSystem Info",
     discovery_function=inventory_ucs_bladecenter_topsystem,

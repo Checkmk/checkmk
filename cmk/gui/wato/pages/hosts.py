@@ -50,6 +50,7 @@ from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
+    folder_tree,
     Host,
     validate_all_hosts,
 )
@@ -214,7 +215,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         errors = None
         if self._mode == "edit":
             errors = (
-                validate_all_hosts([self._host.name()]).get(self._host.name(), [])
+                validate_all_hosts(folder_tree(), [self._host.name()]).get(self._host.name(), [])
                 + self._host.validation_errors()
             )
 

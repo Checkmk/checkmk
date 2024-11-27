@@ -7,21 +7,20 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, Metric, Result, State
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import get_value_store, Metric, Result, State
 
 
 @pytest.fixture(name="check")
-def _graylog_sources_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("graylog_sources")]
+def _graylog_sources_check_plugin(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[CheckPluginName("graylog_sources")]
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -80,12 +79,12 @@ def _graylog_sources_check_plugin(fix_register: FixRegister) -> CheckPlugin:
 )
 def test_check_graylog_sources(
     check: CheckPlugin,
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    parse_graylog_sources = fix_register.agent_sections[
+    parse_graylog_sources = agent_based_plugins.agent_sections[
         SectionName("graylog_sources")
     ].parse_function
 

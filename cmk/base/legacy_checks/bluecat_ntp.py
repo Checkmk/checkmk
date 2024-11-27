@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_bluecat_ntp(info):
@@ -55,6 +55,7 @@ def parse_bluecat_ntp(string_table: StringTable) -> StringTable:
 
 
 check_info["bluecat_ntp"] = LegacyCheckDefinition(
+    name="bluecat_ntp",
     parse_function=parse_bluecat_ntp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
     fetch=SNMPTree(

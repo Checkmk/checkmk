@@ -13,14 +13,15 @@ import pytest
 
 from tests.testlib.repo import repo_path
 
-from tests.unit.conftest import FixPluginLegacy, FixRegister
+from tests.unit.conftest import FixPluginLegacy
 
 from cmk.utils import man_pages
 
-from cmk.base.server_side_calls import load_active_checks
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+from cmk.server_side_calls_backend import load_active_checks
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -173,27 +174,27 @@ def test_cmk_plugins_families_manpages() -> None:
 
 
 def test_man_page_consistency(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     fix_plugin_legacy: FixPluginLegacy,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     """Make sure we have one man page per plugin, and no additional ones"""
     expected_man_pages = (
-        {str(plugin_name) for plugin_name in fix_register.check_plugins}
-        | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
+        {str(plugin_name) for plugin_name in agent_based_plugins.check_plugins}
+        | {f"check_{plugin.name}" for plugin in load_active_checks(raise_errors=False).values()}
         | {"check-mk", "check-mk-inventory"}
     )
     assert set(all_pages) == expected_man_pages
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     missing_cluster_description: set[str] = set()
     unexpected_cluster_description: set[str] = set()
 
-    for plugin in fix_register.check_plugins.values():
+    for plugin in agent_based_plugins.check_plugins.values():
         man_page = all_pages[str(plugin.name)]
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None

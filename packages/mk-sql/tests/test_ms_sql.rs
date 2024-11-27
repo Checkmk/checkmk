@@ -174,13 +174,13 @@ async fn test_obtain_all_instances_from_registry_local_exclude() {
     const SOURCE: &str = r#"
     discovery:
       detect: true
-      exclude: [SQLEXPRESS_OLD, SQLEXPRESS_AW, SQLEXPRESS_WOW]
+      exclude: [SQLEXPRESS_OLD, SQLBAD, SQLEXPRESS_AW, SQLEXPRESS_WOW]
     "#;
     let endpoint = make_default_endpoint();
     let discovery = Discovery::from_yaml(&YamlLoader::load_from_str(SOURCE).unwrap()[0])
         .unwrap()
         .unwrap();
-    assert_eq!(discovery.exclude().len(), 3usize, "Discovery is wrong");
+    assert_eq!(discovery.exclude().len(), 4usize, "Discovery is wrong");
     let builders = instance::obtain_instance_builders(&endpoint, &[], &discovery)
         .await
         .unwrap();
@@ -1125,7 +1125,7 @@ const EXPECTED_START: &str = r"<<<mssql_instance:sep(124)>>>
 <<<mssql_counters:sep(124)>>>
 <<<mssql_blocked_sessions:sep(124)>>>
 <<<mssql_transactionlogs:sep(124)>>>
-<<<mssql_clusters:sep(124)>>>
+<<<mssql_cluster:sep(124)>>>
 <<<mssql_mirroring:sep(09)>>>
 <<<mssql_availability_groups:sep(09)>>>
 <<<mssql_connections>>>
@@ -1283,7 +1283,7 @@ async fn test_lack_of_sql_db() {
 <<<mssql_counters:sep(124)>>>
 <<<mssql_blocked_sessions:sep(124)>>>
 <<<mssql_transactionlogs:sep(124)>>>
-<<<mssql_clusters:sep(124)>>>
+<<<mssql_cluster:sep(124)>>>
 <<<mssql_mirroring:sep(09)>>>
 <<<mssql_availability_groups:sep(09)>>>
 <<<mssql_connections>>>

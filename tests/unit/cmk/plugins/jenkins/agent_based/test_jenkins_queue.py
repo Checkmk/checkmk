@@ -9,9 +9,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-
 import cmk.plugins.jenkins.agent_based.jenkins_queue as jq
+from cmk.agent_based.v2 import Metric, Result, Service, State
 
 TEST_TIMEZONE = ZoneInfo("CET")
 TEST_TIME_2019 = datetime.datetime(2019, 8, 27, 13, 15, tzinfo=TEST_TIMEZONE)

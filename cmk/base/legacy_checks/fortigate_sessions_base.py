@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_fortigate_sessions_base(info):
@@ -26,6 +26,7 @@ def parse_fortigate_sessions_base(string_table: StringTable) -> StringTable | No
 
 
 check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
+    name="fortigate_sessions_base",
     parse_function=parse_fortigate_sessions_base,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),

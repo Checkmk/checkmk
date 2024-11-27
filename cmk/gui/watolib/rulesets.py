@@ -23,7 +23,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
-from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
@@ -51,7 +50,6 @@ from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
@@ -63,7 +61,6 @@ from .changes import add_change
 from .check_mk_automations import get_services_labels
 from .hosts_and_folders import (
     Folder,
-    folder_from_request,
     folder_preserving_link,
     folder_tree,
     get_wato_redis_client,
@@ -79,7 +76,7 @@ from .rulespecs import (
     RulespecAllowList,
     TimeperiodValuespec,
 )
-from .simple_config_file import ConfigFileRegistry, WatoConfigFile
+from .simple_config_file import WatoConfigFile
 from .timeperiods import TimeperiodSelection, TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
@@ -94,6 +91,10 @@ RuleValue = Any
 # This macro is needed to make the to_config() methods be able to use native pprint/repr for the
 # ruleset data structures. Have a look at to_config() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+class InvalidRuleException(MKGeneralException):
+    pass
 
 
 @dataclasses.dataclass()
@@ -934,12 +935,12 @@ class Ruleset:
             )
         self._on_change()
 
-    def move_rule_to(self, rule: Rule, index: int) -> None:
+    def move_rule_to(self, rule: Rule, index: int) -> int:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         index = self.get_index_for_move(rule.folder, rule, index)
         if old_index == index:
-            return
+            return index
 
         rules.remove(rule)
         rules.insert(index, rule)
@@ -950,6 +951,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
         )
+        return index
 
     # TODO: Remove these getters
     def valuespec(self) -> ValueSpec:
@@ -1009,7 +1011,6 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                folder_from_request(request.var("folder"), hostname),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,
@@ -1139,7 +1140,7 @@ class Rule:
             raise NotImplementedError()
         except Exception:
             logger.exception("error parsing rule")
-            raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
+            raise InvalidRuleException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
     @classmethod
     def _parse_dict_rule(
@@ -1256,61 +1257,47 @@ class Rule:
         does not match any service has never been tested. Probably because this would be
         too expensive."""
         hosts = Host.all()
-        for host_name, host in hosts.items():
-            if self.matches_host_conditions(host.folder(), host_name):
+        for host_name in hosts.keys():
+            if self.matches_host_conditions(host_name):
                 return False
         return True
 
-    def matches_host_conditions(self, host_folder: Folder, hostname: HostName) -> bool:
-        """Whether or not the given folder/host matches this rule
+    def matches_host_conditions(self, hostname: HostName) -> bool:
+        """Whether or not the given host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
-        return not any(
-            True
-            for _r in self.get_mismatch_reasons(
-                host_folder,
-                hostname,
-                svc_desc_or_item=None,
-                svc_desc=None,
-                only_host_conditions=True,
-                service_labels={},
-            )
+        return self.matches(
+            hostname,
+            svc_desc_or_item=None,
+            svc_desc=None,
+            only_host_conditions=True,
+            service_labels={},
         )
 
     def matches_host_and_item(
         self,
-        host_folder: Folder,
         hostname: HostName,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
         service_labels: Labels,
     ) -> bool:
-        """Whether or not the given folder/host/item matches this rule"""
-        return not any(
-            True
-            for _r in self.get_mismatch_reasons(
-                host_folder,
-                hostname,
-                svc_desc_or_item,
-                svc_desc,
-                only_host_conditions=False,
-                service_labels=service_labels,
-            )
+        """Whether the given host and service/item matches this rule"""
+        return self.matches(
+            hostname,
+            svc_desc_or_item,
+            svc_desc,
+            only_host_conditions=False,
+            service_labels=service_labels,
         )
 
-    def get_mismatch_reasons(
+    def matches(
         self,
-        host_folder: Folder,
         hostname: HostName,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
         only_host_conditions: bool,
         service_labels: Labels,
-    ) -> Iterator[str]:
-        """A generator that provides the reasons why a given folder/host/item does not match this rule"""
-        host = host_folder.host(hostname)
-        if host is None:
-            raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
-
+    ) -> bool:
+        """Wether a given host or service/item matches this rule"""
         # BE AWARE: Depending on the service ruleset the service_description of
         # the rules is only a check item or a full service name. For
         # example the check parameters rulesets only use the item, and other
@@ -1326,14 +1313,14 @@ class Rule:
         elif self.ruleset.item_type() == "service":
             if svc_desc_or_item is None:
                 raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = cmk.base.export.ruleset_match_object_of_service(
-                hostname, svc_desc_or_item, svc_labels=service_labels
+            match_object = ruleset_matcher.RulesetMatchObject(
+                hostname, svc_desc_or_item, service_labels
             )
         elif self.ruleset.item_type() == "item":
             if svc_desc is None:
                 raise TypeError("svc_desc_or_item must be set for service rulesets")
-            match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
-                hostname, svc_desc_or_item, svc_desc, svc_labels=service_labels
+            match_object = ruleset_matcher.RulesetMatchObject(
+                hostname, svc_desc_or_item, service_labels
             )
         elif not self.ruleset.item_type():
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
@@ -1344,22 +1331,16 @@ class Rule:
         if only_host_conditions:
             match_service_conditions = False
 
-        yield from self._get_mismatch_reasons_of_match_object(
-            match_object, match_service_conditions
-        )
+        return self._matches_match_object(match_object, match_service_conditions)
 
-    def _get_mismatch_reasons_of_match_object(
+    def _matches_match_object(
         self, match_object: ruleset_matcher.RulesetMatchObject, match_service_conditions: bool
-    ) -> Iterator[str]:
+    ) -> bool:
         matcher = _get_ruleset_matcher()
         ruleset = self.to_single_base_ruleset()
         if match_service_conditions:
-            if list(matcher.get_service_ruleset_values(match_object, ruleset)):
-                return
-        elif list(matcher.get_host_values(match_object.host_name, ruleset)):
-            return
-
-        yield _("The rule does not match")
+            return bool(list(matcher.get_service_ruleset_values(match_object, ruleset)))
+        return bool(list(matcher.get_host_values(match_object.host_name, ruleset)))
 
     def matches_search(  # pylint: disable=too-many-branches
         self,
@@ -1818,17 +1799,3 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
         finally:
             if may_use_redis():
                 get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
-
-    def read_file_and_validate(self) -> None:
-        cfg = self.load_for_reading()
-        validate_rulesets(cfg)
-
-
-def register(
-    config_file_registry: ConfigFileRegistry, folder: Path = Path(wato_root_dir())
-) -> None:
-    if not folder.is_dir():
-        return
-    for subfolder in folder.iterdir():
-        register(config_file_registry, subfolder)
-    config_file_registry.register(RuleConfigFile(folder / "rules.mk"))

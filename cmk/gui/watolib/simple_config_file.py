@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
+from typing import cast, Generic, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -36,9 +37,11 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
+        # Performance impact needs to be investigated (see CMK-19527)
+        # nosemgrep: type-adapter-detected
         self.validator = TypeAdapter(spec_class)
 
-    def _validate(self, raw: object) -> _G:
+    def validate(self, raw: object) -> _G:
         try:
             return self.validator.validate_python(raw, strict=True)
         except ValidationError as exc:
@@ -66,7 +69,7 @@ class WatoConfigFile(ABC, Generic[_G]):
 
     def read_file_and_validate(self) -> None:
         cfg = self._load_file(lock=False)
-        self._validate(cfg)
+        self.validate(cfg)
 
 
 class WatoListConfigFile(WatoConfigFile[list[_G]], Generic[_G]):
@@ -174,16 +177,13 @@ class WatoMultiConfigFile(WatoConfigFile[_D], Generic[_D]):
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         output = wato_fileheader()
         for field, value in cfg.items():
-            output += "{} = \\\n{}\n\n".format(
-                field,
-                format_config_value(value),
-            )
+            output += f"{field} = \\\n{format_config_value(value)}\n\n"
         store.save_mk_file(self._config_file_path, output, add_header=False)
 
     def validate_and_save(self, raw: Mapping[str, object]) -> None:
         with_defaults = dict(self.load_default())
         with_defaults.update(raw)
-        cfg = self._validate(with_defaults)
+        cfg = self.validate(with_defaults)
         self.save(cfg)
 
 

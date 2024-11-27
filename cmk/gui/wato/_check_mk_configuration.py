@@ -2662,9 +2662,10 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(
-                                        "Define the maximum session duration. "
-                                        "If reached, the user has to "
-                                        "re-authenticate.",
+                                        "Define the maximum allowed session "
+                                        "duration. If reached, the user has to "
+                                        "re-authenticate. Sessions are not set "
+                                        "to persist on browser termination.",
                                     ),
                                     default_value=86400,
                                 ),

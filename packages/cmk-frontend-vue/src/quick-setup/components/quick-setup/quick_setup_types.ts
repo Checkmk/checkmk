@@ -3,9 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { VNode } from 'vue'
-import { type ButtonVariants } from '@/components/IconButton.vue'
+import type { Ref, VNode } from 'vue'
 import type { WizardMode } from './useWizard'
+export interface QuickSetupStageAction {
+  label: string
+  ariaLabel?: string | null
+  waitLabel: string
+  variant: string
+  action: () => void
+}
 
 export interface QuickSetupProps {
   /** @property {boolean} loading - when true, it hides the current stage's buttons */
@@ -21,7 +27,10 @@ export interface QuickSetupProps {
   saveStage?: QuickSetupSaveStageSpec | null
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
-  mode?: WizardMode
+  mode: Ref<WizardMode>
+
+  /** @property {boolean} prevent-leaving - this and that */
+  preventLeaving: boolean
 }
 
 /**
@@ -35,8 +44,8 @@ export interface QuickSetupSaveStageSpec {
   /** @property {string[]} errors - List of errors (General + stage validation) */
   errors: Readonly<string[]>
 
-  /** @property {StageButtonSpec} buttons - List of butons to be rendered at the bottom of the stage */
-  buttons: Readonly<StageButtonSpec[]>
+  /** @property {QuickSetupStageAction[]} actions - List of actions from wich will render buttons */
+  actions: Readonly<QuickSetupStageAction[]>
 }
 
 export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
@@ -76,20 +85,6 @@ export interface QuickSetupSaveStageProps extends QuickSetupSaveAndStageContentP
 }
 
 export interface QuickSetupStageProps extends QuickSetupStageSpec, QuickSetupSaveStageProps {}
-
-/**
- * Stage Content
- */
-export interface StageButtonSpec {
-  /** @property {string} label - Button's caption */
-  label: string
-
-  /** @property {ButtonVariants['variant']} variant - type of button */
-  variant: ButtonVariants['variant']
-
-  /** @property { () => void } action - Callback to be called on click */
-  action: () => void
-}
 
 export interface QuickSetupStageContent extends QuickSetupSaveAndStageContentProps {
   /** @property {VNode | null} content - Element to be rendered as stage's content */

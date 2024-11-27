@@ -23,14 +23,13 @@
 #include "neb/MacroExpander.h"
 #include "neb/NebContact.h"
 #include "neb/NebCore.h"
-#include "neb/NebHost.h"
 #include "neb/TimeperiodsCache.h"
 #include "neb/nagios.h"
 
 class NebService : public IService {
 public:
-    explicit NebService(const ::service &svc)
-        : service_{svc}, host_{NebHost{*svc.host_ptr}} {}
+    NebService(const ::service &svc, const NebCore &core)
+        : service_{svc}, core_{core} {}
 
     [[nodiscard]] const ::service &handle() const { return service_; }
 
@@ -38,7 +37,7 @@ public:
         return &service_;
     }
 
-    [[nodiscard]] const IHost &host() const override { return host_; }
+    [[nodiscard]] const IHost &host() const override;
 
     [[nodiscard]] bool hasContact(const IContact &contact) const override {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
@@ -65,10 +64,9 @@ public:
         // empty assumes 24X7
         return tp.empty() || g_timeperiods_cache->inTimeperiod(tp);
     }
-    [[nodiscard]] std::string name() const override {
+    [[nodiscard]] std::string description() const override {
         return service_.description == nullptr ? "" : service_.description;
     }
-    [[nodiscard]] std::string description() const override { return name(); }
     [[nodiscard]] std::string host_name() const override {
         return service_.host_name == nullptr ? "" : service_.host_name;
     }
@@ -408,7 +406,7 @@ public:
 
 private:
     const ::service &service_;
-    const NebHost host_;
+    const NebCore &core_;
 };
 
 #endif  // NebService_h

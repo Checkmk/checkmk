@@ -295,7 +295,7 @@ def test_openapi_group_values_are_links(group_client: GroupConfig, group_type: s
         customer="global",
     )
 
-    response = group_client.list(include_links=True)
+    response = group_client.list()
 
     assert len(response.json["value"]) == 1
     assert response.json["value"][0]["links"][0]["domainType"] == "link"
@@ -584,30 +584,3 @@ def test_contact_group_inventory_paths(
             path.setdefault("nodes", {"type": "no_restriction"})
 
     assert group.json["extensions"]["inventory_paths"] == inventory_paths
-
-
-def test_list_group_include_links(group_client: GroupConfig) -> None:
-    group_client.create(name="test_group", alias="test_alias")
-    default_response = group_client.list()
-    enabled_response = group_client.list(include_links=True)
-    disabled_response = group_client.list(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-@managedtest
-def test_list_group_include_extensions(group_client: GroupConfig) -> None:
-    group_client.create(name="test_group", alias="test_alias")
-    default_response = group_client.list()
-    enabled_response = group_client.list(include_extensions=True)
-    disabled_response = group_client.list(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])

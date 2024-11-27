@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 
@@ -14,7 +14,7 @@ from cmk.gui import userdb
 from cmk.gui.type_defs import UserObject, UserSpec
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.watolib.users import default_sites, delete_users, edit_users
 
 USER1_ID = UserId("user1")
 USER2_ID = UserId("user2")
@@ -108,7 +108,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
 def test_only_affected_sites_require_activation_when_adding_users(
     sites: list[SiteId], changed_users: UserObject, expected_changed_sites: list[SiteId]
 ) -> None:
-    edit_users(changed_users)
+    edit_users(changed_users, default_sites)
     all_users = userdb.load_users()
     assert all(user_id in all_users for user_id in changed_users)
     assert expected_changed_sites == _changed_sites(sites)
@@ -125,7 +125,8 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
                 ),
                 "is_new_user": True,
             }
-        }
+        },
+        default_sites,
     )
     _reset_site_changes(ALL_SITES)
 
@@ -138,7 +139,8 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
                 ),
                 "is_new_user": False,
             }
-        }
+        },
+        default_sites,
     )
 
     # THEN both site1 and site2 should require activation
@@ -182,12 +184,13 @@ def test_only_affected_sites_require_activation_when_deleting_users(
                 ),
                 "is_new_user": True,
             },
-        }
+        },
+        default_sites,
     )
     _reset_site_changes(ALL_SITES)
 
     # WHEN
-    delete_users(users_to_delete)
+    delete_users(users_to_delete, default_sites)
 
     # THEN
     all_users = userdb.load_users()

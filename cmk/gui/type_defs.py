@@ -95,6 +95,7 @@ AuthType = Literal[
     "http_header",
     "internal_token",
     "login_form",
+    "remote_site",
     "saml",
     "web_server",
 ]
@@ -154,6 +155,45 @@ class LastLoginInfo(TypedDict, total=False):
     remote_address: str
 
 
+# TODO: verify if the 'idea' is the same as notify_types.DisabledNotificationsOptions
+#  but where the 'disable' field is called 'disabled'
+class DisableNotificationsAttribute(TypedDict):
+    disable: NotRequired[Literal[True]]  # disable or disabled?
+    timerange: NotRequired[tuple[float, float]]
+
+
+# TODO: verify if this is the same notify_types.Contact (merge if yes)
+#  should be sure with first validation update
+class UserContactDetails(TypedDict):
+    alias: str
+    disable_notifications: NotRequired[DisabledNotificationsOptions]
+    email: NotRequired[str]
+    pager: NotRequired[str]
+    contactgroups: NotRequired[list[str]]
+    fallback_contact: NotRequired[bool]
+    user_scheme_serial: NotRequired[int]
+    authorized_sites: NotRequired[list[str]]
+    customer: NotRequired[str | None]
+
+
+class UserDetails(TypedDict):
+    alias: str
+    connector: NotRequired[str | None]
+    locked: NotRequired[bool]
+    roles: NotRequired[list[str]]
+    temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
+    force_authuser: NotRequired[bool]
+    nav_hide_icons_title: NotRequired[Literal["hide"] | None]
+    icons_per_item: NotRequired[Literal["entry"] | None]
+    show_mode: NotRequired[
+        Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
+    ]
+    automation_secret: NotRequired[str]
+    language: NotRequired[str]
+
+
+# TODO: UserSpec gets composed from UserContactDetails and UserDetails so ideally the definition
+#  should highlight this fact. For now, we leave it as is and improve the individual fields
 class UserSpec(TypedDict, total=False):
     """This is not complete, but they don't yet...  Also we have a
     user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
@@ -163,21 +203,21 @@ class UserSpec(TypedDict, total=False):
 
     alias: str
     authorized_sites: Sequence[SiteId] | None  # "None"/field missing => all sites
-    automation_secret: str
-    connector: str | None  # Contains the connection id this user was synced from
+    automation_secret: NotRequired[str]
+    connector: NotRequired[str | None]  # Contains the connection id this user was synced from
     contactgroups: list[_ContactgroupName]
     customer: str | None
     disable_notifications: DisabledNotificationsOptions
-    email: str  # TODO: Why do we have "email" *and* "mail"?
+    email: NotRequired[str]  # TODO: Why do we have "email" *and* "mail"?
     enforce_pw_change: bool | None
     fallback_contact: bool | None
-    force_authuser: bool
+    force_authuser: NotRequired[bool]
     host_notification_options: str
     idle_timeout: Any  # TODO: Improve this
-    language: str
+    language: NotRequired[str]
     last_pw_change: int
     last_login: LastLoginInfo | None
-    locked: bool
+    locked: NotRequired[bool]
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
     notification_period: str
@@ -186,11 +226,13 @@ class UserSpec(TypedDict, total=False):
     num_failed_logins: int
     pager: str
     password: PasswordHash
-    roles: list[str]
+    roles: NotRequired[list[str]]
     serial: int
     service_notification_options: str
     session_info: dict[SessionId, SessionInfo]
-    show_mode: str | None
+    show_mode: NotRequired[
+        Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
+    ]
     start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Any  # TODO: Improve this
@@ -198,9 +240,9 @@ class UserSpec(TypedDict, total=False):
     ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int
-    nav_hide_icons_title: Literal["hide"] | None
-    icons_per_item: Literal["entry"] | None
-    temperature_unit: str | None
+    nav_hide_icons_title: NotRequired[Literal["hide"] | None]
+    icons_per_item: NotRequired[Literal["entry"] | None]
+    temperature_unit: NotRequired[Literal["celsius", "fahrenheit"] | None]
 
 
 class UserObjectValue(TypedDict):

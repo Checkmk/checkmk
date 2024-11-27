@@ -63,7 +63,7 @@ def get_failed_notification_count() -> int:
     return number_of_failed_notifications(after=acknowledged_time())
 
 
-def get_total_send_notifications() -> LivestatusResponse:
+def get_total_sent_notifications() -> LivestatusResponse:
     query = (
         "GET log\n"
         "Stats: class = 3\n"

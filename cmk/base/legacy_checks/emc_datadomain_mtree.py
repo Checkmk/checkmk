@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
+
+check_info = {}
 
 
 def parse_emc_datadomain_mtree(string_table):
@@ -47,6 +47,7 @@ def discover_emc_datadomain_mtree(section):
 
 
 check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
+    name="emc_datadomain_mtree",
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",

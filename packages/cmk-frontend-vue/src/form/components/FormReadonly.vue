@@ -12,16 +12,24 @@ import type {
   List,
   TimeSpan,
   SingleChoice,
+  SingleChoiceElement,
   CascadingSingleChoice,
   LegacyValuespec,
   FixedValue,
   BooleanChoice,
   MultilineText,
-  MultipleChoice,
   Password,
   Tuple,
   OptionalChoice,
-  ListOfStrings
+  ListOfStrings,
+  DualListChoice,
+  CheckboxListChoice,
+  Folder,
+  Labels,
+  ConditionChoices,
+  ConditionChoicesValue,
+  ConditionGroup,
+  TimeSpecific
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -29,8 +37,11 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
-
-const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
+import {
+  translateOperator,
+  type Operator,
+  type OperatorI18n
+} from './forms/form_condition_choices/utils'
 
 function renderForm(
   formSpec: FormSpec,
@@ -46,9 +57,11 @@ function renderForm(
     case 'integer':
     case 'float':
       return renderSimpleValue(formSpec, value as string, backendValidation)
+    case 'single_choice_editable':
     case 'single_choice':
       return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
+    case 'list_unique_selection':
       return renderList(formSpec as List, value as unknown[], backendValidation)
     case 'list_of_strings':
       return renderListOfStrings(formSpec as ListOfStrings, value as unknown[], backendValidation)
@@ -58,6 +71,8 @@ function renderForm(
         value as [string, unknown],
         backendValidation
       )
+    case 'condition_choices':
+      return renderConditionChoices(formSpec as ConditionChoices, value as ConditionChoicesValue[])
     case 'legacy_valuespec':
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':
@@ -71,8 +86,10 @@ function renderForm(
       return renderDataSize(value as [string, string])
     case 'catalog':
       return h('div', 'Catalog does not support readonly')
-    case 'multiple_choice':
-      return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
+    case 'dual_list_choice':
+      return renderMultipleChoice(formSpec as DualListChoice, value as string[])
+    case 'checkbox_list_choice':
+      return renderMultipleChoice(formSpec as CheckboxListChoice, value as string[])
     case 'password':
       return renderPassword(formSpec as Password, value as (string | boolean)[])
     case 'tuple':
@@ -81,6 +98,12 @@ function renderForm(
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
     case 'simple_password':
       return renderSimplePassword()
+    case 'folder':
+      return renderFolder(formSpec as Folder, value as string, backendValidation)
+    case 'labels':
+      return renderLabels(formSpec as Labels, value as Record<string, string>)
+    case 'time_specific':
+      return renderTimeSpecific(formSpec as TimeSpecific, value, backendValidation)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -148,8 +171,11 @@ function renderTuple(
   return h('span', tupleResults)
 }
 
-function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode {
-  let nameToTitle: Record<string, string> = {}
+function renderMultipleChoice(
+  formSpec: DualListChoice | CheckboxListChoice,
+  value: string[]
+): VNode {
+  const nameToTitle: Record<string, string> = {}
   for (const element of formSpec.elements) {
     nameToTitle[element.name] = element.title
   }
@@ -158,7 +184,7 @@ function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode 
   const textSpans: VNode[] = []
 
   // WIP: no i18n...
-  for (let [index, entry] of value.entries()) {
+  for (const [index, entry] of value.entries()) {
     if (index >= maxEntries) {
       break
     }
@@ -197,7 +223,7 @@ function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
 
 function renderFixedValue(formSpec: FixedValue): VNode {
   let shownValue = formSpec.value
-  if (formSpec.label != null) {
+  if (formSpec.label !== null) {
     shownValue = formSpec.label
   }
   return h('div', shownValue as string)
@@ -212,30 +238,27 @@ function renderDict(
   // Note: Dictionary validations are not shown
   const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
   formSpec.elements.map((element) => {
-    if (value[element.ident] == undefined) {
+    if (value[element.name] === undefined) {
       return
     }
 
     const elementForm = renderForm(
       element.parameter_form,
-      value[element.ident],
-      elementValidations[element.ident] || []
+      value[element.name],
+      elementValidations[element.name] || []
     )
     if (elementForm === null) {
       return
     }
     dictElements.push(
-      h('tr', [
-        h('th', `${element.parameter_form.title}: `),
-        h('td', { style: 'align: left' }, [elementForm])
-      ])
+      h('tr', [h('th', `${element.parameter_form.title}: `), h('td', [elementForm])])
     )
   })
-  return h(
-    'table',
-    { class: formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : '' },
-    dictElements
-  )
+  const cssClasses = [
+    'form-readonly__dictionary',
+    formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : ''
+  ]
+  return h('table', { class: cssClasses }, dictElements)
 }
 
 function computeUsedValue(
@@ -253,12 +276,9 @@ function renderSimpleValue(
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
-  return h(
-    'div',
-    isError ? { style: ERROR_BACKGROUND_COLOR } : {},
-    isError ? [`${usedValue} - ${errorMessage}`] : [usedValue]
-  )
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const cssClasses = ['form-readonly__simple-value', isError ? 'form-readonly__error' : '']
+  return h('div', { class: cssClasses }, isError ? [`${usedValue} - ${errorMessage}`] : [usedValue])
 }
 
 function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
@@ -289,7 +309,7 @@ function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
 }
 
 function renderSingleChoice(
-  formSpec: SingleChoice,
+  formSpec: { elements: SingleChoiceElement[] },
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {
@@ -300,18 +320,14 @@ function renderSingleChoice(
   }
 
   // Value not found in valid values. Try to show error
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   if (isError) {
-    return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-      `${usedValue} - ${errorMessage}`
-    ])
+    return h('div', { class: 'form-readonly__error' }, [`${usedValue} - ${errorMessage}`])
   }
 
   // In case no validation message is present, we still want to show raw_value
   // (This should not happen in production, but is useful for debugging)
-  return h('div', { style: `background: ${ERROR_BACKGROUND_COLOR}` }, [
-    `${usedValue} - Invalid value`
-  ])
+  return h('div', { class: 'form-readonly__error' }, [`${usedValue} - Invalid value`])
 }
 
 function renderList(
@@ -342,7 +358,7 @@ function renderList(
       ])
     )
   }
-  return h('ul', { style: 'display: contents' }, listResults)
+  return h('ul', { class: 'form-readonly__list' }, listResults)
 }
 
 function renderListOfStrings(
@@ -393,19 +409,112 @@ function renderCascadingSingleChoice(
   return null
 }
 
+function renderTimeSpecific(
+  formSpec: TimeSpecific,
+  value: unknown,
+  backendValidation: ValidationMessages
+): VNode {
+  const isActive = typeof value === 'object' && value !== null && 'tp_default_value' in value
+  if (isActive) {
+    return h('div', [renderForm(formSpec.parameter_form_enabled, value, backendValidation)])
+  } else {
+    return h('div', [renderForm(formSpec.parameter_form_disabled, value, backendValidation)])
+  }
+}
+
+interface PreRenderedHtml {
+  input_html: string
+  readonly_html: string
+}
+
 function renderLegacyValuespec(
-  formSpec: LegacyValuespec,
-  _value: unknown,
+  _formSpec: LegacyValuespec,
+  value: unknown,
   backendValidation: ValidationMessages
 ): VNode {
   return h('div', [
     h('div', {
       style: 'background: #595959',
       class: 'legacy_valuespec',
-      innerHTML: formSpec.readonly_html
+      innerHTML: (value as PreRenderedHtml).readonly_html
     }),
     h('div', { validation: backendValidation })
   ])
+}
+
+function renderConditionChoiceGroup(
+  group: ConditionGroup,
+  value: ConditionChoicesValue,
+  i18n: OperatorI18n
+): VNode {
+  const condition = Object.values(value.value)[0] as string | string[]
+  const conditionList = condition instanceof Array ? condition : [condition]
+  const operator = translateOperator(i18n, Object.keys(value.value)[0] as Operator)
+  return h('tr', [
+    h('td', group.title),
+    h('td', [
+      h('table', [
+        h('tbody', [
+          h('th', h('b', operator)),
+          ...conditionList.map((cValue) =>
+            h('tr', h('td', group.conditions.find((cGroup) => cGroup.name === cValue)?.title))
+          )
+        ])
+      ])
+    ])
+  ])
+}
+
+function renderConditionChoices(formSpec: ConditionChoices, value: ConditionChoicesValue[]): VNode {
+  return h('table', { class: 'form-readonly__table' }, [
+    h('tbody', [
+      value.map((v) => {
+        const group = formSpec.condition_groups[v.group_name]
+        if (group === undefined) {
+          throw new Error('Invalid group')
+        }
+        return renderConditionChoiceGroup(group, v, formSpec.i18n)
+      })
+    ])
+  ])
+}
+
+function renderFolder(
+  formSpec: Folder,
+  value: string,
+  backendValidation: ValidationMessages
+): VNode {
+  return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
+}
+function renderLabels(formSpec: Labels, value: Record<string, string>): VNode {
+  let bgColor = 'var(--tag-color)'
+  let color = 'var(--black)'
+
+  switch (formSpec.label_source) {
+    case 'discovered':
+      bgColor = 'var(--tag-discovered-color)'
+      color = 'var(--white)'
+      break
+    case 'explicit':
+      bgColor = 'var(--tag-explicit-color)'
+      color = 'var(--black)'
+      break
+    case 'ruleset':
+      bgColor = 'var(--tag-ruleset-color)'
+      color = 'var(--white)'
+      break
+  }
+  return h(
+    'div',
+    { class: 'form-readonly__labels' },
+    Object.entries(value).map(([key, value]) => {
+      return h(
+        'div',
+        { class: 'label', style: { backgroundColor: bgColor, color: color } },
+        `${key}: ${value}`
+      )
+    })
+  )
 }
 
 export default defineComponent({
@@ -421,6 +530,43 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.form-readonly__error {
+  background-color: var(--form-readonly-error-bg-color);
+}
+
+table.form-readonly__table {
+  margin-top: 3px;
+  border-collapse: collapse;
+
+  td,
+  th {
+    background: var(--default-table-th-color);
+  }
+
+  td {
+    height: 14px;
+    padding: 1px 5px;
+    border: 1px solid grey;
+  }
+
+  table {
+    border-collapse: collapse;
+    padding: 1px 5px;
+  }
+}
+
+.form-readonly__simple-value {
+  display: inline-block;
+}
+
+.form-readonly__dictionary {
+  display: inline-table;
+
+  > tr > th {
+    padding-right: var(--spacing-half);
+  }
+}
+
 .form-readonly__dictionary--two_columns > tr {
   line-height: 18px;
 
@@ -430,7 +576,7 @@ export default defineComponent({
     font-weight: var(--font-weight-bold);
   }
 
-  .form-readonly__multiple-choice span {
+  > td > .form-readonly__multiple-choice span {
     display: block;
 
     &:before {
@@ -446,6 +592,35 @@ export default defineComponent({
 
   &.form-readonly__multiple-choice__max-entries:before {
     content: '';
+  }
+}
+
+.form-readonly__list {
+  padding-left: var(--spacing-half);
+  list-style-position: inside;
+}
+
+.form-readonly__list > li > div {
+  display: inline-block;
+}
+
+.form-readonly__labels {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 0;
+
+  > .label {
+    width: fit-content;
+    margin: 0 5px 0 0;
+    padding: 1px 4px;
+    border-radius: 5px;
+
+    &:first-child {
+      margin-left: 0;
+    }
   }
 }
 </style>

@@ -11,10 +11,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_average, get_value_store, render, StringTable
+
+check_info = {}
 
 
 def inventory_mongodb_flushing(info):
@@ -91,6 +91,7 @@ def parse_mongodb_flushing(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    name="mongodb_flushing",
     parse_function=parse_mongodb_flushing,
     service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,

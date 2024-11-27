@@ -7,9 +7,9 @@ import urllib
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry, Response
+from tests.testlib.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc import version
 
@@ -146,97 +146,18 @@ def test_openapi_livestatus_collection_link(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        resp = aut_user_auth_wsgi_app.call_method(
+        resp: CmkTestResponse = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
             headers={"Accept": "application/json"},
-            params={"include_links": True},
+            params='{"include_links": True}',
             status=200,
         )
+
         assert (
-            resp.json_body["value"][0]["links"][0]["href"]
+            resp.json_body["value"][0]["links"][0]["href"]  # mypy: disable-error-code=index
             == "http://localhost/NO_SITE/check_mk/api/1.0/objects/host/heute/actions/show_service/invoke?service_description=Filesystem+%2Fopt%2Fomd%2Fsites%2Fheute%2Ftmp"
         )
-
-
-def test_openapi_list_services_include_links(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
-    mock_livestatus.add_table(
-        "services",
-        [
-            {
-                "host_name": "heute",
-                "host_alias": "heute",
-                "description": "Filesystem /opt/omd/sites/heute/tmp",
-                "state": 0,
-                "state_type": "hard",
-                "last_check": 1593697877,
-                "acknowledged": 0,
-            },
-        ],
-    )
-
-    def _request(include_links: bool | None = None) -> Response:
-        mock_livestatus.expect_query(
-            [
-                "GET services",
-                "Columns: host_name description",
-            ],
-        )
-        with mock_livestatus:
-            return clients.Service.get_all(include_links=include_links)
-
-    default_response = _request()
-    enabled_response = _request(include_links=True)
-    disabled_response = _request(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-def test_openapi_list_services_include_extensions(
-    clients: ClientRegistry,
-    mock_livestatus: MockLiveStatusConnection,
-) -> None:
-    mock_livestatus.add_table(
-        "services",
-        [
-            {
-                "host_name": "heute",
-                "host_alias": "heute",
-                "description": "Filesystem /opt/omd/sites/heute/tmp",
-                "state": 0,
-                "state_type": "hard",
-                "last_check": 1593697877,
-                "acknowledged": 0,
-            },
-        ],
-    )
-
-    def _request(include_extensions: bool | None = None) -> Response:
-        mock_livestatus.expect_query(
-            [
-                "GET services",
-                "Columns: host_name description",
-            ],
-        )
-        with mock_livestatus:
-            return clients.Service.get_all(include_extensions=include_extensions)
-
-    default_response = _request()
-    enabled_response = _request(include_extensions=True)
-    disabled_response = _request(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")

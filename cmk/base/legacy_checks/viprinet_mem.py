@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, render, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -41,6 +41,7 @@ def check_viprinet_mem(_no_item, _no_params, info):
 
 
 check_info["viprinet_mem"] = LegacyCheckDefinition(
+    name="viprinet_mem",
     parse_function=parse_viprinet_mem,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

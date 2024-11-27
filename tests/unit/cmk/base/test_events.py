@@ -9,7 +9,12 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.notify import NotificationHostConfig
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterID,
+    NotificationRuleID,
+    NotifyPluginParamsDict,
+)
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -17,8 +22,9 @@ from cmk.events.event_context import EnrichedEventContext, EventContext
 
 import cmk.base.events
 from cmk.base.events import (
-    _update_enriched_context_with_labels,
+    _update_enriched_context_from_notify_host_file,
     add_to_event_context,
+    convert_proxy_params,
     event_match_hosttags,
     raw_context_from_string,
 )
@@ -262,6 +268,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTLABEL_rule": "label",
                 "HOSTLABEL_explicit": "label",
                 "HOSTLABEL_cmk/site": "heute",
+                "HOSTTAG_criticality": "prod",
                 "SERVICELABEL_dicovered": "label",
                 "SERVICELABEL_rule": "label",
             },
@@ -285,7 +292,8 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 },
                 service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
                 tags={
-                    TagGroupID("criticality"): TagID("prod"),
+                    TagGroupID("networking"): TagID("wan"),
+                    TagGroupID("criticality"): TagID("critical"),
                 },
             ),
             {
@@ -299,12 +307,14 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTLABEL_rule": "label",
                 "HOSTLABEL_explicit": "label",
                 "HOSTLABEL_cmk/site": "heute",
+                "HOSTTAG_networking": "wan",
+                "HOSTTAG_criticality": "critical",
             },
             id="host notification",
         ),
     ],
 )
-def test_update_enriched_contect_with_labels(
+def test_update_enriched_context_from_host_file(
     enriched_context: EnrichedEventContext,
     config: NotificationHostConfig,
     expected: EventContext,
@@ -315,7 +325,7 @@ def test_update_enriched_contect_with_labels(
         "read_notify_host_file",
         lambda *args, **kw: config,
     )
-    _update_enriched_context_with_labels(enriched_context)
+    _update_enriched_context_from_notify_host_file(enriched_context)
     assert enriched_context == expected
 
 
@@ -325,6 +335,7 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_criticality": "prod",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -341,7 +352,7 @@ def test_update_enriched_contect_with_labels(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={TagGroupID("bla"): TagID("bli")},
             ),
             "The host's tags {'criticality': 'prod'} do not match the required tags {'bla': 'bli'}",
@@ -350,6 +361,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_criticality": "prod",
+                "HOSTTAG_hurz": "blub",
+                "HOSTTAG_hans": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -368,7 +382,7 @@ def test_update_enriched_contect_with_labels(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={
                     TagGroupID("criticality"): TagID("prod"),
                     TagGroupID("hurz"): TagID("blub"),
@@ -381,6 +395,9 @@ def test_update_enriched_contect_with_labels(
         pytest.param(
             {
                 "HOSTNAME": "heute",
+                "HOSTTAG_criticality": "prod",
+                "HOSTTAG_hurz": "blub",
+                "HOSTTAG_hans": "wurst",
             },
             NotificationHostConfig(
                 host_labels={},
@@ -399,7 +416,7 @@ def test_update_enriched_contect_with_labels(
                 contact_object=False,
                 description="Test rule",
                 disabled=False,
-                notify_plugin=("mail", None),
+                notify_plugin=("mail", NotificationParameterID("parameter_id")),
                 match_hosttags={
                     TagGroupID("criticality"): TagConditionNE({"$ne": TagID("prod")}),
                     TagGroupID("hurz"): TagID("blub"),
@@ -434,3 +451,36 @@ def test_match_host_tags(
         )
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "params, expected",
+    [
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "no_proxy", "")},
+            ("no_proxy", None),
+            id="No proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "stored_proxy", "proxy_id")},
+            ("global", "proxy_id"),
+            id="Stored proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "environment_proxy", "")},
+            ("environment", "environment"),
+            id="Environment proxy",
+        ),
+        pytest.param(
+            {"proxy_url": ("cmk_postprocessed", "explicit_proxy", "http://www.myproxy.com")},
+            ("url", "http://www.myproxy.com"),
+            id="Explicit proxy",
+        ),
+    ],
+)
+def test_convert_proxy_params(
+    params: NotifyPluginParamsDict,
+    expected: tuple[str, str | None],
+) -> None:
+    params_dict = convert_proxy_params(params)
+    assert params_dict["proxy_url"] == expected

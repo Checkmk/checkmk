@@ -38,3 +38,33 @@ def test_check_netapp_luns() -> None:
         Result(state=State.OK, summary="Volume: test_volume_name"),
         Result(state=State.OK, summary="SVM: test_svm_name"),
     ]
+
+
+def test_check_netapp_luns_no_used_space() -> None:
+    lun_model = LunModelFactory.build(
+        name="/vol/test/lun1",
+        volume_name="test_volume_name",
+        svm_name="test_svm_name",
+        space_used=None,
+    )
+    section = {lun_model.item_name(): lun_model}
+
+    result = list(
+        _check_netapp_ontap_luns(
+            "lun1",
+            {  # not revelevant for this test - but needed
+                "levels": (80.0, 90.0),
+                "trend_range": 24,
+            },
+            section,
+            # not revelevant for this test - but needed:
+            {"lun1.delta": (0.0, 0.0)},
+            0.0,
+        )
+    )
+
+    assert result == [
+        Result(state=State.OK, summary="Volume: test_volume_name"),
+        Result(state=State.OK, summary="SVM: test_svm_name"),
+        Result(state=State.UNKNOWN, summary="Space used is unknown"),
+    ]

@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 
 def check_wmic_process(item, params, info):
@@ -93,6 +93,7 @@ def parse_wmic_process(string_table: StringTable) -> StringTable:
 
 
 check_info["wmic_process"] = LegacyCheckDefinition(
+    name="wmic_process",
     parse_function=parse_wmic_process,
     service_name="Process %s",
     check_function=check_wmic_process,

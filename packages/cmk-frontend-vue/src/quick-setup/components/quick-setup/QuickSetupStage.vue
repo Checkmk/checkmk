@@ -15,7 +15,7 @@ import type { QuickSetupStageProps } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageProps>()
 
-const isSelectedStage = computed(() => props.index == props.currentStage)
+const isSelectedStage = computed(() => props.index === props.currentStage)
 const isCompleted = computed(() => props.index < props.currentStage)
 const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview')
 const onClickGoTo = computed(() =>
@@ -27,8 +27,8 @@ const onClickGoTo = computed(() =>
   <li
     class="qs-stage"
     :class="{
-      'qs-stage-active': isSelectedStage,
-      'qs-stage-complete': isCompleted
+      'qs-stage-active': isSelectedStage && props.mode !== 'overview',
+      'qs-stage-complete': isCompleted && props.mode !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
   >
@@ -48,7 +48,7 @@ const onClickGoTo = computed(() =>
             :loading="loading"
             :mode="mode"
             :errors="errors"
-            :buttons="buttons"
+            :actions="actions"
             :content="content || null"
           />
         </CollapsibleContent>

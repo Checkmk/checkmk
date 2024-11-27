@@ -2,13 +2,12 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from pathlib import Path
 
 from tests.testlib.site import Site
 
 
 def test_erl_in_bin(site: Site) -> None:
-    assert Path(site.root, "bin", "erl").exists()
+    assert site.path("bin/erl").exists()
 
 
 def test_erl_version(site: Site) -> None:

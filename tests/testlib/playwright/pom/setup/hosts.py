@@ -67,7 +67,7 @@ class SetupHost(CmkPage):
         self.main_area.click_item_in_dropdown_list(dropdown_button="Hosts", item="Delete hosts")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         try:
-            expect(self.successfully_deleted_msg).to_be_visible(timeout=5000)
+            expect(self.successfully_deleted_msg).to_be_visible()
         except PWTimeoutError as e:
             if self.main_area.locator("div.error").count() != 0:
                 error_msg = (
@@ -189,11 +189,7 @@ class AddHost(CmkPage):
                 )
                 e.add_note(error_msg)
             raise e
-
-        logger.info("Activate changes")
-        self.get_link("1 change").click()
-        self.activate_selected()
-        self.expect_success_state()
+        self.activate_changes()
 
 
 class HostProperties(CmkPage):
@@ -232,7 +228,12 @@ class HostProperties(CmkPage):
         self.details = host
         self._exists = exists
         self.page_title = f"Properties of host {host.name}"
-        super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
+        super().__init__(
+            page=page,
+            navigate_to_page=navigate_to_page,
+            timeout_assertions=timeout_assertions,
+            timeout_navigation=timeout_navigation,
+        )
 
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts -> <host name> properties` page.
@@ -270,8 +271,5 @@ class HostProperties(CmkPage):
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
         )
-        logger.info("Activate changes")
-        self.get_link("1 change").click()
-        self.activate_selected()
-        self.expect_success_state()
+        self.activate_changes()
         self._exists = False

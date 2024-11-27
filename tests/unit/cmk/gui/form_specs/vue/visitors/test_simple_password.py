@@ -23,6 +23,7 @@ def test_simple_password_encrypts_disk_password(
     pw_visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=DataOrigin.DISK))
     _, frontend_value = pw_visitor.to_vue(password)
 
+    assert isinstance(frontend_value, tuple)
     assert len(frontend_value) == 2
     assert isinstance(frontend_value[0], str)
 
@@ -53,6 +54,7 @@ def test_simple_password_encrypts_frontend_password(
     pw_visitor = get_visitor(SimplePassword(), VisitorOptions(data_origin=DataOrigin.FRONTEND))
     _, frontend_value = pw_visitor.to_vue(password_value)
 
+    assert isinstance(frontend_value, tuple)
     assert len(frontend_value) == 2
     assert isinstance(frontend_value[0], str)
     if not frontend_value[1]:

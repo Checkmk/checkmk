@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render, StringTable
+
+check_info = {}
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -35,7 +36,9 @@ def parse_siemens_plc(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["siemens_plc"] = LegacyCheckDefinition(parse_function=parse_siemens_plc)
+check_info["siemens_plc"] = LegacyCheckDefinition(
+    name="siemens_plc", parse_function=parse_siemens_plc
+)
 
 
 # .
@@ -64,6 +67,7 @@ def check_siemens_plc_temp(item, params, info):
 
 
 check_info["siemens_plc.temp"] = LegacyCheckDefinition(
+    name="siemens_plc_temp",
     service_name="Temperature %s",
     sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_temp,
@@ -107,6 +111,7 @@ def check_siemens_plc_flag(item, params, info):
 
 
 check_info["siemens_plc.flag"] = LegacyCheckDefinition(
+    name="siemens_plc_flag",
     service_name="Flag %s",
     sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_flag,
@@ -172,6 +177,7 @@ def check_siemens_plc_duration(item, params, info):
 
 
 check_info["siemens_plc.duration"] = LegacyCheckDefinition(
+    name="siemens_plc_duration",
     service_name="Duration %s",
     sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_duration,
@@ -221,6 +227,7 @@ def check_siemens_plc_counter(item, params, info):
 
 
 check_info["siemens_plc.counter"] = LegacyCheckDefinition(
+    name="siemens_plc_counter",
     service_name="Counter %s",
     sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_counter,
@@ -253,6 +260,7 @@ def check_siemens_plc_info(item, _no_params, info):
 
 
 check_info["siemens_plc.info"] = LegacyCheckDefinition(
+    name="siemens_plc_info",
     service_name="Info %s",
     sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_info,
@@ -294,6 +302,7 @@ def parse_siemens_plc_cpu_state(string_table: StringTable) -> StringTable:
 
 
 check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    name="siemens_plc_cpu_state",
     parse_function=parse_siemens_plc_cpu_state,
     service_name="CPU state",
     discovery_function=inventory_siemens_plc_cpu_state,

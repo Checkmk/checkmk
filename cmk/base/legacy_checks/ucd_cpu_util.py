@@ -6,12 +6,13 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
 #    UCD-SNMP-MIB::ssCpuRawNice.0 = Counter32: 0
@@ -91,6 +92,7 @@ def check_ucd_cpu_util(item, params, parsed):
 
 
 check_info["ucd_cpu_util"] = LegacyCheckDefinition(
+    name="ucd_cpu_util",
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.11",

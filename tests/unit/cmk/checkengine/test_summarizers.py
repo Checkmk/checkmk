@@ -18,7 +18,7 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
 
-from cmk.piggyback import PiggybackMetaData
+from cmk.piggyback.backend import PiggybackMetaData
 
 
 class TestAgentSummarizer:

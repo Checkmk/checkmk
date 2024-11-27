@@ -19,6 +19,7 @@ from tests.plugins_integration.checks import (
     read_cmk_dump,
     read_disk_dump,
     setup_source_host_piggyback,
+    wait_for_dcd_pend_changes,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,9 +34,10 @@ def _read_piggyback_hosts_from_dump(dump: str) -> set[str]:
     return piggyback_hosts
 
 
-def _rm_piggyback_host_from_dump(dump: str, host_name: str, max_count: int = 20) -> str:
+def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
     host_start = f"<<<<{host_name}>>>>"
     host_end = "<<<<>>>>"
+    max_count = 20
     counter = 0
 
     while counter < max_count:
@@ -58,9 +60,8 @@ def _rm_piggyback_host_from_dump(dump: str, host_name: str, max_count: int = 20)
     return dump
 
 
-def _wait_for_pb_host_removal(
-    site: Site, source_host_name: str, pb_host_name: str, max_count: int = 80
-) -> None:
+def _wait_for_pb_host_deletion(site: Site, source_host_name: str, pb_host_name: str) -> None:
+    max_count = 30
     counter = 0
     while pb_host_name in get_piggyback_hosts(site, source_host_name) and counter < max_count:
         logger.info(
@@ -110,4 +111,5 @@ def test_plugin_piggyback(
             updated_dump
         ), f"Host {pb_host_to_rm} was not removed from the agent dump."
 
-        _wait_for_pb_host_removal(test_site_piggyback, source_host_name, pb_host_to_rm)
+        _wait_for_pb_host_deletion(test_site_piggyback, source_host_name, pb_host_to_rm)
+        wait_for_dcd_pend_changes(test_site_piggyback)

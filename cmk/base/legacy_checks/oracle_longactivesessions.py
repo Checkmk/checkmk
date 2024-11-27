@@ -10,10 +10,10 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_longactivesessions(info):
@@ -38,16 +38,7 @@ def check_oracle_longactivesessions(item, params, info):
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
-            longoutput = "Session (sid,serial,proc) {} {} {} active for {} from {} osuser {} program {} sql_id {} ".format(
-                sidnr,
-                serial,
-                process,
-                render.timespan(int(last_call_el)),
-                machine,
-                osuser,
-                program,
-                sql_id,
-            )
+            longoutput = f"Session (sid,serial,proc) {sidnr} {serial} {process} active for {render.timespan(int(last_call_el))} from {machine} osuser {osuser} program {program} sql_id {sql_id} "
 
     if itemfound:
         infotext = "%s" % sessioncount
@@ -81,6 +72,7 @@ def parse_oracle_longactivesessions(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
+    name="oracle_longactivesessions",
     parse_function=parse_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
     discovery_function=inventory_oracle_longactivesessions,

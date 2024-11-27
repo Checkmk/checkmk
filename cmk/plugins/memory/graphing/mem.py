@@ -152,30 +152,6 @@ graph_mem_absolute = Graph(
         "mem_free",
     ),
 )
-graph_ram_swap_overview = Graph(
-    name="ram_swap_overview",
-    title=Title("RAM + swap overview"),
-    compound_lines=[
-        Sum(
-            Title("RAM + swap installed"),
-            Color.LIGHT_BLUE,
-            [
-                "mem_total",
-                "swap_total",
-            ],
-        )
-    ],
-    simple_lines=[
-        Sum(
-            Title("RAM + swap used"),
-            Color.GREEN,
-            [
-                "mem_used",
-                "swap_used",
-            ],
-        )
-    ],
-)
 graph_ram_swap_used = Graph(
     name="ram_swap_used",
     title=Title("RAM + Swap used"),
@@ -222,6 +198,49 @@ graph_ram_swap_used = Graph(
     ],
     conflicting=["swap_total"],
 )
+graph_ram_swap_overview = Graph(
+    name="ram_swap_overview",
+    title=Title("RAM + swap overview"),
+    compound_lines=[
+        Sum(
+            Title("RAM + swap installed"),
+            Color.LIGHT_BLUE,
+            [
+                "mem_total",
+                "swap_total",
+            ],
+        )
+    ],
+    simple_lines=[
+        Sum(
+            Title("RAM + swap used"),
+            Color.GREEN,
+            [
+                "mem_used",
+                "swap_used",
+            ],
+        )
+    ],
+)
+graph_swap = Graph(
+    name="swap",
+    title=Title("Swap"),
+    compound_lines=[
+        "swap_used",
+        "swap_cached",
+    ],
+    simple_lines=["swap_total"],
+)
+graph_caches = Graph(
+    name="caches",
+    title=Title("Caches"),
+    simple_lines=[
+        "mem_lnx_slab",
+        "swap_cached",
+        "mem_lnx_buffers",
+        "mem_lnx_cached",
+    ],
+)
 graph_ram_used = Graph(
     name="ram_used",
     title=Title("RAM used"),
@@ -242,23 +261,4 @@ graph_ram_used = Graph(
         CriticalOf("mem_used"),
     ],
     conflicting=["swap_used"],
-)
-graph_swap = Graph(
-    name="swap",
-    title=Title("Swap"),
-    compound_lines=[
-        "swap_used",
-        "swap_cached",
-    ],
-    simple_lines=["swap_total"],
-)
-graph_caches = Graph(
-    name="caches",
-    title=Title("Caches"),
-    simple_lines=[
-        "mem_lnx_slab",
-        "swap_cached",
-        "mem_lnx_buffers",
-        "mem_lnx_cached",
-    ],
 )

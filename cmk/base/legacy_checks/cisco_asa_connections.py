@@ -11,10 +11,10 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_cisco_asa_connections(info):
@@ -47,6 +47,7 @@ def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None
 
 
 check_info["cisco_asa_connections"] = LegacyCheckDefinition(
+    name="cisco_asa_connections",
     parse_function=parse_cisco_asa_connections,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),

@@ -78,7 +78,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
             sid, status, _start, _end, backuptype, backupage_str = line
             item = f"{sid}.{backuptype}"
 
-            backupscn = int(-1)
+            backupscn = -1
             backuplevel = "-1"
 
         elif len(line) == 8:
@@ -93,7 +93,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
                 backupscn_str,
             ) = line
             if backupscn_str == "":
-                backupscn = int(-1)
+                backupscn = -1
             else:
                 backupscn = int(backupscn_str)
 

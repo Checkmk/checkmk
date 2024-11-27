@@ -50,7 +50,7 @@ def test_navigate_to_werks(werks_page: Werks) -> None:
 
     # validate 'Acnowledge all' button is disabled
     with pytest.raises(PWTimeoutError):
-        werks_page.get_link("Acknowledge all").click(timeout=5000)
+        werks_page.get_link("Acknowledge all").click()
 
     # validate presence of Werks
     max_number_of_werks_displayed = 100

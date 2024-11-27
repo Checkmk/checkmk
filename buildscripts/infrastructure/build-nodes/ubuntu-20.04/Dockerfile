@@ -107,7 +107,6 @@ ENV \
 COPY \
     .bazelversion \
     package_versions.bzl \
-    static_variables.bzl \
     defines.make \
     /opt/
 
@@ -137,9 +136,6 @@ RUN /opt/install-python.sh
 # install GDB after Python as it requires shared object files, see CMK-15854
 COPY --from=scripts install-gdb.sh /opt/
 RUN /opt/install-gdb.sh
-
-COPY --from=scripts install-freetds.sh /opt/
-RUN /opt/install-freetds.sh
 
 COPY --from=scripts install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
@@ -172,7 +168,6 @@ RUN /opt/install-valgrind.sh link-only
 RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
-RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
 RUN /opt/install-rust-cargo.sh link-only
 

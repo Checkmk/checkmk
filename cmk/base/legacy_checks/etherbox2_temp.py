@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, equals, OIDEnd, SNMPTree
+
+check_info = {}
 
 # .1.3.6.1.4.1.14848.2.1.7.1.2.1 -0.0008 Volt --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.7.1.2.1
 # .1.3.6.1.4.1.14848.2.1.7.1.2.2 -0.0008 Volt --> BETTER-NETWORKS-ETHERNETBOX-MIB::ethernetboxObjects.7.1.2.2
@@ -60,6 +61,7 @@ def check_etherbox2_temp(item, params, parsed):
 
 
 check_info["etherbox2_temp"] = LegacyCheckDefinition(
+    name="etherbox2_temp",
     detect=all_of(
         equals(".1.3.6.1.2.1.1.1.0", ""), contains(".1.3.6.1.4.1.14848.2.1.1.1.0", "Version 1.2")
     ),

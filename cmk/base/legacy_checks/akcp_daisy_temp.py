@@ -7,10 +7,9 @@
 from collections.abc import Sequence
 from itertools import chain
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -21,6 +20,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def inventory_akcp_daisy_temp(info):
@@ -44,6 +45,7 @@ def parse_akcp_daisy_temp(string_table: Sequence[StringTable]) -> Sequence[Strin
 
 
 check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
+    name="akcp_daisy_temp",
     parse_function=parse_akcp_daisy_temp,
     detect=all_of(
         any_of(

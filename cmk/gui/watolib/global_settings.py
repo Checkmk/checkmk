@@ -26,11 +26,11 @@ def load_configuration_settings(
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
-            settings.update(domain().load_full_config())
+            settings.update(domain.load_full_config())
         elif site_specific:
-            settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
+            settings.update(domain.load_site_globals(custom_site_path=custom_site_path))
         else:
-            settings.update(domain().load())
+            settings.update(domain.load())
     return settings
 
 
@@ -58,11 +58,11 @@ def save_global_settings(
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()
-        domain = config_variable.domain()
+        domain_cls = config_variable.domain()
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain().ident(), {})[varname] = vars_[varname]
+        per_domain.setdefault(domain_cls().ident(), {})[varname] = vars_[varname]
 
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
@@ -71,11 +71,11 @@ def save_global_settings(
             per_domain.setdefault(config_domain_name.GUI, {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
-        domain_config = per_domain.get(domain().ident(), {})
+        domain_config = per_domain.get(domain.ident(), {})
         if site_specific:
-            domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
+            domain.save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
-            domain().save(domain_config, custom_site_path=custom_site_path)
+            domain.save(domain_config, custom_site_path=custom_site_path)
 
 
 def load_site_global_settings(custom_site_path: str | None = None) -> GlobalSettings:

@@ -32,10 +32,9 @@ from cmk.utils.user import UserId
 
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
-from cmk.fetchers import IPMICredentials
-
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -46,8 +45,8 @@ from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, Va
 from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 
 _ContactgroupName = str
 
@@ -61,6 +60,13 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
     host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard)
     host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes)
     host_attribute_topic_registry_.register(HostAttributeTopicMetaData)
+
+
+# Keep in sync with cmk.fetchers._ipmi.IPMICredentials
+# C&P to avoid the dependency which pulls in pyghmi
+class IPMICredentials(TypedDict, total=False):
+    username: str
+    password: str
 
 
 class HostContactGroupSpec(TypedDict):
@@ -140,6 +146,7 @@ class HostAttributes(TypedDict, total=False):
     locked_attributes: Sequence[str]
     meta_data: MetaData
     inventory_failed: bool
+    waiting_for_discovery: bool
     labels: Labels
     contactgroups: HostContactGroupSpec
     # Enterprise editions only
@@ -154,6 +161,24 @@ class HostAttributes(TypedDict, total=False):
     # Shipped tag attributes, but could be changed or even removed by users.
     # So we don't define the shipped literals here
     tag_criticality: str
+
+
+def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
+    """Create a copy of the given attributes and mask credential data"""
+
+    MASK_STRING = "******"
+
+    masked = dict(attributes)
+    if "snmp_community" in masked:
+        masked["snmp_community"] = MASK_STRING
+    if "management_snmp_community" in masked:
+        masked["management_snmp_community"] = MASK_STRING
+    if ipmi := masked.get("management_ipmi_credentials"):
+        username = ipmi.get("username", None) if isinstance(ipmi, dict) else None
+        masked["management_ipmi_credentials"] = IPMICredentials(
+            username=username or "(Unknown)", password=MASK_STRING
+        )
+    return masked
 
 
 class HostAttributeTopic(abc.ABC):
@@ -755,17 +780,10 @@ def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag
 
 def declare_custom_host_attrs() -> None:
     for attr in transform_pre_16_host_topics(active_config.wato_host_attrs):
-        if attr["type"] == "TextAscii":
-            # Hack: The API does not perform validate_datatype and we can currently not enable
-            # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
-            # As a local workaround we use a custom validate function here to ensure we only get ascii characters
-            vs = TextInput(
-                title=attr["title"],
-                help=attr["help"],
-                validate=_validate_is_ascii,
-            )
-        else:
-            raise NotImplementedError()
+        vs = TextInput(
+            title=attr["title"],
+            help=attr["help"],
+        )
 
         a: type[ABCHostAttributeValueSpec]
         if attr["add_custom_macro"]:
@@ -785,19 +803,6 @@ def declare_custom_host_attrs() -> None:
             topic=topic_class,
             from_config=True,
         )
-
-
-def _validate_is_ascii(value: str, varprefix: str) -> None:
-    if isinstance(value, str):
-        try:
-            value.encode("ascii")
-        except UnicodeEncodeError:
-            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
-    elif isinstance(value, bytes):
-        try:
-            value.decode("ascii")
-        except UnicodeDecodeError:
-            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
 
 
 def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1107,21 +1112,18 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: self._tag_value() if s is True else None,
         )
 
-    def form_spec(self) -> SingleChoiceExtended:
-        return SingleChoiceExtended(
-            title=Title(  # pylint: disable=localization-of-non-literal-string
-                self._tag_group.title
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
+        return TransformDataForLegacyFormatOrRecomposeFunction(
+            wrapped_form_spec=BooleanChoice(
+                title=Title(  # pylint: disable=localization-of-non-literal-string
+                    self._tag_group.title
+                ),
+                label=Label(  # pylint: disable=localization-of-non-literal-string
+                    self._tag_group.get_tag_choices()[0][1]
+                ),
             ),
-            elements=[
-                SingleChoiceElementExtended(
-                    name=self._tag_value(),
-                    title=Title(  # pylint: disable=localization-of-non-literal-string
-                        self._tag_group.title
-                    ),
-                )
-            ],
-            prefill=DefaultValue(self._tag_value()),
-            type=str,
+            from_disk=lambda s: s == self._tag_value(),
+            to_disk=lambda s: self._tag_value() if s is True else None,
         )
 
     @property

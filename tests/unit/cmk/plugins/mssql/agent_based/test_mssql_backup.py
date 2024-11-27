@@ -10,9 +10,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.mssql.agent_based import backup as msb
 
 STRING_TABLE = [

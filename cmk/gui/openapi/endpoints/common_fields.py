@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping
+from collections.abc import Mapping
 
 from cmk.gui import fields as gui_fields
 
@@ -20,22 +20,10 @@ EXISTING_FOLDER = gui_fields.FolderField(
 def field_include_links(description: str | None = None) -> Mapping[str, Boolean]:
     return {
         "include_links": Boolean(
-            load_default=True,
+            load_default=False,
             required=False,
             example=False,
             description=description
             or "Flag which toggles whether the links field of the individual values should be populated.",
-        )
-    }
-
-
-def field_include_extensions(description: str | None = None) -> Mapping[str, Boolean]:
-    return {
-        "include_extensions": Boolean(
-            load_default=True,
-            required=False,
-            example=True,
-            description=description
-            or "Flag which toggles whether the extensions field of the individual values should be populated.",
         )
     }

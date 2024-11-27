@@ -6,8 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_informix_status(string_table):
@@ -60,6 +61,7 @@ def check_informix_status(item, params, parsed):
 
 
 check_info["informix_status"] = LegacyCheckDefinition(
+    name="informix_status",
     parse_function=parse_informix_status,
     service_name="Informix Instance %s",
     discovery_function=inventory_informix_status,

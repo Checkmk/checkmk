@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
-RABBITMQ_NODENAME="rabbit-###SITE###@localhost"
+RABBITMQ_NODENAME="rabbit-${OMD_SITE}@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
@@ -16,9 +16,14 @@ RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
+# Control number of Erlang schedulers and amount of memory allocated for constant data
+RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="+S 2:2 +MIscs 32"
+# Control the number of arenas that the erlang memory allocator can use for multi-threaded applications
+MALLOC_ARENA_MAX="1"
+INITLOG="${RABBITMQ_LOG_BASE}/init.log"
 
 getpid() {
-    cat "${PIDFILE}" 2>/dev/null
+    cat "${1}" 2>/dev/null
 }
 
 process_is_running() {
@@ -38,19 +43,31 @@ await_process_stop() {
 }
 
 rabbitmq_accepting_connections() {
-    "${RABBITMQ_DIAGNOSTICS}" -q check_port_connectivity --node "${RABBITMQ_NODENAME}" &>/dev/null
+    LANG="C.utf8" \  # set locale to avoid irrelevant warnings in log
+    LC_CTYPE="C.utf8" \
+        "${RABBITMQ_DIAGNOSTICS}" check_port_connectivity --node "${RABBITMQ_NODENAME}"
 }
 
 await_process_start() {
+    # Only write output in the end, otherwise we clobber the logfile.
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && return 0
-        [ -e "${PIDFILE}" ] || return 1
-        [ $((N % 10)) -eq 0 ] && printf "."
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections &>/dev/null && break
+        [ -e "${PIDFILE}" ] || {
+            date +"%F %T.%N RabbitMQ failed to start (pidfile vanished)"
+            return 1
+        }
         sleep 0.1
     done
-    # give up after timeout.
+
+    # once again, mostly to get the output of the diagnostics call
+    [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && {
+        date +"%F %T.%N RabbitMQ considered ready"
+        return 0
+    }
+
+    date +"%F %T.%N RabbitMQ failed to start (giving up after timeout)"
     return 1
 }
 
@@ -70,17 +87,24 @@ exit_failure() {
 }
 
 ensure_broker_certs() {
-    printf "Ensuring broker certificates presence..."
+    printf "Ensuring broker certificates presence...\n"
     if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
-        printf "Creating broker certificates..."
-        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "###SITE###"
+        printf "Creating broker certificates...\n"
+        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "${OMD_SITE}"
     fi
 }
 
-stop_process() {
+stop_and_reset_app() {
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" stop_app &>/dev/null
     "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" reset &>/dev/null
+}
 
+start_app() {
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" start_app &>/dev/null
+}
+
+stop_process() {
+    stop_and_reset_app
     printf "killing %s..." "${1}"
     kill "${1}" 2>/dev/null
 }
@@ -99,6 +123,8 @@ case "$1" in
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
             RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
             ERL_EPMD_ADDRESS="${ERL_EPMD_ADDRESS}" \
+            RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS="${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS}" \
+            MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;
@@ -112,10 +138,10 @@ case "$1" in
         touch "${PIDFILE}"
         mkdir -p "${RABBITMQ_LOG_BASE}"
 
-        nohup "${0}" "start-blocking" &>"${RABBITMQ_LOG_BASE}/init.log" &
+        nohup "${0}" "start-blocking" &>"${INITLOG}" &
 
         # try for one minute to interpret the outcome
-        await_process_start 60 && exit_successfully "OK"
+        await_process_start 60 &>>"${INITLOG}" && exit_successfully "OK"
 
         # Give up
         exit_failure "failed"
@@ -151,8 +177,8 @@ case "$1" in
         ;;
 
     reload)
-        $0 stop
-        $0 start
+        stop_and_reset_app
+        start_app
         ;;
 
     status)
@@ -169,7 +195,7 @@ case "$1" in
         exit_successfully "running"
         ;;
     *)
-        exit_failure "Usage: rabbitmq {start|stop|restart|reload|status}"
+        exit_failure "Usage: rabbitmq {start|stop|reload|status}"
         ;;
 
 esac

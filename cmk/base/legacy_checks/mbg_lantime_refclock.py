@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+
+check_info = {}
 
 mbg_lantime_refclock_refmode_map = {
     "0": "notavailable",
@@ -90,6 +90,7 @@ def parse_mbg_lantime_refclock(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
+    name="mbg_lantime_refclock",
     parse_function=parse_mbg_lantime_refclock,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
     fetch=SNMPTree(

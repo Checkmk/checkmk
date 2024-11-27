@@ -979,10 +979,7 @@ def get_availability_rawdata(
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
         tl_site, tl_host, tl_service = av_object
-        av_filter += "Filter: host_name = {}\nFilter: service_description = {}\n".format(
-            lqencode(str(tl_host)),
-            lqencode(tl_service),
-        )
+        av_filter += f"Filter: host_name = {lqencode(str(tl_host))}\nFilter: service_description = {lqencode(tl_service)}\n"
         assert tl_site is not None
         only_sites = [tl_site]
     elif what == "service":

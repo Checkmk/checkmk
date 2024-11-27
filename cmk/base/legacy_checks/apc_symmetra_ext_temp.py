@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
 
 
 def inventory_apc_symmetra_ext_temp(info):
@@ -34,6 +35,7 @@ def parse_apc_symmetra_ext_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
+    name="apc_symmetra_ext_temp",
     parse_function=parse_apc_symmetra_ext_temp,
     detect=DETECT,
     fetch=SNMPTree(

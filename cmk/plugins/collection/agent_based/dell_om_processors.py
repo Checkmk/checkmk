@@ -68,11 +68,7 @@ def check_dell_om_processors(item: str, section: StringTable) -> CheckResult:
                 state = State.UNKNOWN
             yield Result(
                 state=state,
-                summary="[{}] CPU status: {}, CPU reading: {}".format(
-                    manuf,
-                    cpu_state_readable,
-                    cpu_reading_readable,
-                ),
+                summary=f"[{manuf}] CPU status: {cpu_state_readable}, CPU reading: {cpu_reading_readable}",
             )
             return
 

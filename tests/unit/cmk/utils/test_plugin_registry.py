@@ -68,6 +68,15 @@ def test_delitem(basic_registry: PluginRegistry) -> None:
     basic_registry.unregister("DelPlugin")
 
 
+def test_clear() -> None:
+    registry = PluginRegistry()
+    registry.register(Plugin)
+    assert "Plugin" in registry
+
+    registry.clear()
+    assert "Plugin" not in registry
+
+
 def test_getitem(basic_registry: PluginRegistry) -> None:
     with pytest.raises(KeyError):
         _unused = basic_registry["bla"]

@@ -6,9 +6,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     exists,
@@ -19,6 +17,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 
 def check_netapp_fcpio(item, params, info):
@@ -57,6 +57,7 @@ def discover_netapp_fcpio(info):
 
 
 check_info["netapp_fcpio"] = LegacyCheckDefinition(
+    name="netapp_fcpio",
     parse_function=parse_netapp_fcpio,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.17.20.0")

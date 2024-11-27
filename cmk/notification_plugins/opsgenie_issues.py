@@ -5,10 +5,12 @@
 
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pprint import pformat
-from typing import cast, Iterator
+from typing import cast
 
+import urllib3
 from opsgenie_sdk import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
     AddNoteToAlertPayload,
@@ -24,37 +26,63 @@ from opsgenie_sdk import (  # type: ignore[import-untyped]
     UpdateAlertMessagePayload,
 )
 from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[import-untyped]
+from requests.utils import get_environ_proxies
+from tenacity import RetryError
+from urllib3.util import parse_url
 
+from cmk.utils.http_proxy_config import (
+    deserialize_http_proxy_config,
+    EnvironmentProxyConfig,
+    ExplicitProxyConfig,
+    NoProxyConfig,
+)
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify_types import PluginNotificationContext
+from cmk.utils.paths import trusted_ca_file
 
 from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import retrieve_from_passwordstore
+from cmk.notification_plugins.utils import get_password_from_env_or_context
 
 
 @contextmanager
-def _handle_api_exceptions(api_call_name: str) -> Iterator[None]:
+def _handle_api_exceptions(api_call_name: str, ignore_retry: bool = False) -> Iterator[None]:
     try:
         yield
     except (ApiException, AuthenticationException) as err:
         sys.stderr.write(f"Exception when calling AlertApi -> {api_call_name}: {err}\n")
         sys.exit(2)
     except Exception as e:
-        sys.stderr.write(f"Unhandled exception: {e}\n")
+        if not ignore_retry and isinstance(e, RetryError):
+            with _handle_api_exceptions(api_call_name, ignore_retry=True):
+                e.reraise()
+        sys.stderr.write(f"Unhandled exception when calling AlertApi -> {api_call_name}: {e}\n")
         sys.exit(2)
 
 
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
 class Connector:
-    def __init__(self, api_key: str, host_url: str | None, proxy_url: str | None) -> None:
-        conf: "Configuration" = Configuration()
+    def __init__(
+        self, api_key: str, host_url: str | None, proxy_url: str | None, ignore_ssl: bool
+    ) -> None:
+        conf = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
             conf.host = "%s" % host_url
         if proxy_url is not None:
+            sys.stdout.write(f"Using proxy: {proxy_url}\n")
             conf.proxy = proxy_url
 
-        api_client: "ApiClient" = ApiClient(configuration=conf)
+        if ignore_ssl:
+            sys.stdout.write("Ignoring SSL certificate verification\n")
+            conf.verify_ssl = False
+            urllib3.disable_warnings(urllib3.connectionpool.InsecureRequestWarning)
+        else:
+            sys.stdout.write(f"Using trust store: {trusted_ca_file}\n")
+            conf.ssl_ca_cert = trusted_ca_file
+
+        sys.stdout.flush()
+
+        api_client: ApiClient = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
 
     def get_existing_alert(self, alias: str) -> Alert | None:
@@ -159,13 +187,39 @@ class Connector:
         sys.stdout.write(f"Request id: {response.request_id}, successfully removed tags.\n")
 
 
+def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
+    proxy = deserialize_http_proxy_config(proxy_setting)
+    if isinstance(proxy, EnvironmentProxyConfig):
+        parsed_url = parse_url(url or "https://api.opsgenie.com")
+        proxies = get_environ_proxies(parsed_url.url)
+        return proxies.get(parsed_url.scheme)
+
+    if isinstance(proxy, NoProxyConfig):
+        return None
+
+    if isinstance(proxy, ExplicitProxyConfig):
+        return proxy_setting
+
+    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")
+    sys.exit(2)
+
+
 def _get_connector(context: PluginNotificationContext) -> Connector:
-    if "PARAMETER_PASSWORD" not in context:
+    if "PARAMETER_PASSWORD_1" not in context:
         sys.stderr.write("API key not set\n")
         sys.exit(2)
 
-    api_key = retrieve_from_passwordstore(context["PARAMETER_PASSWORD"])
-    return Connector(api_key, context.get("PARAMETER_URL"), context.get("PARAMETER_PROXY_URL"))
+    api_key = get_password_from_env_or_context(
+        key="PARAMETER_PASSWORD",
+        context=context,
+    )
+    url = context.get("PARAMETER_URL")
+    return Connector(
+        api_key,
+        url,
+        _get_proxy_url(context.get("PARAMETER_PROXY_URL"), url),
+        ignore_ssl="PARAMETER_IGNORE_SSL" in context,
+    )
 
 
 def _get_alias(context: PluginNotificationContext) -> str:
@@ -199,7 +253,7 @@ def _requires_integration_team(notification_type: str, integration_team: str | N
 def _get_extra_properties(context: PluginNotificationContext) -> dict[str, str]:
     all_elements: dict[str, tuple[str, str]] = {
         "omdsite": ("Site ID", os.environ["OMD_SITE"]),
-        "hosttags": ("Tags of the Host", "\n".join((context.get("HOST_TAGS", "").split()))),
+        "hosttags": ("Tags of the Host", "\n".join(context.get("HOST_TAGS", "").split())),
         "address": ("IP address of host", context.get("HOSTADDRESS", "")),
         "abstime": ("Absolute time of alert", context.get("LONGDATETIME", "")),
         "reltime": ("Relative time of alert", context.get("LASTHOSTSTATECHANGE_REL", "")),

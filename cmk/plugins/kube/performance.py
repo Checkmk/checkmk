@@ -96,6 +96,8 @@ _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
+    # Performance impact needs to be investigated (see CMK-19527)
+    # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(list[_AllSamples])
     return adapter.validate_json(cluster_collector_metrics)
 
@@ -206,12 +208,25 @@ def _determine_cpu_rate_metrics(
 
 def _calculate_rate(counter_metric: CPUSample, old_counter_metric: CPUSample) -> float:
     """Calculate the rate value based on two counter metric values
-    Examples:
-        >>> from polyfactory.factories.pydantic_factory import ModelFactory
-        >>> class SampleFactory(ModelFactory):
-        ...    __model__ = CPUSample
-        >>> _calculate_rate(SampleFactory.build(metric_value_string="40", timestamp=60),
-        ... SampleFactory.build(metric_value_string="10", timestamp=30))
+    Example:
+        >>> _calculate_rate(
+        ...     CPUSample(
+        ...         namespace="foo",
+        ...         pod_name="bar",
+        ...         container_name=ContainerName("baz"),
+        ...         metric_name=UsedMetric.container_cpu_usage_seconds_total,
+        ...         metric_value_string="40",
+        ...         timestamp=60,
+        ...     ),
+        ...     CPUSample(
+        ...         namespace="foo",
+        ...         pod_name="bar",
+        ...         container_name=ContainerName("baz"),
+        ...         metric_name=UsedMetric.container_cpu_usage_seconds_total,
+        ...         metric_value_string="10",
+        ...         timestamp=30,
+        ...     ),
+        ... )
         1.0
     """
     time_delta = counter_metric.timestamp - old_counter_metric.timestamp

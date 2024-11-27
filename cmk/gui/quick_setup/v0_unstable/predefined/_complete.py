@@ -12,7 +12,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
-from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
@@ -34,7 +33,6 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
 )
@@ -62,9 +60,9 @@ from cmk.rulesets.v1.form_specs import Dictionary
 
 
 class DCDHook:
-    create_dcd_connections: Callable[[BundleId, SiteId, Folder], list[CreateDCDConnection]] = (
-        lambda *_args: []
-    )
+    create_dcd_connections: Callable[
+        [BundleId, SiteId, HostName, Folder], list[CreateDCDConnection]
+    ] = lambda *_args: []
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -130,11 +128,15 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
     return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path, title=sanitized_folder_path, attributes={}
+        name=sanitized_folder_path,
+        title=sanitized_folder_path.split("/")[-1]
+        if "/" in sanitized_folder_path
+        else sanitized_folder_path,
+        attributes={},
     )
 
 
-def create_host_from_form_data(
+def create_special_agent_host_from_form_data(
     host_name: HostName,
     site_id: SiteId,
     folder: Folder,
@@ -144,6 +146,9 @@ def create_host_from_form_data(
         folder=folder,
         attributes=HostAttributes(
             tag_address_family="no-ip",
+            tag_agent="special-agents",
+            tag_piggyback="auto-piggyback",
+            tag_snmp_ds="no-snmp",
             site=site_id,
         ),
     )
@@ -234,6 +239,34 @@ def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
     return BundleId(bundle_id)
 
 
+def _convert_explicit_passwords_to_stored_passwords(
+    rule_params: Mapping, explicit_password_ids: set[str]
+) -> Mapping[str, object]:
+    """Passwords that are explicitly set in the form data are replaced with a reference to the
+    password to be created in the password store
+
+    Notes:
+        * assumed that the password store entry will get the same id as the password id
+        * assumed that passwords are not part of a list and only a direct entry in a dictionary
+    """
+    params_with_converted_passwords: dict = {}
+    for key, value in rule_params.items():
+        match value:
+            case dict():
+                params_with_converted_passwords[key] = (
+                    _convert_explicit_passwords_to_stored_passwords(value, explicit_password_ids)
+                )
+            case ("cmk_postprocessed", "explicit_password", (pw_id, _password)):
+                if pw_id in explicit_password_ids:
+                    password_store_reference = ("cmk_postprocessed", "stored_password", (pw_id, ""))
+                    params_with_converted_passwords[key] = password_store_reference
+                else:
+                    params_with_converted_passwords[key] = value
+            case _:
+                params_with_converted_passwords[key] = value
+    return params_with_converted_passwords
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -255,20 +288,17 @@ def _create_and_save_special_agent_bundle(
 
     collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
-    # TODO: Find a better solution.
-    # Here we replace the password id if the user has selected from password store
-    # otherwise, the previous one will be overwritten.
     stored_passwords = load_passwords()
-    passwords = {
-        pwid if pwid not in stored_passwords else ad_hoc_password_id(): pw
-        for pwid, pw in collected_passwords.items()
+    # We need to filter out the passwords that are already stored in the password store since they
+    # should be independent of the configuration bundle
+    explicit_passwords = {
+        pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
     }
+    params = _convert_explicit_passwords_to_stored_passwords(params, set(explicit_passwords.keys()))
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
-    hosts = [
-        create_host_from_form_data(host_name=HostName(host_name), folder=folder, site_id=site_id)
-    ]
+    validated_host_name = HostName(host_name)
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -278,24 +308,29 @@ def _create_and_save_special_agent_bundle(
             program_id=PROGRAM_ID_QUICK_SETUP,
         ),
         entities=CreateBundleEntities(
-            hosts=hosts,
+            hosts=[
+                create_special_agent_host_from_form_data(
+                    host_name=validated_host_name, folder=folder, site_id=site_id
+                )
+            ],
             passwords=create_passwords(
-                passwords=passwords,
+                passwords=explicit_passwords,
                 rulespec_name=rulespec_name,
                 bundle_id=bundle_id,
             ),
             rules=[
                 create_rule(
                     params=params,
-                    host_name=create_host["name"],
-                    host_path=create_host["folder"].path(),
+                    host_name=validated_host_name,
+                    host_path=folder.path(),
                     rulespec_name=rulespec_name,
                     bundle_id=bundle_id,
                     site_id=site_id,
                 )
-                for create_host in hosts
             ],
-            dcd_connections=DCDHook.create_dcd_connections(bundle_id, site_id, folder),
+            dcd_connections=DCDHook.create_dcd_connections(
+                bundle_id, site_id, validated_host_name, folder
+            ),
         ),
     )
     try:
@@ -324,7 +359,7 @@ def _create_and_save_special_agent_bundle(
     return makeuri_contextless(
         request,
         [
-            ("mode", ModeActivateChanges.name()),
+            ("mode", "changelog"),
             ("origin", "quick_setup"),
             ("special_agent_name", special_agent_name),
         ],

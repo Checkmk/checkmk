@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -70,6 +70,7 @@ def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+    name="ups_eaton_enviroment",
     parse_function=parse_ups_eaton_enviroment,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),

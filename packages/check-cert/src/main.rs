@@ -6,6 +6,7 @@ use anyhow::Result;
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
 use check_cert::checker::certificate::{self, Config as CertChecks};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
+use check_cert::checker::info::{self, Config as InfoConfig};
 use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
@@ -219,12 +220,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::str::from_utf8(&to_pem(&chain[0])).expect("valid utf8")
     ));
     info(" 1/3 - check fetching process");
-    let mut collection = fetcher_check::check(
+    let mut collection = info::collect(
+        InfoConfig::builder()
+            .server(&args.url)
+            .port(args.port)
+            .build(),
+    );
+    collection.join(&mut fetcher_check::check(
         elapsed,
         FetcherChecks::builder()
             .response_time(Some(response_time))
             .build(),
-    );
+    ));
     info(" 2/3 - verify certificate with trust store");
     collection.join(&mut verification::check(
         &chain,

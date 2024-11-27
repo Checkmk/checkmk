@@ -37,53 +37,63 @@ def _validate_aws_tags(values: Sequence[Any]) -> object:
 
 
 def formspec_aws_tags(title: Title | None = None) -> FormSpec:
-    return List(
+    return Dictionary(
+        title=title,
         help_text=Help(
             "For information on AWS tag configuration, visit "
             "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
         ),
-        title=title,
-        element_template=Dictionary(
-            elements={
-                "key": DictElement(
-                    parameter_form=String(
-                        title=Title("Key"),
-                        custom_validate=[
-                            LengthInRange(
-                                min_value=1,
-                                error_msg=Message("Tags enabled but no key defined."),
+        elements={
+            "restriction_tags": DictElement(
+                parameter_form=List(
+                    title=Title("Restrict monitoring services by one of these AWS tags"),
+                    element_template=Dictionary(
+                        elements={
+                            "key": DictElement(
+                                parameter_form=String(
+                                    title=Title("Key"),
+                                    custom_validate=[
+                                        LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message("Tags enabled but no key defined."),
+                                        ),
+                                    ],
+                                ),
+                                required=True,
                             ),
-                        ],
-                    ),
-                    required=True,
-                ),
-                "values": DictElement(
-                    parameter_form=List(
-                        element_template=String(label=Label("Value")),
-                        add_element_label=Label("Add new value"),
-                        remove_element_label=Label("Remove value"),
-                        no_element_label=Label("No values defined"),
-                        editable_order=False,
-                        custom_validate=[
-                            LengthInRange(
-                                min_value=1,
-                                error_msg=Message("Tags enabled but no values defined."),
+                            "values": DictElement(
+                                parameter_form=List(
+                                    title=Title("Values"),
+                                    element_template=String(),
+                                    add_element_label=Label("Add new value"),
+                                    remove_element_label=Label("Remove value"),
+                                    no_element_label=Label("No values defined"),
+                                    editable_order=False,
+                                    custom_validate=[
+                                        LengthInRange(
+                                            min_value=1,
+                                            error_msg=Message(
+                                                "Tags enabled but no values defined."
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                required=True,
                             ),
-                        ],
+                        },
                     ),
-                    required=True,
-                ),
-            },
-        ),
-        add_element_label=Label("Add new tag"),
-        remove_element_label=Label("Remove tag"),
-        no_element_label=Label("No tags defined"),
-        editable_order=False,
-        custom_validate=[
-            _validate_aws_tags,
-            LengthInRange(
-                min_value=1,
-                error_msg=Message("Tags enabled but no tags defined."),
-            ),
-        ],
+                    add_element_label=Label("Add new tag"),
+                    remove_element_label=Label("Remove tag"),
+                    no_element_label=Label("No tags defined"),
+                    editable_order=False,
+                    custom_validate=[
+                        _validate_aws_tags,
+                        LengthInRange(
+                            min_value=1,
+                            error_msg=Message("Tags enabled but no tags defined."),
+                        ),
+                    ],
+                )
+            )
+        },
     )

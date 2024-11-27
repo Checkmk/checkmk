@@ -254,7 +254,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         action=vcrtrace(filter_post_data_parameters=[("client_secret", "****")]),
     )
     parser.add_argument(
-        "--dump-config", action="store_true", help="""Dump parsed configuration and exit"""
+        "--dump-config",
+        action="store_true",
+        help="""Dump parsed configuration and exit""",
     )
     parser.add_argument(
         "--timeout",
@@ -354,6 +356,14 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         "for in the key of the tag.",
     )
     group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
+
+    parser.add_argument(
+        "--connection-test",
+        action="store_true",
+        help="Run a connection test through the Management API only. No further agent code is "
+        "executed.",
+    )
+
     args = parser.parse_args(argv)
 
     # LOGGING
@@ -488,6 +498,7 @@ class BaseApiClient(abc.ABC):
             {
                 "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
+                "ClientType": "monitoring-custom-client-type",
             }
         )
 
@@ -733,7 +744,15 @@ class MgmtApiClient(BaseApiClient):
             "resourceGroups/{}/providers/Microsoft.Network/networkInterfaces/{}/ipConfigurations/{}"
         )
         return self._get(
-            url.format(group, nic_name, ip_conf_name), params={"api-version": "2022-01-01"}
+            url.format(group, nic_name, ip_conf_name),
+            params={"api-version": "2022-01-01"},
+        )
+
+    def nic_vmss_ip_conf_view(self, group, vmss, virtual_machine_index, nic_name, ip_conf_name):
+        return self._get(
+            f"resourceGroups/{group}/providers/microsoft.Compute/virtualMachineScaleSets/"
+            f"{vmss}/virtualMachines/{virtual_machine_index}/networkInterfaces/{nic_name}/ipConfigurations/{ip_conf_name}",
+            params={"api-version": "2024-07-01"},
         )
 
     def public_ip_view(self, group, name):
@@ -795,7 +814,10 @@ class MgmtApiClient(BaseApiClient):
         return self._query(
             "/providers/Microsoft.CostManagement/query",
             body=body,
-            params={"api-version": "2021-10-01", "$top": "100"},
+            # here 10000 might be too high,
+            # but I haven't found any useful documentation.
+            # No "$top" means 1000
+            params={"api-version": "2021-10-01", "$top": "10000"},
         )
 
     def metrics(self, region, resource_ids, params):
@@ -945,7 +967,11 @@ class Section:
     LOCK = Lock()
 
     def __init__(
-        self, name: str, piggytargets: Iterable[str], separator: int, options: Sequence[str]
+        self,
+        name: str,
+        piggytargets: Iterable[str],
+        separator: int,
+        options: Sequence[str],
     ) -> None:
         super().__init__()
         self._sep = chr(separator)
@@ -1126,7 +1152,8 @@ def get_frontend_ip_configs(
         ip_config_data = {
             **filter_keys(ip_config, ("id", "name")),
             **filter_keys(
-                ip_config["properties"], ("privateIPAllocationMethod", "privateIPAddress")
+                ip_config["properties"],
+                ("privateIPAllocationMethod", "privateIPAddress"),
             ),
         }
         if "publicIPAddress" in ip_config.get("properties"):
@@ -1162,7 +1189,13 @@ def get_routing_rules(app_gateway: Mapping) -> list[Mapping]:
 
 
 def get_http_listeners(app_gateway: Mapping) -> Mapping[str, Mapping]:
-    listener_keys = ("port", "protocol", "hostNames", "frontendIPConfiguration", "frontendPort")
+    listener_keys = (
+        "port",
+        "protocol",
+        "hostNames",
+        "frontendIPConfiguration",
+        "frontendPort",
+    )
     return {
         l["id"]: {
             "id": l["id"],
@@ -1195,7 +1228,10 @@ def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> 
     resource.info["properties"]["frontend_ports"] = frontend_ports
 
     backend_settings = {
-        c["id"]: {"name": c["name"], **filter_keys(c["properties"], ("port", "protocol"))}
+        c["id"]: {
+            "name": c["name"],
+            **filter_keys(c["properties"], ("port", "protocol")),
+        }
         for c in app_gateway["properties"]["backendHttpSettingsCollection"]
     }
     resource.info["properties"]["backend_settings"] = backend_settings
@@ -1204,11 +1240,35 @@ def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> 
     resource.info["properties"]["backend_address_pools"] = backend_pools
 
 
-def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+def _get_standard_network_interface_config(
+    mgmt_client: MgmtApiClient, nic_id: str
+) -> Mapping[str, Mapping]:
     _, group, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
     )
     return mgmt_client.nic_ip_conf_view(group, nic_name, ip_conf_name)
+
+
+def _get_vmss_network_interface_config(
+    mgmt_client: MgmtApiClient, nic_id: str
+) -> Mapping[str, Mapping]:
+    _, group, vmss, vm_index, nic_name, ip_conf_name = get_params_from_azure_id(
+        nic_id,
+        resource_types=[
+            "virtualMachineScaleSets",
+            "virtualMachines",
+            "networkInterfaces",
+            "ipConfigurations",
+        ],
+    )
+    return mgmt_client.nic_vmss_ip_conf_view(group, vmss, vm_index, nic_name, ip_conf_name)
+
+
+def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+    if "virtualMachineScaleSets" in nic_id:
+        return _get_vmss_network_interface_config(mgmt_client, nic_id)
+
+    return _get_standard_network_interface_config(mgmt_client, nic_id)
 
 
 def get_inbound_nat_rules(
@@ -1262,7 +1322,11 @@ def get_backend_address_pools(
                     backend_addresses.append(backend_address_data)
 
         backend_pools.append(
-            {"id": backend_pool["id"], "name": backend_pool["name"], "addresses": backend_addresses}
+            {
+                "id": backend_pool["id"],
+                "name": backend_pool["name"],
+                "addresses": backend_addresses,
+            }
         )
 
     return backend_pools
@@ -1297,7 +1361,11 @@ def get_remote_peerings(
         vnet_peering_id = vnet_peering["id"]
         subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
             vnet_peering_id,
-            resource_types=["providers", "virtualNetworks", "virtualNetworkPeerings"],
+            resource_types=[
+                "providers",
+                "virtualNetworks",
+                "virtualNetworkPeerings",
+            ],
         )
         # skip vNet peerings that belong to another Azure subscription
         if subscription != mgmt_client.subscription:
@@ -1435,7 +1503,7 @@ class MetricCache(DataCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = "metric not found: {} ({})".format(metric_name, aggregation)
+                    msg = f"metric not found: {metric_name} ({aggregation})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 
@@ -1518,7 +1586,8 @@ def gather_metrics(
                         metric_resource.metrics += resource_metrics
                     else:
                         LOGGER.info(
-                            "Resource %s found in metrics cache no longer monitored", resource_id
+                            "Resource %s found in metrics cache no longer monitored",
+                            resource_id,
                         )
 
             except ApiError as exc:
@@ -1545,7 +1614,10 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 def process_resource(
-    mgmt_client: MgmtApiClient, resource: AzureResource, group_labels: GroupLabels, args: Args
+    mgmt_client: MgmtApiClient,
+    resource: AzureResource,
+    group_labels: GroupLabels,
+    args: Args,
 ) -> Sequence[Section]:
     sections: list[Section] = []
     enabled_services = set(args.services)
@@ -1630,7 +1702,12 @@ def write_group_info(
 
     section = AzureSection("agent_info")
     section.add(("monitored-groups", json.dumps(monitored_groups)))
-    section.add(("monitored-resources", json.dumps([r.info["name"] for r in monitored_resources])))
+    section.add(
+        (
+            "monitored-resources",
+            json.dumps([r.info["name"] for r in monitored_resources]),
+        )
+    )
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
@@ -1791,7 +1868,8 @@ def process_resource_health(
             "id": health_id,
             "name": "/".join(health_id.split("/")[-6:-4]),
             **filter_keys(
-                health["properties"], ("availabilityState", "summary", "reasonType", "occuredTime")
+                health["properties"],
+                ("availabilityState", "summary", "reasonType", "occuredTime"),
             ),
             "tags": resource.tags,
         }
@@ -1805,6 +1883,26 @@ def process_resource_health(
         yield section
 
 
+def test_connection(args: Args, subscription: str) -> int | tuple[int, str]:
+    """We test the connection only via the Management API client, not via the Graph API client.
+    The Graph API client is used for three specific services, which are disabled in the default
+    setup when configured via the UI.
+    The Management API client is used for all other services, so we assume here that this is the
+    connection that's essential for the vast majority of setups."""
+    mgmt_client = MgmtApiClient(
+        _get_mgmt_authority_urls(args.authority, subscription),
+        deserialize_http_proxy_config(args.proxy),
+        subscription,
+    )
+    try:
+        mgmt_client.login(args.tenant, args.client, args.secret)
+    except ValueError as exc:
+        error_msg = f"Management client login failed with: {exc}\n"
+        sys.stdout.write(error_msg)
+        return 2, error_msg
+    return 0
+
+
 def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
@@ -1814,7 +1912,6 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
-
         all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
@@ -1856,12 +1953,18 @@ def main(argv=None):
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
-        return
+        return 0
+
+    if args.connection_test:
+        for subscription in args.subscriptions:
+            if (test_result := test_connection(args, subscription)) != 0:
+                return test_result
 
     LOGGER.debug("%s", selector)
     main_graph_client(args)
     for subscription in args.subscriptions:
         main_subscription(args, selector, subscription)
+    return 0
 
 
 if __name__ == "__main__":

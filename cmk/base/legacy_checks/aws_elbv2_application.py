@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -13,10 +12,12 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_elbv2_application(string_table):
@@ -81,6 +82,7 @@ def discover_aws_elbv2_application(p):
 
 
 check_info["aws_elbv2_application"] = LegacyCheckDefinition(
+    name="aws_elbv2_application",
     parse_function=parse_aws_elbv2_application,
     service_name="AWS/ApplicationELB LCUs",
     discovery_function=discover_aws_elbv2_application,
@@ -140,6 +142,7 @@ def discover_aws_elbv2_application_connections(p):
 
 
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_connections",
     service_name="AWS/ApplicationELB Connections",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_connections,
@@ -171,6 +174,7 @@ def discover_aws_elbv2_application_http_elb(p):
 
 
 check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_http_elb",
     service_name="AWS/ApplicationELB HTTP ELB",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_http_elb,
@@ -223,6 +227,7 @@ def discover_aws_elbv2_application_http_redirects(p):
 
 
 check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_http_redirects",
     service_name="AWS/ApplicationELB HTTP Redirects",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_http_redirects,
@@ -283,6 +288,7 @@ def discover_aws_elbv2_application_statistics(p):
 
 
 check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_statistics",
     service_name="AWS/ApplicationELB Statistics",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_statistics,

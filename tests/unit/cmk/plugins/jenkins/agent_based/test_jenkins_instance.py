@@ -5,9 +5,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-
 import cmk.plugins.jenkins.agent_based.jenkins_instance as ji
+from cmk.agent_based.v2 import Result, Service, State
 
 
 @pytest.fixture(scope="module", name="section")

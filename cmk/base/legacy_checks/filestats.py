@@ -9,10 +9,10 @@
 import ast
 import re
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, state_markers
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition, STATE_MARKERS
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -146,7 +146,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 
@@ -165,7 +165,7 @@ def check_filestats_extremes(files, params, show_files=False):
                 text = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    state_markers[state],
+                    STATE_MARKERS[state],
                 )
                 long_output[efile["path"]] = text
 
@@ -298,6 +298,7 @@ def discover_filestats_single(section):
 
 
 check_info["filestats.single"] = LegacyCheckDefinition(
+    name="filestats_single",
     service_name="File %s",
     sections=["filestats"],
     discovery_function=discover_filestats_single,
@@ -306,6 +307,7 @@ check_info["filestats.single"] = LegacyCheckDefinition(
 )
 
 check_info["filestats"] = LegacyCheckDefinition(
+    name="filestats",
     parse_function=parse_filestats,
     service_name="File group %s",
     discovery_function=discover_filestats,

@@ -6,11 +6,12 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
+
+check_info = {}
 
 
 def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
@@ -58,6 +59,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
 
 check_info["aws_wafv2_summary"] = LegacyCheckDefinition(
+    name="aws_wafv2_summary",
     parse_function=parse_aws,
     service_name="AWS/WAFV2 Summary",
     discovery_function=discover_aws_wafv2_summary,

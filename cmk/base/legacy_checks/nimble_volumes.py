@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 # example output
 
@@ -35,6 +36,7 @@ def parse_nimble_volumes(string_table: StringTable) -> StringTable:
 
 
 check_info["nimble_volumes"] = LegacyCheckDefinition(
+    name="nimble_volumes",
     parse_function=parse_nimble_volumes,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(

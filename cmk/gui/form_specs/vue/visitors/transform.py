@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.form_specs.converter import TransformForLegacyData
+from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 
 from cmk.rulesets.v1 import Message
@@ -13,7 +13,7 @@ from ._type_defs import DataOrigin, EmptyValue
 from ._utils import create_validation_error
 
 
-class TransformVisitor(FormSpecVisitor[TransformForLegacyData, object]):
+class TransformVisitor(FormSpecVisitor[TransformDataForLegacyFormatOrRecomposeFunction, object]):
     def _parse_value(self, raw_value: object) -> object:
         if self.options.data_origin == DataOrigin.FRONTEND:
             return raw_value

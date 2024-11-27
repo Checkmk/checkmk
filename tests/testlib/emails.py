@@ -1,12 +1,21 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import email
 import logging
-import re
 import time
+from collections.abc import Iterator
 from email.policy import default
 from getpass import getuser
 from pathlib import Path
+from typing import Final
+
+from faker import Faker
 
 from tests.testlib.repo import repo_path
+from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
@@ -14,12 +23,14 @@ logger = logging.getLogger(__name__)
 
 class EmailManager:
     def __init__(self) -> None:
-        self.maildir_folder = Path.home() / "Maildir" / "new"
+        self.temp_folder = Path("/tmp")
+        self.base_folder: Final[Path] = Path.home()  # enforced by postfix
+        self.maildir_folder = self.base_folder / "Maildir"
+        self.unread_folder = self.maildir_folder / "new"
         scripts_folder = repo_path() / "tests" / "scripts"
         self.setup_postfix_script = scripts_folder / "setup_postfix.sh"
         self.teardown_postfix_script = scripts_folder / "teardown_postfix.sh"
         self._username = getuser()
-        self.html_file_path = repo_path() / "email_content.html"
 
     def __enter__(self):
         self.setup_postfix()
@@ -28,6 +39,10 @@ class EmailManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.teardown_postfix()
         self.delete_html_file()
+
+    @property
+    def html_file_path(self) -> Path:
+        return self.temp_folder / "email_content.html"
 
     def setup_postfix(self) -> None:
         """Install and configure Postfix to send emails to a local Maildir."""
@@ -42,34 +57,38 @@ class EmailManager:
         run([str(self.teardown_postfix_script), self._username], sudo=True)
         logger.info("Postfix is deleted")
 
-    def find_email_by_subject(self, email_subject: str) -> Path | None:
+    def find_email_by_subject(self, email_subject: str | None = None) -> Path | None:
         """Check all emails in the Maildir folder and return the file path of the email
         with the specified subject. Delete checked emails.
         """
-        for file_name in self.maildir_folder.iterdir():
-            file_path = self.maildir_folder / file_name
+        for file_name in self.unread_folder.iterdir():
+            file_path = self.unread_folder / file_name
             with open(file_path, "r") as file:
                 msg = email.message_from_file(file, policy=default)
                 logger.info("Email received, subject: '%s'", msg.get("Subject"))
-                if msg.get("Subject") == email_subject:
+                if email_subject is None or msg.get("Subject") == email_subject:
                     return file_path
                 file_path.unlink()
         return None
 
-    def wait_for_email(self, email_subject: str, interval: int = 3, timeout: int = 20) -> Path:
+    def wait_for_email(
+        self, email_subject: str | None = None, interval: int = 3, timeout: int = 20
+    ) -> Path:
         """Wait for an email with the specified subject to be received in the Maildir folder.
         Return the file path of the email if it is received, otherwise raise TimeoutError.
         """
-        logger.info("Waiting for the email with subject: '%s'", email_subject)
+        subject_note = f'with subject "{email_subject}"' if email_subject else "(any subject)"
+        logger.info("Waiting for email %s", subject_note)
         start_time = time.time()
         while time.time() - start_time < timeout:
-            if self.maildir_folder.exists():
+            if self.unread_folder.exists():
                 file_path = self.find_email_by_subject(email_subject)
                 if file_path:
                     return file_path
             time.sleep(interval)
         raise TimeoutError(
-            f"Email with subject '{email_subject}' was not received after {timeout} seconds"
+            f"No email {subject_note} was received within {timeout} seconds!"
+            f" (Mail folder: {self.unread_folder})"
         )
 
     def check_email_content(
@@ -130,3 +149,28 @@ class EmailManager:
                 key, value = line.split(": ", 1)
                 dict_result[key.strip()] = value.strip()
         return dict_result
+
+
+def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[str, str]]:
+    """Create a user for email notifications via API.
+
+    Create a user with email in order to receive email notifications.
+    Delete the user after the test.
+    """
+    faker = Faker()
+    user_name = faker.user_name()
+    email_address = f"{user_name}@test.com"
+
+    site.openapi.create_user(
+        username=user_name,
+        fullname=faker.name(),
+        password=faker.password(length=12),
+        email=email_address,
+        contactgroups=["all"],
+        customer="global" if site.version.is_managed_edition() else None,
+        roles=["admin"] if admin else [],
+    )
+    site.openapi.activate_changes_and_wait_for_completion()
+    yield user_name, email_address
+    site.openapi.delete_user(user_name)
+    site.openapi.activate_changes_and_wait_for_completion()

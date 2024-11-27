@@ -693,7 +693,11 @@ def view_editor_sorter_specs(
             # Sorters may provide a third element: That Dictionary will be displayed after the
             # sorter was choosen in the CascadingDropdown.
             if isinstance(p, ParameterizedSorter):
-                yield name, get_sorter_plugin_title_for_choices(p), p.vs_parameters(painters)
+                yield (
+                    name,
+                    get_sorter_plugin_title_for_choices(p),
+                    p.vs_parameters(active_config, painters),
+                )
             else:
                 yield name, get_sorter_plugin_title_for_choices(p)
 
@@ -1009,15 +1013,22 @@ def _allowed_for_datasource(
     unsupported_columns: list[ColumnName] = datasource.unsupported_columns
 
     allowed: dict[str, Sorter | Painter] = {}
-    for name, plugin_class in collection.items():
-        plugin = plugin_class(
-            user=user,
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        )
+    plugin: Sorter | Painter
+    for name, instance in collection.items():
+        if isinstance(instance, Sorter):
+            plugin = instance
+        elif issubclass(instance, Painter):
+            plugin = instance(
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=PainterOptions.get_instance(),
+                theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
+            )
+        else:
+            raise TypeError(f"Unexpected instance type ({type(instance)}): {instance}")
+
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

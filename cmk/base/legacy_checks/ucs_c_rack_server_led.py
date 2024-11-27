@@ -6,8 +6,9 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_ucs_c_rack_server_led(
@@ -30,6 +31,7 @@ def discover_ucs_c_rack_server_led(section):
 
 
 check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_led",
     service_name="LED %s",
     discovery_function=discover_ucs_c_rack_server_led,
     check_function=check_ucs_c_rack_server_led,

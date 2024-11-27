@@ -6,12 +6,13 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+
+check_info = {}
 
 # Nikolas Hagemann, comNET GmbH - nikolas.hagemann@comnetgmbh.com
 
@@ -38,6 +39,7 @@ def parse_fortisandbox_cpu_util(string_table: StringTable) -> StringTable:
 
 
 check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
+    name="fortisandbox_cpu_util",
     parse_function=parse_fortisandbox_cpu_util,
     detect=DETECT_FORTISANDBOX,
     fetch=SNMPTree(

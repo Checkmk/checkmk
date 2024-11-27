@@ -3,74 +3,74 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import traceback
+from collections.abc import Sequence
 from logging import Logger
 from pathlib import Path
 
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.paths import local_agent_based_plugins_dir
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.urls import werk_reference_url, WerkReference
 
 from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
-    continue_on_incomp_local_file,
-    disable_incomp_mkp,
-    error_message_incomp_local_file,
+    continue_per_users_choice,
     get_installer_and_package_map,
     get_path_config,
-    PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
-    """Load all agent based plugins before the real update happens"""
+    """Make sure no inactive agent based plug-ins are left over."""
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_agent_based_plugins_dir.rglob("*.py"))
+        except FileNotFoundError:
+            return ()
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
-        while self._disable_failure_and_reload_plugins(logger, conflict_mode):
-            pass
-
-    def _disable_failure_and_reload_plugins(
-        self,
-        logger: Logger,
-        conflict_mode: ConflictMode,
-    ) -> bool:
         path_config = get_path_config()
-        package_store = PACKAGE_STORE
-        installer, package_map = get_installer_and_package_map(path_config)
-        disabled_packages: set[PackageID] = set()
-        for module_name, error in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-            path = Path(traceback.extract_tb(error.__traceback__)[-1].filename)
+        _installer, package_map = get_installer_and_package_map(path_config)
+        for path in self._get_files():
             package_id = package_map.get(path.resolve())
-            # unpackaged files
+            logger.error(_error_message_inactive_local_file(path, package_id))
+
             if package_id is None:
-                logger.error(error_message_incomp_local_file(path, error))
-                if continue_on_incomp_local_file(conflict_mode):
+                if _continue_on_inactive_local_file(conflict_mode):
                     continue
-                raise MKUserError(None, "incompatible local file")
+                raise MKUserError(None, "inactive local file")
 
-            if package_id in disabled_packages:
-                continue  # already dealt with
+            if _continue_on_inactive_package(conflict_mode):
+                continue
+            raise MKUserError(None, "inactive package")
 
-            if disable_incomp_mkp(
-                logger,
-                conflict_mode,
-                module_name,
-                error,
-                package_id,
-                installer,
-                package_store,
-                path_config,
-                path,
-            ):
-                disabled_packages.add(package_id)
-                return True
 
-            raise MKUserError(None, "incompatible local file")
+def _error_message_inactive_local_file(path: Path, package_id: PackageID | None) -> str:
+    hint = "" if package_id is None else f"of package {package_id.name} [{package_id.version}] "
+    return (
+        f"Found obsolete file: '{path}' {hint}(please remove it).\n"
+        f"See: {werk_reference_url(WerkReference.DECOMMISSION_V1_API)}\n\n"
+    )
 
-        return False
+
+def _continue_on_inactive_local_file(conflict_mode: ConflictMode) -> bool:
+    return continue_per_users_choice(
+        conflict_mode,
+        "You can abort the update process (A) and remove the file(s) or continue the update (c).\n\n"
+        "Abort the update process? [A/c] \n",
+    )
+
+
+def _continue_on_inactive_package(conflict_mode: ConflictMode) -> bool:
+    return continue_per_users_choice(
+        conflict_mode,
+        "You can abort the update process (A) and disable/remove the packages or continue the update (c).\n\n"
+        "Abort the update process? [A/c] \n",
+    )
 
 
 pre_update_action_registry.register(

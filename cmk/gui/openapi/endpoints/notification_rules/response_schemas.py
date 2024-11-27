@@ -752,9 +752,10 @@ class CheckboxOpsExtraPropertiesValue(CheckboxOutput):
     )
 
 
-class OpenGeniePluginResponse(PluginName):
+class OpsgeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse)
     domain = fields.Nested(CheckboxWithStrValueOutput)
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = fields.Nested(HttpProxyValue)
     owner = fields.Nested(CheckboxWithStrValueOutput)
     source = fields.Nested(CheckboxWithStrValueOutput)
@@ -788,13 +789,33 @@ class PagerDutyPluginResponse(PluginName):
 
 
 # PushOver ----------------------------------------------------------
-
-
-class PushOverPriority(CheckboxOutput):
-    value = fields.String(
+class PushOverPriority(BaseSchema):
+    level = fields.String(
         enum=list(get_args(PushOverPriorityStringType)),
         description="The pushover priority level",
         example="normal",
+    )
+    retry = fields.Integer(
+        example=60,
+        description="The retry time in seconds",
+    )
+    expire = fields.Integer(
+        example=3600,
+        description="The expiration time in seconds",
+    )
+    receipt = fields.String(
+        example="The receipt can be used to periodically poll receipts API to get "
+        "the status of the notification. "
+        'See <a href="https://pushover.net/api#receipt" target="_blank">'
+        "Pushover receipts and callbacks</a> for more information.",
+        description="The receipt of the message",
+    )
+
+
+class PushOverPriorityValue(CheckboxOutput):
+    value = fields.Nested(
+        PushOverPriority,
+        description="The pushover priority level",
     )
 
 
@@ -817,8 +838,8 @@ class PushOverPluginResponse(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(CheckboxWithStrValueOutput)
-    priority = fields.Nested(PushOverPriority)
+    url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE
+    priority = fields.Nested(PushOverPriorityValue)
     sound = fields.Nested(Sounds)
     http_proxy = HTTP_PROXY_RESPONSE
 
@@ -828,7 +849,7 @@ class PushOverPluginResponse(PluginName):
 
 class CheckBoxUseSiteIDPrefix(CheckboxOutput):
     value = fields.String(
-        enum=["use_site_id_prefix", "deactivated"],
+        enum=["use_site_id", "deactivated"],
         description="",
         example="use_site_id",
     )
@@ -1058,7 +1079,7 @@ class PluginBase(BaseSchema):
             "asciimail": AsciiEmailParamsResponse,
             "ilert": IlertPluginResponse,
             "jira_issues": JiraPluginResponse,
-            "opsgenie_issues": OpenGeniePluginResponse,
+            "opsgenie_issues": OpsgeniePluginResponse,
             "pagerduty": PagerDutyPluginResponse,
             "pushover": PushOverPluginResponse,
             "servicenow": ServiceNowPluginResponse,

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.lib import postgres
+
+check_info = {}
 
 # OLD FORMAT - with idle filter
 # <<<postgres_connections:sep(59)>>>
@@ -130,6 +130,7 @@ def check_postgres_connections(item, params, parsed):
 
 
 check_info["postgres_connections"] = LegacyCheckDefinition(
+    name="postgres_connections",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Connections %s",
     discovery_function=inventory_postgres_connections,

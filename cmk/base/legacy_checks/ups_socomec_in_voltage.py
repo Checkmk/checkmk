@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_in_voltage import check_ups_in_voltage
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -41,6 +42,7 @@ def parse_ups_socomec_in_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_in_voltage"] = LegacyCheckDefinition(
+    name="ups_socomec_in_voltage",
     parse_function=parse_ups_socomec_in_voltage,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

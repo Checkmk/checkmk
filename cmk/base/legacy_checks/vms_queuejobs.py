@@ -9,10 +9,10 @@
 # 20201AF1 DRS_WATCHDOG_22 LEF 0 00:01:39.97 284611 2030
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_vms_queuejobs(info):
@@ -53,6 +53,7 @@ def parse_vms_queuejobs(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_queuejobs"] = LegacyCheckDefinition(
+    name="vms_queuejobs",
     parse_function=parse_vms_queuejobs,
     service_name="Queue Jobs",
     discovery_function=inventory_vms_queuejobs,

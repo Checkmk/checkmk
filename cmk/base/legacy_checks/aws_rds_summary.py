@@ -7,11 +7,12 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.aws.lib import aws_rds_service_item
+
+check_info = {}
 
 Section = Mapping[str, Any]
 
@@ -54,6 +55,7 @@ def check_aws_rds_summary(item, params, parsed):
 
 
 check_info["aws_rds_summary"] = LegacyCheckDefinition(
+    name="aws_rds_summary",
     parse_function=parse_aws_rds_summary,
     service_name="AWS/RDS Summary",
     discovery_function=discover_aws_rds_summary,
@@ -100,6 +102,7 @@ def discover_aws_rds_summary_db_status(p):
 
 
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
+    name="aws_rds_summary_db_status",
     service_name="AWS/RDS %s Info",
     sections=["aws_rds_summary"],
     discovery_function=discover_aws_rds_summary_db_status,

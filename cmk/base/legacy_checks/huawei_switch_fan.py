@@ -6,15 +6,17 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 # mypy: disable-error-code="var-annotated"
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
 
-HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+check_info = {}
+
+HuaweiFanData = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "HuaweiFanData", "fan_present fan_speed"
 )
 
@@ -51,6 +53,7 @@ def check_huawei_switch_fan(item, params, parsed):
 
 
 check_info["huawei_switch_fan"] = LegacyCheckDefinition(
+    name="huawei_switch_fan",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1.10.1",

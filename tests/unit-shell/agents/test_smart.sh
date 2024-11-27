@@ -156,5 +156,33 @@ WDC_WUH722222ALE6L4_123456A ATA WDC__WUH722222AL 199 UDMA_CRC_Error_Count    0x0
 
 }
 
+test_map_AMCC_serial_to_port() {
+    TW_CLI_DRIVER_STATUS="Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     OK               u0     149.05 GB   312581808     3JS0TF14
+p1     OK               u0     149.05 GB   312581808     3JS0TETZ
+p2     OK               u1     149.05 GB   312581808     3JS0VG85
+p3     OK               u1     149.05 GB   312581808     3JS0VGCY
+p4     OK               u1     149.05 GB   312581808     3JS0VGGQ
+p5     OK               u2     149.05 GB   312581808     3JS0VH1P
+p6     OK               -      149.05 GB   312581808     3JS0TF0P
+p7     OK               -      149.05 GB   312581808     3JS0VF43
+p8     OK               -      149.05 GB   312581808     3JS0VG8D
+p9     NOT-PRESENT      -      -           -             -
+p10    NOT-PRESENT      -      -           -             -
+p11    NOT-PRESENT      -      -           -             -"
+    DNAME=AMCC_blah0000000000
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" ""
+    DNAME=AMCC_3JS0VF43000000000000
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" "7"
+    DNAME=AMCC_00000000000
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" "9"
+}
+
+test_AMCC_format_model_name() {
+    TW_CLI_SHOW_MODEL="/c0 Model = 7500-12"
+    assertEquals "$(_format_model_name "$TW_CLI_SHOW_MODEL")" "7500-12"
+}
+
 # shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_ipr400_in_voltage(info):
@@ -34,6 +34,7 @@ def parse_ipr400_in_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
+    name="ipr400_in_voltage",
     parse_function=parse_ipr400_in_voltage,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     fetch=SNMPTree(

@@ -4,10 +4,17 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import CompositeWidget from '@/quick-setup/components/quick-setup/widgets/CompositeWidget.vue'
+import { getWidget } from '@/quick-setup/components/quick-setup/widgets/utils'
+import { quickSetupGetWidgetKey } from '@/quick-setup/components/quick-setup/utils'
 import { render, screen } from '@testing-library/vue'
 
 test('CompositeWidget renders values and label', async () => {
   render(CompositeWidget, {
+    global: {
+      provide: {
+        [quickSetupGetWidgetKey]: getWidget
+      }
+    },
     props: {
       items: [
         { widget_type: 'text', text: 'Welcome' },

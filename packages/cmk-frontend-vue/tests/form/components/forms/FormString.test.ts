@@ -22,7 +22,9 @@ const spec: FormSpec.String = {
   title: 'fooTitle',
   help: 'fooHelp',
   validators: validators,
-  input_hint: 'fooInputHint'
+  input_hint: 'fooInputHint',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 test('FormString renders value', () => {

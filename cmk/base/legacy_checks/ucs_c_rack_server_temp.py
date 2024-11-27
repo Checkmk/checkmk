@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #
@@ -83,6 +85,7 @@ def discover_ucs_c_rack_server_temp(section):
 
 
 check_info["ucs_c_rack_server_temp"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_temp",
     parse_function=parse_ucs_c_rack_server_temp,
     service_name="Temperature %s",
     discovery_function=discover_ucs_c_rack_server_temp,

@@ -6,6 +6,7 @@ pub mod check;
 pub mod checker {
     pub mod certificate;
     pub mod fetcher;
+    pub mod info;
     pub mod verification;
 }
 pub mod fetcher;

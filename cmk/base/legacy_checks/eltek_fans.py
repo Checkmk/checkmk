@@ -50,11 +50,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.eltek import DETECT_ELTEK
+
+check_info = {}
 
 
 def inventory_eltek_fans(info):
@@ -100,6 +100,7 @@ def parse_eltek_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["eltek_fans"] = LegacyCheckDefinition(
+    name="eltek_fans",
     parse_function=parse_eltek_fans,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(

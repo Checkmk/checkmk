@@ -49,7 +49,7 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 
@@ -1510,6 +1510,7 @@ class OpsGeniePluginCreate(PluginName):
         required=True,
         description="If you have an european account, please set the domain of your opsgenie. Specify an absolute URL like https://api.eu.opsgenie.com",
     )
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     http_proxy = HTTP_PROXY_CREATE
     owner = fields.Nested(
         StrValueOneOfSchema,
@@ -1616,9 +1617,58 @@ class PagerDutyPluginCreate(PluginName):
 # PushOver ----------------------------------------------------------
 
 
-class PushOverPriority(Checkbox):
-    value = fields.String(
+class PushOverPriorityBase(BaseSchema):
+    level = fields.String(
         enum=list(get_args(PushOverPriorityStringType)),
+        required=True,
+        description="The pushover priority level",
+        example="normal",
+    )
+
+
+class PushOverPriorityEmergency(BaseSchema):
+    level = fields.String(
+        enum=["emergency"],
+        required=True,
+        description="The pushover priority level",
+        example="emergency",
+    )
+    retry = fields.Integer(
+        required=True,
+        description="The retry interval in seconds",
+        example=60,
+    )
+    expire = fields.Integer(
+        required=True,
+        description="The expiration time in seconds",
+        example=3600,
+    )
+    receipt = fields.String(
+        required=True,
+        description="The receipt of the message",
+        example="The receipt can be used to periodically poll receipts API to get "
+        "the status of the notification. "
+        'See <a href="https://pushover.net/api#receipt" target="_blank">'
+        "Pushover receipts and callbacks</a> for more information.",
+        pattern="^[a-zA-Z0-9]{30,40}$",
+    )
+
+
+class PushOverPrioritySelector(OneOfSchema):
+    type_field = "level"
+    type_field_remove = False
+    type_schemas = {
+        "lowest": PushOverPriorityBase,
+        "low": PushOverPriorityBase,
+        "normal": PushOverPriorityBase,
+        "high": PushOverPriorityBase,
+        "emergency": PushOverPriorityEmergency,
+    }
+
+
+class PushOverPriority(Checkbox):
+    value = fields.Nested(
+        PushOverPrioritySelector,
         required=True,
         description="The pushover priority level",
         example="normal",
@@ -1661,11 +1711,7 @@ class PushOverPluginCreate(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(
-        StrValueOneOfSchema,
-        required=True,
-        description="If you specify an URL prefix here, then several parts of the email body are armed with hyperlinks to your Check_MK GUI, so that the recipient of the email can directly visit the host or service in question in Check_MK. Specify an absolute URL including the .../check_mk/",
-    )
+    url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     priority = fields.Nested(
         PushOverOneOfSchema,
         required=True,
@@ -1680,7 +1726,7 @@ class PushOverPluginCreate(PluginName):
 # ServiceNow --------------------------------------------------------
 class CheckBoxUseSiteIDPrefix(Checkbox):
     value = fields.String(
-        enum=["use_site_id_prefix", "deactivated"],
+        enum=["use_site_id", "deactivated"],
         required=True,
         description="",
         example="use_site_id",

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+check_info = {}
 
 
 def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable | None:
@@ -21,15 +21,14 @@ def inventory_mcafee_gateway_generic(info):
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
-    return 0, "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
-        total_connections,
-        render.bytes(total_bytes),
-        kernel_mode_blocked,
-        kernel_mode_active,
+    return (
+        0,
+        f"Total connections: {total_connections} ({render.bytes(total_bytes)}), Kernel blocked: {kernel_mode_blocked}, Kernel active: {kernel_mode_active}",
     )
 
 
 check_info["mcafee_emailgateway_smtp"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_smtp",
     parse_function=parse_mcafee_emailgateway_smtp,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

@@ -6,14 +6,16 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_total,
     parse_wmi_table,
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def discover_msexch_owa(parsed):
@@ -31,6 +33,7 @@ def check_msexch_owa(_no_item, params, parsed):
 
 
 check_info["msexch_owa"] = LegacyCheckDefinition(
+    name="msexch_owa",
     parse_function=parse_wmi_table,
     service_name="Exchange OWA",
     discovery_function=discover_msexch_owa,

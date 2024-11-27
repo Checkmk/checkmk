@@ -5,6 +5,8 @@
 
 # pylint: disable=chained-comparison,unused-import
 
+from typing import Literal
+
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes
 from cmk.plugins.lib.df import (
@@ -131,15 +133,16 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         return
 
     # params might still be a tuple
+    show_levels: Literal["onmagic", "always", "onproblem"]
     show_levels, subtract_reserved, show_reserved = (
         (
             params.get("show_levels", "onproblem"),
             params.get("subtract_reserved", False) and reserved_mb > 0,
             params.get("show_reserved") and reserved_mb > 0,
         )
-        # params might still be a tuple
+        # params might still be a tuple  # (mo): I don't think so.
         if isinstance(params, dict)
-        else (False, False, False)
+        else ("onproblem", False, False)
     )
 
     used_mb = size_mb - avail_mb

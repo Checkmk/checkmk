@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 
 def parse_fsc_sc2_fans(string_table: StringTable) -> StringTable:
@@ -70,6 +71,7 @@ def check_fsc_sc2_fans(item, params, info):
 
 
 check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
+    name="fsc_sc2_fans",
     parse_function=parse_fsc_sc2_fans,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

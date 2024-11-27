@@ -6,15 +6,16 @@
 
 import re
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_wafv2_web_acl(string_table):
@@ -75,6 +76,7 @@ def discover_aws_wafv2_web_acl(p):
 
 
 check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
+    name="aws_wafv2_web_acl",
     parse_function=parse_aws_wafv2_web_acl,
     service_name="AWS/WAFV2 Web ACL Requests",
     discovery_function=discover_aws_wafv2_web_acl,

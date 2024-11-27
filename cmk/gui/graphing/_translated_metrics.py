@@ -83,7 +83,8 @@ def _parse_check_command(check_command: str) -> str:
     # This function handles very special and known cases.
     parts = check_command.split("!", 1)
     if parts[0] == "check-mk-custom" and len(parts) >= 2:
-        if parts[1].startswith("check_ping") or parts[1].startswith("./check_ping"):
+        # re.search(r"(^|/)check_ping(\s|$)", parts[1]) would be better..
+        if parts[1].startswith("check_ping") or "/check_ping" in parts[1]:
             return "check_ping"
     return parts[0]
 

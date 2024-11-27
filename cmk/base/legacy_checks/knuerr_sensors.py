@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.knuerr import DETECT_KNUERR
+
+check_info = {}
 
 
 def inventory_knuerr_sensors(info):
@@ -31,6 +31,7 @@ def parse_knuerr_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["knuerr_sensors"] = LegacyCheckDefinition(
+    name="knuerr_sensors",
     parse_function=parse_knuerr_sensors,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

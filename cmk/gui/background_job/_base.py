@@ -18,6 +18,7 @@ import psutil
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
+import cmk.utils.resulttype as result
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
@@ -39,8 +40,10 @@ from ._store import JobStatusStore
 tracer = get_tracer()
 
 
-class BackgroundJobAlreadyRunning(MKGeneralException):
-    pass
+class AlreadyRunningError(Exception): ...
+
+
+class StartupError(Exception): ...
 
 
 class BackgroundJob:
@@ -291,7 +294,7 @@ class BackgroundJob:
         init_span_processor_callback: (
             Callable[[TracerProvider, SpanExporter | None], None] | None
         ) = None,
-    ) -> None:
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if init_span_processor_callback is None:
             init_span_processor_callback = init_span_processor
 
@@ -299,18 +302,24 @@ class BackgroundJob:
             tracer.start_as_current_span(f"start_background_job[{self._job_id}]") as span,
             store.locked(self._job_initializiation_lock),
         ):
-            if self._start(
-                target,
-                initial_status_args,
-                override_job_log_level,
-                init_span_processor_callback,
-                Link(span.get_span_context()),
-            ):
+            if (
+                start_result := self._start(
+                    target,
+                    initial_status_args,
+                    override_job_log_level,
+                    init_span_processor_callback,
+                    Link(span.get_span_context()),
+                )
+            ).is_ok():
                 job_status = self.get_status()
                 self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
             else:
-                self._logger.error('Failed to start job "%s"', self._job_id)
-                span.set_status(Status(StatusCode.ERROR))
+                self._logger.debug('Failed to start job "%s"', self._job_id)
+                if not isinstance(start_result.error, AlreadyRunningError):
+                    # Callers decided on the severity of this case, so we don't report this as an
+                    # error condition here.
+                    span.set_status(Status(StatusCode.ERROR, str(start_result.error)))
+            return start_result
 
     def _start(
         self,
@@ -319,9 +328,11 @@ class BackgroundJob:
         override_job_log_level: int | None,
         init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None],
         origin_span: Link,
-    ) -> bool:
+    ) -> result.Result[None, AlreadyRunningError | StartupError]:
         if self.is_active():
-            raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
+            return result.Error(
+                AlreadyRunningError(f"Background Job {self._job_id} already running")
+            )
 
         self._prepare_work_dir()
 
@@ -358,6 +369,7 @@ class BackgroundJob:
                     lock_wato=initial_status_args.lock_wato,
                     is_stoppable=initial_status_args.stoppable,
                     override_job_log_level=override_job_log_level,
+                    span_id=self.job_prefix,
                     init_span_processor_callback=init_span_processor_callback,
                     origin_span=origin_span,
                 ),
@@ -366,7 +378,12 @@ class BackgroundJob:
         p.start()
         p.join()
 
-        return p.exitcode == 0
+        if p.exitcode != 0:
+            return result.Error(
+                StartupError(f'Failed to start job "{self._job_id}". Exit code: {p.exitcode}')
+            )
+
+        return result.OK(None)
 
     def _prepare_work_dir(self) -> None:
         self._delete_work_dir()

@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def inventory_mongodb_counters(parsed):
@@ -32,6 +32,7 @@ def check_mongodb_counters(item, _no_params, parsed):
 
 
 check_info["mongodb_counters"] = LegacyCheckDefinition(
+    name="mongodb_counters",
     service_name="MongoDB Counters %s",
     discovery_function=inventory_mongodb_counters,
     check_function=check_mongodb_counters,

@@ -8,9 +8,11 @@
 
 import collections
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # example output
 # <<<aix_paging>>>
@@ -18,7 +20,7 @@ from cmk.base.config import check_info
 # hd6                   hdisk11                rootvg       10240MB    23        yes        yes       lv       0
 
 
-AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+AIXPaging = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "AIXPaging", ["group", "size_mb", "usage_perc", "active", "auto", "type"]
 )
 
@@ -65,6 +67,7 @@ def discover_aix_paging(section):
 
 
 check_info["aix_paging"] = LegacyCheckDefinition(
+    name="aix_paging",
     parse_function=parse_aix_paging,
     service_name="Page Space %s",
     discovery_function=discover_aix_paging,

@@ -225,9 +225,7 @@ def test_bake_and_sign(dashboard_page: Dashboard, test_site: Site, with_key: str
 
     # wait for completion and verify status
     wait_for_bakery(test_site)
-    expect(dashboard_page.main_area.get_text("Agent baking successful")).to_be_visible(
-        timeout=30000
-    )
+    expect(dashboard_page.main_area.get_text("Agent baking successful")).to_be_visible()
 
 
 def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
@@ -240,8 +238,8 @@ def test_bake_and_sign_disabled(dashboard_page: Dashboard) -> None:
     )
 
     expect(dashboard_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
+        re.compile("disabled")
     )
     expect(dashboard_page.main_area.get_suggestion("Sign agents")).to_have_class(
-        re.compile("disabled"), timeout=15000
+        re.compile("disabled")
     )

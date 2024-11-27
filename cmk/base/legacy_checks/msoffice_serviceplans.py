@@ -15,10 +15,10 @@
 # msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_msoffice_serviceplans(info):
@@ -57,6 +57,7 @@ def parse_msoffice_serviceplans(string_table: StringTable) -> StringTable:
 
 
 check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+    name="msoffice_serviceplans",
     parse_function=parse_msoffice_serviceplans,
     service_name="MS Office Serviceplans %s",
     discovery_function=inventory_msoffice_serviceplans,

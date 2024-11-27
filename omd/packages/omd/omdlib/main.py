@@ -1712,7 +1712,7 @@ def init_action(
     version_info: VersionInfo,
     site: SiteContext,
     _global_opts: object,
-    command: str,
+    command: Literal["start", "stop", "reload", "restart", "status"],
     args: Arguments,
     options: CommandOptions,
 ) -> int:
@@ -2258,10 +2258,10 @@ def finalize_site_as_user(
     # Run all hooks in order to setup things according to the
     # configuration settings
     config_set_all(site, ignored_hooks)
-    _update_cmk_core_config(site)
     initialize_site_ca(site)
     initialize_agent_ca(site)
     save_site_conf(site)
+    _update_cmk_core_config(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site.dir)), instance_id=uuid4())
@@ -2932,7 +2932,7 @@ def main_update(  # pylint: disable=too-many-branches
             "OMD_FROM_EDITION": from_edition,
         }
         command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
-        sys.stdout.write("Executing '{}'".format(subprocess.list2cmdline(command)))
+        sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
         returncode = _call_script(
             is_tty,
             {
@@ -3017,13 +3017,13 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
     >>> f("2.0.0p3.cee")
-    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3))
+    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("1.6.0p3.cee.demo")
-    Version(_BaseVersion(major=1, minor=6, sub=0), _Release(release_type=ReleaseType.p, value=3))
+    Version(_BaseVersion(major=1, minor=6, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("2.0.0p3.cee")
-    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3))
+    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     >>> f("2021.12.13.cee")
-    Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2021, month=12, day=13)))
+    Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2021, month=12, day=13)), _ReleaseCandidate(value=None), _ReleaseMeta(value=None))
     """
     parts = omd_version.split(".")
 
@@ -3081,7 +3081,7 @@ def main_init_action(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     site: SiteContext | RootContext,
     global_opts: GlobalOptions,
-    command: str,
+    command: Literal["start", "stop", "restart", "reload", "status"],
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -4679,10 +4679,10 @@ def _run_command(
         bail_out(tty.normal + "Aborted.")
 
 
-# Handle global options. We might convert this to getopt
-# later. But a problem here is that we have options appearing
+# Handle global options.
+# A problem here is that we have options appearing
 # *before* the command and command specific ones. We handle
-# the options before the command here only
+# the options before the command here only.
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:  # pylint: disable=too-many-branches
@@ -4717,8 +4717,8 @@ def main() -> None:  # pylint: disable=too-many-branches
     if not is_root() and command.only_root:
         bail_out("omd: root permissions are needed for this command.")
 
-    # Parse command options. We need to do this now in order to know,
-    # if a site name has been specified or not
+    # Parse command options. We need to do this now in order to know
+    # if a site name has been specified or not.
 
     # Give a short description for the command when the user specifies --help:
     if args and args[0] in ["-h", "--help"]:
@@ -4726,7 +4726,7 @@ def main() -> None:  # pylint: disable=too-many-branches
     args, command_options = _parse_command_options(args, command.options)
 
     # Some commands need a site to be specified. If we are
-    # called as root, this must be done explicitely. If we
+    # called as root, this must be done explicitly. If we
     # are site user, the site name is our user name
     site: SiteContext | RootContext
     if command.needs_site > 0:

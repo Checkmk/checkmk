@@ -25,11 +25,12 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EventRule
+from cmk.utils.notify_types import EventRule, NotifyPluginParamsDict
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
 from cmk.events.event_context import EnrichedEventContext, EventContext
@@ -423,7 +424,7 @@ def complete_raw_context(
             enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
         enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_enriched_context_with_labels(enriched_context)
+        _update_enriched_context_from_notify_host_file(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -443,7 +444,7 @@ def complete_raw_context(
     return enriched_context
 
 
-def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
+def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEventContext) -> None:
     notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
@@ -454,6 +455,9 @@ def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext)
         ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+
+    for k, v in notify_host_config.tags.items():
+        enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?
@@ -588,10 +592,7 @@ def event_match_folder(
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires folder '{}', but the host is in '{}'".format(
-                            mustfolder,
-                            hasfolder,
-                        )
+                        return f"The rule requires folder '{mustfolder}', but the host is in '{hasfolder}'"
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 
@@ -608,8 +609,12 @@ def event_match_hosttags(
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
-        notify_host_config = read_notify_host_file(HostName(context["HOSTNAME"]))
-        host_tags = notify_host_config.tags
+        context_str = "HOSTTAG_"
+        host_tags = {
+            TagGroupID(variable.replace(context_str, "")): TagID(str(value))
+            for variable, value in context.items()
+            if variable.startswith(context_str)
+        }
         if not matches_host_tags(set(host_tags.items()), required_tags):
             return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"
     return None
@@ -1009,6 +1014,29 @@ def add_context_to_environment(
     for key, value in plugin_context.items():
         assert isinstance(value, str)
         os.putenv(prefix + key, value.encode("utf-8"))
+
+
+def convert_proxy_params(params: NotifyPluginParamsDict) -> dict[str, Any]:
+    """
+    This is needed before add_to_event_context() to keep the 2.3 structure for
+    the changes we made in 2.4. The new format can not be handled by add_to_event_context()
+    """
+    params_dict = dict(params)
+    proxy_params = params["proxy_url"]  # type: ignore[typeddict-item]
+    match proxy_params:
+        case "cmk_postprocessed", "environment_proxy", str():
+            params_dict["proxy_url"] = ("environment", "environment")
+        case "cmk_postprocessed", "no_proxy", str():
+            params_dict["proxy_url"] = ("no_proxy", None)
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            params_dict["proxy_url"] = ("global", stored_proxy_id)
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            params_dict["proxy_url"] = ("url", url)
+        case _:
+            # unknown format, take it as it is
+            pass
+
+    return params_dict
 
 
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters

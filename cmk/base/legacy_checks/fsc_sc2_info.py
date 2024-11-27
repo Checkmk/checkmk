@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.2.3.1.5.1 "PRIMERGY RX300 S8"
 # .1.3.6.1.4.1.231.2.10.2.2.10.2.3.1.7.1 "--"
@@ -35,6 +36,7 @@ def check_fsc_sc2_info(_no_item, _no_params, info):
 
 
 check_info["fsc_sc2_info"] = LegacyCheckDefinition(
+    name="fsc_sc2_info",
     parse_function=parse_fsc_sc2_info,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

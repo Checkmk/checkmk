@@ -3,8 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, waitFor, render, screen } from '@testing-library/vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -22,7 +23,9 @@ const stringFormSpec: FormSpec.String = {
   title: 'barTitle',
   help: 'barHelp',
   validators: stringValidators,
-  input_hint: ''
+  input_hint: '',
+  autocompleter: null,
+  field_size: 'SMALL'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
@@ -38,9 +41,11 @@ const spec: FormSpec.Dictionary = {
   layout: 'one_column',
   validators: [],
   groups: [],
+  additional_static_elements: null,
+  no_elements_text: 'no_text',
   elements: [
     {
-      ident: 'bar',
+      name: 'bar',
       required: false,
       default_value: 'baz',
       parameter_form: stringFormSpec,
@@ -70,7 +75,7 @@ test('FormDictionary displays dictelement data', async () => {
   })
 
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox', { name: 'barTitle' })
-  expect(checkbox.checked).toBeTruthy()
+  await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('true'))
 
   const element = screen.getByRole<HTMLInputElement>('textbox')
   expect(element.value).toBe('some_value')
@@ -79,7 +84,7 @@ test('FormDictionary displays dictelement data', async () => {
 })
 
 test('FormDictionary checking non-required element fills default', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: {},
@@ -95,7 +100,7 @@ test('FormDictionary checking non-required element fills default', async () => {
 })
 
 test('FormDictionary enable element, check frontend validators', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: {},
@@ -113,7 +118,7 @@ test('FormDictionary enable element, check frontend validators', async () => {
 })
 
 test('FormDictionary render backend validation message', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: { bar: 'some_value' },
@@ -154,9 +159,11 @@ test('FormDictionary appends default of required element if missing in data', as
       help: 'fooHelp',
       groups: [],
       validators: [],
+      no_elements_text: 'no_text',
+      additional_static_elements: null,
       elements: [
         {
-          ident: 'bar',
+          name: 'bar',
           required: true,
           default_value: 'baz',
           parameter_form: stringFormSpec,
@@ -174,7 +181,7 @@ test('FormDictionary appends default of required element if missing in data', as
 })
 
 test('FormDictionary checks frontend validators on existing element', async () => {
-  render(FormDictionary, {
+  render(FormEdit, {
     props: {
       spec,
       data: { bar: 'some_value' },
@@ -189,7 +196,7 @@ test('FormDictionary checks frontend validators on existing element', async () =
 })
 
 test('FormDictionary reads new defaultValue on updated spec', async () => {
-  function getSpec(ident: string): FormSpec.Dictionary {
+  function getSpec(name: string): FormSpec.Dictionary {
     return {
       type: 'dictionary',
       title: 'fooTitle',
@@ -197,12 +204,15 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
       help: 'fooHelp',
       groups: [],
       validators: [],
+      additional_static_elements: null,
+      no_elements_text: 'no_text',
       elements: [
         {
-          ident: ident,
+          name: name,
           required: true,
           default_value: 'something',
-          parameter_form: stringFormSpec
+          parameter_form: stringFormSpec,
+          group: null
         }
       ]
     }
@@ -230,6 +240,7 @@ test('FormDictionary is able to be rerenderd: static value', async () => {
       layout: 'one_column',
       help: 'fooHelp',
       additional_static_elements: staticElements,
+      no_elements_text: 'no_text',
       groups: [],
       validators: [],
       elements: []

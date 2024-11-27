@@ -17,10 +17,10 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_rabbitmq_queues(string_table):
@@ -117,6 +117,7 @@ def discover_rabbitmq_queues(section):
 
 
 check_info["rabbitmq_queues"] = LegacyCheckDefinition(
+    name="rabbitmq_queues",
     parse_function=parse_rabbitmq_queues,
     service_name="RabbitMQ Queue %s",
     discovery_function=discover_rabbitmq_queues,

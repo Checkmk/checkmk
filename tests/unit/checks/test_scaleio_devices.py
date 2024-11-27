@@ -6,12 +6,12 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.api.agent_based.register import AgentBasedPlugins
+
+from cmk.agent_based.v2 import Result, Service, State
 
 _SECTION = {
     "devices": [
@@ -41,8 +41,8 @@ _SECTION = {
 
 
 @pytest.fixture(name="scaleio_devices")
-def fixture_scaleio_devices(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("scaleio_devices")]
+def fixture_scaleio_devices(agent_based_plugins: AgentBasedPlugins) -> CheckPlugin:
+    return agent_based_plugins.check_plugins[CheckPluginName("scaleio_devices")]
 
 
 def test_discover_scaleio_devices(scaleio_devices: CheckPlugin) -> None:

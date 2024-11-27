@@ -8,6 +8,8 @@ import ast
 import os
 from pathlib import Path
 
+from livestatus import SiteId
+
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
@@ -16,7 +18,6 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
@@ -134,12 +135,8 @@ class AgentOutputPage(Page, abc.ABC):
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
 
     @staticmethod
-    def file_name(api_request: FetchAgentOutputRequest) -> str:
-        return "{}-{}-{}.txt".format(
-            api_request.host.site_id(),
-            api_request.host.name(),
-            api_request.agent_type,
-        )
+    def file_name(site_id: SiteId, host_name: HostName, agent_type: str) -> str:
+        return f"{site_id}-{host_name}-{agent_type}.txt"
 
 
 class PageFetchAgentOutput(AgentOutputPage):
@@ -193,7 +190,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if job_status.is_active:
             html.immediate_browser_redirect(0.8, makeuri(request, []))
 
-        job = FetchAgentOutputBackgroundJob(self._request)
+        job = FetchAgentOutputBackgroundJob.from_api_request(self._request)
         JobRenderer.show_job_details(job.get_job_id(), job_status, job.may_stop(), job.may_delete())
 
     def _start_fetch(self) -> None:
@@ -246,9 +243,9 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
 
 
 def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
-    job = FetchAgentOutputBackgroundJob(api_request)
-    try:
-        job.start(
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
+    if (
+        result := job.start(
             job.fetch_agent_output,
             InitialStatusArgs(
                 title=_("Fetching %s of %s / %s")
@@ -260,8 +257,8 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
                 user=str(user.id) if user.id else None,
             ),
         )
-    except BackgroundJobAlreadyRunning:
-        pass
+    ).is_error():
+        raise MKUserError(None, str(result.error))
 
 
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
@@ -275,7 +272,7 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
 
 
 def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatusSpec:
-    job = FetchAgentOutputBackgroundJob(api_request)
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
     return job.get_status_snapshot().status
 
 
@@ -285,19 +282,20 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
     job_prefix = "agent-output-"
 
     @classmethod
+    def from_api_request(
+        cls, api_request: FetchAgentOutputRequest
+    ) -> "FetchAgentOutputBackgroundJob":
+        return cls(api_request.host.site_id(), api_request.host.name(), api_request.agent_type)
+
+    @classmethod
     def gui_title(cls) -> str:
         return _("Fetch agent output")
 
-    def __init__(self, api_request: FetchAgentOutputRequest) -> None:
-        self._request = api_request
-
-        host = self._request.host
-        job_id = "{}{}-{}-{}".format(
-            self.job_prefix,
-            host.site_id(),
-            host.name(),
-            self._request.agent_type,
-        )
+    def __init__(self, site_id: SiteId, host_name: HostName, agent_type: str) -> None:
+        self._site_id = site_id
+        self._host_name = host_name
+        self._agent_type = agent_type
+        job_id = f"{self.job_prefix}{site_id}-{host_name}-{agent_type}"
         super().__init__(job_id)
 
     def fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
@@ -305,13 +303,9 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             self._fetch_agent_output(job_interface)
 
     def _fetch_agent_output(self, job_interface: BackgroundProcessInterface) -> None:
-        job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
+        job_interface.send_progress_update(_("Fetching '%s'...") % self._agent_type)
 
-        agent_output_result = get_agent_output(
-            self._request.host.site_id(),
-            self._request.host.name(),
-            self._request.agent_type,
-        )
+        agent_output_result = get_agent_output(self._site_id, self._host_name, self._agent_type)
 
         if not agent_output_result.success:
             job_interface.send_progress_update(
@@ -319,7 +313,8 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             )
 
         preview_filepath = os.path.join(
-            job_interface.get_work_dir(), AgentOutputPage.file_name(self._request)
+            job_interface.get_work_dir(),
+            AgentOutputPage.file_name(self._site_id, self._host_name, self._agent_type),
         )
 
         store.save_bytes_to_file(
@@ -329,7 +324,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
         download_url = makeuri_contextless(
             request,
-            [("host", self._request.host.name()), ("type", self._request.agent_type)],
+            [("host", self._host_name), ("type", self._agent_type)],
             filename="download_agent_output.py",
         )
 
@@ -344,7 +339,9 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self) -> None:
-        file_name = self.file_name(self._request)
+        file_name = self.file_name(
+            self._request.host.site_id(), self._request.host.name(), self._request.agent_type
+        )
         file_content = self._get_agent_output_file()
 
         response.set_content_type("text/plain")
@@ -375,8 +372,13 @@ class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
 
 
 def get_fetch_agent_output_file(api_request: FetchAgentOutputRequest) -> bytes:
-    job = FetchAgentOutputBackgroundJob(api_request)
-    filepath = Path(job.get_work_dir(), AgentOutputPage.file_name(api_request))
+    job = FetchAgentOutputBackgroundJob.from_api_request(api_request)
+    filepath = Path(
+        job.get_work_dir(),
+        AgentOutputPage.file_name(
+            api_request.host.site_id(), api_request.host.name(), api_request.agent_type
+        ),
+    )
     # The agent output need to be treated as binary data since each agent section can have an
     # individual encoding
     with filepath.open("rb") as f:

@@ -16,11 +16,11 @@
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.16' => 'cpqRackPowerSupplyPresent',
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.17' => 'cpqRackPowerSupplyCondition',
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
+
+check_info = {}
 
 # GENERAL MAPS:
 hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
@@ -109,6 +109,7 @@ def parse_hp_blade_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_blade_psu"] = LegacyCheckDefinition(
+    name="hp_blade_psu",
     parse_function=parse_hp_blade_psu,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(

@@ -336,18 +336,13 @@ impl SqlInstance {
             .to_owned()
     }
 
-    pub async fn generate_sections(
-        &self,
-        ms_sql: &config::ms_sql::Config,
-        sections: &[Section],
-    ) -> String {
+    pub async fn generate_sections(&self, sections: &[Section]) -> String {
         let header = self.generate_header();
-        let endpoint = &ms_sql.endpoint();
 
         // if yes - call generate_section with database parameter
         // else - call generate_section without database parameter
-        log::trace!("{:?} @ {:?}", self, endpoint);
-        let body = match self.create_client(endpoint, None).await {
+        log::trace!("{:?} @ {:?}", self, self.endpoint);
+        let body = match self.create_client(&self.endpoint, None).await {
             Ok(mut client) => {
                 let real_name = obtain_instance_name(&mut client)
                     .await
@@ -374,7 +369,7 @@ impl SqlInstance {
                     instance_section.to_plain_header()
                         + &self.generate_bad_state_entry(instance_section.sep(), &error_text)
                 } else {
-                    self._generate_sections(&mut client, endpoint, sections)
+                    self._generate_sections(&mut client, &self.endpoint, sections)
                         .await
                 }
             }
@@ -429,7 +424,13 @@ impl SqlInstance {
         endpoint: &Endpoint,
         database: Option<String>,
     ) -> Result<UniClient> {
-        log::info!("create client {}", self.name);
+        log::info!(
+            "Create client {} TCP:{} user:{} host:{}",
+            self.name,
+            self.tcp,
+            endpoint.auth().username(),
+            endpoint.conn().hostname()
+        );
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
@@ -2357,7 +2358,7 @@ async fn generate_result(
     // place all futures now in vector for future asynchronous processing
     let tasks = instances
         .iter()
-        .map(move |instance| instance.generate_sections(ms_sql, sections));
+        .map(move |instance| instance.generate_sections(sections));
 
     // processing here
     let s: u32 = ms_sql.options().max_connections().into();

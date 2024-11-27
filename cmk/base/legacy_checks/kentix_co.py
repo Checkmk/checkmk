@@ -10,11 +10,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.kentix import DETECT_KENTIX
+
+check_info = {}
 
 
 def parse_kentix_co(string_table: StringTable) -> int | None:
@@ -44,6 +44,7 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
 
 
 check_info["kentix_co"] = LegacyCheckDefinition(
+    name="kentix_co",
     detect=DETECT_KENTIX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",

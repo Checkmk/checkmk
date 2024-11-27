@@ -22,10 +22,10 @@
 # docsIfCmStatusInvalidRegistrationResponses  1.3.6.1.2.1.10.127.1.2.2.1.9
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, OIDEnd, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_docsis_cm_status(info):
@@ -83,6 +83,7 @@ def parse_docsis_cm_status(string_table: StringTable) -> StringTable:
 
 
 check_info["docsis_cm_status"] = LegacyCheckDefinition(
+    name="docsis_cm_status",
     parse_function=parse_docsis_cm_status,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),

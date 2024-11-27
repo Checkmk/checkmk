@@ -5,15 +5,17 @@
 
 
 import collections
+import re
 from collections.abc import Mapping
 from typing import NotRequired, TypedDict
 
-from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -63,7 +65,7 @@ OpenhardwaremonitorTraits: Mapping[str, _Trait] = {
     "Factor": {"unit": "1", "factor": 1.0},
     "Data": {"unit": " B", "factor": 1073741824.0},
 }
-OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+OpenhardwaremonitorSensor = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "OpenhardwaremonitorSensor", ("reading", "unit", "perf_var", "WMIstatus")
 )
 
@@ -100,7 +102,7 @@ def parse_openhardwaremonitor(string_table):
 
 def _create_openhardwaremonitor_full_name(parent, name):
     def dict_replace(input_, replacements):
-        pattern = regex(r"\b(" + "|".join(replacements) + r")\b")
+        pattern = re.compile(r"\b(" + "|".join(replacements) + r")\b")
         return pattern.sub(lambda x: replacements[x.group()], input_)
 
     parent = dict_replace(parent, {"intelcpu": "cpu", "amdcpu": "cpu", "genericcpu": "cpu"})
@@ -175,6 +177,7 @@ def check_openhardwaremonitor_clock(item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor"] = LegacyCheckDefinition(
+    name="openhardwaremonitor",
     parse_function=parse_openhardwaremonitor,
     service_name="Clock %s",
     discovery_function=discover_openhardwaremonitor,
@@ -208,6 +211,7 @@ def discover_openhardwaremonitor_temperature(parsed):
 
 
 check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_temperature",
     service_name="Temperature %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_temperature,
@@ -242,6 +246,7 @@ def check_openhardwaremonitor_power(item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_power",
     service_name="Power %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_power,
@@ -272,6 +277,7 @@ def discover_openhardwaremonitor_fan(parsed):
 
 
 check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_fan",
     service_name="Fan %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_fan,
@@ -334,6 +340,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
 check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_smart",
     service_name="SMART %s Stats",
     sections=["openhardwaremonitor"],
     discovery_function=inventory_openhardwaremonitor_smart,

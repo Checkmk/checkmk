@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
-from faker import Faker
-from playwright.sync_api import expect
 
-from tests.testlib.emails import EmailManager
+from tests.testlib.emails import create_notification_user, EmailManager
 from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.email import EmailPage
@@ -22,67 +21,28 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(name="email_manager", scope="module")
-def create_email_manager() -> Iterator[EmailManager]:
-    """Create EmailManager instance.
-
-    EmailManager handles setting up and tearing down Postfix SMTP-server, which is configured
-    to redirect emails to a local Maildir. It also provides methods to check and wait for emails.
-    """
-    with EmailManager() as email_manager:
-        yield email_manager
+@pytest.fixture(name="notification_user", scope="function")
+def _notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
+    yield from create_notification_user(test_site)
 
 
-@pytest.fixture(name="notification_user", scope="module")
-def create_notification_user(test_site: Site) -> Iterator[tuple[str, str]]:
-    """Create a user for email notifications via API.
-
-    Create a user with email in order to receive email notifications.
-    Delete the user after the test.
-    """
-    faker = Faker()
-    username = faker.user_name()
-    email = f"{username}@test.com"
-
-    test_site.openapi.create_user(
-        username=username,
-        fullname=faker.name(),
-        password=faker.password(length=12),
-        email=email,
-        contactgroups=["all"],
-        customer="global" if test_site.version.is_managed_edition() else None,
-    )
-    test_site.openapi.activate_changes_and_wait_for_completion()
-    yield username, email
-    test_site.openapi.delete_user(username)
-    test_site.openapi.activate_changes_and_wait_for_completion()
-
-
-@pytest.mark.parametrize(
-    "create_host_using_agent_dump",
-    [
-        pytest.param(
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
-            id="filesystem_email_notifications",
-        ),
-    ],
-    indirect=["create_host_using_agent_dump"],
-)
 @pytest.mark.skip(reason="New email templates need adjustments")
 def test_filesystem_email_notifications(
     dashboard_page: Dashboard,
-    create_host_using_agent_dump: list[str],
+    linux_hosts: list[str],
     notification_user: tuple[str, str],
     email_manager: EmailManager,
     test_site: Site,
+    tmp_path: Path,
 ) -> None:
     """Test that email notification is sent and contain expected data.
 
     Test that when email notifications are set up and the status of 'Filesystem /' service changes,
     the email notification is sent and contains the expected data.
     """
+    email_manager.temp_folder = tmp_path
     username, email = notification_user
-    host_name = create_host_using_agent_dump[0]
+    host_name = linux_hosts[0]
     service_name = "Filesystem /"
     expected_event = "OK -> WARN"
     expected_notification_subject = f"Check_MK: {host_name}/{service_name} {expected_event}"
@@ -108,10 +68,9 @@ def test_filesystem_email_notifications(
     try:
         service_search_page = ServiceSearchPage(dashboard_page.page)
         logger.info("Reschedule the 'Check_MK' service to trigger the notification")
-        service_search_page.apply_filters_button.click()
-        expect(service_search_page.services_table).to_be_visible()
-        service_search_page.reschedule_check("Check_MK")
-        service_summary = service_search_page.service_summary(service_name).inner_text()
+        service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
+        service_search_page.reschedule_check(host_name, "Check_MK")
+        service_summary = service_search_page.service_summary(host_name, service_name).inner_text()
 
         email_file_path = email_manager.wait_for_email(expected_notification_subject)
         expected_fields = {"To": email}

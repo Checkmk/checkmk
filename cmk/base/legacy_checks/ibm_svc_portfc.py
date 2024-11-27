@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Output may have 11 fields:
 # id:fc_io_port_id:port_id:type:port_speed:node_id:node_name:WWPN:nportid:status:attachment
@@ -96,6 +98,7 @@ def check_ibm_svc_portfc(item, _no_params, parsed):
 
 
 check_info["ibm_svc_portfc"] = LegacyCheckDefinition(
+    name="ibm_svc_portfc",
     parse_function=parse_ibm_svc_portfc,
     service_name="FC %s",
     discovery_function=inventory_ibm_svc_portfc,

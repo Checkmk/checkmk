@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 type AlertType = 'error' | 'warning' | 'success' | 'info'
 
@@ -16,17 +17,16 @@ const props = withDefaults(defineProps<AlertBoxProps>(), {
   variant: 'info'
 })
 
-const alertIcon = computed(() => {
-  const url = 'themes/facelift/images'
+const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
-      return `${url}/icon_alert_crit.svg`
+      return 'alert_crit'
     case 'warning':
-      return `${url}/icon_alert_warn.png`
+      return 'alert_warn'
     case 'success':
-      return `${url}/icon_alert_up.png`
+      return 'alert_up'
     default:
-      return `${url}/icon_about_checkmk.svg`
+      return 'about_checkmk'
   }
 })
 
@@ -47,8 +47,10 @@ const alertClass = computed(() => {
 
 <template>
   <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
-    <img :src="alertIcon" />
-    <slot />
+    <CmkIcon :name="alertIconName" variant="inline" size="large" />
+    <div>
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -62,9 +64,8 @@ const alertClass = computed(() => {
   border-radius: var(--border-radius);
   margin: 12px 0;
 
-  img {
-    height: 18px;
-    margin-right: 12px;
+  div {
+    margin-left: 7px;
   }
 
   &.error {

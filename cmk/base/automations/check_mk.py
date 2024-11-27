@@ -20,7 +20,7 @@ import subprocess
 import sys
 import time
 import uuid
-from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict
 from itertools import islice
@@ -68,6 +68,7 @@ from cmk.utils.paths import (
     tmp_dir,
     var_dir,
 )
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
@@ -154,7 +155,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
-from cmk.base import check_api, config, core_config, notify, server_side_calls, sources
+from cmk.base import config, core_config, notify, sources
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
@@ -179,18 +180,17 @@ from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
-from cmk.base.server_side_calls import (
+from cmk.base.sources import make_parser, SNMPFetcherConfig
+
+from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
+from cmk.server_side_calls_backend import (
     ExecutableFinder,
-    load_active_checks,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
 )
-from cmk.base.sources import make_parser, SNMPFetcherConfig
-
-import cmk.piggyback
-from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -285,14 +285,16 @@ class AutomationDiscovery(DiscoveryAutomation):
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
+        plugins = agent_based_register.get_previously_loaded_plugins()
         ruleset_matcher = config_cache.ruleset_matcher
+        autochecks_config = config.AutochecksConfigurer(config_cache)
 
         results: dict[HostName, DiscoveryResult] = {}
 
         parser = CMKParser(
             config_cache.parser_factory(),
             checking_sections=lambda hostname: config_cache.make_checking_sections(
-                hostname, selected_sections=NO_SELECTION
+                plugins, hostname, selected_sections=NO_SELECTION
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
@@ -301,6 +303,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = CMKFetcher(
             config_cache,
             config_cache.fetcher_factory(),
+            plugins,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             ip_address_of=config.ConfiguredIPLookup(
@@ -346,16 +349,16 @@ class AutomationDiscovery(DiscoveryAutomation):
                     config_cache.summary_config,
                     override_non_ok_state=None,
                 ),
-                section_plugins=SectionPluginMapper(),
-                section_error_handling=section_error_handling,
-                host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-                ignore_service=config_cache.service_ignored,
-                ignore_plugin=config_cache.check_plugin_ignored,
-                get_effective_host=config_cache.effective_host,
-                get_service_description=functools.partial(
-                    config.service_description, ruleset_matcher
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
                 ),
+                section_error_handling=section_error_handling,
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=ruleset_matcher,
+                    sections={**plugins.agent_sections, **plugins.snmp_sections},
+                ),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+                autochecks_config=autochecks_config,
                 settings=settings,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
@@ -445,6 +448,7 @@ class AutomationDiscoveryPreview(Automation):
         fetcher = CMKFetcher(
             config_cache,
             config_cache.fetcher_factory(),
+            agent_based_register.get_previously_loaded_plugins(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=not prevent_fetching,
             ip_address_of=config.ConfiguredIPLookup(
@@ -544,11 +548,7 @@ def _active_check_preview_rows(
     host_name: HostName,
     ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
-    active_check_rules = config_cache.active_checks(host_name)
-    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     ignored_services = config.IgnoredServices(config_cache, host_name)
-    ruleset_matcher = config_cache.ruleset_matcher
-    translations = config.get_service_translations(ruleset_matcher, host_name)
 
     def make_check_source(desc: str) -> str:
         return "ignored_active" if desc in ignored_services else "active"
@@ -557,38 +557,7 @@ def _active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    def make_final_service_name(sn: ServiceName) -> ServiceName:
-        return config.get_final_service_description(sn, translations)
-
-    host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-    resource_macros = config.get_resource_macros()
-    macros = {**host_macros, **resource_macros}
     password_store_file = cmk.utils.password_store.pending_password_store_path()
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        host_name
-    )
-    active_check_config = server_side_calls.ActiveCheck(
-        load_active_checks()[1],
-        host_name,
-        config.get_ssc_host_config(
-            host_name,
-            config_cache.alias(host_name),
-            config_cache.default_address_family(host_name),
-            config_cache.ip_stack_config(host_name),
-            additional_addresses_ipv4,
-            additional_addresses_ipv6,
-            macros,
-            ip_address_of,
-        ),
-        config.http_proxies,
-        make_final_service_name,
-        cmk.utils.password_store.load(password_store_file),
-        password_store_file,
-        ExecutableFinder(
-            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-        ),
-        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-    )
 
     return [
         CheckPreviewEntry(
@@ -608,7 +577,13 @@ def _active_check_preview_rows(
             new_labels={},
             found_on_nodes=[host_name],
         )
-        for active_service in active_check_config.get_active_service_data(active_check_rules)
+        for active_service in config_cache.active_check_services(
+            host_name,
+            config_cache.get_host_attributes(host_name, ip_address_of),
+            ip_address_of,
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
+        )
     ]
 
 
@@ -622,11 +597,13 @@ def _execute_discovery(
 ) -> CheckPreview:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
+    plugins = agent_based_register.get_previously_loaded_plugins()
     ruleset_matcher = config_cache.ruleset_matcher
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -657,7 +634,9 @@ def _execute_discovery(
                 config_cache.summary_config,
                 override_non_ok_state=None,
             ),
-            section_plugins=SectionPluginMapper(),
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
             section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
                 operation="parsing",
                 section_name=section_name,
@@ -665,7 +644,10 @@ def _execute_discovery(
                 host_name=host_name,
                 rtc_package=None,
             ),
-            host_label_plugins=HostLabelPluginMapper(ruleset_matcher=ruleset_matcher),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
             check_plugins=check_plugins,
             compute_check_parameters=(
                 lambda host_name, entry: config.compute_check_parameters(
@@ -677,10 +659,7 @@ def _execute_discovery(
                 )
             ),
             discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            ignore_service=config_cache.service_ignored,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            get_effective_host=config_cache.effective_host,
-            find_service_description=functools.partial(config.service_description, ruleset_matcher),
+            autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(host_name),
             on_error=on_error,
         )
@@ -697,6 +676,20 @@ def _execute_discovery(
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
     )
+
+
+def _make_service_description_cb(
+    matcher: RulesetMatcher,
+) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
+    """Replacement for functool.partial(config.service_description, matcher)
+
+    functools.partial is not supported by the mypy type checker.
+    """
+
+    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
+        return config.service_description(matcher, hostname, check_plugin_name, item)
+
+    return callback
 
 
 class AutomationAutodiscovery(DiscoveryAutomation):
@@ -723,6 +716,8 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
+    ab_plugins = agent_based_register.get_previously_loaded_plugins()
+    autochecks_config = config.AutochecksConfigurer(config_cache)
     ip_address_of = config.ConfiguredIPLookup(
         config_cache,
         # error handling: we're redirecting stdout to /dev/null anyway,
@@ -735,7 +730,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            ab_plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -744,6 +739,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        ab_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -756,8 +752,11 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         snmp_backend_override=None,
         password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
-    section_plugins = SectionPluginMapper()
-    host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
+    section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
+    host_label_plugins = HostLabelPluginMapper(
+        ruleset_matcher=ruleset_matcher,
+        sections={**ab_plugins.agent_sections, **ab_plugins.snmp_sections},
+    )
     plugins = DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher)
     on_error = OnError.IGNORE
 
@@ -844,12 +843,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         section_error_handling=section_error_handling,
                         host_label_plugins=host_label_plugins,
                         plugins=plugins,
-                        ignore_service=config_cache.service_ignored,
-                        ignore_plugin=config_cache.check_plugin_ignored,
-                        get_effective_host=config_cache.effective_host,
-                        get_service_description=(
-                            functools.partial(config.service_description, ruleset_matcher)
-                        ),
+                        autochecks_config=autochecks_config,
                         schedule_discovery_check=_schedule_discovery_check,
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
@@ -931,18 +925,16 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
             for service_name, autocheck_entry in services.items()
         }
 
-        def get_effective_host_by_id(
-            host: HostName, check_plugin: CheckPluginName, item: Item
-        ) -> HostName:
+        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
             # This function is used to get the effective host for a service description.
             # Some of the service_descriptions are actually already passed down in which case they
             # are used directly. In case all service_descriptions are passed down, needs_checks can
             # be set to False.
             return config_cache.effective_host(
                 host,
-                service_descriptions.get((host, check_plugin, item))
+                service_descriptions.get((host, entry.check_plugin_name, entry.item))
                 or config.service_description(
-                    config_cache.ruleset_matcher, host, check_plugin, item
+                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
                 ),
             )
 
@@ -951,7 +943,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
                 autochecks_owner=set_autochecks_input.discovered_host,
                 effective_host=set_autochecks_input.discovered_host,
                 new_services=set_autochecks_input.target_services.values(),
-                get_effective_host=get_effective_host_by_id,
+                get_effective_host=get_effective_host_of_autocheck,
             )
         else:
             desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
@@ -960,7 +952,7 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
                     autochecks_owner=node,
                     effective_host=set_autochecks_input.discovered_host,
                     new_services=(s for s in services.values() if s.id() in desired_on_cluster),
-                    get_effective_host=get_effective_host_by_id,
+                    get_effective_host=get_effective_host_of_autocheck,
                 )
 
         self._trigger_discovery_check(config_cache, set_autochecks_input.discovered_host)
@@ -995,9 +987,16 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # (See autochecks.set_autochecks_of_cluster())
         if hostname in config_cache.hosts_config.clusters:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
+            )
+
+        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
+            return config_cache.effective_host(
+                host,
+                config.service_description(
+                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
+                ),
             )
 
         new_services = [
@@ -1025,8 +1024,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 # The set-autochecks automation will do nothing in clustered mode.
                 # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
                 {hostname: new_services},
-                config_cache.effective_host,
-                functools.partial(config.service_description, config_cache.ruleset_matcher),
+                get_effective_host_of_autocheck,
             )
         else:
             set_autochecks_of_real_hosts(hostname, new_services)
@@ -1171,9 +1169,7 @@ class AutomationRenameHosts(Automation):
             if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        actions.extend(
-            cmk.piggyback.move_for_host_rename(cmk.utils.paths.omd_root, oldname, newname)
-        )
+        actions.extend(move_piggyback_for_host_rename(cmk.utils.paths.omd_root, oldname, newname))
 
         # Logwatch
         if self._rename_host_dir(logwatch_dir, oldname, newname):
@@ -1354,15 +1350,12 @@ class AutomationRenameHosts(Automation):
         # Logfiles and history files of CMC and Nagios. Problem
         # here: the exact place of the hostname varies between the
         # various log entry lines
-        sed_commands = r"""
-s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: {old};/\1 \2 STATE: {new};/
-s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: {old};/\1 \2ALERT: {new};/
-s/PASSIVE (HOST|SERVICE) CHECK: {old};/PASSIVE \1 CHECK: {new};/
-s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{old};/\1 NOTIFICATION: \2;{new};/
-""".format(
-            old=oldregex,
-            new=newname,
-        )
+        sed_commands = rf"""
+s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: {oldregex};/\1 \2 STATE: {newname};/
+s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: {oldregex};/\1 \2ALERT: {newname};/
+s/PASSIVE (HOST|SERVICE) CHECK: {oldregex};/PASSIVE \1 CHECK: {newname};/
+s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname};/
+"""
 
         handled_files: list[str] = []
 
@@ -1511,40 +1504,15 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
-        host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
-        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = config.get_resource_macros()
-        macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
-        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-            host_name
-        )
-        active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+
+        for active_service in config_cache.active_check_services(
             host_name,
-            config.get_ssc_host_config(
-                host_name,
-                config_cache.alias(host_name),
-                config_cache.default_address_family(host_name),
-                config_cache.ip_stack_config(host_name),
-                additional_addresses_ipv4,
-                additional_addresses_ipv6,
-                macros,
-                ip_address_of,
-            ),
-            config.http_proxies,
-            lambda x: config.get_final_service_description(x, translations),
+            config_cache.get_host_attributes(host_name, ip_address_of),
+            ip_address_of,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
-            ExecutableFinder(
-                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-            ),
-            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-        )
-
-        active_checks = config_cache.active_checks(host_name)
-        for active_service in active_check_config.get_active_service_data(active_checks):
+        ):
             if active_service.description == servicedesc:
                 return {
                     "origin": "active",
@@ -1887,7 +1855,6 @@ class AutomationGetConfiguration(Automation):
 
         if missing_variables:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )
@@ -1914,9 +1881,10 @@ class AutomationGetCheckInformation(Automation):
         man_page_path_map = man_pages.make_man_page_path_map(
             discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
         )
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         plugin_infos: dict[str, dict[str, Any]] = {}
-        for plugin in agent_based_register.iter_all_check_plugins():
+        for plugin in plugins.check_plugins.values():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
                 {
@@ -1959,21 +1927,22 @@ class AutomationGetSectionInformation(Automation):
     needs_checks = True
 
     def execute(self, args: object) -> GetSectionInformationResult:
+        plugins = agent_based_register.get_previously_loaded_plugins()
         section_infos = {
-            str(section.name): {
+            str(section_name): {
                 # for now, we need only these two.
-                "name": str(section.name),
+                "name": str(section_name),
                 "type": "agent",
             }
-            for section in agent_based_register.iter_all_agent_sections()
+            for section_name in plugins.agent_sections
         }
         section_infos.update(
             {
-                str(section.name): {
-                    "name": str(section.name),
+                str(section_name): {
+                    "name": str(section_name),
                     "type": "snmp",
                 }
-                for section in agent_based_register.iter_all_snmp_sections()
+                for section_name in plugins.snmp_sections
             }
         )
         return GetSectionInformationResult(section_infos)
@@ -2046,8 +2015,7 @@ def get_special_agent_commandline(
     http_proxies: Mapping[str, Mapping[str, str]],
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
-        load_special_agents()[1],
-        {},
+        load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
         host_config.host_name,
         host_config.ip_address,
         config.get_ssc_host_config(
@@ -2153,6 +2121,7 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
+        plugins = agent_based_register.get_previously_loaded_plugins()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
         # In 1.5 the tcp connect timeout has been added. The automation may
@@ -2205,6 +2174,7 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_agent(
                         config_cache,
+                        plugins,
                         host_name,
                         ipaddress,
                         agent_port=agent_port,
@@ -2281,6 +2251,7 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         config_cache: ConfigCache,
+        plugins: agent_based_register.AgentBasedPlugins,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
@@ -2312,6 +2283,7 @@ class AutomationDiagHost(Automation):
             oid_cache_dir=oid_cache_dir,
         )
         for source in sources.make_sources(
+            plugins,
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
@@ -2595,39 +2567,15 @@ class AutomationActiveCheck(Automation):
             # The redirect might not be needed anymore.
             host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
-        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = config.get_resource_macros()
-        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
-        macros = {**host_macros, **resource_macros}
         password_store_file = cmk.utils.password_store.pending_password_store_path()
-        additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-            host_name
-        )
-        active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+        for service_data in config_cache.active_check_services(
             host_name,
-            config.get_ssc_host_config(
-                host_name,
-                config_cache.alias(host_name),
-                config_cache.default_address_family(host_name),
-                config_cache.ip_stack_config(host_name),
-                additional_addresses_ipv4,
-                additional_addresses_ipv6,
-                macros,
-                ip_address_of,
-            ),
-            config.http_proxies,
-            lambda x: config.get_final_service_description(x, translations),
+            host_attrs,
+            ip_address_of,
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
-            ExecutableFinder(
-                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-            ),
-            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-        )
-
-        active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
-        for service_data in active_check_config.get_active_service_data([(plugin, active_check)]):
+            single_plugin=plugin,
+        ):
             if service_data.description != item:
                 continue
 
@@ -2659,7 +2607,9 @@ class AutomationActiveCheck(Automation):
         macros = ConfigCache.get_host_macros_from_attributes(
             hostname, config_cache.get_host_attributes(hostname, ip_address_of)
         )
-        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        service_attrs = core_config.get_service_attributes(
+            hostname, service_desc, config_cache, extra_icon=None
+        )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
         macros.update(config.get_resource_macros())
 
@@ -2669,7 +2619,9 @@ class AutomationActiveCheck(Automation):
         self, hostname: HostName, service_desc: str, commandline: str
     ) -> str:
         config_cache = config.get_config_cache()
-        service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
+        service_attrs = core_config.get_service_attributes(
+            hostname, service_desc, config_cache, extra_icon=None
+        )
         service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in service_macros.items()})
@@ -2749,6 +2701,7 @@ class AutomationGetAgentOutput(Automation):
         ty = args[1]
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
+        plugins = agent_based_register.get_previously_loaded_plugins()
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -2786,6 +2739,7 @@ class AutomationGetAgentOutput(Automation):
                     LATEST_CONFIG
                 )
                 for source in sources.make_sources(
+                    plugins,
                     hostname,
                     ipaddress,
                     ip_stack_config,
@@ -2843,7 +2797,7 @@ class AutomationGetAgentOutput(Automation):
                             source_info.hostname,
                             source_info.fetcher_type,
                             checking_sections=config_cache.make_checking_sections(
-                                hostname, selected_sections=NO_SELECTION
+                                plugins, hostname, selected_sections=NO_SELECTION
                             ),
                             persisted_section_dir=make_persisted_section_dir(
                                 source_info.hostname,
@@ -2928,6 +2882,7 @@ class AutomationNotificationReplay(Automation):
             ensure_nagios,
             int(nr),
             rules=config.notification_rules,
+            parameters=config.notification_parameter,
             define_servicegroups=config.define_servicegroups,
             config_contacts=config.contacts,
             fallback_email=config.notification_fallback_email,
@@ -2964,6 +2919,7 @@ class AutomationNotificationAnalyse(Automation):
                 ensure_nagios,
                 int(nr),
                 rules=config.notification_rules,
+                parameters=config.notification_parameter,
                 define_servicegroups=config.define_servicegroups,
                 config_contacts=config.contacts,
                 fallback_email=config.notification_fallback_email,
@@ -3001,6 +2957,7 @@ class AutomationNotificationTest(Automation):
                 config.get_http_proxy,
                 ensure_nagios,
                 rules=config.notification_rules,
+                parameters=config.notification_parameter,
                 define_servicegroups=config.define_servicegroups,
                 config_contacts=config.contacts,
                 fallback_email=config.notification_fallback_email,

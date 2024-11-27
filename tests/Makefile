@@ -13,6 +13,7 @@ PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
+SEMGREP := $(realpath semgrep)/run-semgrep
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -38,8 +39,13 @@ SYSTEM_TESTS := \
     test-gui-crawl \
     test-xss-crawl \
     test-gui-e2e \
+    test-gui-e2e-non-free \
+    test-gui-e2e-cee \
+    test-gui-e2e-cce \
+    test-gui-e2e-cme \
+    test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -59,9 +65,10 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-all test-unit-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
-	test-unit-omdlib test-unit-doctests \
+	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
-	test-unit-neb test-unit-core test-flake8
+	test-unit-neb test-unit-core test-flake8 \
+	test-semgrep test-semgrep-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -123,6 +130,8 @@ help:
 	@echo "test-unit-testlib-docker            - Run doctests present in testlib-modules within docker container."
 	@echo "test-werks                          - Run Werks tests"
 	@echo "test-werks-docker                   - Run Werks tests in docker"
+	@echo "test-semgrep                        - Run semgrep code quality tests"
+	@echo "test-semgrep-docker                 - Run semgrep code quality tests in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -169,6 +178,21 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	    -v "$(realpath ../agents):/agents" \
 	    $$IMAGE_HASH \
 	    python$$PYTHON_VERSION -m pytest --ignore=tests/py2/ "/tests"
+
+test-semgrep:
+	$(SEMGREP) scan \
+	    $(SEMGREP_OUTPUT_ARGS) \
+	    --config "$(realpath semgrep/rules)" \
+	    --quiet \
+	    --oss-only \
+	    --use-git-ignore \
+	    --exclude=$(realpath ..)/packages \
+	    --disable-version-check \
+	    --error \
+	    $(realpath ..)
+
+test-semgrep-docker:
+	../scripts/run-in-docker.sh TERM=xterm make test-semgrep
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
@@ -237,36 +261,50 @@ test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=2
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
-test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
+	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+
+test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
+
+test-gui-e2e-cce:
+	EDITION=cce $(MAKE) test-gui-e2e-non-free
+
+test-gui-e2e-cme:
+	EDITION=cme $(MAKE) test-gui-e2e-non-free
+
+test-gui-e2e-cse:
+	EDITION=cse $(MAKE) test-gui-e2e-non-free
 
 test-integration:
 	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
 test-composition:
-	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
+	    $(PYTEST) -T composition --export-traces $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
 test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cee:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cee
 
 test-update-cce:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
+	EDITION=cce $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cce
 
 test-update-cse:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO \
-	--disable-interactive-mode
+	EDITION=cse $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) -m cse --disable-interactive-mode
 
 test-update-cross-edition-cce: # from CEE to CCE
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode
 
 test-update-cross-edition-cme: # from CEE to CME
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	EDITION=cee $(PYTEST) -T update $(realpath update/cee) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/cee/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode
 
 test-schemathesis-openapi:
@@ -278,7 +316,7 @@ test-plugins:
 
 test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	plugins_integration/test_plugin_piggyback.py --log-cli-level=INFO
+	plugins_integration/test_plugin_piggyback.py
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
@@ -338,6 +376,16 @@ test-pipenv-deps:
 
 test-pylint: prepare-protobuf-files
 	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+	cd .. && $(PYTEST) \
+	    -T unit \
+	    --config-file=pyproject.toml \
+	    --override-ini="pythonpath=." \
+	    --random-order-bucket=global \
+	    --numprocesses=4 \
+	    --dist=loadfile \
+	    -- \
+	    tests/unit/test_pylint_checker_cmk_module_layers.py \
+	    tests/unit/test_pylint_checker_localization.py
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
@@ -351,15 +399,21 @@ test-shellcheck-docker:
 test-cycles:
 	$(CYCLES) \
 		--packages \
-		    cmk \
-		    omd/packages/omd/omdlib \
-		    packages/cmk-agent-based/cmk/agent_based \
-		    packages/cmk-agent-receiver/cmk/agent_receiver \
-		    packages/cmk-graphing/cmk/graphing \
-		    packages/cmk-werks/cmk/werks \
-		    packages/cmk-werks/cmk/trace \
-		--project-path $$(realpath -L ..) \
+			$$(realpath -L ..)/cmk \
+			$$(realpath -L ..)/packages/cmk-agent-based/cmk \
+			$$(realpath -L ..)/packages/cmk-agent-receiver/cmk \
+			$$(realpath -L ..)/packages/cmk-crypto/cmk \
+			$$(realpath -L ..)/packages/cmk-graphing/cmk \
+			$$(realpath -L ..)/packages/cmk-livestatus-client/cmk \
+			$$(realpath -L ..)/packages/cmk-messaging/cmk \
+			$$(realpath -L ..)/packages/cmk-mkp-tool/cmk \
+			$$(realpath -L ..)/packages/cmk-rulesets/cmk \
+			$$(realpath -L ..)/packages/cmk-server-side-calls/cmk \
+			$$(realpath -L ..)/packages/cmk-werks/cmk \
+			$$(realpath -L ..)/packages/cmk-trace/cmk \
+			$$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
+		--threshold 114 \
 		--verbose
 
 test-cycles-docker:
@@ -376,51 +430,27 @@ test-unit-omdlib:
 		omd/packages/omd/ \
 		tests/unit/omdlib/
 
-test-unit-doctests: prepare-protobuf-files
-	# Different files with the same name but in different namespace packages
-	# confuse our tooling.  Let's help by removing those caches as indicated
-	# in the error message.
-	find ../cmk/ -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
-	# The `consider_namespace_packages` option requires pytest >= 8.1
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--doctest-modules \
-		--override-ini="pythonpath=." \
-		--override-ini="consider_namespace_packages=true" \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		-- \
-		cmk/
-
-test-unit: prepare-protobuf-files test-unit-doctests
-	cd .. \
-	    && ./scripts/run-bazel.sh test //tests/unit:all \
-	    && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--override-ini="pythonpath=." \
-		--random-order-bucket=global \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		--ignore=tests/unit/omdlib/ \
-		--numprocesses=4 \
-		--dist=loadfile \
-		-- \
-		tests/unit
+test-unit: prepare-protobuf-files
+	cd .. && \
+	    ./scripts/run-bazel.sh test //cmk:doctest
+	cd .. && \
+	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+	    --test_arg="-m" --test_arg="not slow" \
+	    --test_arg="--numprocesses=4"
 
 test-unit-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit
+	../scripts/run-in-docker.sh '\
+	    make --quiet test-unit ;\
+	    x=$$? ;\
+	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
+	    exit $$x'
 
 test-unit-all: prepare-protobuf-files
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--override-ini="pythonpath=." \
-		--random-order-bucket=global \
-		--ignore=tests/unit/omdlib/ \
-		--numprocesses=4 \
-		--dist=loadfile \
-		-- \
-		tests/unit
+	cd .. && \
+	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+	    --test_arg="--numprocesses=4"
 
 test-unit-all-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-all
@@ -470,8 +500,8 @@ test-unit-neb:
 test-unit-cmc:
 	cd ../packages/cmc/test && ./.f12
 
-test-find-dirty-files-in-git:
-	scripts/find_dirty_files_in_git
+test-find-modified-lock-files:
+	scripts/find_modified_lock_files
 
 test-flake8: ../.flake8
 	cd ..; $(PIPENV) run flake8 --jobs=6 $$($(FIND_PYTHON_FILES))

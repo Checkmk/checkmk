@@ -25,7 +25,7 @@ from cmk.fetchers import IPMICredentials
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
-from cmk.base.server_side_calls import ConfigSet as SSCConfigSet
+from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -195,8 +195,7 @@ inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 active_checks: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 # WATO variant for datasource_programs
 # WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
-# However: We still have legacy rulesets, which can be of any (basic python) type.
-special_agents: dict[str, list[RuleSpec[object]]] = {}
+special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 
 
 # WATO variant for free-form custom checks without formalization

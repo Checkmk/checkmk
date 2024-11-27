@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
+
+check_info = {}
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.2.1 "Temperature-R" --> ISPRO-MIB::isDeviceMonitorTemperatureName
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.3.1 2230 --> ISPRO-MIB::isDeviceMonitorTemperature
@@ -46,6 +47,7 @@ def parse_ispro_sensors_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
+    name="ispro_sensors_temp",
     parse_function=parse_ispro_sensors_temp,
     detect=DETECT_ISPRO_SENSORS,
     fetch=SNMPTree(

@@ -11,6 +11,7 @@ const validators: FormSpec.Validator[] = [
   {
     type: 'length_in_range',
     min_value: 1,
+    max_value: null,
     error_message: 'Min length must be 1'
   }
 ]

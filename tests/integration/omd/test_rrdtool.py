@@ -44,7 +44,7 @@ def fixture_rrd_database(site: Site) -> Path:
     "Create rrd database for integration test"
     with site.python_helper("helper_rrd_database.py").execute() as p:
         assert p.wait() == 0
-    return Path(site.path("test.rrd"))
+    return site.path("test.rrd")
 
 
 @pytest.mark.parametrize(

@@ -8,14 +8,16 @@ import type { SingleChoice } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{
   spec: SingleChoice
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<string>('data', { required: true })
-const [validation, value] = useValidation<string>(
+const data = defineModel<string | null>('data', { required: true })
+const [validation, value] = useValidation<string | null>(
   data,
   props.spec.validators,
   () => props.backendValidation
@@ -26,19 +28,17 @@ const componentId = useId()
 
 <template>
   <div>
-    <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
-    <select :id="componentId" v-model="value" :disabled="spec.frozen">
-      <option v-if="value.length == 0" disabled selected hidden value="">
-        {{ props.spec.input_hint }}
-      </option>
-      <option
-        v-for="element in spec.elements"
-        :key="JSON.stringify(element.name)"
-        :value="element.name"
-      >
-        {{ element.title }}
-      </option>
-    </select>
+    <label v-if="$props.spec.label" :for="componentId"
+      >{{ spec.label }}<CmkSpace size="small"
+    /></label>
+    <CmkDropdown
+      v-model:selected-option="value"
+      :options="props.spec.elements"
+      :input-hint="spec.input_hint || ''"
+      :disabled="spec.frozen"
+      :component-id="componentId"
+      :show-filter="props.spec.elements.length > 5"
+    />
   </div>
   <FormValidation :validation="validation"></FormValidation>
 </template>

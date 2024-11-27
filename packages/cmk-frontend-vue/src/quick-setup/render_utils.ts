@@ -13,18 +13,10 @@ import type {
   ComponentSpec,
   StageData
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
-import type { StageButtonSpec, VnodeOrNull } from './components/quick-setup/quick_setup_types'
+import type { QuickSetupStageAction, VnodeOrNull } from './components/quick-setup/quick_setup_types'
+import type { QSAction } from './rest_api_types'
 
 export type UpdateCallback = (value: StageData) => void
-
-export interface ButtonDefiner {
-  next: (label: string) => StageButtonSpec
-  prev: (label: string) => StageButtonSpec
-  save: (buttonId: string, label: string) => StageButtonSpec
-}
-
-type Callback = () => void
-type SaveCallback = (buttonId: string) => void
 
 /**
  * Renders a component for the recap section of a completed stage
@@ -66,38 +58,30 @@ export const renderContent = (
   )
 }
 
-export const defineButtons = (
-  nextStageCallback: Callback,
-  prevStageCallback: Callback,
-  saveCallback: SaveCallback
-): ButtonDefiner => {
-  const next = (label: string): StageButtonSpec => {
-    return {
-      label,
-      variant: 'next',
-      action: nextStageCallback
-    }
-  }
+export enum ActionType {
+  Next = 'next',
+  Prev = 'prev',
+  Save = 'save'
+}
 
-  const prev = (label: string): StageButtonSpec => {
-    return {
-      label,
-      variant: 'prev',
-      action: prevStageCallback
-    }
-  }
+type QuickSetupSimpleCallback = () => void
+type QuickSetupIdCallback = (id: string) => void
+type QuickSetupCallback = QuickSetupSimpleCallback | QuickSetupIdCallback
 
-  const save = (buttonId: string, label: string): StageButtonSpec => {
-    return {
-      label,
-      variant: 'save',
-      action: () => saveCallback(buttonId)
-    }
-  }
+export const processActionData = (
+  actionType: ActionType,
+  actionData: QSAction,
+  callback: QuickSetupCallback
+): QuickSetupStageAction => {
+  const clb: () => void = (
+    actionData?.id ? () => callback(actionData.id!) : callback
+  ) as QuickSetupSimpleCallback
 
   return {
-    next,
-    prev,
-    save
+    label: actionData.button.label,
+    ariaLabel: actionData.button.aria_label || actionData.button.label,
+    waitLabel: actionData.load_wait_label,
+    variant: actionType,
+    action: clb
   }
 }

@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from contextlib import suppress
 
 from cmk.gui import hooks
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
@@ -31,17 +29,15 @@ def register(job_registry: BackgroundJobRegistry) -> None:
 
 
 def trigger_spec_generation_in_background(user_id: str | None) -> None:
-    job = SpecGeneratorBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        job.start(
-            _generate_spec_in_background_job,
-            InitialStatusArgs(
-                title=SpecGeneratorBackgroundJob.gui_title(),
-                stoppable=False,
-                lock_wato=False,
-                user=user_id,
-            ),
-        )
+    SpecGeneratorBackgroundJob().start(
+        _generate_spec_in_background_job,
+        InitialStatusArgs(
+            title=SpecGeneratorBackgroundJob.gui_title(),
+            stoppable=False,
+            lock_wato=False,
+            user=user_id,
+        ),
+    )
 
 
 class SpecGeneratorBackgroundJob(BackgroundJob):

@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
+
+check_info = {}
 
 
 def parse_seh_ports(string_table):
@@ -40,6 +40,7 @@ def check_seh_ports(item, params, parsed):
 
 
 check_info["seh_ports"] = LegacyCheckDefinition(
+    name="seh_ports",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1229.1.1"),
     fetch=[
         # format taken from SEH-PSRV-MIB v1.167 (2021.10.15)

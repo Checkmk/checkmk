@@ -8,14 +8,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def parse_jolokia_jvm_threading(string_table):
@@ -69,6 +70,7 @@ def check_jolokia_jvm_threading(item, params, parsed):
 
 
 check_info["jolokia_jvm_threading"] = LegacyCheckDefinition(
+    name="jolokia_jvm_threading",
     parse_function=parse_jolokia_jvm_threading,
     service_name="JVM %s Threading",
     discovery_function=discover_jolokia_jvm_threading,
@@ -117,6 +119,7 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
 
 
 check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
+    name="jolokia_jvm_threading_pool",
     service_name="JVM %s",
     sections=["jolokia_jvm_threading"],
     discovery_function=discover_jolokia_jvm_threading_pool,

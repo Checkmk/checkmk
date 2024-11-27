@@ -15,6 +15,6 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
 ) -> None:
-    config_domain_registry.register(ConfigDomainDistributedPiggyback)
+    config_domain_registry.register(ConfigDomainDistributedPiggyback())
     config_variable_group_registry.register(ConfigVariableGroupDistributedPiggyback)
     config_variable_registry.register(ConfigVariableEnable)

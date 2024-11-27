@@ -13,9 +13,7 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TypeVar
-
-from six import ensure_str
+from typing import Any, cast, Literal, TypeVar
 
 from cmk.ccc.store import (
     acquire_lock,
@@ -28,8 +26,6 @@ from cmk.ccc.store import (
 )
 
 import cmk.utils.paths
-from cmk.utils.config_validation_layer.users.contacts import validate_contacts
-from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.user import UserId
@@ -41,7 +37,14 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
+from cmk.gui.type_defs import (
+    SessionInfo,
+    TwoFactorCredentials,
+    UserContactDetails,
+    UserDetails,
+    Users,
+    UserSpec,
+)
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
@@ -51,7 +54,7 @@ from cmk.crypto.password import Password
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
 from ._user_attribute import get_user_attributes
-from ._user_spec import add_internal_attributes
+from ._user_spec import add_internal_attributes, validate_contact_details, validate_users_details
 
 T = TypeVar("T")
 
@@ -123,16 +126,16 @@ def get_authserials_lines() -> list[str]:
         return f.readlines()
 
 
-def load_users_uncached(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users_uncached(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
 @request_memoize()
-def load_users(lock: bool = False, skip_validation: bool = False) -> Users:
-    return _load_users(lock, skip_validation)
+def load_users(lock: bool = False) -> Users:
+    return _load_users(lock)
 
 
-def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # pylint: disable=too-many-branches
+def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -142,11 +145,11 @@ def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # 
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
     # ? exact type of keys and items returned from load_mk_file seems to be unclear
-    contacts = load_contacts(skip_validation)
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_multisite_users(skip_validation)
+    users = load_multisite_users()
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -157,7 +160,9 @@ def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # 
     # far as possible.
     for uid, contact in contacts.items():
         if (uid := UserId(uid)) not in result:
-            result[uid] = contact
+            # making the use of cast since we are handling a legacy support case
+            user_profile: UserSpec = cast(UserSpec, contact)
+            result[uid] = user_profile
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
             result[uid]["password"] = password_hashing.PasswordHash("")
@@ -238,22 +243,28 @@ def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # 
     return result
 
 
-def _merge_users_and_contacts(users: dict[str, Any], contacts: dict[str, Any]) -> Users:
+def _merge_users_and_contacts(
+    users: dict[str, UserDetails], contacts: dict[str, UserContactDetails]
+) -> Users:
     result: Users = {}
     for uid, user in users.items():
-        # Transform user IDs which were stored with a wrong type
-        uid = ensure_str(uid)  # pylint: disable= six-ensure-str-bin-call
+        profile: dict[str, object] = {}
+        if (contact := contacts.get(uid)) is not None:
+            profile.update(contact)
 
-        profile = contacts.get(uid, {})
         profile.update(user)
-        result[UserId(uid)] = profile
 
         # Convert non unicode mail addresses
         if "email" in profile:
-            profile["email"] = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                profile["email"]
-            )
+            # TODO: according to UserDetails & UserContactDetails, email can only come from
+            #  UserContactDetails. We keep this just in case UserDetails is incomplete and perform
+            #  the cast to str. Once verified, the condition can be switched to
+            #  `if "email" in contact`.
+            email = cast(str, profile["email"])
+            profile["email"] = email
 
+        # see TODO in UserSpec why the cast is currently necessary
+        result[UserId(uid)] = cast(UserSpec, profile)
     return result
 
 
@@ -547,8 +558,8 @@ def write_contacts_and_users_file(
         }
 
     if not skip_validation:
-        validate_users(users)
-        validate_contacts(contacts)
+        validate_users_details(users)
+        validate_contact_details(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(
@@ -683,22 +694,16 @@ def convert_idle_timeout(value: str) -> int | bool | None:
         return None  # Invalid value -> use global setting
 
 
-def load_contacts(skip_contact_validation: bool = False) -> dict[str, Any]:
-    contacts = load_from_mk_file(_contacts_filepath(), "contacts", {})
-    if not skip_contact_validation:
-        validate_contacts(contacts)
-    return contacts
+def load_contacts() -> dict[str, UserContactDetails]:
+    return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
 
 
-def load_multisite_users(skip_user_validation: bool = False) -> dict[str, Any]:
-    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
-    if not skip_user_validation:
-        validate_users(users)
-    return users
+def load_multisite_users() -> dict[str, UserDetails]:
+    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:

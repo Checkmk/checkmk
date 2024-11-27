@@ -10,7 +10,6 @@ REPO_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev
 
 cp \
     "${REPO_ROOT}/defines.make" \
-    "${REPO_ROOT}/static_variables.bzl" \
     "${REPO_ROOT}/package_versions.bzl" \
     "${REPO_ROOT}/.bazelversion" \
     "${REPO_ROOT}/omd/strip_binaries" \

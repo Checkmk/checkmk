@@ -36,3 +36,7 @@ Note that Bandit is picky about the exact format.
 | `BNS:ff2c84` | `B411` | The xmlrpc submodule version being used is safe to xml attacks. |
 | `BNS:0b0eac` | `B113` | The timeout will be enforced by the executor process for special agents and active checks (CMK-18517). |
 | `BNS:f159c1` | `B507` | The AutoAdd policy is used, which is the human default. Also the host keys are persisted |
+| `BNS:fa3c6c` | `B608` | The inputs to the SQL expression are controlled by the script, not by the user. |
+| `BNS:6b6392` | `B608` | The inputs have been parameterized and controlled. |
+| `BNS:666c0d` | `B608` | This case is not truly an SQL injection; it is a command injection that is already being addressed. |
+| `BNS:d840de` | `B608` | Removing backticks from user input make sure the input can't escape from enclosing backtick. Bigquery treat `{tableid}` as an identifier rather than part of SQL syntax. |

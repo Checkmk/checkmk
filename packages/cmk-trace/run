@@ -6,6 +6,8 @@
 set -e
 
 JOBS=6
+readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+readonly ALL_LINTERS=mypy,ruff,bandit
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -19,10 +21,8 @@ usage() {
     echo "  -c, --clean             remove artifacts first"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -m, --mypy              run mypy"
-    echo "  -r, --ruff              run ruff linter"
-    echo "  -B, --bandit            run bandit"
-    echo "  -a, --all               shortcut for -u -F -m -p -B -C"
+    echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -a, --all               shortcut for -u -F -l all"
     echo "  -f, --format            format sources"
     echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -40,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cuFmprBafDj:h' --long 'clean,unit-tests,check-format,mypy,ruff,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cuFl:afDj:h' --long 'clean,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -52,32 +52,27 @@ parse_options() {
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
-                continue
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
                 shift
-                continue
                 ;;
             '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
-                continue
                 ;;
-            '-m' | '--mypy')
-                RUN_MYPY=yes
-                shift
-                continue
-                ;;
-            '-r' | '--ruff')
-                RUN_RUFF=yes
-                shift
-                continue
-                ;;
-            '-B' | '--bandit')
-                RUN_BANDIT=yes
-                shift
-                continue
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
                 ;;
             '-a' | '--all')
                 RUN_UNIT_TESTS=yes
@@ -86,22 +81,18 @@ parse_options() {
                 RUN_RUFF=yes
                 RUN_BANDIT=yes
                 shift
-                continue
                 ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
-                continue
                 ;;
             '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
-                continue
                 ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
-                continue
                 ;;
             '-h' | '--help')
                 usage
@@ -119,26 +110,13 @@ parse_options() {
     readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
-run_pipenv() {
-    PIPENV_CACHE_DIR="$(pwd)/.cache" \
-    PIPENV_VENV_IN_PROJECT=true \
-    PIPENV_NOSPIN=true \
-    PIPENV_HIDE_EMOJIS=true \
-    PIPENV_NO_INHERIT=true \
-    PIPENV_PIPFILE="$(pwd)/Pipfile" \
-    PIPENV_IGNORE_VIRTUALENVS=1 \
-        pipenv "$@"
-}
-
 setup_venv() {
     test "${SETUP_VENV_RAN}" = "yes" && return
-    # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
-    # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
-    run_pipenv sync --dev >/dev/null
-    run_pipenv clean
-    # poor man's "activate", but without any danger of naming clashes
-    PATH="$(pwd)/.venv/bin:$PATH"
-    hash -r
+    # TODO: Let rules_uv know about our toolchain... https://github.com/theoremlp/rules_uv/issues/163
+    # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
+    CC="gcc" ${BAZEL_CMD} run //:create_venv
+    # shellcheck source=/dev/null
+    source "$(bazel info workspace)"/.venv_uv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
@@ -149,7 +127,7 @@ run_clean() {
 
 run_unit_tests() {
     setup_venv
-    pytest
+    pytest -p no:opentelemetry
 }
 
 run_check_format() {

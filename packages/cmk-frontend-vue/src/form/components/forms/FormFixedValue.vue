@@ -15,17 +15,14 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-const [validation, _value] = useValidation<unknown>(
+const [validation] = useValidation<unknown>(
   data,
   props.spec.validators,
   () => props.backendValidation
 )
 
 const fixedValue = computed(() => {
-  if (props.spec.label != null) {
-    return props.spec.label
-  }
-  return props.spec.value
+  return props.spec.label === null ? props.spec.value : props.spec.label
 })
 </script>
 

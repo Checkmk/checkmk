@@ -29,7 +29,7 @@ constexpr std::string_view kCmdLineAsDaemon{"daemon"};
 constexpr std::string_view kCmdLinePort{"-P"};
 constexpr std::string_view kCmdLineChannel{"--agent-channel"};
 constexpr std::string_view kCmdLineVersion{"-V"};
-constexpr std::string_view kCmdLineStatus{"status --json"};
+constexpr std::string_view kCmdLineStatus{"status --json --no-query-remote"};
 
 constexpr std::string_view kCmdMailSlotPrefix{"ms"};
 constexpr std::string_view kCmdIpPrefix{"ip"};

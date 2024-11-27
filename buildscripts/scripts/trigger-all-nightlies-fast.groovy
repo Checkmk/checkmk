@@ -9,8 +9,8 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def editions = versioning.get_editions();
 
-    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 12) {
-        // build only enterprise on high noon
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
+        // build only enterprise on high noon or a little bit later
         editions = ["enterprise"];
     }
 

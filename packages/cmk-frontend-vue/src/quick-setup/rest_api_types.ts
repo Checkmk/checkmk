@@ -6,34 +6,59 @@
 import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { ValidationMessages } from '@/form'
 
+export interface QSStageButton {
+  label: string
+  aria_label?: string | null
+}
+
+export interface QSActionButton extends QSStageButton {
+  id?: string | null
+}
+
+export interface QSAction {
+  id?: string
+  button: QSStageButton
+  load_wait_label: string
+}
+
 /**
  * Common stage structure
  */
 export interface QSStageStructure {
   components: ComponentSpec[]
-  button_label: string
+  actions: QSAction[]
+  prev_button?: QSActionButton
 }
 
-/**
- * Save button
- */
-export interface QSCompleteButton {
-  id: string
-  label: string
-}
-
-/**
- * Response from the API when initializing the quick setup
- */
-export interface QSInitializationResponse {
+interface QSCommonInitializationResponse {
   quick_setup_id: string
+  guided_mode_string: string
+  overview_mode_string: string
+  actions: QSAction[]
+
+  /** previous stage button for save stage */
+  prev_button: QSActionButton
+}
+
+/**
+ * Response from the API when initializing the quick setup when in guided mode
+ */
+export interface QSInitializationResponse extends QSCommonInitializationResponse {
   overviews: QSOverviewSpec[]
   stage: {
     stage_id: number
     stage_recap: ComponentSpec[]
     next_stage_structure: QSStageStructure
   }
-  complete_buttons: QSCompleteButton[]
+}
+
+interface QSStage extends QSOverviewSpec, QSStageStructure {}
+
+/**
+ * Response from the API when initializing the quick setup when in overview mode
+ */
+export interface QSAllStagesResponse extends QSCommonInitializationResponse {
+  stages: QSStage[]
 }
 
 /**
@@ -56,6 +81,7 @@ interface QSStageRequest {
  */
 export interface QSValidateStagesRequest {
   quick_setup_id: string
+  stage_action_id?: string
   stages: QSStageRequest[]
 }
 
@@ -76,6 +102,10 @@ export interface QsStageValidationError {
   stage_errors: string[]
 }
 
+interface QsStageValidationIndexError extends QsStageValidationError {
+  stage_index?: number | null
+}
+
 export interface RestApiError {
   type: string
 }
@@ -83,6 +113,12 @@ export interface RestApiError {
 export interface ValidationError extends RestApiError, QsStageValidationError {
   type: 'validation'
 }
+
+export interface AllStagesValidationError extends RestApiError, QsStageValidationError {
+  type: 'validation_all_stages'
+  all_stage_errors: QsStageValidationIndexError[]
+}
+
 export interface GeneralError extends RestApiError {
   type: 'general'
   general_error: string

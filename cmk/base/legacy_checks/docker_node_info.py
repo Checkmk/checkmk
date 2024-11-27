@@ -6,11 +6,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.lib.docker import NodeInfoSection
+
+check_info = {}
 
 
 def discover_docker_node_info(section: NodeInfoSection) -> Iterable[tuple[None, dict]]:
@@ -27,6 +27,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 
 
 check_info["docker_node_info"] = LegacyCheckDefinition(
+    name="docker_node_info",
     service_name="Docker node info",
     discovery_function=discover_docker_node_info,
     check_function=check_docker_node_info,
@@ -61,6 +62,7 @@ def check_docker_node_containers(_no_item, params, parsed):
 
 
 check_info["docker_node_info.containers"] = LegacyCheckDefinition(
+    name="docker_node_info_containers",
     service_name="Docker containers",
     sections=["docker_node_info"],
     discovery_function=discover_docker_node_info,

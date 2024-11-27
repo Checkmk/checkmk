@@ -32,6 +32,7 @@ def test_hooks(site: Site) -> None:
         "TMPFS",
         "TRACE_SEND",
         "TRACE_SEND_TARGET",
+        "TRACE_SERVICE_NAMESPACE",
         "RABBITMQ_PORT",
         "RABBITMQ_ONLY_FROM",
         "RABBITMQ_DIST_PORT",
@@ -51,6 +52,11 @@ def test_hooks(site: Site) -> None:
             "TRACE_JAEGER_ADMIN_PORT",
         ]
 
-    installed_hooks = os.listdir(os.path.join(site.root, "lib/omd/hooks"))
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+        hooks += [
+            "OPENTELEMETRY_COLLECTOR",
+        ]
+
+    installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)

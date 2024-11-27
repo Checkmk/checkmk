@@ -13,12 +13,9 @@
 
 class NebDowntime : public IDowntime {
 public:
-    explicit NebDowntime(const Downtime &downtime)
-        : downtime_{downtime}
-        , host_{NebHost{*downtime_._host}}
-        , service_{downtime_._service == nullptr
-                       ? nullptr
-                       : std::make_unique<NebService>(*downtime_._service)} {}
+    NebDowntime(const Downtime &downtime, const IHost &host,
+                const IService *service)
+        : downtime_{downtime}, host_{host}, service_{service} {}
 
     [[nodiscard]] int32_t id() const override { return downtime_._id; }
 
@@ -71,14 +68,12 @@ public:
 
     [[nodiscard]] const IHost &host() const override { return host_; }
 
-    [[nodiscard]] const IService *service() const override {
-        return service_ ? service_.get() : nullptr;
-    }
+    [[nodiscard]] const IService *service() const override { return service_; }
 
 private:
     const Downtime &downtime_;
-    const NebHost host_;
-    const std::unique_ptr<const IService> service_;
+    const IHost &host_;
+    const IService *service_;
 };
 
 #endif  // NebDowntime_h

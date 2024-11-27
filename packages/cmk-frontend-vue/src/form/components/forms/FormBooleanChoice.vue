@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { BooleanChoice } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
-import { useId } from '@/form/utils'
+import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const props = defineProps<{
   spec: BooleanChoice
@@ -20,14 +20,13 @@ const [validation, value] = useValidation<boolean>(
   props.spec.validators,
   () => props.backendValidation
 )
-
-const componentId = useId()
 </script>
 
 <template>
-  <span class="checkbox">
-    <input :id="componentId" v-model="value" type="checkbox" />
-    <label :for="componentId">{{ props.spec.label }}</label>
+  <span class="checkbox form-boolean-choice">
+    <CmkCheckbox v-model="value" :label="spec.label ?? ''" />
   </span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped></style>

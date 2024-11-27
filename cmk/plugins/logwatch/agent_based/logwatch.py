@@ -79,7 +79,9 @@ def discover_logwatch_single(
     section: logwatch.Section,
 ) -> DiscoveryResult:
     _groups, singles = _discovery_make_groups(params, section)
-    yield from (Service(item=item) for item in singles)
+    yield from (
+        Service(item=item, labels=logwatch.NEVER_DISCOVER_SERVICE_LABELS) for item in singles
+    )
 
 
 def discover_logwatch_groups(
@@ -88,7 +90,11 @@ def discover_logwatch_groups(
 ) -> DiscoveryResult:
     groups, _singles = _discovery_make_groups(params, section)
     yield from (
-        Service(item=group.name, parameters={"group_patterns": sorted(group.patterns)})
+        Service(
+            item=group.name,
+            parameters={"group_patterns": sorted(group.patterns)},
+            labels=logwatch.NEVER_DISCOVER_SERVICE_LABELS,
+        )
         for group in groups
     )
 

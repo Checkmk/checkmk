@@ -55,8 +55,8 @@ def get_domains():
     domain_collection = {}
     for this_domain_id, this_domain in cursor.fetchall():
         cursor2.execute(
-            "SELECT param, value FROM BackupsSettings "
-            "WHERE id = %d AND type = 'domain'" % this_domain_id
+            "SELECT param, value FROM BackupsSettings WHERE id = %s AND type = 'domain'",
+            (int(this_domain_id),),
         )
         params = dict(cursor2.fetchall())
         domain_collection[this_domain] = params

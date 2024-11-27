@@ -89,6 +89,7 @@ def main() {
                 MAKE_TARGET: make_target,
                 BRANCH: branch_name,
                 cmk_version: cmk_version_rc_aware,
+                OTEL_EXPORTER_OTLP_ENDPOINT: "",
             );
         }
     }

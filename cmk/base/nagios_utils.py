@@ -14,7 +14,8 @@ from cmk.utils.log import console
 
 def print_(txt: str) -> None:
     with suppress(IOError):
-        print(txt, end="", flush=True, file=sys.stdout)
+        sys.stdout.write(txt)
+        sys.stdout.flush()
 
 
 def do_check_nagiosconfig() -> bool:
@@ -37,5 +38,6 @@ def do_check_nagiosconfig() -> bool:
 
     print_("ERROR:\n")
     with suppress(IOError):
-        print(completed_process.stdout, end="", flush=True, file=sys.stderr)
+        sys.stderr.write(completed_process.stdout)
+        sys.stdout.flush()
     return False

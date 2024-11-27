@@ -4,18 +4,43 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, provide, onMounted, onBeforeUnmount } from 'vue'
 
 import QuickSetupStage from './QuickSetupStage.vue'
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
 import type { QuickSetupProps } from './quick_setup_types'
 
-const props = withDefaults(defineProps<QuickSetupProps>(), {
-  mode: 'guided'
-})
+import { getWidget } from './widgets/utils'
+import { quickSetupGetWidgetKey } from './utils'
+provide(quickSetupGetWidgetKey, getWidget)
+
+const props = defineProps<QuickSetupProps>()
 
 const numberOfStages = computed(() => props.regularStages.length)
-const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
+const showSaveStage = computed(
+  () => props.currentStage === numberOfStages.value || props.mode.value === 'overview'
+)
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBrowserDialog)
+  // The "old" world sets the title to "Reloading..." if a reload is
+  // triggered. This would lead to a wrong title in case the user clicks
+  // "Cancel" in the browser dialog
+  document.querySelectorAll('a.title').forEach((link) => {
+    link.setAttribute('onclick', 'document.location.reload();')
+  })
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBrowserDialog)
+})
+
+function handleBrowserDialog(event: BeforeUnloadEvent) {
+  if (props.preventLeaving) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
 </script>
 
 <template>
@@ -26,11 +51,11 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
       :index="index"
       :current-stage="currentStage"
       :number-of-stages="numberOfStages"
-      :mode="props.mode"
+      :mode="props.mode.value"
       :loading="loading"
       :title="stg.title"
       :sub_title="stg.sub_title || null"
-      :buttons="stg.buttons || []"
+      :actions="stg.actions || []"
       :content="stg.content || null"
       :recap-content="stg.recapContent || null"
       :errors="stg.errors"
@@ -38,15 +63,15 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
     />
   </ol>
   <QuickSetupSaveStage
-    v-if="saveStage && isSaveStage"
+    v-if="saveStage && showSaveStage"
     :index="numberOfStages"
     :current-stage="currentStage"
     :number-of-stages="numberOfStages"
-    :mode="props.mode"
+    :mode="props.mode.value"
     :loading="loading"
     :content="saveStage.content || null"
     :errors="saveStage.errors || []"
-    :buttons="saveStage.buttons || []"
+    :actions="saveStage.actions || []"
   />
 </template>
 

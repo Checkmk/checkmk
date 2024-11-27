@@ -7,7 +7,6 @@ import re
 from typing import Type
 
 import pytest
-from faker import Faker
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
@@ -38,10 +37,10 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
 
 
 @pytest.mark.parametrize(
-    "create_host_using_agent_dump, dashboard_class, dashlets_expected_row_count",
+    "hosts, dashboard_class, dashlets_expected_row_count",
     [
         pytest.param(
-            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
+            "linux_hosts",
             LinuxHostsDashboard,
             {
                 "Host statistics": 0,
@@ -57,7 +56,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
             id="linux_dashboard",
         ),
         pytest.param(
-            ("windows-2.3.0p10", [f"{Faker().hostname()}"]),
+            "windows_hosts",
             WindowsHostsDashboard,
             {
                 "Host statistics": 0,
@@ -69,23 +68,24 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
             id="windows_dashboard",
         ),
     ],
-    indirect=["create_host_using_agent_dump"],
 )
 def test_host_dashboard(
     dashboard_page: Dashboard,
     dashboard_class: Type[LinuxHostsDashboard | WindowsHostsDashboard],
     dashlets_expected_row_count: dict[str, int],
-    create_host_using_agent_dump: list[str],
+    hosts: str,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test 'Linux Hosts' and 'Windows Hosts' dashboards.
 
     Test that when agent data is available, the dashlets on the 'Linux Hosts'
     and 'Windows Hosts' pages have no errors and contain data.
     """
+    hosts_count = len(request.getfixturevalue(hosts))
     not_empty_dashboards = dashlets_expected_row_count.keys()
     hosts_dashboard_page = dashboard_class(dashboard_page.page)
 
-    hosts_dashboard_page.check_no_errors(timeout=5000)
+    hosts_dashboard_page.check_no_errors()
 
     # Can be moved down after CMK-18863 is fixed
     logger.info("Check that scatterplots are visible on dashlets")
@@ -106,7 +106,7 @@ def test_host_dashboard(
             expect(
                 hosts_dashboard_page.dashlet_table_rows(dashlet_title),
                 f"Table in dashlet '{dashlet_title}' is empty",
-            ).to_have_count(dashlets_expected_row_count[dashlet_title])
+            ).to_have_count(dashlets_expected_row_count[dashlet_title] * hosts_count)
 
     logger.info("Check that dashlets with chart contain data")
     for dashlet_title in hosts_dashboard_page.chart_dashlets:
@@ -159,32 +159,13 @@ def test_top_list_dashlets_settings(
     ).to_contain_text(re.compile(f"{expected_metric}$"))
 
 
-@pytest.mark.parametrize(
-    "create_host_using_agent_dump",
-    [
-        pytest.param(
-            (
-                "linux-2.4.0-2024.08.27",
-                [
-                    f"{Faker().hostname()}",
-                    f"{Faker().hostname()}",
-                    f"{Faker().hostname()}",
-                ],
-            ),
-            id="cpu_utilization_top_list_dashlet_filters",
-        ),
-    ],
-    indirect=["create_host_using_agent_dump"],
-)
-def test_dashlet_filters(
-    dashboard_page: Dashboard, create_host_using_agent_dump: list[str]
-) -> None:
+def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
     """Test that applying filters for 'Top 10: CPU utilization' dashlet works correctly.
 
     Test that after applying 'Site', 'Host label' and both filters together in dashlet settings,
     the dashlet table contains all expected hosts.
     """
-    hosts_count = len(create_host_using_agent_dump)
+    hosts_count = len(linux_hosts)
     dashlet_title = "Top 10: CPU utilization"
     linux_hosts_dashboard_page = LinuxHostsDashboard(dashboard_page.page)
 
@@ -223,29 +204,13 @@ def test_dashlet_filters(
     edit_element_top_list_page.save_button.click()
 
 
-@pytest.mark.parametrize(
-    "create_host_using_agent_dump",
-    [
-        pytest.param(
-            (
-                "linux-2.4.0-2024.08.27",
-                [
-                    f"{Faker().hostname()}",
-                ],
-            ),
-            id="total_execution_time_top_list",
-        ),
-    ],
-    indirect=["create_host_using_agent_dump"],
-)
-def test_add_top_list_dashlet(
-    dashboard_page: Dashboard, create_host_using_agent_dump: list[str]
-) -> None:
+def test_add_top_list_dashlet(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
     """Test 'Top list' dashlet for 'Total execution time' metric can be added to the dashboard.
 
     Add 'Top list' dashlet for 'Total execution time' metric to the 'Linux Hosts' dashboard. Check
     that the dashlet is visible and not empty.
     """
+    hosts_count = len(linux_hosts)
     metric = "Total execution time"
     linux_hosts_dashboard_page = LinuxHostsDashboard(dashboard_page.page)
     linux_hosts_dashboard_page.enter_layout_mode()
@@ -259,7 +224,9 @@ def test_add_top_list_dashlet(
 
     logger.info("Check that new dashlet is visible and not empty")
     expect(linux_hosts_dashboard_page.dashlet(f"Top 10: {metric}")).to_be_visible()
-    expect(linux_hosts_dashboard_page.dashlet_table_rows(f"Top 10: {metric}")).to_have_count(1)
+    expect(linux_hosts_dashboard_page.dashlet_table_rows(f"Top 10: {metric}")).to_have_count(
+        hosts_count
+    )
 
     logger.info("Delete 'Top list' dashlet for '%s' metric", metric)
     linux_hosts_dashboard_page.delete_dashlet_button(f"Top 10: {metric}").click()

@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 
 import logging
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -47,7 +47,6 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._active_check import _check_host_labels, _check_service_lists
-from cmk.checkengine.discovery._autochecks import DiscoveredService
 from cmk.checkengine.discovery._autodiscovery import (
     _get_post_discovery_autocheck_services,
     _group_by_transition,
@@ -59,7 +58,6 @@ from cmk.checkengine.discovery._autodiscovery import (
     ServicesTableEntry,
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
-from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
@@ -73,7 +71,6 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.plugin_classes import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -83,12 +80,21 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import ConfigCache
 
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection
+from cmk.plugins.collection.agent_based.df_section import agent_section_df
+from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
+from cmk.plugins.collection.agent_based.labels import agent_section_labels
+from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
+from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
 
-def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
+
+def _as_plugin(plugin: AgentSection | SimpleSNMPSection) -> SectionPlugin:
     return SectionPlugin(
-        supersedes=plugin.supersedes,
+        supersedes=set()
+        if plugin.supersedes is None
+        else {SectionName(n) for n in plugin.supersedes},
         parse_function=plugin.parse_function,
-        parsed_section_name=plugin.parsed_section_name,
+        parsed_section_name=ParsedSectionName(plugin.parsed_section_name or plugin.name),
     )
 
 
@@ -590,13 +596,13 @@ def test__get_post_discovery_services(
     service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
-        DiscoveredService.item(entry.service) or ""
+        entry.service.newer.item or ""
         for entry in _get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
             result,
-            get_service_description=lambda *args: f"Test Description {args[-1]}",
+            get_service_description=lambda hn, entry: f"Test Description {entry.item}",
             settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
@@ -1011,7 +1017,7 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
-        find_service_description=lambda *args: f"Test Description {args[-1]}",
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
         discovery_mode=discovery_mode,
     )
 
@@ -1120,12 +1126,11 @@ def test__check_host_labels_changed() -> None:
     )
 
 
-@pytest.mark.usefixtures("fix_register")
-def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
-    # This test doesn't test much:
-    #  1. It concentrates on implementation details and private functions.
-    #  2. Because it tests private functions, it also copy-pastes a lot of
-    #     production code!
+def test__find_candidates(
+    monkeypatch: MonkeyPatch,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> None:
+    # plugins have been loaded by the fixture. Better: load the ones we need for this test
     config_cache = Scenario().apply(monkeypatch)
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
@@ -1143,8 +1148,8 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("kernel"), SectionName("uptime"))
+                    SectionName("kernel"): _as_plugin(agent_section_kernel),
+                    SectionName("uptime"): _as_plugin(agent_section_uptime),
                 },
             )
         ),
@@ -1165,66 +1170,16 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (
-                        SectionName("uptime"),
-                        SectionName("liebert_fans"),
-                        SectionName("mgmt_snmp_info"),
-                    )
+                    SectionName("uptime"): _as_plugin(agent_section_uptime),
+                    SectionName("liebert_fans"): _as_plugin(snmp_section_liebert_fans),
+                    SectionName("mgmt_snmp_info"): SectionPlugin(
+                        supersedes=set(),
+                        parsed_section_name=ParsedSectionName("mgmt_snmp_info"),
+                        parse_function=lambda x: x,
+                    ),
                 },
             )
         ),
-    }
-
-    preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
-    parsed_sections_of_interest = {
-        parsed_section_name
-        for plugin in preliminary_candidates
-        for parsed_section_name in plugin.sections
-    }
-
-    def __iter(
-        section_names: Iterable[ParsedSectionName],
-        providers: Mapping[HostKey, Provider],
-    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
-        for host_key, provider in providers.items():
-            # filter section names for sections that cannot be resolved
-            for section_name in (
-                section_name
-                for section_name in section_names
-                if provider.resolve(section_name) is not None
-            ):
-                yield host_key, section_name
-
-    resolved = tuple(__iter(parsed_sections_of_interest, providers))
-    assert _find_host_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.HOST
-        ),
-    ) == {
-        CheckPluginName("docker_container_status_uptime"),
-        CheckPluginName("if64"),
-        CheckPluginName("kernel"),
-        CheckPluginName("kernel_performance"),
-        CheckPluginName("kernel_util"),
-        CheckPluginName("uptime"),
-    }
-
-    assert _find_mgmt_plugins(
-        ((p.name, p.sections) for p in preliminary_candidates),
-        frozenset(
-            section_name
-            for host_key, section_name in resolved
-            if host_key.source_type is SourceType.MANAGEMENT
-        ),
-    ) == {
-        CheckPluginName("mgmt_docker_container_status_uptime"),
-        CheckPluginName("mgmt_if64"),
-        CheckPluginName("mgmt_liebert_fans"),
-        CheckPluginName("mgmt_uptime"),
     }
 
     assert find_plugins(
@@ -1324,8 +1279,11 @@ _expected_host_labels = [
 ]
 
 
-@pytest.mark.usefixtures("patch_omd_site", "fix_register")
-def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("patch_omd_site")
+def test_commandline_discovery(
+    monkeypatch: MonkeyPatch,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
+) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
@@ -1335,7 +1293,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     parser = CMKParser(
         config_cache.parser_factory(),
         checking_sections=lambda hostname: config_cache.make_checking_sections(
-            hostname, selected_sections=NO_SELECTION
+            agent_based_plugins, hostname, selected_sections=NO_SELECTION
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
@@ -1344,6 +1302,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     fetcher = CMKFetcher(
         config_cache,
         config_cache.fetcher_factory(),
+        agent_based_plugins,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         ip_address_of=config.ConfiguredIPLookup(
@@ -1361,9 +1320,14 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
+        section_plugins=SectionPluginMapper(
+            {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
+        ),
         section_error_handling=lambda *args, **kw: "error",
-        host_label_plugins=HostLabelPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
+        host_label_plugins=HostLabelPluginMapper(
+            ruleset_matcher=config_cache.ruleset_matcher,
+            sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
+        ),
         plugins=DiscoveryPluginMapper(ruleset_matcher=config_cache.ruleset_matcher),
         run_plugin_names=EVERYTHING,
         ignore_plugin=lambda *args, **kw: False,
@@ -1461,8 +1425,8 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         )
@@ -1562,8 +1526,8 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         ),
@@ -1603,8 +1567,8 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    section_name: _as_plugin(agent_based_register.get_section_plugin(section_name))
-                    for section_name in (SectionName("labels"), SectionName("df"))
+                    SectionName("labels"): _as_plugin(agent_section_labels),
+                    SectionName("df"): _as_plugin(agent_section_df),
                 },
             )
         ),
@@ -1641,7 +1605,7 @@ class DiscoveryTestCase(NamedTuple):
     on_cluster: ExpectedDiscoveryResultOnCluster
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "host_labels, expected_services",
     [
@@ -1812,7 +1776,7 @@ _discovery_test_cases = [
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(
     realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
@@ -1847,10 +1811,12 @@ def test__discover_host_labels_and_services_on_realhost(
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_realhost(
-    realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase
+    realhost_scenario: RealHostScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
 ) -> None:
     scenario = realhost_scenario
 
@@ -1862,7 +1828,13 @@ def test__perform_host_label_discovery_on_realhost(
         ),
         current=discover_host_labels(
             scenario.hostname,
-            HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
+            HostLabelPluginMapper(
+                ruleset_matcher=scenario.config_cache.ruleset_matcher,
+                sections={
+                    **agent_based_plugins.agent_sections,
+                    **agent_based_plugins.snmp_sections,
+                },
+            ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
         ),
@@ -1877,7 +1849,7 @@ def test__perform_host_label_discovery_on_realhost(
     assert host_label_result.present == discovery_test_case.on_realhost.expected_kept_labels
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
@@ -1910,10 +1882,11 @@ def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> Non
     }
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_cluster(
-    cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
+    cluster_scenario: ClusterScenario,
+    discovery_test_case: DiscoveryTestCase,
+    agent_based_plugins: agent_based_register.AgentBasedPlugins,
 ) -> None:
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes(scenario.parent)
@@ -1925,7 +1898,13 @@ def test__perform_host_label_discovery_on_cluster(
         discovered_host_labels={
             node: discover_host_labels(
                 node,
-                HostLabelPluginMapper(ruleset_matcher=scenario.config_cache.ruleset_matcher),
+                HostLabelPluginMapper(
+                    ruleset_matcher=scenario.config_cache.ruleset_matcher,
+                    sections={
+                        **agent_based_plugins.agent_sections,
+                        **agent_based_plugins.snmp_sections,
+                    },
+                ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
             )
@@ -1944,6 +1923,20 @@ def test__perform_host_label_discovery_on_cluster(
     assert host_label_result.old == discovery_test_case.on_cluster.expected_old_host_labels
     assert host_label_result.new == discovery_test_case.on_cluster.expected_new_host_labels
     assert kept_labels == discovery_test_case.on_cluster.expected_kept_labels
+
+
+class _AutochecksConfigDummy:
+    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
+        return False
+
+    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
+        return False
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return host_name
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+        return "desc"
 
 
 def test_get_node_services() -> None:
@@ -1968,14 +1961,7 @@ def test_get_node_services() -> None:
             for discovery_status in ("unchanged", "new")
         ],
     )
-    assert make_table(
-        host_name,
-        entries,
-        ignore_service=lambda *args, **kw: False,
-        ignore_plugin=lambda *args, **kw: False,
-        get_effective_host=lambda hn, *args, **kw: hn,
-        get_service_description=lambda *args, **kw: "desc",
-    ) == {
+    assert make_table(host_name, entries, autochecks_config=_AutochecksConfigDummy()) == {
         ServiceID(CheckPluginName("plugin_vanished"), item=None): ServicesTableEntry(
             transition="vanished",
             autocheck=DiscoveredItem[AutocheckEntry](

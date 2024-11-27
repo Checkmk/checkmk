@@ -88,6 +88,23 @@ def service_url_from_context(context: PluginNotificationContext) -> str:
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
+def graph_url_from_context(context: PluginNotificationContext) -> str:
+    base = _base_url(context)
+    view_url = base + "/check_mk/view.py?"
+    if context["WHAT"] == "HOST":
+        return (
+            view_url + f'siteopt={context["OMD_SITE"]}&'
+            f'view_name=host_graphs&'
+            f'host={context["HOSTNAME"]}'
+        )
+    return (
+        view_url + f'siteopt={context["OMD_SITE"]}&'
+        f'view_name=service_graphs&'
+        f'host={context["HOSTNAME"]}&'
+        f'service={context["SERVICEDESC"]}'
+    )
+
+
 def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",
@@ -140,9 +157,8 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
     elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += f"{varname}={value}\n"
-        html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
-            varname,
-            escape(value),
+        html_output += (
+            f"<tr><td class=varname>{varname}</td><td class=value>{escape(value)}</td></tr>\n"
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
@@ -231,21 +247,42 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 
 #################################################################################################
 # REST
-def retrieve_from_passwordstore(parameter: str) -> str:
-    values = parameter.split()
-
-    if len(values) == 2:
-        if values[0] == "store":
-            value = cmk.utils.password_store.extract(values[1])
+def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
+    if isinstance(parameter, list):
+        if "explicit_password" in parameter:
+            value: str | None = parameter[-1]
+        else:
+            value = cmk.utils.password_store.extract(parameter[-2])
             if value is None:
                 sys.stderr.write("Unable to retrieve password from passwordstore")
                 sys.exit(2)
-        else:
-            value = values[1]
     else:
-        value = values[0]
+        # old valuespec style
+        values = parameter.split()
 
+        if len(values) == 2:
+            if values[0] == "store":
+                value = cmk.utils.password_store.extract(values[1])
+                if value is None:
+                    sys.stderr.write("Unable to retrieve password from passwordstore")
+                    sys.exit(2)
+            else:
+                value = values[1]
+        else:
+            value = values[0]
+
+    assert value is not None
     return value
+
+
+def get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
+    """
+    Since 2.4 the passwords are stored in FormSpec format, this leads to
+    multiple keys in the notification context
+    """
+    source = context if context else os.environ
+    password_parameter_list = [source[k] for k in source if k.startswith(key)]
+    return retrieve_from_passwordstore(password_parameter_list)
 
 
 def post_request(

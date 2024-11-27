@@ -8,8 +8,7 @@ from zoneinfo import ZoneInfo
 
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
-
+from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.collection.agent_based.inv_if import inventory_if, parse_inv_if, SectionInvIf
 from cmk.plugins.lib import uptime
 from cmk.plugins.lib.inventory_interfaces import Interface

@@ -29,31 +29,31 @@ tracer = trace.get_tracer()
 # possibly a third time over the plug-in discovery mechanism.
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
-match cmk_version.edition(paths.omd_root):
+match edition := cmk_version.edition(paths.omd_root):
     case Edition.CEE:
         import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cee.registration.register()
+        cmk.gui.cee.registration.register(edition)
 
     case Edition.CME:
         import cmk.gui.cme.registration  # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cme.registration.register()
+        cmk.gui.cme.registration.register(edition)
 
     case Edition.CCE:
         import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cce.registration.register()
+        cmk.gui.cce.registration.register(edition)
 
     case Edition.CSE:
         import cmk.gui.cse.registration
 
-        cmk.gui.cse.registration.register()
+        cmk.gui.cse.registration.register(edition)
 
     case Edition.CRE:
         import cmk.gui.cre.registration
 
-        cmk.gui.cre.registration.register()
+        cmk.gui.cre.registration.register(edition)
 
     case _ as unreachable:
         assert_never(unreachable)
@@ -104,7 +104,6 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 
         for plugin_package_name in _plugin_package_names(main_module_name):
             if not _is_plugin_namespace(plugin_package_name):
-                logger.debug("  Skip loading plug-ins from %s", plugin_package_name)
                 continue
 
             logger.debug("  Importing plug-ins from %s", plugin_package_name)

@@ -6,13 +6,16 @@
 
 # mypy: disable-error-code="var-annotated"
 
+import re
+
 import dateutil.parser
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
@@ -52,6 +55,9 @@ def inventory_ibm_mq_queues(parsed):
         yield service_name, {}
 
 
+QTIME_PATTERN = re.compile(r"^([0-9]*),[\s]*([0-9]*)$")
+
+
 def check_ibm_mq_queues(item, params, parsed):
     if is_ibm_mq_service_vanished(item, parsed):
         return
@@ -88,9 +94,7 @@ def check_ibm_mq_queues(item, params, parsed):
 
     if "QTIME" in data:
         qtimes = data["QTIME"]
-        tuple_value = regex(r"^([0-9]*),[\s]*([0-9]*)$")
-        qtimes_match = tuple_value.match(qtimes)
-        if qtimes_match:
+        if qtimes_match := QTIME_PATTERN.match(qtimes):
             qtime_short = qtimes_match.group(1)
             qtime_long = qtimes_match.group(2)
             yield ibm_mq_get_qtime(qtime_short, "Qtime short", "qtime_short")
@@ -189,6 +193,7 @@ def ibm_mq_get_qtime(qtime, label, key):
 
 
 check_info["ibm_mq_queues"] = LegacyCheckDefinition(
+    name="ibm_mq_queues",
     service_name="IBM MQ Queue %s",
     discovery_function=inventory_ibm_mq_queues,
     check_function=check_ibm_mq_queues,

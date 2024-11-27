@@ -8,10 +8,10 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, startswith
+
+check_info = {}
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
@@ -121,6 +121,7 @@ def discover_nimble_latency(parsed):
 
 
 check_info["nimble_latency"] = LegacyCheckDefinition(
+    name="nimble_latency",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
@@ -184,6 +185,7 @@ def discover_nimble_latency_write(parsed):
 
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
+    name="nimble_latency_write",
     service_name="Volume %s Write IO",
     sections=["nimble_latency"],
     discovery_function=discover_nimble_latency_write,

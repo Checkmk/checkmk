@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -22,7 +21,7 @@ class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.3.3"
+    expected: str = "v2.4.0"
 
 
 @dataclass(frozen=True)
@@ -61,7 +60,6 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
-    MonitoringPlugin("check_ircd"),
     MonitoringPlugin("check_jabber"),
     MonitoringPlugin("check_ldap"),
     MonitoringPlugin("check_ldaps"),
@@ -149,7 +147,7 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
         plugin.binary_name == "check_mysql"
     )  # What? Why? Is printing the version dangerous?
 
-    cmd_line = [os.path.join(site.root, plugin.path, plugin.binary_name), plugin.cmd_line_option]
+    cmd_line = [(site.root / plugin.path / plugin.binary_name).as_posix(), plugin.cmd_line_option]
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert p.stdout and p.stderr  # for mypy

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
+
+check_info = {}
 
 
 def inventory_steelhead_connections(info):
@@ -74,6 +74,7 @@ def parse_steelhead_connections(string_table: StringTable) -> StringTable:
 
 
 check_info["steelhead_connections"] = LegacyCheckDefinition(
+    name="steelhead_connections",
     parse_function=parse_steelhead_connections,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(

@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.wmi import (
     inventory_wmi_table_instances,
     parse_wmi_table,
     wmi_yield_raw_counter,
 )
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_wmi_webservices(item, params, parsed):
@@ -24,6 +26,7 @@ def discover_wmi_webservices(p):
 
 
 check_info["wmi_webservices"] = LegacyCheckDefinition(
+    name="wmi_webservices",
     parse_function=parse_wmi_table,
     service_name="Web Service %s",
     discovery_function=discover_wmi_webservices,

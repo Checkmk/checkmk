@@ -12,11 +12,11 @@
 import re
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.brocade import DETECT_MLX
+
+check_info = {}
 
 
 def inventory_brocade_tm(info):
@@ -78,6 +78,7 @@ def parse_brocade_tm(string_table: StringTable) -> StringTable:
 
 
 check_info["brocade_tm"] = LegacyCheckDefinition(
+    name="brocade_tm",
     parse_function=parse_brocade_tm,
     detect=DETECT_MLX,
     fetch=SNMPTree(

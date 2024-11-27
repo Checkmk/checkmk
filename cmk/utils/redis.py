@@ -84,13 +84,12 @@ def query_redis(
             query_lock.acquire()
             pipeline.execute()
         elif blocking:
-            # Blocking was required, but timeout occurred
-            raise DataUnavailableException()
+            raise DataUnavailableException("Could not aquire lock in time")
         return query_callback()
     except MKTimeout:
         raise
     except Exception as e:
-        raise DataUnavailableException(e)
+        raise DataUnavailableException(e) from e
     finally:
         if query_lock.owned():
             query_lock.release()

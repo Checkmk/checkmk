@@ -42,7 +42,7 @@ old_version = CMKVersion(
 )
 
 
-def test_start_simple(checkmk: docker.models.containers.Container, version: CMKVersion) -> None:
+def test_start_simple(checkmk: docker.models.containers.Container) -> None:
     cmds = [p[-1] for p in checkmk.top()["Processes"]]
     assert "cron -f" in cmds
 
@@ -58,7 +58,7 @@ def test_start_simple(checkmk: docker.models.containers.Container, version: CMKV
     assert "APACHE_TCP_PORT: 5000" in output
     assert "MKEVENTD: on" in output
 
-    if version.is_raw_edition():
+    if version_from_env().is_raw_edition():
         assert "CORE: nagios" in output
     else:
         assert "CORE: cmc" in output
@@ -119,8 +119,8 @@ def test_start_execute_custom_command(checkmk: docker.models.containers.Containe
     assert output_bytes.decode("utf-8") == "1\n"
 
 
-def test_start_with_custom_command(client: docker.DockerClient, version: CMKVersion) -> None:
-    image, _build_logs = build_checkmk(client, version)
+def test_start_with_custom_command(client: docker.DockerClient) -> None:
+    image, _build_logs = build_checkmk(client, version_from_env())
     output = client.containers.run(
         image=image.id, detach=False, command=["bash", "-c", "echo 1"]
     ).decode("utf-8")
@@ -148,10 +148,10 @@ def test_start_setting_custom_timezone(client: docker.DockerClient) -> None:
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
     client: docker.DockerClient,
-    version: CMKVersion,
     caplog: LogCaptureFixture,
 ) -> None:
-    pkg_name = package_name(version)
+    pkg_version = version_from_env()
+    pkg_name = package_name(pkg_version)
     pkg_path = Path(build_path, pkg_name)
     pkg_path_sav = Path(build_path, f"{pkg_name}.sav")
     try:
@@ -159,9 +159,9 @@ def test_build_using_local_deb(
         pkg_path.write_bytes(b"")
         with pytest.raises(docker.errors.BuildError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
-            build_checkmk(client, version, prepare_pkg=False)
+            build_checkmk(client, pkg_version, prepare_pkg=False)
         os.unlink(pkg_path)
-        prepare_package(version)
+        prepare_package(pkg_version)
     finally:
         try:
             os.unlink(pkg_path)
@@ -173,7 +173,6 @@ def test_build_using_local_deb(
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(
     client: docker.DockerClient,
-    version: CMKVersion,
     caplog: LogCaptureFixture,
 ) -> None:
     key_name = "Check_MK-pubkey.gpg"
@@ -184,7 +183,7 @@ def test_build_using_local_gpg_pubkey(
         key_path.write_text("")
         with pytest.raises(docker.errors.BuildError):
             caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
-            build_checkmk(client, version)
+            build_checkmk(client, version_from_env())
     finally:
         os.unlink(key_path)
         os.rename(key_path_sav, key_path)
@@ -333,6 +332,7 @@ def test_http_access_login_screen(checkmk: docker.models.containers.Container) -
     assert 'name="_login"' in response.text, "Login field not found!"
 
 
+@pytest.mark.skip(reason="SaaS edition requires cognito config")
 def test_http_access_login_screen_saas(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
 
@@ -358,15 +358,16 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
     not git_tag_exists(old_version),
     reason=f"Test is skipped until we have {old_version} available as git tag",
 )
-def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
-    container_name = "%s-monitoring" % version.branch
+def test_update(client: docker.DockerClient) -> None:
+    pkg_version = version_from_env()
+    container_name = "%s-monitoring" % pkg_version.branch
 
     update_compatibility = versions_compatible(
-        Version.from_str(old_version.version), Version.from_str(version.version)
+        Version.from_str(old_version.version), Version.from_str(pkg_version.version)
     )
     assert (
         update_compatibility.is_compatible
-    ), f"Version {old_version} and {version} are incompatible, reason: {update_compatibility}"
+    ), f"Version {old_version} and {pkg_version} are incompatible, reason: {update_compatibility}"
 
     # 1. create container with old version and add a file to mark the pre-update state
     with start_checkmk(
@@ -386,14 +387,14 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
         # 4. create new container
         with start_checkmk(
             client,
-            version=version,
+            version=pkg_version,
             is_update=True,
             name=container_name,
             volumes_from=c_orig.id,
         ) as c_new:
             # 5. verify result
             c_new.exec_run(["omd", "version"], user="cmk")[1].decode("utf-8").endswith(
-                "%s\n" % version.omd_version()
+                "%s\n" % pkg_version.omd_version()
             )
             assert (
                 c_new.exec_run(

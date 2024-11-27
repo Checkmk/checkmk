@@ -15,7 +15,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
@@ -33,7 +32,12 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
-from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
+from cmk.gui.watolib.users import (
+    delete_users,
+    edit_users,
+    user_features_registry,
+    verify_password_policy,
+)
 
 from cmk.crypto.password import Password
 
@@ -97,19 +101,11 @@ def show_user(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=UserCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
-    include_links: bool = params["include_links"]
-    include_extensions: bool = params["include_extensions"]
-    users = [
-        serialize_user(
-            user_id, spec, include_links=include_links, include_extensions=include_extensions
-        )
-        for user_id, spec in load_users(False).items()
-    ]
+    users = [serialize_user(user_id, spec) for user_id, spec in load_users(False).items()]
     return serve_json(constructors.collection_object(domain_type="user_config", value=users))
 
 
@@ -148,7 +144,8 @@ def create_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": True,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 
@@ -164,7 +161,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
 def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
-    delete_users([username])
+    delete_users([username], user_features_registry.features().sites)
     return Response(status=204)
 
 
@@ -210,7 +207,8 @@ def edit_user(params: Mapping[str, Any]) -> Response:
                 "attributes": internal_attrs,
                 "is_new_user": False,
             }
-        }
+        },
+        user_features_registry.features().sites,
     )
     return serve_user(username)
 
@@ -233,18 +231,12 @@ def serve_user(user_id):
 def serialize_user(
     user_id: UserId,
     user_spec: UserSpec,
-    *,
-    include_links: bool = True,
-    include_extensions: bool = True,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_config",
         identifier=user_id,
         title=user_spec["alias"],
-        extensions=(
-            complement_customer(_internal_to_api_format(user_spec)) if include_extensions else None
-        ),
-        include_links=include_links,
+        extensions=complement_customer(_internal_to_api_format(user_spec)),
     )
 
 
@@ -313,7 +305,7 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
     if "icons_per_item" in internal_attrs:
         iia["icons_per_item"] = internal_attrs["icons_per_item"]
     if "show_mode" in internal_attrs:
-        iia["show_mode"] = internal_attrs["show_mode"]  # type: ignore[typeddict-item]
+        iia["show_mode"] = internal_attrs["show_mode"]
     if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 

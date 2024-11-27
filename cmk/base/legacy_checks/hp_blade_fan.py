@@ -13,11 +13,11 @@
 # '.1.3.6.1.4.1.232.22.2.3.1.3.1.11' => 'cpqRackCommonEnclosureFanCondition',
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
+
+check_info = {}
 
 # GENERAL MAPS:
 
@@ -58,6 +58,7 @@ def parse_hp_blade_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_blade_fan"] = LegacyCheckDefinition(
+    name="hp_blade_fan",
     parse_function=parse_hp_blade_fan,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(

@@ -213,32 +213,6 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         clients.Folder.delete(folder_name=folder_obj["id"])
 
 
-def test_openapi_list_folders_include_links(clients: ClientRegistry) -> None:
-    clients.Folder.create(parent="/", title="test_folder")
-    default_response = clients.Folder.get_all()
-    enabled_response = clients.Folder.get_all(include_links=True)
-    disabled_response = clients.Folder.get_all(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-def test_openapi_list_folders_include_extensions(clients: ClientRegistry) -> None:
-    clients.Folder.create(parent="/", title="test_folder")
-    default_response = clients.Folder.get_all()
-    enabled_response = clients.Folder.get_all(include_extensions=True)
-    disabled_response = clients.Folder.get_all(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
-
-
 def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
     folder_name = "my_folder"
     non_existing_site_name = "i_am_not_existing"
@@ -298,32 +272,6 @@ def test_openapi_hosts_in_folder(clients: ClientRegistry) -> None:
     clients.Folder.get_hosts("~")
 
 
-@pytest.mark.usefixtures("with_host")
-def test_openapi_hosts_in_folder_include_links(clients: ClientRegistry) -> None:
-    default_response = clients.Folder.get_hosts("~")
-    enabled_response = clients.Folder.get_hosts("~", include_links=True)
-    disabled_response = clients.Folder.get_hosts("~", include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_hosts_in_folder_include_extensions(clients: ClientRegistry) -> None:
-    default_response = clients.Folder.get_hosts("~")
-    enabled_response = clients.Folder.get_hosts("~", include_extensions=True)
-    disabled_response = clients.Folder.get_hosts("~", include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
-
-
 def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
@@ -360,15 +308,17 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=200,
     )
     hosts_ = resp.json["value"][0]["members"]["hosts"]["value"]
     assert len(hosts_) == 2
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert "hosts" not in resp.json["value"][0]["members"]
@@ -512,7 +462,7 @@ def test_openapi_show_folder_with_network_scan_result(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert resp.json["value"][0]["extensions"] == {
@@ -569,7 +519,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -579,7 +529,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -704,7 +654,7 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _ = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
         status=200,
     )
@@ -758,7 +708,7 @@ def test_openapi_folder_config_collections_recursive_list(
     response = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"parent": "~I", "recursive": "True"},
+        query_string={"parent": "~I", "recursive": "True"},
         status=200,
         headers={"Accept": "application/json"},
     )

@@ -6,10 +6,10 @@
 # "0=Off, 1=On in DI/DO mode or N=Count in DO counter mode"
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_iologik_register(info):
@@ -35,6 +35,7 @@ def parse_moxa_iologik_register(string_table: StringTable) -> StringTable:
 
 
 check_info["moxa_iologik_register"] = LegacyCheckDefinition(
+    name="moxa_iologik_register",
     parse_function=parse_moxa_iologik_register,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8691."),

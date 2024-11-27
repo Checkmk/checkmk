@@ -47,10 +47,8 @@ def check_datapower_ldrive(item: str, section: StringTable) -> CheckResult:
         if item == f"{controller}-{ldrive}":
             state, state_txt = datapower_ldrive_status[status]
             raid_level = datapower_ldrive_raid[raid_level]
-            infotext = "Status: {}, RAID Level: {}, Number of Drives: {}".format(
-                state_txt,
-                raid_level,
-                num_drives,
+            infotext = (
+                f"Status: {state_txt}, RAID Level: {raid_level}, Number of Drives: {num_drives}"
             )
             yield Result(state=state, summary=infotext)
             return

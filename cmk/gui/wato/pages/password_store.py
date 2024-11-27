@@ -30,13 +30,20 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
+from cmk.gui.wato.pages._simple_modes import (
+    convert_dict_elements_vs2fs,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+)
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
+
+from cmk.rulesets.v1.form_specs import DictElement
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -57,8 +64,8 @@ class PasswordStoreModeType(SimpleModeType[Password]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
-        return [ConfigDomainCore]
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
 
 
 class ModePasswords(SimpleListMode[Password]):
@@ -200,6 +207,9 @@ class ModeEditPassword(SimpleEditMode[Password]):
             )
 
         return elements
+
+    def _mandatory_elements(self) -> dict[str, DictElement]:
+        return convert_dict_elements_vs2fs(self._vs_mandatory_elements())
 
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):

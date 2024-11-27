@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib import memory
+
+check_info = {}
 
 
 def inventory_mem_linux(section):
@@ -120,6 +121,7 @@ def _camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = LegacyCheckDefinition(
+    name="mem_linux",
     service_name="Memory",
     sections=["mem"],
     discovery_function=inventory_mem_linux,

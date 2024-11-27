@@ -22,6 +22,7 @@ case "$1" in
         fi
 
         sed -ri 's/(\[::1\]:)[0-9]+/\1'"$PORT"'/' "$OMD_ROOT"/etc/jaeger/apache.conf
+        sed -ri 's/endpoint: .*/endpoint: "[::1]:'"$PORT"'"/' "$OMD_ROOT"/etc/jaeger/omd-query-port.yaml
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

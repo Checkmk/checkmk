@@ -1,3 +1,6 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
 genrule(
     name = "apache-omd",
     srcs = [
@@ -107,10 +110,28 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
-genrule(
+pkg_files(
+    name = "skel_files",
+    srcs = glob(
+        include = ["skel/**/*"],
+    ),
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_mklink(
+    name = "85-apache-symlink",
+    link_name = "skel/etc/rc.d/85-apache",
+    target = "../init.d/apache",
+)
+
+pkg_tar(
     name = "skel_dir",
-    srcs = ["@omd_packages//omd/packages/apache-omd:skel"],
-    outs = ["apache-skel.tar.gz"],
-    cmd = "tar -czf $@ -C $(location //omd/packages/apache-omd:skel)/.. skel",
+    srcs = [
+        "85-apache-symlink",
+        "skel_files",
+    ],
+    extension = "tar.gz",
+    package_file_name = "apache-skel.tar.gz",
+    strip_prefix = ".",
     visibility = ["//visibility:public"],
 )

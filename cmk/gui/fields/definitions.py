@@ -52,11 +52,13 @@ from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
+from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_group
 
 from cmk.fields import base, DateTime, validators
 
 _logger = logging.getLogger(__name__)
+_CONNECTION_ID_PATTERN = "^[-a-z0-9A-Z_]+$"
 
 
 class PythonString(base.String):
@@ -1483,6 +1485,42 @@ class Username(base.String):
             raise self.make_error("should_exist", username=value)
         if not self._should_exist and value in usernames:
             raise self.make_error("should_not_exist", username=value)
+
+
+class ConnectionIdentifier(base.String):
+    default_error_messages = {
+        "should_exist": "ConnectionId missing: {connection_id!r}",
+        "should_not_exist": "ConnectionId {connection_id!r} already exists",
+        "invalid_name": "ConnectionId {connection_id!r} is not a valid checkmk ConnectionId",
+    }
+
+    def __init__(
+        self,
+        example: str,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        **kwargs: Any,
+    ):
+        self._presence = presence
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            pattern=_CONNECTION_ID_PATTERN,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        user.need_permission("wato.sites")
+
+        site_mgmt = site_management_registry["site_management"]
+        exists = site_mgmt.broker_connection_id_exists(value)
+        if self._presence == "should_exist" and not exists:
+            raise self.make_error("should_exist", connection_id=value)
+        if self._presence == "should_not_exist" and exists:
+            raise self.make_error("should_not_exist", connection_id=value)
 
 
 class FolderIDField(FolderField):

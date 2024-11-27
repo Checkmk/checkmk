@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, OIDBytes, Service, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def discover_hp_mcs_system(section: StringTable) -> DiscoveryResult:
@@ -37,6 +37,7 @@ def parse_hp_mcs_system(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_mcs_system"] = LegacyCheckDefinition(
+    name="hp_mcs_system",
     parse_function=parse_hp_mcs_system,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
     fetch=SNMPTree(

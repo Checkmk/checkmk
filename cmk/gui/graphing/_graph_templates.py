@@ -20,8 +20,9 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import Row, VisualContext
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.visuals import livestatus_query_bare
 
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
@@ -36,6 +37,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
+from ._graphs_order import GRAPHS_2_2
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
 from ._metric_expression import (
     Average,
@@ -71,7 +73,7 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _get_graph_plugins() -> (
+def _collect_graph_plugins() -> (
     Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
 ):
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
@@ -83,6 +85,18 @@ def _get_graph_plugins() -> (
     for template_id, template in graph_info.items():
         if template_id not in known_plugins:
             yield template_id, template
+
+
+def _get_sorted_graph_plugins() -> (
+    Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
+):
+    def _by_index(graph_name: str) -> int:
+        try:
+            return GRAPHS_2_2.index(graph_name)
+        except ValueError:
+            return -1
+
+    return sorted(list(_collect_graph_plugins()), key=lambda t: _by_index(t[0]))
 
 
 def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate) -> str:
@@ -103,7 +117,7 @@ def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _get_graph_plugins()],
+        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _collect_graph_plugins()],
         key=lambda c: c.title,
     )
 
@@ -324,10 +338,10 @@ def _create_graph_template_from_name(name: str) -> GraphTemplate:
 def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _create_graph_template_from_name(template_id)
-    for id_, graph_plugin in _get_graph_plugins():
+    for id_, graph_plugin in _get_sorted_graph_plugins():
         if template_id == id_:
             return _parse_graph_plugin(id_, graph_plugin)
-    raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
+    raise MKGeneralException(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
 def evaluate_metrics(
@@ -351,12 +365,12 @@ def evaluate_metrics(
     return results
 
 
-def get_evaluated_graph_template_choices(
+def graph_and_single_metric_template_choices_for_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[GraphTemplateChoice]:
+) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for id_, graph_plugin in _get_graph_plugins():
+    for id_, graph_plugin in _get_sorted_graph_plugins():
         graph_template = _parse_graph_plugin(id_, graph_plugin)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
@@ -371,15 +385,37 @@ def get_evaluated_graph_template_choices(
                 )
             )
             already_graphed_metrics.update({n for e in evaluated_metrics for n in e.metric_names()})
+
+    single_metric_template_choices = []
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            graph_template_choices.append(
+            single_metric_template_choices.append(
                 GraphTemplateChoice(
-                    metric_name[7:] if metric_name.startswith("METRIC_") else metric_name,
-                    "",
+                    f"METRIC_{metric_name}",
+                    _("Metric: %s") % translated_metric.title,
                 )
             )
-    return graph_template_choices
+    return graph_template_choices, single_metric_template_choices
+
+
+def graph_and_single_metric_templates_choices_for_context(
+    context: VisualContext,
+) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
+    graph_template_choices: list[GraphTemplateChoice] = []
+    single_metric_template_choices: list[GraphTemplateChoice] = []
+
+    for row in livestatus_query_bare(
+        "service",
+        context,
+        ["service_check_command", "service_perf_data", "service_metrics"],
+    ):
+        graph_template_choices_for_row, single_metric_template_choices_for_row = (
+            graph_and_single_metric_template_choices_for_metrics(translated_metrics_from_row(row))
+        )
+        graph_template_choices.extend(graph_template_choices_for_row)
+        single_metric_template_choices.extend(single_metric_template_choices_for_row)
+
+    return graph_template_choices, single_metric_template_choices
 
 
 def _to_metric_operation(
@@ -770,7 +806,7 @@ def _get_evaluated_graph_templates(
             ),
             translated_metrics,
         )
-        for id_, graph_plugin in _get_graph_plugins()
+        for id_, graph_plugin in _get_sorted_graph_plugins()
         for graph_template in [_parse_graph_plugin(id_, graph_plugin)]
         if (
             evaluated_metrics := evaluate_metrics(

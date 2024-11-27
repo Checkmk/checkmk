@@ -11,10 +11,10 @@
 # owncloud-test|18762|Incremental|Successful
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_unitrends_backup(info):
@@ -41,11 +41,7 @@ def check_unitrends_backup(item, _no_params, info):
 
         if line[0] == "HEADER" and line[1] == item:
             _head, _sched_name, app_name, sched_desc, failures = line
-            message = "{} Errors in last 24/h for Application {} ({}) ".format(
-                failures,
-                app_name,
-                sched_desc,
-            )
+            message = f"{failures} Errors in last 24/h for Application {app_name} ({sched_desc}) "
 
     if message is not None:
         message += "\n" + "\n".join(details)
@@ -60,6 +56,7 @@ def parse_unitrends_backup(string_table: StringTable) -> StringTable:
 
 
 check_info["unitrends_backup"] = LegacyCheckDefinition(
+    name="unitrends_backup",
     parse_function=parse_unitrends_backup,
     service_name="Schedule %s",
     discovery_function=inventory_unitrends_backup,

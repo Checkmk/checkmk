@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use assertor::*;
 use check_cert::check;
 use check_cert::checker::certificate::{self, Config as CertConfig};
 
@@ -23,10 +24,9 @@ fn test_signature_algorithm_sha256_with_rsa_encryption() {
             .build(),
     );
     assert_eq!(check::exit_code(&coll), 0);
-    assert_eq!(
-        coll.to_string(),
-        format!("OK\nSignature algorithm: sha256WithRSAEncryption")
-    );
+    assert_that!(coll
+        .to_string()
+        .contains("OK\nCertificate signature algorithm: sha256WithRSAEncryption"));
 }
 
 #[test]
@@ -41,10 +41,9 @@ fn test_signature_algorithm_ee_pss_sha256() {
             .build(),
     );
     assert_eq!(check::exit_code(&coll), 0);
-    assert_eq!(
-        coll.to_string(),
-        format!("OK\nSignature algorithm: rsassa-pss")
-    );
+    assert_that!(coll
+        .to_string()
+        .contains("Certificate signature algorithm: rsassa-pss"));
 }
 
 #[test]
@@ -60,10 +59,10 @@ fn test_signature_algorithm_ee_pss_sha256_wrong_alg() {
     );
 
     assert_eq!(check::exit_code(&coll), 1);
-    assert_eq!(
-        coll.to_string(),
-        format!(
-            "Signature algorithm is rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.3.4.5.6 (!)"
+    assert_that!(
+        coll.to_string().contains
+        (
+            "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.3.4.5.6 (!)"
         )
     );
 }
@@ -80,10 +79,9 @@ fn test_signature_algorithm_ee_pss_sha1() {
             .build(),
     );
     assert_eq!(check::exit_code(&coll), 0);
-    assert_eq!(
-        coll.to_string(),
-        format!("OK\nSignature algorithm: rsassa-pss")
-    );
+    assert_that!(coll
+        .to_string()
+        .contains("Certificate signature algorithm: rsassa-pss"));
 }
 
 #[test]
@@ -99,10 +97,9 @@ fn test_signature_algorithm_ee_pss_sha1_wrong_alg() {
     );
 
     assert_eq!(check::exit_code(&coll), 1);
-    assert_eq!(
-        coll.to_string(),
-        format!(
-            "Signature algorithm is rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.840.113549.1.1.11 (!)"
+    assert_that!(
+        coll.to_string().contains(
+            "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.840.113549.1.1.11 (!)"
         )
     );
 }

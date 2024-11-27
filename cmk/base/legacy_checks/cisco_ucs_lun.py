@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
+
+check_info = {}
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
@@ -51,6 +52,7 @@ def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable | None:
 
 
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
+    name="cisco_ucs_lun",
     parse_function=parse_cisco_ucs_lun,
     detect=DETECT,
     fetch=SNMPTree(

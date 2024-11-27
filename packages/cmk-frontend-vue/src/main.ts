@@ -7,16 +7,15 @@
 // see https://github.com/vuejs/eslint-plugin-vue/issues/2201
 /* eslint-disable vue/one-component-per-file */
 
-import 'core-js/stable'
-
 import { createApp } from 'vue'
 
-import D3Table from './views/D3Table.vue'
-import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
+import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+
+import '@/assets/variables.css'
 
 function setupVue() {
   document
@@ -49,38 +48,38 @@ function setupVue() {
           })
           break
         }
-        case 'd3_table': {
-          console.log('vue create table')
-          app = createApp(D3Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
-          break
-        }
-        case 'vue_table': {
-          console.log('vue create table')
-          app = createApp(Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
-          break
-        }
         case 'quick_setup': {
-          app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
+          app = createApp(QuickSetup, {
+            quick_setup_id: appData.quick_setup_id,
+            mode: appData.mode,
+            toggleEnabled: appData.toggle_enabled,
+            objectId: appData.object_id || null
+          })
           break
         }
         case 'notification_overview': {
           app = createApp(NotificationOverview, {
+            overview_title_i18n: appData.overview_title_i18n,
             fallback_warning: appData.fallback_warning,
             notification_stats: appData.notification_stats,
             core_stats: appData.core_stats,
-            rule_sections: appData.rule_sections
+            rule_sections: appData.rule_sections,
+            user_id: appData.user_id
           })
           break
         }
         case 'notification_parameters_overview': {
           app = createApp(NotificationParametersOverviewApp, {
-            parameters: appData.parameters
+            parameters: appData.parameters,
+            i18n: appData.i18n
+          })
+          break
+        }
+        case 'graph_designer': {
+          app = createApp(GraphDesignerApp, {
+            graph_lines: appData.graph_lines,
+            graph_options: appData.graph_options,
+            i18n: appData.i18n
           })
           break
         }
@@ -95,6 +94,3 @@ function setupVue() {
 addEventListener('load', () => {
   setupVue()
 })
-
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-export const cmk_export = {}

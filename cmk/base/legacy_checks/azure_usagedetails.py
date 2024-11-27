@@ -8,9 +8,11 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_resources
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_azure_usagedetails(string_table):
@@ -51,6 +53,7 @@ def discover_azure_usagedetails(section):
 
 
 check_info["azure_usagedetails"] = LegacyCheckDefinition(
+    name="azure_usagedetails",
     parse_function=parse_azure_usagedetails,
     service_name="Costs %s",
     discovery_function=discover_azure_usagedetails,

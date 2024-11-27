@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Mapping
 from itertools import chain
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.2.1 225 --> GUDEADS-EPC****-MIB::epc****TempSensor.1
@@ -39,6 +40,7 @@ def check_gude_temp(
 
 
 check_info["gude_temp"] = LegacyCheckDefinition(
+    name="gude_temp",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),

@@ -30,6 +30,8 @@ from playwright.sync_api import (
     Video,
 )
 
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
+
 logger = logging.getLogger(__name__)
 _browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
 _browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
@@ -84,7 +86,10 @@ def _browser_type(_playwright: Playwright, browser_name: str) -> BrowserType:
 def _browser(
     _browser_type: BrowserType, browser_type_launch_args: dict
 ) -> t.Generator[Browser, None, None]:
-    browser = _browser_type.launch(**browser_type_launch_args)
+    with exit_pytest_on_exceptions(
+        exceptions=(Error,), exit_msg="Install playwright within the environment!"
+    ):
+        browser = _browser_type.launch(**browser_type_launch_args)
     yield browser
     browser.close()
 
@@ -198,7 +203,7 @@ def _may_create_screenshot(
     pages: t.List[Page],
 ) -> None:
     if isinstance(request, pytest.FixtureRequest):
-        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else True
+        failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
         screenshot_option = request.config.getoption("--screenshot")
         capture_screenshot = screenshot_option == "on" or (
             failed and screenshot_option == "only-on-failure"
@@ -207,7 +212,7 @@ def _may_create_screenshot(
             return
         for page in pages:
             human_readable_status = "failed" if failed else "finished"
-            screenshot_path = _build_artifact_path(request, f".{human_readable_status}.png")
+            screenshot_path = _build_artifact_path(request, suffix=f"{human_readable_status}.png")
             try:
                 page.screenshot(timeout=5432, path=screenshot_path)
             except Error as e:

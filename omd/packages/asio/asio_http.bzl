@@ -1,4 +1,4 @@
-load("@omd_packages//omd/packages/rules:local_archive.bzl", "local_archive")
+load("//bazel/rules:local_archive.bzl", "local_archive")
 
 def asio_workspace():
     # Newer versions available from https://registry.bazel.build/modules/asio

@@ -7,8 +7,8 @@
 import functools
 import inspect
 import itertools
-from collections.abc import Generator
-from typing import Any, List, Sequence
+from collections.abc import Generator, Sequence
+from typing import Any, List
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -25,6 +25,7 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
+    LegacyPluginLocation,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
@@ -230,7 +231,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -273,7 +274,7 @@ def create_agent_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:
@@ -343,17 +344,3 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
                 "You must add those to the supersedes keyword argument."
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
-
-
-def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
-    return AgentSectionPlugin(
-        name=section_name,
-        parsed_section_name=ParsedSectionName(str(section_name)),
-        parse_function=lambda string_table: string_table,
-        host_label_function=_noop_host_label_function,
-        host_label_default_parameters=None,
-        host_label_ruleset_name=None,
-        host_label_ruleset_type="merged",  # doesn't matter, use default.
-        supersedes=set(),
-        location=None,
-    )

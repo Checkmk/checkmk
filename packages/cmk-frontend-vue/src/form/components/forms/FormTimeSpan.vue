@@ -44,7 +44,7 @@ watch(
     if (newValue === null) {
       values.value = {}
     } else {
-      if (newValue != joinToSeconds(values.value)) {
+      if (newValue !== joinToSeconds(values.value)) {
         // don't update values if we already show a similar value
         // otherwise we could not inser minutes > 60 as those are automatically
         // transformed to house and minutes...

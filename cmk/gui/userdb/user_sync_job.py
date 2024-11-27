@@ -8,12 +8,7 @@ from collections.abc import Callable
 from datetime import datetime
 from functools import partial
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobAlreadyRunning,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
@@ -37,9 +32,6 @@ def execute_userdb_job() -> None:
         return
 
     job = UserSyncBackgroundJob()
-    if job.is_active():
-        gui_logger.debug("Another synchronization job is already running: Skipping this sync")
-        return
 
     if not job.shall_start():
         gui_logger.debug("Job shall not start")
@@ -76,8 +68,8 @@ def _userdb_sync_job_enabled() -> bool:
 def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()
-        try:
-            job.start(
+        if (
+            result := job.start(
                 partial(
                     job.do_sync,
                     add_to_changelog=False,
@@ -91,8 +83,8 @@ def ajax_sync() -> None:
                     user=str(user.id) if user.id else None,
                 ),
             )
-        except BackgroundJobAlreadyRunning as e:
-            raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
+        ).is_error():
+            raise MKUserError(None, str(result.error))
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         gui_logger.exception("error synchronizing user DB")

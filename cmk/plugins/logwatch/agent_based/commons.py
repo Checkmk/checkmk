@@ -17,7 +17,7 @@ import re
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from re import Pattern
-from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Any, Literal, NamedTuple, Never, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
@@ -25,6 +25,10 @@ from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-v
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
 from cmk.agent_based.v2 import CheckResult, Result, State
+
+# Watch out! Matching the 'logwatch_rules' ruleset against labels will not
+# work as expected, if logfiles are grouped!
+NEVER_DISCOVER_SERVICE_LABELS: Sequence[Never] = ()
 
 
 class ItemData(TypedDict):
@@ -141,10 +145,24 @@ class RulesetAccess:
 
     # This is only wishful typing -- but lets assume this is what we get.
     @staticmethod
-    def logwatch_rules_all(host_name: str, item: str) -> Sequence[ParameterLogwatchRules]:
+    def logwatch_rules_all(host_name: str, logfile: str) -> Sequence[ParameterLogwatchRules]:
+        # We're using the logfile to match the ruleset, not necessarily the "item"
+        # (which might be the group). However: the ruleset matcher expects this to be the item.
+        # As a result, the following will all fail (hidden in `service_extra_conf`):
+        #
+        # Fail #1: Look up the discovered labels
+        # Mitigatie this by never discovering any labels.
+        #
+        # Fail #2: Compute the correct service description
+        # This will be wrong if the logfile is grouped.
+        #
+        # Fail #3: Retrieve the configured labels for this service.
+        # This might be wrong as a result of #2.
+        #
+        # => Matching this rule agains service labels will most likely fail.
         return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
             HostName(host_name),
-            item,
+            logfile,
             cmk.base.config.logwatch_rules,  # type: ignore[arg-type]
         )
 

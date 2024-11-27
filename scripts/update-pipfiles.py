@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 environment = os.environ.copy()
-environment.update({"PIPENV_PYPI_MIRROR": "https://pypi.org/simple"})
 
 
 class UpdateInfo(NamedTuple):
@@ -130,10 +129,10 @@ def _update_requirementslock(requirements_lock: Path) -> Sequence[UpdateInfo]:
 
 
 def _commit_lock(commit_infos: Sequence[CommitInfo]) -> None:
-    message = f"lock python dependencies {"" if (p := commit_infos[0].file_to_be_committed.parent) == Path() else f" in {p}"}\n\n"
+    message = f"lock python dependencies{"" if (p := commit_infos[0].file_to_be_committed.parent) == Path() else f" in {p}"}\n\n"
     for ci in commit_infos:
         subprocess.run(
-            ["git", "add", ci.file_to_be_committed],
+            ["git", "add", ci.file_to_be_committed.name],
             cwd=ci.file_to_be_committed.parent,
             check=True,
             stdout=subprocess.DEVNULL,
@@ -157,12 +156,14 @@ def _handle_lock_files(task_queue: queue.Queue[LockPaths], lock: threading.Lock)
     while True:
         lock_files = task_queue.get()
         commit_infos = []
+        if version_diff_pipfile := _update_piplock(lock_files.pipfile_lock):
+            commit_infos.append(CommitInfo(lock_files.pipfile_lock, version_diff_pipfile))
+
+        # This uses the Pipfile.lock so this needs to come after the piplocks...
         if lock_files.requirement_lock is not None and (
             version_diff_req := _update_requirementslock(lock_files.requirement_lock)
         ):
             commit_infos.append(CommitInfo(lock_files.requirement_lock, version_diff_req))
-        if version_diff_pipfile := _update_piplock(lock_files.pipfile_lock):
-            commit_infos.append(CommitInfo(lock_files.pipfile_lock, version_diff_pipfile))
         if commit_infos:
             with lock:  # only one thread should commit at a time
                 _commit_lock(commit_infos)

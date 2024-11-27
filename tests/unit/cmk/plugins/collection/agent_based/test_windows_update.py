@@ -8,11 +8,10 @@ from typing import Final
 import pytest
 from pytest_mock.plugin import MockerFixture
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.plugin_classes import CheckFunction
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.windows_updates import parse_windows_updates, Section
@@ -67,16 +66,16 @@ def test_parse_windows_updates_failed() -> None:
     )
 
 
-def test_discover_windows_updates(fix_register: FixRegister) -> None:
-    discover_windows_updates = fix_register.check_plugins[
+def test_discover_windows_updates(agent_based_plugins: AgentBasedPlugins) -> None:
+    discover_windows_updates = agent_based_plugins.check_plugins[
         CheckPluginName("windows_updates")
     ].discovery_function
     assert list(discover_windows_updates(section=SECTION_OK)) == [Service()]
 
 
 @pytest.fixture(name="check_windows_updates")
-def check_windows_updates_fixture(fix_register: FixRegister) -> CheckFunction:
-    return fix_register.check_plugins[CheckPluginName("windows_updates")].check_function
+def check_windows_updates_fixture(agent_based_plugins: AgentBasedPlugins) -> CheckFunction:
+    return agent_based_plugins.check_plugins[CheckPluginName("windows_updates")].check_function
 
 
 def test_check_windows_updates_ok(

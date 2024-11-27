@@ -4,18 +4,24 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref, toValue, type Ref } from 'vue'
-
+import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 
-import { completeQuickSetup, getOverview, validateStage } from './rest_api'
-import useWizard from './components/quick-setup/useWizard'
+import {
+  saveQuickSetup,
+  getOverview,
+  validateStage,
+  getAllStages,
+  editQuickSetup
+} from './rest_api'
+import { formDataKey } from './keys'
+import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
-import { renderContent, renderRecap, defineButtons } from './render_utils'
+import { ActionType, processActionData, renderContent, renderRecap } from './render_utils'
 import type {
   QuickSetupSaveStageSpec,
-  QuickSetupStageSpec,
-  StageButtonSpec
+  QuickSetupStageAction,
+  QuickSetupStageSpec
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
 import type {
@@ -23,13 +29,17 @@ import type {
   ValidationError,
   GeneralError,
   RestApiError,
-  QSStageResponse
+  QSStageResponse,
+  AllStagesValidationError
 } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
   StageData,
   AllValidationMessages
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import usePersistentRef from '@/lib/usePersistentRef'
+
 /**
  * Type definition for internal stage storage
  */
@@ -41,14 +51,23 @@ interface QSStageStore {
   user_input: Ref<StageData>
   form_spec_errors?: AllValidationMessages
   errors?: string[]
-  buttons?: StageButtonSpec[]
+  actions: QuickSetupStageAction[]
 }
 
-/* TODO: move this string to the backend to make it translatable (CMK-19020) */
-const PREV_BUTTON_LABEL = 'Back'
+const GUIDED_MODE = 'guided'
+const OVERVIEW_MODE = 'overview'
 
-const props = defineProps<QuickSetupAppProps>()
-const ready = ref(false)
+let guidedModeLabel = ''
+let overviewModeLabel = ''
+
+const props = withDefaults(defineProps<QuickSetupAppProps>(), {
+  mode: GUIDED_MODE,
+  toggleEnabled: false
+})
+
+const loadedAllStages = ref(false)
+const showQuickSetup = ref(false)
+const preventLeaving = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
@@ -57,22 +76,23 @@ const numberOfStages = computed(() => stages.value.length) //Number of stages
 
 // Data from all stages
 const formData = ref<{ [key: number]: StageData }>({})
+provide(formDataKey, readonly(formData))
 
 //
 //
 // Stages flow control and user input update
 //
 //
-const nextStage = async () => {
+const nextStage = async (actionId: string | null = null) => {
   loading.value = true
   globalError.value = null
 
-  const thisStage = quickSetupHook.stage.value
-  const nextStage = quickSetupHook.stage.value + 1
+  const thisStageNumber = quickSetupHook.stage.value
+  const nextStageNumber = quickSetupHook.stage.value + 1
 
   const userInput: StageData[] = []
 
-  for (let i = 0; i <= thisStage; i++) {
+  for (let i = 0; i <= thisStageNumber; i++) {
     const formData = (toValue(stages.value[i]!.user_input) || {}) as StageData
     userInput.push(formData)
   }
@@ -80,7 +100,7 @@ const nextStage = async () => {
   let result: QSStageResponse | null = null
 
   try {
-    result = await validateStage(props.quick_setup_id, userInput)
+    result = await validateStage(props.quick_setup_id, userInput, actionId, props.objectId)
   } catch (err) {
     handleError(err as RestApiError)
   }
@@ -90,24 +110,42 @@ const nextStage = async () => {
     return
   }
 
-  //Clear form_spec_errors and other_errors from thisStage
-  stages.value[thisStage]!.form_spec_errors = {}
-  stages.value[thisStage]!.errors = []
+  //Clear form_spec_errors and other_errors from thisStageNumber
+  stages.value[thisStageNumber]!.form_spec_errors = {}
+  stages.value[thisStageNumber]!.errors = []
 
-  stages.value[thisStage]!.recap = result.stage_recap
+  stages.value[thisStageNumber]!.recap = result.stage_recap
 
-  //If we have not finished the quick setup yet, but still on the, regular steps
-  if (nextStage < numberOfStages.value - 1) {
-    stages.value[nextStage] = {
-      ...stages.value[nextStage]!,
+  //If we have not finished the quick setup yet, but still on the, regular step
+  if (nextStageNumber < numberOfStages.value - 1) {
+    const acts: QuickSetupStageAction[] = stages.value[nextStageNumber]?.actions || []
+
+    acts.length = 0
+
+    for (const action of result.next_stage_structure.actions) {
+      acts.push(processActionData(ActionType.Next, action, nextStage))
+    }
+
+    if (result.next_stage_structure.prev_button) {
+      acts.push(
+        processActionData(
+          ActionType.Prev,
+          {
+            button: result.next_stage_structure.prev_button,
+            load_wait_label: ''
+          },
+          prevStage
+        )
+      )
+    }
+
+    stages.value[nextStageNumber] = {
+      ...stages.value[nextStageNumber]!,
       components: result.next_stage_structure.components,
       recap: [],
       form_spec_errors: {},
       errors: [],
-      buttons: [
-        defineButton.next(result.next_stage_structure.button_label),
-        defineButton.prev(PREV_BUTTON_LABEL)
-      ]
+      actions: acts
     }
   }
 
@@ -119,24 +157,155 @@ const prevStage = () => {
   quickSetupHook.prev()
 }
 
+const loadAllStages = async (): Promise<QSStageStore[]> => {
+  const data = await getAllStages(props.quick_setup_id, props.objectId)
+  const result: QSStageStore[] = []
+
+  guidedModeLabel = data.guided_mode_string
+  overviewModeLabel = data.overview_mode_string
+
+  for (let stageIndex = 0; stageIndex < data.stages.length; stageIndex++) {
+    const stage = data.stages[stageIndex]!
+
+    const acts: QuickSetupStageAction[] = []
+    if (stageIndex !== data.stages.length - 1) {
+      for (const action of stage.actions) {
+        acts.push(processActionData(ActionType.Next, action, nextStage))
+      }
+    }
+    if (stageIndex !== 0 && stage?.prev_button) {
+      acts.push(
+        processActionData(
+          ActionType.Prev,
+          {
+            button: stage.prev_button,
+            load_wait_label: ''
+          },
+          prevStage
+        )
+      )
+    }
+
+    const userInput = stages.value[stageIndex]?.user_input || {}
+    result.push({
+      title: stage.title,
+      sub_title: stage?.sub_title || null,
+      components: stage.components || [],
+      recap: [],
+      form_spec_errors: {},
+      errors: [],
+      user_input: ref(userInput),
+      actions: acts
+    })
+  }
+
+  // Add save stage
+  result.push({
+    title: '',
+    sub_title: null,
+    components: [],
+    recap: [],
+    form_spec_errors: {},
+    errors: [],
+    user_input: ref({}),
+    actions: [...data.actions.map((action) => processActionData(ActionType.Save, action, save))]
+  })
+  loadedAllStages.value = true
+  return result
+}
+
+const loadGuidedStages = async (): Promise<QSStageStore[]> => {
+  const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
+  const result: QSStageStore[] = []
+
+  guidedModeLabel = data.guided_mode_string
+  overviewModeLabel = data.overview_mode_string
+
+  //Load stages
+  for (let index = 0; index < data.overviews.length; index++) {
+    const isFirst = index === 0
+    const overview = data.overviews[index]!
+
+    const userInput = stages.value[index]?.user_input || {}
+
+    const acts: QuickSetupStageAction[] = []
+
+    if (isFirst) {
+      for (const action of data.stage.next_stage_structure.actions) {
+        acts.push(processActionData(ActionType.Next, action, nextStage))
+      }
+    }
+
+    result.push({
+      title: overview.title,
+      sub_title: overview.sub_title || null,
+      components: isFirst ? data.stage.next_stage_structure.components : [],
+      recap: [],
+      form_spec_errors: {},
+      errors: [],
+      user_input: ref(userInput),
+      actions: acts
+    })
+  }
+
+  // Add save stage
+  result.push({
+    title: '',
+    sub_title: null,
+    components: [],
+    recap: [],
+    form_spec_errors: {},
+    errors: [],
+    user_input: ref({}),
+    actions: [
+      ...data.actions.map((action) => processActionData(ActionType.Save, action, save)),
+      processActionData(
+        ActionType.Prev,
+        {
+          button: data.prev_button,
+          load_wait_label: ''
+        },
+        prevStage
+      )
+    ]
+  })
+
+  return result
+}
+
 const save = async (buttonId: string) => {
   loading.value = true
   globalError.value = null
 
   const userInput: StageData[] = []
 
-  for (let i = 0; i < numberOfStages.value; i++) {
+  for (let i = 0; i < regularStages.value.length; i++) {
     const formData = (stages.value[i]!.user_input || {}) as StageData
     userInput.push(formData)
+
+    stages.value[i]!.form_spec_errors = {}
+    stages.value[i]!.errors = []
   }
 
   try {
-    const { redirect_url: redirectUrl } = await completeQuickSetup(
-      props.quick_setup_id,
-      buttonId,
-      userInput
-    )
-    window.location.href = redirectUrl
+    if (props.objectId) {
+      preventLeaving.value = false
+      const { redirect_url: redirectUrl } = await editQuickSetup(
+        props.quick_setup_id,
+        buttonId,
+        props.objectId,
+        userInput
+      )
+      window.location.href = redirectUrl
+    } else {
+      preventLeaving.value = false
+      const { redirect_url: redirectUrl } = await saveQuickSetup(
+        props.quick_setup_id,
+        buttonId,
+        userInput
+      )
+      window.location.href = redirectUrl
+    }
   } catch (err) {
     loading.value = false
     handleError(err as RestApiError)
@@ -144,16 +313,14 @@ const save = async (buttonId: string) => {
 }
 
 const update = (index: number, value: StageData) => {
+  if (loading.value) {
+    return
+  }
+
   stages.value[index]!.user_input = value
   formData.value[index] = value
+  preventLeaving.value = true
 }
-
-//
-//
-// Rendering helpers
-//
-//
-const defineButton = defineButtons(nextStage, prevStage, save)
 
 //
 //
@@ -174,8 +341,8 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
         stg.form_spec_errors,
         stg.user_input
       ),
-      buttons: stg.buttons!,
-      errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])]
+      errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
+      actions: [...stg.actions.values()]
     }
     return item
   })
@@ -185,8 +352,8 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
   const stg = stages.value[stages.value.length - 1]!
 
   return {
-    buttons: stg.buttons!,
-    errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])]
+    errors: [...asStringArray(stg.errors || []), ...asStringArray(globalError.value || [])],
+    actions: [...stg.actions.values()]
   }
 })
 
@@ -196,43 +363,24 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const data: QSInitializationResponse = await getOverview(props.quick_setup_id)
-
-//Load stages
-for (let index = 0; index < data.overviews.length; index++) {
-  const isFirst = index === 0
-  const overview = data.overviews[index]!
-
-  stages.value.push({
-    title: overview.title,
-    sub_title: overview.sub_title || null,
-    components: isFirst ? data.stage.next_stage_structure.components : [],
-    recap: [],
-    form_spec_errors: {},
-    errors: [],
-    user_input: {},
-    buttons: isFirst ? [defineButton.next(data.stage.next_stage_structure.button_label)] : []
-  })
-}
-
-// Add save stage
-stages.value.push({
-  title: '',
-  sub_title: null,
-  components: [],
-  recap: [],
-  form_spec_errors: {},
-  errors: [],
-  user_input: {},
-  buttons: [
-    ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
-    defineButton.prev(PREV_BUTTON_LABEL)
-  ]
-})
-
 const handleError = (err: RestApiError) => {
   if (err.type === 'general') {
-    globalError.value = (err as GeneralError).general_error
+    globalError.value = `An error occurred while trying to proceed to the next step.
+The underlying call raised the following error: ${(err as GeneralError).general_error}
+Please try again to confirm this is not a one-time occurrence.
+Please verify the logs if this error persists.`
+  } else if (err.type === 'validation_all_stages') {
+    const errs = err as AllStagesValidationError
+
+    for (const stageError of errs.all_stage_errors) {
+      const stageIndex =
+        typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
+          ? stageError.stage_index
+          : stages.value.length - 1
+
+      stages.value[stageIndex]!.errors = stageError.stage_errors
+      stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
+    }
   } else {
     stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors
     stages.value[quickSetupHook.stage.value]!.form_spec_errors = (
@@ -240,19 +388,51 @@ const handleError = (err: RestApiError) => {
     ).formspec_errors
   }
 }
+const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
+  'quick_setup_wizard_mode',
+  props.mode
+)
 
-const quickSetupHook = useWizard(stages.value.length)
+const currentMode = ref<WizardMode>(props.mode)
 
-ready.value = true
+watch(currentMode, async (mode: WizardMode) => {
+  wizardMode.value = mode
+  quickSetupHook.setMode(mode)
+  if (mode === 'overview' && !loadedAllStages.value) {
+    stages.value = await loadAllStages()
+  }
+})
+
+switch (props.mode) {
+  case GUIDED_MODE:
+    stages.value = await loadGuidedStages()
+    break
+  case OVERVIEW_MODE:
+    stages.value = await loadAllStages()
+    break
+}
+const quickSetupHook = useWizard(stages.value.length, props.mode)
+showQuickSetup.value = true
+preventLeaving.value = false
 </script>
 
 <template>
+  <ToggleButtonGroup
+    v-if="toggleEnabled"
+    v-model="currentMode"
+    :options="[
+      { label: guidedModeLabel, value: GUIDED_MODE },
+      { label: overviewModeLabel, value: OVERVIEW_MODE }
+    ]"
+  />
   <QuickSetup
-    v-if="ready"
+    v-if="showQuickSetup"
     :loading="loading"
     :regular-stages="regularStages"
     :save-stage="saveStage"
     :current-stage="quickSetupHook.stage.value"
+    :mode="quickSetupHook.mode"
+    :prevent-leaving="preventLeaving"
   />
 </template>
 

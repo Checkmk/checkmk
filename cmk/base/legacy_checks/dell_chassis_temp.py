@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_CHASSIS
+
+check_info = {}
 
 
 def inventory_dell_chassis_temp(info):
@@ -40,6 +41,7 @@ def parse_dell_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_chassis_temp"] = LegacyCheckDefinition(
+    name="dell_chassis_temp",
     parse_function=parse_dell_chassis_temp,
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(

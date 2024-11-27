@@ -442,6 +442,8 @@ Model = TypeVar("Model")
 
 
 def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
+    # Performance impact needs to be investigated (see CMK-19527)
+    # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(list[RawMetrics])
     return adapter.validate_json(content)
 

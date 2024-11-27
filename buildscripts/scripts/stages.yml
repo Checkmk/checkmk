@@ -30,7 +30,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/Makefile' || true"
 
     - NAME: CHANGED_OMDLIB_FILES
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^omd/packages/omd/omdlib/' || true"
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep -e '^omd/packages/omd/omdlib/' -e '^cmk/utils/' || true"
 
     - NAME: CHANGED_OMDLIB_TESTS
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^tests/unit/omdlib/' || true"
@@ -96,6 +96,9 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep 'checkman/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_SEMGREP_RULE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/semgrep/rules' || true"
+
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
@@ -119,6 +122,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
 
+    - NAME: CHANGED_CMK_CCC_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-ccc/' || true"
+
     - NAME: CHANGED_CMK_CRYPTO_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-crypto/' || true"
 
@@ -133,6 +139,9 @@ VARIABLES:
 
     - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
+
+    - NAME: CHANGED_CMK_OTEL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel/' || true"
 
     - NAME: CHANGED_RULESETS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
@@ -159,14 +168,14 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
     - NAME: CHANGED_SHARED_TYPING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^cmk/gui/form_specs/vue/shared_type_defs.py\\|^packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^cmk/gui/watolib/notification_types.py\\|^cmk/gui/graphing/cee/_graph_designer_type_defs.py\\|^cmk/gui/form_specs/vue/shared_type_defs.py\\|^cmk/gui/watolib/configuration_entity/type_defs.py\\|^packages/cmk-frontend-vue/src/form/components/configuration_entity.ts\\|^packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts\\|^packages/cmk-frontend-vue/src/notification/type_defs.ts\\|^packages/cmk-frontend-vue/src/graph-designer/type_defs.ts' || true"
 
     - NAME: CHANGED_CMK_FRONTEND_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"
 
 STAGES:
     - NAME: "Python Typing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT,CHANGED_PYPROJECT_TOML_FILE
       DIR: "tests"
       ENV_VARS:
           MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml --no-incremental"
@@ -193,7 +202,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 
     - NAME: "omdlib Unit Tests"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_OMDLIB_FILES,CHANGED_OMDLIB_TESTS
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_OMDLIB_FILES,CHANGED_OMDLIB_TESTS,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CRYPTO_FILES
       DIR: "tests"
       ENV_VARS:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-omdlib-junit.xml --color=no"
@@ -205,12 +214,10 @@ STAGES:
     - NAME: "Python Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
       DIR: "tests"
-      ENV_VARS:
-          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/testlogs/unit/repo/test.xml"
 
     - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
@@ -303,6 +310,16 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
 
+    - NAME: "Python semgrep"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_SEMGREP_RULE_FILES
+      DIR: "tests"
+      ENV_VARS:
+          SEMGREP_OUTPUT_ARGS: "--junit-xml --junit-xml-output=${RESULTS}/semgrep_results.xml"
+      COMMAND: "make test-semgrep-docker"
+      TEXT_ON_SKIP: "No Python files changed"
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/semgrep_results.xml"
+
     - NAME: "Shell Format"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHELL_FILES
       DIR: "tests"
@@ -386,7 +403,7 @@ STAGES:
     # files. The ordering is a bit ad hoc, perhaps we should keep the list of
     # steps here in dependency order.
     - NAME: "Package livestatus"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_LIVESTATUS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES
       DIR: "packages/livestatus"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/livestatus.txt"
       TEXT_ON_SKIP: "No Livestatus files changed"
@@ -402,9 +419,9 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
     - NAME: "Package cmk-agent-based"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_BASED_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_BASED_FILES
       DIR: "packages/cmk-agent-based"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-based.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-agent-based.txt"
       TEXT_ON_SKIP: "No cmk-agent-based files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-based.txt"
 
@@ -416,86 +433,100 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
 
     - NAME: "Package cmk-agent-receiver"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_RECEIVER_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_AGENT_RECEIVER_FILES
       DIR: "packages/cmk-agent-receiver"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-receiver.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-agent-receiver.txt"
       TEXT_ON_SKIP: "No cmk-agent-receiver files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-receiver.txt"
 
+    - NAME: "Package cmk-ccc"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES
+      DIR: "packages/cmk-ccc"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-ccc.txt"
+      TEXT_ON_SKIP: "No cmk-ccc files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
+
     - NAME: "Package cmk-crypto"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_CRYPTO_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES
       DIR: "packages/cmk-crypto"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-crypto.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-crypto.txt"
       TEXT_ON_SKIP: "No cmk-crypto files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
 
     - NAME: "Package cmk-graphing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_GRAPHING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_GRAPHING_FILES
       DIR: "packages/cmk-graphing"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-graphing.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-graphing.txt"
       TEXT_ON_SKIP: "No cmk-graphing files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
     - NAME: "Package cmk-livestatus-client"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_PYTHON_FILES,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       DIR: "packages/cmk-livestatus-client"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
 
     - NAME: "Package cmk-messaging"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_MESSAGING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MESSAGING_FILES
       DIR: "packages/cmk-messaging"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-messaging.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-messaging.txt"
       TEXT_ON_SKIP: "No cmk-messaging files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-messaging.txt"
 
     - NAME: "Package cmk-mkp-tool"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_MKP_TOOL_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_MKP_TOOL_FILES
       DIR: "packages/cmk-mkp-tool"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
+    - NAME: "Package cmk-otel"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES
+      DIR: "non-free/packages/cmk-otel"
+      COMMAND: "../../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-otel.txt"
+      TEXT_ON_SKIP: "No cmk-otel files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-otel.txt"
+
     - NAME: "Package cmk-rulesets"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_RULESETS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RULESETS_FILES
       DIR: "packages/cmk-rulesets"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-rulesets.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-rulesets.txt"
       TEXT_ON_SKIP: "No cmk-rulesets files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-rulesets.txt"
 
     - NAME: "Package cmk-server-side-calls"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_SERVER_SIDE_CALLS_FILES
       DIR: "packages/cmk-server-side-calls"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
       TEXT_ON_SKIP: "No cmk-server-side-calls files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
 
     - NAME: "Package cmk-werks"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_WERKS_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_WERKS_FILES
       DIR: "packages/cmk-werks"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: "No cmk-werks package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
     - NAME: "Package cmk-trace"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_TRACE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_TRACE_FILES
       DIR: "packages/cmk-trace"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-trace.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-trace.txt"
       TEXT_ON_SKIP: "No cmk-trace package files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-trace.txt"
 
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES
       DIR: "packages/cmk-frontend-vue"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-frontend-vue.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-frontend-vue.txt"
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
     - NAME: "Package cmk-shared-typing"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHARED_TYPING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_SHARED_TYPING_FILES
       DIR: "packages/cmk-shared-typing"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
       TEXT_ON_SKIP: "No cmk-shared-typing files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"
 
@@ -527,6 +558,6 @@ STAGES:
     - NAME: "Package cmk-frontend"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_FRONTEND_FILES
       DIR: "packages/cmk-frontend"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-frontend.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-frontend.txt"
       TEXT_ON_SKIP: "No cmk-frontend files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"

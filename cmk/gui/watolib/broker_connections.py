@@ -3,10 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from livestatus import BrokerConnection, BrokerConnections, BrokerSite, ConnectionId
+from typing_extensions import TypedDict
+
+from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    BrokerSite,
+    ConnectionId,
+    SiteId,
+)
 
 from cmk.ccc import store
 
@@ -56,6 +66,59 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
             self._config_variable,
             connections_dict,
             pprint_value=active_config.wato_pprint_config,
+        )
+
+
+class SiteConnectionInfo(TypedDict, total=True):
+    site_id: str
+
+
+class BrokerConnectionInfo(TypedDict, total=True):
+    connecter: SiteConnectionInfo
+    connectee: SiteConnectionInfo
+
+
+@dataclass
+class SiteConnectionData:
+    site_id: SiteId
+
+
+@dataclass
+class BrokerConnectionConfig:
+    connection_id: ConnectionId
+    connecter: SiteConnectionData
+    connectee: SiteConnectionData
+
+    @classmethod
+    def from_internal(
+        cls, connection_id: ConnectionId, internal_config: BrokerConnection
+    ) -> BrokerConnectionConfig:
+        return cls(
+            connection_id=connection_id,
+            connecter=SiteConnectionData(site_id=internal_config.connecter.site_id),
+            connectee=SiteConnectionData(site_id=internal_config.connectee.site_id),
+        )
+
+    @classmethod
+    def from_external(
+        cls, connection_id: str, external_config: BrokerConnectionInfo
+    ) -> BrokerConnectionConfig:
+        return cls(
+            connection_id=ConnectionId(connection_id),
+            connecter=SiteConnectionData(site_id=SiteId(external_config["connecter"]["site_id"])),
+            connectee=SiteConnectionData(site_id=SiteId(external_config["connectee"]["site_id"])),
+        )
+
+    def to_external(self) -> BrokerConnectionInfo:
+        return BrokerConnectionInfo(
+            connecter=SiteConnectionInfo(site_id=self.connecter.site_id),
+            connectee=SiteConnectionInfo(site_id=self.connectee.site_id),
+        )
+
+    def to_internal(self) -> BrokerConnection:
+        return BrokerConnection(
+            connecter=BrokerSite(site_id=self.connecter.site_id),
+            connectee=BrokerSite(site_id=self.connectee.site_id),
         )
 
 

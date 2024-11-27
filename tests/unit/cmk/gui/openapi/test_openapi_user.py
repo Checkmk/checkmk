@@ -42,7 +42,7 @@ from cmk.gui.watolib.custom_attributes import (
     update_user_custom_attrs,
 )
 from cmk.gui.watolib.userroles import clone_role, RoleID
-from cmk.gui.watolib.users import edit_users
+from cmk.gui.watolib.users import default_sites, edit_users
 
 from cmk.crypto.password_hashing import PasswordHash
 
@@ -166,7 +166,7 @@ def test_openapi_user_minimal_settings(
                 "is_new_user": True,
             }
         }
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -239,36 +239,12 @@ def test_openapi_user_minimal_password_settings(
 
 
 def test_openapi_all_users(clients: ClientRegistry) -> None:
-    resp = clients.User.get_all(include_links=True)
+    resp = clients.User.get_all()
     users = resp.json["value"]
     assert len(users) == 1
 
     user = clients.User.get(url=users[0]["links"][0]["href"])
     assert user.json == users[0]
-
-
-def test_openapi_list_users_include_links(clients: ClientRegistry) -> None:
-    default_response = clients.User.get_all()
-    enabled_response = clients.User.get_all(include_links=True)
-    disabled_response = clients.User.get_all(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-def test_openapi_list_users_include_extensions(clients: ClientRegistry) -> None:
-    default_response = clients.User.get_all()
-    enabled_response = clients.User.get_all(include_extensions=True)
-    disabled_response = clients.User.get_all(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @managedtest
@@ -350,7 +326,7 @@ def test_openapi_user_internal_with_notifications(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
@@ -553,7 +529,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with run_as_superuser():
-            edit_users(user_object)
+            edit_users(user_object, default_sites)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -585,7 +561,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
 
     assert _load_internal_attributes(name) == {
@@ -619,7 +596,8 @@ def test_openapi_user_internal_auth_handling(
                         "attributes": updated_internal_attributes,
                         "is_new_user": False,
                     }
-                }
+                },
+                default_sites,
             )
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -685,7 +663,7 @@ def test_managed_global_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -769,7 +747,7 @@ def test_managed_idle_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
@@ -854,7 +832,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda flag: {},
+        lambda *args, **kwargs: {},
     )
 
     resp = clients.User.get_all()
@@ -1429,7 +1407,7 @@ def test_edit_ldap_user_with_locked_attributes(
         },
     }
     with run_as_superuser():
-        edit_users(user_object)
+        edit_users(user_object, default_sites)
 
     clients.User.edit(
         username=name,

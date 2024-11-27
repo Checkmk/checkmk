@@ -11,11 +11,11 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 
 def inventory_netscaler_dnsrates(info):
@@ -51,6 +51,7 @@ def parse_netscaler_dnsrates(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
+    name="netscaler_dnsrates",
     parse_function=parse_netscaler_dnsrates,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

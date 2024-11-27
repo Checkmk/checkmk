@@ -49,9 +49,9 @@ extensions = [
 # The better way to deal with it would be to create a dedicated venv for the plugin API doc
 # generator which pulls in our packages as dependencies. This way we would ensure that all
 # dependencies are available during the sphinx execution. But since the documented modules
-# cmk.base.plugins.bakery.bakery_api, cmk.base.plugins.agent_based.agent_based_api and
-# cmk.cee.dcd.plugins.connectors.connectors_api are not separate packages right now, we can
-# not move on with this.
+# cmk.base.plugins.bakery.bakery_api and
+# cmk.cee.dcd.plugins.connectors.connectors_api
+# are not separate packages right now, we can not move on with this.
 autodoc_mock_imports = [
     "cmk.trace",
     "livestatus",

@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.quanta import parse_quanta
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.quanta import DETECT_QUANTA
+
+check_info = {}
 
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.1 1
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.2 2
@@ -58,6 +59,7 @@ def discover_quanta_fan(section):
 
 
 check_info["quanta_fan"] = LegacyCheckDefinition(
+    name="quanta_fan",
     detect=DETECT_QUANTA,
     fetch=[
         SNMPTree(

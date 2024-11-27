@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     DiscoveryResult,
@@ -17,6 +16,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 
@@ -35,6 +36,7 @@ def parse_cisco_oldcpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_oldcpu"] = LegacyCheckDefinition(
+    name="cisco_oldcpu",
     parse_function=parse_cisco_oldcpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),

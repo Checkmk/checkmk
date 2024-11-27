@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_enclosure:sep(58)>>>
@@ -100,6 +102,7 @@ def discover_ibm_svc_enclosure(section):
 
 
 check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
+    name="ibm_svc_enclosure",
     parse_function=parse_ibm_svc_enclosure,
     service_name="Enclosure %s",
     discovery_function=discover_ibm_svc_enclosure,

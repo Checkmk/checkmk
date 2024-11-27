@@ -11,8 +11,9 @@ import { renderFormWithData } from '../cmk-form-helper'
 const spec: FormSpec.SingleChoice = {
   type: 'single_choice',
   title: 'fooTitle',
-  input_hint: '',
+  input_hint: 'some input hint',
   help: 'fooHelp',
+  no_elements_text: 'no_text',
   elements: [
     { name: 'choice1', title: 'Choice 1' },
     { name: 'choice2', title: 'Choice 2' }
@@ -31,9 +32,23 @@ test('FormSingleChoice renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
 
-  expect(element.value).toBe('choice1')
+  expect(element).toHaveAccessibleName('Choice 1')
+})
+
+test('FormSingleChoice renders something when noting is selected', () => {
+  render(FormSingleChoice, {
+    props: {
+      spec,
+      data: null,
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
+
+  expect(element).toHaveAccessibleName('some input hint')
 })
 
 test('FormSingleChoice updates data', async () => {
@@ -43,8 +58,9 @@ test('FormSingleChoice updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
-  await fireEvent.update(element, 'choice2')
+  const element = screen.getByLabelText<HTMLInputElement>('fooLabel')
+  await fireEvent.click(element)
+  await fireEvent.click(screen.getByText('Choice 2'))
 
   expect(getCurrentData()).toBe('"choice2"')
 })

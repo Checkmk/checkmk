@@ -24,14 +24,14 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.user import UserId
 
 from cmk.gui import log, visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
@@ -58,7 +58,7 @@ from cmk.gui.visuals.filter import Filter
 
 from . import availability
 from .row_post_processing import post_process_rows
-from .sorter import SorterEntry
+from .sorter import SorterEntry, SorterProtocol
 from .store import get_all_views, get_permitted_views
 
 
@@ -636,10 +636,12 @@ def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
 
     # Handle case where join columns are not present for all rows
     def safe_compare(
-        compfunc: Callable[[Row, Row, Mapping[str, Any] | None], int],
+        compfunc: SorterProtocol,
         row1: Row,
         row2: Row,
         parameters: Mapping[str, Any] | None,
+        config: Config,
+        req: Request,
     ) -> int:
         if row1 is None and row2 is None:
             return 0
@@ -650,7 +652,9 @@ def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
         return compfunc(
             row1,
             row2,
-            parameters,
+            parameters=parameters,
+            config=config,
+            request=req,
         )
 
     def multisort(e1: Row, e2: Row) -> int:
@@ -663,9 +667,17 @@ def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
                     e1["JOIN"].get(entry.join_key),
                     e2["JOIN"].get(entry.join_key),
                     entry.parameters,
+                    active_config,
+                    request,
                 )
             else:
-                c = neg * entry.sorter.cmp(e1, e2, entry.parameters)
+                c = neg * entry.sorter.cmp(
+                    e1,
+                    e2,
+                    parameters=entry.parameters,
+                    config=active_config,
+                    request=request,
+                )
 
             if c != 0:
                 return c

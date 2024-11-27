@@ -7,30 +7,41 @@ Polyfactory has a limitation on more specific Callables, so we override the orig
 to have a more generic type definition for fields which involve those
 """
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Sequence
 
 from polyfactory.factories.dataclass_factory import DataclassFactory
 
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupStage,
+    QuickSetupStageAction,
+)
 
 
 @dataclass(frozen=True)
-class QuickSetupStageForTest(QuickSetupStage):
+class StageActionForTest(QuickSetupStageAction):
     recap: Sequence
-    configure_components: Sequence
     custom_validators: Sequence
 
 
 @dataclass(frozen=True)
-class QuickSetupSaveActionForTest(QuickSetupSaveAction):
+class QuickSetupStageForTest(QuickSetupStage):
+    configure_components: Sequence
+
+
+@dataclass(frozen=True)
+class QuickSetupActionForTest(QuickSetupAction):
     action: Callable
+    custom_validators: Sequence[Callable]
 
 
 @dataclass(frozen=True)
 class QuickSetupForTest(QuickSetup):
     stages: Sequence[Callable]
-    save_actions: Sequence[QuickSetupSaveActionForTest]
+    actions: Sequence[QuickSetupActionForTest]
+    load_data: Callable
 
 
 class QuickSetupFactory(DataclassFactory):

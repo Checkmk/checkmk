@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -17,9 +19,10 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.lib.cache_helper import CacheInfo, render_cache_info
 
 # <<<oracle_sql:sep(58)>>>
-# [[[SID-1|SQL-A]]]
+# [[[SID-1|SQL-A|cached(123,456)]]]
 # details:DETAILS
 # perfdata:NAME=VAL;WARN;CRIT;MIN;MAX NAME=VAL;WARN;CRIT;MIN;MAX ...
 # perfdata:NAME=VAL;WARN;CRIT;MIN;MAX ...
@@ -46,6 +49,7 @@ class Instance:
     exit: int = 0
     elapsed: float | None = None
     parsing_error: dict[tuple[str, str, int], list[str]] = field(default_factory=lambda: {})
+    cache_info: CacheInfo | None = None
 
 
 def parse_number(value: str) -> float | None:
@@ -92,16 +96,22 @@ def parse_metrics(line: str) -> Iterator[Metric]:
         )
 
 
+def _prepare_instance(line: str, now: float) -> tuple[str, str, Instance]:
+    sid, item, *rest = line.split("|")
+    instance = Instance()
+    if rest:
+        instance.cache_info = CacheInfo.from_raw(rest[0], now)
+    return sid, item, instance
+
+
 def parse_oracle_sql(string_table: StringTable) -> Section:
+    now = time.time()
     parsed: dict[str, Instance] = {}
     instance = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            item_name = tuple(line[0][3:-3].split("|"))
-            instance = parsed.setdefault(
-                ("%s SQL %s" % item_name).upper(),
-                Instance(),
-            )
+            sid, item, inst = _prepare_instance(line[0][3:-3], now)
+            instance = parsed.setdefault((f"{sid} SQL {item}").upper(), inst)
             continue
 
         if instance is None:
@@ -132,7 +142,8 @@ def parse_oracle_sql(string_table: StringTable) -> Section:
             instance.exit = int(line[1])
 
         elif key == "elapsed":
-            instance.elapsed = float(line[1])
+            if line[1] != "":
+                instance.elapsed = float(line[1])
 
         else:
             instance.parsing_error.setdefault(
@@ -172,6 +183,9 @@ def check_oracle_sql(item: str, params: Mapping[str, Any], section: Section) -> 
         yield Result(
             state=State.OK, summary=long[0], details=long_details if long_details else None
         )
+
+    if data.cache_info is not None:
+        yield Result(state=State.OK, summary=render_cache_info(data.cache_info))
 
 
 agent_section_oracle_sql = AgentSection(

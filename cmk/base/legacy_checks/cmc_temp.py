@@ -6,11 +6,12 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 # [[[u'26', u'26']], [[u'45', u'15', u'45', u'15']]]
 
@@ -39,6 +40,7 @@ def parse_cmc_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable]
 
 
 check_info["cmc_temp"] = LegacyCheckDefinition(
+    name="cmc_temp",
     parse_function=parse_cmc_temp,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.1"),
     fetch=[

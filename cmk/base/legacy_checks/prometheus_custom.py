@@ -6,10 +6,10 @@
 
 import json
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store
+
+check_info = {}
 
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
@@ -141,6 +141,7 @@ def discover_prometheus_custom(section):
 
 
 check_info["prometheus_custom"] = LegacyCheckDefinition(
+    name="prometheus_custom",
     parse_function=parse_prometheus_custom,
     service_name="%s",
     discovery_function=discover_prometheus_custom,

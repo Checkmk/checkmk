@@ -1540,11 +1540,7 @@ class CustomAttributeFilter(Filter):
                 _("The requested item %s does not exist") % attribute_id,
             )
         val = value[self.value_varname(self.ident)]
-        return "Filter: {}_custom_variables ~~ {} ^{}\n".format(
-            self.info,
-            livestatus.lqencode(attribute_id.upper()),
-            livestatus.lqencode(val),
-        )
+        return f"Filter: {self.info}_custom_variables ~~ {livestatus.lqencode(attribute_id.upper())} ^{livestatus.lqencode(val)}\n"
 
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.value_varname(self.ident)

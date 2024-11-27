@@ -1,18 +1,16 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_py//:requirements.bzl", "requirement")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = [":__subpackages__"])
 
 py_library(
     name = "testlib",
     testonly = True,
-    srcs = glob(
-        include = ["testlib/**"],
-        exclude = ["testlib/cse/**"],
-    ) + ["__init__.py"],
+    srcs = ["__init__.py"] + glob(include = ["testlib/**"]),
     imports = [".."],
     deps = [
         "//cmk:lib_cmk",
+        requirement("beautifulsoup4"),
         requirement("cryptography"),
         requirement("docker"),
         requirement("dockerpty"),

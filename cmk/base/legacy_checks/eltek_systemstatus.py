@@ -6,11 +6,11 @@
 # .1.3.6.1.4.1.12148.9.2.2.0 1 --> ELTEK-DISTRIBUTED-MIB::systemOperationalStatus.0
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.eltek import DETECT_ELTEK
+
+check_info = {}
 
 
 def inventory_eltek_systemstatus(info):
@@ -33,6 +33,7 @@ def parse_eltek_systemstatus(string_table: StringTable) -> StringTable | None:
 
 
 check_info["eltek_systemstatus"] = LegacyCheckDefinition(
+    name="eltek_systemstatus",
     parse_function=parse_eltek_systemstatus,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(

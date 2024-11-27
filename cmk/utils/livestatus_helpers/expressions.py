@@ -283,12 +283,7 @@ class BinaryExpression(QueryExpression):
         self._header = header
 
     def __repr__(self) -> str:
-        return "{}({} {} {})".format(
-            self._header,
-            self.left.value,
-            self.operator,
-            self.right.value,
-        )
+        return f"{self._header}({self.left.value} {self.operator} {self.right.value})"
 
     def __str__(self) -> str:
         return f"{self.left.value} {self.operator} {self.right.value}"

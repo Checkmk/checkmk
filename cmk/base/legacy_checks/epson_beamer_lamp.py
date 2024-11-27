@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_epson_beamer_lamp(info):
@@ -31,6 +31,7 @@ def parse_epson_beamer_lamp(string_table: StringTable) -> StringTable:
 
 
 check_info["epson_beamer_lamp"] = LegacyCheckDefinition(
+    name="epson_beamer_lamp",
     parse_function=parse_epson_beamer_lamp,
     detect=contains(".1.3.6.1.2.1.1.2.0", "1248"),
     fetch=SNMPTree(

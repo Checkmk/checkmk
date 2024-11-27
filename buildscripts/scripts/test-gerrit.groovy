@@ -119,7 +119,7 @@ def main() {
                 )]);
 
                 show_duration("archiveArtifacts") {
-                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/**');
                 }
             }
         }

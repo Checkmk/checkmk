@@ -6,10 +6,10 @@
 # Example output from agent:
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_symantec_av_progstate(info):
@@ -27,6 +27,7 @@ def parse_symantec_av_progstate(string_table: StringTable) -> StringTable:
 
 
 check_info["symantec_av_progstate"] = LegacyCheckDefinition(
+    name="symantec_av_progstate",
     parse_function=parse_symantec_av_progstate,
     service_name="AV Program Status",
     discovery_function=inventory_symantec_av_progstate,

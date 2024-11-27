@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 _TYPE_TABLE_IDX = (1, 2, 3, 6, 7, 8, 9, 16, 18, 36, 37, 38, 42)
 
@@ -70,6 +71,7 @@ def check_wut_webtherm(item, params, parsed):
 
 
 check_info["wut_webtherm"] = LegacyCheckDefinition(
+    name="wut_webtherm",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
     fetch=[
         SNMPTree(
@@ -118,6 +120,7 @@ def check_wut_webtherm_pressure(item, _no_params, parsed):
 
 
 check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
+    name="wut_webtherm_pressure",
     service_name="Pressure %s",
     sections=["wut_webtherm"],
     discovery_function=inventory_wut_webtherm_pressure,
@@ -146,6 +149,7 @@ def check_wut_webtherm_humidity(item, params, parsed):
 
 
 check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
+    name="wut_webtherm_humidity",
     service_name="Humidity %s",
     sections=["wut_webtherm"],
     discovery_function=inventory_wut_webtherm_humidity,

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
 
 route_type_mapping = {
     "DefaultRoute": "default route",
@@ -34,12 +34,7 @@ def check_stormshield_route(item, params, info):
         if line[0] == item:
             _index, typ, name, gateway_name, gateway_type, state = line
             yield route_state_mapping[state]
-            infotext = "Type: {}, Router name: {}, Gateway name: {}, Gateway type: {}".format(
-                route_type_mapping[typ],
-                name,
-                gateway_name,
-                gateway_type,
-            )
+            infotext = f"Type: {route_type_mapping[typ]}, Router name: {name}, Gateway name: {gateway_name}, Gateway type: {gateway_type}"
             yield 0, infotext
 
 
@@ -48,6 +43,7 @@ def parse_stormshield_route(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_route"] = LegacyCheckDefinition(
+    name="stormshield_route",
     parse_function=parse_stormshield_route,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

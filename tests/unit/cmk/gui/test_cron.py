@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from functools import partial
-
 import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
@@ -39,7 +37,5 @@ def test_registered_jobs() -> None:
             "replace_builtin_signature_cert",
         ]
 
-    found_jobs = sorted(
-        [f.func.__name__ if isinstance(f, partial) else f.__name__ for f in cron.multisite_cronjobs]
-    )
+    found_jobs = sorted([f.name for f in cron.cron_job_registry.values()])
     assert found_jobs == sorted(expected)

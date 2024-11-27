@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+
+check_info = {}
 
 
 def parse_ups_in_freq(string_table):
@@ -46,6 +46,7 @@ def check_ups_in_freq(item, params, parsed):
 
 
 check_info["ups_in_freq"] = LegacyCheckDefinition(
+    name="ups_in_freq",
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.3.3.1",

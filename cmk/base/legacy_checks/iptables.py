@@ -37,10 +37,10 @@
 import difflib
 import hashlib
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError
+
+check_info = {}
 
 
 def iptables_hash(config):
@@ -87,6 +87,7 @@ def check_iptables(_no_item, params, parsed):
 
 
 check_info["iptables"] = LegacyCheckDefinition(
+    name="iptables",
     parse_function=parse_iptables,
     service_name="Iptables",
     discovery_function=inventory_iptables,

@@ -5,11 +5,11 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.collection.agent_based.docker_container_mem import parse_docker_container_mem
@@ -195,12 +195,12 @@ MK_DOCKER_CONTAINER_MEM_CGROUPV2 = [
     ],
 )
 def test_docker_container_diskstat(
-    fix_register: FixRegister,
+    agent_based_plugins: AgentBasedPlugins,
     string_table: StringTable,
     expected_result: CheckResult,
 ) -> None:
-    agent_section = fix_register.agent_sections[SectionName("docker_container_mem")]
-    plugin = fix_register.check_plugins[CheckPluginName("mem_used")]
+    agent_section = agent_based_plugins.agent_sections[SectionName("docker_container_mem")]
+    plugin = agent_based_plugins.check_plugins[CheckPluginName("mem_used")]
     parsed = agent_section.parse_function(string_table)
     assert (
         list(

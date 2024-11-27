@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.stulz import DETECT_STULZ
+
+check_info = {}
 
 
 def inventory_stulz_alerts(info):
@@ -29,6 +29,7 @@ def parse_stulz_alerts(string_table: StringTable) -> StringTable:
 
 
 check_info["stulz_alerts"] = LegacyCheckDefinition(
+    name="stulz_alerts",
     parse_function=parse_stulz_alerts,
     detect=DETECT_STULZ,
     fetch=SNMPTree(

@@ -8,7 +8,7 @@ from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from . import _perfometer
-from ._autocompleter import graph_templates_autocompleter, metrics_autocompleter
+from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import TemplateGraphSpecification
@@ -39,7 +39,6 @@ def register(
     graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
     autocompleter_registry.register_autocompleter("monitored_metrics", metrics_autocompleter)
-    autocompleter_registry.register_autocompleter("available_graphs", graph_templates_autocompleter)
 
 
 __all__ = [

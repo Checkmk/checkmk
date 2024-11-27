@@ -75,10 +75,7 @@ def check_cisco_power(item: str, section: StringTable) -> CheckResult:
             source = int(r_source)
             yield Result(
                 state={1: State.OK, 2: State.WARN}.get(state, State.CRIT),
-                summary="Status: {}, Source: {}".format(
-                    cisco_power_states[state],
-                    cisco_power_sources[source],
-                ),
+                summary=f"Status: {cisco_power_states[state]}, Source: {cisco_power_sources[source]}",
             )
 
 

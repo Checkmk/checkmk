@@ -265,9 +265,9 @@ def _generate_sync_snapshot(
 
     # Now create the snapshot
     work_dir = tmp_path / "activation"
-    snapshot_manager = activate_changes.SnapshotManager.factory(
-        str(work_dir), site_snapshot_settings, edition
-    )
+    snapshot_manager = activate_changes.activation_features_registry[
+        str(edition)
+    ].snapshot_manager_factory(str(work_dir), site_snapshot_settings)
     assert snapshot_manager._data_collector.__class__.__name__ == snapshot_data_collector_class
 
     snapshot_manager.generate_snapshots()
@@ -329,7 +329,7 @@ def _get_expected_paths(
         "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
         "etc/rabbitmq",
         "etc/rabbitmq/definitions.d",
-        "etc/rabbitmq/definitions.d/definitions.json",
+        "etc/rabbitmq/definitions.d/definitions.next.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:
@@ -432,12 +432,18 @@ def _get_expected_paths(
 @pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", [SiteId("unit_remote_1"), SiteId("unit_remote_2")])
 def test_generate_snapshot(
-    edition: cmk_version.Edition,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     with_user_login: UserId,
     remote_site: SiteId,
 ) -> None:
+    # Unfortunately we can not use the edition fixture anymore, which parameterizes the test with
+    # all editions. The reason for this is that cmk.gui.main_modules now executes the registrations
+    # for the edition it detects. In the future we want be able to create edition specific
+    # application objects, which would make testing them independently possible. Until then we have
+    # to accept the smaller test scope.
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
+
     with _get_activation_manager(monkeypatch, remote_site) as activation_manager:
         with _create_sync_snapshot(
             activation_manager,
@@ -463,12 +469,15 @@ def test_generate_snapshot(
 def test_synchronize_site(
     mocked_responses: responses.RequestsMock,
     monkeypatch: pytest.MonkeyPatch,
-    edition: cmk_version.Edition,
     tmp_path: Path,
     mocker: MockerFixture,
 ) -> None:
-    if edition is cmk_version.Edition.CME:
-        pytest.skip("Seems faked site environment is not 100% correct")
+    # Unfortunately we can not use the edition fixture anymore, which parameterizes the test with
+    # all editions. The reason for this is that cmk.gui.main_modules now executes the registrations
+    # for the edition it detects. In the future we want be able to create edition specific
+    # application objects, which would make testing them independently possible. Until then we have
+    # to accept the smaller test scope.
+    edition = cmk_version.edition(cmk.utils.paths.omd_root)
 
     mocked_responses.add(
         method=responses.POST,

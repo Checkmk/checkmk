@@ -14,8 +14,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 
-from cmk.piggyback import get_messages_for, PiggybackMessage
-from cmk.piggyback.config import Config as PiggybackConfig
+from cmk.piggyback.backend import Config as PiggybackConfig
+from cmk.piggyback.backend import get_messages_for, PiggybackMessage
 
 from ._abstract import Fetcher, Mode
 

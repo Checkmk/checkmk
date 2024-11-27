@@ -6,7 +6,6 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -14,10 +13,12 @@ from cmk.base.check_legacy_includes.azure import (
     iter_resource_attributes,
     parse_resources,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import Service
 from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
+check_info = {}
 
 
 def check_azure_storageaccounts(item, params, section):
@@ -48,6 +49,7 @@ def discover_azure_storageaccounts(section):
 
 
 check_info["azure_storageaccounts"] = LegacyCheckDefinition(
+    name="azure_storageaccounts",
     parse_function=parse_resources,
     service_name="Storage %s account",
     discovery_function=discover_azure_storageaccounts,
@@ -83,6 +85,7 @@ def check_azure_storageaccounts_flow(item, params, section):
 
 
 check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
+    name="azure_storageaccounts_flow",
     service_name="Storage %s flow",
     sections=["azure_storageaccounts"],
     discovery_function=discover_azure_by_metrics(
@@ -122,6 +125,7 @@ def check_azure_storageaccounts_performance(item, params, section):
 
 
 check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
+    name="azure_storageaccounts_performance",
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
     discovery_function=discover_azure_by_metrics(

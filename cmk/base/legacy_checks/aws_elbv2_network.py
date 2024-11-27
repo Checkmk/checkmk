@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -12,10 +11,12 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_metrics,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_elbv2_network(string_table):
@@ -74,6 +75,7 @@ def discover_aws_elbv2_network(p):
 
 
 check_info["aws_elbv2_network"] = LegacyCheckDefinition(
+    name="aws_elbv2_network",
     parse_function=parse_aws_elbv2_network,
     service_name="AWS/NetworkELB LCUs",
     discovery_function=discover_aws_elbv2_network,
@@ -126,6 +128,7 @@ def discover_aws_elbv2_network_connections(p):
 
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_connections",
     service_name="AWS/NetworkELB Connections",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_connections,
@@ -229,6 +232,7 @@ def discover_aws_elbv2_network_tls_handshakes(p):
 
 
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_tls_handshakes",
     service_name="AWS/NetworkELB TLS Handshakes",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_tls_handshakes,
@@ -278,6 +282,7 @@ def discover_aws_elbv2_network_rst_packets(p):
 
 
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_rst_packets",
     service_name="AWS/NetworkELB Reset Packets",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_rst_packets,
@@ -327,6 +332,7 @@ def discover_aws_elbv2_network_statistics(p):
 
 
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_statistics",
     service_name="AWS/NetworkELB Statistics",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_statistics,

@@ -8,6 +8,8 @@ import type { DataSize } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   spec: DataSize
@@ -22,6 +24,15 @@ const [validation, value] = useValidation<[string, string]>(
 )
 
 const componentId = useId()
+
+const magnitudeOptions = computed(() => {
+  return props.spec.displayed_magnitudes.map((element: string) => {
+    return {
+      name: element,
+      title: element
+    }
+  })
+})
 </script>
 
 <template>
@@ -30,13 +41,30 @@ const componentId = useId()
     :id="componentId"
     v-model="value[0]"
     :placeholder="spec.input_hint || ''"
-    class="number"
-    type="text"
+    class="number no-spinner"
+    step="any"
+    type="number"
   />
-  <select v-model="value[1]">
-    <option v-for="element in spec.displayed_magnitudes" :key="element" :value="element">
-      {{ element }}
-    </option>
-  </select>
+  <CmkDropdown
+    v-model:selected-option="value[1]"
+    :options="magnitudeOptions"
+    :show-filter="false"
+  />
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input.number {
+  width: 5.8ex;
+}
+
+.no-spinner[type='number'] {
+  -moz-appearance: textfield;
+}
+</style>

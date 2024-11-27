@@ -15,13 +15,14 @@ from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, List
 def recompose(form_spec: FormSpec[Any]) -> ListExtended[Any]:
     if not isinstance(form_spec, List):
         raise MKGeneralException(
-            f"Cannot decompose form spec. Expected a String form spec, got {type(form_spec)}"
+            f"Cannot  form spec. Expected a String form spec, got {type(form_spec)}"
         )
 
     return ListExtended(
         title=form_spec.title,
         help_text=form_spec.help_text,
         custom_validate=form_spec.custom_validate,
+        migrate=form_spec.migrate,
         element_template=form_spec.element_template,
         add_element_label=form_spec.add_element_label,
         remove_element_label=form_spec.remove_element_label,

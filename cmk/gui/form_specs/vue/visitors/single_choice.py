@@ -2,19 +2,18 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Generic, Literal, TypeVar
+from typing import Generic, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import InvalidElementMode
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_title_input_hint,
     compute_validation_errors,
@@ -23,9 +22,12 @@ from ._utils import (
     get_prefill_default,
     get_title_and_help,
     localize,
+    option_id,
 )
 
 T = TypeVar("T")
+
+NO_SELECTION = None
 
 
 class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], T]):
@@ -34,6 +36,10 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             return False
         return value in [x.name for x in self.form_spec.elements]
 
+    @classmethod
+    def option_id(cls, val: object) -> str:
+        return option_id(val)
+
     def _parse_value(self, raw_value: object) -> T | EmptyValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -41,6 +47,16 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             ):
                 return prefill_default
             raw_value = prefill_default
+
+        if self.options.data_origin == DataOrigin.FRONTEND:
+            # Decode option send from frontend
+            for option in self.form_spec.elements:
+                if self.option_id(option.name) == raw_value:
+                    raw_value = option.name
+                    break
+            else:
+                # Found no matching option
+                return EMPTY_VALUE
 
         if not isinstance(raw_value, self.form_spec.type):
             return EMPTY_VALUE
@@ -69,12 +85,12 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[shared_type_defs.SingleChoice, Literal[""] | T]:
+    ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
             shared_type_defs.SingleChoiceElement(
-                name=element.name,
+                name=self.option_id(element.name),
                 title=element.title.localize(translate_to_current_language),
             )
             for element in self.form_spec.elements
@@ -87,6 +103,8 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             if invalid_validation and invalid_validation.display:
                 input_hint = localize(invalid_validation.display)
 
+        # Note: All valid values have at least some kind of str content,
+        #       since self._option_id uses repr() to generate the id
         return (
             shared_type_defs.SingleChoice(
                 title=title,
@@ -95,9 +113,10 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 frozen=self.form_spec.frozen and isinstance(raw_value, self.form_spec.type),
-                input_hint=input_hint,
+                input_hint=input_hint or _("Please choose"),
+                no_elements_text=localize(self.form_spec.no_elements_text),
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            NO_SELECTION if isinstance(parsed_value, EmptyValue) else self.option_id(parsed_value),
         )
 
     def _compute_invalid_value_display_message(self, raw_value: object) -> str:
@@ -109,6 +128,8 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
         ) or Message("Invalid choice %r")
         message_localized = localize(message)
         if "%s" in message_localized or "%r" in message_localized:
+            if raw_value == NO_SELECTION:
+                return message_localized.replace("%s", "").replace("%r", "")
             return message_localized % (raw_value,)
         return message_localized
 

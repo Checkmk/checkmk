@@ -10,8 +10,7 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-# TODO: Prefixing the command with the environment variable breaks xargs usage below!
-PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
+PIPENV             := scripts/run-pipenv
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
@@ -120,10 +119,10 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-fr
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 cmk-frontend:
-	packages/cmk-frontend/run --setup-environment --all
+	packages/cmk-frontend/run --clean --all
 
 frontend-vue:
-	packages/cmk-frontend-vue/run --all
+	packages/cmk-frontend-vue/run --clean --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -147,7 +146,7 @@ version:
 # but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/ccc/version.py bin/livedump
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
@@ -273,12 +272,12 @@ Pipfile.lock:
 			if [ "${CI}" == "true" ]; then \
 				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
 				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
-				echo "pipenv lock"; \
+				echo "make Pipfile.lock"; \
 				exit 1; \
 			fi; \
 			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
 			|| ( $(RM) -r .venv ; exit 1 ) \
-			&& ( bazel run //cmk:requirements.update ) \
+			&& ( exec $(LOCK_FD)>&- ; bazel run //:requirements.update ) \
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
@@ -287,5 +286,5 @@ Pipfile.lock:
 .venv: Pipfile.lock
 	@( \
 		flock $(LOCK_FD); \
-		PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) $(REPO_PATH)/scripts/make_venv \
+		$(REPO_PATH)/scripts/make_venv \
 	) $(LOCK_FD)>$(LOCK_PATH)

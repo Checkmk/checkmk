@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.infoblox import check_infoblox_statistics
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.2.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfRequests.0
@@ -52,6 +53,7 @@ def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(
+    name="infoblox_dhcp_stats",
     parse_function=parse_infoblox_dhcp_stats,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

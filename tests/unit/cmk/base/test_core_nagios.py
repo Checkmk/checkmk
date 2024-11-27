@@ -30,10 +30,13 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
-from cmk.base import config, core_nagios, server_side_calls
+from cmk.base import config, core_nagios
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
+from cmk.server_side_calls_backend import load_active_checks
 
 
 def ip_address_of_never_called(
@@ -55,9 +58,9 @@ def _patch_plugin_loading(
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
 ) -> None:
     monkeypatch.setattr(
-        server_side_calls,
-        server_side_calls.load_active_checks.__name__,
-        lambda: ((), loaded_active_checks),
+        config,
+        load_active_checks.__name__,
+        lambda *a, **kw: loaded_active_checks,
     )
 
 
@@ -369,6 +372,32 @@ class TestHostCheckStore:
         assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
 
 
+def _make_plugins_for_test() -> AgentBasedPlugins:
+    """Don't load actual plugins, just create some dummy objects."""
+    # most attributes are not used in this test
+    return AgentBasedPlugins(
+        agent_sections={},
+        snmp_sections={},
+        check_plugins={
+            CheckPluginName("uptime"): CheckPlugin(
+                name=CheckPluginName("uptime"),
+                sections=[],
+                service_name="",
+                discovery_function=lambda: (),
+                discovery_default_parameters=None,
+                discovery_ruleset_name=None,
+                discovery_ruleset_type="merged",
+                check_function=lambda: (),
+                check_default_parameters=None,
+                check_ruleset_name=None,
+                cluster_check_function=None,
+                location=PluginLocation("some.test.module.name", "uptime"),
+            )
+        },
+        inventory_plugins={},
+    )
+
+
 def test_dump_precompiled_hostcheck(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
@@ -385,8 +414,7 @@ def test_dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
-        legacy_check_plugin_names={},
-        legacy_check_plugin_files={},
+        plugins=_make_plugins_for_test(),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is not None
@@ -404,8 +432,7 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
         config_cache,
         config_path,
         hostname,
-        legacy_check_plugin_names={},
-        legacy_check_plugin_files={},
+        plugins=AgentBasedPlugins({}, {}, {}, {}),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None
@@ -419,8 +446,7 @@ def test_dump_precompiled_hostcheck_not_existing_host(
         config_cache,
         config_path,
         HostName("not-existing"),
-        legacy_check_plugin_names={},
-        legacy_check_plugin_files={},
+        plugins=AgentBasedPlugins({}, {}, {}, {}),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None

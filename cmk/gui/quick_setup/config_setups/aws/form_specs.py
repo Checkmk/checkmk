@@ -174,7 +174,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Access key ID cannot be empty"),
+                        error_msg=Message("Access key ID is required but not specified."),
                     ),
                 ),
             ),
@@ -186,16 +186,17 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Secret access key cannot be empty"),
+                        error_msg=Message("Secret access key is required but not specified."),
                     ),
                 ),
             ),
             required=True,
         ),
+        **formspec_aws_proxy_details(),
     }
 
 
-def quick_setup_stage_2() -> Mapping[str, DictElement]:
+def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElement]:
     return {
         "regions_to_monitor": DictElement(
             parameter_form=MultipleChoice(
@@ -210,7 +211,12 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("Please choose one or more regions to continue"),
+                        max_value=max_regions,
+                        error_msg=Message("Please select at least one or more regions to continue.")
+                        if max_regions is None
+                        else Message(  # pylint: disable=localization-of-non-literal-string
+                            f"Please select at least one and at most {max_regions} regions to continue"
+                        ),
                     ),
                 ),
             ),
@@ -241,7 +247,7 @@ def quick_setup_stage_3() -> Mapping[str, DictElement]:
     }
 
 
-def quick_setup_advanced() -> Mapping[str, DictElement]:
+def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
     return {
         "proxy_details": DictElement(
             parameter_form=Dictionary(
@@ -258,7 +264,7 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
                                 validators.NumberInRange(
                                     0,
                                     65535,
-                                    Message("Port must be between 0 and 65535"),
+                                    Message("Port must be between 0 and 65535."),
                                 )
                             ],
                         )
@@ -274,13 +280,23 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
                 },
             ),
         ),
+    }
+
+
+def formspec_aws_overall_tags() -> Mapping[str, DictElement]:
+    return {
+        "overall_tags": DictElement(
+            parameter_form=formspec_aws_tags(Title("AWS tags")),
+            required=True,
+        )
+    }
+
+
+def quick_setup_advanced() -> Mapping[str, DictElement]:
+    return {
         **_formspec_aws_api_access(),
         **_formspec_aws_piggyback_naming_convention(),
-        "overall_tags": DictElement(
-            parameter_form=formspec_aws_tags(
-                Title("Restrict monitoring services by one of these AWS tags")
-            ),
-        ),
+        **formspec_aws_overall_tags(),
     }
 
 

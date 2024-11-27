@@ -2,7 +2,10 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import abc
+import logging
+from collections import defaultdict
+from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
@@ -26,51 +29,113 @@ from cmk.crypto.certificate import (
     PersistedCertificateWithPrivateKey,
 )
 from cmk.messaging import (
+    all_cert_files,
     BrokerCertificates,
     ca_key_file,
     cacert_file,
+    clear_brokers_certs_cache,
     multisite_cert_file,
     site_cert_file,
     site_key_file,
     trusted_cas_file,
 )
 
+logger = logging.getLogger("cmk.web.background-job")
 
-def create_all_broker_certificates(
-    myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
-) -> None:
-    if not (
-        required_certificates := [
-            (site_id, settings)
-            for site_id, settings in dirty_sites
-            if site_id != myself and not broker_certs_created(site_id)
-        ]
-    ):
-        return
 
-    broker_ca = load_broker_ca(paths.omd_root)
-    for site_id, settings in required_certificates:
-        sync_remote_broker_certs(settings, create_remote_broker_certs(broker_ca, site_id, settings))
+class BrokerCertificateSync(abc.ABC):
+    def load_central_ca(self) -> PersistedCertificateWithPrivateKey:
+        return load_broker_ca(paths.omd_root)
+
+    @abc.abstractmethod
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_site_to_sync(
+        self, myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[str, Sequence[tuple[SiteId, SiteConfiguration]]]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create_broker_certificates(
+        self,
+        site_id: SiteId,
+        settings: SiteConfiguration,
+        central_ca: CertificateWithPrivateKey,
+        customer_ca: CertificateWithPrivateKey | None,
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_trusted_cas(self) -> None:
+        raise NotImplementedError
+
+
+class DefaultBrokerCertificateSync(BrokerCertificateSync):
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        return broker_certs_created(site_id)
+
+    def get_site_to_sync(
+        self, myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[str, Sequence[tuple[SiteId, SiteConfiguration]]]:
+        required_certificates: dict[str, list[tuple[SiteId, SiteConfiguration]]] = defaultdict(list)
+        for site_id, settings in dirty_sites:
+            if site_id != myself and not self.broker_certs_created(site_id, settings):
+                required_certificates["provider"].append((site_id, settings))
+        return required_certificates
+
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
+        # Only relevant for editions with different customers
+        return None
+
+    def create_broker_certificates(
+        self,
+        site_id: SiteId,
+        settings: SiteConfiguration,
+        central_ca: CertificateWithPrivateKey,
+        customer_ca: CertificateWithPrivateKey | None,
+    ) -> None:
+        logger.debug("Start creating broker certificates for site %s", site_id)
+        remote_broker_certs = create_remote_broker_certs(central_ca, site_id, settings)
+
+        logger.debug("Start syncing broker certificates for site %s", site_id)
+        sync_remote_broker_certs(settings, remote_broker_certs)
+        logger.debug("Certificates synced")
+
+        # the presence of the following cert is used to determine if the broker certificates need
+        # to be created/synced, so only save it if the sync was successful
+        save_single_cert(
+            multisite_cert_file(paths.omd_root, site_id),
+            Certificate.load_pem(CertificatePEM(remote_broker_certs.cert)),
+        )
+
+    def update_trusted_cas(self) -> None:
+        # Only relevant for editions with different customers
+        pass
 
 
 def create_broker_certs(
-    cert_path: Path, site_id: SiteId, ca: CertificateWithPrivateKey
+    site_id: SiteId, ca: CertificateWithPrivateKey
 ) -> CertificateWithPrivateKey:
     """
     Create a new certificate for the broker of a site.
-    Just store the certificate and not the private key.
     """
 
-    bundle = ca.issue_new_certificate(
+    return ca.issue_new_certificate(
         common_name=site_id,
         organization=f"Checkmk Site {omd_site()}",
         expiry=relativedelta(years=2),
         key_size=4096,
     )
-
-    save_single_cert(cert_path, bundle.certificate)
-
-    return bundle
 
 
 def load_broker_ca(omd_root: Path) -> PersistedCertificateWithPrivateKey:
@@ -90,11 +155,7 @@ def create_remote_broker_certs(
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    cert_key = create_broker_certs(
-        multisite_cert_file(paths.omd_root, site_id),
-        site_id,
-        signing_ca,
-    )
+    cert_key = create_broker_certs(site_id, signing_ca)
     return BrokerCertificates(
         key=cert_key.private_key.dump_pem(None).bytes,
         cert=cert_key.certificate.dump_pem().bytes,
@@ -117,6 +178,16 @@ def sync_remote_broker_certs(
     )
 
 
+def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
+    """
+    Remove broker certificates for sites that no longer exist.
+    """
+
+    for cert in all_cert_files(omd_root=paths.omd_root):
+        if SiteId(cert.name.removesuffix("_cert.pem")) not in alive_sites:
+            cert.unlink(missing_ok=True)
+
+
 class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
     def command_name(self) -> str:
         return "store-broker-certs"
@@ -135,7 +206,11 @@ class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
         )
         store.save_bytes_to_file(site_cert_file(paths.omd_root), api_request.cert)
         store.save_bytes_to_file(site_key_file(paths.omd_root), api_request.key)
+
+        # Remove local CA files to avoid confusion. They have no use anymore.
         cacert_file(paths.omd_root).unlink(missing_ok=True)
         ca_key_file(paths.omd_root).unlink(missing_ok=True)
+
+        clear_brokers_certs_cache()
 
         return True

@@ -7,10 +7,14 @@
 import time
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 Section = Mapping[str, Sequence[str]]
 
@@ -36,7 +40,9 @@ def inventory_plesk_backups(section: Section) -> Iterable[tuple[str, Mapping]]:
     yield from ((item, {}) for item in section)
 
 
-def check_plesk_backups(item: str, params: Mapping[str, object], section: Section) -> CheckResult:
+def check_plesk_backups(
+    item: str, params: Mapping[str, object], section: Section
+) -> LegacyCheckResult:
     if (line := section.get(item)) is None:
         return
 
@@ -87,6 +93,7 @@ def check_plesk_backups(item: str, params: Mapping[str, object], section: Sectio
 
 
 check_info["plesk_backups"] = LegacyCheckDefinition(
+    name="plesk_backups",
     parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
     discovery_function=inventory_plesk_backups,

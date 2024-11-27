@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_win_cpuusage(info):
@@ -120,11 +120,13 @@ def parse_winperf(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf"] = LegacyCheckDefinition(
+    name="winperf",
     parse_function=parse_winperf,
 )
 
 
 check_info["winperf.cpuusage"] = LegacyCheckDefinition(
+    name="winperf_cpuusage",
     service_name="CPU Usage",
     sections=["winperf"],
     discovery_function=inventory_win_cpuusage,
@@ -132,6 +134,7 @@ check_info["winperf.cpuusage"] = LegacyCheckDefinition(
 )
 
 check_info["winperf.diskstat"] = LegacyCheckDefinition(
+    name="winperf_diskstat",
     service_name="Disk IO",
     sections=["winperf"],
     discovery_function=inventory_win_diskstat,

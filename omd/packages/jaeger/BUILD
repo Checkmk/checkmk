@@ -1,4 +1,4 @@
-JAEGER_VERSION = "1.58.1"
+JAEGER_VERSION = "2.0.0"
 
 genrule(
     name = "fetch_package",
@@ -12,14 +12,14 @@ genrule(
 genrule(
     name = "extract_binary",
     srcs = [":fetch_package"],
-    outs = ["jaeger-all-in-one"],
+    outs = ["jaeger"],
     cmd = """
         target_path=$$(realpath $(RULEDIR)) ;\
 	tar -xz \
 	    --strip-components=1 \
 	    -C $${target_path} \
 	    -f $(SRCS) \
-	    jaeger-%s-linux-amd64/jaeger-all-in-one
+	    jaeger-%s-linux-amd64/jaeger
     """ % JAEGER_VERSION,
 )
 

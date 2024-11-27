@@ -32,7 +32,13 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, user
+from cmk.gui.logged_in import (
+    LoggedInNobody,
+    LoggedInRemoteSite,
+    LoggedInSuperUser,
+    LoggedInUser,
+    user,
+)
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
@@ -76,7 +82,7 @@ def authenticate() -> Iterator[bool]:
     automation secret authentication."""
     if isinstance(session.user, LoggedInNobody):
         yield False
-    elif isinstance(session.user, LoggedInSuperUser):
+    elif isinstance(session.user, (LoggedInSuperUser, LoggedInRemoteSite)):
         # This is used with the internaltoken auth
         # Let's hope we do not need the transactions for this user...
         yield True

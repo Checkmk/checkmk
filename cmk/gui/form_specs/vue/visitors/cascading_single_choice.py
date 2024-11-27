@@ -5,12 +5,12 @@
 
 from typing import Any
 
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
@@ -26,7 +26,9 @@ from ._utils import (
 )
 
 
-class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):
+class CascadingSingleChoiceVisitor(
+    FormSpecVisitor[CascadingSingleChoiceExtended, tuple[str, object]]
+):
     def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -38,7 +40,12 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
             return (prefill_default, DEFAULT_VALUE)
         if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
             return EMPTY_VALUE
-        assert isinstance(raw_value[0], str)
+
+        name = raw_value[0]
+        if not any(name == element.name for element in self.form_spec.elements):
+            return EMPTY_VALUE
+
+        assert isinstance(name, str)
         assert len(raw_value) == 2
         return tuple(raw_value)
 
@@ -76,6 +83,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
                 elements=vue_elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 input_hint=compute_title_input_hint(self.form_spec.prefill),
+                layout=self.form_spec.layout,
             ),
             (selected_name, selected_value),
         )

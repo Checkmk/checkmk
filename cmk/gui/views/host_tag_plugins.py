@@ -7,9 +7,13 @@
 
 """Dynamic registration of host tag painters and sorters based on the site configuration"""
 
+from collections.abc import Mapping
+from functools import partial
+
 from cmk.utils.tags import TagGroupID
 
 from cmk.gui.config import active_config, Config
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Painter, painter_registry
 from cmk.gui.painter.v0.helpers import get_tag_groups
@@ -81,28 +85,28 @@ def _paint_host_tag(row: Row, tgid: TagGroupID, *, config: Config) -> CellSpec:
 
 def _register_host_tag_sorters(*, config: Config) -> None:
     for tag_group in config.tags.tag_groups:
-        ident = "host_tag_" + str(tag_group.id)
-        cls = type(
-            "LegacySorter%s" % str(ident).title(),
-            (Sorter,),
-            {
-                "_ident": ident,
-                "_spec": {"_tag_group_id": tag_group.id},
-                "ident": property(lambda s: s._ident),
-                "title": _("Host tag:") + " " + tag_group.title,
-                "columns": ["host_tags"],
-                "load_inv": False,
-                "cmp": lambda self, r1, r2, p: _cmp_host_tag(
-                    r1, r2, self._spec["_tag_group_id"], config=config
-                ),
-            },
+        sorter_registry.register(
+            Sorter(
+                ident=f"host_tag_{tag_group.id}",
+                title=_("Host tag:") + " " + tag_group.title,
+                columns=["host_tags"],
+                load_inv=False,
+                sort_function=partial(_cmp_host_tag, tag_group_id=tag_group.id),
+            )
         )
-        sorter_registry.register(cls)
 
 
-def _cmp_host_tag(r1: Row, r2: Row, tgid: TagGroupID, *, config: Config) -> int:
-    host_tag_1 = _get_tag_group_value(r1, "host", tgid, config=config)
-    host_tag_2 = _get_tag_group_value(r2, "host", tgid, config=config)
+def _cmp_host_tag(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, object] | None,
+    config: Config,
+    request: Request,
+    tag_group_id: TagGroupID,
+) -> int:
+    host_tag_1 = _get_tag_group_value(r1, "host", tag_group_id, config=config)
+    host_tag_2 = _get_tag_group_value(r2, "host", tag_group_id, config=config)
     return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 

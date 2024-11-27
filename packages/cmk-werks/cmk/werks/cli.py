@@ -17,6 +17,7 @@ import subprocess
 import sys
 import termios
 import time
+import traceback
 import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
@@ -856,12 +857,35 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    number_of_lines_in_werk = werk_path.read_text(encoding="utf-8").count("\n")
-    if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") == 0:  # nosec
-        werk = load_werk(werk_path)
-        git_add(werk)
-        if commit:
-            git_commit(werk, custom_files)
+    initial_werk_text = werk_path.read_text(encoding="utf-8")
+    number_of_lines_in_werk = initial_werk_text.count("\n")
+    werk = None
+
+    while True:
+        if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") != 0:  # nosec
+            bail_out("Editor returned error, something is very wrong!")
+
+        try:
+            werk = load_werk(werk_path)
+            # validate the werk, to make sure the commit part at the bottom will work
+            cmk_werks_load_werk(file_content=werk.path.read_text(), file_name=werk.path.name)
+            break
+        except Exception:  # pylint: disable=broad-exception-caught
+            sys.stdout.write(initial_werk_text + "\n\n")
+            sys.stdout.write(traceback.format_exc() + "\n\n")
+            sys.stdout.write(
+                "Could not load the werk, see exception above.\n"
+                "You may copy the initial werk text above the exception to fix your werk.\n"
+                "Will reopen the editor, after you acknowledged with enter\n"
+            )
+            input()
+
+    if werk is None:
+        bail_out("This should not have happened, werk is None during edit_werk.")
+
+    git_add(werk)
+    if commit:
+        git_commit(werk, custom_files)
 
 
 def main_pick(args: argparse.Namespace) -> None:
@@ -1045,7 +1069,7 @@ def main_preview(args: argparse.Namespace) -> None:
             yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
 
     definition_list = "\n".join(meta_data())
-    print(
+    sys.stdout.write(
         f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
         "<head>"
         f"<title>Preview of werk {args.id}</title>"
@@ -1055,7 +1079,7 @@ def main_preview(args: argparse.Namespace) -> None:
         f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
         f"<dl>{definition_list}</dl>"
         "</body>"
-        "</html>"
+        "</html>\n"
     )
 
 

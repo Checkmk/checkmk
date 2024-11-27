@@ -5,13 +5,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
-import FormEdit from '@/form/components/FormEdit.vue'
+import { useFormEditDispatcher } from '@/form/private'
 import type { ListOfStrings } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: ListOfStrings
@@ -51,7 +52,7 @@ function setValidation(newBackendValidation: ValidationMessages) {
 }
 
 function checkAutoextend(): void {
-  if (backendData.value[backendData.value.length - 1] == '') {
+  if (backendData.value[backendData.value.length - 1] === '') {
     return
   }
   backendData.value.push('')
@@ -62,7 +63,7 @@ function onPaste(e: ClipboardEvent, index: number) {
   e.preventDefault()
   // Get pasted data via clipboard API
   const clipboardData = e.clipboardData
-  if (clipboardData == null) {
+  if (clipboardData === null) {
     return
   }
   const pasted = clipboardData.getData('Text')
@@ -70,7 +71,7 @@ function onPaste(e: ClipboardEvent, index: number) {
   const stripped = pasted.replace(new RegExp('^[;]+|[;]+$', 'g'), '')
   const entries = stripped.split(new RegExp('[;]+'))
 
-  if (entries.length == 0) {
+  if (entries.length === 0) {
     return
   }
   // Add first entry to the current index
@@ -79,7 +80,7 @@ function onPaste(e: ClipboardEvent, index: number) {
 
   for (let i = 1; i < entries.length; i++) {
     // Append new fields for the remaining entries
-    if (backendData.value[backendData.value.length - 1] == '') {
+    if (backendData.value[backendData.value.length - 1] === '') {
       backendData.value[backendData.value.length - 1] = entries[i]!
     } else {
       backendData.value.push(entries[i]!)
@@ -88,24 +89,27 @@ function onPaste(e: ClipboardEvent, index: number) {
   }
   checkAutoextend()
 }
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table ref="tableRef" class="vue_list">
+  <table ref="tableRef" class="form-list-of-srings">
     <tbody>
       <template v-for="(_, index) in backendData" :key="index">
         <tr
           class="listof_element"
-          :style="{ float: props.spec.layout == 'vertical' ? 'unset' : 'left' }"
+          :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
         >
           <td class="vlof_content">
-            <FormEdit
+            <HelpText :help="spec.help" />
+            <FormEditDispatcher
               v-model:data="backendData[index]"
               :spec="spec.string_spec"
               :backend-validation="elementValidation[index]!"
               @update:data="checkAutoextend"
               @paste="(event: ClipboardEvent) => onPaste(event, index)"
-            ></FormEdit>
+            />
           </td>
         </tr>
       </template>
@@ -113,3 +117,13 @@ function onPaste(e: ClipboardEvent, index: number) {
   </table>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+.form-list-of-srings {
+  border-spacing: 2px 0;
+
+  > tbody > .listof_element > .vlof_content {
+    vertical-align: top;
+  }
+}
+</style>

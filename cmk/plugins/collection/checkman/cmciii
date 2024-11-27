@@ -12,6 +12,8 @@ description:
  If the device returns {OK}, the check is {OK}.
  Otherwise the check is {UNKNOWN}.
 
+ Firmware versions using the MIB of firmware V3.15.20 are supported.
+
 item:
  By default the name of the device is used. If the discovery option
  "Use sensor description" from the ruleset "Rittal CMC III discovery"

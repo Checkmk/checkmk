@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.knuerr import DETECT_KNUERR
+
+check_info = {}
 
 
 def inventory_knuerr_rms_temp(info):
@@ -25,6 +26,7 @@ def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
+    name="knuerr_rms_temp",
     parse_function=parse_knuerr_rms_temp,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

@@ -24,6 +24,7 @@ from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    AckStateAPI,
     API_BasicAuthExplicit,
     API_BasicAuthStore,
     API_ExplicitToken,
@@ -37,16 +38,21 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIPluginDict,
     APIPluginList,
     APIRuleProperties,
+    DowntimeStateAPI,
     MatchHostEventsAPIType,
     MatchServiceEventsAPIType,
-    MgmtTypeAPI,
-    MgmtTypeParamsAPI,
+    MgmtTypeCaseAPI,
+    MgmtTypeCaseParamsAPI,
+    MgmtTypeIncidentAPI,
+    MgmtTypeIncidentParamsAPI,
     NotificationBulkingAPIAttrs,
     NotificationBulkingAPIValueType,
     PluginType,
+    RecoveryStateCaseAPI,
+    RecoveryStateIncidentAPI,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
-from cmk.gui.wato._notification_parameter._registry import (
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     register_notification_parameters,
 )
@@ -72,34 +78,6 @@ def test_get_notification_rules(clients: ClientRegistry) -> None:
     rules = r3.json["value"]
     assert rules[0]["id"] == r1.json["id"]
     assert rules[1]["id"] == r2.json["id"]
-
-
-def test_list_notification_rules_include_links(clients: ClientRegistry) -> None:
-    config = notification_rule_request_example()
-    clients.RuleNotification.create(config)
-    default_response = clients.RuleNotification.get_all()
-    enabled_response = clients.RuleNotification.get_all(include_links=True)
-    disabled_response = clients.RuleNotification.get_all(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-def test_list_notification_rules_include_extensions(clients: ClientRegistry) -> None:
-    config = notification_rule_request_example()
-    clients.RuleNotification.create(config)
-    default_response = clients.RuleNotification.get_all()
-    enabled_response = clients.RuleNotification.get_all(include_extensions=True)
-    disabled_response = clients.RuleNotification.get_all(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_create_notification_rule(clients: ClientRegistry) -> None:
@@ -857,6 +835,9 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": "https://domain_test",
         },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
+        },
         "http_proxy": {"state": "enabled", "value": {"option": "no_proxy"}},
         "owner": {
             "state": "enabled",
@@ -921,6 +902,9 @@ plugin_test_data: list[PluginType] = [
         "domain": {
             "state": "enabled",
             "value": "https://domain_test",
+        },
+        "disable_ssl_cert_verification": {
+            "state": "enabled",
         },
         "http_proxy": {
             "state": "enabled",
@@ -1039,7 +1023,7 @@ plugin_test_data: list[PluginType] = [
         "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
         "http_proxy": {
             "state": "enabled",
@@ -1047,7 +1031,7 @@ plugin_test_data: list[PluginType] = [
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "high"},
         },
         "sound": {
             "state": "enabled",
@@ -1068,7 +1052,7 @@ plugin_test_data: list[PluginType] = [
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1121,7 +1105,7 @@ plugin_test_data: list[PluginType] = [
         },
         "use_site_id_prefix": {
             "state": "enabled",
-            "value": "use_site_id_prefix",
+            "value": "use_site_id",
         },
         "optional_timeout": {
             "state": "enabled",
@@ -1372,6 +1356,32 @@ plugin_test_data: list[PluginType] = [
             "url": "http://abc.com",
         },
     },
+    {
+        "plugin_name": "pushover",
+        "api_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "user_group_key": "azGDORePK8gMaC0QOYAMyEEuzJnyUi",
+        "url_prefix_for_links_to_checkmk": {
+            "state": "enabled",
+            "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
+        },
+        "http_proxy": {
+            "state": "enabled",
+            "value": {"option": "environment"},
+        },
+        "priority": {
+            "state": "enabled",
+            "value": {
+                "level": "emergency",
+                "retry": 60,
+                "expire": 3600,
+                "receipt": "abcdefghijklmnopqrst0123456789",
+            },
+        },
+        "sound": {
+            "state": "enabled",
+            "value": "cosmic",
+        },
+    },
 ]
 
 
@@ -1439,7 +1449,7 @@ def test_pushover_key_regex(
         "user_group_key": invalid_key,
         "url_prefix_for_links_to_checkmk": {
             "state": "enabled",
-            "value": "http://http_proxy_test_url/here",
+            "value": {"option": "automatic", "schema": "http"},
         },
         "http_proxy": {
             "state": "enabled",
@@ -1447,7 +1457,7 @@ def test_pushover_key_regex(
         },
         "priority": {
             "state": "enabled",
-            "value": "high",
+            "value": {"level": "low"},
         },
         "sound": {
             "state": "enabled",
@@ -1485,7 +1495,7 @@ service_now: API_ServiceNowData = {
     },
     "use_site_id_prefix": {
         "state": "enabled",
-        "value": "use_site_id_prefix",
+        "value": "use_site_id",
     },
     "optional_timeout": {
         "state": "enabled",
@@ -1494,7 +1504,7 @@ service_now: API_ServiceNowData = {
     "management_type": {},
 }
 
-service_now_incident: MgmtTypeAPI = {
+service_now_incident: MgmtTypeIncidentAPI = {
     "option": "incident",
     "params": {
         "caller": "",
@@ -1523,59 +1533,59 @@ service_now_incident: MgmtTypeAPI = {
 }
 
 
-def incident_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
+def incident_states() -> list[MgmtTypeIncidentParamsAPI]:
+    d: list[MgmtTypeIncidentParamsAPI] = []
     for n, predefined_state in enumerate(list(get_args(IncidentStateStr))):
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_acknowledgement": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_acknowledgement=AckStateAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={
                         "start_predefined": predefined_state,
                         "end_predefined": predefined_state,
                     },
-                },
-            },
+                ),
+            ),
         )
         d.append(
-            {
-                "state_downtime": {
-                    "state": "enabled",
-                    "value": {"start_integer": n, "end_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_downtime=DowntimeStateAPI(
+                    state="enabled",
+                    value={"start_integer": n, "end_integer": n},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeIncidentParamsAPI(
+                state_recovery=RecoveryStateIncidentAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1583,10 +1593,10 @@ def incident_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", incident_states())
 def test_service_now_management_incident_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeIncidentParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_incident
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
@@ -1596,7 +1606,7 @@ def test_service_now_management_incident_types_200(
     assert r1.json["extensions"] == {"rule_config": config}
 
 
-service_now_case: MgmtTypeAPI = {
+service_now_case: MgmtTypeCaseAPI = {
     "option": "case",
     "params": {
         "host_description": {
@@ -1619,24 +1629,24 @@ service_now_case: MgmtTypeAPI = {
 }
 
 
-def case_states() -> list[MgmtTypeParamsAPI]:
-    d: list[MgmtTypeParamsAPI] = []
+def case_states() -> list[MgmtTypeCaseParamsAPI]:
+    d: list[MgmtTypeCaseParamsAPI] = []
     for n, predefined_state in enumerate(list(get_args(CaseStateStr))):
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_predefined": predefined_state},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_predefined": predefined_state},
+                ),
+            ),
         )
         d.append(
-            {
-                "state_recovery": {
-                    "state": "enabled",
-                    "value": {"start_integer": n},
-                },
-            },
+            MgmtTypeCaseParamsAPI(
+                state_recovery=RecoveryStateCaseAPI(
+                    state="enabled",
+                    value={"start_integer": n},
+                ),
+            ),
         )
     return d
 
@@ -1644,10 +1654,10 @@ def case_states() -> list[MgmtTypeParamsAPI]:
 @pytest.mark.parametrize("mgmt_type_data", case_states())
 def test_service_now_management_case_types_200(
     clients: ClientRegistry,
-    mgmt_type_data: MgmtTypeParamsAPI,
+    mgmt_type_data: MgmtTypeCaseParamsAPI,
 ) -> None:
     service_now["management_type"] = service_now_case
-    service_now["management_type"]["params"].update(mgmt_type_data)
+    service_now["management_type"]["params"].update(mgmt_type_data)  # type: ignore[typeddict-item]
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,

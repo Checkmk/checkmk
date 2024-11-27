@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.9.9.441.1.3.1 CISCO-SRST-MIB::csrstState (1: active, 2: inactive)
 # .1.3.6.1.4.1.9.9.441.1.3.4 CISCO-SRST-MIB::csrstTotalUpTime
@@ -36,6 +37,7 @@ def parse_cisco_srst_state(string_table: StringTable) -> StringTable | None:
 
 
 check_info["cisco_srst_state"] = LegacyCheckDefinition(
+    name="cisco_srst_state",
     parse_function=parse_cisco_srst_state,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")

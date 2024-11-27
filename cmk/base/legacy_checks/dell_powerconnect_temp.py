@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 # Example:
 # .1.3.6.1.4.1.89.53.15.1.9.1 = INTEGER: 42
@@ -65,6 +66,7 @@ def check_dell_powerconnect_temp(_no_item, params, parsed):
 
 
 check_info["dell_powerconnect_temp"] = LegacyCheckDefinition(
+    name="dell_powerconnect_temp",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.53.15.1",

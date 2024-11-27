@@ -4,7 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
+import {
+  DialogClose,
+  DialogTitle,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot
+} from 'radix-vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import { Label } from '@/components/ui/label'
 
 export interface SlideInProps {
@@ -23,14 +31,20 @@ const emit = defineEmits(['close'])
   <DialogRoot :open="open">
     <DialogPortal>
       <DialogOverlay class="slide-in__overlay" />
-      <DialogContent class="slide-in__content" @escape-key-down="emit('close')">
-        <div v-if="header" class="slide-in__title">
+      <DialogContent
+        class="slide-in__content"
+        :aria-describedby="undefined"
+        @escape-key-down="emit('close')"
+      >
+        <DialogTitle v-if="header" class="slide-in__title">
           <Label variant="title">{{ header.title }}</Label>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-            <div class="slide-in__icon-close" />
+            <CmkIcon name="close" size="xsmall" />
           </DialogClose>
+        </DialogTitle>
+        <div class="slide-in__slot">
+          <slot />
         </div>
-        <slot />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -39,13 +53,15 @@ const emit = defineEmits(['close'])
 <style scoped>
 .slide-in__content {
   max-width: 80%;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   position: fixed;
   top: 0;
   right: 0;
-  height: 100%;
+  bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
-  background: var(--default-background-color);
+  background: var(--default-bg-color);
 
   &[data-state='open'] {
     animation: slide-in__content-show 0.2s ease-in-out;
@@ -54,6 +70,11 @@ const emit = defineEmits(['close'])
   &[data-state='closed'] {
     animation: slide-in__content-hide 0.2s ease-in-out;
   }
+}
+
+.slide-in__slot {
+  overflow: auto;
+  height: 100%;
 }
 
 @keyframes slide-in__content-show {
@@ -110,13 +131,6 @@ const emit = defineEmits(['close'])
   border: none;
   margin: 0;
   padding: 0;
-}
-
-div.slide-in__icon-close {
-  width: 10px;
-  height: 10px;
-  background-size: 10px;
-  background-image: var(--icon-close);
 }
 
 button {

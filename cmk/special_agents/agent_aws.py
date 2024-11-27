@@ -661,7 +661,7 @@ class ResultDistributor:
     """
 
     def __init__(self) -> None:
-        self._colleagues: dict[str, list["AWSSection"]] = defaultdict(list)
+        self._colleagues: dict[str, list[AWSSection]] = defaultdict(list)
 
     def add(self, sender_name: str, colleague: "AWSSection") -> None:
         self._colleagues[sender_name].append(colleague)
@@ -6563,10 +6563,7 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached({},{})".format(
-                    int(cache_timestamp),
-                    int(section_interval + 60),
-                )
+                cached_suffix = f":cached({int(cache_timestamp)},{int(section_interval + 60)})"
 
             if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)

@@ -9,8 +9,8 @@ import dataclasses
 import json
 import os
 import time
-from collections.abc import Mapping
-from typing import Any, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import omd_root

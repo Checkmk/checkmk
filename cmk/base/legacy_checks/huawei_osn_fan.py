@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
+
+check_info = {}
 
 
 def inventory_huawei_osn_fan(info):
@@ -37,6 +37,7 @@ def parse_huawei_osn_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["huawei_osn_fan"] = LegacyCheckDefinition(
+    name="huawei_osn_fan",
     parse_function=parse_huawei_osn_fan,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(

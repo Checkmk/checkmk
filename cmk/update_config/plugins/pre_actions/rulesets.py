@@ -90,6 +90,10 @@ def _validate_rule_values(
     conflict_mode: ConflictMode,
     logger: Logger,
 ) -> bool:
+    """Validate all ruleset values.
+
+    Returns True if the update shall continue, False otherwise.
+    """
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
@@ -117,58 +121,65 @@ def _validate_rule_values(
             logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
             try:
                 ruleset.rulespec.valuespec.validate_value(
-                    rule.value,
+                    ruleset.rulespec.valuespec.transform_value(rule.value),
                     "",
                 )
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
-                if version.edition(paths.omd_root) is version.Edition.CME and ruleset.name in (
-                    "host_contactgroups",
-                    "host_groups",
-                    "service_contactgroups",
-                    "service_groups",
-                ):
-                    addition_info = [
-                        "Note:",
-                        (
-                            f"The group {rule.value!r} may not be synchronized to this site because"
-                            " the customer setting of the group is not set to global."
-                        ),
-                        (
-                            "If you continue the invalid rule does not have any effect but should"
-                            " be fixed anyway.\n"
-                        ),
-                    ]
-                else:
-                    addition_info = []
-                error_message = _error_message(ruleset, folder, index, e, addition_info)
+                error_message = _error_message(ruleset, rule.value, folder, index, e)
                 logger.error(error_message)
-                if conflict_mode is ConflictMode.ASK:
-                    user_input = prompt(
+                if conflict_mode is not ConflictMode.ASK:
+                    return False
+                if (
+                    prompt(
                         "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                    )
-                    return user_input.lower() in USER_INPUT_CONTINUE
-                return False
+                    ).lower()
+                    not in USER_INPUT_CONTINUE
+                ):
+                    return False
     return True
 
 
 def _error_message(
     ruleset: Ruleset,
+    rule_value: object,
     folder: Folder,
     index: int,
     exception: Exception,
-    additional_info: Sequence[str],
 ) -> str:
-    parts = [
-        "WARNING: Invalid rule configuration detected",
-        f"Ruleset: {ruleset.name}",
-        f"Title: {ruleset.title()}",
-        f"Folder: {folder.path() or 'main'}",
-        f"Rule nr: {index + 1}",
-        f"Exception: {exception}\n",
-    ]
-    if additional_info:
-        parts.extend(additional_info)
-    return "\n".join(parts)
+    return "\n".join(
+        [
+            "WARNING: Invalid rule configuration detected",
+            f"Ruleset: {ruleset.name}",
+            f"Title: {ruleset.title()}",
+            f"Folder: {folder.path() or 'main'}",
+            f"Rule nr: {index + 1}",
+            f"Exception: {exception}\n",
+            *_make_additional_info(ruleset, rule_value),
+        ]
+    )
+
+
+def _make_additional_info(ruleset: Ruleset, rule_value: object) -> Sequence[str]:
+    if version.edition(paths.omd_root) is not version.Edition.CME:
+        return ()
+    if ruleset.name not in (
+        "host_contactgroups",
+        "host_groups",
+        "service_contactgroups",
+        "service_groups",
+    ):
+        return ()
+    return (
+        "Note:",
+        (
+            f"The group {rule_value!r} may not be synchronized to this site because"
+            " the customer setting of the group is not set to global."
+        ),
+        (
+            "If you continue the invalid rule does not have any effect but should"
+            " be fixed anyway.\n"
+        ),
+    )
 
 
 pre_update_action_registry.register(

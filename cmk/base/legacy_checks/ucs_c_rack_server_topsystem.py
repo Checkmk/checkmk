@@ -11,8 +11,9 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_ucs_c_rack_server_topsystem(string_table):
@@ -68,6 +69,7 @@ def check_ucs_c_rack_server_topsystem(item, _no_params, data):
 
 
 check_info["ucs_c_rack_server_topsystem"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_topsystem",
     parse_function=parse_ucs_c_rack_server_topsystem,
     service_name="UCS C-Series Rack Server TopSystem Info",
     discovery_function=inventory_ucs_c_rack_server_topsystem,

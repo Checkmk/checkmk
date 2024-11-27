@@ -27,7 +27,6 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.site_management.request_schemas import (
     SITE_ID,
     SITE_ID_EXISTS,
@@ -95,7 +94,6 @@ def show_site(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=SiteConnectionResponseCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_links(), field_include_extensions()],
 )
 def show_sites(params: Mapping[str, Any]) -> Response:
     """Show all site connections"""
@@ -107,14 +105,7 @@ def show_sites(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="site_connection",
-            value=[
-                _serialize_site(
-                    site,
-                    include_links=params["include_links"],
-                    include_extensions=params["include_extensions"],
-                )
-                for site in all_site_objs
-            ],
+            value=[_serialize_site(site) for site in all_site_objs],
         )
     )
 
@@ -225,15 +216,12 @@ def site_logout(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _serialize_site(
-    site: SiteConfig, *, include_links: bool = True, include_extensions: bool = True
-) -> DomainObject:
+def _serialize_site(site: SiteConfig) -> DomainObject:
     return domain_object(
         domain_type="site_connection",
         identifier=site.basic_settings.site_id,
         title=site.basic_settings.alias,
-        extensions=dict(site.to_external()) if include_extensions else None,
-        include_links=include_links,
+        extensions=dict(site.to_external()),
         editable=True,
         deletable=True,
     )
@@ -247,8 +235,16 @@ def _convert_validate_and_save_site_data(
 ) -> Response:
     site_config["basic_settings"]["site_id"] = site_id
     try:
+        old_site_config = None if is_new_connection else SitesApiMgr().get_a_site(site_id)
         site_obj: SiteConfig = SiteConfig.from_external(site_config)
         internal_config: SiteConfiguration = site_obj.to_internal()
+
+        sites_to_update = SitesApiMgr().get_connected_sites_to_update(
+            is_new_connection,
+            site_id,
+            current_site_config=internal_config,
+            old_site_config=old_site_config,
+        )
         SitesApiMgr().validate_and_save_site(site_id, internal_config)
     except MKUserError as exc:
         return _problem_from_user_error(exc)
@@ -257,6 +253,7 @@ def _convert_validate_and_save_site_data(
         site_id=site_id,
         is_new_connection=is_new_connection,
         replication_enabled=site_obj.configuration_connection.enable_replication,
+        connected_sites=sites_to_update,
     )
 
     return serve_json(data=_serialize_site(site_obj), status=200)

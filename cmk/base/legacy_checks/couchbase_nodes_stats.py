@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines
+
+check_info = {}
 
 
 def discover_couchbase_nodes_stats(section):
@@ -17,6 +18,7 @@ def discover_couchbase_nodes_stats(section):
 
 
 check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats",
     parse_function=parse_couchbase_lines,
     discovery_function=discover_couchbase_nodes_stats,
 )
@@ -37,6 +39,7 @@ def discover_couchbase_nodes_stats_cpu_util(section):
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats_cpu_util",
     service_name="Couchbase %s CPU utilization",
     sections=["couchbase_nodes_stats"],
     discovery_function=discover_couchbase_nodes_stats_cpu_util,
@@ -81,6 +84,7 @@ def discover_couchbase_nodes_stats_mem(section):
 
 
 check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats_mem",
     service_name="Couchbase %s Memory",
     sections=["couchbase_nodes_stats"],
     discovery_function=discover_couchbase_nodes_stats_mem,

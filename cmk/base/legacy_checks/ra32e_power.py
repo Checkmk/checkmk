@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.ra32e import DETECT_RA32E
+
+check_info = {}
 
 
 def discover_ra32e_power(section: StringTable) -> DiscoveryResult:
@@ -31,6 +31,7 @@ def parse_ra32e_power(string_table: StringTable) -> StringTable:
 
 
 check_info["ra32e_power"] = LegacyCheckDefinition(
+    name="ra32e_power",
     parse_function=parse_ra32e_power,
     detect=DETECT_RA32E,
     fetch=SNMPTree(

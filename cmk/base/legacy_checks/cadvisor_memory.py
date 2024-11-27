@@ -7,9 +7,11 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[str, float]
 
@@ -72,6 +74,7 @@ def check_cadvisor_memory(_item, _params, parsed):
 
 
 check_info["cadvisor_memory"] = LegacyCheckDefinition(
+    name="cadvisor_memory",
     parse_function=parse_cadvisor_memory,
     service_name="Memory",
     discovery_function=discover_cadvisor_memory,

@@ -21,6 +21,7 @@ from livestatus import SiteConfiguration, SiteGlobals, SiteId
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 
 import cmk.utils.paths
 
@@ -62,6 +63,14 @@ class ReplicationPath(_BaseReplicationPath):
             site_path=cleaned_path,
             excludes=final_excludes,
         )
+
+
+class ReplicationPathRegistry(Registry[ReplicationPath]):
+    def plugin_name(self, instance: ReplicationPath) -> str:
+        return instance.ident
+
+
+replication_path_registry = ReplicationPathRegistry()
 
 
 class SnapshotSettings(NamedTuple):
@@ -341,6 +350,8 @@ class SnapshotCreationBase:
 
 
 class SnapshotCreator(SnapshotCreationBase):
+    """Packe the snapshots into snapshot archives"""
+
     def __init__(
         self, activation_work_dir: str, all_generic_components: list[ReplicationPath]
     ) -> None:
@@ -512,8 +523,5 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
     store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)
 
 
-def create_rabbitmq_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
-    store.save_text_to_file(
-        base_dir.joinpath("etc/rabbitmq/definitions.d/definitions.json"),
-        definition.model_dump_json(indent=4),
-    )
+def create_rabbitmq_new_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
+    store.save_text_to_file(base_dir / rabbitmq.NEW_DEFINITIONS_FILE_PATH, definition.dumps())

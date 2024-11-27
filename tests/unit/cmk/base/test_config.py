@@ -9,7 +9,7 @@ import itertools
 import re
 import shutil
 import socket
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final, Literal, NoReturn
 
@@ -18,6 +18,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
@@ -26,7 +27,6 @@ import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.sectionname import SectionName
@@ -44,16 +44,28 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
+from cmk.base.api.agent_based.register.check_plugins_legacy import convert_legacy_check_plugins
+from cmk.base.api.agent_based.register.section_plugins_legacy import convert_legacy_sections
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
-from cmk.agent_based.v1 import HostLabel
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    exists,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckConfig
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -574,6 +586,26 @@ def test_host_config_management_address(
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.management_address(hostname) == result
+
+
+@pytest.mark.parametrize(
+    "result,attrs",
+    [
+        (False, {}),
+        (True, {"waiting_for_discovery": True}),
+        (False, {"waiting_for_discovery": False}),
+    ],
+)
+def test_host_waiting_for_discovery(
+    monkeypatch: MonkeyPatch, attrs: dict[str, str], result: bool
+) -> None:
+    hostname = HostName("hostname")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("host_attributes", {hostname: attrs})
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.is_waiting_for_discovery_host(hostname) == result
 
 
 def _management_config_ruleset() -> Sequence[RuleSpec[object]]:
@@ -1472,7 +1504,7 @@ def test_host_config_static_checks(
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
-            location=None,
+            location=LegacyPluginLocation(""),
         )
 
     monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
@@ -1727,7 +1759,7 @@ def test_config_cache_snmp_credentials_of_version(
     assert config_cache.snmp_credentials_of_version(hostname, version) == result
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "hostname, section_name, result",
     [
@@ -2225,7 +2257,6 @@ def test_config_cache_icons_and_actions(
         config_cache.icons_and_actions_of_service(
             hostname,
             "CPU load",
-            None,
             None,
         )
     ) == sorted(result)
@@ -2971,79 +3002,79 @@ class TestPackedConfigStore:
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {
-        "duplicate_plugin": LegacyCheckDefinition(
-            service_name="blah",
-        ),
-    }
-    registered_plugin = CheckPluginAPI(
-        name=CheckPluginName("duplicate_plugin"),
-        sections=[],
-        service_name="Duplicate Plug-in",
-        discovery_function=lambda: [],
-        discovery_default_parameters=None,
-        discovery_ruleset_name=None,
-        discovery_ruleset_type="merged",
+    duplicate_legacy_plugin = LegacyCheckDefinition(
+        name="duplicate_plugin",
+        service_name="blah",
         check_function=lambda: [],
-        cluster_check_function=None,
-        check_default_parameters=None,
-        check_ruleset_name=None,
-        location=None,
     )
 
-    monkeypatch.setattr(
-        agent_based_register._config,
-        "registered_check_plugins",
-        {registered_plugin.name: registered_plugin},
-    )
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
+    def _noop_disco(section: None) -> Iterable[Service]:
+        yield from ()
+
+    def _noop_check(section: None) -> Iterable[Result]:
+        yield from ()
+
+    new_style_plugin = CheckPlugin(
+        name="duplicate_plugin",
+        service_name="Duplicate Plug-in",
+        discovery_function=_noop_disco,
+        check_function=_noop_check,
     )
 
-    assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
-    with pytest.raises(MKGeneralException):
-        config._add_checks_to_register(
-            config._make_check_plugins(duplicate_plugin, validate_creation_kwargs=False)[1]
+    monkeypatch.setattr(agent_based_register._config, "registered_check_plugins", {})
+
+    monkeypatch.setattr(
+        agent_based_register._discover,
+        "discover_plugins",
+        lambda *a, **kw: DiscoveredPlugins(
+            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_plugin}
+        ),
+    )
+    converted_legacy_checks = convert_legacy_check_plugins(
+        (duplicate_legacy_plugin,),
+        {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
+        validate_creation_kwargs=False,
+        raise_errors=True,
+    )[1]
+    assert converted_legacy_checks
+    with pytest.raises(ValueError):
+        agent_based_register.load_all_plugins(
+            sections=(),
+            checks=converted_legacy_checks,
+            raise_errors=False,  # we still expect the error to be raised
         )
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {
-        "duplicate_plugin": LegacyCheckDefinition(),
-    }
-    registered_section = SNMPSectionPlugin(
-        SectionName("duplicate_plugin"),
-        ParsedSectionName("duplicate_plugin"),
-        lambda x: None,
-        lambda: (HostLabel(x, "bar") for x in ["foo"]),
-        None,
-        None,
-        "merged",
-        [],
-        [],
-        set(),
-        None,
+    duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
+
+    def dummy_parse_function(string_table: StringTable) -> int:
+        return 42
+
+    new_style_section = SimpleSNMPSection(
+        name="duplicate_plugin",
+        detect=exists(".1.2.3"),
+        fetch=SNMPTree(base=".1.2.3", oids=[]),
+        parse_function=dummy_parse_function,
     )
 
+    monkeypatch.setattr(agent_based_register._config, "registered_snmp_sections", {})
+
     monkeypatch.setattr(
-        agent_based_register._config,
-        "registered_snmp_sections",
-        {registered_section.name: registered_section},
-    )
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
+        agent_based_register._discover,
+        "discover_plugins",
+        lambda *a, **kw: DiscoveredPlugins(
+            errors=(), plugins={PluginLocation(module="module", name="name"): new_style_section}
+        ),
     )
 
-    assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._add_sections_to_register(config._make_agent_and_snmp_sections(duplicate_plugin)[1])
-    assert (
-        agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
-        == registered_section
+    agent_based_register.load_all_plugins(
+        sections=convert_legacy_sections(duplicate_plugin, {}, raise_errors=True)[1],
+        checks=(),
+        raise_errors=True,  # we don't expect any errors
     )
+    plugins = agent_based_register.get_previously_loaded_plugins()
+    assert plugins.snmp_sections[SectionName("duplicate_plugin")].detect_spec
 
 
 @pytest.mark.parametrize(
@@ -3146,3 +3177,80 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.check_table(CN) == expected
+
+
+def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "some_active_check": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["no-such-host"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid1234", "p4ssw0rd!"),
+                        )
+                    },
+                }
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.collect_passwords() == {"uuid1234": "p4ssw0rd!"}
+
+
+def test_get_active_service_data_crash(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: False)
+    monkeypatch.setattr(
+        config,
+        "load_active_checks",
+        lambda **kw: {
+            PluginLocation(
+                "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+            ): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                commands_function=lambda *a, **kw: 1 / 0,  # type: ignore[arg-type]
+            )
+        },
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "my_active_check": [
+                {
+                    "condition": {},
+                    "id": "2",
+                    "value": {"description": "My active check", "param1": "param1"},
+                }
+            ]
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    list(
+        config_cache.active_check_services(
+            host_name,
+            config_cache.get_host_attributes(host_name, lambda *a, **kw: None),
+            lambda *a, **kw: None,
+            {},
+            Path(),
+        )
+    )
+
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
+    )

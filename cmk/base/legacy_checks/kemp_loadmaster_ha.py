@@ -7,10 +7,10 @@
 # .1.3.6.1.4.1.12196.13.0.10.0 7.1-20b.20140926-1505
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_kemp_loadmaster_ha(info):
@@ -35,6 +35,7 @@ def parse_kemp_loadmaster_ha(string_table: StringTable) -> StringTable:
 
 
 check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
+    name="kemp_loadmaster_ha",
     parse_function=parse_kemp_loadmaster_ha,
     detect=all_of(
         any_of(

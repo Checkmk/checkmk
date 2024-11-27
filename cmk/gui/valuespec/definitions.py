@@ -57,7 +57,6 @@ from typing import (
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from six import ensure_str
 
 from livestatus import SiteId
 
@@ -1021,8 +1020,7 @@ class TextInput(ValueSpec[str]):
                 self._empty_text or _("An empty value is not allowed here."),
             )
         if value and self._regex:
-            # ? removing ensure_str causes an error in unit tests despite the type of value being str in the function typization
-            if not self._regex.match(ensure_str(value)):  # pylint: disable= six-ensure-str-bin-call
+            if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
 
         if self._minlen is not None and len(value) < self._minlen:
@@ -2384,11 +2382,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix: str) -> None:
-        onclick: str = "cmk.valuespecs.listof_add({}, {}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(self._magic),
-            json.dumps(self._style.value),
-        )
+        onclick: str = f"cmk.valuespecs.listof_add({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._style.value)})"
         if self._add_icon:
             html.open_a(
                 id_=varprefix + "_add",
@@ -2639,10 +2633,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
-        js = "cmk.valuespecs.listofmultiple_del({}, {})".format(
-            json.dumps(varprefix),
-            json.dumps(ident),
-        )
+        js = f"cmk.valuespecs.listofmultiple_del({json.dumps(varprefix)}, {json.dumps(ident)})"
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def render_input(self, varprefix: str, value: ListOfMultipleModel) -> None:
@@ -4224,10 +4215,7 @@ class DualListChoice(ListChoice):
         ]:
             onchange_func = select_func if self._instant_add else ""
             if self._enlarge_active:
-                onchange_func = "cmk.valuespecs.duallist_enlarge({}, {});".format(
-                    json.dumps(suffix),
-                    json.dumps(varprefix),
-                )
+                onchange_func = f"cmk.valuespecs.duallist_enlarge({json.dumps(suffix)}, {json.dumps(varprefix)});"
 
             html.open_td()
             html.dropdown(
@@ -7047,7 +7035,11 @@ class FileUpload(ValueSpec[FileUploadModel]):
         return json_value
 
     def value_to_html(self, value: FileUploadModel) -> ValueSpecText:
-        raise NotImplementedError()  # FIXME! Violates LSP!
+        match value:
+            case (str(file_name), str(_), bytes(_)):
+                return _("Chosen file: %s") % file_name
+            case other:
+                raise TypeError(other)
 
 
 class ImageUpload(FileUpload):
@@ -8588,7 +8580,10 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
             "description",
             TextInput(
                 title=_("Description"),
-                help=_("Add a title or describe this rule"),
+                help=_(
+                    "This field is intended for a brief description of the rule's purpose. "
+                    "This description will be visible on the overview page of this rule set."
+                ),
                 size=80,
             ),
         ),
@@ -8602,8 +8597,8 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
                 Checkbox(
                     title=_("Rule activation"),
                     help=_(
-                        "Selecting this option will disable the rule, but it "
-                        "will remain in the configuration."
+                        "A deactivated rule is not effective. However, it remains "
+                        "in place so that it can be reactivated later, for example."
                     ),
                     label=_("do not apply this rule"),
                 ),
@@ -8617,10 +8612,9 @@ class RuleComment(TextAreaUnicode):
         super().__init__(
             title=_("Comment"),
             help=_(
-                "Optionally, add a comment to explain the purpose of this "
-                "object. The comment is only visible in this dialog and can help "
-                "other users to understand the intentions of the configured "
-                "attributes."
+                "This field is intended for additional information that may help other "
+                "users (and your future self) to understand the rule's purpose and the "
+                "configured attributes. This comment is only visible in this dialog."
             ),
             rows=4,
             cols=80,
@@ -8636,7 +8630,7 @@ class RuleComment(TextAreaUnicode):
         html.nbsp()
         html.icon_button(
             None,
-            title=_("Prefix date and your name to the comment"),
+            title=_("Prefix the comment with the current date and your user name."),
             icon="insertdate",
             onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user,
         )
@@ -8656,12 +8650,17 @@ def DocumentationURL() -> TextInput:
         title=_("Documentation URL"),
         help=HTML.without_escaping(
             _(
-                "Optionally, add a URL linking to a documentation or any other "
-                "page. An icon links to the page and opens in a new tab when "
-                "clicked. You can use either global URLs (starting with "
-                "<tt>http://</tt>), absolute local URLs (starting with "
-                "<tt>/</tt>) or relative URLs (relative to "
-                "<tt>check_mk/</tt>)."
+                "In this field you can add a URL linking to a page with related, "
+                "useful information. You can use:<br>"
+                "<ul>"
+                "<li>an absolute URL starting with the protocol (<tt>http(s)://</tt>)</li>"
+                "<li>or a relative URL either starting with a slash (<tt>/something</tt> "
+                "will be resolved to <tt>https://mycheckmkserver/something</tt>) or without "
+                "a slash (<tt>somethingelse</tt> will be resolved to "
+                "<tt>https://mycheckmkserver/mysite/check_mk/somethingelse</tt>)</li>"
+                "</ul>"
+                "The link will be displayed as an icon in the description on the "
+                "overview page of the related rule set."
             )
             % html.render_icon("url")
         ),

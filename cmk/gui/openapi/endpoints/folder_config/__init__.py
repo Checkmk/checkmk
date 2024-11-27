@@ -42,11 +42,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import (
-    EXISTING_FOLDER_PATTERN,
-    field_include_extensions,
-    field_include_links,
-)
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER_PATTERN
 from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
@@ -142,23 +138,14 @@ def create(params: Mapping[str, Any]) -> Response:
     path_params=[PATH_FOLDER_FIELD],
     response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
-    query_params=[
-        EFFECTIVE_ATTRIBUTES,
-        field_include_links(
-            "Flag which toggles whether the links field of the individual hosts should be populated."
-        ),
-        field_include_extensions(),
-    ],
+    query_params=[EFFECTIVE_ATTRIBUTES],
 )
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
     folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
     return serve_host_collection(
-        folder.hosts().values(),
-        effective_attributes=params["effective_attributes"],
-        include_links=params["include_links"],
-        include_extensions=params["include_extensions"],
+        folder.hosts().values(), effective_attributes=params["effective_attributes"]
     )
 
 
@@ -371,9 +358,7 @@ def move(params: Mapping[str, Any]) -> Response:
                 example=False,
                 load_default=False,
             ),
-        },
-        field_include_links(),
-        field_include_extensions(),
+        }
     ],
     response_schema=FolderCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
@@ -387,22 +372,13 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     else:
         parent.permissions.need_permission("read")
         folders = parent.subfolders()
-    return serve_json(
-        _folders_collection(
-            folders,
-            show_hosts=params["show_hosts"],
-            include_links=params["include_links"],
-            include_extensions=params["include_extensions"],
-        )
-    )
+    return serve_json(_folders_collection(folders, show_hosts=params["show_hosts"]))
 
 
 def _folders_collection(
     folders: list[Folder],
     *,
     show_hosts: bool = False,
-    include_links: bool = True,
-    include_extensions: bool = True,
 ) -> CollectionObject:
     folders_ = []
     for folder in folders:
@@ -426,16 +402,11 @@ def _folders_collection(
                 domain_type="folder_config",
                 identifier=folder_slug(folder),
                 title=folder.title(),
-                extensions=(
-                    {
-                        "path": "/" + folder.path(),
-                        "attributes": folder.attributes.copy(),
-                    }
-                    if include_extensions
-                    else None
-                ),
+                extensions={
+                    "path": "/" + folder.path(),
+                    "attributes": folder.attributes.copy(),
+                },
                 members=members,
-                include_links=include_links,
             )
         )
     #

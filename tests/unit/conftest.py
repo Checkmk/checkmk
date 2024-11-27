@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import os
 import shutil
@@ -32,7 +31,6 @@ from cmk.ccc.site import omd_site
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.utils import redis, tty
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -44,7 +42,13 @@ from cmk.utils.livestatus_helpers.testing import (
     MockLiveStatusConnection,
 )
 
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
+)
+
 import cmk.crypto.password_hashing
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 
 logger = logging.getLogger(__name__)
 
@@ -263,77 +267,40 @@ def clear_caches_per_function():
     yield
 
 
-class FixRegister:
-    """Access agent based plugins"""
+@pytest.fixture(scope="session")
+def agent_based_plugins() -> AgentBasedPlugins:
+    # Local import to have faster pytest initialization
+    from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        config,
+    )
 
-    def __init__(self) -> None:
-        # Local import to have faster pytest initialization
-        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            check_api,
-            config,
-        )
-        from cmk.base.api.agent_based import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            register,
-        )
-
-        config._initialize_data_structures()
-        assert not config.check_info
-
-        errors = config.load_all_plugins(
-            check_api.get_check_api_context,
-            local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
-            checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
-        )
-        assert not errors
-
-        self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
-        self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
-        self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
-        self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
-
-    @property
-    def snmp_sections(self):
-        return self._snmp_sections
-
-    @property
-    def agent_sections(self):
-        return self._agent_sections
-
-    @property
-    def check_plugins(self):
-        return self._check_plugins
-
-    @property
-    def inventory_plugins(self):
-        return self._inventory_plugins
+    errors = config.load_all_plugins(
+        local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
+        checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
+    )
+    assert not errors
+    return get_previously_loaded_plugins()
 
 
 class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
-    def __init__(self, fixed_register: FixRegister) -> None:
-        from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            config,
+    def __init__(self) -> None:
+        result = discover_legacy_checks(
+            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            FileLoader(
+                precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                local_path="/not_relevant_for_test",
+                makedirs=store.makedirs,
+            ),
+            raise_errors=True,
         )
-
-        assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
-
-        self.check_info = {
-            k: v
-            for k, v in config.check_info.items()
-            if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
-        }
-        self.factory_settings = copy.deepcopy(config.factory_settings)
-
-
-@pytest.fixture(scope="session", name="fix_register")
-def fix_register_fixture() -> Iterator[FixRegister]:
-    yield FixRegister()
+        self.check_info = {p.name: p for p in result.sane_check_info}
 
 
 @pytest.fixture(scope="session")
-def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
-    yield FixPluginLegacy(fix_register)
+def fix_plugin_legacy() -> Iterator[FixPluginLegacy]:
+    yield FixPluginLegacy()
 
 
 @pytest.fixture(autouse=True, scope="module")

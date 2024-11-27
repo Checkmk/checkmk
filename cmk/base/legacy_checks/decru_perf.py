@@ -5,11 +5,15 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import (
+    check_levels,
+    LegacyCheckDefinition,
+    LegacyCheckResult,
+)
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
+
+check_info = {}
 
 
 def discover_decru_perf(string_table: StringTable) -> DiscoveryResult:
@@ -31,7 +35,9 @@ def discover_decru_perf(string_table: StringTable) -> DiscoveryResult:
         yield Service(item=f"{index}: {name}")
 
 
-def check_decru_perf(item: str, _no_params: Mapping[str, object], info: StringTable) -> CheckResult:
+def check_decru_perf(
+    item: str, _no_params: Mapping[str, object], info: StringTable
+) -> LegacyCheckResult:
     index, _name = item.split(":", 1)
     for perf in info:
         if perf[0] == index:
@@ -50,6 +56,7 @@ def parse_decru_perf(string_table: StringTable) -> StringTable:
 
 
 check_info["decru_perf"] = LegacyCheckDefinition(
+    name="decru_perf",
     parse_function=parse_decru_perf,
     detect=DETECT_DECRU,
     fetch=SNMPTree(

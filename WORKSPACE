@@ -2,31 +2,6 @@ workspace(name = "omd_packages")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
-load("//omd/packages/toolchain:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
-
-fork_cc_toolchain_config(
-    name = "forked_cc_toolchain_config",
-)
-
-register_toolchains("//omd/packages/toolchain:linux_gcc13")
-
-RULES_FOREIGN_CC_VERSION = "0.11.1"
-
-http_archive(
-    name = "rules_foreign_cc",
-    patch_args = ["-p1"],
-    patches = ["//omd/packages/foreign_cc:symlink.patch"],
-    sha256 = "4b33d62cf109bcccf286b30ed7121129cc34cf4f4ed9d8a11f38d9108f40ba74",
-    strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
-    urls = [
-        "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-    ],
-)
-
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
 
 RULES_PKG_VERSION = "0.9.1"
 
@@ -41,7 +16,7 @@ http_archive(
 )
 
 load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
-load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
+load("//bazel/rules:rust_workspace.bzl", "rust_workspace")
 
 rust_workspace()
 
@@ -125,10 +100,6 @@ crates_repository(
 load("@cargo_deps_host//:defs.bzl", host_crate_repository = "crate_repositories")
 
 host_crate_repository()
-
-load("//omd/packages/patch:patch_http.bzl", "patch_workspace")
-
-patch_workspace()
 
 load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
@@ -225,11 +196,11 @@ create_python_requirements(
     # TODO: differentiate between own code and things we get from other omd packages
     ignored_modules = [
         # Third party modules with special handling
-        "protobuf",  # don't build with pip -> see protobuf omd packages
         "rrdtool",  # don't build with pip -> see rrdtool omd packages
         # Our own packages
         "agent-based",
         "agent-receiver",
+        "ccc",
         "crypto",
         "graphing",
         "messaging",
@@ -242,6 +213,8 @@ create_python_requirements(
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
+    # TODO: Use the already existing requirements_lock.txt generated from _generate_requirements_in
+    pipfile_lock = "//:Pipfile.lock",
     requirements = "//:Pipfile",
 )
 
@@ -280,36 +253,6 @@ http_archive(
     url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
 
-http_archive(
-    name = "rules_proto",
-    sha256 = "6fb6767d1bef535310547e03247f7518b03487740c11b6c6adb7952033fe1295",
-    strip_prefix = "rules_proto-6.0.2",
-    url = "https://github.com/bazelbuild/rules_proto/releases/download/6.0.2/rules_proto-6.0.2.tar.gz",
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
-
-rules_proto_dependencies()
-
-load("@rules_proto//proto:setup.bzl", "rules_proto_setup")
-
-rules_proto_setup()
-
-load("@rules_proto//proto:toolchains.bzl", "rules_proto_toolchains")
-
-rules_proto_toolchains()
-
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "76637ddb08533dc6bffbd382e2614b119b8f84d16a025f7516cf2f833d103c12",
-    strip_prefix = "protobuf-3d9f7c430a5ae1385512908801492d4421c3cdb7",
-    url = "https://github.com/protocolbuffers/protobuf/archive/3d9f7c430a5ae1385512908801492d4421c3cdb7.tar.gz",
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
 load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp_workspace")
 
 redfish_mkp_workspace()
@@ -331,7 +274,7 @@ erlang_workspace()
 
 http_archive(
     name = "bazel_iwyu",
-    patches = ["//omd/packages/bazel_iwyu:0001-Make-IWYU-executable-configurable.patch"],
+    patches = ["//bazel/tools:0001-Make-IWYU-executable-configurable.patch"],
     sha256 = "058d2ba699c1a6ef15ffb8b6e98f056250bb6080e634037034099d10bff4d19f",
     strip_prefix = "bazel_iwyu-bb102395e553215abd66603bcdeb6e93c66ca6d7",
     urls = [
@@ -342,3 +285,7 @@ http_archive(
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()
+
+load("//non-free/packages/otel-collector:otelcol_http.bzl", "otelcol_workspace")
+
+otelcol_workspace()

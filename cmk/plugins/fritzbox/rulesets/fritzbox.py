@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.fritzbox.lib.config import AgentConfigParams
 from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
@@ -25,12 +24,11 @@ def _formspec_fritzbox():
                         "is not a total timeout, instead it is applied to each API call."
                     ),
                     prefill=form_specs.DefaultValue(10.0),
-                    custom_validate=(form_specs.validators.NumberInRange(1.0, float("inf")),),
+                    custom_validate=(form_specs.validators.NumberInRange(1.0, None),),
                     migrate=float,  # type: ignore[arg-type]
                 ),
             ),
         },
-        custom_validate=(AgentConfigParams.model_validate,),
     )
 
 

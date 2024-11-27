@@ -106,6 +106,8 @@ def parse_raw_response(
     response: bytes | str,
 ) -> Response | ValidationError | JSONDecodeError:
     try:
+        # Performance impact needs to be investigated (see CMK-19527)
+        # nosemgrep: type-adapter-detected
         adapter: TypeAdapter[Response] = TypeAdapter(Response)
         return adapter.validate_json(response)
     except (ValidationError, JSONDecodeError) as e:

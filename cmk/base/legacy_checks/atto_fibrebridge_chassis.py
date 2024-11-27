@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_atto_fibrebridge_chassis(string_table):
@@ -54,6 +55,7 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
 
 
 check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
+    name="atto_fibrebridge_chassis_temp",
     service_name="Temperature %s",
     sections=["atto_fibrebridge_chassis"],
     discovery_function=inventory_atto_fibrebridge_chassis_temp,
@@ -86,6 +88,7 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
 
 
 check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
+    name="atto_fibrebridge_chassis",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.2",

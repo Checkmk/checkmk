@@ -67,6 +67,7 @@ ignored_files = [
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories
 # based on their name.
 enterprise_names = [
+    "non-free",
     "nonfree",
     "cloud",
     "enterprise",

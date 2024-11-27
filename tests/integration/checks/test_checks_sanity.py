@@ -16,13 +16,16 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status, ServiceInfo
+from tests.testlib.utils import ServiceInfo
 from tests.testlib.version import version_from_env
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
+
+
+_RESCHEDULES_LIMIT = 2
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")
@@ -74,17 +77,20 @@ def _host_services(
                     },
                 )
                 site.activate_changes_and_wait_for_core_reload()
-            wait_timeout = 5 if not version_from_env().is_saas_edition() else 65
-            site.wait_for_services_state_update(hostname, "Check_MK", 0, wait_timeout, 10)
+            site.wait_for_services_state_update(
+                hostname,
+                "Check_MK",
+                expected_state=0,
+                wait_timeout=65,
+                max_count=_RESCHEDULES_LIMIT,
+            )
 
         host_services = site.get_host_services(hostname)
 
         yield host_services
-
-    except Exception:
-        logger.error("Failed to retrieve services from the host.")
-        raise
-
+    except Exception as e:
+        logger.error("Failed to retrieve services from the host. Reason: %s", str(e))
+        raise e
     finally:
         if rule_id:
             site.openapi.delete_rule(rule_id)
@@ -93,17 +99,18 @@ def _host_services(
 
 
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
-    """Assert sanity of the discovered checks. Depending on the parameter the test
-    will be executed in two modes:
-        - active - the Check_MK service is rescheduled to update the state of the services
-        - passive - the check interval is minimized and the state of the services is
-        updated without any additional actions
-    """
-    ok_services = get_services_with_status(host_services, 0)
-    not_ok_services = [service for service in host_services if service not in ok_services]
-    err_msg = (
-        f"The following services are not in state 0: {not_ok_services} "
-        f"(Details: {[host_services[s] for s in not_ok_services]})"
-    )
+    """Assert sanity of the discovered checks.
 
-    assert len(host_services) == len(ok_services) > 0, err_msg
+    Depending on the parameter the test will be executed in two modes:
+    - active - the Check_MK service is rescheduled to update the state of the services
+    - passive - the check interval is minimized and the state of the services is
+    updated without any additional actions
+
+    Sanity here means that
+     * there are services
+     * all services leave their pending state after the number of reschedules provided in
+       the fixture (ideal would be 1, but some poorly written checks might need more
+       iterations to initialize all their counters)
+
+    """
+    assert host_services

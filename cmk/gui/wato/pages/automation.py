@@ -17,6 +17,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
+from cmk.utils.local_secrets import DistributedSetupSecret
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
 
@@ -37,11 +38,14 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
+    LastKnownCentralSiteVersion,
+    LastKnownCentralSiteVersionStore,
     local_automation_failure,
     verify_request_compatibility,
 )
 
 from cmk import trace
+from cmk.crypto.password import Password
 
 tracer = trace.get_tracer()
 
@@ -49,6 +53,23 @@ tracer = trace.get_tracer()
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("automation_login")(PageAutomationLogin)
     page_registry.register_page("noauth:automation")(PageAutomation)
+
+
+def _store_central_site_info() -> None:
+    central_version = request.headers.get("x-checkmk-version", request.get_ascii_input("_version"))
+
+    if central_version is None:
+        return
+
+    try:
+        LastKnownCentralSiteVersionStore().write_obj(
+            LastKnownCentralSiteVersion(version_str=central_version)
+        )
+    except ValueError:
+        # The call to _store_central_site_info is after the compatibility call, therefore we should
+        # be fine
+        logger.exception("Error writing central site info to disk")
+        raise
 
 
 class PageAutomationLogin(AjaxPage):
@@ -85,7 +106,7 @@ class PageAutomationLogin(AjaxPage):
                 {
                     "version": cmk_version.__version__,
                     "edition_short": cmk_version.edition(cmk.utils.paths.omd_root).short,
-                    "login_secret": _get_login_secret(create_on_demand=True),
+                    "login_secret": DistributedSetupSecret().read_or_create().raw,
                 }
             )
         )
@@ -108,16 +129,15 @@ class PageAutomation(AjaxPage):
         verify_request_compatibility(
             ignore_license_compatibility=self._command == "distribute-verification-response"
         )
+        _store_central_site_info()
 
-    def _authenticate(self) -> None:
-        secret = request.var("secret")
-
+    @staticmethod
+    def _authenticate() -> None:
+        secret = request.get_validated_type_input(Password, "secret")
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
 
-        login_secret = _get_login_secret()
-
-        if (login_secret is None) or not secrets.compare_digest(secret, login_secret):
+        if not DistributedSetupSecret().compare(secret):
             raise MKAuthException(_("Invalid automation secret."))
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This

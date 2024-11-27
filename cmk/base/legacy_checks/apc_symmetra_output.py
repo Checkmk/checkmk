@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.apc import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.318.1.1.1.4.2.1.0 231
 # .1.3.6.1.4.1.318.1.1.1.4.2.4.0
@@ -39,6 +40,7 @@ def discover_apc_symmetra_output(section):
 
 
 check_info["apc_symmetra_output"] = LegacyCheckDefinition(
+    name="apc_symmetra_output",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.4.2",

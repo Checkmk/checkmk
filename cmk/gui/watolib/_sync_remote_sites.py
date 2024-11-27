@@ -8,6 +8,7 @@ import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 
 from livestatus import SiteId
@@ -22,7 +23,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
 )
 from cmk.gui.config import active_config
-from cmk.gui.cron import register_job
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -41,9 +42,17 @@ LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
 
 
 def register(
-    automation_command_registry: AutomationCommandRegistry, job_registry: BackgroundJobRegistry
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
-    register_job(execute_sync_remote_sites)
+    cron_job_registry.register(
+        CronJob(
+            name="execute_sync_remote_sites",
+            callable=execute_sync_remote_sites,
+            interval=timedelta(minutes=1),
+        )
+    )
     job_registry.register(SyncRemoteSitesBackgroundJob)
 
     automation_command_registry.register(AutomationSyncRemoteSites)
@@ -309,9 +318,6 @@ def execute_sync_remote_sites() -> None:
         return
 
     job = SyncRemoteSitesBackgroundJob()
-    if job.is_active():
-        logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
-        return
 
     if not job.shall_start():
         logger.debug("Job shall not start")

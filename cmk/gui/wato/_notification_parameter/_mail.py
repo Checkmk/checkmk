@@ -14,11 +14,10 @@ from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
 from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
+from cmk.gui.watolib.notification_parameter import NotificationParameter
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice,
-    CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
     DictGroup,
@@ -34,10 +33,8 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
-from cmk.rulesets.v1.form_specs.validators import Url, UrlProtocol
 
-from ._base import NotificationParameter
-from ._helpers import local_site_url
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterMail(NotificationParameter):
@@ -54,8 +51,8 @@ class NotificationParameterMail(NotificationParameter):
         # TODO register CSE specific version
         return DictionaryExtended(
             title=Title("HTML Email parameters"),
-            # must be called at run time!!
             elements=self._parameter_elements(is_cse=edition(paths.omd_root) == Edition.CSE),
+            ignored_elements=("no_floating_graphs",),
         )
 
     def _parameter_elements(self, is_cse: bool) -> dict[str, DictElement[Any]]:
@@ -72,46 +69,11 @@ class NotificationParameterMail(NotificationParameter):
 
     def _url_prefix_setting(self, is_cse: bool) -> dict[str, DictElement[Any]]:
         return {
-            "url_prefix": DictElement(
-                group=DictGroup(
-                    title=Title("Settings"),
-                ),
-                # TODO only option that crashes from old configs, getting {"automatic": "http"}
-                parameter_form=CascadingSingleChoice(
-                    title=Title("URL prefix for links to Checkmk"),
-                    help_text=Help(
-                        "If you use <b>Automatic HTTP/s</b>, the URL prefix for host and service links within the notification is filled automatically. If you specify an URL prefix here, then several parts of the notification are armed with hyperlinks to your Checkmk GUI. In both cases, the recipient of the notification can directly visit the host or service in question in Checkmk. Specify an absolute URL including the <tt>.../check_mk/</tt>."
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="automatic_http",
-                            title=Title("Automatic HTTP"),
-                            parameter_form=FixedValue(
-                                value=None,
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="automatic_https",
-                            title=Title("Automatic HTTPs"),
-                            parameter_form=FixedValue(
-                                value=None,
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="manual",
-                            title=Title("Specify URL prefix"),
-                            parameter_form=String(
-                                prefill=DefaultValue(local_site_url()),
-                                custom_validate=[Url([UrlProtocol.HTTP, UrlProtocol.HTTPS])],
-                            ),
-                        ),
-                    ],
-                    prefill=DefaultValue(
-                        "automatic_https" if request.is_ssl_request else "automatic_http"
-                    ),
-                ),
-                render_only=is_cse,
-            ),
+            "url_prefix": _get_url_prefix_setting(
+                is_cse,
+                default_value="automatic_https" if request.is_ssl_request else "automatic_http",
+                group_title="Settings",
+            )
         }
 
 
@@ -269,6 +231,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show contact groups"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -278,6 +241,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show service labels"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -287,6 +251,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show host labels"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -296,6 +261,7 @@ def _content_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show host tags"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -314,15 +280,6 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     "a notification."
                 ),
             ),
-        ),
-        "no_floating_graphs": DictElement(
-            group=DictGroup(
-                title=Title("Email body/content"),
-            ),
-            parameter_form=FixedValue(
-                value=True,
-            ),
-            render_only=True,
         ),
     }
 
@@ -361,6 +318,7 @@ def _testing_elements() -> dict[str, DictElement[Any]]:
             ),
             parameter_form=FixedValue(
                 title=Title("Show notification rule that triggered the notification"),
+                label=Label(""),
                 value=True,
             ),
         ),
@@ -405,7 +363,6 @@ def _reply_to() -> DictElement[Any]:
                         title=Title("Email address"),
                         custom_validate=[ValidateEmailAddress()],
                     ),
-                    required=True,
                 ),
                 "display_name": DictElement(
                     parameter_form=String(
@@ -456,7 +413,7 @@ def _host_subject() -> DictElement[Any]:
                 "all macros that are defined in "
                 "the notification context."
             ),
-            prefill=DefaultValue("Check_MK: $HOSTNAME$ - $EVENT_TXT$"),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$ - $EVENT_TXT$"),
             field_size=FieldSize.LARGE,
             macro_support=True,
         ),
@@ -475,7 +432,7 @@ def _service_subject() -> DictElement[Any]:
                 "all macros that are defined in "
                 "the notification context."
             ),
-            prefill=DefaultValue("Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"),
+            prefill=DefaultValue("Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"),
             field_size=FieldSize.LARGE,
             macro_support=True,
         ),
@@ -501,6 +458,6 @@ def _bulk_sort_order() -> DictElement[Any]:
                 "at the top of the notification "
                 "mail."
             ),
-            prefill=DefaultValue("oldest_first"),
+            prefill=DefaultValue("newest_first"),
         ),
     )

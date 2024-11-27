@@ -5,12 +5,13 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import pulse_secure
+
+check_info = {}
 
 
 def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int] | None:
@@ -31,6 +32,7 @@ def discover_pulse_secure_temp(section):
 
 
 check_info["pulse_secure_temp"] = LegacyCheckDefinition(
+    name="pulse_secure_temp",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

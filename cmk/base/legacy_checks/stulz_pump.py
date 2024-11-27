@@ -6,11 +6,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.stulz import DETECT_STULZ
+
+check_info = {}
 
 
 def inventory_stulz_pump(info):
@@ -45,6 +45,7 @@ def parse_stulz_pump(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["stulz_pump"] = LegacyCheckDefinition(
+    name="stulz_pump",
     parse_function=parse_stulz_pump,
     detect=DETECT_STULZ,
     fetch=[

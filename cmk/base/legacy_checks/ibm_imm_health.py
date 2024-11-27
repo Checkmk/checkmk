@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+
+check_info = {}
 
 
 def inventory_ibm_imm_health(info):
@@ -47,6 +47,7 @@ def parse_ibm_imm_health(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_health"] = LegacyCheckDefinition(
+    name="ibm_imm_health",
     parse_function=parse_ibm_imm_health,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

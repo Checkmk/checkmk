@@ -40,6 +40,10 @@ class HostLabelPlugin:
     function: Callable[..., Iterator[HostLabel]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
+    @classmethod
+    def trivial(cls) -> HostLabelPlugin:
+        return cls(function=lambda *a, **kw: iter(()), parameters=lambda _: None)
+
 
 def analyse_cluster_labels(
     cluster_name: HostName,

@@ -8,11 +8,12 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError
+
+check_info = {}
 
 
 def parse_ddn_s2a_statsdelay(string_table):
@@ -155,6 +156,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
 
 check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
+    name="ddn_s2a_statsdelay",
     parse_function=parse_ddn_s2a_statsdelay,
     service_name="DDN S2A Delay %s",
     discovery_function=inventory_ddn_s2a_statsdelay,

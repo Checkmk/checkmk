@@ -24,8 +24,6 @@ set -e
 
 CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 
-echo >&2 "run-in-docker.sh checkpoint 1"
-
 : "${IMAGE_ID:="$(
     if [ -n "${IMAGE_ALIAS}" ]; then
         "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
@@ -34,14 +32,7 @@ echo >&2 "run-in-docker.sh checkpoint 1"
     fi
 )"}"
 
-echo >&2 "run-in-docker.sh checkpoint 2 $IMAGE_ID"
-
-# TODO: Remove all operations on *.cid files as soon as we finished debugging
-find "${CHECKOUT_ROOT}" -maxdepth 1 -name "*.cid" -delete
-
 IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
-
-echo >&2 "run-in-docker.sh checkpoint 3 $IMAGE_VERSION"
 
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
@@ -75,6 +66,7 @@ fi
 
 # Create bind source and targets to avoid dockerd creating them with root ownership
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home"
+touch "${CONTAINER_SHADOW_WORKSPACE}/home/.cmk-credentials"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home_cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/venv"
@@ -114,19 +106,14 @@ if [ -d "${GIT_REFERENCE_CLONE_PATH}" ]; then
 fi
 
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
+: "${CPU_LIMITATION:="--cpus="$(($(nproc) - 3))""}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
 
-echo >&2 "run-in-docker.sh checkpoint 4"
-
 function cleanup {
-    echo >&2 "run-in-docker.sh checkpoint 5 $(cat "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid" 2>/dev/null || echo CID_FILE_NOT_FOUND)"
-    rm -f "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid"
-
     # FIXME: eventually created image is not being cleaned up
-
     ROOT_ARTIFACTS=$(find . -user root)
     if [ -n "${ROOT_ARTIFACTS}" ]; then
         echo >&2 "WARNING: there are files/directories owned by root:"
@@ -137,9 +124,9 @@ trap cleanup EXIT
 
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
-    --cidfile "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid" \
     --rm \
     --name $CONTAINER_NAME \
+    ${CPU_LIMITATION} \
     ${TERMINAL_FLAG} \
     --init \
     -u "$(id -u):$(id -g)" \
@@ -151,6 +138,7 @@ docker run -a stdout -a stderr \
     -e USER \
     -e CI \
     -e BANDIT_OUTPUT_ARGS \
+    -e SEMGREP_OUTPUT_ARGS \
     -e GROOVYLINT_OUTPUT_ARGS \
     -e JUNIT_XML \
     -e PYLINT_ARGS \

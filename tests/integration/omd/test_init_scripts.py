@@ -10,10 +10,10 @@ def test_init_scripts(site: Site) -> None:
     scripts = {
         "agent-receiver",
         "apache",
-        "background-jobs",
+        "automation-helper",
+        "cmk-ui-jobs",
         "core",
         "crontab",
-        "jaeger",
         "mkeventd",
         "nagios",
         "npcd",
@@ -33,6 +33,10 @@ def test_init_scripts(site: Site) -> None:
             "liveproxyd",
             "mknotifyd",
         }
+    if site.version.is_cloud_edition() or site.version.is_managed_edition():
+        scripts |= {"otel-collector"}
+    if not site.version.is_saas_edition():
+        scripts |= {"jaeger"}
 
     installed_scripts = set(site.listdir("etc/init.d"))
 

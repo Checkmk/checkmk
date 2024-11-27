@@ -86,8 +86,8 @@ class PredefinedConditionModeType(SimpleModeType[PredefinedConditionSpec]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
-        return [ConfigDomainCore]
+    def affected_config_domains(self) -> list[ABCConfigDomain]:
+        return [ConfigDomainCore()]
 
 
 class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):

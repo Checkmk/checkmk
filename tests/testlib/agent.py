@@ -62,18 +62,34 @@ def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
-        try:
-            run(["dpkg", "-i", package_path.as_posix()], sudo=True)
-        except RuntimeError as e:
-            process_table = run(["ps", "aux"]).stdout
-            raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
+        agent_install_cmd = ["dpkg", "-i", package_path.as_posix()]
+    elif package_type == "linux_rpm":
+        agent_install_cmd = [
+            "rpm",
+            "-vU",
+            "--oldpackage",
+            "--replacepkgs",
+            package_path.as_posix(),
+        ]
+    else:
+        raise NotImplementedError(
+            f"Installation of package type {package_type} is not supported yet, please implement it"
+        )
+    logger.info("Installing Checkmk agent...")
+    try:
+        agent_installation = run(agent_install_cmd, sudo=True)
+        logger.info(
+            "Agent installation output: %s\n%s",
+            agent_installation.stdout,
+            agent_installation.stderr,
+        )
+        assert (
+            installed_ctl_path.exists()
+        ), f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
         return installed_ctl_path
-    if package_type == "linux_rpm":
-        run(["rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()], sudo=True)
-        return installed_ctl_path
-    raise NotImplementedError(
-        f"Installation of package type {package_type} is not supported yet, please implement it"
-    )
+    except RuntimeError as e:
+        process_table = run(["ps", "aux"]).stdout
+        raise RuntimeError(f"Agent installation failed. Process table:\n{process_table}") from e
 
 
 def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
@@ -93,6 +109,13 @@ def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
+    # Some smoke test to ensure the cmk-agent-ctl is executable in the current environment before
+    # trying to install and use it in the following steps.
+    # Please note: We can not verify the agent controller from the package below, as it is
+    # automatically deleted by the post install script in case it is not executable (see also
+    # agents/scripts/super-server/0_systemd/setup).
+    run([site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"])
+
     if site.version.is_raw_edition():
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download/invoke",
@@ -144,7 +167,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
         # after starting the agent controller, so we retry for some time
         wait_until(
             lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
-            timeout=3,
+            timeout=30,
             interval=0.1,
         )
         yield agent_ctl_daemon
@@ -271,8 +294,8 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
-    waiting_time = 1
-    waiting_cycles = 20
+    waiting_time = 2
+    waiting_cycles = 30
     for _ in range(waiting_cycles):
         time.sleep(waiting_time)
         baking_status = central_site.openapi.get_baking_status()
@@ -301,17 +324,19 @@ def _remove_omd_status_cache() -> None:
 
 
 def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:
-    stdout = site.read_file(OMD_STATUS_CACHE)
-    assert f"[{site.id}]" in stdout
-    assert "OVERALL" in stdout
+    omd_status_cache_content = site.read_file(OMD_STATUS_CACHE)
+    assert (
+        f"[{site.id}]" in omd_status_cache_content
+    ), f'Site "{site.id}" not found in "{OMD_STATUS_CACHE}"!'
+    assert "OVERALL" in omd_status_cache_content
 
     # extract text between '[<site.id>]' and 'OVERALL'
-    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", stdout)
+    match_extraction = re.findall(rf"\[{site.id}\]([^\\]*?)OVERALL", omd_status_cache_content)
     sub_stdout = match_extraction[0] if match_extraction else ""
 
     # find all occurrences of one or more digits in the extracted stdout
     match_assertion = re.findall(r"\d+", sub_stdout)
-    return all(int(match) == 0 for match in match_assertion), stdout
+    return all(int(match) == 0 for match in match_assertion), omd_status_cache_content
 
 
 def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_time: int = 5) -> None:
@@ -336,3 +361,18 @@ def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_tim
         count += 1
 
     logger.info("Agent cache not matching the current OMD status")
+
+
+@contextlib.contextmanager
+def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        deleted = False
+        if site.openapi.get_host(hostname):
+            logger.info("Delete created host %s", hostname)
+            site.openapi.delete_host(hostname)
+            deleted = True
+
+        if deleted:
+            site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

@@ -191,11 +191,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         # try using security files
         basecmd = "naviseccli -h %s " % host_address
     else:
-        basecmd = "naviseccli -h {} -User {} -Password '{}' -Scope 0 ".format(
-            host_address,
-            user,
-            password,
-        )
+        basecmd = f"naviseccli -h {host_address} -User {user} -Password '{password}' -Scope 0 "
 
     #
     # check_mk section of agent output

@@ -8,10 +8,9 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     get_average,
@@ -24,6 +23,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # Taken from connUnitPortState
 # user selected state of the port hardware
@@ -332,6 +333,7 @@ def parse_fc_port(string_table: StringTable) -> StringTable:
 
 
 check_info["fc_port"] = LegacyCheckDefinition(
+    name="fc_port",
     parse_function=parse_fc_port,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),

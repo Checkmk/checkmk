@@ -1697,21 +1697,23 @@ def test_check_multiple_interfaces(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces_with_counters(4000000),
-                timestamp=5,
+                ifaces,
+                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1727,21 +1729,23 @@ def test_check_multiple_interfaces_duplicate_descr(
 ) -> None:
     description = "description"
     item = f"{description} {item}"
+    ifaces = _create_interfaces_with_counters(0, descr=description)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, descr=description),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000, descr=description)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces_with_counters(4000000, descr=description),
-                timestamp=5,
+                ifaces,
+                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1758,12 +1762,13 @@ def test_check_multiple_interfaces_duplicate_alias(
     alias = "alias"
     index = item
     item = f"{alias} {index}"
+    ifaces = _create_interfaces_with_counters(0, alias=alias)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, alias=alias),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
     ifaces = _create_interfaces_with_counters(4000000, alias=alias)
@@ -1772,7 +1777,7 @@ def test_check_multiple_interfaces_duplicate_alias(
             item,
             params,
             ifaces,
-            timestamp=5,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(
@@ -1805,20 +1810,22 @@ def test_check_multiple_interfaces_group_simple() -> None:
         "state": ["8"],
         "speed": 123456,
     }
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(4000000),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1858,20 +1865,22 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         "discovered_speed": 20000000,
     }
 
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(4000000),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1918,24 +1927,14 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     list(
-        interfaces.check_multiple_interfaces(
-            "group",
-            params,
-            ifaces,
-            timestamp=0,
-        )
+        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[0] * len(ifaces))
     )
 
     ifaces = _create_interfaces_with_counters(4000000)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     assert list(
-        interfaces.check_multiple_interfaces(
-            "group",
-            params,
-            ifaces,
-            timestamp=5,
-        )
+        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[5] * len(ifaces))
     ) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
@@ -1987,20 +1986,22 @@ def test_check_multiple_interfaces_w_node(
     result: CheckResults,
 ) -> None:
     node_name = "node"
+    ifaces = _create_interfaces_with_counters(0, node=node_name)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, node=node_name),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000, node=node_name)
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(4000000, node=node_name),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name)
 
@@ -2014,26 +2015,28 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
 ) -> None:
     node_name_1 = "node1"
     node_name_2 = "node2"
+    ifaces = [
+        *_create_interfaces_with_counters(0, node=node_name_1),
+        *_create_interfaces_with_counters(0, node=node_name_2),
+    ]
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            [
-                *_create_interfaces_with_counters(0, node=node_name_1),
-                *_create_interfaces_with_counters(0, node=node_name_2),
-            ],
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = [
+        *_create_interfaces_with_counters(4000000, node=node_name_1),
+        *_create_interfaces_with_counters(4000000, node=node_name_2),
+    ]
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            [
-                *_create_interfaces_with_counters(4000000, node=node_name_1),
-                *_create_interfaces_with_counters(4000000, node=node_name_2),
-            ],
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name_1)
 
@@ -2063,36 +2066,38 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         "discovered_speed": 20000000,
     }
     node_names = ["node1", "node2", "node3"]
+    ifaces = [
+        interface
+        for idx, node_name in enumerate(node_names)
+        for interface in _create_interfaces_with_counters(
+            0,
+            admin_status=str(idx + 1),
+            node=node_name,
+        )
+    ]
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            [
-                interface
-                for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces_with_counters(
-                    0,
-                    admin_status=str(idx + 1),
-                    node=node_name,
-                )
-            ],
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = [
+        interface
+        for idx, node_name in enumerate(node_names)
+        for interface in _create_interfaces_with_counters(
+            4000000,
+            admin_status=str(idx + 1),
+            node=node_name,
+        )
+    ]
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            [
-                interface
-                for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces_with_counters(
-                    4000000,
-                    admin_status=str(idx + 1),
-                    node=node_name,
-                )
-            ],
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),

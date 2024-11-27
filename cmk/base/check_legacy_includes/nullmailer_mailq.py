@@ -6,8 +6,7 @@
 import typing
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels
-
+from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import render
 
 NULLMAILER_MAILQ_DEFAULT_LEVELS = {

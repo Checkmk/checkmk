@@ -26,7 +26,8 @@ from setproctitle import setthreadtitle
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
+from cmk.ccc.version import edition
 
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
@@ -34,6 +35,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui import log
 from cmk.gui.crash_handler import create_gui_crash_report
+from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
@@ -45,6 +47,7 @@ from cmk.trace import (
     get_tracer_provider,
     init_tracing,
     INVALID_SPAN,
+    service_namespace_from_config,
     set_span_in_context,
     trace_send_config,
     TracerProvider,
@@ -68,6 +71,7 @@ def run_process(job_parameters: JobParameters) -> None:
         lock_wato,
         is_stoppable,
         override_job_log_level,
+        span_id,
         init_span_processor_callback,
         origin_span,
     ) = job_parameters
@@ -80,8 +84,15 @@ def run_process(job_parameters: JobParameters) -> None:
     try:
         job_status = jobstatus_store.read()
         init_span_processor_callback(
-            init_tracing(omd_site(), "gui"),
-            exporter_from_config(trace_send_config(get_omd_config(paths.omd_root))),
+            init_tracing(
+                service_namespace=service_namespace_from_config(
+                    "", omd_config := get_omd_config(paths.omd_root)
+                ),
+                service_name="gui",
+                service_instance_id=omd_site(),
+                extra_resource_attributes=resource_attributes_from_config(paths.omd_root),
+            ),
+            exporter_from_config(trace_send_config(omd_config)),
         )
         instrument_app_dependencies()
         _initialize_environment(
@@ -89,7 +100,7 @@ def run_process(job_parameters: JobParameters) -> None:
         )
 
         with tracer.start_as_current_span(
-            f"run_process[{job_id}]",
+            f"run_process[{span_id}]",
             context=set_span_in_context(INVALID_SPAN),
             attributes={
                 "cmk.job_id": job_id,
@@ -148,8 +159,14 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
     @contextmanager
     def gui_job_context() -> Iterator[None]:
         _load_ui()
+
+        try:
+            features = features_registry[str(edition(paths.omd_root))]
+        except KeyError:
+            raise ValueError(f"Invalid edition: {edition}")
+
         with (
-            BackgroundJobFlaskApp().test_request_context("/"),
+            BackgroundJobFlaskApp(features).test_request_context("/"),
             SuperUserContext() if user is None else UserContext(UserId(user)),
         ):
             yield None

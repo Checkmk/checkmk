@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import contextlib
-from typing import Iterator
+from collections.abc import Iterator
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition, skip_if_saas_edition
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -305,7 +306,7 @@ def test_local_secret_permissions(site: Site) -> None:
     """test if all pages are accessible by the local_secret
 
     while introducing the secret and refactoring code to this secret we should
-    add tests here to make sure the functionallity works..."""
+    add tests here to make sure the functionality works..."""
 
     session = CMKWebSession(site)
     b64_token = site.get_site_internal_secret().b64_str
@@ -403,3 +404,23 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
         )
         assert "site" not in response.json()
         assert not session.is_logged_in()
+
+
+@skip_if_saas_edition
+@skip_if_raw_edition
+def test_invalid_remote_site_login(site: Site) -> None:
+    """test that we are not logged in with any remote site secret
+
+    AFAIK we have not configured a remote site at that point so no secret should work.
+    In the raw edition we don't have the `register_agent.py` page since the agent
+    bakery is a enterprise feature."""
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/register_agent.py",
+        headers={
+            "Authorization": f"RemoteSite {base64.b64encode(b'foobar').decode()}",
+        },
+        allow_redirect_to_login=True,
+    )
+    assert "check_mk/login.py" in response.url

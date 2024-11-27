@@ -8,11 +8,11 @@
 # https://mibs.observium.org/mib/SKYCONTROL-SYSTEM-MIB/#
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+
+check_info = {}
 
 
 def parse_vutlan_ems_leakage(string_table):
@@ -43,6 +43,7 @@ def check_vutlan_ems_leakage(item, _no_params, parsed):
 
 
 check_info["vutlan_ems_leakage"] = LegacyCheckDefinition(
+    name="vutlan_ems_leakage",
     detect=DETECT_VUTLAN_EMS,
     fetch=[
         SNMPTree(

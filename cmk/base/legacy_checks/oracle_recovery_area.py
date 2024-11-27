@@ -10,10 +10,10 @@
 # ORACLE_SID used_pct size used reclaimable
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_recovery_area(info):
@@ -68,6 +68,7 @@ def parse_oracle_recovery_area(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_recovery_area"] = LegacyCheckDefinition(
+    name="oracle_recovery_area",
     parse_function=parse_oracle_recovery_area,
     service_name="ORA %s Recovery Area",
     discovery_function=inventory_oracle_recovery_area,

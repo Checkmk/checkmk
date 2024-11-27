@@ -16,10 +16,10 @@
 # Default values for parameters that can be overriden.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
+
+check_info = {}
 
 
 # Discovery of dell power connect CPU details.
@@ -69,6 +69,7 @@ def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
+    name="dell_powerconnect_cpu",
     parse_function=parse_dell_powerconnect_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(

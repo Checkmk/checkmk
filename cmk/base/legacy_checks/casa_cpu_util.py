@@ -6,11 +6,11 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.casa import DETECT_CASA
+
+check_info = {}
 
 
 def parse_casa_info_util(info):
@@ -55,6 +55,7 @@ def parse_casa_cpu_util(string_table: Sequence[StringTable]) -> Sequence[StringT
 
 
 check_info["casa_cpu_util"] = LegacyCheckDefinition(
+    name="casa_cpu_util",
     parse_function=parse_casa_cpu_util,
     detect=DETECT_CASA,
     fetch=[

@@ -35,17 +35,17 @@ fn test_cert_ok() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "CN=IGC/A\n\
+            "Subject CN: IGC/A\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
-            Serial: {SERIAL}\n\
+            Serial number: {SERIAL}\n\
             Issuer CN: IGC/A\n\
             Issuer O: PM/SGDN\n\
             Issuer OU: DCSSI\n\
             Issuer ST: France\n\
             Issuer C: FR\n\
-            Signature algorithm: sha1WithRSAEncryption\n\
+            Certificate signature algorithm: sha1WithRSAEncryption\n\
             Public key algorithm: {PUBKEY_ALG}\n\
             Public key size: {PUBKEY_SZ}"
         )
@@ -73,8 +73,8 @@ fn test_cert_wrong_serial() {
     assert_eq!(
         coll.to_string(),
         format!(
-            "CN=IGC/A, \
-            Serial is {SERIAL} but expected {serial} (!)\n\
+            "Subject CN: IGC/A, \
+            Serial number: {SERIAL} but expected {serial} (!)\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\

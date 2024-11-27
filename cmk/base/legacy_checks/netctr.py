@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+
+check_info = {}
 
 linux_nic_check = "lnx_if"
 
@@ -103,10 +103,12 @@ def parse_netctr(string_table: StringTable) -> StringTable:
 
 
 check_info["netctr"] = LegacyCheckDefinition(
+    name="netctr",
     parse_function=parse_netctr,
 )
 
 check_info["netctr.combined"] = LegacyCheckDefinition(
+    name="netctr_combined",
     service_name="NIC %s counters",
     sections=["netctr"],
     discovery_function=inventory_netctr_combined,

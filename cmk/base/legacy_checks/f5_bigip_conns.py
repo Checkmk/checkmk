@@ -8,11 +8,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT, get_conn_rate_params
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+
+check_info = {}
 
 
 def inventory_f5_bigip_conns(info):
@@ -89,6 +90,7 @@ def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+    name="f5_bigip_conns",
     parse_function=parse_f5_bigip_conns,
     detect=DETECT,
     fetch=SNMPTree(

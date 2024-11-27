@@ -1,19 +1,14 @@
 [project]
 name = "cmk-agent-receiver"
 version = "1.0.0"
-dependencies = [
-  "cryptography",
-  "fastapi",
-  "gunicorn",
-  "python-dateutil",
-  "python-multipart",
-  "requests",
-  "uvicorn",
-]
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.package-data]
 "cmk.agent_receiver" = ["py.typed"]
@@ -74,6 +69,6 @@ disable = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+consider_namespace_packages = true
 testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

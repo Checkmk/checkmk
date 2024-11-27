@@ -9,9 +9,12 @@ import {
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
-import FormEdit from '@/form/components/FormEdit.vue'
 import { ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
+import HelpText from '@/components/HelpText.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import { capitalizeFirstLetter } from '@/lib/utils'
+import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{
   spec: FormSpec.Tuple
@@ -42,59 +45,80 @@ function setValidation(newBackendValidation: ValidationMessages) {
   elementValidation.value = _elementValidations
 }
 
-function capitalizeFirstLetter(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
   <table
-    v-if="spec.layout == 'horizontal' || spec.layout == 'horizontal_titles_top'"
+    v-if="spec.layout === 'horizontal' || spec.layout === 'horizontal_titles_top'"
     class="valuespec_tuple horizontal"
   >
-    <tr>
-      <template v-for="(element, index) in spec.elements" :key="index">
-        <td class="tuple_td">
-          <span v-if="spec.show_titles && element.title" class="title">{{
+    <tbody>
+      <tr>
+        <template v-for="(element, index) in spec.elements" :key="index">
+          <td class="tuple_td">
+            <span v-if="spec.show_titles && element.title" class="title">{{
+              capitalizeFirstLetter(element.title)
+            }}</span>
+            <CmkSpace
+              v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
+              size="small"
+            />
+            <br
+              v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'"
+            />
+            <FormEditDispatcher
+              v-model:data="data[index]"
+              :spec="element"
+              :backend-validation="elementValidation[index]!"
+            />
+            <HelpText :help="element.help" />
+          </td>
+        </template>
+      </tr>
+    </tbody>
+  </table>
+
+  <table v-if="spec.layout === 'vertical'" class="valuespec_tuple vertical">
+    <tbody>
+      <tr v-for="(element, index) in spec.elements" :key="index">
+        <td v-if="spec.show_titles" class="tuple_left">
+          <span v-if="element.title" class="vs_floating_text">{{
             capitalizeFirstLetter(element.title)
           }}</span>
-          <br v-if="spec.show_titles && element.title && spec.layout == 'horizontal_titles_top'" />
-          <span v-else> </span>
-          <FormEdit
+          <CmkSpace v-if="spec.show_titles && element.title" size="small" />
+        </td>
+        <td :class="{ tuple_right: true, has_title: element.title }">
+          <FormEditDispatcher
             v-model:data="data[index]"
             :spec="element"
             :backend-validation="elementValidation[index]!"
           />
+          <HelpText :help="element.help" />
         </td>
-      </template>
-    </tr>
+      </tr>
+    </tbody>
   </table>
 
-  <table v-if="spec.layout == 'vertical'" class="valuespec_tuple vertical">
-    <tr v-for="(element, index) in spec.elements" :key="index">
-      <td v-if="spec.show_titles" class="tuple_left">
-        <span v-if="element.title" class="vs_floating_text">{{
-          capitalizeFirstLetter(element.title)
-        }}</span>
-      </td>
-      <td :class="{ tuple_right: true, has_title: element.title }">
-        <FormEdit
-          v-model:data="data[index]"
-          :spec="element"
-          :backend-validation="elementValidation[index]!"
-        />
-      </td>
-    </tr>
-  </table>
-
-  <template v-if="spec.layout == 'float'">
+  <template v-if="spec.layout === 'float'">
     <template v-for="(element, index) in spec.elements" :key="index">
-      <FormEdit
+      <FormEditDispatcher
         v-model:data="data[index]"
         :spec="element"
         :backend-validation="elementValidation[index]!"
       />
+      <HelpText :help="element.help" />
     </template>
   </template>
   <FormValidation :validation="validation"></FormValidation>
 </template>
+
+<style scoped>
+td.tuple_td:first-child {
+  padding-left: 0;
+}
+td.tuple_td {
+  padding-left: var(--spacing);
+}
+</style>

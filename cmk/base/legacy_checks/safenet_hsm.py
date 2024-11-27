@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, get_rate, get_value_store, SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_safenet_hsm(string_table):
@@ -95,6 +95,7 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
 
 check_info["safenet_hsm.events"] = LegacyCheckDefinition(
+    name="safenet_hsm_events",
     service_name="HSM Safenet Event Stats",
     sections=["safenet_hsm"],
     discovery_function=inventory_safenet_hsm_events,
@@ -187,6 +188,7 @@ def check_safenet_hsm(_no_item, params, parsed):
 
 
 check_info["safenet_hsm"] = LegacyCheckDefinition(
+    name="safenet_hsm",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),

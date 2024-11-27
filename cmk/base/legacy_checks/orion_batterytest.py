@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_orion_batterytest(info):
@@ -41,6 +41,7 @@ def parse_orion_batterytest(string_table: StringTable) -> StringTable | None:
 
 
 check_info["orion_batterytest"] = LegacyCheckDefinition(
+    name="orion_batterytest",
     parse_function=parse_orion_batterytest,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
     fetch=SNMPTree(

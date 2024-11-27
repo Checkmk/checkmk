@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769
@@ -45,6 +46,7 @@ def parse_hr_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["hr_cpu"] = LegacyCheckDefinition(
+    name="hr_cpu",
     parse_function=parse_hr_cpu,
     detect=ucd_hr_detection.HR,
     fetch=SNMPTree(

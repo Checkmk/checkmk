@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, contains, OIDEnd, SNMPTree
+
+check_info = {}
 
 
 def parse_hp_psu(string_table):
@@ -45,6 +46,7 @@ def check_hp_psu_temp(item, params, parsed):
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
+    name="hp_psu_temp",
     service_name="Temperature Power Supply %s",
     sections=["hp_psu"],
     discovery_function=inventory_hp_psu_temp,
@@ -87,6 +89,7 @@ def check_hp_psu(item, params, parsed):
 
 
 check_info["hp_psu"] = LegacyCheckDefinition(
+    name="hp_psu",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
         any_of(

@@ -18,7 +18,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
@@ -30,7 +30,12 @@ from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_p
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckServiceWithNodes, AutochecksStore, DiscoveredService
+from ._autochecks import (
+    AutocheckEntry,
+    AutochecksConfig,
+    AutocheckServiceWithNodes,
+    AutochecksStore,
+)
 from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
@@ -86,10 +91,7 @@ def execute_check_discovery(
     section_plugins: SectionMap[SectionPlugin],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    autochecks_config: AutochecksConfig,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Container[ServiceID],
 ) -> Sequence[ActiveCheckResult]:
@@ -155,10 +157,7 @@ def execute_check_discovery(
         ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        ignore_service=ignore_service,
-        ignore_plugin=ignore_plugin,
-        get_effective_host=get_effective_host,
-        get_service_description=find_service_description,
+        autochecks_config=autochecks_config,
         enforced_services=enforced_services,
     )
 
@@ -168,7 +167,7 @@ def execute_check_discovery(
         params=params,
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,
-        find_service_description=find_service_description,
+        get_service_description=autochecks_config.service_description,
     )
 
     host_labels_result, host_labels_need_rediscovery = _check_host_labels(
@@ -209,7 +208,7 @@ def _check_service_lists(
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoverySettings,
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, AutocheckEntry], ServiceName],
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
     subresults = []
     need_rediscovery = False
@@ -223,10 +222,8 @@ def _check_service_lists(
         filtered = True
 
         for service, _found_on_nodes in discovered_services:
-            check_plugin_name = DiscoveredService.check_plugin_name(service)
-            service_description = find_service_description(
-                host_name, *DiscoveredService.id(service)
-            )
+            check_plugin_name = service.newer.check_plugin_name
+            service_description = get_service_description(host_name, service.newer)
             service_result = _make_service_result(
                 transition.title, check_plugin_name, service_description=service_description
             )
@@ -246,8 +243,8 @@ def _check_service_lists(
     modified_params = False
     for service, _found_on_nodes in services_by_transition.get("changed", []):
         modified = False
-        check_plugin_name = DiscoveredService.check_plugin_name(service)
-        service_description = find_service_description(host_name, *DiscoveredService.id(service))
+        check_plugin_name = service.newer.check_plugin_name
+        service_description = get_service_description(host_name, service.newer)
         assert service.previous is not None and service.new is not None
 
         subresults.append(
@@ -291,10 +288,8 @@ def _check_service_lists(
     subresults.extend(
         _make_service_result(
             "ignored",
-            DiscoveredService.check_plugin_name(ignored_service),
-            service_description=find_service_description(
-                host_name, *DiscoveredService.id(ignored_service)
-            ),
+            ignored_service.newer.check_plugin_name,
+            service_description=get_service_description(host_name, ignored_service.newer),
         )
         for ignored_service, _found_on_nodes in services_by_transition.get("ignored", [])
     )

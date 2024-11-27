@@ -13,10 +13,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def parse_nginx_status(string_table):
@@ -99,6 +99,7 @@ def discover_nginx_status(section):
 
 
 check_info["nginx_status"] = LegacyCheckDefinition(
+    name="nginx_status",
     parse_function=parse_nginx_status,
     service_name="Nginx %s Status",
     discovery_function=discover_nginx_status,

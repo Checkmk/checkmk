@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
+
+check_info = {}
 
 
 def inventory_emc_isilon_diskstatus(info):
@@ -33,6 +33,7 @@ def parse_emc_isilon_diskstatus(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_isilon_diskstatus"] = LegacyCheckDefinition(
+    name="emc_isilon_diskstatus",
     parse_function=parse_emc_isilon_diskstatus,
     detect=DETECT_ISILON,
     fetch=SNMPTree(

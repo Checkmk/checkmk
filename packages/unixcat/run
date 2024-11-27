@@ -8,6 +8,7 @@ set -e
 JOBS=6
 readonly CLANG_VERSION=${CLANG_VERSION:-18}
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
+readonly ALL_LINTERS=iwyu,clang-tidy
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -23,9 +24,8 @@ usage() {
     echo "  -b, --build             build package"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
-    echo "  -t, --clang-tidy        check sources with clang-tidy linter"
-    echo "  -a, --all               shortcut for -b -u -F -i -t"
+    echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
+    echo "  -a, --all               shortcut for -b -u -F -l all"
     echo "  -f, --format            format sources"
     echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
@@ -44,7 +44,7 @@ parse_options() {
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cbuFitafDj:h' --long 'clean,build,unit-tests,check-format,iwyu,clang-tidy,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cbuFl:afDj:h' --long 'clean,build,unit-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -56,32 +56,31 @@ parse_options() {
             '-c' | '--clean')
                 RUN_CLEAN=yes
                 shift
-                continue
                 ;;
             '-b' | '--build')
                 RUN_BUILD=yes
                 shift
-                continue
                 ;;
             '-u' | '--unit-tests')
                 RUN_UNIT_TESTS=yes
                 shift
-                continue
                 ;;
             '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
-                continue
                 ;;
-            '-i' | '--iwyu')
-                RUN_IWYU=yes
-                shift
-                continue
-                ;;
-            '-t' | '--clang-tidy')
-                RUN_CLANG_TIDY=yes
-                shift
-                continue
+            '-l' | '--lint')
+                test "$2" = "all" && LINTERS="${ALL_LINTERS}" || LINTERS="$2"
+                for LINTER in ${LINTERS//,/ }; do
+                    case ,"${ALL_LINTERS}", in
+                        *,"${LINTER}",*)
+                            FLAG="RUN_${LINTER//-/_}"
+                            eval "${FLAG^^}=yes"
+                            ;;
+                        *) failure "unknown linter: ${LINTER}" ;;
+                    esac
+                done
+                shift 2
                 ;;
             '-a' | '--all')
                 RUN_BUILD=yes
@@ -90,22 +89,18 @@ parse_options() {
                 RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift
-                continue
                 ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
-                continue
                 ;;
             '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
-                continue
                 ;;
             '-j' | '--jobs')
                 JOBS="$2"
                 shift 2
-                continue
                 ;;
             '-h' | '--help')
                 usage
@@ -141,7 +136,7 @@ run_build() {
 
 run_unit_tests() {
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
-        VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
+        VALGRIND="$(which valgrind) --quiet --num-callers=30 --error-exitcode=42"
     fi
     "${BAZEL_CMD}" test ${VALGRIND:+--run_under="${VALGRIND}"} //packages/unixcat:all
 }

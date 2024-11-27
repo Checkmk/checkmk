@@ -55,6 +55,11 @@ perfometer_processes = perfometers.Perfometer(
     segments=["processes"],
 )
 
+graph_number_of_processes = graphs.Graph(
+    name="number_of_processes",
+    title=Title("Number of processes"),
+    compound_lines=["processes"],
+)
 graph_size_of_processes = graphs.Graph(
     name="size_of_processes",
     title=Title("Size of processes"),
@@ -116,9 +121,4 @@ graph_size_per_process = graphs.Graph(
             ),
         )
     ],
-)
-graph_number_of_processes = graphs.Graph(
-    name="number_of_processes",
-    title=Title("Number of processes"),
-    compound_lines=["processes"],
 )

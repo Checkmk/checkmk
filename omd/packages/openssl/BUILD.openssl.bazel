@@ -1,4 +1,4 @@
-load("@//omd/packages/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
+load("@//bazel/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(

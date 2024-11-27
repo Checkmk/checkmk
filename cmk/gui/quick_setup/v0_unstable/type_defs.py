@@ -11,6 +11,7 @@ from typing import Any, NewType
 
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
+ActionId = NewType("ActionId", str)
 QuickSetupId = NewType("QuickSetupId", str)
 StageIndex = NewType("StageIndex", int)
 RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])

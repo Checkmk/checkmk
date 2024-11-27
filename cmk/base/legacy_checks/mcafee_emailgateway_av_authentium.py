@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+check_info = {}
 
 
 def discover_mcafee_emailgateway_av_authentium(section: StringTable) -> DiscoveryResult:
@@ -24,10 +24,9 @@ def check_mcafee_emailgateway_av_authentium(item, params, info):
 
     activated, engine_version, dat_version = info[0]
     state, state_readable = map_states.get(activated, (3, "unknown[%s]" % activated))
-    return state, "Status: {}, Engine version: {}, DAT version: {}".format(
-        state_readable,
-        engine_version,
-        dat_version,
+    return (
+        state,
+        f"Status: {state_readable}, Engine version: {engine_version}, DAT version: {dat_version}",
     )
 
 
@@ -36,6 +35,7 @@ def parse_mcafee_emailgateway_av_authentium(string_table: StringTable) -> String
 
 
 check_info["mcafee_emailgateway_av_authentium"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_av_authentium",
     parse_function=parse_mcafee_emailgateway_av_authentium,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

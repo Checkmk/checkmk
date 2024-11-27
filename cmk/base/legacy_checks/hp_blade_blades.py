@@ -22,11 +22,11 @@
 # '.1.3.6.1.4.1.232.22.2.4.1.1.1.25' => 'cpqRackServerBladePowered',
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
+
+check_info = {}
 
 # GENERAL MAPS:
 
@@ -41,7 +41,7 @@ hp_blade_status2nagios_map = {
 }
 
 
-def saveint(i: str) -> int:
+def saveint(i: object) -> int:
     """Tries to cast a string to an integer and return it. In case this
     fails, it returns 0.
 
@@ -49,7 +49,7 @@ def saveint(i: str) -> int:
     bad style these days, because in case you get 0 back from this function,
     you can not know whether it is really 0 or something went wrong."""
     try:
-        return int(i)
+        return int(i)  # type: ignore[call-overload]
     except (TypeError, ValueError):
         return 0
 
@@ -75,8 +75,7 @@ def check_hp_blade_blades(item, params, info):
             # Seems not to be implemented. The MIB file tells me that this value
             # should represent a state but is empty. So set it to "fake" OK and
             # display the other gathered information.
-            state = 2 if line[2] == "" else line[2]
-            state = saveint(state)
+            state = saveint(line[2] or "2")
 
             snmp_state = hp_blade_status_map[state]
             status = hp_blade_status2nagios_map[snmp_state]
@@ -92,6 +91,7 @@ def parse_hp_blade_blades(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_blade_blades"] = LegacyCheckDefinition(
+    name="hp_blade_blades",
     parse_function=parse_hp_blade_blades,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(

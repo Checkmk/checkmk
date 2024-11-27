@@ -28,13 +28,13 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
-def _migrate_credentials(
+def migrate_credentials(
     params: object,
 ) -> tuple[Literal["automation"], None] | tuple[Literal["credentials"], Mapping[str, object]]:
     match params:
-        case "automation":
+        case "automation" | ("automation", None):
             return "automation", None
-        case "credentials", (user, secret):
+        case "credentials", ((user, secret) | {"user": user, "secret": secret}):
             return "credentials", {"user": user, "secret": secret}
     raise ValueError(params)
 
@@ -78,7 +78,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                 required=True,
                 parameter_form=CascadingSingleChoice(
                     title=Title("Login credentials"),
-                    migrate=_migrate_credentials,
+                    migrate=migrate_credentials,
                     help_text=Help(
                         "Here you can configured the credentials to be used. Keep in mind that the <tt>automation</tt> user need "
                         "to exist if you choose this option"

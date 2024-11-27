@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+
+check_info = {}
 
 
 def savefloat(f: str) -> float:
@@ -49,6 +49,7 @@ def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+    name="innovaphone_licenses",
     parse_function=parse_innovaphone_licenses,
     service_name="Licenses",
     discovery_function=discover_innovaphone_licenses,

@@ -10,13 +10,11 @@ from typing import Any
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.register import check_plugins
+from cmk.base.api.agent_based.register import AgentBasedPlugins, check_plugins
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_function_arguments,
@@ -35,6 +33,7 @@ MINIMAL_CREATION_KWARGS: dict[str, Any] = {
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,
     "check_function": dummy_generator,
+    "location": PluginLocation(""),
 }
 
 
@@ -222,8 +221,8 @@ def test_create_check_plugin() -> None:
     assert plugin.check_ruleset_name is None
 
 
-def test_module_attribute(fix_register: FixRegister) -> None:
-    local_check = fix_register.check_plugins[CheckPluginName("local")]
+def test_module_attribute(agent_based_plugins: AgentBasedPlugins) -> None:
+    local_check = agent_based_plugins.check_plugins[CheckPluginName("local")]
     assert local_check.location == PluginLocation(
         "cmk.plugins.collection.agent_based.local", "check_plugin_local"
     )

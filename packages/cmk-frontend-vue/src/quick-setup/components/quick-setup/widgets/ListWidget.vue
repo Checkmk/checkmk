@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type ListWidgetProps } from './widget_types'
-import { getWidget } from './utils'
+import { getGetWidget } from '@/quick-setup/components/quick-setup/utils'
+const getWidget = getGetWidget()
 
 const props = defineProps<ListWidgetProps>()
 const ordered = props.list_type === 'ordered'

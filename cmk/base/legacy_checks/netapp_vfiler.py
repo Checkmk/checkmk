@@ -7,10 +7,10 @@
 #                                                   vfState(9)
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_netapp_vfiler(info):
@@ -41,6 +41,7 @@ def parse_netapp_vfiler(string_table: StringTable) -> StringTable:
 
 
 check_info["netapp_vfiler"] = LegacyCheckDefinition(
+    name="netapp_vfiler",
     parse_function=parse_netapp_vfiler,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),

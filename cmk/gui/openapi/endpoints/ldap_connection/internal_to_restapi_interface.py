@@ -9,6 +9,7 @@ from typing import Any, cast, get_args, Literal, TypedDict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import DisableNotificationsAttribute
 from cmk.gui.userdb import (
     ACTIVE_DIR,
     ActivePlugins,
@@ -16,7 +17,6 @@ from cmk.gui.userdb import (
     CUSTOM_USER_ATTRIBUTE,
     DIR_SERVER_389,
     DISABLE_NOTIFICATIONS,
-    DisableNotificationsAttribute,
     Discover,
     Fixed,
     FORCE_AUTH_USER,

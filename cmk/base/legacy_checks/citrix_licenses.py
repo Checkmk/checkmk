@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from plugin:
 # <<<citrix_licenses>>>
@@ -51,6 +53,7 @@ def check_citrix_licenses(item, params, parsed):
 
 
 check_info["citrix_licenses"] = LegacyCheckDefinition(
+    name="citrix_licenses",
     parse_function=parse_citrix_licenses,
     service_name="Citrix Licenses %s",
     discovery_function=inventory_citrix_licenses,

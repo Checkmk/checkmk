@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import '@/assets/variables.css'
 import FormMultilineText from './FormMultilineText.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { type ValidationMessages } from '@/form/components/utils/validation'
@@ -23,12 +22,14 @@ const prependDateAndUsername = (): void => {
 }
 </script>
 <template>
-  <div style="display: flex">
+  <div class="form-comment-text-area">
     <FormMultilineText
       v-model:data="data"
       :backend-validation="backendValidation"
       :spec="{ ...spec, type: 'multiline_text' }"
     />
+    <!-- TODO: replace thise with something like
+      <Button variant='invisible'><CmkIcon /></Button> -->
     <img
       :alt="props.spec.i18n.prefix_date_and_comment"
       :title="props.spec.i18n.prefix_date_and_comment"
@@ -39,9 +40,13 @@ const prependDateAndUsername = (): void => {
 </template>
 
 <style scoped>
-img {
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
+.form-comment-text-area {
+  display: flex;
+
+  img {
+    width: 20px;
+    height: 20px;
+    margin-left: var(--spacing);
+  }
 }
 </style>

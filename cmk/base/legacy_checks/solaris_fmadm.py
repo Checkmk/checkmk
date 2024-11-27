@@ -138,8 +138,9 @@
 
 # mypy: disable-error-code="attr-defined"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_solaris_fmadm(string_table):
@@ -195,6 +196,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
 
 check_info["solaris_fmadm"] = LegacyCheckDefinition(
+    name="solaris_fmadm",
     parse_function=parse_solaris_fmadm,
     service_name="FMD Status",
     discovery_function=inventory_solaris_fmadm,

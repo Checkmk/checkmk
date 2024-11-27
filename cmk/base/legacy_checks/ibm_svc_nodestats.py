@@ -6,12 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, Service
+
+check_info = {}
 
 # newer Firmware versions may return decimal values, not just integer
 # <<<ibm_svc_nodestats:sep(58)>>>
@@ -159,6 +160,7 @@ def parse_ibm_svc_nodestats(info):
 
 
 check_info["ibm_svc_nodestats"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats",
     parse_function=parse_ibm_svc_nodestats,
 )
 
@@ -197,6 +199,7 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, section):
 
 
 check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats_diskio",
     service_name="Disk IO %s",
     sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_diskio,
@@ -235,6 +238,7 @@ def check_ibm_svc_nodestats_iops(item, _no_params, section):
 
 
 check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats_iops",
     service_name="Disk IOPS %s",
     sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_iops,
@@ -273,6 +277,7 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, section):
 
 
 check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats_disk_latency",
     service_name="Disk Latency %s",
     sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_disk_latency,
@@ -303,6 +308,7 @@ def check_ibm_svc_nodestats_cpu(item, params, section):
 
 
 check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats_cpu_util",
     service_name="CPU utilization %s",
     sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_cpu,
@@ -350,6 +356,7 @@ def check_ibm_svc_nodestats_cache(item, _no_params, section):
 
 
 check_info["ibm_svc_nodestats.cache"] = LegacyCheckDefinition(
+    name="ibm_svc_nodestats_cache",
     service_name="Cache %s",
     sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_cache,

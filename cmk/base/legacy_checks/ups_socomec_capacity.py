@@ -10,11 +10,11 @@
 # upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+
+check_info = {}
 
 
 def inventory_ups_socomec_capacity(info):
@@ -81,6 +81,7 @@ def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    name="ups_socomec_capacity",
     parse_function=parse_ups_socomec_capacity,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

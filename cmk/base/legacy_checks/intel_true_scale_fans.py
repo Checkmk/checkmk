@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
+
+check_info = {}
 
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.6.1 Fan 201 --> ICS-CHASSIS-MIB::icsChassisFanDescription.6.1
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.7.1 Fan 202 --> ICS-CHASSIS-MIB::icsChassisFanDescription.7.1
@@ -82,6 +82,7 @@ def parse_intel_true_scale_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
+    name="intel_true_scale_fans",
     parse_function=parse_intel_true_scale_fans,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(

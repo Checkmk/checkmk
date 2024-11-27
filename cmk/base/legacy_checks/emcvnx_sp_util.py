@@ -14,10 +14,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, render
+
+check_info = {}
 
 
 def parse_emcvnx_sp_util(string_table):
@@ -63,6 +63,7 @@ def check_emcvnx_sp_util(item, params, parsed):
 
 
 check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
+    name="emcvnx_sp_util",
     parse_function=parse_emcvnx_sp_util,
     service_name="Storage Processor Utilization",
     discovery_function=inventory_emcvnx_sp_util,

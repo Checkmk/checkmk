@@ -27,7 +27,7 @@ from cmk.base import diagnostics
 @pytest.fixture(autouse=True)
 def reset_collector_caches():
     diagnostics.get_omd_config.cache_clear()
-    diagnostics.get_checkmk_server_name.cache_clear()
+    diagnostics.verify_checkmk_server_host.cache_clear()
 
 
 @pytest.fixture()
@@ -159,22 +159,84 @@ def test_diagnostics_element_hw_info() -> None:
 def test_diagnostics_element_hw_info_content(
     tmp_path: PurePath,
 ) -> None:
-    diagnostics_element = diagnostics.HWDiagnosticsElement()
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    proc_base_path = Path(tmp_path).joinpath("proc")
+    proc_base_path.mkdir(exist_ok=True)
 
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("hwinfo.json")
+    # Create three fake proc files
+    with open(proc_base_path / "meminfo", "w", encoding="utf-8") as f:
+        f.write("MemTotal:       32663516 kB")
+
+    with open(proc_base_path / "loadavg", "w", encoding="utf-8") as f:
+        f.write("1.19 1.58 1.75 2/1922 891074")
+
+    with open(proc_base_path / "cpuinfo", "w", encoding="utf-8") as f:
+        f.write("""processor : 0
+physical id : 0
+processor   : 1
+physical id : 0
+processor   : 2
+physical id : 0
+processor   : 3
+physical id : 0""")
+
+    diagnostics_element = diagnostics.collect_infos_hw(proc_base_path)
 
     info_keys = [
         "cpuinfo",
         "loadavg",
         "meminfo",
-        "vendorinfo",
     ]
-    content = json.loads(filepath.open().read())
 
-    assert sorted(content.keys()) == sorted(info_keys)
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert isinstance(diagnostics_element, dict)
+    assert diagnostics_element == {
+        "meminfo": {"MemTotal": "32663516 kB"},
+        "loadavg": {"loadavg_1": "1.19", "loadavg_5": "1.58", "loadavg_15": "1.75"},
+        "cpuinfo": {"physical_id": "0", "num_logical_processors": "4", "cpus": 1},
+    }
+
+
+def test_diagnostics_element_vendor_info() -> None:
+    diagnostics_element = diagnostics.VendorDiagnosticsElement()
+    assert diagnostics_element.ident == "vendorinfo"
+    assert diagnostics_element.title == "Vendor Information"
+    assert diagnostics_element.description == ("HW Vendor information of the Checkmk Server")
+
+
+def test_diagnostics_element_vendor_info_content(
+    tmp_path: PurePath,
+) -> None:
+    sys_path = Path(tmp_path).joinpath("sys/class/dmi/id")
+    sys_path.mkdir(parents=True, exist_ok=True)
+
+    # Create five fake sys files
+    with open(sys_path / "bios_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "bios_version", "w", encoding="utf-8") as f:
+        f.write("1.2.3")
+
+    with open(sys_path / "sys_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(sys_path / "product_name", "w", encoding="utf-8") as f:
+        f.write("Longitude 4")
+
+    with open(sys_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
+        f.write("")
+
+    diagnostics_element = diagnostics.collect_infos_vendor(sys_path)
+
+    info_keys = [
+        "bios_vendor",
+        "bios_version",
+        "sys_vendor",
+        "product_name",
+        "chassis_asset_tag",
+    ]
+
+    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
+    assert dict(diagnostics_element)["bios_vendor"] == "Dull Ink"
 
 
 def test_diagnostics_element_environment() -> None:
@@ -257,6 +319,93 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
     assert str(test_file) in size_of
     assert size_of[str(test_file)] == str(len(test_content))
     assert group_of[str(test_file)] == test_group
+
+
+def test_diagnostics_element_dpkg():
+    diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "dpkg_packages"
+    assert diagnostics_element.title == "Dpkg packages information"
+    assert diagnostics_element.description == (
+        "Output of `dpkg -l`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_dpkg_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("dpkg")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "Desired=Unknown/Install/Remove/Purge/Hold
+| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+||/ Name                                                        Version                                         Architecture Description
++++-===========================================================-===============================================-============-=====================================================================================================
+ii  accountsservice                                             22.07.5-2ubuntu1.5                              amd64        query and manipulate user account information"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", str(test_bin_dir))
+
+        diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("dpkg_packages.csv")
+
+        content = filepath.open().read()
+
+        assert "22.07.5-2ubuntu1.5" in content
+
+        shutil.rmtree(str(test_bin_dir))
+
+
+def test_diagnostics_element_rpm():
+    diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
+    assert diagnostics_element.ident == "rpm_packages"
+    assert diagnostics_element.title == "Rpm packages information"
+    assert diagnostics_element.description == (
+        "Output of `rpm -qa`. See the corresponding commandline help for more details."
+    )
+
+
+def test_diagnostics_element_rpm_content(monkeypatch, tmp_path):
+    test_bin_dir = Path(cmk.utils.paths.omd_root).joinpath("bin")
+    test_bin_dir.mkdir(parents=True, exist_ok=True)
+    test_bin_filepath = test_bin_dir.joinpath("rpm")
+
+    with test_bin_filepath.open("w", encoding="utf-8") as f:
+        f.write(
+            """#!/bin/bash
+                echo "libgcc;11.4.1;2.1.el9;x86_64
+crypto-policies;20230731;1.git94f0e2c.el9_3.1;noarch
+tzdata;2023c;1.el9;noarch"
+                """
+        )
+
+    os.chmod(test_bin_filepath, 0o770)
+
+    with monkeypatch.context() as m:
+        m.setenv("PATH", str(test_bin_dir))
+
+        diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("rpm_packages.csv")
+
+        content = filepath.open().read()
+
+        assert "libgcc;11.4.1;2.1.el9;x86_64" in content
+
+        shutil.rmtree(str(test_bin_dir))
 
 
 def test_diagnostics_element_omd_config() -> None:
@@ -368,7 +517,7 @@ CONFIG_TMPFS='on'"""
 
 
 def test_diagnostics_element_checkmk_overview() -> None:
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
     assert diagnostics_element.description == (
@@ -401,7 +550,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
 def test_diagnostics_element_checkmk_overview_error(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree, error
 ):
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -470,7 +619,7 @@ def test_diagnostics_element_checkmk_overview_error(
 def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
+    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -612,7 +761,7 @@ def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir
 
 
 def test_diagnostics_element_performance_graphs() -> None:
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
     assert diagnostics_element.ident == "performance_graphs"
     assert diagnostics_element.title == "Performance Graphs of Checkmk Server"
     assert diagnostics_element.description == (
@@ -652,7 +801,7 @@ def test_diagnostics_element_performance_graphs_error(
     content,
     error,
 ):
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -704,7 +853,7 @@ def test_diagnostics_element_performance_graphs_content(
     text,
     content,
 ):
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -848,7 +997,7 @@ def test_diagnostics_element_crash_dumps_content(tmp_path):
 
     assert tarfile.is_tarfile(filepath)
     with tarfile.open(filepath, "r") as tar:
-        tar.extractall(path=tmp_path)
+        tar.extractall(path=tmp_path, filter="data")
         with Path(tmp_path.joinpath("info.json")).open("r", encoding="utf-8") as f:
             content = f.read()
 

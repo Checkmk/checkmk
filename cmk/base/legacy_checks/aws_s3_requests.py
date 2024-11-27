@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -13,10 +12,12 @@ from cmk.base.check_legacy_includes.aws import (
     get_data_or_go_stale,
     inventory_aws_generic,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_s3(string_table):
@@ -97,6 +98,7 @@ def discover_aws_s3_requests(p):
 
 
 check_info["aws_s3_requests"] = LegacyCheckDefinition(
+    name="aws_s3_requests",
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Requests %s",
     discovery_function=discover_aws_s3_requests,
@@ -131,6 +133,7 @@ def discover_aws_s3_requests_http_errors(p):
 
 
 check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
+    name="aws_s3_requests_http_errors",
     service_name="AWS/S3 HTTP Errors %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_http_errors,
@@ -185,6 +188,7 @@ def discover_aws_s3_requests_latency(p):
 
 
 check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
+    name="aws_s3_requests_latency",
     service_name="AWS/S3 Latency %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_latency,
@@ -226,6 +230,7 @@ def discover_aws_s3_requests_traffic_stats(p):
 
 
 check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
+    name="aws_s3_requests_traffic_stats",
     service_name="AWS/S3 Traffic Stats %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_traffic_stats,
@@ -266,6 +271,7 @@ def discover_aws_s3_requests_select_object(p):
 
 
 check_info["aws_s3_requests.select_object"] = LegacyCheckDefinition(
+    name="aws_s3_requests_select_object",
     service_name="AWS/S3 SELECT Object %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_select_object,

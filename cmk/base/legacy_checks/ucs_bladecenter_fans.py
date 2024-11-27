@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.plugins.lib import ucs_bladecenter
+
+check_info = {}
 
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
@@ -84,6 +85,7 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 
 check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_fans",
     parse_function=parse_ucs_bladecenter_fans,
     service_name="Fans %s",
     discovery_function=inventory_ucs_bladecenter_fans,
@@ -125,6 +127,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_fans_temp",
     service_name="Temperature %s",
     sections=["ucs_bladecenter_fans"],
     discovery_function=inventory_ucs_bladecenter_fans_temp,

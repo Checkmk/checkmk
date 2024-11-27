@@ -6,11 +6,12 @@
 
 import time
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+
+check_info = {}
 
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
@@ -47,6 +48,7 @@ def check_db2_backup(item, params, parsed):
 
 
 check_info["db2_backup"] = LegacyCheckDefinition(
+    name="db2_backup",
     parse_function=parse_db2_dbs,
     service_name="DB2 Backup %s",
     discovery_function=inventory_db2_backup,

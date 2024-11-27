@@ -8,8 +8,9 @@ import json
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[str, Any]
 
@@ -32,15 +33,12 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
         subsystemState = service_data["subsystemState"]
         yield (
             health_map.get(healthLevelString, 3),
-            "{}: {} ({})".format(
-                service_name,
-                healthString,
-                subsystemState,
-            ),
+            f"{service_name}: {healthString} ({subsystemState})",
         )
 
 
 check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
+    name="storeonce4x_d2d_services",
     parse_function=parse_storeonce4x_d2d_services,
     service_name="D2D Services",
     discovery_function=discover_storeonce4x_d2d_services,

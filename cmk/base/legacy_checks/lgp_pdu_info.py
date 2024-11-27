@@ -13,11 +13,11 @@
 # [['1', 'TEST-123-HOST', '1', '535055G103T2010JUN240295', '1']]
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 
 def inventory_lgp_pdu_info(info):
@@ -43,6 +43,7 @@ def parse_lgp_pdu_info(string_table: StringTable) -> StringTable:
 
 
 check_info["lgp_pdu_info"] = LegacyCheckDefinition(
+    name="lgp_pdu_info",
     parse_function=parse_lgp_pdu_info,
     detect=DETECT_LGP,
     fetch=SNMPTree(

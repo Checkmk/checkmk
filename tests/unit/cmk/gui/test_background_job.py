@@ -27,7 +27,6 @@ import cmk.utils.paths
 import cmk.gui.log
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundJobAlreadyRunning,
     BackgroundJobDefines,
     BackgroundProcessInterface,
     InitialStatusArgs,
@@ -144,16 +143,15 @@ def test_start_job() -> None:
     )
     wait_until(job.is_active, timeout=10, interval=0.1)
 
-    with pytest.raises(BackgroundJobAlreadyRunning):
-        job.start(
-            job.execute_hello,
-            InitialStatusArgs(
-                title=job.gui_title(),
-                deletable=False,
-                stoppable=True,
-                user=None,
-            ),
-        )
+    assert job.start(
+        job.execute_hello,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=None,
+        ),
+    ).is_error()
     assert job.is_active()
 
     job.finish_hello_event.set()
@@ -414,7 +412,11 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
     span_name_path = Path(job.get_work_dir()) / "span_names"
 
     with _reset_global_fixture_provider():
-        provider = init_tracing("test", "background-job")
+        provider = init_tracing(
+            service_namespace="",
+            service_name="background-job",
+            service_instance_id="test",
+        )
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
         with tracer.start_as_current_span("test_tracing_with_background_job"):

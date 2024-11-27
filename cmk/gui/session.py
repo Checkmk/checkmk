@@ -22,10 +22,14 @@ from cmk.utils.user import UserId
 
 import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
-from cmk.gui.auth import check_auth, parse_and_check_cookie, SiteInternalPseudoUser
+from cmk.gui.auth import (
+    check_auth,
+    parse_and_check_cookie,
+)
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
+from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
@@ -58,7 +62,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @user.setter
     def user(self, user: LoggedInUser) -> None:
-        if not isinstance(user, (LoggedInNobody, LoggedInSuperUser)):
+        if not isinstance(user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
             assert user.id is not None
         self["_user"] = user
 
@@ -68,7 +72,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @property
     def persist_session(self) -> bool:
-        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
+        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser, LoggedInRemoteSite)):
             return False
 
         if not self.is_gui_session:
@@ -122,13 +126,19 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         return sess
 
     @classmethod
-    def create_internal_session(cls) -> CheckmkFileBasedSession:
-        """This method is reserved for site internal inter component authenticated "sessions"
+    def create_pseudo_user_session(cls, pseudo_user_id: PseudoUserId) -> CheckmkFileBasedSession:
+        """This method is reserved for pseudo users
 
         These should not really be sessions but currently everything is a session..."""
 
         sess = cls()
-        sess.user = LoggedInSuperUser()
+        match pseudo_user_id:
+            case SiteInternalPseudoUser():
+                sess.user = LoggedInSuperUser()
+            case RemoteSitePseudoUser():
+                sess.user = LoggedInRemoteSite(site_name=pseudo_user_id.site_name)
+            case _:
+                raise NotImplementedError
         return sess
 
     @classmethod
@@ -311,9 +321,12 @@ class FileBasedSession(SessionInterface):
         try to authenticate a request based on headers, password login is
         handled in login.py"""
 
-        user_name, auth_type = check_auth()
-        if isinstance(user_name, SiteInternalPseudoUser):
-            return self.session_class.create_internal_session()
+        identity, auth_type = check_auth()
+
+        if isinstance(identity, PseudoUserId):
+            return self.session_class.create_pseudo_user_session(identity)
+
+        user_name = identity
 
         userdb.session.on_succeeded_login(user_name, datetime.now())
 

@@ -8,12 +8,12 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
-LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+check_info = {}
+
+LvmLvsEntry = collections.namedtuple(  # nosemgrep: typing-namedtuple-call
     "LvmLvsEntry", ["data", "meta"]
 )
 
@@ -59,6 +59,7 @@ def discover_lvm_lvs(section):
 
 
 check_info["lvm_lvs"] = LegacyCheckDefinition(
+    name="lvm_lvs",
     parse_function=parse_lvm_lvs,
     service_name="LVM LV Pool %s",
     discovery_function=discover_lvm_lvs,

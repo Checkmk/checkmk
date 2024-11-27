@@ -1,12 +1,12 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def robotmk_workspace():
-    version_str = "v3.0.0-alpha-7"
+    version_str = "v3.0.0-alpha-11"
     http_archive(
         name = "robotmk",
         build_file = "//omd/packages/robotmk:BUILD.robotmk.bazel",
         urls = [
             "https://github.com/elabit/robotmk/releases/download/" + version_str + "/executables.zip",
         ],
-        sha256 = "78d1b5bde14b2f8421181b5ef1733e205a4f13b1229b26924861764f61175401",
+        sha256 = "79891741db18425b07afc013c2362229b720dceb92a072c664014bcc501dfe2c",
     )

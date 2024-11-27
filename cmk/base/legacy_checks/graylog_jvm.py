@@ -6,11 +6,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
+
+check_info = {}
 
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
@@ -49,6 +49,7 @@ def check_graylog_jvm(_no_item, params, parsed):
 
 
 check_info["graylog_jvm"] = LegacyCheckDefinition(
+    name="graylog_jvm",
     parse_function=deserialize_and_merge_json,
     service_name="Graylog JVM",
     discovery_function=discover_graylog_jvm,

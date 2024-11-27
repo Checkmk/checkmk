@@ -10,11 +10,11 @@
 
 # Suggested by customer
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+
+check_info = {}
 
 
 def discover_barracuda_mailqueues(info):
@@ -50,6 +50,7 @@ def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable | None:
 
 
 check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
+    name="barracuda_mailqueues",
     parse_function=parse_barracuda_mailqueues,
     detect=DETECT_BARRACUDA,
     fetch=SNMPTree(

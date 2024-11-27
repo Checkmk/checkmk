@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.nullmailer_mailq import (
     check_nullmailer_mailq,
     NULLMAILER_MAILQ_DEFAULT_LEVELS,
     parse_nullmailer_mailq,
 )
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 # Example agent output:
 # old format
@@ -29,6 +31,7 @@ def discover_nullmailer_mailq(parsed):
 
 
 check_info["nullmailer_mailq"] = LegacyCheckDefinition(
+    name="nullmailer_mailq",
     parse_function=parse_nullmailer_mailq,
     service_name="Nullmailer Queue",
     discovery_function=discover_nullmailer_mailq,

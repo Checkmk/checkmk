@@ -6,13 +6,10 @@
 from typing import Literal, NotRequired, TypedDict
 
 
-class BasicSettingsRequired(TypedDict):
+class BasicSettings(TypedDict):
     alias: str
     site_id: str
-
-
-class BasicSettings(BasicSettingsRequired, total=False):
-    customer: str
+    customer: NotRequired[str]
 
 
 class Connection(TypedDict, total=False):
@@ -76,12 +73,14 @@ class ConfigurationConnection(TypedDict, total=False):
     user_sync: dict
     replicate_event_console: bool
     replicate_extensions: bool
+    message_broker_port: int
 
 
 class SiteConfig(TypedDict):
     basic_settings: BasicSettings
     status_connection: StatusConnectionRequired
     configuration_connection: ConfigurationConnection
+    secret: NotRequired[str]
 
 
 class APISiteConfig(TypedDict):

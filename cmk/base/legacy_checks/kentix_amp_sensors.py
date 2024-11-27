@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.kentix import DETECT_KENTIX
+
+check_info = {}
 
 # .1.3.6.1.4.1.37954.1.2.7.1.0 RZ1SE-KLIMA-NEU  sensor name
 # .1.3.6.1.4.1.37954.1.2.7.2.0 159              temperature     INTEGER (0..1000)
@@ -80,6 +81,7 @@ def check_kentix_amp_sensors(item, params, parsed):
 
 
 check_info["kentix_amp_sensors"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(
@@ -116,6 +118,7 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_humidity",
     service_name="Humidity %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_humidity,
@@ -163,6 +166,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_smoke",
     service_name="Smoke Detector %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_smoke,
@@ -195,6 +199,7 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_leakage",
     service_name="Leakage %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_leakage,

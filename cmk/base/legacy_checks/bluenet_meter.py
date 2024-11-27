@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_bluenet_meter(string_table):
@@ -31,6 +32,7 @@ def discover_bluenet_meter(section):
 
 
 check_info["bluenet_meter"] = LegacyCheckDefinition(
+    name="bluenet_meter",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.2.1",

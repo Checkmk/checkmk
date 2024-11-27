@@ -13,7 +13,6 @@ from cmk.gui.watolib.config_domain_name import (
 )
 
 
-@config_domain_registry.register
 class ConfigDomainTest(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -30,3 +29,6 @@ class ConfigDomainTest(ABCConfigDomain):
 
     def default_globals(self):
         return {}
+
+
+config_domain_registry.register(ConfigDomainTest())

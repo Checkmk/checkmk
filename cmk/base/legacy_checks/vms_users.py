@@ -10,10 +10,10 @@
 # TCPIP$FTP - - - 1
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -58,6 +58,7 @@ def parse_vms_users(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_users"] = LegacyCheckDefinition(
+    name="vms_users",
     parse_function=parse_vms_users,
     service_name="VMS Users",
     discovery_function=inventory_vms_users,

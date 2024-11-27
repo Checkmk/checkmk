@@ -22,8 +22,9 @@
 #          Driver-Firmware Dump Available = NO
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hpux_fchba(info):
@@ -75,6 +76,7 @@ def check_hpux_fchba(item, _no_params, section):
 
 
 check_info["hpux_fchba"] = LegacyCheckDefinition(
+    name="hpux_fchba",
     service_name="FC HBA %s",
     parse_function=parse_hpux_fchba,
     discovery_function=inventory_hpux_fchba,

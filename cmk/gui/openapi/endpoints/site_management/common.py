@@ -57,6 +57,7 @@ def default_config_example() -> SiteConfig:
             },
             "replicate_event_console": True,
             "replicate_extensions": True,
+            "message_broker_port": 5672,
         },
     }
 

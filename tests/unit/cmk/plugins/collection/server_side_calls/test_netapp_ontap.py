@@ -63,6 +63,31 @@ HOST_CONFIG = HostConfig(
             ],
             id="Check certificate",
         ),
+        pytest.param(
+            {
+                "username": "user",
+                "password": Secret(0),
+                "no_cert_check": False,
+                "skip_elements": ["ctr_volume"],
+            },
+            [
+                SpecialAgentCommand(
+                    command_arguments=[
+                        "--hostname",
+                        "0.0.0.1",
+                        "--username",
+                        "user",
+                        "--password",
+                        Secret(0).unsafe(),
+                        "--cert-server-name",
+                        HOST_CONFIG.name,
+                        "--no-counters",
+                        "volume",
+                    ]
+                )
+            ],
+            id="Exclude volume counters",
+        ),
     ],
 )
 def test_argument_parsing(

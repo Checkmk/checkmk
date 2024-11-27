@@ -12,6 +12,8 @@ description:
  If the Rittal device returns {OK}, the check is {OK}. Otherwise
  the check is {CRIT}.
 
+ Firmware versions using the MIB of firmware V3.15.20 are supported.
+
 item:
  The unit name and the name of the sensor
 

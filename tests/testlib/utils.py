@@ -22,13 +22,21 @@ from pprint import pformat
 from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
-import pytest
+import yaml
 
 from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.ccc.version import Edition
 
+from cmk import trace
+
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer()
+
+
+def verbose_called_process_error(excp: subprocess.CalledProcessError) -> str:
+    """Return a verbose message containing debug information of a `CalledProcessError` exception."""
+    return f"STDOUT:\n{excp.stdout}\nSTDERR:\n{excp.stderr}\n"
 
 
 @dataclasses.dataclass
@@ -227,20 +235,20 @@ def run(
     **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     """Run a process and return a `subprocess.CompletedProcess` object."""
-    args = _extend_command(args, substitute_user, sudo, preserve_env)
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
+    args_ = _extend_command(args, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["capture_output"] = capture_output
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    logger.info("Executing: %s", subprocess.list2cmdline(args))
-    return subprocess.run(args, check=check, **kwargs)
+    with tracer.start_as_current_span("run", attributes={"cmk.command": repr(args_)}):
+        return subprocess.run(args_, check=check, **kwargs)
 
 
 def execute(
     cmd: list[str],
     encoding: str | None = "utf-8",
-    shell: bool = True,
     preserve_env: list[str] | None = None,
     substitute_user: str | None = None,
     sudo: bool = False,
@@ -251,37 +259,58 @@ def execute(
     The method wraps `subprocess.Popen` and initializes some `kwargs` by default.
     NOTE: use it as a contextmanager; `with execute(...) as process: ...`
     """
-    cmd = _extend_command(cmd, substitute_user, sudo, preserve_env)
-    cmd_txt = subprocess.list2cmdline(cmd)
-    logger.info("Executing: %s", cmd_txt)
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
+    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
-    kwargs["shell"] = shell
 
-    logger.info("Executing: %s", cmd_txt)
-    return subprocess.Popen(cmd_txt if shell else cmd, **kwargs)
+    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+        return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
+
+
+def _add_trace_context(
+    kwargs: dict, preserve_env: list[str] | None, sudo: bool
+) -> tuple[list[str] | None, dict]:
+    if trace_env := trace.context_for_environment():
+        orig_env = kwargs["env"] if kwargs.get("env") else dict(os.environ)
+        kwargs["env"] = {**orig_env, **trace_env}
+        if sudo and preserve_env is not None:
+            preserve_env.extend(trace_env.keys())
+        elif sudo:
+            preserve_env = list(trace_env.keys())
+    return preserve_env, kwargs
 
 
 def _extend_command(
-    cmd: list[str], substitute_user: str | None, sudo: bool, preserve_env: list[str] | None
+    cmd: list[str],
+    substitute_user: str | None,
+    sudo: bool,
+    preserve_env: list[str] | None,
+    kwargs: dict,  # subprocess.<method> kwargs
 ) -> list[str]:
-    if preserve_env and not (sudo or substitute_user):
-        raise TypeError("'preserve_env' requires usage of either 'sudo' or 'substitute_user'!")
+    """Return extended command by adding `sudo` or `su` usage."""
 
-    if preserve_env and (sudo or substitute_user):
-        distro = "centos-8"
-        if os.environ.get("DISTRO") == distro:
-            pytest.skip(
-                "'sudo ... --preserve-env' / 'su ...--whitelist-environment' "
-                f"can not be used within distro: '{distro}'!"
-            )
+    methods = "`testlib.utils.check_output / execute / run`"
+    # TODO: remove usage of kwargs & shell from methods `check_output / execute / run`.
+    if kwargs.get("shell", False):
+        raise NotImplementedError(
+            f"`shell=True` is not supported by {methods}.\n"
+            "Use desired `subprocess.<method>` directly for such cases."
+        )
+    if preserve_env and not (sudo or substitute_user):
+        raise TypeError(
+            f"'preserve_env' requires usage of 'sudo' or 'substitute_user' in {methods}!"
+        )
+
     sudo_cmd = _cmd_as_sudo(preserve_env) if sudo else []
     user_cmd = (
         (_cmd_as_user(substitute_user, preserve_env) + [shlex.join(cmd)])
         if substitute_user
         else cmd
     )
-    return sudo_cmd + user_cmd
+    cmd_ = sudo_cmd + user_cmd
+    logging.info("Executing command: %s", shlex.join(cmd_))
+    return cmd_
 
 
 def _cmd_as_sudo(preserve_env: list[str] | None = None) -> list[str]:
@@ -328,9 +357,8 @@ def daemon(
             if daemon_rc is None:
                 logger.info("Terminating %s daemon...", name_for_logging)
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
-            stdout, stderr = daemon_proc.communicate(timeout=5)
-            logger.info("Stdout from %s daemon:\n%s", name_for_logging, stdout)
-            logger.info("Stderr from %s daemon:\n%s", name_for_logging, stderr)
+            stdout, _stderr = daemon_proc.communicate(timeout=5)
+            logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
             assert (
                 daemon_rc is None
             ), f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
@@ -393,13 +421,14 @@ def check_output(
 
     Returns the stdout of the process.
     """
-    cmd = _extend_command(cmd, substitute_user, sudo, preserve_env)
+    preserve_env, kwargs = _add_trace_context(kwargs, preserve_env, sudo)
+    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
 
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-    return subprocess.check_output(cmd, **kwargs)
+    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+        return subprocess.check_output(cmd_, **kwargs)
 
 
 def write_file(
@@ -432,7 +461,7 @@ def makedirs(path: str | Path, sudo: bool = True, substitute_user: str | None = 
 def restart_httpd() -> None:
     """Restart Apache manually on RHEL-based containers.
 
-    On RHEL-based containers, such as CentOS and AlmaLinux, the system Apache is not running.
+    On RHEL-based containers, such as AlmaLinux, the system Apache is not running.
     OMD will not start Apache, if it is not running already.
 
     If a distro uses an `INIT_CMD`, which is not available inside of docker, then the system
@@ -441,12 +470,17 @@ def restart_httpd() -> None:
     test environment, but not a real distribution.
 
     Before using this in your test, try an Apache reload instead. It is much more likely to work
-    accross different distributions. If your test needs a system Apache, then run this command at
-    the beginning of the test. This ensures consistency accross distributions.
+    across different distributions. If your test needs a system Apache, then run this command at
+    the beginning of the test. This ensures consistency across distributions.
     """
 
+    almalinux_9 = "almalinux-9"
+    assert almalinux_9 in get_supported_distros(), (
+        f"{almalinux_9} is not supported anymore. " f"Please adapt the code below."
+    )
+
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
+    if os.environ.get("DISTRO") == almalinux_9:
         run(["httpd", "-k", "restart"], sudo=True)
 
 
@@ -483,11 +517,14 @@ def get_services_with_status(
 
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
     start = time.time()
+    logger.info("Waiting for %r to finish for %ds", condition, timeout)
     while time.time() - start < timeout:
         if condition():
+            logger.info("Wait for %r finished after %ss", condition, time.time() - start)
             return  # Success. Stop waiting...
         time.sleep(interval)
 
+    logger.error("Timeout waiting for %r to finish (Timeout: %d sec)", condition, timeout)
     raise TimeoutError("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
@@ -503,3 +540,10 @@ def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[
                     logger.info("Match found in %s: %s", file_path, line.strip())
                     match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict
+
+
+def get_supported_distros() -> list[str]:
+    with open(repo_path() / "editions.yml") as stream:
+        yaml_file = yaml.safe_load(stream)
+
+    return yaml_file["common"]

@@ -7,38 +7,16 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.utils.config_validation_layer.timeperiods import validate_timeperiod, validate_timeperiods
+from cmk.utils.timeperiod import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
+
+from cmk.update_config.plugins.actions.validate_mk_files import validate_timeperiods
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_get_all_time_periods(clients: ClientRegistry) -> None:
     clients.TimePeriod.get_all()
-
-
-def test_openapi_list_time_periods_include_links(clients: ClientRegistry) -> None:
-    default_response = clients.TimePeriod.get_all()
-    enabled_response = clients.TimePeriod.get_all(include_links=True)
-    disabled_response = clients.TimePeriod.get_all(include_links=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["links"]) for value in enabled_response.json["value"])
-    assert all(value["links"] == [] for value in disabled_response.json["value"])
-
-
-def test_openapi_list_time_periods_include_extensions(clients: ClientRegistry) -> None:
-    default_response = clients.TimePeriod.get_all()
-    enabled_response = clients.TimePeriod.get_all(include_extensions=True)
-    disabled_response = clients.TimePeriod.get_all(include_extensions=False)
-
-    assert len(default_response.json["value"]) > 0
-
-    assert default_response.json == enabled_response.json
-    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -942,11 +920,11 @@ def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None
     ],
 )
 def test_timeperiod_config_validator_fields(
-    time_period: dict, is_valid: bool, request: pytest.FixtureRequest
+    time_period: TimeperiodSpec, is_valid: bool, request: pytest.FixtureRequest
 ) -> None:
     result = True
     try:
-        validate_timeperiod(request.node.name, time_period)
+        validate_timeperiods({request.node.name: time_period})
     except Exception:
         result = False
 
@@ -954,7 +932,7 @@ def test_timeperiod_config_validator_fields(
 
 
 def test_timeperiod_config_validator_on_file() -> None:
-    time_periods = {
+    time_periods: TimeperiodSpecs = {
         "Nights": {
             "alias": "Nights",
             "friday": [("21:00", "24:00"), ("00:00", "06:00")],

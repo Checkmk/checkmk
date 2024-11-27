@@ -21,80 +21,62 @@ from ._connections import (
 )
 
 CENTRAL_SHOVELS_REMOTE1 = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote1:5672?"
-            "server_name_indication=remote1&auth_mechanism=external",
-            "src-uri": "amqp:///customer1",
-            "src-queue": "cmk.intersite.remote1",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            dest_uri="amqps://remote1:5672?server_name_indication=remote1&auth_mechanism=external",
+            src_uri="amqp:///customer1",
+            src_queue="cmk.intersite.remote1",
+        ),
         vhost="customer1",
-        component="shovel",
         name="cmk.shovel.central->remote1",
     ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote1:5672?"
-            "server_name_indication=remote1&auth_mechanism=external",
-            "dest-uri": "amqp:///customer1",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            src_queue="cmk.intersite.central",
+            src_uri="amqps://remote1:5672?server_name_indication=remote1&auth_mechanism=external",
+            dest_uri="amqp:///customer1",
+        ),
         vhost="customer1",
-        component="shovel",
         name="cmk.shovel.remote1->central",
     ),
 ]
 CENTRAL_SHOVELS_REMOTE2 = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "src-queue": "cmk.intersite.remote2",
-            "src-uri": "amqp:///customer1",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            dest_uri="amqps://remote2:5672?server_name_indication=remote2&auth_mechanism=external",
+            src_queue="cmk.intersite.remote2",
+            src_uri="amqp:///customer1",
+        ),
         vhost="customer1",
-        component="shovel",
         name="cmk.shovel.central->remote2",
     ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "dest-uri": "amqp:///customer1",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            src_queue="cmk.intersite.central",
+            src_uri="amqps://remote2:5672?server_name_indication=remote2&auth_mechanism=external",
+            dest_uri="amqp:///customer1",
+        ),
         vhost="customer1",
-        component="shovel",
         name="cmk.shovel.remote2->central",
     ),
 ]
 CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "src-queue": "cmk.intersite.remote2",
-            "src-uri": "amqp:///customer2",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            dest_uri="amqps://remote2:5672?server_name_indication=remote2&auth_mechanism=external",
+            src_queue="cmk.intersite.remote2",
+            src_uri="amqp:///customer2",
+        ),
         vhost="customer2",
-        component="shovel",
         name="cmk.shovel.central->remote2",
     ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "dest-uri": "amqp:///customer2",
-        },
+    rabbitmq.Shovel(
+        value=rabbitmq.ShovelValue.from_kwargs(
+            src_queue="cmk.intersite.central",
+            src_uri="amqps://remote2:5672?server_name_indication=remote2&auth_mechanism=external",
+            dest_uri="amqp:///customer2",
+        ),
         vhost="customer2",
-        component="shovel",
         name="cmk.shovel.remote2->central",
     ),
 ]
@@ -108,28 +90,24 @@ CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
             {
                 "remote1": [],
                 "central": [
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "dest-uri": "amqps://remote1:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            dest_uri="amqps://remote1:5672?"
                             "server_name_indication=remote1&auth_mechanism=external",
-                            "src-uri": r"amqp:///%2f",
-                            "src-queue": "cmk.intersite.remote1",
-                        },
+                            src_uri=r"amqp:///%2f",
+                            src_queue="cmk.intersite.remote1",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.central->remote1",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.central",
-                            "src-uri": "amqps://remote1:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.central",
+                            src_uri="amqps://remote1:5672?"
                             "server_name_indication=remote1&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
+                            dest_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote1->central",
                     ),
                 ],
@@ -162,28 +140,24 @@ CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
             P2P_CONNECTIONS_SAME_CUSTOMER,
             {
                 "remote1": [
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.remote2",
-                            "src-uri": r"amqp:///%2f",
-                            "dest-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.remote2",
+                            src_uri=r"amqp:///%2f",
+                            dest_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                        },
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote1->remote2",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.remote1",
-                            "src-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.remote1",
+                            src_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
+                            dest_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote2->remote1",
                     ),
                 ],
@@ -195,79 +169,67 @@ CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
             P2P_CONNECTIONS_PROVIDER,
             {
                 "remote1": [
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.remote2",
-                            "src-uri": r"amqp:///%2f",
-                            "dest-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.remote2",
+                            src_uri=r"amqp:///%2f",
+                            dest_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                        },
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote1->remote2",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.remote1",
-                            "src-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.remote1",
+                            src_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
+                            dest_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote2->remote1",
                     ),
                 ],
                 "remote2": [],
                 "central": [
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "dest-uri": "amqps://remote1:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            dest_uri="amqps://remote1:5672?"
                             "server_name_indication=remote1&auth_mechanism=external",
-                            "src-uri": r"amqp:///%2f",
-                            "src-queue": "cmk.intersite.remote1",
-                        },
+                            src_uri=r"amqp:///%2f",
+                            src_queue="cmk.intersite.remote1",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.central->remote1",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.central",
-                            "src-uri": "amqps://remote1:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.central",
+                            src_uri="amqps://remote1:5672?"
                             "server_name_indication=remote1&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
+                            dest_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote1->central",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "dest-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            dest_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                            "src-queue": "cmk.intersite.remote2",
-                            "src-uri": r"amqp:///%2f",
-                        },
+                            src_queue="cmk.intersite.remote2",
+                            src_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.central->remote2",
                     ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.central",
-                            "src-uri": "amqps://remote2:5672?"
+                    rabbitmq.Shovel(
+                        value=rabbitmq.ShovelValue.from_kwargs(
+                            src_queue="cmk.intersite.central",
+                            src_uri="amqps://remote2:5672?"
                             "server_name_indication=remote2&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
+                            dest_uri=r"amqp:///%2f",
+                        ),
                         vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
                         name="cmk.shovel.remote2->central",
                     ),
                 ],
@@ -277,7 +239,7 @@ CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
 )
 def test_compute_distributed_definitions_parameters(
     connections: Sequence[rabbitmq.Connection],
-    parameters: Mapping[str, Sequence[rabbitmq.Component]],
+    parameters: Mapping[str, Sequence[rabbitmq.Shovel]],
 ) -> None:
     definitions = rabbitmq.compute_distributed_definitions(connections)
 

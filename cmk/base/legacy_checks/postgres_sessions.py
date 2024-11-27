@@ -19,10 +19,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 
 def parse_postgres_sessions(string_table):
@@ -79,6 +79,7 @@ def check_postgres_sessions(item, params, parsed):
 
 
 check_info["postgres_sessions"] = LegacyCheckDefinition(
+    name="postgres_sessions",
     parse_function=parse_postgres_sessions,
     service_name="PostgreSQL Daemon Sessions %s",
     discovery_function=inventory_postgres_sessions,

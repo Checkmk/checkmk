@@ -84,6 +84,9 @@ def call(name: str, *args: Any) -> None:
             try:
                 hook.handler(*args)
             except Exception as e:
+                # for builtin hooks do not change exception handling
+                if hook.is_builtin:
+                    raise
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
                 raise MKGeneralException(msg) from e
@@ -115,7 +118,7 @@ CacheWrapperArgs = typing.ParamSpec("CacheWrapperArgs")
 
 def scoped_memoize(
     clear_events: ClearEvents,
-    cache_impl: Callable[CacheWrapperArgs, Callable[P, R]],
+    cache_impl: Callable[CacheWrapperArgs, Callable[[Callable[P, R]], Callable[P, R]]],
     cache_impl_args: CacheWrapperArgs.args,
     cache_impl_kwargs: CacheWrapperArgs.kwargs,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
@@ -152,7 +155,7 @@ def scoped_memoize(
     if not clear_events:
         raise ValueError(f"No clear-events specified. Use one of: {ClearEvent!r}")
 
-    def _decorator(func: P.args) -> P.args:
+    def _decorator(func: Callable[P, R]) -> Callable[P, R]:
         cached_func = cache_impl(*cache_impl_args, **cache_impl_kwargs)(func)
         for clear_event in clear_events:
             # Tried to generically type this such that parameters and added methods are checked,

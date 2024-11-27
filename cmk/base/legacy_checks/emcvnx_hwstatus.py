@@ -61,8 +61,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_emcvnx_hwstatus(info):
@@ -126,6 +127,7 @@ def check_emcvnx_hwstatus(item, _no_params, section):
 
 
 check_info["emcvnx_hwstatus"] = LegacyCheckDefinition(
+    name="emcvnx_hwstatus",
     service_name="Enclosure %s",  # Example for Item: "0/1 Power A",
     parse_function=parse_emcvnx_hwstatus,
     discovery_function=inventory_emcvnx_hwstatus,

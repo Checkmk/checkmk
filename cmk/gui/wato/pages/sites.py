@@ -129,7 +129,7 @@ from cmk.gui.watolib.site_management import (
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
-    SiteManagementFactory,
+    site_management_registry,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
@@ -175,14 +175,13 @@ class ModeEditSite(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
 
         _site_id_return = request.get_ascii_input("site")
         self._site_id = None if _site_id_return is None else SiteId(_site_id_return)
         _clone_id_return = request.get_ascii_input("clone")
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
-        self._connected_sites: set[SiteId] = set()
 
         if is_free() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_free_message())
@@ -251,15 +250,6 @@ class ModeEditSite(WatoMode):
             )
         return menu
 
-    def _add_connected_sites_to_update(self) -> None:
-        # add connected sites to the sites to be updated
-        connections = BrokerConnectionsConfigFile().load_for_reading()
-        for connection in connections.values():
-            if connection.connecter.site_id == self._site_id:
-                self._connected_sites.add(SiteId(connection.connectee.site_id))
-            elif connection.connectee.site_id == self._site_id:
-                self._connected_sites.add(SiteId(connection.connecter.site_id))
-
     def _site_from_valuespec(self) -> SiteConfiguration:
         vs = self._valuespec()
         raw_site_spec = vs.from_html_vars("site")
@@ -290,28 +280,28 @@ class ModeEditSite(WatoMode):
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
+        sites_to_update = site_management_registry["site_management"].get_connected_sites_to_update(
+            self._new,
+            self._site_id,
+            site_spec,
+            self._site,
+        )
+
         self._site = configured_sites[self._site_id] = site_spec
-        self._add_connected_sites_to_update()
         self._site_mgmt.save_sites(configured_sites)
 
         msg = add_changes_after_editing_site_connection(
             site_id=self._site_id,
             is_new_connection=self._new,
             replication_enabled=is_replication_enabled(site_spec),
-            connected_sites=self._connected_sites,
+            connected_sites=sites_to_update,
         )
 
         flash(msg)
         return redirect(mode_url("sites"))
 
-    def _update_related_sites(self, site_spec: SiteConfiguration) -> None:
-        if self._new:
-            # update all replicated sites
-            self._connected_sites = self._connected_sites | set(wato_slave_sites().keys())
-
     def action(self) -> ActionResult:
         site_spec = self._site_from_valuespec()
-        self._update_related_sites(site_spec)
         return self.save_site_changes(site_spec)
 
     def page(self) -> None:
@@ -636,6 +626,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
+        self._site_mgmt = site_management_registry["site_management"]
 
         self._connection: BrokerConnection | None = None
 
@@ -670,11 +661,6 @@ class ModeEditBrokerConnection(WatoMode):
         assert self._edit_id is not None
         return self.mode_url(site=self._edit_id)
 
-    def _save_connection_config(self, save_id: str, connection: BrokerConnection) -> str:
-        self._connections[ConnectionId(save_id)] = connection
-        BrokerConnectionsConfigFile().save(self._connections)
-        return "Connection configuration saved successfully."
-
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Connection"), breadcrumb, form_name="broker_connection", button_name="_save"
@@ -682,37 +668,11 @@ class ModeEditBrokerConnection(WatoMode):
         return menu
 
     def _validate_connection_id(self, connection_id: str, varprefix: str | None) -> None:
-        if self._is_new and connection_id in self._connections:
-            raise MKUserError(
-                "unique_id",
-                _("A connection with this ID already exists."),
-            )
-
-    def _check_connection_values(self, connection_id: str, connection: BrokerConnection) -> None:
-        if connection.connecter.site_id == connection.connectee.site_id:
+        if self._site_mgmt.broker_connection_id_exists(connection_id):
             raise MKUserError(
                 None,
-                _("Connecter and connectee sites must be different."),
+                _("Connection id %s already exists.") % connection_id,
             )
-
-        self._validate_connection_id(connection_id, None)
-
-        for _conn_id, conn in self._connections.items():
-            old_connection_sites = [
-                connection.connecter.site_id,
-                connection.connectee.site_id,
-            ]
-            edit_connection_sites = [conn.connecter.site_id, conn.connectee.site_id]
-
-            if (self._is_new and set(old_connection_sites) == set(edit_connection_sites)) or (
-                not self._is_new
-                and _conn_id != self._edit_id
-                and set(old_connection_sites) == set(edit_connection_sites)
-            ):
-                raise MKUserError(
-                    None,
-                    _("A connection with the same sites already exists."),
-                )
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -735,8 +695,9 @@ class ModeEditBrokerConnection(WatoMode):
             connectee=BrokerSite(site_id=dest_site),
         )
 
-        self._check_connection_values(raw_site_spec["unique_id"], connection)
-        self._save_connection_config(raw_site_spec["unique_id"], connection)
+        self._site_mgmt.validate_and_save_broker_connection(
+            raw_site_spec["unique_id"], connection, self._is_new
+        )
         msg = add_changes_after_editing_broker_connection(
             connection_id=raw_site_spec["unique_id"],
             is_new_broker_connection=self._is_new,
@@ -830,7 +791,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
 
     def title(self) -> str:
         return _("Distributed monitoring")
@@ -885,7 +846,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         delete_connection_id = request.get_ascii_input("_delete_connection_id")
         if delete_connection_id and transactions.check_transaction():
-            return self._action_delete_broker_connection(delete_connection_id)
+            return self._action_delete_broker_connection(ConnectionId(delete_connection_id))
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
@@ -896,7 +857,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(SiteId(login_id))
         return None
 
-    def _delete_single_site(self, delete_id: SiteId) -> ActionResult:
+    def _action_delete(self, delete_id: SiteId) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -938,48 +899,13 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.delete_site(delete_id)
         return redirect(mode_url("sites"))
 
-    def _action_delete(self, delete_id: SiteId) -> ActionResult:
-        result = self._delete_single_site(delete_id)
-        related_sites = list(wato_slave_sites().keys())
-        _changes.add_change(
-            "edit-sites",
-            _("Updated broker connection for site %s") % delete_id,
-            domains=[ConfigDomainGUI],
-            sites=related_sites,
-        )
-        return result
-
-    def _action_delete_broker_connection(self, delete_connection_id: str) -> ActionResult:
-        connection_config = BrokerConnectionsConfigFile()
-        connections = connection_config.load_for_modification()
-
-        if delete_connection_id not in connections:
-            raise MKUserError(
-                None, _("Unable to delete unknown connection id: %s") % delete_connection_id
-            )
-        try:
-            source_site, dest_site = (
-                SiteId(connections[ConnectionId(delete_connection_id)].connecter.site_id),
-                SiteId(connections[ConnectionId(delete_connection_id)].connectee.site_id),
-            )
-        except KeyError:
-            raise MKUserError(
-                None,
-                _(
-                    "Unable to delete connection id: %s. Connecter and connectee sites must be specified."
-                )
-                % delete_connection_id,
-            )
-
+    def _action_delete_broker_connection(self, delete_connection_id: ConnectionId) -> ActionResult:
+        source_site, dest_site = self._site_mgmt.delete_broker_connection(delete_connection_id)
         add_changes_after_editing_broker_connection(
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
             sites=[source_site, dest_site],
         )
-
-        del connections[ConnectionId(delete_connection_id)]
-
-        connection_config.save(connections)
         return redirect(mode_url("sites"))
 
     def _action_logout(self, logout_id: SiteId) -> ActionResult:
@@ -991,7 +917,7 @@ class ModeDistributedMonitoring(WatoMode):
         _changes.add_change(
             "edit-site",
             _("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
-            domains=[ConfigDomainGUI],
+            domains=[ConfigDomainGUI()],
             sites=[omd_site()],
         )
         flash(_("Logged out."))
@@ -1113,7 +1039,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_message_broker_connection(table, site_id, site)
 
         # Message broker connections table
-        connections = BrokerConnectionsConfigFile().load_for_reading()
+        connections = self._site_mgmt.get_broker_connections()
         if connections:
             with table_element(
                 "brokers_connections",
@@ -1291,7 +1217,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = SiteManagementFactory().factory().load_sites()
+        sites = site_management_registry["site_management"].load_sites()
         replication_sites = [
             (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
         ]
@@ -1545,7 +1471,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -1616,7 +1542,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
-            domains=[config_variable.domain()],
+            domains=[config_variable.domain()()],
             need_restart=config_variable.need_restart(),
         )
 
@@ -1681,7 +1607,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         super()._from_vars()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site_id:
-            self._configured_sites = SiteManagementFactory().factory().load_sites()
+            self._configured_sites = site_management_registry["site_management"].load_sites()
             try:
                 site = self._configured_sites[self._site_id]
             except KeyError:
@@ -1697,7 +1623,9 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return [self._site_id]
 
     def _save(self) -> None:
-        SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
+        site_management_registry["site_management"].save_sites(
+            self._configured_sites, activate=False
+        )
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
@@ -1727,7 +1655,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._site_id = SiteId(request.get_ascii_input_mandatory("site"))
-        self._site_mgmt = SiteManagementFactory().factory()
+        self._site_mgmt = site_management_registry["site_management"]
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -1791,7 +1719,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
-            domains=[config_variable.domain()],
+            domains=[config_variable.domain()()],
             need_restart=config_variable.need_restart(),
         )
         save_global_settings(

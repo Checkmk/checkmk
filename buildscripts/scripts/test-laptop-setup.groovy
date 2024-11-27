@@ -53,7 +53,6 @@ def main() {
                     omd/strip_binaries \
                     omd/distros/*.mk \
                     package_versions.bzl \
-                    static_variables.bzl \
                 buildscripts/infrastructure/build-nodes/scripts
             """);
         }

@@ -12,8 +12,10 @@ from tests.testlib.site import get_site_factory, Site
 
 
 @pytest.fixture(name="site", scope="session")
-def fixture_site() -> Iterator[Site]:
-    with exit_pytest_on_exceptions():
+def fixture_site(request: pytest.FixtureRequest) -> Iterator[Site]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from get_site_factory(
             prefix="ext_comp_",
             fallback_branch=current_base_branch_name,

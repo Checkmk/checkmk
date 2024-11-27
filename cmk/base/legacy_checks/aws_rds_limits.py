@@ -6,11 +6,12 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 
 def parse_aws_rds_limits(string_table):
@@ -43,6 +44,7 @@ def discover_aws_rds_limits(section):
 
 
 check_info["aws_rds_limits"] = LegacyCheckDefinition(
+    name="aws_rds_limits",
     parse_function=parse_aws_rds_limits,
     service_name="AWS/RDS Limits %s",
     discovery_function=discover_aws_rds_limits,

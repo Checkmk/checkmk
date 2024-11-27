@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.ispro import ispro_sensors_alarm_states
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
+
+check_info = {}
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.2.1 "Humidity-R" --> ISPRO-MIB::isDeviceMonitorHumidityName
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.3.1 4407 --> ISPRO-MIB::isDeviceMonitorHumidity
@@ -33,6 +34,7 @@ def parse_ispro_sensors_humid(string_table: StringTable) -> StringTable:
 
 
 check_info["ispro_sensors_humid"] = LegacyCheckDefinition(
+    name="ispro_sensors_humid",
     parse_function=parse_ispro_sensors_humid,
     detect=DETECT_ISPRO_SENSORS,
     fetch=SNMPTree(

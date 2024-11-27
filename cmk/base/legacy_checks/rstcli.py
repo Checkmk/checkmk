@@ -46,8 +46,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_rstcli_sections(info):
@@ -146,6 +147,7 @@ def check_rstcli(item, _no_params, parsed):
 
 
 check_info["rstcli"] = LegacyCheckDefinition(
+    name="rstcli",
     parse_function=parse_rstcli,
     service_name="RAID Volume %s",
     discovery_function=inventory_rstcli,
@@ -178,6 +180,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
 
 
 check_info["rstcli.pdisks"] = LegacyCheckDefinition(
+    name="rstcli_pdisks",
     service_name="RAID Disk %s",
     sections=["rstcli"],
     discovery_function=inventory_rstcli_pdisks,

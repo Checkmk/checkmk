@@ -9,9 +9,6 @@ from pathlib import Path
 import pytest
 
 from tests.unit.cmk.plugins.collection.agent_based.snmp import get_parsed_snmp_section
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.collection.agent_based import synology_disks
@@ -132,8 +129,8 @@ def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) ->
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_disk_health_status(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_0))
+def test_disk_health_status(as_path: Callable[[str], Path]) -> None:
+    parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_0))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
         Metric("temp", 26.0),
@@ -145,10 +142,8 @@ def test_disk_health_status(fix_register: FixRegister, as_path: Callable[[str], 
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_disk_health_status_missing(
-    fix_register: FixRegister, as_path: Callable[[str], Path]
-) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_1))
+def test_disk_health_status_missing(as_path: Callable[[str], Path]) -> None:
+    parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_1))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
         Metric("temp", 27.0),
@@ -160,8 +155,8 @@ def test_disk_health_status_missing(
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_hotspare(fix_register: FixRegister, as_path: Callable[[str], Path]) -> None:
-    parsed = get_parsed_snmp_section(SectionName("synology_disks"), as_path(DATA_2))
+def test_hotspare(as_path: Callable[[str], Path]) -> None:
+    parsed = get_parsed_snmp_section(synology_disks.snmp_section_synology_disks, as_path(DATA_2))
     assert parsed is not None
     assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [
         Metric("temp", 35.0),

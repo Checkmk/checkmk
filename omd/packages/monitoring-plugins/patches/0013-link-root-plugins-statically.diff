@@ -1,0 +1,26 @@
+--- a/plugins-root/Makefile.am	2024-10-02 08:55:14.509697886 +0200
++++ b/plugins-root/Makefile.am	2024-10-02 08:50:07.336291483 +0200
+@@ -80,8 +80,8 @@
+
+ ##############################################################################
+ # the actual targets
+-check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(LIB_CRYPTO)
+-check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(LIB_CRYPTO)
++check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) "-l:libcrypto.a"
++check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) "-l:libcrypto.a"
+
+ # -m64 needed at compiler and linker phase
+ pst3_CFLAGS = @PST3CFLAGS@
+--- a/plugins-root/Makefile.in	2024-09-19 15:00:43.792941585 +0200
++++ b/plugins-root/Makefile.in	2024-10-02 08:50:34.566617482 +0200
+@@ -1969,8 +1969,8 @@
+
+ ##############################################################################
+ # the actual targets
+-check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(LIB_CRYPTO)
+-check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(LIB_CRYPTO)
++check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) "-l:libcrypto.a"
++check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) "-l:libcrypto.a"
+
+ # -m64 needed at compiler and linker phase
+ pst3_CFLAGS = @PST3CFLAGS@

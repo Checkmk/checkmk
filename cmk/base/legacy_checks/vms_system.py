@@ -13,10 +13,10 @@
 # 0.00 0.00 15.00
 
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def parse_vms_system(string_table: StringTable) -> StringTable:
@@ -24,6 +24,7 @@ def parse_vms_system(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_system"] = LegacyCheckDefinition(
+    name="vms_system",
     parse_function=parse_vms_system,
 )
 
@@ -44,6 +45,7 @@ def check_vms_system_ios(_no_item, _no_params, info):
 
 
 check_info["vms_system.ios"] = LegacyCheckDefinition(
+    name="vms_system_ios",
     service_name="IOs",
     sections=["vms_system"],
     discovery_function=inventory_vms_system,
@@ -65,6 +67,7 @@ def check_vms_system_procs(_no_item, params, info):
 
 
 check_info["vms_system.procs"] = LegacyCheckDefinition(
+    name="vms_system_procs",
     service_name="Number of processes",
     sections=["vms_system"],
     discovery_function=inventory_vms_system,

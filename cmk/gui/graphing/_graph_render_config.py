@@ -41,6 +41,8 @@ class GraphRenderOptions(GraphRenderOptionsBase, total=False):
 def graph_grender_options_from_vs(options_vs: GraphRenderOptionsVS) -> GraphRenderOptions:
     # no assignment expressions due to https://github.com/pylint-dev/pylint/issues/8486
     title_format_vs = options_vs.get("title_format")
+    # Performance impact needs to be investigated (see CMK-19527)
+    # nosemgrep: type-adapter-detected
     return TypeAdapter(GraphRenderOptions).validate_python(
         options_vs
         | (

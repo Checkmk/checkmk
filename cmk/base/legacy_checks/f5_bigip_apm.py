@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+
+check_info = {}
 
 
 def discover_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
@@ -27,6 +28,7 @@ def parse_f5_bigip_apm(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+    name="f5_bigip_apm",
     parse_function=parse_f5_bigip_apm,
     detect=DETECT,
     fetch=SNMPTree(

@@ -12,10 +12,10 @@
 # Microsoft_iSCSI-Initiator iSCSI True
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_sansymphony_ports(info):
@@ -38,6 +38,7 @@ def parse_sansymphony_ports(string_table: StringTable) -> StringTable:
 
 
 check_info["sansymphony_ports"] = LegacyCheckDefinition(
+    name="sansymphony_ports",
     parse_function=parse_sansymphony_ports,
     service_name="sansymphony Port %s",
     discovery_function=inventory_sansymphony_ports,

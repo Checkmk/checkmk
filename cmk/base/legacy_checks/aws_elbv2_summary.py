@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic, parse_aws
-from cmk.base.config import check_info
+
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_aws_elbv2_summary(string_table):
@@ -33,6 +35,7 @@ def check_aws_elbv2_summary_application(item, params, parsed):
 
 
 check_info["aws_elbv2_summary"] = LegacyCheckDefinition(
+    name="aws_elbv2_summary",
     parse_function=parse_aws_elbv2_summary,
     service_name="AWS/ApplicationELB Summary",
     discovery_function=inventory_aws_elbv2_summary_application,
@@ -53,6 +56,7 @@ def check_aws_elbv2_summary_network(item, params, parsed):
 
 
 check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
+    name="aws_elbv2_summary_network",
     service_name="AWS/NetworkELB Summary",
     sections=["aws_elbv2_summary"],
     discovery_function=inventory_aws_elbv2_summary_network,

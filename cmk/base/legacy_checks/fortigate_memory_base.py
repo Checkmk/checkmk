@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 from cmk.plugins.lib.memory import get_levels_mode_from_value
+
+check_info = {}
 
 
 def parse_fortigate_memory_base(string_table):
@@ -45,6 +46,7 @@ def check_fortigate_memory_base(_item, params, parsed):
 
 
 check_info["fortigate_memory_base"] = LegacyCheckDefinition(
+    name="fortigate_memory_base",
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.1",

@@ -11,10 +11,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 
 def parse_oracle_sessions(string_table):
@@ -82,6 +82,7 @@ def check_oracle_sessions(item, params, parsed):
 
 
 check_info["oracle_sessions"] = LegacyCheckDefinition(
+    name="oracle_sessions",
     parse_function=parse_oracle_sessions,
     service_name="ORA %s Sessions",
     discovery_function=inventory_oracle_sessions,

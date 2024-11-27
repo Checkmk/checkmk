@@ -6,15 +6,19 @@
 """some fixtures related to e2e tests and playwright"""
 
 import logging
+import os
 import re
+from collections import defaultdict
 from collections.abc import Iterator
 from typing import Any
 
 import pytest
+from faker import Faker
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.host_details import AgentAndApiIntegration, HostDetails
+from tests.testlib.emails import EmailManager
+from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.plugin import (
     manage_new_browser_context,
@@ -28,13 +32,17 @@ from tests.testlib.repo import repo_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 from tests.testlib.utils import run
 
+from cmk.ccc.version import Edition
+
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_site", scope="session")
-def fixture_test_site() -> Iterator[Site]:
+def fixture_test_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Return the Checkmk site object."""
-    with exit_pytest_on_exceptions():
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 
@@ -50,6 +58,8 @@ def _log_in(
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> None:
+    if test_site.version.edition == Edition.CSE:
+        return
     video_name = f"login_for_{request.node.name.replace('.py', '')}"
     with manage_new_page_from_browser_context(context, request, video_name) as page:
         login_page = LoginPage(page, site_url=test_site.internal_url)
@@ -167,27 +177,17 @@ def fixture_host(
     setup_host_page.activate_changes()
 
 
-@pytest.fixture(name="create_host_using_agent_dump")
-def create_host_using_data_from_agent_dump(
-    test_site: Site, request: pytest.FixtureRequest
-) -> Iterator:
-    """Create a host(s) which will use data from agent dump.
+@pytest.fixture(name="agent_dump_hosts", scope="session")
+def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
+    """Create hosts which will use data from agent dump.
 
     Copy the agent dump to the test site, create a rule to read agent-output data from it,
-    then add a host(s) and wait for services update. Delete all the created objects after the test.
-
-    This fixture uses indirect pytest parametrization to define the agent dump and host names.
+    then add hosts and wait for services update. Create 3 hosts using linux agent dump and one
+    host using windows dump. Delete all the created objects at the end of the session.
     """
-    logger.info("Check indirect parameters have correct type")
-    dump_name, host_names = request.param
-    assert isinstance(dump_name, str), "First parameter 'dump_name' is not a string"
-    assert isinstance(host_names, list), "Second parameter 'host_names' is not a list"
-    assert all(
-        isinstance(host_name, str) for host_name in host_names
-    ), "Second parameter 'host_names' contain non-string elements"
-
     test_site_dump_path = test_site.path("var/check_mk/dumps")
     data_source_dump_path = repo_path() / "tests" / "gui_e2e" / "data"
+    faker = Faker()
 
     logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
     if not test_site.is_dir(test_site_dump_path):
@@ -199,57 +199,85 @@ def create_host_using_data_from_agent_dump(
         value=f"cat {test_site_dump_path}/<HOST>",
     )
 
-    for host_name in host_names:
-        logger.info("Copy a dump to the new folder")
-        assert (
-            run(
-                [
-                    "cp",
-                    "-f",
-                    f"{data_source_dump_path}/{dump_name}",
-                    f"{test_site_dump_path}/{host_name}",
-                ],
-                sudo=True,
-            ).returncode
-            == 0
-        )
+    dump_path_to_host_name_dict = defaultdict(list)
 
-        logger.info("Create a host '%s'", host_name)
-        host_details = HostDetails(
-            name=host_name,
-            ip="127.0.0.1",
-            agent_and_api_integration=AgentAndApiIntegration.cmk_agent,
-        )
-        test_site.openapi.create_host(
-            hostname=host_details.name,
-            attributes=host_details.rest_api_attributes(),
-        )
-        test_site.activate_changes_and_wait_for_core_reload()
+    for dump_path in data_source_dump_path.iterdir():
+        if "linux" in dump_path.name:
+            hosts_count = 3
+        else:
+            hosts_count = 1
+        for _ in range(hosts_count):
+            host_name = faker.unique.hostname()
+            logger.info("Copy a dump to the new folder")
+            assert (
+                run(
+                    [
+                        "cp",
+                        "-f",
+                        f"{dump_path}",
+                        f"{test_site_dump_path}/{host_name}",
+                    ],
+                    sudo=True,
+                ).returncode
+                == 0
+            )
+            dump_path_to_host_name_dict[dump_path.name].append(host_name)
 
-        logger.info("Run service discovery")
-        test_site.openapi.discover_services_and_wait_for_completion(host_name)
-        test_site.activate_changes_and_wait_for_core_reload()
+    created_hosts_list = [
+        value for sublist in dump_path_to_host_name_dict.values() for value in sublist
+    ]
+    hosts_dict = [
+        {
+            "host_name": host_name,
+            "folder": "/",
+            "attributes": {
+                "ipaddress": "127.0.0.1",
+                "tag_agent": "cmk-agent",
+            },
+        }
+        for host_name in created_hosts_list
+    ]
 
-        logger.info("Schedule the 'Check_MK' service and check for pending services")
+    logger.info("Creating hosts...")
+    test_site.openapi.bulk_create_hosts(hosts_dict)
+
+    logger.info("Discovering services and waiting for completion...")
+    test_site.openapi.bulk_discover_services_and_wait_for_completion(created_hosts_list)
+    test_site.openapi.activate_changes_and_wait_for_completion()
+
+    logger.info("Schedule the 'Check_MK' service")
+    for host_name in created_hosts_list:
+        # we have to schedule the checks multiple times since some checks require it
         for _ in range(3):
             test_site.schedule_check(host_name, "Check_MK", 0, 60)
 
-        pending_checks = test_site.openapi.get_host_services(host_name, pending=True)
-        if pending_checks:
-            logger.info(
-                "%s pending service(s) found: %s",
-                len(pending_checks),
-                ",".join(
-                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-                ),
-            )
-
-    try:
-        yield host_names
-    finally:
+    yield dump_path_to_host_name_dict
+    if os.getenv("CLEANUP", "1") == "1":
         logger.info("Clean up: delete the host(s) and the rule")
-        for host_name in host_names:
-            test_site.openapi.delete_host(host_name)
-            test_site.delete_file(f"{test_site_dump_path}/{host_name}")
+        test_site.openapi.bulk_delete_hosts(created_hosts_list)
         test_site.openapi.delete_rule(rule_id)
-        test_site.activate_changes_and_wait_for_core_reload()
+        test_site.openapi.activate_changes_and_wait_for_completion()
+        test_site.delete_dir(test_site_dump_path)
+
+
+@pytest.fixture(name="linux_hosts", scope="session")
+def fixture_linux_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
+    """Return the list of linux hosts created using agent dump."""
+    return agent_dump_hosts["linux-2.4.0-2024.08.27"]
+
+
+@pytest.fixture(name="windows_hosts", scope="session")
+def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
+    """Return the list of windows hosts created using agent dump."""
+    return agent_dump_hosts["windows-2.3.0p10"]
+
+
+@pytest.fixture(name="email_manager", scope="session")
+def _email_manager() -> Iterator[EmailManager]:
+    """Create EmailManager instance.
+
+    EmailManager handles setting up and tearing down Postfix SMTP-server, which is configured
+    to redirect emails to a local Maildir. It also provides methods to check and wait for emails.
+    """
+    with EmailManager() as email_manager:
+        yield email_manager

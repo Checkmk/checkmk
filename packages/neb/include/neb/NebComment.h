@@ -13,12 +13,9 @@
 
 class NebComment : public IComment {
 public:
-    explicit NebComment(const Comment &comment)
-        : comment_{comment}
-        , host_{NebHost{*comment._host}}
-        , service_{comment_._service == nullptr
-                       ? nullptr
-                       : std::make_unique<NebService>(*comment_._service)} {}
+    NebComment(const Comment &comment, const IHost &host,
+               const IService *service)
+        : comment_{comment}, host_{host}, service_{service} {}
 
     [[nodiscard]] int32_t id() const override {
         // NOLINTNEXTLINE(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
@@ -63,14 +60,12 @@ public:
 
     [[nodiscard]] const IHost &host() const override { return host_; }
 
-    [[nodiscard]] const IService *service() const override {
-        return service_ ? service_.get() : nullptr;
-    }
+    [[nodiscard]] const IService *service() const override { return service_; }
 
 private:
     const Comment &comment_;
-    const NebHost host_;
-    const std::unique_ptr<const IService> service_;
+    const IHost &host_;
+    const IService *service_;
 };
 
 #endif  // NebComment_h

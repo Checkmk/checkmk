@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import abc
 import copy
 import os
 import types
@@ -14,46 +13,51 @@ from unittest import mock
 
 import pytest
 
-from cmk.utils.legacy_check_api import LegacyCheckDefinition
+from tests.testlib.repo import repo_path
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.ccc import store
+
+import cmk.utils.paths
+
+from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 
 class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(abc.ABC):
-    """Abstract base class for Check and ActiveCheck"""
+class Check:
+    _LEGACY_CHECKS: dict[str, LegacyCheckDefinition] = {}
+
+    @classmethod
+    def _load_checks(cls) -> None:
+        for legacy_check in discover_legacy_checks(
+            find_plugin_files(str(repo_path() / "cmk/base/legacy_checks")),
+            FileLoader(
+                precomile_path=cmk.utils.paths.precompiled_checks_dir,
+                local_path="/not_relevant_for_test",
+                makedirs=store.makedirs,
+            ),
+            raise_errors=True,
+        ).sane_check_info:
+            cls._LEGACY_CHECKS[legacy_check.name] = legacy_check
 
     def __init__(self, name: str) -> None:
         self.name = name
+        if not self._LEGACY_CHECKS:
+            self._load_checks()
+
+        if (info := self._LEGACY_CHECKS.get(name)) is None:
+            raise MissingCheckInfoError(self.name)
+
+        self.info = info
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
-
-class Check(BaseCheck):
-    def __init__(self, name: str) -> None:
-        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
-
-        super().__init__(name)
-        if self.name not in config.check_info:
-            raise MissingCheckInfoError(self.name)
-        info = config.check_info[self.name]
-        assert isinstance(info, LegacyCheckDefinition)
-        self.info = info
-        self._migrated_plugin = register.get_check_plugin(
-            CheckPluginName(self.name.replace(".", "_"))
-        )
-
     def default_parameters(self) -> Mapping[str, Any]:
-        if self._migrated_plugin:
-            return self._migrated_plugin.check_default_parameters or {}
-        return {}
+        return self.info.check_default_parameters or {}
 
     def run_parse(self, info: list) -> object:
         if self.info.parse_function is None:
@@ -71,20 +75,6 @@ class Check(BaseCheck):
         if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
         return self.info.check_function(item, params, info)
-
-
-class SpecialAgent:
-    def __init__(self, name: str) -> None:
-        from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
-            config,
-        )
-
-        super().__init__()
-        self.name = name
-        assert self.name.startswith(
-            "agent_"
-        ), "Specify the full name of the active check, e.g. agent_3par"
-        self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
 
 
 class Tuploid:
@@ -169,30 +159,21 @@ def assertPerfValuesEqual(actual, expected):
     assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
     assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
     assert expected.key == actual.key, f"expected {expected!r}, but key is {actual.key!r}"
-    assert expected.value == pytest.approx(actual.value), "expected {!r}, but value is {!r}".format(
-        expected,
-        actual.value,
-    )
+    assert expected.value == pytest.approx(
+        actual.value
+    ), f"expected {expected!r}, but value is {actual.value!r}"
     assert (
         pytest.approx(expected.warn, rel=0.1) == actual.warn
-    ), "expected {!r}, but warn is {!r}".format(
-        expected,
-        actual.warn,
-    )
+    ), f"expected {expected!r}, but warn is {actual.warn!r}"
     assert (
         pytest.approx(expected.crit, rel=0.1) == actual.crit
-    ), "expected {!r}, but crit is {!r}".format(
-        expected,
-        actual.crit,
-    )
-    assert expected.minimum == actual.minimum, "expected {!r}, but minimum is {!r}".format(
-        expected,
-        actual.minimum,
-    )
-    assert expected.maximum == actual.maximum, "expected {!r}, but maximum is {!r}".format(
-        expected,
-        actual.maximum,
-    )
+    ), f"expected {expected!r}, but crit is {actual.crit!r}"
+    assert (
+        expected.minimum == actual.minimum
+    ), f"expected {expected!r}, but minimum is {actual.minimum!r}"
+    assert (
+        expected.maximum == actual.maximum
+    ), f"expected {expected!r}, but maximum is {actual.maximum!r}"
 
 
 class BasicCheckResult(Tuploid):
@@ -223,10 +204,7 @@ class BasicCheckResult(Tuploid):
 
         assert isinstance(
             infotext, str
-        ), "BasicCheckResult: infotext {!r} must be of type str or unicode - not {!r}".format(
-            infotext,
-            type(infotext),
-        )
+        ), f"BasicCheckResult: infotext {infotext!r} must be of type str or unicode - not {type(infotext)!r}"
         if "\n" in infotext:
             self.infotext, self.multiline = infotext.split("\n", 1)
 
@@ -234,10 +212,7 @@ class BasicCheckResult(Tuploid):
             tp = type(perfdata)
             assert (
                 tp is list
-            ), "BasicCheckResult: perfdata {!r} must be of type list - not {!r}".format(
-                perfdata,
-                tp,
-            )
+            ), f"BasicCheckResult: perfdata {perfdata!r} must be of type list - not {tp!r}"
             for entry in perfdata:
                 te = type(entry)
                 assert te in [tuple, PerfValue], (
@@ -432,10 +407,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         assert item_a == item_e, f"items differ: {item_a!r} != {item_e!r}"
         assert (
             default_params_a == default_params_e
-        ), "default parameters differ: {!r} != {!r}".format(
-            default_params_a,
-            default_params_e,
-        )
+        ), f"default parameters differ: {default_params_a!r} != {default_params_e!r}"
 
 
 class _MockValueStore:
@@ -522,13 +494,7 @@ def assertEqual(first, second, descr=""):
 
     assert isinstance(
         first, type(second)
-    ), "{}differing type: {!r} != {!r} for values {!r} and {!r}".format(
-        descr,
-        type(first),
-        type(second),
-        first,
-        second,
-    )
+    ), f"{descr}differing type: {type(first)!r} != {type(second)!r} for values {first!r} and {second!r}"
 
     if isinstance(first, dict):
         remainder = set(second.keys())

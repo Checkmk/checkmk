@@ -24,10 +24,10 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 Section = Mapping[str, Any]
 
@@ -96,13 +96,7 @@ def check_silverpeak(_item, _params, parsed):
 
     yield (
         0,
-        "{} active alarms. OK: {}, WARN: {}, CRIT: {}, UNKNOWN: {}".format(
-            alarm_cnt,
-            cnt_ok,
-            cnt_warn,
-            cnt_crit,
-            cnt_unkn,
-        ),
+        f"{alarm_cnt} active alarms. OK: {cnt_ok}, WARN: {cnt_warn}, CRIT: {cnt_crit}, UNKNOWN: {cnt_unkn}",
     )
 
     for elem in alarms:
@@ -117,6 +111,7 @@ def check_silverpeak(_item, _params, parsed):
 
 
 check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
+    name="silverpeak_VX6000",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
     fetch=[
         SNMPTree(

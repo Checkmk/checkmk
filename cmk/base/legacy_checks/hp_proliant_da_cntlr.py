@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp_proliant import DETECT
+
+check_info = {}
 
 hp_proliant_da_cntlr_cond_map = {
     "1": (3, "other"),
@@ -90,6 +90,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
 
 
 check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(
+    name="hp_proliant_da_cntlr",
     parse_function=parse_hp_proliant_da_cntlr,
     detect=DETECT,
     fetch=SNMPTree(

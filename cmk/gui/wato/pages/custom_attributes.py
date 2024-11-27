@@ -42,7 +42,7 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.users import remove_custom_attribute_from_all_users
+from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -504,7 +504,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
             if attr["name"] == delname:
                 self._attrs.pop(index)
         save_custom_attrs_to_mk_file(self._all_attrs)
-        remove_custom_attribute_from_all_users(delname)
+        remove_custom_attribute_from_all_users(delname, user_features_registry.features().sites)
         self._update_config()
         _changes.add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
         return redirect(self.mode_url())

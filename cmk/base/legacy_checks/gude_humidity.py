@@ -6,10 +6,9 @@
 from collections.abc import Iterable, Mapping
 from itertools import chain
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
     DiscoveryResult,
@@ -19,6 +18,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.3.1 498 --> GUDEADS-EPC****-MIB::epc****HygroSensor.1
@@ -47,6 +48,7 @@ def check_gude_humidity(
 
 
 check_info["gude_humidity"] = LegacyCheckDefinition(
+    name="gude_humidity",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),

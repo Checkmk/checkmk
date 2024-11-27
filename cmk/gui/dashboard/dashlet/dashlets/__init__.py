@@ -3,10 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.valuespec import AutocompleterRegistry
+
 from ..registry import DashletRegistry
 from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
-from .graph import default_dashlet_graph_render_options, TemplateGraphDashlet
+from .graph import (
+    default_dashlet_graph_render_options,
+    GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
+    graph_templates_autocompleter,
+    TemplateGraphDashlet,
+)
 from .logo import MKLogoDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
@@ -31,7 +38,10 @@ __all__ = [
 ]
 
 
-def register_dashlets(dashlet_registry: DashletRegistry) -> None:
+def register_dashlets(
+    dashlet_registry: DashletRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+) -> None:
     dashlet_registry.register(StaticTextDashlet)
     dashlet_registry.register(URLDashlet)
     dashlet_registry.register(FailedNotificationsDashlet)
@@ -43,3 +53,7 @@ def register_dashlets(dashlet_registry: DashletRegistry) -> None:
     dashlet_registry.register(MessageUsersDashlet)
     dashlet_registry.register(ViewDashlet)
     dashlet_registry.register(LinkedViewDashlet)
+    autocompleter_registry.register_autocompleter(
+        GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
+        graph_templates_autocompleter,
+    )

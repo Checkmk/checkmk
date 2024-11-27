@@ -15,9 +15,9 @@ from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     collect_context,
+    get_password_from_env_or_context,
     get_sms_message_from_context,
     quote_message,
-    retrieve_from_passwordstore,
 )
 
 #   .--Classes-------------------------------------------------------------.
@@ -139,7 +139,10 @@ def _get_request_params_from_context(
             raw_context.get("PARAMETER_PROXY_URL")
         ).to_requests_proxies(),
         user=raw_context["PARAMETER_USERNAME"],
-        pwd=retrieve_from_passwordstore(raw_context["PARAMETER_PASSWORD"]),
+        pwd=get_password_from_env_or_context(
+            key="PARAMETER_PASSWORD",
+            context=raw_context,
+        ),
         timeout=float(raw_context.get("PARAMETER_TIMEOUT", 10.0)),
     )
 

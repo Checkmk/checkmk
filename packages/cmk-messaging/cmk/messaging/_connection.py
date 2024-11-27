@@ -16,11 +16,58 @@ import pika
 import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
-from pika.exceptions import AMQPConnectionError
+from pika.exceptions import AMQPConnectionError, StreamLostError
 from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
 from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
+
+
+@dataclass(frozen=True)
+class AppName:
+    """The application name
+    Any string that does not contain '.', '#' or '*'.
+    It is used in routing and binding keys, for which these are of
+    special significance.
+    """
+
+    value: str
+
+    def __post_init__(self) -> None:
+        if {"#", ".", "*"}.intersection(self.value) or not self.value:
+            raise ValueError(self.value)
+
+
+@dataclass(frozen=True)
+class QueueName:
+    """The queue name"""
+
+    # Queue names can be up to 255 bytes of UTF-8 characters.
+    # We don't enforce this here, because we will construct the full queue name
+    # with the app name, this queue name and some constant parts.
+    value: str
+
+
+@dataclass(frozen=True)
+class RoutingKey:
+    """The routing sub key
+
+    Any string that does not contain '#' or '*'.
+    These are of special significance for the _binding_ key.
+    """
+
+    value: str
+
+    def __post_init__(self) -> None:
+        if {"#", "*"}.intersection(self.value) or not self.value:
+            raise ValueError(self.value)
+
+
+@dataclass(frozen=True)
+class BindingKey:
+    """The binding key"""
+
+    value: str
 
 
 class CMKConnectionError(RuntimeError):
@@ -106,63 +153,62 @@ class Channel(Generic[_ModelT]):
 
     def __init__(
         self,
-        app: str,
+        app_name: AppName,
         pchannel: _ChannelT,
         message_model: type[_ModelT],
     ) -> None:
         super().__init__()
-        self.app: Final = app
+        self.app_name: Final = app_name
         self._pchannel: Final = pchannel
         self._model = message_model
 
-    def _make_queue_name(self, suffix: str | None) -> str:
-        return f"{APP_PREFIX}.{self.app}" if suffix is None else f"{APP_PREFIX}.{self.app}.{suffix}"
+    def _make_queue_name(self, suffix: QueueName) -> str:
+        return f"{APP_PREFIX}.{self.app_name.value}.{suffix.value}"
 
-    def _make_binding_key(self, suffix: str | None) -> str:
-        return f"*.{self.app}" if suffix is None else f"*.{self.app}.{suffix}"
+    def _make_binding_key(self, suffix: BindingKey) -> str:
+        return f"*.{self.app_name.value}.{suffix.value}"
 
-    def _make_routing_key(self, site: str, routing_sub_key: str | None) -> str:
-        return (
-            f"{site}.{self.app}"
-            if routing_sub_key is None
-            else f"{site}.{self.app}.{routing_sub_key}"
-        )
+    def _make_routing_key(self, site: str, routing_sub_key: RoutingKey) -> str:
+        return f"{site}.{self.app_name.value}.{routing_sub_key.value}"
 
     def queue_declare(
         self,
-        queue: str | None = None,
-        bindings: Sequence[str | None] = (None,),
+        queue: QueueName,
+        bindings: Sequence[BindingKey] | None = None,
         message_ttl: int | None = None,
     ) -> None:
         """
         Bind a queue to the local exchange with the given queue and bindings.
 
         Args:
-            queue: The queue to bind to. If None, "cmk.app.{app}" name is used,
-               otherwise "cmk.app.{app}.{queue}".
+            queue: The queue to bind to. Full queue name will be "cmk.app.{app}.{queue}".
             bindings: The bindings to use. For every provided element we add the binding
-               "*.{app}" if the element is None, otherwise "*.{app}.{binding}".
+                "*.{app}.{binding}". Defaults to None, in which case we bind with "*.{app}.{queue}".
 
-        You can omit all arguments, but you _must_ bind in order to consume messages.
+        You _must_ bind in order to consume messages.
         """
+        bindings = bindings or [BindingKey(queue.value)]
         full_queue_name = self._make_queue_name(queue)
-        self._pchannel.queue_declare(
-            queue=full_queue_name,
-            arguments=None if message_ttl is None else {"x-message-ttl": message_ttl * 1000},
-        )
-        for binding in bindings:
-            self._pchannel.queue_bind(
-                exchange=LOCAL_EXCHANGE,
+        try:
+            self._pchannel.queue_declare(
                 queue=full_queue_name,
-                routing_key=self._make_binding_key(binding),
+                arguments=None if message_ttl is None else {"x-message-ttl": message_ttl * 1000},
             )
+            for binding in bindings:
+                self._pchannel.queue_bind(
+                    exchange=LOCAL_EXCHANGE,
+                    queue=full_queue_name,
+                    routing_key=self._make_binding_key(binding),
+                )
+        except AMQPConnectionError as e:
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def publish_locally(
         self,
         message: _ModelT,
-        *,
+        routing: RoutingKey,
         properties: pika.BasicProperties | None = None,
-        routing: str | None = None,
     ) -> None:
         self._pchannel.basic_publish(
             exchange=LOCAL_EXCHANGE,
@@ -175,9 +221,8 @@ class Channel(Generic[_ModelT]):
         self,
         site: str,
         message: _ModelT,
-        *,
+        routing: RoutingKey,
         properties: pika.BasicProperties = pika.BasicProperties(),
-        routing: str | None = None,
     ) -> None:
         try:
             self._pchannel.basic_publish(
@@ -187,14 +232,15 @@ class Channel(Generic[_ModelT]):
                 properties=properties,
             )
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def consume(
         self,
+        queue: QueueName,
         callback: Callable[[Self, DeliveryTag, _ModelT], object],
         *,
         auto_ack: bool = False,
-        queue: str | None = None,
     ) -> NoReturn:
         """Block forever and call the callback for every message received.
 
@@ -221,7 +267,7 @@ class Channel(Generic[_ModelT]):
         )
         try:
             self._pchannel.start_consuming()
-        except AMQPConnectionError as e:
+        except (AMQPConnectionError, StreamLostError) as e:
             raise CMKConnectionError from e
 
         raise RuntimeError("start_consuming() should never return")
@@ -245,9 +291,9 @@ class Connection:
 
     ```python
 
-    with Connection("myapp", Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
         channel = conn.channel(MyMessageModel)
-        channel.publish_for_site("other_site", my_message_instance)
+        channel.publish_for_site("other_site", my_message_instance, RoutintKey("my_routing"))
 
     ```
 
@@ -255,18 +301,16 @@ class Connection:
 
     ```python
 
-    with Connection("myapp", Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
         channel = conn.channel(MyMessageModel)
-        channel.queue_declare()  # default queue + bindings
+        channel.queue_declare(QueueName("default"))  # includes default binding
         channel.consume(my_message_handler_callback)
 
     ```
     """
 
-    def __init__(self, app: str, omd_root: Path) -> None:
+    def __init__(self, app: AppName, omd_root: Path) -> None:
         """Create a connection for a specific app"""
-        if not app:
-            raise ValueError(app)
         self.app: Final = app
         self._omd_root = omd_root
         try:
@@ -274,7 +318,8 @@ class Connection:
                 make_connection_params(omd_root, "localhost", get_local_port())
             )
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
 
     def channel(self, model: type[_ModelT]) -> Channel[_ModelT]:
         return Channel(self.app, self._pconnection.channel(), model)
@@ -292,7 +337,12 @@ class Connection:
         try:
             return self._pconnection.__exit__(exc_type, value, traceback)
         except AMQPConnectionError as e:
-            raise CMKConnectionError from e
+            # pika handles exceptions weirdly. We need repr, in order to see something.
+            raise CMKConnectionError(repr(e)) from e
+        finally:
+            # the pika connections __exit__ will swallow these :-(
+            if isinstance(value, SystemExit):
+                raise value
 
 
 def check_remote_connection(
@@ -310,5 +360,17 @@ def check_remote_connection(
     try:
         with pika.BlockingConnection(make_connection_params(omd_root, server, port)):
             return ConnectionOK()
-    except (RuntimeError, socket.gaierror, ssl.SSLError, AMQPConnectionError) as exc:
+    except AMQPConnectionError as exc:
+        return (
+            ConnectionFailed("Connection refused")
+            if "connection refused" in repr(exc).lower()
+            else ConnectionFailed(str(exc))
+        )
+    except ssl.SSLError as exc:
+        return (
+            ConnectionFailed("Invalid certificates")
+            if "certificate verify failed" in repr(exc).lower()
+            else ConnectionFailed(str(exc))
+        )
+    except (socket.gaierror, RuntimeError) as exc:
         return ConnectionFailed(str(exc))

@@ -65,6 +65,18 @@ HACK_AGENTS = {
     "innovaphone": True,
     "storeonce4x": True,
     "vsphere": True,
+    "jolokia": True,
+    "random": False,  # needs no secret
+    "mqtt": True,
+    "splunk": True,
+    "vnx_quotas": True,
+    "ucs_bladecenter": True,
+    "smb_share": True,
+    "jira": True,
+    "salesforce": False,  # needs no secret
+    "ipmi_sensors": True,
+    "ruckus_spot": True,
+    "kube": True,
 }
 
 

@@ -1,0 +1,4 @@
+# A config to separte the isort linting from the rest of ruff
+lint:
+  aspects:
+    - //bazel/tools:aspects.bzl%ruff_isort

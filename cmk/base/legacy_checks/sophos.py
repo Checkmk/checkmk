@@ -6,10 +6,10 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
+
+check_info = {}
 
 # .1.3.6.1.4.1.2604.3.4 2 --> SOPHOS::sophosHwMemoryConsumption     Indicates whether the appliance is consuming excessive memory
 # .1.3.6.1.4.1.2604.3.5 2 --> SOPHOS::sophosHwMemoryStatus          Indicates whether the appliance detects less memory than expected
@@ -158,6 +158,7 @@ def parse_sophos(string_table: StringTable) -> StringTable:
 
 
 check_info["sophos"] = LegacyCheckDefinition(
+    name="sophos",
     parse_function=parse_sophos,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.bvip import DETECT_BVIP
+
+check_info = {}
 
 
 def inventory_bvip_link(info):
@@ -53,6 +53,7 @@ def parse_bvip_link(string_table: StringTable) -> StringTable:
 
 
 check_info["bvip_link"] = LegacyCheckDefinition(
+    name="bvip_link",
     parse_function=parse_bvip_link,
     detect=DETECT_BVIP,
     fetch=SNMPTree(

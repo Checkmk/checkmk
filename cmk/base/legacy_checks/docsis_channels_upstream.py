@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, get_rate, get_value_store, OIDEnd, render, SNMPTree
+
+check_info = {}
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
@@ -161,6 +161,7 @@ def check_docsis_channels_upstream(item, params, parsed):
 
 
 check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
+    name="docsis_channels_upstream",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),

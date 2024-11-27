@@ -12,8 +12,8 @@ import socket
 import sys
 import time
 from collections import Counter
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Any
 from xml.dom import minidom
 
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
@@ -1146,7 +1146,7 @@ class ESXConnection:
 
         response = self._session.postsoap(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
-            element = get_pattern("<{entry}.*>(.*)</{entry}>".format(entry=entry), response.text)
+            element = get_pattern(f"<{entry}.*>(.*)</{entry}>", response.text)
             if element:
                 system_info[entry] = element[0]
 
@@ -1708,6 +1708,10 @@ def get_section_snapshot_summary(
     ]
 
 
+def _make_unix_time(raw_time: str) -> int:
+    return int(dateutil.parser.isoparse(raw_time).timestamp())
+
+
 def get_systemtime(connection: ESXConnection, debug: bool) -> int | None:
     try:
         response = connection.query_server("systemtime")
@@ -1717,7 +1721,7 @@ def get_systemtime(connection: ESXConnection, debug: bool) -> int | None:
             raise
         return None
 
-    return int(dateutil.parser.isoparse(raw_systime).timestamp())
+    return _make_unix_time(raw_systime)
 
 
 def is_placeholder_vm(devices: str) -> bool:
@@ -1759,7 +1763,7 @@ def eval_snapshot_list(info: str, _datastores: Mapping[str, Mapping[str, str]]) 
     for entry in snapshot_info:
         try:
             # 2013-11-06T15:39:39.347543Z
-            creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
+            creation_time = _make_unix_time(entry[2])
         except ValueError:
             creation_time = 0
         response.append(

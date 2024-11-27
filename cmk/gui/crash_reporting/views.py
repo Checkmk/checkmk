@@ -11,10 +11,12 @@ import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
 
 from cmk.gui import sites
+from cmk.gui.config import Config
 from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request
+from cmk.gui.http import request as active_request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import paint_age
@@ -299,21 +301,23 @@ class PainterCrashException(Painter):
         return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
 
 
-class SorterCrashTime(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_time"
+def _sort_crash_time(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_number("crash_time", r1, r2)
 
-    @property
-    def title(self) -> str:
-        return _("Crash time")
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_time"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_number("crash_time", r1, r2)
+SorterCrashTime = Sorter(
+    ident="crash_time",
+    title=_l("Crash time"),
+    columns=["crash_time"],
+    sort_function=_sort_crash_time,
+)
 
 
 PermissionActionDeleteCrashReport = permission_registry.register(
@@ -358,7 +362,7 @@ def command_delete_crash_report_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.has_var("_delete_crash_reports"):
+    if active_request.has_var("_delete_crash_reports"):
         commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
         return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None

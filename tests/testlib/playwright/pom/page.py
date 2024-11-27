@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
 from tests.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
+from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class CmkPage(LocatorHelper):
         self,
         page: Page,
         navigate_to_page: bool = True,
+        contain_filter_sidebar: bool = False,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
@@ -31,6 +33,8 @@ class CmkPage(LocatorHelper):
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page, self._dropdown_list_name_to_id())
         self.sidebar = Sidebar(self.page)
+        if contain_filter_sidebar:
+            self.filter_sidebar = FilterSidebar(self.page)
         if self._navigate_to_page:
             self.navigate()
         else:
@@ -99,7 +103,7 @@ class CmkPage(LocatorHelper):
         self.main_area.check_page_title("Add sidebar element")
 
     def press_keyboard(self, key: Keys) -> None:
-        logger.info("Press keyboard key: %d", key.value)
+        logger.info("Press keyboard key: %s", key.value)
         self.page.keyboard.press(str(key.value))
 
     def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
@@ -107,6 +111,7 @@ class CmkPage(LocatorHelper):
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self) -> None:
+        logger.info("Activate changes")
         self.get_link(re.compile("^[1-9][0-9]* changes?$"), exact=False).click()
         self.activate_selected()
         self.expect_success_state()
@@ -119,7 +124,7 @@ class CmkPage(LocatorHelper):
         with self.page.expect_event(event) as _:
             self.page.goto(url)
 
-    def check_no_errors(self, timeout: int) -> None:
+    def check_no_errors(self, timeout: float = TIMEOUT_ASSERTIONS / 4) -> None:
         """Check that no errors are present on the page."""
         expect(self.locator("div.error"), "Some errors are present on the page").not_to_be_visible(
             timeout=timeout
@@ -342,7 +347,7 @@ class MainArea(LocatorHelper):
             return _loc
         return _loc.locator(selector)
 
-    def check_page_title(self, title: str) -> None:
+    def check_page_title(self, title: str | Pattern[str]) -> None:
         """check the page title"""
         expect(self.locator(".titlebar a>>nth=0")).to_have_text(title)
 
@@ -389,3 +394,105 @@ class Sidebar(LocatorHelper):
 
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_sidebar").locator(selector)
+
+
+class FilterSidebar(LocatorHelper):
+    """functionality to find items from the filter sidebar"""
+
+    @overload
+    def locator(self, selector: None = None) -> Locator: ...
+
+    @overload
+    def locator(self, selector: str) -> Locator: ...
+
+    def locator(self, selector: str | None = None) -> Locator:
+        _loc = self.page.frame_locator("iframe[name='main']").locator("div#popup_filters")
+        if selector:
+            _loc = _loc.locator(selector)
+        self._unique_web_element(_loc)
+        return _loc
+
+    @property
+    def apply_filters_button(self) -> Locator:
+        return self.locator().get_by_role("button", name="Apply filters")
+
+    @property
+    def add_filter_button(self) -> Locator:
+        return self.locator().get_by_role("link", name="Add filter")
+
+    @property
+    def filters_list(self) -> Locator:
+        return self.locator("div#_popup_filter_list")
+
+    def filter_button(self, filter_name: str) -> Locator:
+        return self.filters_list.get_by_role("link", name=filter_name)
+
+    @property
+    def select_service_field(self) -> Locator:
+        return self.locator("#select2-service_regex-container")
+
+    @property
+    def search_text_field(self) -> Locator:
+        return self.page.frame_locator("iframe[name='main']").get_by_role("searchbox")
+
+    @property
+    def select_host_field(self) -> Locator:
+        return self.locator("#select2-host_regex-container")
+
+    @property
+    def last_service_state_change_filter(self):
+        return self.locator("span:text-is('Last service state change')")
+
+    @property
+    def last_service_state_change_from_text_field(self) -> Locator:
+        return self.locator("input[name='svc_last_state_change_from']")
+
+    @property
+    def last_service_state_change_from_dropdown(self) -> Locator:
+        return self.locator("#select2-svc_last_state_change_from_range-container")
+
+    @property
+    def last_service_state_change_until_text_field(self) -> Locator:
+        return self.locator("input[name='svc_last_state_change_until']")
+
+    @property
+    def last_service_state_change_until_dropdown(self) -> Locator:
+        return self.locator("#select2-svc_last_state_change_until_range-container")
+
+    def dropdown_option(self, option_name: str, exact: bool = False) -> Locator:
+        return self.page.frame_locator("iframe[name='main']").get_by_role(
+            "option", name=option_name, exact=exact
+        )
+
+    def apply_last_service_state_change_filter(
+        self, from_units: str, from_value: str, until_units: str, until_value: str
+    ) -> None:
+        try:
+            expect(self.last_service_state_change_filter).to_be_visible(timeout=3000)
+        except AssertionError:
+            self.add_filter_button.click()
+            self.filter_button("Last service state change").click()
+
+        self.last_service_state_change_from_dropdown.click()
+        self.dropdown_option(from_units).click()
+        self.last_service_state_change_from_text_field.fill(from_value)
+
+        self.last_service_state_change_until_dropdown.click()
+        self.dropdown_option(until_units).click()
+        self.last_service_state_change_until_text_field.fill(until_value)
+
+    def apply_service_filter(self, service_filter: str) -> None:
+        self.select_service_field.click()
+        self.search_text_field.fill(service_filter)
+        self.dropdown_option(service_filter, exact=True).click()
+
+    def apply_host_filter(self, host_filter: str) -> None:
+        self.select_host_field.click()
+        self.search_text_field.fill(host_filter)
+        # TODO: remove 'nth(0)' after fixing CMK-19975
+        self.dropdown_option(host_filter, exact=True).nth(0).click()
+
+    def apply_filters(self, expected_locator: Locator) -> None:
+        self.apply_filters_button.click()
+        self.page.wait_for_load_state("load")
+        expect(expected_locator).to_be_visible()

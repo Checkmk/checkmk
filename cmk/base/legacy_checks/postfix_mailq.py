@@ -59,8 +59,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+
+check_info = {}
 
 DEFAULT_ITEM_NAME = "default"
 
@@ -165,6 +166,7 @@ def check_postfix_mailq(item, params, parsed):
 
 
 check_info["postfix_mailq"] = LegacyCheckDefinition(
+    name="postfix_mailq",
     parse_function=parse_postfix_mailq,
     service_name="Postfix Queue %s",
     discovery_function=inventory_postfix_mailq,

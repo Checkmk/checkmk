@@ -236,8 +236,8 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, ImportErrors] = {
     "pure-1.4.7.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin pure_arraydetails: cannot import name "
-            "'get_percent_human_readable' from 'cmk.base.check_api' "
-            "(/omd/sites/ext_comp_1/lib/python3/cmk/base/check_api.py)\n",
+            "'get_percent_human_readable' from 'cmk.agent_based.legacy.v0_unstable' "
+            "(/omd/sites/ext_comp_1/lib/python3/cmk/agent_based.legacy.v0_unstable.py)\n",
         }
     ),
     "fail2ban-1.3.1.mkp": ImportErrors(gui_errors={"wato/fail2ban: name 'Tuple' is not defined"}),

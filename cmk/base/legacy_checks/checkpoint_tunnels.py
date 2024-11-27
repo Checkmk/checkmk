@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.checkpoint import DETECT
+
+check_info = {}
 
 tunnel_states = {
     "3": "Active",
@@ -38,6 +38,7 @@ def parse_checkpoint_tunnels(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
+    name="checkpoint_tunnels",
     parse_function=parse_checkpoint_tunnels,
     detect=DETECT,
     fetch=SNMPTree(

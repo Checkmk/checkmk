@@ -8,10 +8,10 @@
 # 0
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_solaris_prtdiag_status(info):
@@ -40,6 +40,7 @@ def parse_solaris_prtdiag_status(string_table: StringTable) -> StringTable:
 
 
 check_info["solaris_prtdiag_status"] = LegacyCheckDefinition(
+    name="solaris_prtdiag_status",
     parse_function=parse_solaris_prtdiag_status,
     service_name="Hardware Overall State",
     discovery_function=inventory_solaris_prtdiag_status,

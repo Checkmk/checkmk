@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.scaleio import convert_scaleio_space
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.scaleio import parse_scaleio, ScaleioSection
+
+check_info = {}
 
 # example output
 # <<<scaleio_sds>>>
@@ -72,6 +73,7 @@ def check_scaleio_sds(item, params, parsed):
 
 
 check_info["scaleio_sds"] = LegacyCheckDefinition(
+    name="scaleio_sds",
     parse_function=parse_scaleio_sds,
     service_name="ScaleIO SDS capacity %s",
     discovery_function=inventory_scaleio_sds,
@@ -111,6 +113,7 @@ def check_scaleio_sds_status(item, _no_params, parsed):
 
 
 check_info["scaleio_sds.status"] = LegacyCheckDefinition(
+    name="scaleio_sds_status",
     service_name="ScaleIO SDS status %s",
     sections=["scaleio_sds"],
     discovery_function=inventory_scaleio_sds_status,

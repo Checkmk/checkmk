@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
+from cmk.agent_based.v2 import get_value_store
 
 from .checktestlib import Check, CheckResult
 

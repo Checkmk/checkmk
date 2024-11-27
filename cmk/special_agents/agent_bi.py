@@ -131,8 +131,11 @@ class AggregationData:
                 self._aggregation_targets.setdefault(hostname, {})[aggr_name] = aggr_data
 
         for pattern, target_host in self._assignments.get("regex", []):
-            if regex(pattern).match(aggr_name):
-                self._aggregation_targets.setdefault(target_host, {})[aggr_name] = aggr_data
+            if mo := regex(pattern).match(aggr_name):
+                target_name = target_host
+                for nr, text in enumerate(mo.groups("")):
+                    target_name = target_name.replace("\\%d" % (nr + 1), text)
+                self._aggregation_targets.setdefault(target_name, {})[aggr_name] = aggr_data
 
 
 class RawdataException(MKException):

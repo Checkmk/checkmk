@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, startswith
+
+check_info = {}
 
 
 def parse_brocade_sys(string_table):
@@ -47,6 +48,7 @@ def check_brocade_sys_mem(item, params, parsed):
 
 
 check_info["brocade_sys.mem"] = LegacyCheckDefinition(
+    name="brocade_sys_mem",
     service_name="Memory",
     sections=["brocade_sys"],
     discovery_function=inventory_brocade_sys_mem,
@@ -75,6 +77,7 @@ def check_brocade_sys(item, params, parsed):
 
 
 check_info["brocade_sys"] = LegacyCheckDefinition(
+    name="brocade_sys",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),

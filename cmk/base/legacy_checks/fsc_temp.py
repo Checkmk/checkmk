@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -19,6 +18,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # We fetch the following columns from SNMP:
 # 13: name of the temperature sensor (used as item)
@@ -50,6 +51,7 @@ def parse_fsc_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["fsc_temp"] = LegacyCheckDefinition(
+    name="fsc_temp",
     parse_function=parse_fsc_temp,
     detect=all_of(
         all_of(

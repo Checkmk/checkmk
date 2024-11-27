@@ -4,16 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for RabbitMq definitions creation"""
 
-import logging
+import subprocess
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from logging import Logger
+from pathlib import Path
+from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
-_logger = logging.getLogger(__name__)
+DEFAULT_DEFINITIONS_FILE_NAME = "00-default.json"
+ACTIVE_DEFINITIONS_FILE_NAME = "definitions.json"
+
+DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
+ACTIVE_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/{ACTIVE_DEFINITIONS_FILE_NAME}"
+NEW_DEFINITIONS_FILE_PATH = f"{DEFINITIONS_PATH}/definitions.next.json"
 
 
 class User(BaseModel):
@@ -57,23 +65,36 @@ class VirtualHost(BaseModel):
     name: str
 
 
-DEFAULT_SHOVEL: Mapping[str, str | bool] = {
-    "ack-mode": "on-confirm",
-    "dest-add-forward-headers": False,
-    "dest-exchange": INTERSITE_EXCHANGE,
-    "dest-protocol": "amqp091",
-    "dest-uri": "amqp://",
-    "src-delete-after": "never",
-    "src-protocol": "amqp091",
-    "src-queue": "",
-    "src-uri": "amqp://",
-}
+class ShovelValue(BaseModel):
+    ack_mode: str = Field(alias="ack-mode", default="on-confirm")
+    dest_add_forward_headers: bool = Field(alias="dest-add-forward-headers", default=False)
+    dest_exchange: str = Field(alias="dest-exchange", default=INTERSITE_EXCHANGE)
+    dest_protocol: str = Field(alias="dest-protocol", default="amqp091")
+    dest_uri: str = Field(alias="dest-uri", default="amqp://")
+    src_delete_after: str = Field(alias="src-delete-after", default="never")
+    src_protocol: str = Field(alias="src-protocol", default="amqp091")
+    src_queue: str = Field(alias="src-queue")
+    src_uri: str = Field(alias="src-uri", default="amqp://")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        frozen=True,
+    )
+
+    @classmethod
+    def from_kwargs(cls, *, src_queue: str, src_uri: str, dest_uri: str) -> Self:
+        # centralized suppression.
+        # unfortunately mypy does not understand that I can use the non-alias
+        # field names (which is the point of them) :-(
+        return cls(  # type: ignore[call-arg]
+            src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri
+        )
 
 
-class Component(BaseModel):
-    value: Mapping[str, str | bool]
+class Shovel(BaseModel, frozen=True):
+    value: ShovelValue
     vhost: str
-    component: str
+    component: Literal["shovel"] = "shovel"
     name: str
 
 
@@ -93,7 +114,14 @@ class Definitions(BaseModel):
     exchanges: list[Exchange] = []
     bindings: list[Binding] = []
     queues: list[Queue] = []
-    parameters: list[Component] = []
+    parameters: list[Shovel] = []  # there are others, we currently only need shovels.
+
+    def dumps(self) -> str:
+        return self.model_dump_json(indent=4, by_alias=True)
+
+    @classmethod
+    def loads(cls, data: str) -> Self:
+        return cls.model_validate_json(data)
 
 
 @dataclass(frozen=True)
@@ -263,26 +291,22 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         arguments={},
     )
     parameters = [
-        Component(
-            value={
-                **DEFAULT_SHOVEL,
-                "src-uri": connecter_url,
-                "dest-uri": connectee_url,
-                "src-queue": queue.name,
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                src_uri=connecter_url,
+                dest_uri=connectee_url,
+                src_queue=queue.name,
+            ),
             vhost=vhost_name,
-            component="shovel",
             name=f"cmk.shovel.{connection.connecter.site_id}->{connection.connectee.site_id}",
         ),
-        Component(
-            value={
-                **DEFAULT_SHOVEL,
-                "src-queue": f"cmk.intersite.{connection.connecter.site_id}",
-                "src-uri": connectee_url,
-                "dest-uri": connecter_url,
-            },
+        Shovel(
+            value=ShovelValue.from_kwargs(
+                src_queue=f"cmk.intersite.{connection.connecter.site_id}",
+                src_uri=connectee_url,
+                dest_uri=connecter_url,
+            ),
             vhost=vhost_name,
-            component="shovel",
             name=f"cmk.shovel.{connection.connectee.site_id}->{connection.connecter.site_id}",
         ),
     ]
@@ -326,3 +350,68 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
     definition.users.append(user)
     definition.permissions.append(permission)
     definition.queues.append(queue)
+
+
+def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> None:
+    definitions_file = omd_root / ACTIVE_DEFINITIONS_FILE_PATH
+    new_definitions_file = omd_root / NEW_DEFINITIONS_FILE_PATH
+    try:
+        old_definitions = Definitions.loads(definitions_file.read_text())
+    except FileNotFoundError:
+        old_definitions = Definitions()
+
+    try:
+        new_definitions = Definitions.loads(new_definitions_file.read_text())
+    except FileNotFoundError:
+        return
+
+    new_definitions_file.rename(definitions_file)
+
+    if old_definitions == new_definitions:
+        return
+
+    # run in parallel
+    for process in [
+        *_cleanup_unused_definitions(old_definitions, new_definitions),
+        _import_new_definitions(definitions_file),
+    ]:
+        (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
+
+
+def _cleanup_unused_definitions(
+    old_definitions: Definitions, new_definitions: Definitions
+) -> Iterator[subprocess.Popen[str]]:
+    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
+        yield _rabbitmqctl_process(("delete_user", user))
+
+    for vhost in {v.name for v in old_definitions.vhosts} - {
+        v.name for v in new_definitions.vhosts
+    }:
+        yield _rabbitmqctl_process(("delete_vhost", vhost))
+
+    # currently only shovels, but we don't have to care here
+    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
+        yield _rabbitmqctl_process(
+            ("clear_parameter", "-p", param.vhost, param.component, param.name)
+        )
+
+
+def _import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
+    return _rabbitmqctl_process(("import_definitions", str(definitions_file)))
+
+
+def _rabbitmqctl_process(cmd: tuple[str, ...]) -> subprocess.Popen[str]:
+    return subprocess.Popen(
+        ["rabbitmqctl", *cmd],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+
+def _format_process(p: subprocess.Popen[str]) -> str:
+    return (
+        f"{'FAILED' if p.returncode else 'OK'}: {p.args!r}\n"  # type: ignore[misc]  # contains Any
+        f"{' '.join(p.stdout or ())}\n"
+        f"{' '.join(p.stderr or ())}"
+    )

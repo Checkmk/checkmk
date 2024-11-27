@@ -9,13 +9,18 @@ import io
 import logging
 import os
 import tarfile
+from collections.abc import Mapping
 from contextlib import nullcontext
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
+from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.repo import is_enterprise_repo, is_managed_repo
+
+from tests.unit.testlib.rabbitmq import get_expected_definition
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -28,17 +33,29 @@ from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
-from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.activate_changes import (
+    ActivationCleanupBackgroundJob,
+    ConfigSyncFileInfo,
+    default_rabbitmq_definitions,
+)
+from cmk.gui.watolib.config_sync import replication_path_registry, ReplicationPath
+
+from cmk.livestatus_client import (
+    BrokerConnection,
+    BrokerConnections,
+    BrokerSite,
+    ConnectionId,
+    NetworkSocketDetails,
+)
+from cmk.messaging import rabbitmq
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def restore_orig_replication_paths():
-    _orig_paths = activate_changes._replication_paths[:]
-    yield
-    activate_changes._replication_paths = _orig_paths
+    with reset_registries([replication_path_registry]):
+        yield
 
 
 def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:
@@ -68,7 +85,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ty="dir",
             ident="rabbitmq",
             site_path="etc/rabbitmq/definitions.d",
-            excludes=["00-default.json", ".*new*"],
+            excludes=["00-default.json", "definitions.json", ".*new*"],
         ),
         ReplicationPath(
             ty="dir",
@@ -224,7 +241,7 @@ def test_get_replication_paths_defaults(
     edition: cmk_version.Edition, request_context: None
 ) -> None:
     expected = _expected_replication_paths(edition)
-    assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
+    assert sorted(replication_path_registry.values()) == sorted(expected)
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
@@ -254,18 +271,6 @@ def test_get_replication_components(
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected
-    )
-
-
-def test_add_replication_paths(request_context: None) -> None:
-    activate_changes.add_replication_paths(
-        [
-            ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
-        ]
-    )
-
-    assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "path/to/abc", ["e1", "e2"]
     )
 
 
@@ -812,3 +817,210 @@ def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -
     assert result == "Activation cleanup finished\n"
 
     assert not act_dir.exists()
+
+
+@pytest.mark.parametrize(
+    "site_configs, peer_to_peer_connections, expected_definitions",
+    [
+        pytest.param(
+            {},
+            {},
+            {},
+            id="no connection",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            {},
+            get_expected_definition("NO_SITE", {"remote_1": 5673}, {}),
+            id="replicated site",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1:5001/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            {},
+            get_expected_definition("NO_SITE", {"remote_1": 5672}, {}),
+            id="replicated site with apache port in multisiteurl",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+                "remote_2": SiteConfiguration(
+                    alias="remote site 2",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_2/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5674,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6791),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            BrokerConnections(
+                {
+                    ConnectionId("test"): BrokerConnection(
+                        connecter=BrokerSite(site_id=SiteId("remote_1")),
+                        connectee=BrokerSite(site_id=SiteId("remote_2")),
+                    )
+                }
+            ),
+            get_expected_definition(
+                "NO_SITE", {"remote_1": 5673, "remote_2": 5674}, {"remote_1": "remote_2"}
+            ),
+            id="peer to peer connection",
+        ),
+        pytest.param(
+            {
+                "remote_1": SiteConfiguration(
+                    alias="remote site",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1/remote_1/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5673,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6790),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+                "remote_2": SiteConfiguration(
+                    alias="remote site 2",
+                    disable_wato=True,
+                    disabled=False,
+                    insecure=False,
+                    multisiteurl="http://127.0.0.1: 5001/remote_2/check_mk/",
+                    persist=False,
+                    replicate_ec=True,
+                    replication="slave",
+                    message_broker_port=5674,
+                    secret="watosecret",
+                    timeout=2,
+                    user_login=True,
+                    url_prefix="/heute/",
+                    proxy=None,
+                    socket=(
+                        "tcp",
+                        NetworkSocketDetails(
+                            address=("127.0.0.1", 6791),
+                            tls=("encrypted", {"verify": True}),
+                        ),
+                    ),
+                ),
+            },
+            BrokerConnections(
+                {
+                    ConnectionId("test"): BrokerConnection(
+                        connecter=BrokerSite(site_id=SiteId("remote_1")),
+                        connectee=BrokerSite(site_id=SiteId("remote_2")),
+                    )
+                }
+            ),
+            get_expected_definition(
+                "NO_SITE", {"remote_1": 5673, "remote_2": 5674}, {"remote_1": "remote_2"}
+            ),
+            id="peer to peer connection with apache port in multisiteurl",
+        ),
+    ],
+)
+def test_default_rabbitmq_definitions(
+    site_configs: Mapping[str, SiteConfiguration],
+    peer_to_peer_connections: BrokerConnections,
+    expected_definitions: Mapping[str, rabbitmq.Definitions],
+) -> None:
+    with patch(
+        "cmk.gui.watolib.activate_changes.get_all_replicated_sites",
+        return_value=site_configs,
+    ):
+        actual_definitions = default_rabbitmq_definitions(peer_to_peer_connections)
+        assert dict(actual_definitions) == expected_definitions

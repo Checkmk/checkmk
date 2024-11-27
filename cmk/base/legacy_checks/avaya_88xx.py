@@ -5,12 +5,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.avaya import DETECT_AVAYA
+
+check_info = {}
 
 
 def parse_avaya_88xx(string_table):
@@ -63,6 +64,7 @@ def check_avaya_88xx(item, params, parsed):
 
 
 check_info["avaya_88xx"] = LegacyCheckDefinition(
+    name="avaya_88xx",
     detect=DETECT_AVAYA,
     # RAPID-CITY MIB,
     fetch=SNMPTree(
@@ -80,6 +82,7 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
 )
 
 check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
+    name="avaya_88xx_fan",
     service_name="Fan %s Status",
     sections=["avaya_88xx"],
     discovery_function=inventory_avaya_88xx_fan,

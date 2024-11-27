@@ -29,7 +29,7 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 from cmk.utils.paths import omd_root, web_dir
 
 from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import render_cmk_graphs
+from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 
 # Elements to be put into the mail body. Columns:
 # 1. Name
@@ -255,8 +255,8 @@ BODY_ELEMENTS = [
     ),
 ]
 
-TMPL_HOST_SUBJECT = "Check_MK: $HOSTNAME$ - $EVENT_TXT$"
-TMPL_SERVICE_SUBJECT = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
+TMPL_HOST_SUBJECT = "Checkmk: $HOSTNAME$ - $EVENT_TXT$"
+TMPL_SERVICE_SUBJECT = "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
 
 opt_debug = "-d" in sys.argv
 bulk_mode = "--bulk" in sys.argv
@@ -444,7 +444,13 @@ def send_mail_smtp_impl(
         conn.starttls()
 
     if context.get("PARAMETER_SMTP_AUTH_USER") is not None:
-        conn.login(context["PARAMETER_SMTP_AUTH_USER"], context["PARAMETER_SMTP_AUTH_PASSWORD"])
+        conn.login(
+            context["PARAMETER_SMTP_AUTH_USER"],
+            get_password_from_env_or_context(
+                key="PARAMETER_SMTP_AUTH_PASSWORD",
+                context=context,
+            ),
+        )
 
     # this call returns a dictionary with the recipients that failed + the reason, but only
     # if at least one succeeded, otherwise it throws an exception.
@@ -483,7 +489,11 @@ def render_performance_graphs(
 
 
 def construct_content(
-    context: dict[str, str], is_bulk: bool = False, notification_number: int = 1
+    context: dict[str, str],
+    is_bulk: bool = False,
+    bulk_summary: list[dict[str, str]] | None = None,
+    last_bulk_entry: bool = False,
+    notification_number: int = 1,
 ) -> tuple[str, str, list[Attachment]]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
@@ -524,6 +534,9 @@ def construct_content(
                 "data": context,
                 "graphs": file_names,
                 "insert": escape_permissive(context.get("PARAMETER_INSERT_HTML_SECTION", "")),
+                "is_bulk": is_bulk,
+                "bulk_summary": bulk_summary,
+                "last_bulk_entry": last_bulk_entry,
             },
         ),
         context,
@@ -550,6 +563,9 @@ def extend_context(context: dict[str, str]) -> None:
         utils.service_url_from_context(context),
         context.get("SERVICEDESC", ""),
     )
+
+    if "graph" in context.get("PARAMETER_ELEMENTSS", "graph").split():
+        context["GRAPH_URL"] = utils.graph_url_from_context(context)
 
     if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
         context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
@@ -663,16 +679,27 @@ class BulkEmailContent(EmailContent):
         parameters, contexts = context_function()
         hosts = set()
 
-        for i, c in enumerate(contexts, 1):
-            c.update(parameters)
-            escaped_context = utils.html_escape_context(c)
+        all_contexts_updated: list[dict[str, str]] = []
+        for single_context in contexts:
+            single_context.update(parameters)
+            escaped_context = utils.html_escape_context(single_context)
             extend_context(escaped_context)
+            all_contexts_updated.append(escaped_context)
 
-            txt, html, att = construct_content(escaped_context, is_bulk=True, notification_number=i)
+        for i, c in enumerate(all_contexts_updated, 1):
+            txt, html, att = construct_content(
+                c,
+                is_bulk=True,
+                bulk_summary=all_contexts_updated if i == 1 else None,
+                last_bulk_entry=i == len(all_contexts_updated),
+                notification_number=i,
+            )
             content_txt += txt
             content_html += html
             attachments += att
             hosts.add(c["HOSTNAME"])
+
+        attachments = _add_template_attachments(escaped_context, attachments)
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
@@ -744,10 +771,12 @@ def _add_template_attachments(
 
     if context.get("PARAMETER_CONTACT_GROUPS"):
         attachments.append(attach_file(icon="contact_groups.png"))
-    if elements := context.get("PARAMETER_ELEMENTSS", "").split():
-        attachments.append(attach_file(icon="additional.png"))
+    if elements := context.get("PARAMETER_ELEMENTSS", "graph abstime longoutput").split():
         if "graph" in elements:
             attachments.append(attach_file(icon="graph.png"))
+            elements.remove("graph")
+        if elements:
+            attachments.append(attach_file(icon="additional.png"))
     if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):
         attachments.append(attach_file(icon="label.png"))
     if context.get("PARAMETER_HOST_TAGS"):

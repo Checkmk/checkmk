@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
 )
-from cmk.base.config import check_info
 
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
@@ -40,6 +41,7 @@ def parse_oracle_version(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_version"] = LegacyCheckDefinition(
+    name="oracle_version",
     parse_function=parse_oracle_version,
     service_name="ORA Version %s",
     discovery_function=inventory_oracle_version,

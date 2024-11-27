@@ -9,19 +9,6 @@ PIDFILE=$OMD_ROOT/tmp/run/jaeger.pid
 LOGFILE=$OMD_ROOT/var/log/jaeger.log
 THE_PID=$(cat "$PIDFILE" 2>/dev/null)
 
-# shellcheck source=/dev/null
-. "$OMD_ROOT/etc/omd/site.conf"
-if [ "$CONFIG_TRACE_RECEIVE" != on ]; then
-    exit 5
-fi
-
-# shellcheck source=/dev/null
-. "$OMD_ROOT/etc/jaeger/jaeger.env"
-
-export COLLECTOR_OTLP_GRPC_HOST_PORT="$CONFIG_TRACE_RECEIVE_ADDRESS:$CONFIG_TRACE_RECEIVE_PORT"
-export ADMIN_HTTP_HOST_PORT="[::1]:$CONFIG_TRACE_JAEGER_ADMIN_PORT"
-export QUERY_HTTP_SERVER_HOST_PORT="[::1]:$CONFIG_TRACE_JAEGER_UI_PORT"
-
 case "$1" in
     start)
         echo -n 'Starting jaeger...'
@@ -31,6 +18,10 @@ case "$1" in
         fi
 
         nohup "$OMD_ROOT"/bin/jaeger \
+            --config="$OMD_ROOT"/etc/jaeger/config.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-query-port.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml \
+            --config="$OMD_ROOT"/etc/jaeger/omd-grpc.yaml \
             >>"$LOGFILE" 2>&1 &
         STATUS=$?
         if [ $STATUS -eq 0 ]; then

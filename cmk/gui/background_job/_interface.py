@@ -5,9 +5,10 @@
 
 import sys
 import time
+from collections.abc import Callable
 from logging import Logger
 from pathlib import Path
-from typing import Callable, ContextManager, NamedTuple
+from typing import ContextManager, NamedTuple
 
 from cmk.utils import render
 
@@ -78,5 +79,6 @@ class JobParameters(NamedTuple):
     lock_wato: bool
     is_stoppable: bool
     override_job_log_level: int | None
+    span_id: str
     init_span_processor_callback: Callable[[TracerProvider, SpanExporter | None], None]
     origin_span: Link

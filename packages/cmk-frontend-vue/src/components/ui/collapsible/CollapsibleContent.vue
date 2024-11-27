@@ -18,8 +18,6 @@ const props = defineProps<CollapsibleContentProps>()
 
 <style scoped>
 .ui-collapsible-content {
-  overflow: hidden;
-
   &[data-state='open'] {
     animation: slideDown 300ms ease-out;
   }

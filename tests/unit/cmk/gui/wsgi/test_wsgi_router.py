@@ -10,17 +10,14 @@ from importlib._bootstrap_external import SourceFileLoader  # type: ignore[impor
 
 import flask
 import pytest
-import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc.site import omd_site
 
 from cmk.utils.user import UserId
-
-from cmk.gui import cron
 
 
 def search_up(search_path: str, start_path: str) -> str:
@@ -121,10 +118,7 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
-    login.form["_username"] = username
-    login.form["_password"] = password
-    resp = login.form.submit("_login", index=1)
+    resp: CmkTestResponse = wsgi_app.login(username, password)
 
     assert "Invalid credentials." not in resp.text
 
@@ -160,15 +154,6 @@ def test_openapi_app_exception(
     assert "crash_report_url" in resp.json["ext"]["details"]
     assert "check_mk" in resp.json["ext"]["details"]["crash_report_url"]["href"]
     assert "id" in resp.json["ext"]
-
-
-def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
-    orig_multisite_cronjobs = cron.multisite_cronjobs[:]
-    try:
-        cron.multisite_cronjobs.clear()
-        wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
-    finally:
-        cron.multisite_cronjobs = orig_multisite_cronjobs
 
 
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:

@@ -1159,9 +1159,6 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
                 config_path,
                 hostname,
             )
-            if host_check is None:
-                console.verbose("(no Checkmk checks)\n")
-                continue
 
             host_check_store.write(config_path, hostname, host_check)
         except Exception as e:
@@ -1177,7 +1174,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     hostname: HostName,
     *,
     verify_site_python: bool = True,
-) -> str | None:
+) -> str:
     (
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
@@ -1207,15 +1204,6 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             needed_agent_based_inventory_plugin_names,
         )
     )
-
-    if not any(
-        (
-            needed_legacy_check_plugin_names,
-            needed_agent_based_check_plugin_names,
-            needed_agent_based_inventory_plugin_names,
-        )
-    ):
-        return None
 
     output = StringIO()
     output.write("#!/usr/bin/env python3\n")

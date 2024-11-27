@@ -234,3 +234,42 @@ def test_check_credentials_not_found(mocker: MockerFixture) -> None:
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
     assert connector.check_credentials(UserId("alice"), Password("hunter2")) is None
+
+
+def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
+    cfg = LDAPUserConnectionConfig(
+        id="test-trailing-dot-server",
+        directory_type=(
+            "openldap",
+            LDAPConnectionConfigFixed(
+                connect_to=(
+                    "fixed_list",
+                    Fixed(
+                        server="lolcathorst.",
+                    ),
+                )
+            ),
+        ),
+        user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+        user_scope="sub",
+        user_id_umlauts="keep",
+        group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
+        group_scope="sub",
+        active_plugins={"email": {}},
+        cache_livetime=300,
+        type="ldap",
+        bind=("bind_dn", ("store", "ldap_golden_unknown_password")),  # not in password_store
+        version=2,
+        connect_timeout=0.1,
+        lower_user_ids=True,
+        suffix="TEST_TRAILING_DOT",
+        disabled=False,
+        description="",
+        comment="",
+        docu_url="",
+    )
+
+    connector = LDAPUserConnector(cfg)
+    connector.connect()
+
+    mock_ldap.assert_called_with("ldap://lolcathorst", trace_level=0, trace_file=None)

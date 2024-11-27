@@ -345,7 +345,8 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _format_ldap_uri(self, server: str) -> str:
         uri = "ldaps://" if self.use_ssl() else "ldap://"
         port_spec = ":%d" % self._config["port"] if "port" in self._config else ""
-        return uri + server + port_spec
+        srv = server[:-1] if server.endswith(".") else server
+        return uri + srv + port_spec
 
     def connect(self, enforce_new: bool = False, enforce_server: str | None = None) -> None:
         if not enforce_new and self._ldap_obj and self._config == self._ldap_obj_config:

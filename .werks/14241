@@ -1,0 +1,10 @@
+Title: Nagios: Fixed Check_MK service showing (null) as plugin output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1732714495
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+If a host had no passive Check_MK services assigned at all, the executing of the active Check_MK check failed and returned (null) as plugin output.

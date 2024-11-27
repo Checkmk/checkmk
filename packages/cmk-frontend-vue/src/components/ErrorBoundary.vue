@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
-import AlertBox from '../../components/AlertBox.vue'
+import AlertBox from './AlertBox.vue'
 
 const error = ref<Error | null>(null)
 

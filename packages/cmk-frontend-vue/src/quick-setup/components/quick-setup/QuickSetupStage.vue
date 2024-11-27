@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
+import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 import type { QuickSetupStageProps } from './quick_setup_types'
 

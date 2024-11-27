@@ -8,5 +8,7 @@ description:
  as the configured name. The service is always {OK}. It requires that the
  special agent kube is configured.
 
+ Checkmk supports Kubernetes version 1.26, 1.27, 1.28, 1.29, 1.30 and 1.31.
+
 discovery:
  One service is created for the cluster.

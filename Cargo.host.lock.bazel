@@ -1,5 +1,5 @@
 {
-  "checksum": "8c185a07581562ce071c145586804bd47d84bc0aece97f8ed26729999b0a6ebc",
+  "checksum": "452d51c04bfe9de1ac3653d253936111c41c07cdd7f56feccae89aaad4553af3",
   "crates": {
     "addr2line 0.24.1": {
       "name": "addr2line",
@@ -25672,7 +25672,7 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "cmk-agent-ctl 1.0.0": "packages/cmk-agent-ctl",
+    "cmk-agent-ctl 1.0.0": "packages/host/cmk-agent-ctl",
     "mk-sql 0.1.0": "packages/mk-sql"
   },
   "conditions": {

@@ -92,7 +92,7 @@ crates_repository(
     lockfile = "//:Cargo.host.lock.bazel",
     manifests = [
         "//:Cargo.host.toml",
-        "//packages/cmk-agent-ctl:Cargo.toml",
+        "//packages/host/cmk-agent-ctl:Cargo.toml",
         "//packages/mk-sql:Cargo.toml",
     ],
 )

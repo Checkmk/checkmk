@@ -22,7 +22,7 @@ DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENT_CTL).gz
-AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
+AGENT_CTL_DIR := $(REPO_PATH)/packages/host/cmk-agent-ctl
 
 MK_SQL := $(AGENTS_DIR)/linux/mk-sql
 MK_SQL_DIR := $(REPO_PATH)/packages/mk-sql

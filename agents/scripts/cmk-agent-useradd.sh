@@ -39,8 +39,30 @@ HERE
 }
 
 _activate_single_dir() {
-    _set_user_permissions
+    [ -e "${OLD_HOMEDIR}" ] && systemctl status cmk-agent-ctl-daemon >/dev/null 2>&1 && {
+        echo "Stopping cmk-agent-ctl daemon for migration of home directory."
+        systemctl stop cmk-agent-ctl-daemon >/dev/null 2>&1
+        restart_agent_controller_daemon="yes"
+    }
+
     _migrate_from_multi_dir
+    _adapt_user
+    _set_user_permissions
+
+    [ "${restart_agent_controller_daemon}" = "yes" ] && {
+        # This is probably not necessary because upcoming scripts will replace the service anyways,
+        # but we better leave the situation as initially found.
+        echo "Starting cmk-agent-ctl daemon again."
+        systemctl start cmk-agent-ctl-daemon >/dev/null 2>&1
+    }
+}
+
+_adapt_user() {
+    # Only change if the user really has our old home directory assigned!
+    [ "$(getent passwd "cmk-agent" | cut -d: -f6)" = "/var/lib/cmk-agent" ] && {
+        printf "Changing home directory of cmk-agent to %s\n" "${HOMEDIR}"
+        usermod -d "${HOMEDIR}" "cmk-agent"
+    }
 }
 
 _set_user_permissions() {

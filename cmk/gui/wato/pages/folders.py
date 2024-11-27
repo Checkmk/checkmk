@@ -1149,13 +1149,6 @@ class ModeFolder(WatoMode):
 
     def _show_host_actions(self, host: Host) -> None:
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
-        if user.may("wato.rulesets"):
-            html.icon_button(
-                host.params_url(),
-                _("View the rule based effective parameters of this host"),
-                "rulesets",
-            )
-
         if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")
@@ -1168,6 +1161,13 @@ class ModeFolder(WatoMode):
                     "The service discovery of this host failed during a previous bulk service discovery."
                 )
             html.icon_button(host.services_url(), msg, image)
+
+        if user.may("wato.rulesets"):
+            html.icon_button(
+                host.params_url(),
+                _("View the rule based effective parameters of this host"),
+                "rulesets",
+            )
 
         if not host.locked():
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):

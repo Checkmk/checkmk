@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
@@ -105,10 +106,28 @@ pip_compile(
     visibility = ["//visibility:public"],
 )
 
+write_file(
+    # WHY?
+    # * we used to install the packages as editable in our pipenv
+    # * when creating a venv with bazel, we need to have everything sandbox-ed in bazel
+    # * however we still want to use the packages somehow editable
+    name = "sitecustomize",
+    out = "sitecustomize.py",
+    content = [
+        "import os",
+        "import sys",
+        "dirname = os.path.dirname(__file__)",
+        'relative_packages_path = "../../../../packages"',
+        "for p in os.listdir(os.path.join(dirname, relative_packages_path)):",
+        "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path, p)))",
+    ],
+)
+
 create_venv(
     name = "create_venv",
     destination_folder = ".venv_uv",
     requirements_txt = "@//:requirements_lock.txt",
+    site_packages_extra_files = [":sitecustomize.py"],
 )
 
 copy_file(

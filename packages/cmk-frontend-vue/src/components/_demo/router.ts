@@ -16,6 +16,7 @@ import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoCmkCheckbox from './DemoCmkCheckbox.vue'
 import DemoFormList from './DemoFormList.vue'
 import DemoForm from './DemoForm.vue'
@@ -89,6 +90,11 @@ const routes: Route[] = [
     path: '/dropdown',
     name: 'CmkDropdown',
     component: DemoCmkDropdown
+  },
+  {
+    path: '/errorboundary',
+    name: 'ErrorBoundary',
+    component: DemoErrorBoundary
   },
   {
     path: '/cmk_switch',

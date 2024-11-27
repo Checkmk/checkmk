@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-import ErrorBoundary from '@/components/ErrorBoundary.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import type { QuickSetupStageProps } from './quick_setup_types'
 
@@ -21,6 +21,8 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
 const onClickGoTo = computed(() =>
   !!props.goToThisStage && props.currentStage > props.index ? () => props.goToThisStage!() : null
 )
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>

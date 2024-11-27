@@ -14,7 +14,8 @@ logger = logging.getLogger(APPLICATION_LOGGER)
 
 def configure_logger(log_directory: Path) -> None:
     handler = logging.FileHandler(log_directory / f"{APPLICATION_LOGGER}.log", encoding="UTF-8")
-    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    log_format = f"%(asctime)s [%(levelno)s] [{APPLICATION_LOGGER} %(process)d] %(message)s"
+    formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)

@@ -347,7 +347,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            _ = load_pem_x509_certificate(raw_cert.encode())
+            # We filter by subject field so accessing it must not throw.
+            # We access it here to make sure.
+            cert = load_pem_x509_certificate(raw_cert.encode())
+            cert.subject.rfc4514_string()
             return True
         except ValueError:
             return False

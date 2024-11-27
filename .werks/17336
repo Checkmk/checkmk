@@ -1,0 +1,24 @@
+Title: Fix update crash if non-standard certificates are present
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1732718488
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+When discovering system certificates, we rely on the common
+name in the subject field of a certificate to identify certificates
+relevant to Checkmk sites.
+
+If there were certificates present which did not adhere to the
+x509 standard, we might incorrectly judge them as valid. This for
+example occurs if the country code contains a three-letter string.
+
+When such certificates are present, the update process would crash
+during the "Extract remote sites CAs..." step while accessing the
+subject field of such certificates.
+
+With this werk, we make sure that we only deem certificates as
+valid when we are able to parse their subject field. This stops the
+update process from crashing if non-standard certificates are present.

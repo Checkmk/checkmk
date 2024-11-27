@@ -82,6 +82,54 @@ remote2 = (
     "-----END CERTIFICATE-----\n"
 )
 
+#### To create this monstrosity:
+## Create CSR with `openssl req -x509 -newkey rsa:2048 -nodes -new -subj "/C=DE/" -out foo.csr`
+# import base64
+# from pyasn1_modules import rfc2459, pem
+# from pyasn1.codec.der import decoder
+# from pyasn1.codec.der import encoder
+# with open(cert_pem, 'r') as f:
+#     substrate = pem.readPemFromFile(f)
+#
+# cert, _ = decoder.decode(substrate, asn1Spec=rfc2459.Certificate())
+#
+# tbs = cert.getComponentByName('tbsCertificate')
+# subject = tbs.getComponentByName('subject')
+# rdn = subject[0][0]
+#
+# # Hack into pyasn1_modules.rfc2459.X520countryName and replace size constraint
+# rdn[0].setComponentByName('value', rfc2459.X520countryName('FOO'))
+#
+# new_cert = encoder.encode(cert)
+#
+# with open("modified.csr", "wb") as f:
+#     f.write(b"-----BEGIN CERTIFICATE-----\n")
+#     b64 = base64.b64encode(new_cert)
+#     chunks = [b64[i:i+64] for i in range(0, len(b64), 64)]
+#     f.write(b'\n'.join(chunks))
+#     f.write(b"\n-----END CERTIFICATE-----\n")
+
+three_digit_country_code = (
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIC/DCCAeSgAwIBAgIUXtQK7vrDHktGFCKWxqyz6jxLn2cwDQYJKoZIhvcNAQEL\n"
+    "BQAwDTELMAkGA1UEBhMCREUwHhcNMjQxMTI3MTQyMjI2WhcNMjQxMjI3MTQyMjI2\n"
+    "WjAOMQwwCgYDVQQGEwNVU0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB\n"
+    "AQCvnkeu9w2nzuXBr+wueLSXSI6SFGZZTZHVV2zPgyr3s1L3c4rcah25a/fia+Pr\n"
+    "qEJfJytvlF36/1/MviD/pQ0/5X5LB0PeOuWZbqD32HDRUOz61H7ZOhmmGOR8X7XW\n"
+    "lzBfGkbYyXj6iNZ1xjfkCty3+RV0f/CjXvi1pwsBzrvyIep6+g5ktqBQxwatFfDt\n"
+    "vqfgHZPsclNknUFUxJXziKugM2r7WBdzWkdruFWkiPokCZ10Lq8AApOn2IkIZI04\n"
+    "fijNivajztYIAI+iYbxCP/lHgvQSCE1tmQVd8zpvci/hiT3vGS2G1Z+1KyNg27jP\n"
+    "KkjBzsb99iumfLriJ4zwhZ+7AgMBAAGjUzBRMB0GA1UdDgQWBBS0h6oikGzCewYv\n"
+    "2XcjsIGwbxHEjjAfBgNVHSMEGDAWgBS0h6oikGzCewYv2XcjsIGwbxHEjjAPBgNV\n"
+    "HRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQBv1OWL7q0H39ogqCC9n1KZ\n"
+    "Ush6+GTDfK9lytq73prpRhYzuivB1nkh/uZjzEIhxQS/xpvq3rx79IVEmc1f/1EJ\n"
+    "XO0zTY61EEqmP9X69LLw7X1f+uJJwMtpZEjchCukrudRVpsgVQtEyRiDEAgiKwQr\n"
+    "eXWJKYw1LnnwhjSEZnS/yGGnv4vHOoDIgMs3hW95OJ1DOmtTjzxNV0/50wlwNRxS\n"
+    "xi09TcrZc3lqn3K+GlGeO5RhWIRKB5Eawhk9HeiEdmLhuogDBeCFotGbyc2pVccA\n"
+    "D5gBbSCZekux+Xpj1xK42NkxUNk5kUMlPsfuAUYwhYeuB0DzzNmSN8MWdmnFeJbD\n"
+    "-----END CERTIFICATE-----\n"
+)
+
 
 class _CASettings(TypedDict):
     use_system_wide_cas: bool
@@ -178,3 +226,6 @@ class TestConfigDomainCACertificates:
         # also test changed order:
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
+
+    def test_three_digit_country_code_is_invalid(self) -> None:
+        assert not ConfigDomainCACertificates.is_valid_cert(three_digit_country_code)

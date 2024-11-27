@@ -358,18 +358,11 @@ class LDAPUserConnector(UserConnector):
             self.clear_nearest_dc_cache()
             return None, "%s" % e
 
-    def _format_ldap_uri(self, server):
-        if self.use_ssl():
-            uri = "ldaps://"
-        else:
-            uri = "ldap://"
-
-        if "port" in self._config:
-            port_spec = ":%d" % self._config["port"]
-        else:
-            port_spec = ""
-
-        return uri + server + port_spec
+    def _format_ldap_uri(self, server: str) -> str:
+        uri = "ldaps://" if self.use_ssl() else "ldap://"
+        port_spec = ":%d" % self._config["port"] if "port" in self._config else ""
+        srv = server[:-1] if server.endswith(".") else server
+        return uri + srv + port_spec
 
     def connect(self, enforce_new=False, enforce_server=None):
         if not enforce_new and self._ldap_obj and self._config == self._ldap_obj_config:

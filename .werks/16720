@@ -1,0 +1,10 @@
+Title: Fix connection issue with dot ended ldap hostnames
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1732715061
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Fixed an issue that prevented connecting to an LDAP server via SSL when the hostname ended with a dot

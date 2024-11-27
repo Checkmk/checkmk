@@ -34,7 +34,9 @@ cc_library(
     srcs = [
         "include/neb/CmkVersion.h",
         "src/MacroExpander.cc",
+        "src/NebComment.cc",
         "src/NebCore.cc",
+        "src/NebDowntime.cc",
         "src/NebHost.cc",
         "src/NebService.cc",
         "src/TimeperiodsCache.cc",

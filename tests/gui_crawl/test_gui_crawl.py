@@ -9,7 +9,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from tests.testlib.crawler import Crawler, mutate_url_with_xss_payload, Url
+from tests.gui_crawl.crawler import Crawler, mutate_url_with_xss_payload, Url
 
 
 def test_crawl(test_crawler: Crawler) -> None:

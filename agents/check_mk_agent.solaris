@@ -479,17 +479,19 @@ section_statgrab() {
         fi
 
         # shellcheck disable=SC2086
-        statgrab_wrapped ${statgrab_vars} | grep -v md 1>$statgrab_temporary_file
-        for s in ${statgrab_sections}; do
-            echo "<<<statgrab_${s}>>>"
-            grep "^${s}\." $statgrab_temporary_file | cut -d. -f2-99 | sed 's/ *= */ /'
-        done
+        if statgrab_wrapped ${statgrab_vars} 1>$statgrab_temporary_file; then
+            # only output sections if statgrab did exit successfully and no timeout did occur
+            for s in ${statgrab_sections}; do
+                echo "<<<statgrab_${s}>>>"
+                grep "^${s}\." $statgrab_temporary_file | grep -v md | cut -d. -f2-99 | sed 's/ *= */ /'
+            done
 
-        # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
-        # since solaris_mem is under suspicion to be buggy.
-        echo '<<<statgrab_mem>>>'
-        # shellcheck disable=SC2196
-        grep -E "^(swap|mem)\." $statgrab_temporary_file | sed 's/ *= */ /'
+            # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
+            # since solaris_mem is under suspicion to be buggy.
+            echo '<<<statgrab_mem>>>'
+            # shellcheck disable=SC2196
+            grep "^(swap|mem)\." $statgrab_temporary_file | grep -v md | sed 's/ *= */ /'
+        fi
 
     else
         # Memory

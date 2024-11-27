@@ -103,6 +103,17 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
+def get_package_name(base_dir, package_type, edition, cmk_version) {
+    print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
+    dir(base_dir) {
+        def file_pattern = (package_type == "deb" ?
+            "check-mk-$edition-${cmk_version}_*.${package_type}" :  // FIXME do we need this?
+            "check-mk-$edition-${cmk_version}-*.${package_type}");
+        return (cmd_output("ls ${file_pattern}")
+                ?: error("Found no package matching ${file_pattern} in ${base_dir}"));
+    }
+}
+
 def get_distros(Map args) {
     def override_distros = args.override.trim() ?: "";
 

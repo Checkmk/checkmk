@@ -382,6 +382,7 @@ void start_threads() {
         }
     }
 
+    fl_core->dump_infos();
     fl_thread_running = 1;
     if (auto result = pthread_attr_destroy(&attr); result != 0) {
         Warning(fl_logger_nagios) << generic_error{
@@ -513,6 +514,12 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     switch (co->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD: {
+            // TODO(sp): We get a NEBTYPE_COMMENT_LOAD *and* a
+            // NEBTYPE_COMMENT_ADD for a single ADD_*_COMMENT command, can we
+            // remove on of those cases above?
+            Informational(fl_core->loggerLivestatus())
+                << (co->type == NEBTYPE_COMMENT_ADD ? "adding" : "loading")
+                << " new comment " << id;
             auto *hst = ::find_host(co->host_name);
             auto *svc =
                 co->service_description == nullptr
@@ -538,9 +545,11 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
+            Informational(fl_core->loggerLivestatus())
+                << "deleting comment " << id;
             if (fl_comments.erase(id) == 0) {
                 Informational(fl_logger_nagios)
-                    << "Cannot delete non-existing comment " << id;
+                    << "cannot delete non-existing comment " << id;
             }
             break;
         default:
@@ -557,6 +566,13 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     switch (dt->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD: {
+            // TODO(sp): We get a NEBTYPE_DOWNTIME_LOAD *and* a
+            // NEBTYPE_DOWNTIME_ADD for a single SCHEDULE_*_DOWNTIME command,
+            // can we remove on of those cases above? After that, we get a
+            // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD.
+            Informational(fl_core->loggerLivestatus())
+                << (dt->type == NEBTYPE_DOWNTIME_ADD ? "adding" : "loading")
+                << " new downtime " << id;
             auto *hst = ::find_host(dt->host_name);
             auto *svc =
                 dt->service_description == nullptr
@@ -583,9 +599,11 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
             break;
         }
         case NEBTYPE_DOWNTIME_DELETE:
+            Informational(fl_core->loggerLivestatus())
+                << "deleting downtime " << id;
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)
-                    << "Cannot delete non-existing downtime " << id;
+                    << "cannot delete non-existing downtime " << id;
             }
             break;
         case NEBTYPE_DOWNTIME_START:

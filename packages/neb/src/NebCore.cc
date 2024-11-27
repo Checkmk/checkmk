@@ -134,6 +134,16 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
     }
 }
 
+void NebCore::dump_infos() const {
+    Notice(_logger) << "created core abstraction with "
+                    << ihosts_by_handle_.size() << " hosts, "
+                    << ihostgroups_by_handle_.size() << " host groups, "
+                    << iservices_by_handle_.size() << " services, "
+                    << iservicegroups_by_handle_.size() << " service groups, "
+                    << icontacts_by_handle_.size() << " contacts, "
+                    << icontactgroups_by_handle_.size() << " contact groups";
+}
+
 const IHost *NebCore::ihost(const ::host *handle) const {
     auto it = ihosts_by_handle_.find(handle);
     return it == ihosts_by_handle_.end() ? nullptr : it->second.get();

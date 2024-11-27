@@ -61,9 +61,9 @@ void TimeperiodsCache::update(std::chrono::system_clock::time_point now) {
             it->second = is_in;
         }
     }
-    if (timeperiod_list != nullptr) {
+    if (_cache.empty()) {
         Informational(_logger)
-            << "Timeperiod cache not updated, there are no timeperiods (yet)";
+            << "time period cache not updated, there are no time periods (yet)";
     }
 }
 

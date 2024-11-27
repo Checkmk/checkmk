@@ -93,6 +93,7 @@ public:
             NagiosAuthorization authorization, Encoding data_encoding,
             std::string edition,
             std::chrono::system_clock::time_point state_file_created);
+    void dump_infos() const;
 
     const IHost *ihost(const ::host *handle) const;
     const IHostGroup *ihostgroup(const ::hostgroup *handle) const;

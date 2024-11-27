@@ -127,14 +127,12 @@ def disable_piggyback_hub_globally(central_site: Site, remote_site_id: str) -> I
         ):
             _write_replication_changes(central_site, central_site.id)
             _write_replication_changes(central_site, remote_site_id)
-            central_site.openapi.activate_changes_and_wait_for_completion(
-                force_foreign_changes=True
-            )
+            central_site.openapi.activate_changes_and_wait_for_completion()
             yield
     finally:
         _write_replication_changes(central_site, central_site.id)
         _write_replication_changes(central_site, remote_site_id)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.activate_changes_and_wait_for_completion()
 
 
 @contextmanager
@@ -143,13 +141,11 @@ def disable_piggyback_hub_remote_site(central_site: Site, remote_site_id: str) -
         # fake changes to trigger replication
         with _write_sitespecific_config_file(central_site):
             _write_replication_changes(central_site, remote_site_id)
-            central_site.openapi.activate_changes_and_wait_for_completion(
-                force_foreign_changes=True
-            )
+            central_site.openapi.activate_changes_and_wait_for_completion()
             yield
     finally:
         _write_replication_changes(central_site, remote_site_id)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.activate_changes_and_wait_for_completion()
 
 
 @contextmanager

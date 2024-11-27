@@ -102,7 +102,8 @@ repos:
             verbose: true
           - id: pipfile-locking
             name: Pipfile.lock
-            entry: pipenv verify
+            entry: scripts/run-pipenv verify
+            pass_filenames: false
             language: script
             files: Pipfile
             verbose: true

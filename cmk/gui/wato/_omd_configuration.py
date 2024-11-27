@@ -46,6 +46,8 @@ from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
+from cmk import diskspace
+
 
 def register(
     config_domain_registry: ConfigDomainRegistry,
@@ -63,9 +65,9 @@ def register(
     config_variable_registry.register(ConfigVariableSiteRRDCachedTuning)
     replication_path_registry.register(
         ReplicationPath(
-            "file",
+            "dir",
             "diskspace",
-            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
+            str(cmk.utils.paths.diskspace_config_dir.relative_to(cmk.utils.paths.omd_root)),
             [],
         )
     )
@@ -234,11 +236,9 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Diskspace cleanup does not support site specific globals!
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    diskspace_config = cmk.utils.paths.omd_root / "etc/diskspace.conf"
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -248,65 +248,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return []
 
     def config_dir(self):
-        return ""  # unused, we override load and save below
-
-    def load_full_config(self, site_specific=False, custom_site_path=None):
-        return self.load()
-
-    def load(self, site_specific=False, custom_site_path=None):
-        cleanup_settings = {**store.load_mk_file(self.diskspace_config, default={})}
-        if not cleanup_settings:
-            return {}
-
-        # Convert old config (min_free_bytes and min_file_age) were independent options
-        if "min_free_bytes" in cleanup_settings:
-            cleanup_settings["min_free_bytes"] = (
-                cleanup_settings["min_free_bytes"],
-                cleanup_settings.pop("min_file_age", 2592000),
-            )  # 1 month
-
-        if cleanup_settings.get("cleanup_abandoned_host_files", False) is None:
-            del cleanup_settings["cleanup_abandoned_host_files"]
-
-        if cleanup_settings.get("max_file_age", False) is None:
-            del cleanup_settings["max_file_age"]
-
-        return {
-            "diskspace_cleanup": cleanup_settings,
-        }
-
-    def save(self, settings, site_specific=False, custom_site_path=None):
-        if site_specific:
-            return  # not supported at the moment
-
-        config = {}
-
-        if "diskspace_cleanup" in settings:
-            # Convert to old config format.
-            for k, v in settings.get("diskspace_cleanup", {}).items():
-                if k == "min_free_bytes":
-                    config["min_free_bytes"], config["min_file_age"] = v
-                else:
-                    config[k] = v
-
-            if "cleanup_abandoned_host_files" not in settings.get("diskspace_cleanup", {}):
-                config["cleanup_abandoned_host_files"] = None
-
-        output = ""
-        for k, v in sorted(config.items()):
-            output += f"{k} = {v!r}\n"
-
-        store.save_text_to_file(self.diskspace_config, output)
+        return cmk.utils.paths.diskspace_config_dir
 
     def default_globals(self) -> Mapping[str, Any]:
-        diskspace_context: dict[str, Any] = {}
-        filename = cmk.utils.paths.omd_root / "bin/diskspace"
-        with filename.open(encoding="utf-8") as f:
-            code = compile(f.read(), str(filename), "exec")
-            exec(code, {}, diskspace_context)  # nosec B102 # BNS:aee528
-        return {
-            "diskspace_cleanup": diskspace_context["default_config"],
-        }
+        return {"diskspace_cleanup": diskspace.DEFAULT_CONFIG.model_dump(exclude_none=True)}
 
 
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):

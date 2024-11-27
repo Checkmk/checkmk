@@ -1281,7 +1281,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
     hostname = HostName("my-host")
 
-    check_result = inventorize_host(
+    check_results = inventorize_host(
         hostname,
         fetcher=fetcher,
         parser=parser,
@@ -1302,15 +1302,16 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         ),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
-    ).check_result
+    ).check_results
 
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     assert expected == check_result.state
     assert "Did not update the tree due to at least one error" in check_result.summary
 
 
 def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
-    check_result = inventorize_host(
+    check_results = inventorize_host(
         hostname,
         # no data!
         fetcher=lambda *args, **kwargs: [],
@@ -1324,8 +1325,9 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         parameters=HWSWInventoryParameters.from_raw({}),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
-    ).check_result
+    ).check_results
 
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     assert check_result.state == 0
     assert check_result.summary == "No data yet, please be patient"
 

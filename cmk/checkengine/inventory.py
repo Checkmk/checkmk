@@ -118,7 +118,7 @@ class HWSWInventoryParameters:
 class CheckInventoryTreeResult:
     processing_failed: bool
     no_data_or_files: bool
-    check_result: ActiveCheckResult
+    check_results: Sequence[ActiveCheckResult]
     inventory_tree: MutableTree
     update_result: UpdateResult
 
@@ -182,20 +182,18 @@ def inventorize_host(
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,
         no_data_or_files=no_data_or_files,
-        check_result=ActiveCheckResult.from_subresults(
-            *itertools.chain(
-                _check_fetched_data_or_trees(
-                    parameters=parameters,
-                    inventory_tree=trees.inventory,
-                    status_data_tree=trees.status_data,
-                    previous_tree=previous_tree,
-                    processing_failed=processing_failed,
-                    no_data_or_files=no_data_or_files,
-                ),
-                (r for r in summarizer(host_sections) if r.state != 0),
-                check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
-            )
-        ),
+        check_results=[
+            *_check_fetched_data_or_trees(
+                parameters=parameters,
+                inventory_tree=trees.inventory,
+                status_data_tree=trees.status_data,
+                previous_tree=previous_tree,
+                processing_failed=processing_failed,
+                no_data_or_files=no_data_or_files,
+            ),
+            *(r for r in summarizer(host_sections) if r.state != 0),
+            *check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
+        ],
         inventory_tree=trees.inventory,
         update_result=update_result,
     )
@@ -211,13 +209,13 @@ def inventorize_cluster(
     return CheckInventoryTreeResult(
         processing_failed=False,
         no_data_or_files=False,
-        check_result=ActiveCheckResult.from_subresults(
-            *_check_trees(
+        check_results=list(
+            _check_trees(
                 parameters=parameters,
                 inventory_tree=inventory_tree,
                 status_data_tree=MutableTree(),
                 previous_tree=previous_tree,
-            ),
+            )
         ),
         inventory_tree=inventory_tree,
         update_result=UpdateResult(),

@@ -2671,13 +2671,13 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         try:
             previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
             if hostname in hosts_config.clusters:
-                check_result = inventory.inventorize_cluster(
+                check_results = inventory.inventorize_cluster(
                     config_cache.nodes(hostname),
                     parameters=parameters,
                     previous_tree=previous_tree,
-                ).check_result
+                ).check_results
             else:
-                check_result = inventory.inventorize_host(
+                check_results = inventory.inventorize_host(
                     hostname,
                     fetcher=fetcher,
                     parser=parser,
@@ -2690,7 +2690,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
                     parameters=parameters,
                     raw_intervals_from_config=raw_intervals_from_config,
                     previous_tree=previous_tree,
-                ).check_result
+                ).check_results
+
+            check_result = ActiveCheckResult.from_subresults(*check_results)
             if check_result.state:
                 section.section_error(check_result.summary)
             else:
@@ -2757,7 +2759,7 @@ def _execute_active_check_inventory(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
-) -> ActiveCheckResult:
+) -> Sequence[ActiveCheckResult]:
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
@@ -2815,7 +2817,7 @@ def _execute_active_check_inventory(
                 meta=make_meta(do_archive=save_tree_actions.do_archive),
             )
 
-    return result.check_result
+    return result.check_results
 
 
 class _SaveTreeActions(NamedTuple):
@@ -2908,9 +2910,9 @@ def mode_inventory_as_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    check_result = ActiveCheckResult(3, "unknown error")
+    check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
-        check_result = _execute_active_check_inventory(
+        check_results = _execute_active_check_inventory(
             hostname,
             config_cache=config_cache,
             hosts_config=hosts_config,
@@ -2927,8 +2929,9 @@ def mode_inventory_as_check(
         )
 
     if error_handler.result is not None:
-        check_result = error_handler.result
+        check_results = (error_handler.result,)
 
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())

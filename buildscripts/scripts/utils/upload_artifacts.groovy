@@ -78,6 +78,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
             sh("""
                 rsync -av \
+                    --mkpath \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                     --exclude=${EXCLUDE_PATTERN} \
                     ${SOURCE_PATH} \

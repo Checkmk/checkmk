@@ -360,7 +360,7 @@ def main() {
                     ],
                     ulimit_nofile: 1024,
                 ) {
-                    def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
+                    def package_name = versioning.get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
                     def build_package_path = "${distro_dir}/${package_name}";
                     def node_version_dir = "${WORKSPACE}/versions";
                     def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
@@ -697,17 +697,6 @@ def build_package(package_type, build_dir, env) {
                 cat \$(bazel info server_log)
             """);
         }
-    }
-}
-
-def get_package_name(base_dir, package_type, edition, cmk_version) {
-    print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
-    dir(base_dir) {
-        def file_pattern = (package_type == "deb" ?
-            "check-mk-$edition-${cmk_version}_*.${package_type}" :  // FIXME do we need this?
-            "check-mk-$edition-${cmk_version}-*.${package_type}");
-        return (cmd_output("ls ${file_pattern}")
-                ?: error("Found no package matching ${file_pattern} in ${base_dir}"));
     }
 }
 

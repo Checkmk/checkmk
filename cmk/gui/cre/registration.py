@@ -59,7 +59,10 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
-from cmk.gui.watolib.broker_certificates import DefaultBrokerCertificateSync
+from cmk.gui.watolib.broker_certificates import (
+    broker_certificate_sync_registry,
+    DefaultBrokerCertificateSync,
+)
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
@@ -220,11 +223,11 @@ def register(edition: Edition) -> None:
             edition,
             sync_file_filter_func=None,
             snapshot_manager_factory=make_cre_snapshot_manager,
-            broker_certificate_sync=DefaultBrokerCertificateSync(),
             get_rabbitmq_definitions=default_rabbitmq_definitions,
             distribute_piggyback_hub_configs=distribute_piggyback_hub_configs,
         )
     )
+    broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())
 
     site_management_registry.register(SiteManagement())
     notification_parameter_registry.register(NotificationParameterMail)

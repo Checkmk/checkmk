@@ -17,6 +17,7 @@ from dateutil.relativedelta import relativedelta
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
@@ -191,6 +192,14 @@ def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
     for cert in all_cert_files(omd_root=paths.omd_root):
         if SiteId(cert.name.removesuffix("_cert.pem")) not in alive_sites:
             cert.unlink(missing_ok=True)
+
+
+class BrokerCertificateSyncRegistry(Registry[BrokerCertificateSync]):
+    def plugin_name(self, instance: BrokerCertificateSync) -> str:
+        return "broker_certificate_sync"
+
+
+broker_certificate_sync_registry = BrokerCertificateSyncRegistry()
 
 
 def _create_message_broker_certs() -> SiteBrokerCertificate:

@@ -69,7 +69,6 @@ def test_activate_changes(
                 orig_features.edition,
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
-                broker_certificate_sync=orig_features.broker_certificate_sync,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=lambda *args, **kwargs: None,
             ),
@@ -154,7 +153,6 @@ def test_list_activate_changes_star_etag(
                 orig_features.edition,
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
-                broker_certificate_sync=orig_features.broker_certificate_sync,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=(
                     distribute_piggyback_config := mocker.MagicMock()
@@ -190,7 +188,6 @@ def test_list_activate_changes_valid_etag(
                 orig_features.edition,
                 sync_file_filter_func=orig_features.sync_file_filter_func,
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
-                broker_certificate_sync=orig_features.broker_certificate_sync,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=(
                     distribute_piggyback_config := mocker.MagicMock()

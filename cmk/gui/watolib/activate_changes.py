@@ -105,7 +105,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.broker_certificates import BrokerCertificateSync, clean_dead_sites_certs
+from cmk.gui.watolib.broker_certificates import (
+    broker_certificate_sync_registry,
+    BrokerCertificateSync,
+    clean_dead_sites_certs,
+)
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -2144,9 +2148,7 @@ def sync_and_activate(
             site_activation_states,
             site_snapshot_settings,
             task_pool,
-            activation_features_registry[
-                str(version.edition(paths.omd_root))
-            ].broker_certificate_sync,
+            broker_certificate_sync_registry["broker_certificate_sync"],
         )
         clean_dead_sites_certs(list(get_all_replicated_sites()))
 
@@ -3370,7 +3372,6 @@ class ActivationFeatures:
     edition: version.Edition
     sync_file_filter_func: Callable[[str], bool] | None
     snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager]
-    broker_certificate_sync: BrokerCertificateSync
     get_rabbitmq_definitions: Callable[[BrokerConnections], Mapping[str, rabbitmq.Definitions]]
     distribute_piggyback_hub_configs: Callable[
         [

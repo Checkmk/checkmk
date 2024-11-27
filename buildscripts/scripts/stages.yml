@@ -111,7 +111,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
@@ -537,8 +537,8 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
-      DIR: "packages/mk-sql"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
+      DIR: "packages/host/mk-sql"
+      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
       TEXT_ON_SKIP: "No mk-sql files changed"
       RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 

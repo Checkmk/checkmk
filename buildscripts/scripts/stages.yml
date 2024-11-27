@@ -120,7 +120,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"
@@ -430,8 +430,8 @@ STAGES:
 
     - NAME: "Package cmk-agent-ctl"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMK_AGENT_CTL_FILES
-      DIR: "packages/host/cmk-agent-ctl"
-      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-agent-ctl.txt"
+      DIR: "packages/cmk-agent-ctl"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-agent-ctl.txt"
       TEXT_ON_SKIP: "No cmk-agent-ctl files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
 

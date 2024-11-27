@@ -17,6 +17,7 @@ export default [
       '*.config.js',
       'vite.config.*',
       '**/dist/**',
+      '**/dist-dev/**',
       '**/dist-ssr/**',
       '**/coverage/**',
       'src/notification/type_defs.ts',

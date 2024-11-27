@@ -107,6 +107,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     parse_license_state,
 )
+from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -954,6 +955,8 @@ class ModeDistributedMonitoring(WatoMode):
                 message = _("Successfully logged into remote site %s.") % HTMLWriter.render_tt(
                     site["alias"]
                 )
+                trigger_remote_certs_creation(login_id, site)
+
                 _audit_log.log_audit("edit-site", message)
                 flash(message)
                 return redirect(mode_url("sites"))

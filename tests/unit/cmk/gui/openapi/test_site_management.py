@@ -73,6 +73,11 @@ def test_login(
         "cmk.gui.watolib.site_management.do_site_login",
         lambda site_id, username, password: "watosecret",
     )
+    monkeypatch.setattr(
+        "cmk.gui.watolib.site_management.trigger_remote_certs_creation",
+        lambda site_id, settings: None,
+    )
+
     clients.SiteManagement.login(
         site_id="NO_SITE",
         username="cmkadmin",

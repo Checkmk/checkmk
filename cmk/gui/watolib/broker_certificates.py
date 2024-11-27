@@ -194,6 +194,19 @@ def clean_dead_sites_certs(alive_sites: Container[SiteId]) -> None:
             cert.unlink(missing_ok=True)
 
 
+def trigger_remote_certs_creation(
+    site_id: SiteId, settings: SiteConfiguration, force: bool = False
+) -> None:
+    broker_sync = broker_certificate_sync_registry["broker_certificate_sync"]
+    if not force and broker_sync.broker_certs_created(site_id, settings):
+        return
+
+    central_ca = broker_sync.load_central_ca()
+    customer_ca = broker_sync.load_or_create_customer_ca(settings.get("customer", "provider"))
+    broker_sync.create_broker_certificates(site_id, settings, central_ca, customer_ca)
+    broker_sync.update_trusted_cas()
+
+
 class BrokerCertificateSyncRegistry(Registry[BrokerCertificateSync]):
     def plugin_name(self, instance: BrokerCertificateSync) -> str:
         return "broker_certificate_sync"

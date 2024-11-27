@@ -14,7 +14,7 @@ from setproctitle import setproctitle
 from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
-from ._log import configure_logger
+from ._log import configure_app_logger
 from ._server import ApplicationServer, ApplicationServerConfig
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
@@ -36,7 +36,7 @@ def main() -> int:
         run_directory.mkdir(exist_ok=True, parents=True)
         log_directory.mkdir(exist_ok=True, parents=True)
 
-        configure_logger(log_directory)
+        configure_app_logger(log_directory)
 
         app = get_application(engine=automations, reload_config=reload_automation_config)
 

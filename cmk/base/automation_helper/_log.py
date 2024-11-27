@@ -7,15 +7,15 @@ import logging
 from pathlib import Path
 from typing import Final
 
-APPLICATION_LOGGER: Final = "automation-helper"
+APP_LOGGER_NAME: Final = "automation-helper"
 
-logger = logging.getLogger(APPLICATION_LOGGER)
+app_logger = logging.getLogger(APP_LOGGER_NAME)
 
 
-def configure_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / f"{APPLICATION_LOGGER}.log", encoding="UTF-8")
-    log_format = f"%(asctime)s [%(levelno)s] [{APPLICATION_LOGGER} %(process)d] %(message)s"
+def configure_app_logger(log_directory: Path) -> None:
+    handler = logging.FileHandler(log_directory / f"{APP_LOGGER_NAME}.log", encoding="UTF-8")
+    log_format = f"%(asctime)s [%(levelno)s] [{APP_LOGGER_NAME} %(process)d] %(message)s"
     formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    app_logger.addHandler(handler)
+    app_logger.setLevel(logging.INFO)

@@ -19,7 +19,7 @@ from cmk.utils import paths
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
-from ._log import logger
+from ._log import app_logger
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
@@ -81,7 +81,7 @@ def get_application(*, engine: AutomationEngine, reload_config: Callable[[], Non
         # TODO: move this into the application lifespan once the watcher is integrated.
         reload_config()
 
-        logger.setLevel(request.log_level)
+        app_logger.setLevel(request.log_level)
 
         with (
             redirect_stdout(output_buffer := io.StringIO()),

@@ -164,6 +164,11 @@ SerializedCertificateSpec = (
 ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
 
 
+class SAMLRequestedAuthnContext(TypedDict):
+    comparison: Literal["exact", "minimum", "maximum", "better"]
+    authn_context_class_ref: Sequence[str]
+
+
 class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     name: str
     description: str
@@ -177,6 +182,7 @@ class SAMLUserConnectionConfig(UserConnectionConfig, total=True):
     connection_timeout: tuple[int, int]  # connection timeout, read timeout
     signature_certificate: SerializedCertificateSpec
     encryption_certificate: NotRequired[SerializedCertificateSpec]
+    requested_authn_context: NotRequired[SAMLRequestedAuthnContext]
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str

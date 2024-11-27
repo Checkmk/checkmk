@@ -1258,7 +1258,7 @@ void ConfigInfo::initFolders(
 
         auto data = folders_.getData();
         wtools::ProtectPathFromUserAccess(data.parent_path(), commands);
-        wtools::ProtectPathFromUserWrite(data, commands);
+        wtools::ProtectPathFromUserAccess(data, commands);
         wtools::ExecuteCommandsAsync(L"all", commands);
     }
 

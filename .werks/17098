@@ -1,0 +1,29 @@
+Title: Fix access permissions in Windows Agents
+Class: security
+Compatible: compat
+Component: checks
+Date: 1732872245
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Incorrectly assigned permissions allowed local, unprivileged Windows users to read sensitive data of the Checkmk Windows agent.
+
+Before this Werk, non-admin users could read files in the <code>ProgramData\checkmk\agent</code> directory.
+This directory contains sensitive information, such as the agent's private key used to authenticate its TLS connections to the Checkmk site.
+
+The issue is a regression from an incomplete fix in Werk #16845. It was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0 >= 2.2.0p22
+LI: 2.1.0 (EOL)
+
+<em>Mitigations</em>:
+
+If updating is not possible, you can manually remove all permissions for the group Users on the directory <code>ProgramData\checkmk\agent</code> and all its contents.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 4.8 Medium (<code>CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:N/SC:L/SI:L/SA:N</code>) and assigned <code>CVE-2024-38864</code>.

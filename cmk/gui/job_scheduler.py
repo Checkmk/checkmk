@@ -9,6 +9,7 @@ import datetime
 import logging
 import os
 import sys
+import threading
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -27,6 +28,7 @@ from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.script_helpers import gui_context
 
 from cmk import trace
@@ -86,13 +88,15 @@ def _setup_console_logging() -> None:
 
 
 def _run_scheduler() -> None:
+    job_threads: dict[str, threading.Thread] = {}
     while True:
         cycle_start = time.time()
+        _collect_finished_threads(job_threads)
 
         # gui_context is within the loop to ensure that config changes are automatically applied
         with gui_context(), SuperUserContext():
             try:
-                run_scheduled_jobs(list(cron_job_registry.values()))
+                run_scheduled_jobs(list(cron_job_registry.values()), job_threads)
             except Exception:
                 crash = create_gui_crash_report()
                 logger.error(
@@ -102,6 +106,7 @@ def _run_scheduler() -> None:
                 )
 
         time.sleep(60 - (time.time() - cycle_start))
+    _wait_for_job_threads(job_threads)
 
 
 def _load_last_job_runs() -> dict[str, datetime.datetime]:
@@ -130,17 +135,38 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
 
 
 @tracer.start_as_current_span("run_scheduled_jobs")
-def run_scheduled_jobs(jobs: Sequence[CronJob]) -> None:
+def run_scheduled_jobs(jobs: Sequence[CronJob], job_threads: dict[str, threading.Thread]) -> None:
     logger.debug("Starting cron jobs")
 
     for job in _jobs_to_run(jobs, job_runs := _load_last_job_runs()):
         try:
+            if job.name in job_threads:
+                logger.debug("Skipping [%s] as it is already running", job.name)
+                continue
+
             with tracer.start_as_current_span(
-                f"run_cron_job[{job.name}]", attributes={"cmk.gui.job_name": job.name}
-            ):
-                logger.debug("Starting [%s]", job.name)
-                job.callable()
-                logger.debug("Finished [%s]", job.name)
+                f"run_cron_job[{job.name}]",
+                attributes={
+                    "cmk.gui.job_name": job.name,
+                    "cmk.gui.job_run_in_thread": str(job.run_in_thread),
+                    "cmk.gui.job_interval": str(job.interval.total_seconds()),
+                },
+            ) as span:
+                if job.run_in_thread:
+                    logger.debug("Starting [%s] in thread", job.name)
+                    job_threads[job.name] = thread = threading.Thread(
+                        target=copy_request_context(job_thread_main),
+                        args=(
+                            job,
+                            trace.Link(span.get_span_context()),
+                        ),
+                    )
+                    thread.start()
+                    logger.debug("Started [%s]", job.name)
+                else:
+                    logger.debug("Starting [%s] unthreaded", job.name)
+                    job.callable()
+                    logger.debug("Finished [%s]", job.name)
         except Exception:
             crash = create_gui_crash_report()
             logger.error(
@@ -153,3 +179,35 @@ def run_scheduled_jobs(jobs: Sequence[CronJob]) -> None:
     _save_last_job_runs(job_runs)
 
     logger.debug("Finished all cron jobs")
+
+
+def job_thread_main(job: CronJob, origin_span: trace.Link) -> None:
+    try:
+        with tracer.start_as_current_span(
+            f"job_thread_main[{job.name}]",
+            attributes={"cmk.gui.job_name": job.name},
+            links=[origin_span],
+        ):
+            job.callable()
+    except Exception:
+        crash = create_gui_crash_report()
+        logger.error(
+            "Exception in cron job thread (Job: %s Crash ID: %s)",
+            job.name,
+            crash.ident_to_text(),
+            exc_info=True,
+        )
+
+
+@tracer.start_as_current_span("wait_for_job_threads")
+def _wait_for_job_threads(job_threads: dict[str, threading.Thread]) -> None:
+    logger.debug("Waiting for threads to terminate")
+    for thread in job_threads.values():
+        thread.join()
+
+
+def _collect_finished_threads(job_threads: dict[str, threading.Thread]) -> None:
+    for job_name, thread in list(job_threads.items()):
+        if not thread.is_alive():
+            logger.debug("Removing finished thread [%s]", job_name)
+            del job_threads[job_name]

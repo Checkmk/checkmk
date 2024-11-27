@@ -81,7 +81,6 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
-from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
@@ -372,14 +371,6 @@ def _get_contact_group_users() -> list[tuple[UserId, str]]:
         for name, user in load_users().items()
         if user.get("contactgroups")
     )
-
-
-def _get_check_types() -> list[tuple[str, str]]:
-    return [
-        (str(cn), (str(cn) + " - " + c["title"])[:60])
-        for (cn, c) in get_check_information_cached().items()
-        if not cn.is_management_name()
-    ]
 
 
 def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended]:
@@ -777,21 +768,17 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
-                                # TODO disabled until we found a solution to load on demand or faster
-                                # "check_type_plugin": DictElement(
-                                #    parameter_form=MultipleChoiceExtended(
-                                #        title=Title("Match check types"),
-                                #        elements=[
-                                #            MultipleChoiceElement(
-                                #                name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
-                                #                title=Title("%s") % title,
-                                #            )
-                                #            for name, title in _get_check_types()
-                                #        ],
-                                #        show_toggle_all=True,
-                                #        layout=MultipleChoiceExtendedLayout.dual_list,
-                                #    ),
-                                # ),
+                                "check_type_plugin": DictElement(
+                                    parameter_form=MultipleChoiceExtended(
+                                        title=Title("Match check types"),
+                                        elements=Autocompleter(
+                                            fetch_method="check_types_autocompleter",
+                                            data={"ident": "check_types", "params": {}},
+                                        ),
+                                        show_toggle_all=True,
+                                        layout=MultipleChoiceExtendedLayout.dual_list,
+                                    ),
+                                ),
                             },
                         ),
                     ),

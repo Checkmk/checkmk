@@ -13,7 +13,7 @@ interface AjaxResponse {
   severity: string
 }
 
-async function fetchData<OutputType>(
+export async function fetchData<OutputType>(
   value: unknown,
   data: Record<string, unknown>
 ): Promise<OutputType> {

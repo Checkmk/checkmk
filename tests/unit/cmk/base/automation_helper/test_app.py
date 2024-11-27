@@ -13,17 +13,17 @@ from cmk.base.automations import AutomationExitCode
 
 
 class DummyAutomationEngineSuccess:
-    def execute(self, cmd: str, args: list[str]) -> AutomationExitCode:  # noqa: ARG002
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
         return AutomationExitCode.SUCCESS
 
 
 class DummyAutomationEngineFailure:
-    def execute(self, cmd: str, args: list[str]) -> AutomationExitCode:  # noqa: ARG002
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
         raise SystemExit()
 
 
 class DummyAutomationEngineTimeout:
-    def execute(self, cmd: str, args: list[str]) -> AutomationExitCode:  # noqa: ARG002
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
         time.sleep(1)
         return AutomationExitCode.SUCCESS
 

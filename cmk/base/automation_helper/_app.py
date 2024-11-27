@@ -52,7 +52,8 @@ def redirect_stdin(stream: io.StringIO) -> Iterator[None]:
 
 
 class AutomationEngine(Protocol):
-    def execute(self, cmd: str, args: list[str]) -> AutomationExitCode: ...
+    # TODO: remove `reload_config` when automation helper is fully integrated.
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode: ...
 
 
 def get_application(*, engine: AutomationEngine, reload_config: Callable[[], None]) -> FastAPI:
@@ -88,7 +89,8 @@ def get_application(*, engine: AutomationEngine, reload_config: Callable[[], Non
             redirect_stdin(io.StringIO(request.stdin)),
         ):
             try:
-                exit_code = engine.execute(request.name, list(request.args))
+                # TODO: remove `reload_config` when automation helper is fully integrated.
+                exit_code = engine.execute(request.name, list(request.args), reload_config=False)
             except SystemExit:
                 exit_code = AutomationExitCode.SYSTEM_EXIT
 

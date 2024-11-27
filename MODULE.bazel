@@ -67,6 +67,7 @@ use_repo(pip, "cmk_requirements")
 
 # Keep in synch with Pipfile---will work automatically when we drop pipenv
 bazel_dep(name = "protobuf", version = "28.3", repo_name = "com_google_protobuf")
+bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 
 fork_cc_toolchain_config = use_repo_rule("//bazel/toolchains/cc:fork_cc_toolchain_config.bzl", "fork_cc_toolchain_config")
 

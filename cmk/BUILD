@@ -6,6 +6,11 @@ load("@rules_python//python:proto.bzl", "py_proto_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
+# TODO: It would be way better if rules_proto would already support the mypy plugin, see:
+# https://github.com/protocolbuffers/protobuf/issues/10366
+load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
+load("//bazel/rules:proto.bzl", "mypy_compile")
+
 genrule(
     name = "_generate_requirements_in",
     srcs = [
@@ -203,6 +208,30 @@ py_console_script_binary(
     name = "protoc-gen-mypy",
     pkg = requirement("mypy-protobuf"),
     script = "protoc-gen-mypy",
+)
+
+proto_plugin(
+    name = "mypy",
+    outputs = ["{protopath}_pb2.pyi"],
+    tool = ":protoc-gen-mypy",
+)
+
+mypy_compile(
+    name = "mypy_proto_stubs",
+    protos = [
+        "//:config_proto",
+        "//:cycletime_proto",
+        "//:state_proto",
+    ],
+)
+
+filegroup(
+    name = "python_proto_files",
+    srcs = [
+        ":config_proto_pb2",
+        ":mypy_proto_stubs",
+        ":state_proto_pb2",
+    ],
 )
 
 py_proto_library(

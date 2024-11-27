@@ -6,6 +6,8 @@ import time
 from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
+from marshmallow import ValidationError
+
 import cmk.utils.tags
 from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
@@ -1572,8 +1574,9 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return _(
             "Labels allow you to flexibly group your hosts in order to "
             "refer to them later at other places in Checkmk, e.g. in rule "
-            "chains.<br><b>Label format:</b>  key:value<br><br>Checkmk does not "
-            "perform any validation on the labels you use."
+            "chains.<br><b>Label format:</b>  key:value<br><br>Neither the "
+            "key nor the value can contain ‘:’.  CheckMK does not perform "
+            "any other validation on the labels you use."
         )
 
     def show_in_table(self):
@@ -1588,9 +1591,19 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.Dict(
             description=self.help(),
-            keys=fields.String(description="The host label key"),
-            values=fields.String(description="The host label value"),
+            keys=fields.String(description="The host label key", validate=self._validate_label_key),
+            values=fields.String(
+                description="The host label value", validate=self._validate_label_value
+            ),
         )
+
+    def _validate_label_key(self, data: str) -> None:
+        if ":" in data:
+            raise ValidationError(f"Invalid label key: {data!r}")
+
+    def _validate_label_value(self, data: str) -> None:
+        if ":" in data:
+            raise ValidationError(f"Invalid label value: {data!r}")
 
     def filter_matches(self, crit, value, hostname):
         return set(value).issuperset(set(crit))

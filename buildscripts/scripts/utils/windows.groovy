@@ -68,7 +68,7 @@ def build(Map args) {
                     "watest64.exe",
                 ].join(",")] :
             (args.TARGET == "cmk_agent_ctl_no_sign") ? [
-                "packages/host/cmk-agent-ctl",
+                "packages/cmk-agent-ctl",
                 "call run.cmd --all",
                 ""] :
             (args.TARGET == "mk_sql_no_sign") ? [

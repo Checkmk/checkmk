@@ -111,7 +111,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
@@ -120,7 +120,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/\\|^packages/host/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"

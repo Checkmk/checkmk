@@ -1,7 +1,6 @@
 [package]
 name = "mk-sql"
 version = "0.1.0"
-workspace = ".."
 edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

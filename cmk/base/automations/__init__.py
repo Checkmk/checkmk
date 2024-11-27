@@ -122,7 +122,7 @@ class Automations:
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
-    def _raise_automation_timeout(self, signum: int, stackframe: FrameType | None) -> NoReturn:
+    def _raise_automation_timeout(self, _signum: int, _stackframe: FrameType | None) -> NoReturn:
         raise MKTimeout("Action timed out.")
 
 

@@ -171,7 +171,7 @@ def discover_oracle_instance_uptime(section: Section) -> DiscoveryResult:
     yield from (
         Service(item=item)
         for item, data in section.items()
-        if isinstance(data, Instance) and data.up_seconds is not None
+        if isinstance(data, Instance) and data.up_seconds is not None and data.up_seconds != -1
     )
 
 

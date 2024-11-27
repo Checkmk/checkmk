@@ -14,6 +14,7 @@ from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.agent_based.v2 import CheckResult, InventoryResult, Result, Service, State, TableRow
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData
+from cmk.plugins.oracle.agent_based import oracle_instance_check
 from cmk.plugins.oracle.agent_based.oracle_instance_inventory import inventory_oracle_instance
 from cmk.plugins.oracle.agent_based.oracle_instance_section import parse_oracle_instance
 
@@ -775,3 +776,12 @@ def test_inv_oracle_instance_multiline() -> None:
     assert sort_inventory_result(
         inventory_oracle_instance(parse_oracle_instance(lines))
     ) == sort_inventory_result(expected_data)
+
+
+def test_discover_template_database_negative_uptime():
+    # SUP-21457
+    instance_line = "OOOOOOOO|19.17.0.0.0|OPEN|ALLOWED|STARTED|111111|2222222222|ARCHIVELOG|PRIMARY|NO|OOOOOOOO|333333333333|TRUE|3|TTTT|4444444444|MOUNTED||5555555555|ENABLED|-1|6666|HHHHHHHH"
+    string_table = [instance_line.split("|")]
+    section = parse_oracle_instance(string_table)
+    items = list(oracle_instance_check.discover_oracle_instance_uptime(section))
+    assert not items

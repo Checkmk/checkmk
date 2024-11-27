@@ -301,7 +301,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         """
         if self._backend is None:
-            raise MKFetcherError("missing backend")
+            raise TypeError("missing backend")
 
         now = int(time.time())
         persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}

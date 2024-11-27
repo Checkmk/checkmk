@@ -5,7 +5,9 @@
 
 from __future__ import annotations
 
+import errno
 import logging
+import os
 from collections.abc import Iterable
 from dataclasses import astuple, dataclass
 from typing import Final, Self, TYPE_CHECKING, TypedDict
@@ -151,7 +153,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get IPMI data")
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         return AgentRawData(b"" + self._sensors_section() + self._firmware_section())
 
@@ -213,7 +215,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _sensors_section(self) -> AgentRawData:
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
@@ -253,7 +255,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _firmware_section(self) -> AgentRawData:
         if self._command is None:
-            raise MKFetcherError("Not connected")
+            raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))
 
         self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:

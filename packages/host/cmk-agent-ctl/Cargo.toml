@@ -5,7 +5,7 @@
 [package]
 name = "cmk-agent-ctl"
 version = "1.0.0"
-edition.workspace = true
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -60,3 +60,6 @@ assert_cmd = { version = "*" }
 lazy_static = { version = "*" }
 predicates = { version = "*" }
 tempfile = { version = "*" }
+
+[profile.release]
+opt-level = "z" # Optimize for size.

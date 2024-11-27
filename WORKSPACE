@@ -88,10 +88,10 @@ crates_repository(
             ),
         ],
     },
-    cargo_lockfile = "//packages/host:Cargo.lock",
-    lockfile = "//packages/host:Cargo.lock.bazel",
+    cargo_lockfile = "//:Cargo.host.lock",
+    lockfile = "//:Cargo.host.lock.bazel",
     manifests = [
-        "//packages/host:Cargo.toml",
+        "//:Cargo.host.toml",
         "//packages/host/cmk-agent-ctl:Cargo.toml",
         "//packages/host/mk-sql:Cargo.toml",
     ],

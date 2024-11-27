@@ -17,7 +17,7 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._log import configure_app_logger
+from ._log import configure_app_logger, configure_watcher_logger
 from ._server import ApplicationServer, ApplicationServerConfig
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
@@ -40,6 +40,7 @@ def main() -> int:
         log_directory.mkdir(exist_ok=True, parents=True)
 
         configure_app_logger(log_directory)
+        configure_watcher_logger(log_directory)
 
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)

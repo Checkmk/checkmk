@@ -129,6 +129,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "typing-extensions",
     "urllib3",
     "vcrpy",
+    "watchdog",
 ]
 
 CRE_PY = glob([

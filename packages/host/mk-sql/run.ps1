@@ -26,7 +26,9 @@ $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
 #set target=x86_64-pc-windows-mscvc # 64 bit not used now
 $cargo_target = "i686-pc-windows-msvc"
-$exe_dir = "target/$cargo_target/release"
+$workspace_dir = Split-Path -Path (Get-Location) -Parent
+$target_dir = Join-Path -Path $workspace_dir -ChildPath "target/$cargo_target"
+$exe_dir = Join-Path -Path $target_dir -ChildPath "release"
 
 $packBuild = $false
 $packClippy = $false
@@ -210,7 +212,6 @@ try {
     }
     if ($packBuild) {
         $cwd = Get-Location
-        $target_dir = Join-Path -Path "$cwd" -ChildPath "target/$cargo_target"
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         &cargo build --release --target $cargo_target

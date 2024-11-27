@@ -93,7 +93,7 @@ crates_repository(
     manifests = [
         "//:Cargo.host.toml",
         "//packages/host/cmk-agent-ctl:Cargo.toml",
-        "//packages/host/mk-sql:Cargo.toml",
+        "//packages/mk-sql:Cargo.toml",
     ],
 )
 

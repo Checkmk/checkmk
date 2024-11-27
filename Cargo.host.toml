@@ -6,5 +6,5 @@
 [workspace]
 members = [
     "packages/host/cmk-agent-ctl",
-    "packages/host/mk-sql",
+    "packages/mk-sql",
 ]

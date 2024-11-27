@@ -131,7 +131,7 @@ def main() {
                         "agents/wnx",
                         "agents/windows",
                         "packages/host/cmk-agent-ctl",
-                        "packages/host/mk-sql"
+                        "packages/mk-sql"
                     ],
                     dest: "artifacts/winagt-build",
                 );

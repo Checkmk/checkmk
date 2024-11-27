@@ -72,7 +72,7 @@ def build(Map args) {
                 "call run.cmd --all",
                 ""] :
             (args.TARGET == "mk_sql_no_sign") ? [
-                "packages/host/mk-sql",
+                "packages/mk-sql",
                 "call run.cmd --all",
                 "mk-sql.exe"] :
             (args.TARGET == "test_unit") ? [

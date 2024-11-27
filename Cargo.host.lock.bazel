@@ -1,5 +1,5 @@
 {
-  "checksum": "86f97a4006e7a150ce0cc9cf60228a6cc338979c32b7a5eda565aa55466daea9",
+  "checksum": "452d51c04bfe9de1ac3653d253936111c41c07cdd7f56feccae89aaad4553af3",
   "crates": {
     "addr2line 0.24.1": {
       "name": "addr2line",
@@ -25673,7 +25673,7 @@
   "binary_crates": [],
   "workspace_members": {
     "cmk-agent-ctl 1.0.0": "packages/host/cmk-agent-ctl",
-    "mk-sql 0.1.0": "packages/host/mk-sql"
+    "mk-sql 0.1.0": "packages/mk-sql"
   },
   "conditions": {
     "aarch64-apple-darwin": [

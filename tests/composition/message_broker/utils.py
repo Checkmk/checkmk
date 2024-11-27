@@ -135,3 +135,33 @@ def assert_message_exchange_not_working(site1: Site, site2: Site) -> None:
     with broker_pong(site2):
         with pytest.raises(Timeout):
             check_broker_ping(site1, site2.id)
+
+
+@contextmanager
+def broker_stopped(site: Site) -> Iterator[None]:
+    """Disable the broker on the site"""
+    if site.omd("status", "rabbitmq") != 0:
+        # broker is not running anyway
+        yield
+        return
+
+    assert site.omd("stop", "rabbitmq") == 0
+    try:
+        yield
+    finally:
+        assert site.omd("start", "rabbitmq") == 0
+
+
+@contextmanager
+def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -> Iterator[None]:
+    """Establish a direct connection between two sites"""
+    connection_id = f"comp_test_p2p_{remote_site.id}_{remote_site_2.id}"
+    try:
+        central_site.openapi.create_broker_connection(
+            connection_id, connecter=remote_site.id, connectee=remote_site_2.id
+        )
+        central_site.openapi.activate_changes_and_wait_for_completion()
+        yield
+    finally:
+        central_site.openapi.delete_broker_connection(connection_id)
+        central_site.openapi.activate_changes_and_wait_for_completion()

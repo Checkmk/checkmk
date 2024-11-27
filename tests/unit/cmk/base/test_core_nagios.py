@@ -421,37 +421,6 @@ def test_dump_precompiled_hostcheck(
     assert host_check.startswith("#!/usr/bin/env python3")
 
 
-def test_dump_precompiled_hostcheck_without_check_mk_service(
-    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
-) -> None:
-    hostname = HostName("localhost")
-    ts = Scenario()
-    ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
-    host_check = core_nagios.dump_precompiled_hostcheck(
-        config_cache,
-        config_path,
-        hostname,
-        plugins=AgentBasedPlugins({}, {}, {}, {}),
-        precompile_mode=core_nagios.PrecompileMode.INSTANT,
-    )
-    assert host_check is None
-
-
-def test_dump_precompiled_hostcheck_not_existing_host(
-    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
-) -> None:
-    config_cache = Scenario().apply(monkeypatch)
-    host_check = core_nagios.dump_precompiled_hostcheck(
-        config_cache,
-        config_path,
-        HostName("not-existing"),
-        plugins=AgentBasedPlugins({}, {}, {}, {}),
-        precompile_mode=core_nagios.PrecompileMode.INSTANT,
-    )
-    assert host_check is None
-
-
 MOCK_PLUGIN = ActiveCheckConfig(
     name="my_active_check",
     parameter_parser=lambda x: x,

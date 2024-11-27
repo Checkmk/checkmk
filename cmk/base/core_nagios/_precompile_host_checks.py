@@ -140,9 +140,6 @@ def precompile_hostchecks(
                 plugins,
                 precompile_mode=precompile_mode,
             )
-            if host_check is None:
-                console.verbose("(no Checkmk checks)")
-                continue
 
             host_check_store.write(
                 config_path, hostname, host_check, precompile_mode=precompile_mode
@@ -162,12 +159,10 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     *,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
-) -> str | None:
+) -> str:
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
         config_cache, hostname, plugins
     )
-    if not locations and not legacy_checks_to_load:
-        return None
 
     # IP addresses
     # FIXME:

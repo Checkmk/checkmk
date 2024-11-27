@@ -547,19 +547,10 @@ def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
         ("cpuinfo", _cpuinfo_proc_parser),
     ]:
         filepath = proc_base_path.joinpath(procfile)
-        try:
-            content = _get_proc_content(filepath)
-        except FileNotFoundError:
-            continue
-
-        hw_info[procfile] = parser(content)
+        if content := _try_to_read(filepath):
+            hw_info[procfile] = parser(content)
 
     return hw_info
-
-
-def _get_proc_content(filepath: Path) -> list[str]:
-    with open(filepath) as f:
-        return f.read().splitlines()
 
 
 def _meminfo_proc_parser(content: list[str]) -> dict[str, str]:
@@ -816,6 +807,17 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         }
 
 
+def _try_to_read(filename: str | Path) -> list[str]:
+    try:
+        with open(filename, "r") as f:
+            content = f.readlines()
+
+    except (PermissionError, FileNotFoundError):
+        return []
+
+    return [l.rstrip() for l in content]
+
+
 class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
@@ -832,17 +834,11 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         cma_infos: dict[str, str | dict[str, str]] = {}
 
-        hw_file = "/etc/cma/hw"
-        if os.path.exists(hw_file):
-            with open(hw_file, "r") as f:
-                cma_infos["hw"] = dict(
-                    [l.replace("'", "").split("=") for l in f.read().splitlines() if "=" in l]
-                )
+        if hw_content := _try_to_read("/etc/cma/hw"):
+            cma_infos["hw"] = dict([l.replace("'", "").split("=") for l in hw_content if "=" in l])
 
-        fw_file = "/ro/usr/share/cma/version"
-        if os.path.exists(fw_file):
-            with open(fw_file, "r") as f:
-                cma_infos["fw"] = f.read().splitlines()[0]
+        if fw_content := _try_to_read("/ro/usr/share/cma/version"):
+            cma_infos["fw"] = fw_content[0]
 
         return cma_infos
 

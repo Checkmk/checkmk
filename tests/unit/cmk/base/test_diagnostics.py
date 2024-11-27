@@ -948,9 +948,8 @@ def test_diagnostics_element_cma_content(tmp_path):
     def open_side_effect(name, options):
         return mock_open(read_data=data_dict.get(name))()
 
-    with patch("builtins.open") as bo, patch("os.path.exists") as ope:
+    with patch("builtins.open") as bo:
         bo.side_effect = open_side_effect
-        ope.return_value = True
 
         diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")

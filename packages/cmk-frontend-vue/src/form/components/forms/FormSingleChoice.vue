@@ -38,6 +38,7 @@ const componentId = useId()
       :disabled="spec.frozen"
       :component-id="componentId"
       :show-filter="props.spec.elements.length > 5"
+      :no-elements-text="props.spec.no_elements_text || ''"
     />
   </div>
   <FormValidation :validation="validation"></FormValidation>

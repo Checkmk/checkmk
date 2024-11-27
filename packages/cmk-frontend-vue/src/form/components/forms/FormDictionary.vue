@@ -159,7 +159,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <table class="dictionary" :class="dictionaryVariants({ variant })">
+  <table
+    v-if="props.spec.elements.length > 0"
+    class="dictionary"
+    :class="dictionaryVariants({ variant })"
+  >
     <tbody>
       <tr v-for="group in getElementsInGroupsFromProps()" :key="`${componentId}.${group.groupKey}`">
         <td class="dictleft">
@@ -213,6 +217,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
       </tr>
     </tbody>
   </table>
+  <span v-else>{{ spec.no_elements_text }}</span>
 </template>
 
 <style scoped>

@@ -18,6 +18,7 @@ const {
   noResultsHint = '',
   disabled = false,
   componentId = '',
+  noElementsText = '',
   options,
   showFilter
 } = defineProps<{
@@ -27,6 +28,7 @@ const {
   noResultsHint?: string
   disabled?: boolean
   componentId?: string
+  noElementsText?: string
 }>()
 
 const vClickOutside = useClickOutside()
@@ -131,23 +133,25 @@ function wrap(index: number, length: number): number {
         if (suggestionsShown) suggestionsShown = false
       }
     "
-    class="cmk_dropdown__container"
+    class="cmk-dropdown"
   >
     <CmkButton
+      v-if="options.length > 0"
       :id="componentId"
       ref="comboboxButtonRef"
       role="combobox"
       :aria-label="selectedOptionTitle"
       :aria-expanded="suggestionsShown"
-      :class="{ 'drop-down': true, disabled: disabled || options.length === 0 }"
+      :class="{ 'cmk-dropdown__button': true, disabled: disabled || options.length === 0 }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
       <div>{{ selectedOptionTitle }}</div>
     </CmkButton>
+    <span v-else>{{ noElementsText }}</span>
     <ul
       v-if="!!suggestionsShown"
-      class="suggestions"
+      class="cmk-dropdown__suggestions"
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"
       @keydown.enter="keyEnter"
@@ -178,12 +182,12 @@ function wrap(index: number, length: number): number {
 </template>
 
 <style scoped>
-.cmk_dropdown__container {
+.cmk-dropdown {
   display: inline-block;
   position: relative;
 }
 
-.drop-down {
+.cmk-dropdown__button {
   cursor: pointer;
   background-color: var(--default-form-element-bg-color);
   margin: 0;
@@ -208,7 +212,7 @@ function wrap(index: number, length: number): number {
   }
 }
 
-.suggestions {
+.cmk-dropdown__suggestions {
   position: absolute;
   z-index: 1;
   color: var(--font-color);

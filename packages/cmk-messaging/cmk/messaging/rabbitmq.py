@@ -76,12 +76,7 @@ class ShovelValue(BaseModel):
 
     @classmethod
     def from_kwargs(cls, *, src_queue: str, src_uri: str, dest_uri: str) -> Self:
-        # centralized suppression.
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
-        return cls(  # type: ignore[call-arg]
-            src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri
-        )
+        return cls(src_queue=src_queue, src_uri=src_uri, dest_uri=dest_uri)
 
 
 class Shovel(BaseModel, frozen=True):

@@ -37,7 +37,6 @@ PACKAGES := \
     rrdtool \
     lcab \
     msitools \
-    net-snmp \
     apache-omd \
     xinetd \
     mod_fcgid \

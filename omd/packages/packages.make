@@ -30,6 +30,8 @@ DEPS_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/deps_install_bazel'
 intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
 deps_install_bazel: $(DEPS_INSTALL_BAZEL)
 
+NET_SNMP_PYTHONPATH := $(DESTDIR)$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages
+
 $(INTERMEDIATE_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
@@ -79,6 +81,13 @@ $(DEPS_INSTALL_BAZEL):
 	    -s "$(DESTDIR)$(OMD_ROOT)/lib/python3/" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/python3/cmc_proto"; \
 	fi
+
+	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(NET_SNMP_PYTHONPATH)/" \
+	    -o 0 -o 1 -o 2 -j0 \
+	    "$(NET_SNMP_PYTHONPATH)/netsnmp/"
 
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
@@ -221,7 +230,6 @@ include \
     packages/Python/Python.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
-    packages/net-snmp/net-snmp.make \
     packages/mod_wsgi/mod_wsgi.make \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \

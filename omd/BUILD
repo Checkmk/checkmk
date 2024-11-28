@@ -4,7 +4,6 @@ pkg_tar(
     name = "intermediate_install",
     srcs = [
         "//omd/packages/Python:python_files_with_prefix_pkg",
-        "//omd/packages/net-snmp:net-snmp_files_with_prefix_pkg",
         "//omd/packages/openssl:openssl_files_with_prefix_pkg",
         "//omd/packages/protobuf",
         "//omd/packages/rrdtool:rrdtool_perl_bindings_files",
@@ -42,7 +41,10 @@ srcs = {
 
 [pkg_tar(
     name = "deps_install_" + edition,
-    srcs = ["//omd/packages/freetds:freetds_pkg"] + srcs[edition],
+    srcs = [
+        "//omd/packages/freetds:freetds_pkg",
+        "//omd/packages/net-snmp:net-snmp_files_pkg",
+    ] + srcs[edition],
     extension = "tar.gz",
 ) for edition in [
     "cre",

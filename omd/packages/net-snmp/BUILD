@@ -71,22 +71,3 @@ pkg_tar(
     package_file_name = "net-snmp.tar",
     visibility = ["//visibility:public"],
 )
-
-# only necessary for intermediate install
-# can be removed once that is obsolete
-pkg_filegroup(
-    name = "net-snmp_files_with_prefix_pkg",
-    srcs = [
-        ":net-snmp_bin_pkg",
-        ":net-snmp_rest_pkg",
-    ],
-    prefix = "net-snmp",
-    visibility = ["//visibility:public"],
-)
-
-pkg_tar(
-    name = "net-snmp_with_prefix_tar",
-    srcs = [":net-snmp_files_with_prefix_pkg"],
-    package_file_name = "net-snmp_with_prefix.tar",
-    visibility = ["//visibility:public"],
-)

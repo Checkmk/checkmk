@@ -200,7 +200,6 @@ include \
     packages/xinetd/xinetd.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
-    packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
     packages/cpp-libs/cpp-libs.make \

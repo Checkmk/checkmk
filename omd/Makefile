@@ -32,7 +32,6 @@ PACKAGES := \
     cpp-libs \
     perl-modules \
     Python \
-    freetds \
     protobuf \
     python3-modules \
     rrdtool \

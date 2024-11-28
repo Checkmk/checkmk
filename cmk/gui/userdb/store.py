@@ -54,7 +54,7 @@ from cmk.crypto.password import Password
 from ._connections import active_connections, get_connection
 from ._connector import UserConnector
 from ._user_attribute import get_user_attributes
-from ._user_spec import add_internal_attributes, validate_contact_details, validate_users_details
+from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
 
@@ -363,8 +363,8 @@ def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
-def save_users(profiles: Users, now: datetime, skip_validation: bool = False) -> None:
-    write_contacts_and_users_file(profiles, skip_validation=skip_validation)
+def save_users(profiles: Users, now: datetime) -> None:
+    write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
     hook_save(profiles)
@@ -506,7 +506,8 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 
 def write_contacts_and_users_file(
-    profiles: Users, custom_default_config_dir: str | None = None, skip_validation: bool = False
+    profiles: Users,
+    custom_default_config_dir: str | None = None,
 ) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
@@ -558,10 +559,6 @@ def write_contacts_and_users_file(
             for p, val in profile.items()
             if p in multisite_keys or p in multisite_attributes_cache[profile.get("connector")]
         }
-
-    if not skip_validation:
-        validate_users_details(users)
-        validate_contact_details(contacts)
 
     # Checkmk's monitoring contacts
     save_to_mk_file(

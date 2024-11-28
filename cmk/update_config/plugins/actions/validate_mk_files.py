@@ -58,6 +58,7 @@ class ValidateConfigFiles(UpdateAction):
             faulty_configurations.append(result)
 
         # Validate rulesets in folders
+        # No performance impact - only called during cmk-update-config
         rule_validator = TypeAdapter(RuleSpec)  # nosemgrep: type-adapter-detected
         for folder_path, validate_result, has_failure in _validate_folder_ruleset_rules(
             folder_tree().root_folder(), rule_validator
@@ -107,6 +108,7 @@ def _run_and_evaluate_validation(
 
 
 def validate_timeperiods(time_periods: TimeperiodSpecs) -> None:
+    # No performance impact - only called during cmk-update-config
     validator = TypeAdapter(TimeperiodSpecs)  # nosemgrep: type-adapter-detected
     validator.validate_python(time_periods, strict=True)
 

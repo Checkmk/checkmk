@@ -37,9 +37,8 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
-        # Performance impact needs to be investigated (see CMK-20212)
-        # nosemgrep: type-adapter-detected
-        self.validator = TypeAdapter(spec_class)
+        # No performance impact - only called during cmk-update-config
+        self.validator = TypeAdapter(spec_class)  # nosemgrep: type-adapter-detected
 
     def validate(self, raw: object) -> _G:
         try:

@@ -16,18 +16,10 @@ from livestatus import SiteId
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundJobRegistry,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-)
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import request
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -43,17 +35,16 @@ LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
 
 def register(
     automation_command_registry: AutomationCommandRegistry,
-    job_registry: BackgroundJobRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
     cron_job_registry.register(
         CronJob(
             name="execute_sync_remote_sites",
-            callable=execute_sync_remote_sites,
+            callable=_execute_sync_remote_sites,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
-    job_registry.register(SyncRemoteSitesBackgroundJob)
 
     automation_command_registry.register(AutomationSyncRemoteSites)
     automation_command_registry.register(AutomationClearSiteChanges)
@@ -131,15 +122,8 @@ def _get_last_audit_log_timestamps_path() -> Path:
     return wato_var_dir() / "log" / "last_audit_log_timestamps"
 
 
-class SyncRemoteSitesBackgroundJob(BackgroundJob):
-    job_prefix = "sync_remote_sites"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Sync remote site changes and audit log")
-
+class SyncRemoteSitesJob:
     def __init__(self) -> None:
-        super().__init__(self.job_prefix)
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(
             self._last_audit_log_timestamps_path
@@ -150,11 +134,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         """Some basic preliminary check to decide quickly whether to start the job"""
         return bool(wato_slave_sites())
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            self._execute(job_interface)
-
-    def _execute(self, job_interface: BackgroundProcessInterface) -> None:
+    def do_execute(self) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
             prev_last_timestamps = self._last_audit_log_timestamps_store.load()
 
@@ -166,9 +146,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         ) = self._get_remote_changes(prev_last_timestamps)
 
         if failed_sites:
-            job_interface.send_progress_update(
-                _("Failed to get changes from sites: %s.") % ", ".join(sorted(failed_sites))
-            )
+            logger.error("Failed to get changes from sites: %s.", ", ".join(sorted(failed_sites)))
 
         audit_logs_synced_sites = (
             self._store_audit_logs(last_audit_logs) if last_audit_logs else None
@@ -186,11 +164,11 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         with store.locked(self._last_audit_log_timestamps_path):
             self._last_audit_log_timestamps_store.write(last_timestamps)
 
-        job_interface.send_result_message(
+        logger.info(
             self._get_result_message(last_audit_logs, audit_logs_synced_sites, "audit logs")
         )
 
-        job_interface.send_result_message(
+        logger.info(
             self._get_result_message(last_site_changes, site_changes_synced_sites, "site changes")
         )
 
@@ -296,12 +274,12 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         change_name: str,
     ) -> str:
         if not last_changes or not synced_remote_sites:
-            return _("No remote %s processed.") % change_name
+            return "No remote %s processed." % change_name
 
-        return _("Successfully got %s from sites: %s<br>%s") % (
+        return "Successfully got %s from sites: %s\n%s" % (
             change_name,
             ", ".join(sorted(synced_remote_sites)),
-            "<br>".join(
+            "\n".join(
                 [
                     f"{site_id}: {len(changes)}"
                     for site_id, changes in sorted(
@@ -313,22 +291,12 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         )
 
 
-def execute_sync_remote_sites() -> None:
+def _execute_sync_remote_sites() -> None:
     if is_wato_slave_site():
         return
 
-    job = SyncRemoteSitesBackgroundJob()
-
-    if not job.shall_start():
+    if not wato_slave_sites():
         logger.debug("Job shall not start")
         return
 
-    job.start(
-        job.do_execute,
-        InitialStatusArgs(
-            title=SyncRemoteSitesBackgroundJob.gui_title(),
-            lock_wato=False,
-            stoppable=False,
-            user=str(user.id) if user.id else None,
-        ),
-    )
+    SyncRemoteSitesJob().do_execute()

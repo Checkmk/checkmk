@@ -140,7 +140,7 @@ def register(
             validate_move_subfolder_to=lambda f, t: None,
         )
     )
-    _sync_remote_sites.register(automation_command_registry, job_registry, cron_job_registry)
+    _sync_remote_sites.register(automation_command_registry, cron_job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
     automation_command_registry.register(PushUserProfilesToSite)

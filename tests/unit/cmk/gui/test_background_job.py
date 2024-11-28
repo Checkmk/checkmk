@@ -60,7 +60,6 @@ def test_registered_background_jobs() -> None:
         "SearchIndexBackgroundJob",
         "SpecGeneratorBackgroundJob",
         "DiscoveredHostLabelSyncJob",
-        "SyncRemoteSitesBackgroundJob",
         "HostRemovalBackgroundJob",
         "AutodiscoveryBackgroundJob",
     ]

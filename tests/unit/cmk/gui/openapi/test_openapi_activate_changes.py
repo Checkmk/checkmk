@@ -57,8 +57,8 @@ def test_activate_changes(
     clients.HostConfig.create(host_name="foobar", folder="/")
 
     monkeypatch.setattr(
-        activate_changes,
-        activate_changes._reload_rabbitmq_when_changed.__name__,  # pylint: disable=protected-access
+        activate_changes.rabbitmq,  # type: ignore[attr-defined]
+        "update_and_activate_rabbitmq_definitions",
         lambda *args, **kwargs: None,
     )
 
@@ -145,7 +145,7 @@ def test_list_activate_changes_star_etag(
         "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
     )
     restart_rabbitmq_when_changed = mocker.patch(
-        f"{activate_changes.__name__}.{activate_changes._reload_rabbitmq_when_changed.__name__}",  # pylint: disable=protected-access
+        "cmk.gui.watolib.activate_changes.rabbitmq.update_and_activate_rabbitmq_definitions",
     )
     with reset_registries([activate_changes.activation_features_registry]):
         orig_features = activate_changes.activation_features_registry[str(edition(paths.omd_root))]
@@ -181,7 +181,7 @@ def test_list_activate_changes_valid_etag(
         "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
     )
     restart_rabbitmq_when_changed = mocker.patch(
-        f"{activate_changes.__name__}.{activate_changes._reload_rabbitmq_when_changed.__name__}"  # pylint: disable=protected-access
+        "cmk.gui.watolib.activate_changes.rabbitmq.update_and_activate_rabbitmq_definitions",
     )
     with reset_registries([activate_changes.activation_features_registry]):
         orig_features = activate_changes.activation_features_registry[str(edition(paths.omd_root))]

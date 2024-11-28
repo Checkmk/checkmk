@@ -52,6 +52,7 @@ ignore = [
 # Explicit re-exports is fine in __init__.py, still a code smell elsewhere.
 "__init__.py" = ["PLC0414"]
 "packages/cmk-agent-based/cmk/*" = ["PLR2004"]
+"cmk/*" = ["A", "ARG", "RUF100", "UP", "SLF"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

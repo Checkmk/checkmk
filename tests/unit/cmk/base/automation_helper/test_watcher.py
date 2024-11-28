@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Final
+import time
+from pathlib import Path
+from typing import ContextManager, Final
 
 import pytest
 from watchdog.events import (
@@ -17,7 +19,11 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
-from cmk.base.automation_helper._watcher import AutomationWatcherHandler
+from cmk.base.automation_helper._watcher import (
+    AutomationWatcherHandler,
+    Schedule,
+    start_automation_watcher_observer,
+)
 
 MK_PATTERN: Final = "*.mk"
 MK_FILE: Final = "foo.mk"
@@ -33,6 +39,85 @@ def get_file_watcher_handler() -> AutomationWatcherHandler:
 @pytest.fixture(scope="function", name="directory_watcher_handler")
 def get_directory_watcher_handler() -> AutomationWatcherHandler:
     return AutomationWatcherHandler(patterns=[DIRECTORY], ignore_directories=False)
+
+
+@pytest.fixture(scope="function", name="target_directory")
+def get_target_directory(tmp_path: Path) -> Path:
+    target_directory = tmp_path / DIRECTORY
+    target_directory.mkdir(parents=True)
+    return target_directory
+
+
+@pytest.fixture(scope="function", name="target_file")
+def get_target_file(target_directory: Path) -> Path:
+    return target_directory / MK_FILE
+
+
+@pytest.fixture(scope="function", name="observer")
+def get_observer(target_directory: Path) -> ContextManager:
+    schedules: list[Schedule] = [
+        Schedule(ignore_directories=True, recursive=True, patterns=[MK_PATTERN]),
+        Schedule(ignore_directories=True, recursive=True, patterns=[TXT_FILE]),
+    ]
+    return start_automation_watcher_observer(target_directory, schedules)
+
+
+def wait_for_observer_log_output(
+    log: pytest.LogCaptureFixture, interval: float = 0.001, tries: int = 100
+) -> str:
+    output = ""
+    while tries and not (output := log.text):
+        tries -= 1
+        time.sleep(interval)
+    return output
+
+
+def test_observer_handles_created_mk_file(
+    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_file: Path
+) -> None:
+    with caplog.at_level(logging.INFO):
+        with observer:
+            target_file.touch()
+            log_output = wait_for_observer_log_output(caplog)
+
+    assert "foo.mk (created)" in log_output
+
+
+def test_observer_handles_modified_mk_file(
+    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_file: Path
+) -> None:
+    target_file.touch()
+
+    with caplog.at_level(logging.INFO):
+        with observer:
+            target_file.write_bytes(b"hello")
+            log_output = wait_for_observer_log_output(caplog)
+
+    assert "foo.mk (modified)" in log_output
+
+
+def test_observer_handles_deleted_mk_file(
+    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_file: Path
+) -> None:
+    target_file.touch()
+
+    with caplog.at_level(logging.INFO):
+        with observer:
+            target_file.unlink()
+            log_output = wait_for_observer_log_output(caplog)
+
+    assert "foo.mk (deleted)" in log_output
+
+
+def test_observer_also_handles_txt_files(
+    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_directory: Path
+) -> None:
+    with caplog.at_level(logging.INFO):
+        with observer:
+            (target_directory / TXT_FILE).touch()
+            log_output = wait_for_observer_log_output(caplog)
+
+    assert "foo.txt (created)" in log_output
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "3267f3091d31a19c7c2b0357f1bdf3638e3e4d11b68d9514f793934ac80d55e3",
+  "moduleFileHash": "a186b9ab4034f845731395cb9846ffe32b99ae3a19a4dc98296dc882bd89c8b8",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -176,7 +176,7 @@
         "rules_cc": "rules_cc@0.0.9",
         "rules_rust": "rules_rust@0.49.3",
         "rules_python": "rules_python@0.37.0",
-        "rules_uv": "rules_uv@0.35.0",
+        "rules_uv": "rules_uv@0.42.0",
         "rules_mypy": "rules_mypy@_",
         "aspect_rules_py": "aspect_rules_py@_",
         "aspect_rules_lint": "aspect_rules_lint@1.0.2",
@@ -665,10 +665,10 @@
         }
       }
     },
-    "rules_uv@0.35.0": {
+    "rules_uv@0.42.0": {
       "name": "rules_uv",
-      "version": "0.35.0",
-      "key": "rules_uv@0.35.0",
+      "version": "0.42.0",
+      "key": "rules_uv@0.42.0",
       "repoName": "rules_uv",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
@@ -676,9 +676,9 @@
         {
           "extensionBzlFile": "@rules_multitool//multitool:extension.bzl",
           "extensionName": "multitool",
-          "usingModule": "rules_uv@0.35.0",
+          "usingModule": "rules_uv@0.42.0",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_uv/0.35.0/MODULE.bazel",
+            "file": "https://bcr.bazel.build/modules/rules_uv/0.42.0/MODULE.bazel",
             "line": 15,
             "column": 26
           },
@@ -694,7 +694,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/rules_uv/0.35.0/MODULE.bazel",
+                "file": "https://bcr.bazel.build/modules/rules_uv/0.42.0/MODULE.bazel",
                 "line": 16,
                 "column": 14
               }
@@ -718,10 +718,10 @@
         "ruleClassName": "http_archive",
         "attributes": {
           "urls": [
-            "https://github.com/theoremlp/rules_uv/releases/download/v0.35.0/rules_uv-0.35.0.tar.gz"
+            "https://github.com/theoremlp/rules_uv/releases/download/v0.42.0/rules_uv-0.42.0.tar.gz"
           ],
-          "integrity": "sha256-/Nm6ozYCVEWkTZFb9mcCE8wQDA+XNX2Kj9q7VIqtlBI=",
-          "strip_prefix": "rules_uv-0.35.0",
+          "integrity": "sha256-UqSv85vnPZM28/TYSZZTcODpxiTYK90aFM75HqCeiyI=",
+          "strip_prefix": "rules_uv-0.42.0",
           "remote_patches": {},
           "remote_patch_strip": 0
         }
@@ -809,7 +809,7 @@
         "buildifier_prebuilt": "buildifier_prebuilt@7.3.1",
         "platforms": "platforms@0.0.10",
         "rules_python": "rules_python@0.37.0",
-        "rules_uv": "rules_uv@0.35.0",
+        "rules_uv": "rules_uv@0.42.0",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       }

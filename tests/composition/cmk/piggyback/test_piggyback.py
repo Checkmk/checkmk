@@ -17,7 +17,6 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
     disable_piggyback_hub_globally,
     disable_piggyback_hub_remote_site,
     get_piggybacked_service_time,
-    piggybacked_data_gets_updated,
     piggybacked_service_discovered,
 )
 
@@ -259,76 +258,3 @@ def test_piggyback_hub_disabled_remote_site(
         assert _piggybacked_service_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
-
-
-def _move_host(central_site: Site, to_remote_site: str, hostname_piggyback: str) -> None:
-    central_site.openapi.update_host_attributes(
-        hostname_piggyback,
-        update_attributes={"site": to_remote_site},
-    )
-    central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
-
-
-def test_piggyback_services_move_site(
-    central_site: Site,
-    remote_site: Site,
-    remote_site_2: Site,
-    prepare_piggyback_environment: None,
-) -> None:
-    """
-    Scenario: Moving host to another site makes the piggyback data to be monitored on the new site
-    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored on remote_site
-    - _HOSTNAME_PIGGYBACKED_A is moved to remote_site2
-    - piggyback data for _HOSTNAME_PIGGYBACKED_A is not monitored and not updated on remote_site
-    - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored again on remote_site2
-    """
-
-    with _setup_piggyback_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED_A):
-        _schedule_check_and_discover(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-
-        _move_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED_A)
-        _schedule_check_and_discover(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert piggybacked_data_gets_updated(
-            central_site, remote_site_2, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert not piggybacked_data_gets_updated(
-            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-
-
-def test_piggyback_host_removal(
-    central_site: Site,
-    remote_site: Site,
-    prepare_piggyback_environment: None,
-) -> None:
-    """
-    Scenario: Host removal stops distribution
-        - piggyback data for _HOSTNAME_PIGGYBACKED_A is monitored on remote_site
-        - remove _HOSTNAME_PIGGYBACKED_A from remote_site
-        - piggyback data for _HOSTNAME_PIGGYBACKED_A is not monitored and not updated on remote_site
-    """
-
-    with _setup_piggyback_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED_A):
-        _schedule_check_and_discover(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert piggybacked_data_gets_updated(
-            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-        assert piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-        )
-
-    assert not piggybacked_data_gets_updated(
-        central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
-    )

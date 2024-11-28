@@ -372,22 +372,6 @@ class CMKOpenApiSession(requests.Session):
             response.headers["Etag"],
         )
 
-    def update_host_attributes(
-        self,
-        host_name: str,
-        update_attributes: Mapping[str, object],
-    ) -> None:
-        response = self.put(
-            url=f"/objects/host_config/{host_name}",
-            json={"update_attributes": update_attributes},
-            headers={
-                "If-Match": "*",
-                "Content-Type": "application/json",
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
     def get_hosts(self) -> list[dict[str, Any]]:
         response = self.get(
             "/domain-types/host_config/collections/all", params={"include_links": False}

@@ -388,15 +388,18 @@ def get_url_raw(
     }
     headers_.update(add_headers or {})
 
-    response = requests.post(
-        url,
-        data=data,
-        verify=not insecure,
-        auth=auth,
-        files=files,
-        timeout=timeout,
-        headers=headers_,
-    )
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            verify=not insecure,
+            auth=auth,
+            files=files,
+            timeout=timeout,
+            headers=headers_,
+        )
+    except ConnectionError as e:
+        raise MKUserError(None, _("Could not connect to the remote site (%s)") % e)
 
     response.encoding = "utf-8"  # Always decode with utf-8
 

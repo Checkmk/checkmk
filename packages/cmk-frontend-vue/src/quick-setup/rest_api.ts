@@ -35,33 +35,46 @@ const EDIT_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/a
 /**
  * Returns a record representation of an error to be shown to the user
  * @param err unknown
- * @returns ValidationError | GeneralError
+ * @returns ValidationError | AllStagesValidationError | GeneralError
  */
 
 const processError = (err: unknown): ValidationError | AllStagesValidationError | GeneralError => {
   if (!axios.isAxiosError(err)) {
-    return { type: 'general', general_error: 'Unknown error has occurred' } as GeneralError
+    return {
+      type: 'general',
+      general_error: 'Unknown error has occurred'
+    }
   }
 
   if (err.response?.status === 400) {
     if (err.response.data?.errors) {
+      const responseErrors = err.response.data?.errors
+      const responseDetail = err.response.data?.detail
       return {
         type: 'validation',
-        ...(err.response.data?.errors || err.response.data?.detail)
-      } as ValidationError
+        formspec_errors:
+          responseErrors?.formspec_errors || responseDetail?.formspec_errors || undefined,
+        stage_errors: responseErrors?.stage_errors || responseDetail?.stage_errors || undefined
+      }
     } else if (err.response.data?.all_stage_errors) {
       return {
         type: 'validation_all_stages',
-        all_stage_errors: err.response.data.all_stage_errors
-      } as AllStagesValidationError
+        all_stage_errors: err.response.data.all_stage_errors,
+        formspec_errors: undefined,
+        stage_errors: undefined
+      }
     } else {
-      return { type: 'validation', stage_errors: err.response.data?.detail } as ValidationError
+      return {
+        type: 'validation',
+        stage_errors: err.response.data?.detail,
+        formspec_errors: undefined
+      }
     }
   } else {
     return {
       type: 'general',
       general_error: err?.response?.data?.title || err.message
-    } as GeneralError
+    }
   }
 }
 

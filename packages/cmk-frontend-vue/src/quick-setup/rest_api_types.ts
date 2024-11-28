@@ -110,18 +110,44 @@ export interface RestApiError {
   type: string
 }
 
-export interface ValidationError extends RestApiError, QsStageValidationError {
+type OrUndefined<T> = {
+  // similar to `Partial`, but explicitly undefined.
+  [key in keyof T]: T[key] | undefined
+}
+
+export interface ValidationError extends RestApiError, OrUndefined<QsStageValidationError> {
   type: 'validation'
 }
 
-export interface AllStagesValidationError extends RestApiError, QsStageValidationError {
+export interface AllStagesValidationError
+  extends RestApiError,
+    OrUndefined<QsStageValidationError> {
   type: 'validation_all_stages'
-  all_stage_errors: QsStageValidationIndexError[]
+  all_stage_errors: QsStageValidationIndexError[] | undefined
 }
 
 export interface GeneralError extends RestApiError {
   type: 'general'
   general_error: string
+}
+
+export const isGeneralError = (value: unknown): value is GeneralError => {
+  return typeof value === 'object' && value !== null && 'type' in value && value.type === 'general'
+}
+
+export const isAllStagesValidationError = (value: unknown): value is AllStagesValidationError => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === 'validation_all_stages'
+  )
+}
+
+export const isValidationError = (value: unknown): value is ValidationError => {
+  return (
+    typeof value === 'object' && value !== null && 'type' in value && value.type === 'validation'
+  )
 }
 
 /**

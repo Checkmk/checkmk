@@ -24,14 +24,8 @@ import type {
   QuickSetupStageSpec
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import type {
-  QSInitializationResponse,
-  ValidationError,
-  GeneralError,
-  RestApiError,
-  QSStageResponse,
-  AllStagesValidationError
-} from './rest_api_types'
+import type { QSInitializationResponse, QSStageResponse } from './rest_api_types'
+import { isValidationError, isGeneralError, isAllStagesValidationError } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
   StageData,
@@ -101,8 +95,8 @@ const nextStage = async (actionId: string | null = null) => {
 
   try {
     result = await validateStage(props.quick_setup_id, userInput, actionId, props.objectId)
-  } catch (err) {
-    handleError(err as RestApiError)
+  } catch (err: unknown) {
+    handleError(err)
   }
 
   loading.value = false
@@ -306,9 +300,9 @@ const save = async (buttonId: string) => {
       )
       window.location.href = redirectUrl
     }
-  } catch (err) {
+  } catch (err: unknown) {
     loading.value = false
-    handleError(err as RestApiError)
+    handleError(err)
   }
 }
 
@@ -363,16 +357,16 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 //
 
-const handleError = (err: RestApiError) => {
-  if (err.type === 'general') {
+const handleError = (err: unknown) => {
+  if (isGeneralError(err)) {
     globalError.value = `An error occurred while trying to proceed to the next step.
-The underlying call raised the following error: ${(err as GeneralError).general_error}
+The underlying call raised the following error: ${err.general_error}
 Please try again to confirm this is not a one-time occurrence.
 Please verify the logs if this error persists.`
-  } else if (err.type === 'validation_all_stages') {
-    const errs = err as AllStagesValidationError
+  } else if (isAllStagesValidationError(err)) {
+    const errs = err
 
-    for (const stageError of errs.all_stage_errors) {
+    for (const stageError of errs.all_stage_errors || []) {
       const stageIndex =
         typeof stageError.stage_index !== 'undefined' && stageError.stage_index !== null
           ? stageError.stage_index
@@ -381,13 +375,14 @@ Please verify the logs if this error persists.`
       stages.value[stageIndex]!.errors = stageError.stage_errors
       stages.value[stageIndex]!.form_spec_errors = stageError.formspec_errors
     }
+  } else if (isValidationError(err)) {
+    stages.value[quickSetupHook.stage.value]!.errors = err.stage_errors || []
+    stages.value[quickSetupHook.stage.value]!.form_spec_errors = err.formspec_errors || {}
   } else {
-    stages.value[quickSetupHook.stage.value]!.errors = (err as ValidationError).stage_errors
-    stages.value[quickSetupHook.stage.value]!.form_spec_errors = (
-      err as ValidationError
-    ).formspec_errors
+    throw new Error('Can not handle Error')
   }
 }
+
 const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
   'quick_setup_wizard_mode',
   props.mode

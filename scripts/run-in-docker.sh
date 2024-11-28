@@ -127,6 +127,7 @@ docker run -a stdout -a stderr \
     --rm \
     --name $CONTAINER_NAME \
     ${CPU_LIMITATION} \
+    --ulimit nofile=8192:8192 \
     ${TERMINAL_FLAG} \
     --init \
     -u "$(id -u):$(id -g)" \

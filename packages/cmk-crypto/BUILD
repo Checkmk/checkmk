@@ -1,4 +1,5 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -30,6 +31,32 @@ py_library(
         requirement("cryptography"),
         requirement("python-dateutil"),
     ],
+)
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    main = "__test__.py",
+    deps = [
+        ":__test__",
+        ":cmk-crypto",
+        requirement("cryptography"),
+        requirement("pytest"),
+        requirement("time-machine"),
+    ],
+)
+
+format_multirun(
+    name = "format",
+    python = "@aspect_rules_lint//format:ruff",
 )
 
 py_wheel(

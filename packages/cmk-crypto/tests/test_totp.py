@@ -31,7 +31,7 @@ SECRET = b"12345678901234567890"
 def test_hotp(count: int, hash_object: str, otp: int) -> None:
     totp = TOTP(SECRET, TotpVersion.ONE)
 
-    hmac_sha1 = totp._hmac_hash(count)  # pylint: disable=protected-access
+    hmac_sha1 = totp._hmac_hash(count)  # noqa: SLF001
     hotp = totp.generate_hotp(hmac_sha1)
 
     assert hmac_sha1.hexdigest() == hash_object

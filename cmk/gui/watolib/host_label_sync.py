@@ -23,15 +23,12 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
-from cmk.gui import log
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -105,6 +102,7 @@ def register(cron_job_registry: CronJobRegistry) -> None:
             name="execute_host_label_sync_job",
             callable=execute_host_label_sync_job,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
 
@@ -129,42 +127,20 @@ def execute_host_label_sync_job() -> None:
     if not has_wato_slave_sites():
         return
 
-    job = DiscoveredHostLabelSyncJob()
-
-    if (
-        result := job.start(
-            job.do_sync,
-            InitialStatusArgs(
-                title=DiscoveredHostLabelSyncJob.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    ).is_error():
-        logger.error(str(result.error))
+    DiscoveredHostLabelSyncJob().do_sync()
 
 
-class DiscoveredHostLabelSyncJob(BackgroundJob):
+class DiscoveredHostLabelSyncJob:
     """This job synchronizes the discovered host labels from remote sites to the central site
 
     Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 
-    job_prefix = "discovered_host_label_sync"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Discovered host label synchronization")
-
-    def __init__(self) -> None:
-        super().__init__(self.job_prefix)
-
-    def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
-        with job_interface.gui_context():
-            job_interface.send_progress_update(_("Synchronization started..."))
-            self._execute_sync()
-            job_interface.send_result_message(_("The synchronization finished."))
+    def do_sync(self) -> None:
+        logger.info("Synchronization started...")
+        self._execute_sync()
+        logger.info("The synchronization finished.")
 
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
@@ -192,7 +168,6 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
             SiteRequest,
         ],
     ) -> SiteResult:
-        log.init_logging()  # NOTE: We run in a subprocess!
         return _execute_site_sync(*args)
 
     def _process_site_sync_results(

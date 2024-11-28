@@ -60,7 +60,7 @@ from .config_hostname import config_hostname_autocompleter
 from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
-from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
+from .host_label_sync import AutomationDiscoveredHostLabelSync
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
@@ -205,7 +205,6 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
-    job_registry.register(DiscoveredHostLabelSyncJob)
     job_registry.register(CheckmkAutomationBackgroundJob)
 
 

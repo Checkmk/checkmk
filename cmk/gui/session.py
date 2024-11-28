@@ -178,7 +178,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess["_flashes"] = info.flashes
         return sess
 
-    @tracer.start_as_current_span("CheckmkFileBas.login")
+    @tracer.instrument("CheckmkFileBas.login")
     def login(self, user_obj: LoggedInUser) -> None:
         userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
         self.user = user_obj
@@ -354,7 +354,7 @@ class FileBasedSession(SessionInterface):
         }
         userdb.save_custom_attr(userid, "last_login", last_login_info)
 
-    @tracer.start_as_current_span("FileBasedSession.open_session")
+    @tracer.instrument("FileBasedSession.open_session")
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
@@ -367,7 +367,7 @@ class FileBasedSession(SessionInterface):
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
     # deferred to a later date.
-    @tracer.start_as_current_span("FileBasedSession.save_session")
+    @tracer.instrument("FileBasedSession.save_session")
     def save_session(  # type: ignore[override]  # pylint: disable=redefined-outer-name
         self, app: Flask, session: CheckmkFileBasedSession, response: flask.Response
     ) -> None:

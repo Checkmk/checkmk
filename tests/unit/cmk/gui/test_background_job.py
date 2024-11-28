@@ -415,7 +415,7 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
         )
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
-        with tracer.start_as_current_span("test_tracing_with_background_job"):
+        with tracer.span("test_tracing_with_background_job"):
             status = job.get_status()
             assert status.state == JobStatusStates.INITIALIZED
 
@@ -465,7 +465,7 @@ def init_span_processor_callback(
     provider.add_span_processor(BatchSpanProcessor(JobSpanExporter(span_name_path)))
 
 
-@tracer.start_as_current_span("job_callback")
+@tracer.instrument("job_callback")
 def job_callback(finish_hello_event: Event, job_interface: BackgroundProcessInterface) -> None:
     sys.stdout.write("Hi :-)\n")
     sys.stdout.flush()

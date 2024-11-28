@@ -720,7 +720,7 @@ class SingleSiteConnection(Helpers):
 
     def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
         with (
-            tracer.start_as_current_span(
+            tracer.span(
                 "do_query",
                 kind=trace.SpanKind.CLIENT,
                 attributes={
@@ -916,7 +916,7 @@ class SingleSiteConnection(Helpers):
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
 
-        with tracer.start_as_current_span(
+        with tracer.span(
             "send_command",
             kind=trace.SpanKind.CLIENT,
             attributes={
@@ -1278,9 +1278,7 @@ class MultiSiteConnection(Helpers):
         else:
             connect_to_sites = self.connections
 
-        with tracer.start_as_current_span(
-            "query_parallel", attributes={"cmk.livestatus.query": str(query)}
-        ):
+        with tracer.span("query_parallel", attributes={"cmk.livestatus.query": str(query)}):
             # First send all queries
             retrieve_responses = self._send_queries(
                 query,
@@ -1303,7 +1301,7 @@ class MultiSiteConnection(Helpers):
     ) -> list[tuple[str, trace.Span, ConnectedSite]]:
         retrieve_responses: list[tuple[str, trace.Span, ConnectedSite]] = []
         for connected_site in connect_to_sites:
-            with tracer.start_as_current_span(
+            with tracer.span(
                 f"send_query_to_site[{connected_site.id}]",
                 kind=trace.SpanKind.PRODUCER,
                 attributes={
@@ -1334,7 +1332,7 @@ class MultiSiteConnection(Helpers):
     ) -> list[tuple[ConnectedSite, bytes]]:
         site_responses: list[tuple[ConnectedSite, bytes]] = []
         for str_query, request_span, connected_site in retrieve_responses:
-            with tracer.start_as_current_span(
+            with tracer.span(
                 f"receive_from_site[{connected_site.id}]",
                 kind=trace.SpanKind.CONSUMER,
                 links=[trace.Link(request_span.get_span_context())],

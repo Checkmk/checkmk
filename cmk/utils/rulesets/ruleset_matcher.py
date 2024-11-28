@@ -296,7 +296,7 @@ class RulesetMatcher:
         service_labels: Labels,
         ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> list[TRuleValue]:
-        with tracer.start_as_current_span(
+        with tracer.span(
             "RulesetMatcher_get_checkgroup_ruleset_values",
             attributes={
                 "cmk.host_name": hostname,

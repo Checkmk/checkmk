@@ -66,7 +66,7 @@ def _imports() -> Iterator[str]:
             yield val.__name__
 
 
-@tracer.start_as_current_span("main_modules.load_plugins")
+@tracer.instrument("main_modules.load_plugins")
 def load_plugins() -> None:
     """Loads and initializes main modules and plug-ins into the application
     Only built-in main modules are already imported."""

@@ -242,7 +242,7 @@ def run(
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    with tracer.start_as_current_span("run", attributes={"cmk.command": repr(args_)}):
+    with tracer.span("run", attributes={"cmk.command": repr(args_)}):
         return subprocess.run(args_, check=check, **kwargs)
 
 
@@ -264,7 +264,7 @@ def execute(
 
     kwargs["encoding"] = encoding
 
-    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+    with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.Popen(cmd_, **kwargs)  # pylint: disable=consider-using-with
 
 
@@ -427,7 +427,7 @@ def check_output(
     kwargs["encoding"] = encoding
     kwargs["input"] = input
 
-    with tracer.start_as_current_span("execute", attributes={"cmk.command": repr(cmd_)}):
+    with tracer.span("execute", attributes={"cmk.command": repr(cmd_)}):
         return subprocess.check_output(cmd_, **kwargs)
 
 

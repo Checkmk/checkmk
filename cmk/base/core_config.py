@@ -280,7 +280,7 @@ def do_create_config(
         sys.stdout.flush()
 
     try:
-        with tracer.start_as_current_span(
+        with tracer.span(
             "create_core_config",
             attributes={
                 "cmk.core_config.core": core.name(),
@@ -301,7 +301,7 @@ def do_create_config(
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        with tracer.start_as_current_span("bake_on_restart"):
+        with tracer.span("bake_on_restart"):
             _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
 
 

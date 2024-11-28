@@ -80,7 +80,7 @@ class Modes:
         if handler is None:
             raise TypeError()
 
-        with tracer.start_as_current_span(
+        with tracer.span(
             f"mode[{mode.name()}]",
             attributes={
                 "cmk.base.mode.name": mode.name(),

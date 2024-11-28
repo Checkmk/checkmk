@@ -25,6 +25,7 @@ from ._propagate import (
 from ._propagate import (
     extract_context_from_environment as extract_context_from_environment,
 )
+from ._tracer import Tracer
 
 # Re-export 3rd party names to avoid direct dependencies in the code
 Span = trace.Span
@@ -67,8 +68,9 @@ def init_tracing(
     return provider
 
 
-def get_tracer() -> trace.Tracer:
-    return trace.get_tracer("cmk.trace")
+def get_tracer(name: str | None = None) -> Tracer:
+    t = trace.get_tracer(name if name else "cmk.trace")
+    return Tracer(t)
 
 
 def get_current_tracer_provider() -> TracerProvider:

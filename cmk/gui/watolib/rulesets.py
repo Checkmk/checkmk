@@ -1301,7 +1301,7 @@ class Rule:
         service_labels: Labels,
     ) -> bool:
         """Whether a given host or service/item matches this rule"""
-        with tracer.start_as_current_span(
+        with tracer.span(
             "Rule_matches",
             attributes={
                 "cmk.gui.host_name": hostname,

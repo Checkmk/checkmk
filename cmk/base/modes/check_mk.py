@@ -1709,7 +1709,7 @@ def mode_automation(args: list[str]) -> None:
         log.logger.setLevel(logging.INFO)
 
     name, automation_args = args[0], args[1:]
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"mode_automation[{name}]",
         attributes={
             "cmk.automation.name": name,

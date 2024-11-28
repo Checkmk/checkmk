@@ -146,7 +146,7 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
     ]
 
 
-@tracer.start_as_current_span("run_scheduled_jobs")
+@tracer.instrument()
 def run_scheduled_jobs(
     jobs: Sequence[CronJob],
     job_threads: dict[str, threading.Thread],
@@ -160,7 +160,7 @@ def run_scheduled_jobs(
                 logger.debug("Skipping [%s] as it is already running", job.name)
                 continue
 
-            with tracer.start_as_current_span(
+            with tracer.span(
                 f"run_cron_job[{job.name}]",
                 attributes={
                     "cmk.gui.job_name": job.name,
@@ -201,7 +201,7 @@ def job_thread_main(
 ) -> None:
     try:
         with (
-            tracer.start_as_current_span(
+            tracer.span(
                 f"job_thread_main[{job.name}]",
                 attributes={"cmk.gui.job_name": job.name},
                 links=[origin_span],
@@ -220,7 +220,7 @@ def job_thread_main(
         )
 
 
-@tracer.start_as_current_span("wait_for_job_threads")
+@tracer.instrument()
 def _wait_for_job_threads(job_threads: dict[str, threading.Thread]) -> None:
     logger.debug("Waiting for threads to terminate")
     for thread in job_threads.values():

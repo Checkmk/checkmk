@@ -91,7 +91,7 @@ def create_snapshot_subprocess(
 ) -> None:
     """Entry point of the backup subprocess"""
     context = trace.set_span_in_context(trace.NonRecordingSpan(parent_span_context))
-    with trace.get_tracer().start_as_current_span("create_backup_snapshot", context):
+    with trace.get_tracer().span("create_backup_snapshot", context):
         create_snapshot(comment, created_by, secret, max_snapshots, use_git, debug)
 
 

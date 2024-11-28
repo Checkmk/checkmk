@@ -79,7 +79,7 @@ def call(name: str, *args: Any) -> None:
     if not (registered_hooks := hooks.get(name, [])):
         return
 
-    with tracer.start_as_current_span(f"hook_call[{name}]"):
+    with tracer.span(f"hook_call[{name}]"):
         for hook in registered_hooks:
             try:
                 hook.handler(*args)

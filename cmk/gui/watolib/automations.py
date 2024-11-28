@@ -100,7 +100,7 @@ def check_mk_local_automation_serialized(
     timeout: int | None = None,
     force_cli_interface: bool = False,
 ) -> tuple[Sequence[str], SerializedResult]:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"local_automation[{command}]",
         attributes={"cmk.automation.args": repr(args)},
     ) as span:
@@ -189,7 +189,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"remote_automation[{command}]",
         attributes={
             "cmk.automation.target_site_id": str(site_id),

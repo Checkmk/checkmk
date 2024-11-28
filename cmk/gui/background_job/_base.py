@@ -299,7 +299,7 @@ class BackgroundJob:
             init_span_processor_callback = init_span_processor
 
         with (
-            tracer.start_as_current_span(f"start_background_job[{self._job_id}]") as span,
+            tracer.span(f"start_background_job[{self._job_id}]") as span,
             store.locked(self._job_initializiation_lock),
         ):
             if (

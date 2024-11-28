@@ -1445,8 +1445,8 @@ def load_all_plugins(
     local_checks_dir: Path,
     checks_dir: str,
 ) -> list[str]:
-    with tracer.start_as_current_span("load_legacy_check_plugins"):
-        with tracer.start_as_current_span("discover_legacy_check_plugins"):
+    with tracer.span("load_legacy_check_plugins"):
+        with tracer.span("discover_legacy_check_plugins"):
             filelist = find_plugin_files(str(local_checks_dir), checks_dir)
 
         legacy_errors, sections, checks = load_and_convert_legacy_checks(filelist)
@@ -1460,7 +1460,7 @@ def load_all_plugins(
     return errors + legacy_errors
 
 
-@tracer.start_as_current_span("load_and_convert_legacy_checks")
+@tracer.instrument("load_and_convert_legacy_checks")
 def load_and_convert_legacy_checks(
     filelist: Iterable[str],
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin], Sequence[CheckPlugin]]:

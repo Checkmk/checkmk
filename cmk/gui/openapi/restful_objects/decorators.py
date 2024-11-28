@@ -562,7 +562,7 @@ class Endpoint:
         if path_schema is None:
             return
 
-        with tracer.start_as_current_span("path-parameter-validation"):
+        with tracer.span("path-parameter-validation"):
             try:
                 _params.update(
                     path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
@@ -587,7 +587,7 @@ class Endpoint:
         if query_schema is None:
             return
 
-        with tracer.start_as_current_span("query-parameter-validation"):
+        with tracer.span("query-parameter-validation"):
             try:
                 list_fields = tuple(
                     {k for k, v in query_schema().fields.items() if isinstance(v, ma_fields.List)}
@@ -615,7 +615,7 @@ class Endpoint:
         self, header_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> None:
         if header_schema:
-            with tracer.start_as_current_span("header-parameter-validation"):
+            with tracer.span("header-parameter-validation"):
                 try:
                     _params.update(header_schema().load(dict(request.headers)))
                 except ValidationError as exc:
@@ -653,7 +653,7 @@ class Endpoint:
         content_type, _ = parse_options_header(request.content_type)
 
         if content_type:
-            with tracer.start_as_current_span("request-body-validation"):
+            with tracer.span("request-body-validation"):
                 try:
                     if (body := decode(content_type, request, request_schema)) is not None:
                         _params["body"] = body
@@ -679,7 +679,7 @@ class Endpoint:
     def _validate_response(  # pylint: disable=too-many-branches
         self, response_schema: type[Schema] | None, _params: dict[str, Any]
     ) -> cmk_http.Response:
-        with tracer.start_as_current_span("endpoint-body-call"):
+        with tracer.span("endpoint-body-call"):
             try:
                 response = self.func(_params)
             except ValidationError as exc:
@@ -765,7 +765,7 @@ class Endpoint:
             and response_schema
             and response.data
         ):
-            with tracer.start_as_current_span("response-to-json"):
+            with tracer.span("response-to-json"):
                 try:
                     data = json.loads(response.data.decode("utf-8"))
                 except json.decoder.JSONDecodeError as exc:
@@ -780,7 +780,7 @@ class Endpoint:
                         ),
                     )
 
-            with tracer.start_as_current_span("response-schema-validation"):
+            with tracer.span("response-schema-validation"):
                 try:
                     outbound = response_schema().dump(data)
                 except ValidationError as exc:
@@ -798,7 +798,7 @@ class Endpoint:
                     )
 
             if self.convert_response:
-                with tracer.start_as_current_span("json-to-response"):
+                with tracer.span("json-to-response"):
                     response.set_data(json.dumps(outbound))
         elif response.headers["Content-Type"] == "application/problem+json" and response.data:
             data = response.data.decode("utf-8")

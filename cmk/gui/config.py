@@ -134,7 +134,7 @@ def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, 
             return {"saml2": 50}
 
 
-@tracer.start_as_current_span("config.initialize")
+@tracer.instrument("config.initialize")
 def initialize() -> None:
     load_config()
     log_levels = {

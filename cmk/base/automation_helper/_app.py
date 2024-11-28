@@ -94,7 +94,7 @@ def get_application(
             LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
         with (
-            TRACER.start_as_current_span(
+            TRACER.span(
                 f"automation[{payload.name}]",
                 attributes={
                     "cmk.automation.name": payload.name,

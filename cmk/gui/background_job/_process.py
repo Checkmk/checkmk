@@ -99,7 +99,7 @@ def run_process(job_parameters: JobParameters) -> None:
             logger, job_id, Path(work_dir), lock_wato, is_stoppable, override_job_log_level
         )
 
-        with tracer.start_as_current_span(
+        with tracer.span(
             f"run_process[{span_id}]",
             context=set_span_in_context(INVALID_SPAN),
             attributes={

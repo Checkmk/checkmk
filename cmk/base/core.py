@@ -147,7 +147,7 @@ def do_core_action(
     monitoring_core: Literal["nagios", "cmc"],
     quiet: bool = False,
 ) -> None:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"do_core_action[{action.value}]",
         attributes={
             "cmk.core_config.core": monitoring_core,

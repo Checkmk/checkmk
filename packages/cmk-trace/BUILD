@@ -16,6 +16,7 @@ py_library(
         "cmk/trace/__init__.py",
         "cmk/trace/_config.py",
         "cmk/trace/_propagate.py",
+        "cmk/trace/_tracer.py",
         "cmk/trace/export.py",
         "cmk/trace/logs.py",
     ],

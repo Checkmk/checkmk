@@ -213,7 +213,7 @@ class Site:
 
         assert config_reloaded()
 
-    @tracer.start_as_current_span("Site.restart_core")
+    @tracer.instrument("Site.restart_core")
     def restart_core(self) -> None:
         # Remember the time for the core reload check and wait a second because the program_start
         # is reported as integer and wait_for_core_reloaded() compares with ">".
@@ -222,7 +222,7 @@ class Site:
         self.omd("restart", "core")
         self.wait_for_core_reloaded(before_restart)
 
-    @tracer.start_as_current_span("Site.send_host_check_result")
+    @tracer.instrument("Site.send_host_check_result")
     def send_host_check_result(
         self,
         hostname: str,
@@ -246,7 +246,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.send_service_check_result")
+    @tracer.instrument("Site.send_service_check_result")
     def send_service_check_result(
         self,
         hostname: str,
@@ -273,7 +273,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.schedule_check")
+    @tracer.instrument("Site.schedule_check")
     def schedule_check(
         self,
         hostname: str,
@@ -305,7 +305,7 @@ class Site:
             wait_timeout,
         )
 
-    @tracer.start_as_current_span("Site.reschedule_services")
+    @tracer.instrument("Site.reschedule_services")
     def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
         """Reschedule services in the test-site for a given host until no pending services are
         found."""
@@ -328,7 +328,7 @@ class Site:
             f"\n{pformat(pending_services)}\n"
         )
 
-    @tracer.start_as_current_span("Site.wait_for_service_state_update")
+    @tracer.instrument("Site.wait_for_service_state_update")
     def wait_for_services_state_update(
         self,
         hostname: str,
@@ -753,7 +753,7 @@ class Site:
     def current_version_directory(self) -> str:
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
-    @tracer.start_as_current_span("Site.install_cmk")
+    @tracer.instrument("Site.install_cmk")
     def install_cmk(self) -> None:
         if not self.version.is_installed():
             logger.info("Installing Checkmk version %s", self.version.version_directory())
@@ -779,7 +779,7 @@ class Site:
                     ) from excp
                 raise excp
 
-    @tracer.start_as_current_span("Site.create")
+    @tracer.instrument("Site.create")
     def create(self) -> None:
         self.install_cmk()
 
@@ -996,7 +996,7 @@ class Site:
             "log_rotation_method=n\n",
         )
 
-    @tracer.start_as_current_span("Site.rm")
+    @tracer.instrument("Site.rm")
     def rm(self, site_id: str | None = None) -> None:
         # Wait a bit to avoid unnecessarily stress testing the site.
         time.sleep(1)
@@ -1012,7 +1012,7 @@ class Site:
             sudo=True,
         )
 
-    @tracer.start_as_current_span("Site.start")
+    @tracer.instrument("Site.start")
     def start(self) -> None:
         if not self.is_running():
             logger.info("Starting site")
@@ -1042,7 +1042,7 @@ class Site:
             self.path("tmp").is_mount()
         ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
-    @tracer.start_as_current_span("Site.stop")
+    @tracer.instrument("Site.stop")
     def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
@@ -1072,7 +1072,7 @@ class Site:
     def exists(self) -> bool:
         return os.path.exists("/omd/sites/%s" % self.id)
 
-    @tracer.start_as_current_span("Site.ensure_running")
+    @tracer.instrument("Site.ensure_running")
     def ensure_running(self) -> None:
         if not self.is_running():
             omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
@@ -1150,7 +1150,7 @@ class Site:
         )
         self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
 
-    @tracer.start_as_current_span("Site.prepare_for_tests")
+    @tracer.instrument("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
         username = AUTOMATION_USER
@@ -1397,7 +1397,7 @@ class Site:
 
         return Secret(secret)
 
-    @tracer.start_as_current_span("Site.activate_changes_and_wait_for_core_reload")
+    @tracer.instrument("Site.activate_changes_and_wait_for_core_reload")
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:

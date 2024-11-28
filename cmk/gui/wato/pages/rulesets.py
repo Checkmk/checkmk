@@ -1321,7 +1321,7 @@ class ModeEditRuleset(WatoMode):
         service_name: ServiceName | None,
         rules: Sequence[Rule],
     ) -> dict[str, RuleMatchResult]:
-        with tracer.start_as_current_span(
+        with tracer.span(
             "ModeEditRuleset_analyze_rule_matching",
             attributes={
                 "cmk.gui.site_id": site_id,

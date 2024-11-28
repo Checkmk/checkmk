@@ -116,7 +116,7 @@ def makedirs(path: Path | str, mode: int = 0o770) -> None:
 def load_mk_file(
     path: Path | str, default: Mapping[str, object], lock: bool = False
 ) -> Mapping[str, object]:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"load_mk_file[{path}]",
         attributes={"cmk.file.path": str(path)},
     ):
@@ -154,7 +154,7 @@ def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = Fal
 
 
 def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"save_mk_file[{path}]",
         attributes={"cmk.file.path": str(path)},
     ):
@@ -199,7 +199,7 @@ def save_to_mk_file(path: Path | str, key: str, value: Any, pprint_value: bool =
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
     with (
-        tracer.start_as_current_span(
+        tracer.span(
             f"load_object_from_file[{path}]",
             attributes={"cmk.file.path": str(path)},
         ),
@@ -210,7 +210,7 @@ def load_object_from_file(path: Path | str, *, default: Any, lock: bool = False)
 
 def load_object_from_pickle_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
     with (
-        tracer.start_as_current_span(
+        tracer.span(
             f"load_object_from_pickle_file[{path}]",
             attributes={"cmk.file.path": str(path)},
         ),
@@ -221,7 +221,7 @@ def load_object_from_pickle_file(path: Path | str, *, default: Any, lock: bool =
 
 def load_text_from_file(path: Path | str, default: str = "", lock: bool = False) -> str:
     with (
-        tracer.start_as_current_span(
+        tracer.span(
             f"load_text_from_file[{path}]",
             attributes={"cmk.file.path": str(path)},
         ),
@@ -232,7 +232,7 @@ def load_text_from_file(path: Path | str, default: str = "", lock: bool = False)
 
 def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = False) -> bytes:
     with (
-        tracer.start_as_current_span(
+        tracer.span(
             f"load_bytes_from_file[{path}]",
             attributes={"cmk.file.path": str(path)},
         ),
@@ -280,7 +280,7 @@ def _write(path: Path, serializer: Serializer, content: Any) -> None:
     # NOTE:
     #  * this creates the file with 0 bytes in case it is missing
     with (
-        tracer.start_as_current_span(
+        tracer.span(
             f"_write[{path}]",
             attributes={"cmk.file.path": str(path)},
         ),

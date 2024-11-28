@@ -245,7 +245,7 @@ class ChangesAPI(BaseAPI):
         value: list[dict[str, Any]] = response.json()["value"]
         return value
 
-    @tracer.start_as_current_span("activate_and_wait_for_completion")
+    @tracer.instrument("activate_and_wait_for_completion")
     def activate_and_wait_for_completion(
         self,
         sites: list[str] | None = None,
@@ -522,7 +522,7 @@ class HostsAPI(BaseAPI):
         if not response.status_code == 200:
             raise UnexpectedResponse.from_response(response)
 
-    @tracer.start_as_current_span("rename_and_wait_for_completion")
+    @tracer.instrument("rename_and_wait_for_completion")
     def rename_and_wait_for_completion(
         self,
         *,
@@ -595,7 +595,7 @@ class ServiceDiscoveryAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    @tracer.start_as_current_span("run_bulk_discovery_and_wait_for_completion")
+    @tracer.instrument("run_bulk_discovery_and_wait_for_completion")
     def run_bulk_discovery_and_wait_for_completion(
         self,
         hostnames: list[str],
@@ -673,7 +673,7 @@ class ServiceDiscoveryAPI(BaseAPI):
         job_status_response: dict = response.json()
         return job_status_response
 
-    @tracer.start_as_current_span("run_discovery_and_wait_for_completion")
+    @tracer.instrument("run_discovery_and_wait_for_completion")
     def run_discovery_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:

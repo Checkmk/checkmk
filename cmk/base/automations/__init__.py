@@ -77,7 +77,7 @@ class Automations:
 
             if not called_from_automation_helper and automation.needs_checks:
                 with (
-                    tracer.start_as_current_span("load_all_plugins"),
+                    tracer.span("load_all_plugins"),
                     redirect_stdout(open(os.devnull, "w")),
                 ):
                     log.setup_console_logging()
@@ -87,10 +87,10 @@ class Automations:
                     )
 
             if not called_from_automation_helper and automation.needs_config:
-                with tracer.start_as_current_span("load_config"):
+                with tracer.span("load_config"):
                     config.load(validate_hosts=False)
 
-            with tracer.start_as_current_span(f"execute_automation[{cmd}]"):
+            with tracer.span(f"execute_automation[{cmd}]"):
                 result = automation.execute(args, called_from_automation_helper)
 
         except (MKAutomationError, MKTimeout) as e:

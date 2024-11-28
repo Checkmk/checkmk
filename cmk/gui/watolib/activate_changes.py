@@ -730,7 +730,7 @@ def fetch_sync_state(
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"fetch_sync_state[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -771,7 +771,7 @@ def calc_sync_delta(
 ) -> tuple[SyncDelta, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"calc_sync_delta[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -803,7 +803,7 @@ def synchronize_files(
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"synchronize_files[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -982,7 +982,7 @@ def activate_site_changes(
 ) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"activate_site_changes[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -1385,7 +1385,7 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    @tracer.start_as_current_span("activate_changes")
+    @tracer.instrument("activate_changes")
     def start(
         self,
         sites: list[SiteId],
@@ -1478,7 +1478,7 @@ class ActivateChangesManager(ActivateChanges):
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             with (
-                tracer.start_as_current_span("distribute_piggyback_hub_configs"),
+                tracer.span("distribute_piggyback_hub_configs"),
                 _debug_log_message("Starting piggyback hub config distribution"),
             ):
                 activation_features.distribute_piggyback_hub_configs(
@@ -1636,7 +1636,7 @@ class ActivateChangesManager(ActivateChanges):
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
-    @tracer.start_as_current_span("create_snapshots")
+    @tracer.instrument("create_snapshots")
     def _create_snapshots(
         self,
         snapshot_manager_factory: Callable[[str, dict[SiteId, SnapshotSettings]], SnapshotManager],
@@ -1755,7 +1755,7 @@ class ActivateChangesManager(ActivateChanges):
                 ),
             )
 
-    @tracer.start_as_current_span("start_activation")
+    @tracer.instrument("start_activation")
     def _start_activation(self) -> None:
         self._log_activation()
         assert self._activation_id is not None
@@ -2106,7 +2106,7 @@ def _error_callback(error: BaseException) -> None:
     logger.error(str(error))
 
 
-@tracer.start_as_current_span("sync_and_activate")
+@tracer.instrument("sync_and_activate")
 def sync_and_activate(
     activation_id: str,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
@@ -2231,7 +2231,7 @@ def create_broker_certificates(
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
-    with tracer.start_as_current_span(
+    with tracer.span(
         f"create_broker_certificates[{site_id}]",
         context=trace.set_span_in_context(origin_span),
     ):
@@ -2451,7 +2451,7 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
     store.save_object_to_file(state_path, state)
 
 
-@tracer.start_as_current_span("execute_activate_changes")
+@tracer.instrument("execute_activate_changes")
 def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     domain_names = [x.name for x in domain_requests]
 
@@ -2465,7 +2465,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        with tracer.start_as_current_span(
+        with tracer.span(
             f"activate[{domain_request.name}]",
             attributes={
                 "cmk.activate_changes.domain.name": domain_request.name,
@@ -2486,7 +2486,7 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     return results
 
 
-@tracer.start_as_current_span("_activate_local_rabbitmq_changes")
+@tracer.instrument("_activate_local_rabbitmq_changes")
 def _activate_local_rabbitmq_changes():
     rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
 

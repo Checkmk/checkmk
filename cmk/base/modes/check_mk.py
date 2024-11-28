@@ -1899,49 +1899,40 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-
-    checks_result: Sequence[ActiveCheckResult] = []
+    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        with CPUTracker(console.debug) as tracker:
-            checks_result = execute_check_discovery(
-                hostname,
-                is_cluster=hostname in config_cache.hosts_config.clusters,
-                cluster_nodes=config_cache.nodes(hostname),
-                params=config_cache.discovery_check_parameters(hostname),
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=hostname,
-                    rtc_package=None,
-                ),
-                host_label_plugins=HostLabelPluginMapper(
-                    ruleset_matcher=ruleset_matcher,
-                    sections={**plugins.agent_sections, **plugins.snmp_sections},
-                ),
-                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-                autochecks_config=autochecks_config,
-                enforced_services=config_cache.enforced_services_table(hostname),
-            )
+        checks_result = execute_check_discovery(
+            hostname,
+            is_cluster=hostname in config_cache.hosts_config.clusters,
+            cluster_nodes=config_cache.nodes(hostname),
+            params=config_cache.discovery_check_parameters(hostname),
+            fetched=((f[0], f[1]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
+            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                operation="parsing",
+                section_name=section_name,
+                section_content=raw_data,
+                host_name=hostname,
+                rtc_package=None,
+            ),
+            host_label_plugins=HostLabelPluginMapper(
+                ruleset_matcher=ruleset_matcher,
+                sections={**plugins.agent_sections, **plugins.snmp_sections},
+            ),
+            plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+            autochecks_config=autochecks_config,
+            enforced_services=config_cache.enforced_services_table(hostname),
+        )
 
     if error_handler.result is not None:
         checks_result = [error_handler.result]
 
-    check_result = ActiveCheckResult.from_subresults(
-        *checks_result,
-        make_timing_results(
-            tracker.duration,
-            tuple((f[0], f[2]) for f in fetched),
-            perfdata_with_times=config.check_mk_perfdata_with_times,
-        ),
-    )
+    check_result = ActiveCheckResult.from_subresults(*checks_result)
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
@@ -2921,36 +2912,26 @@ def mode_inventory_as_check(
     )
     check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
-        with CPUTracker(console.debug) as tracker:
-            check_results = _execute_active_check_inventory(
-                hostname,
-                config_cache=config_cache,
-                hosts_config=hosts_config,
-                fetcher=fetcher,
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(
-                    {**plugins.agent_sections, **plugins.snmp_sections}
-                ),
-                inventory_plugins=InventoryPluginMapper(),
-                inventory_parameters=config_cache.inventory_parameters,
-                parameters=parameters,
-                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
-            )
+        check_results = _execute_active_check_inventory(
+            hostname,
+            config_cache=config_cache,
+            hosts_config=hosts_config,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(
+                {**plugins.agent_sections, **plugins.snmp_sections}
+            ),
+            inventory_plugins=InventoryPluginMapper(),
+            inventory_parameters=config_cache.inventory_parameters,
+            parameters=parameters,
+            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
+        )
 
     if error_handler.result is not None:
         check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(
-        *check_results,
-        make_timing_results(
-            tracker.duration,
-            # FIXME: This is inconsistent with the other two calls.
-            (),  # nothing to add here, b/c fetching is triggered further down the call stack.
-            perfdata_with_times=config.check_mk_perfdata_with_times,
-        ),
-    )
-
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())

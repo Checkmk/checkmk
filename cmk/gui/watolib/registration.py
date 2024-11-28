@@ -196,7 +196,6 @@ def _register_automation_commands(automation_command_registry: AutomationCommand
 
 def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(config_domains.OMDConfigChangeBackgroundJob)
-    job_registry.register(automatic_host_removal.HostRemovalBackgroundJob)
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(SearchIndexBackgroundJob)
@@ -281,9 +280,10 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
     )
     cron_job_registry.register(
         CronJob(
-            name="execute_host_removal_background_job",
-            callable=automatic_host_removal.execute_host_removal_background_job,
+            name="execute_host_removal_job",
+            callable=automatic_host_removal.execute_host_removal_job,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
     cron_job_registry.register(

@@ -1340,6 +1340,9 @@ class Site:
             if re.search("systime", crash_detail):
                 logger.warning("Ignored crash report. See CMK-20674")
                 continue
+            if re.search("Licensed phase: too many services.", crash_detail):
+                logger.warning("Ignored crash report due to license violation!")
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

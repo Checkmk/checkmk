@@ -190,6 +190,10 @@ def check_oracle_instance_uptime(
         # Error is already shown in main check
         raise IgnoreResultsError("Login into database failed")
 
+    if data.popenmode == "MOUNTED":
+        yield Result(state=State.OK, summary="PDB in mounted state has no uptime information")
+        return
+
     if data.up_seconds is None:
         return
 

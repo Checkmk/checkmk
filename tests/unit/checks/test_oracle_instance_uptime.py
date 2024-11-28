@@ -88,3 +88,43 @@ def test_check_oracle_instance_uptime_error(fix_register: FixRegister) -> None:
                 ),
             )
         )
+
+
+def test_check_oracle_instance_uptime_pdb_mounted(fix_register: FixRegister) -> None:
+    assert list(
+        fix_register.check_plugins[CheckPluginName("oracle_instance_uptime")].check_function(
+            item="CPMOZD.PDB$SEED",
+            params={},
+            section=parse_oracle_instance(
+                [
+                    [
+                        "CPMOZD",
+                        "19.25.0.0.0",
+                        "MOUNTED",
+                        "ALLOWED",
+                        "STARTED",
+                        "1988689",
+                        "461957806",
+                        "ARCHIVELOG",
+                        "PHYSICAL STANDBY",
+                        "YES",
+                        "CPMOZ",
+                        "190520200930",
+                        "TRUE",
+                        "2",
+                        "PDB$SEED",
+                        "2225282951",
+                        "MOUNTED",
+                        "",
+                        "2897215488",
+                        "ENABLED",
+                        "-1",
+                        "8192",
+                        "gemhb-ol13.grit.local",
+                    ]
+                ]
+            ),
+        )
+    ) == [
+        Result(state=State.OK, summary="PDB in mounted state has no uptime information"),
+    ]

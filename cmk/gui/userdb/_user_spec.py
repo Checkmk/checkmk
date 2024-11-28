@@ -30,14 +30,14 @@ def add_internal_attributes(usr: UserSpec) -> int:
 
 
 def validate_users_details(users: object) -> dict[str, UserDetails]:
-    # Performance impact needs to be investigated (see CMK-19527)
+    # Performance impact needs to be investigated (see CMK-20212)
     # nosemgrep: type-adapter-detected
     validator = TypeAdapter(dict[str, UserDetails])
     return validator.validate_python(users, strict=True)
 
 
 def validate_contact_details(contacts: object) -> dict[str, UserContactDetails]:
-    # Performance impact needs to be investigated (see CMK-19527)
+    # Performance impact needs to be investigated (see CMK-20212)
     # nosemgrep: type-adapter-detected
     validator = TypeAdapter(dict[str, UserContactDetails])
     return validator.validate_python(contacts, strict=True)

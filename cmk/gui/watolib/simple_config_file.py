@@ -37,7 +37,7 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
-        # Performance impact needs to be investigated (see CMK-19527)
+        # Performance impact needs to be investigated (see CMK-20212)
         # nosemgrep: type-adapter-detected
         self.validator = TypeAdapter(spec_class)
 

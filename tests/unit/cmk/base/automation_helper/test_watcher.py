@@ -26,7 +26,7 @@ def get_watcher_handler() -> AutomationWatcherHandler:
     [
         pytest.param(FileCreatedEvent(src_path=MK_FILE), "foo.mk (created)", id="match created"),
         pytest.param(FileModifiedEvent(src_path=MK_FILE), "foo.mk (modified)", id="match modified"),
-        pytest.param(FileDeletedEvent(src_path=MK_FILE), "foo.mk (deleted)", id="match delted"),
+        pytest.param(FileDeletedEvent(src_path=MK_FILE), "foo.mk (deleted)", id="match deleted"),
     ],
 )
 def test_automation_watcher_logging_pattern_match(

@@ -126,15 +126,6 @@ export interface AllStagesValidationError
   all_stage_errors: QsStageValidationIndexError[] | undefined
 }
 
-export interface GeneralError extends RestApiError {
-  type: 'general'
-  general_error: string
-}
-
-export const isGeneralError = (value: unknown): value is GeneralError => {
-  return typeof value === 'object' && value !== null && 'type' in value && value.type === 'general'
-}
-
 export const isAllStagesValidationError = (value: unknown): value is AllStagesValidationError => {
   return (
     typeof value === 'object' &&
@@ -160,4 +151,19 @@ export interface QSRequestComplete {
 
 export interface QSResponseComplete {
   redirect_url: string
+}
+
+export interface MaybeRestApiCrashReport {
+  ext?: {
+    details?: {
+      crash_report_url?: {
+        href?: string
+      }
+    }
+  }
+}
+
+export interface MaybeRestApiError {
+  detail?: string
+  title?: string
 }

@@ -1,0 +1,40 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import {
+  type QuickSetupStageContent,
+  type DetailedError,
+  isDetailedError
+} from './quick_setup_types'
+import AlertBox from '@/components/AlertBox.vue'
+import CmkButton from '@/components/CmkButton.vue'
+
+const details = ref<boolean>(false)
+const props = defineProps<{ errors: QuickSetupStageContent['errors'] }>()
+
+const isValidationError = (value: unknown): value is string => {
+  return !isDetailedError(value) && (typeof value === 'string' || value instanceof String)
+}
+
+const validationErrors = computed<Array<string>>(() => props.errors.filter(isValidationError))
+const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(isDetailedError))
+</script>
+
+<template>
+  <AlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
+    <strong>
+      {{ error.message }}
+    </strong>
+    <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
+    <div v-else>
+      <pre>{{ error.details }}</pre>
+    </div>
+  </AlertBox>
+  <AlertBox v-if="validationErrors.length > 0" variant="error">
+    <p v-for="error in validationErrors" :key="error">{{ error }}</p>
+  </AlertBox>
+</template>

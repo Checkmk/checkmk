@@ -8,6 +8,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
 import { onUnmounted, onBeforeMount } from 'vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 defineProps<QuickSetupAppProps>()
 
@@ -23,19 +24,24 @@ onUnmounted(() => {
     console.info = originalConsoleInfo
   }
 })
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 <template>
-  <Suspense>
-    <QuickSetupAsync
-      :quick_setup_id="quick_setup_id"
-      :toggle-enabled="toggleEnabled"
-      :mode="mode"
-      :object-id="objectId"
-    />
-    <template #fallback>
-      <CmkIcon name="load-graph" size="xxlarge" />
-    </template>
-  </Suspense>
+  <ErrorBoundary>
+    <!-- this seems okay, but it does not show a good error message !-->
+    <Suspense>
+      <QuickSetupAsync
+        :quick_setup_id="quick_setup_id"
+        :toggle-enabled="toggleEnabled"
+        :mode="mode"
+        :object-id="objectId"
+      />
+      <template #fallback>
+        <CmkIcon name="load-graph" size="xxlarge" />
+      </template>
+    </Suspense>
+  </ErrorBoundary>
 </template>
 
 <style>

@@ -42,7 +42,7 @@ export interface QuickSetupSaveStageSpec {
   content?: VnodeOrNull
 
   /** @property {string[]} errors - List of errors (General + stage validation) */
-  errors: Readonly<string[]>
+  errors: Readonly<Array<string | DetailedError>>
 
   /** @property {QuickSetupStageAction[]} actions - List of actions from wich will render buttons */
   actions: Readonly<QuickSetupStageAction[]>
@@ -95,3 +95,15 @@ export interface QuickSetupStageContent extends QuickSetupSaveAndStageContentPro
 }
 
 export type VnodeOrNull = Readonly<VNode> | null
+
+export interface DetailedError {
+  type: 'DetailedError'
+  message: string
+  details: string
+}
+
+export const isDetailedError = (value: unknown): value is DetailedError => {
+  return (
+    typeof value === 'object' && value !== null && 'type' in value && value.type === 'DetailedError'
+  )
+}

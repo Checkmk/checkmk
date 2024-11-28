@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
-
+import { formatError } from '@/components/CmkError'
 import {
   saveQuickSetup,
   getOverview,
@@ -21,11 +21,12 @@ import { ActionType, processActionData, renderContent, renderRecap } from './ren
 import type {
   QuickSetupSaveStageSpec,
   QuickSetupStageAction,
-  QuickSetupStageSpec
+  QuickSetupStageSpec,
+  DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
 import type { QSInitializationResponse, QSStageResponse } from './rest_api_types'
-import { isValidationError, isGeneralError, isAllStagesValidationError } from './rest_api_types'
+import { isValidationError, isAllStagesValidationError } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
   StageData,
@@ -63,7 +64,7 @@ const loadedAllStages = ref(false)
 const showQuickSetup = ref(false)
 const preventLeaving = ref(false)
 const stages = ref<QSStageStore[]>([])
-const globalError = ref<string | null>(null) //Main error message
+const globalError = ref<string | DetailedError | null>(null) //Main error message
 const loading: Ref<boolean> = ref(false) // Loading flag
 
 const numberOfStages = computed(() => stages.value.length) //Number of stages
@@ -358,12 +359,7 @@ const saveStage = computed((): QuickSetupSaveStageSpec => {
 //
 
 const handleError = (err: unknown) => {
-  if (isGeneralError(err)) {
-    globalError.value = `An error occurred while trying to proceed to the next step.
-The underlying call raised the following error: ${err.general_error}
-Please try again to confirm this is not a one-time occurrence.
-Please verify the logs if this error persists.`
-  } else if (isAllStagesValidationError(err)) {
+  if (isAllStagesValidationError(err)) {
     const errs = err
 
     for (const stageError of errs.all_stage_errors || []) {
@@ -378,8 +374,16 @@ Please verify the logs if this error persists.`
   } else if (isValidationError(err)) {
     stages.value[quickSetupHook.stage.value]!.errors = err.stage_errors || []
     stages.value[quickSetupHook.stage.value]!.form_spec_errors = err.formspec_errors || {}
+  } else if (err instanceof Error) {
+    const message =
+      'An error occurred while trying to proceed to the next step. Please try again to confirm this is not a one-time occurrence. Please verify the logs if this error persists.'
+    globalError.value = {
+      type: 'DetailedError',
+      message: message,
+      details: formatError(err)
+    }
   } else {
-    throw new Error('Can not handle Error')
+    throw Error('Can not handle error')
   }
 }
 

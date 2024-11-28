@@ -29,11 +29,10 @@ import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, tty
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.config_path import LATEST_CONFIG
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
     OPT_CHECKMK_CONFIG_FILES,
@@ -47,7 +46,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -70,7 +68,6 @@ from cmk.snmplib import (
     oids_to_walk,
     SNMPBackend,
     SNMPBackendEnum,
-    SNMPRawData,
     walk_for_export,
 )
 
@@ -92,7 +89,7 @@ from cmk.checkengine.discovery import (
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -1899,41 +1896,50 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
+
+    check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        checks_result = execute_check_discovery(
-            hostname,
-            is_cluster=hostname in config_cache.hosts_config.clusters,
-            cluster_nodes=config_cache.nodes(hostname),
-            params=config_cache.discovery_check_parameters(hostname),
-            fetched=((f[0], f[1]) for f in fetched),
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(
-                {**plugins.agent_sections, **plugins.snmp_sections}
+        with CPUTracker(console.debug) as tracker:
+            check_results = execute_check_discovery(
+                hostname,
+                is_cluster=hostname in config_cache.hosts_config.clusters,
+                cluster_nodes=config_cache.nodes(hostname),
+                params=config_cache.discovery_check_parameters(hostname),
+                fetched=((f[0], f[1]) for f in fetched),
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section_name,
+                    section_content=raw_data,
+                    host_name=hostname,
+                    rtc_package=None,
+                ),
+                host_label_plugins=HostLabelPluginMapper(
+                    ruleset_matcher=ruleset_matcher,
+                    sections={**plugins.agent_sections, **plugins.snmp_sections},
+                ),
+                plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+                autochecks_config=autochecks_config,
+                enforced_services=config_cache.enforced_services_table(hostname),
+            )
+        check_results = [
+            *check_results,
+            make_timing_results(
+                tracker.duration,
+                tuple((f[0], f[2]) for f in fetched),
+                perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-            section_error_handling=lambda section_name, raw_data: create_section_crash_dump(
-                operation="parsing",
-                section_name=section_name,
-                section_content=raw_data,
-                host_name=hostname,
-                rtc_package=None,
-            ),
-            host_label_plugins=HostLabelPluginMapper(
-                ruleset_matcher=ruleset_matcher,
-                sections={**plugins.agent_sections, **plugins.snmp_sections},
-            ),
-            plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            autochecks_config=autochecks_config,
-            enforced_services=config_cache.enforced_services_table(hostname),
-        )
+        ]
 
     if error_handler.result is not None:
-        checks_result = [error_handler.result]
+        check_results = (error_handler.result,)
 
-    check_result = ActiveCheckResult.from_subresults(*checks_result)
-
+    check_result = ActiveCheckResult.from_subresults(*check_results)
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())
@@ -2403,14 +2409,8 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
-    fetched: Sequence[
-        tuple[
-            SourceInfo,
-            Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ] = ()
+
+    checks_result: Sequence[ActiveCheckResult] = []
     with (
         error_handler,
         set_value_store_manager(
@@ -2469,10 +2469,9 @@ def mode_check(
         ]
 
     if error_handler.result is not None:
-        checks_result = [error_handler.result]
+        checks_result = (error_handler.result,)
 
     check_result = ActiveCheckResult.from_subresults(*checks_result)
-
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
         console.verbose_no_lf(check_result.as_text())
@@ -2912,21 +2911,31 @@ def mode_inventory_as_check(
     )
     check_results: Sequence[ActiveCheckResult] = []
     with error_handler:
-        check_results = _execute_active_check_inventory(
-            hostname,
-            config_cache=config_cache,
-            hosts_config=hosts_config,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(
-                {**plugins.agent_sections, **plugins.snmp_sections}
+        with CPUTracker(console.debug) as tracker:
+            check_results = _execute_active_check_inventory(
+                hostname,
+                config_cache=config_cache,
+                hosts_config=hosts_config,
+                fetcher=fetcher,
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(
+                    {**plugins.agent_sections, **plugins.snmp_sections}
+                ),
+                inventory_plugins=InventoryPluginMapper(),
+                inventory_parameters=config_cache.inventory_parameters,
+                parameters=parameters,
+                raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
+            )
+        check_results = [
+            *check_results,
+            make_timing_results(
+                tracker.duration,
+                # FIXME: This is inconsistent with the other two calls.
+                (),  # nothing to add here, b/c fetching is triggered further down the call stack.
+                perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-            inventory_plugins=InventoryPluginMapper(),
-            inventory_parameters=config_cache.inventory_parameters,
-            parameters=parameters,
-            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
-        )
+        ]
 
     if error_handler.result is not None:
         check_results = (error_handler.result,)

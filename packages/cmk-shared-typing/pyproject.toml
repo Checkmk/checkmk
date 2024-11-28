@@ -22,29 +22,6 @@ line-length = 100
 [tool.ruff.lint.isort]
 order-by-type = false
 
-[tool.mypy]
-explicit_package_bases = true
-packages = ["cmk", "tests"]
-strict = true
-# Miscellaneous stuff not in --strict
-disallow_any_decorated = false
-disallow_any_explicit = false
-disallow_any_expr = false
-disallow_any_generics = true
-disallow_any_unimported = true
-disallow_subclassing_any = true
-no_implicit_optional = true
-strict_optional = true
-warn_unreachable = true
-# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
-disable_bytearray_promotion = true
-disable_memoryview_promotion = true
-
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-
 [tool.pylint.format]
 max-line-length = 100
 persistent = "no"

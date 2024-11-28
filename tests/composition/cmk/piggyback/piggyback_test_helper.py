@@ -33,7 +33,12 @@ def create_local_check(
     Creates a local check on the passed site and host, using the datasource_programs ruleset.
     """
 
-    bash_command = f"cmk-piggyback create-sections 'Local service piggybacked from $HOSTNAME$' {" ".join(hostnames_piggybacked)}"
+    payload = "".join(
+        f"<<<<{hostname}>>>>\n<<<local>>>\n0 \"Local service piggybacked from $HOSTNAME$\" - created at '$(date +%s)'\n<<<<>>>>\n"
+        for hostname in hostnames_piggybacked
+    )
+
+    bash_command = f"""echo '{payload}'"""
     rule_id = site.openapi.create_rule(
         ruleset_name="datasource_programs",
         value=bash_command,

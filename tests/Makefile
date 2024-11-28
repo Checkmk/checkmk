@@ -62,8 +62,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
-	test-unit test-unit-all test-unit-docker test-unit-coverage-html \
+	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pylint test-pylint-docker \
+	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
@@ -111,7 +111,6 @@ help:
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-pipfile                        - Run Pipfile test"
 	@echo "test-pipfile-docker                 - Run Pipfile test in docker"
-	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
 	@echo "test-pylint                         - Run pylint based tests"
 	@echo "test-pylint-docker                  - Run pylint based tests in docker"
 	@echo "test-shellcheck                     - Run shellcheck tests"
@@ -121,7 +120,6 @@ help:
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-all                       - Run unit tests (including those marked as slow)"
 	@echo "test-unit-cmc                       - Run unit tests for cmc"
-	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
 	@echo "test-unit-shell                     - Run shell unit tests"
@@ -371,9 +369,6 @@ test-mypy-docker:
 test-packaging:
 	$(PYTEST) -T packaging packaging
 
-test-pipenv-deps:
-	$(PIPENV) check
-
 test-pylint: prepare-protobuf-files
 	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST) \
@@ -472,21 +467,6 @@ test-unit-testlib-docker:
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
-
-test-unit-coverage-html: prepare-protobuf-files
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--import-mode=importlib \
-		--override-ini="pythonpath=." \
-		--cov=cmk \
-		--cov-report=html \
-		--cov-config="tests/.coveragerc_unit" \
-		--no-cov-on-fail \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		--ignore=tests/unit/omdlib/ \
-		-- \
-		tests/unit
 
 test-unit-shell:
 	./unit-shell/runner.sh

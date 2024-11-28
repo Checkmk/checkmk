@@ -138,7 +138,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy //packages/cmk-agent-based:all
+    "${BAZEL_CMD}" build --config=mypy //packages/cmk-rulesets:all
 }
 
 run_pylint() {

@@ -37,7 +37,7 @@ def parse_prism_alerts(string_table: StringTable) -> Section:
 
         full_context["timestamp"] = entity["created_time_stamp_in_usecs"]
         full_context["severity"] = entity["severity"]
-        full_context["message"] = message
+        full_context["message"] = message.replace("\n", ", ")
 
         parsed.append(full_context)
 

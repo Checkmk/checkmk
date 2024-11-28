@@ -118,8 +118,8 @@ def test_newline_in_message(
             "cluster_id": "9876",
             "cluster_uuid": "123-123-123",
             "message": "Detailed license expiry info: LIC-1234 - 1.00 NODE Pro "
-            "expiring on 2025-01-31\n"
-            "LIC-987654321 - 1.00 NODE Pro expiring on 2025-01-31",
+            "expiring on 2025-01-31, LIC-987654321 - 1.00 NODE Pro expiring on "
+            "2025-01-31",
             "ncc_version": "123456789",
             "nos_version": "1.2.3.4",
             "pre_expiry_msg": "LIC-1234 - 1.00 NODE Pro expiring on 2025-01-31\n"
@@ -129,14 +129,23 @@ def test_newline_in_message(
         }
     ]
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    with pytest.raises(ValueError) as excinfo:
-        list(
-            check_prism_alerts(
-                params={},
-                section=section,
-            )
+    assert list(
+        check_prism_alerts(
+            params={},
+            section=section,
         )
-    assert "'\\\\n' not allowed in 'summary" in str(excinfo)
+    ) == [
+        Result(state=State.OK, summary="1 alerts"),
+        Result(
+            state=State.OK,
+            summary="Last worst on 2024-11-10 14:53:14: 'Detailed license expiry info: LIC-1234 - 1.00 NODE Pro expiring on 2025-01-31, LIC-987654321 - 1.00 NODE Pro expiring on 2025-01-31'",
+        ),
+        Result(state=State.OK, notice="\nLast 10 Alerts\n"),
+        Result(
+            state=State.OK,
+            notice="2024-11-10 14:53:14\tDetailed license expiry info: LIC-1234 - 1.00 NODE Pro expiring on 2025-01-31, LIC-987654321 - 1.00 NODE Pro expiring on 2025-01-31",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(

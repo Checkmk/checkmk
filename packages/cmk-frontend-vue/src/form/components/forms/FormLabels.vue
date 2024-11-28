@@ -126,9 +126,15 @@ const deleteItem = (item: string) => {
       </span>
     </li>
   </ul>
-  <div v-if="!props.spec.max_labels || keyValuePairs.length < props.spec.max_labels">
+  <div
+    v-if="
+      !props.spec.autocompleter ||
+      !props.spec.max_labels ||
+      keyValuePairs.length < props.spec.max_labels
+    "
+  >
     <AutoComplete
-      :autocompleter="props.spec.autocompleter"
+      :autocompleter="props.spec.autocompleter!"
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
       :filter-on="keyValuePairs"

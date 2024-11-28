@@ -255,8 +255,12 @@
                         },
                         "element_template": {
                             "anyOf": [
-                                { "$ref": "#/$defs/single_choice" },
-                                { "$ref": "#/$defs/cascading_single_choice" }
+                                {
+                                    "$ref": "#/$defs/single_choice"
+                                },
+                                {
+                                    "$ref": "#/$defs/cascading_single_choice"
+                                }
                             ]
                         },
                         "element_default_value": {},
@@ -1283,16 +1287,41 @@
                             ]
                         },
                         "autocompleter": {
-                            "$ref": "#/$defs/autocompleter"
+                            "oneOf": [
+                                {
+                                    "$ref": "#/$defs/autocompleter"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
                         },
                         "max_labels": {
-                            "type": "integer"
+                            "type": ["integer", "null"]
                         },
                         "label_source": {
-                            "enum": ["explicit", "ruleset", "discovered"]
+                            "oneOf": [
+                                {
+                                    "enum": [
+                                        "explicit",
+                                        "ruleset",
+                                        "discovered"
+                                    ]
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
                         }
                     },
-                    "required": ["type", "i18n", "max_labels"]
+                    "required": [
+                        "type",
+                        "i18n",
+                        "max_labels",
+                        "label_source",
+                        "autocompleter",
+                        "label_source"
+                    ]
                 }
             ]
         },

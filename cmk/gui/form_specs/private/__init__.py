@@ -14,7 +14,7 @@ from .definitions import (
 )
 from .dictionary_extended import DictionaryExtended
 from .folder import Folder
-from .labels import Labels
+from .labels import Labels, Source, World
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .list_unique_selection import ListUniqueSelection
@@ -54,4 +54,6 @@ __all__ = [
     "MultipleChoiceExtendedLayout",
     "MonitoredHostExtended",
     "Labels",
+    "World",
+    "Source",
 ]

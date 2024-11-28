@@ -36,7 +36,8 @@ const spec: FormSpec.Labels = {
       'Labels need to be in the format [KEY]:[VALUE]. For example os:windows.',
     max_labels_reached: 'You can only add up to 10 labels.',
     uniqueness_error: 'Labels need to be unique.'
-  }
+  },
+  label_source: null
 }
 describe('FormLabels', () => {
   test('should be rendered with provided items and entry input', async () => {

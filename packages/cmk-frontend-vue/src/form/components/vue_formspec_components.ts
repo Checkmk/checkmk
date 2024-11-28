@@ -217,9 +217,9 @@ export type ConditionChoices = FormSpec & {
 export type Labels = FormSpec & {
   type: "labels";
   i18n: LabelsI18N;
-  autocompleter?: Autocompleter;
-  max_labels: number;
-  label_source?: "explicit" | "ruleset" | "discovered";
+  autocompleter: Autocompleter | null;
+  max_labels: number | null;
+  label_source: ("explicit" | "ruleset" | "discovered") | null;
 };
 export type FileUpload = FormSpec & {
   type: "file_upload";

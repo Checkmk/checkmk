@@ -500,10 +500,10 @@ class ConditionChoices(FormSpec):
 @dataclass(kw_only=True)
 class Labels(FormSpec):
     i18n: LabelsI18n
-    max_labels: int
+    autocompleter: Optional[Autocompleter]
+    max_labels: Optional[int]
+    label_source: Optional[LabelSource]
     type: str = "labels"
-    autocompleter: Optional[Autocompleter] = None
-    label_source: Optional[LabelSource] = None
 
 
 @dataclass(kw_only=True)

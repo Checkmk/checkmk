@@ -30,4 +30,4 @@ class Source(Enum):
 class Labels(FormSpec[Mapping[str, str]]):
     world: World
     label_source: Source | None = None
-    max_labels: int
+    max_labels: int | None = None

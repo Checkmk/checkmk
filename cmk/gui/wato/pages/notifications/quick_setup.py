@@ -17,6 +17,7 @@ from cmk.gui.form_specs.private import (
     CommentTextArea,
     ConditionChoices,
     DictionaryExtended,
+    Labels,
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
@@ -26,6 +27,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+    World,
 )
 from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
@@ -528,12 +530,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ],
                                     ),
                                 ),
-                                "host_labels": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "host_labels": DictElement(
+                                    parameter_form=Labels(
                                         title=Title("Host labels"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
-                                    ),
+                                        help_text=Help(
+                                            "Use this condition to select hosts based on the configured host labels."
+                                        ),
+                                        world=World.CORE,
+                                    )
                                 ),
                                 "match_host_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
@@ -578,12 +582,14 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 form_spec=DictionaryExtended(
                                     layout=DictionaryLayout.two_columns,
                                     elements={
-                                        "service_labels": DictElement(  # TODO: Waiting on team engelbart
-                                            parameter_form=FixedValue(
+                                        "service_labels": DictElement(
+                                            parameter_form=Labels(
                                                 title=Title("Service labels"),
-                                                help_text=Help("Waiting on team Engelbart"),
-                                                value=None,
-                                            ),
+                                                help_text=Help(
+                                                    "Use this condition to select services based on the configured service labels."
+                                                ),
+                                                world=World.CORE,
+                                            )
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(

@@ -9,8 +9,8 @@ from ._log import watcher_logger
 
 
 class AutomationWatcherHandler(PatternMatchingEventHandler):
-    def __init__(self, *, patterns: list[str] | None) -> None:
-        super().__init__(patterns=patterns)
+    def __init__(self, *, patterns: list[str] | None, ignore_directories: bool) -> None:
+        super().__init__(patterns=patterns, ignore_directories=ignore_directories)
 
     def on_created(self, event: FileSystemEvent) -> None:
         self._log_handled_event(event)

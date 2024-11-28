@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "a186b9ab4034f845731395cb9846ffe32b99ae3a19a4dc98296dc882bd89c8b8",
+  "moduleFileHash": "3c235575f5989ead2e4ba812d9350286ff26d5fa88dbd8d8650cc720460b21cb",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -62,7 +62,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 74,
+                "line": 82,
                 "column": 25
               }
             },
@@ -96,7 +96,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 97,
+                "line": 105,
                 "column": 13
               }
             }
@@ -164,6 +164,38 @@
                 "file": "@@//:MODULE.bazel",
                 "line": 54,
                 "column": 10
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_mypy//mypy:types.bzl",
+          "extensionName": "types",
+          "usingModule": "<root>",
+          "location": {
+            "file": "@@//:MODULE.bazel",
+            "line": 68,
+            "column": 22
+          },
+          "imports": {
+            "cmk_types": "cmk_types"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "requirements",
+              "attributeValues": {
+                "name": "cmk_types",
+                "pip_requirements": "@cmk_requirements//:requirements.bzl",
+                "requirements_txt": "//:requirements_lock.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 69,
+                "column": 19
               }
             }
           ],
@@ -6595,6 +6627,25 @@
                 "@@aspect_rules_lint~//format:multitool.lock.json",
                 "@@aspect_rules_lint~//lint:multitool.lock.json"
               ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": []
+      }
+    },
+    "@@rules_mypy~//mypy:types.bzl%types": {
+      "general": {
+        "bzlTransitiveDigest": "bTsjWhC2MntN++D5GogAmgdWEGUqG5ZSXm2SoK8d/5U=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "cmk_types": {
+            "bzlFile": "@@rules_mypy~//mypy/private:types.bzl",
+            "ruleClassName": "generate",
+            "attributes": {
+              "pip_requirements": "@@rules_python~~pip~cmk_requirements//:requirements.bzl",
+              "requirements_txt": "@@//:requirements_lock.txt"
             }
           }
         },

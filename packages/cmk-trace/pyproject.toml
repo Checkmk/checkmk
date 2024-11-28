@@ -48,11 +48,6 @@ ignore = [
 # [tool.mypy]
 # mypy config moved to overrides in the root pyproject.toml
 
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-
 [tool.pylint.format]
 max-line-length = 100
 persistent = "no"

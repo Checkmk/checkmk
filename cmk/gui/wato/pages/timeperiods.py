@@ -461,9 +461,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 exception_map[dt] = [timerange]
 
         # If a time period exception has the full day, we can ignore the others (if available)
-        for exception in exception_map:
-            if ("00:00", "24:00") in exception_map[exception]:
-                exception_map[exception] = [("00:00", "24:00")]
+        for timeranges in exception_map.values():
+            if ("00:00", "24:00") in timeranges:
+                timeranges[:] = [("00:00", "24:00")]
 
         get_vars = {
             "timeperiod_p_alias": str(

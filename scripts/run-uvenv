@@ -12,6 +12,7 @@ if [ -z "$SKIP_MAKEFILE_CALL" ]; then
     make --silent -C "$REPO_PATH" .venv_uv 1>&2
 fi
 
+# shellcheck source=/dev/null
 source "${REPO_PATH}/.venv_uv/bin/activate"
 "$@"
 exit

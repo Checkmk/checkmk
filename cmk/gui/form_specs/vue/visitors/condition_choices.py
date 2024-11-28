@@ -187,7 +187,13 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid conditions")
             )
 
-        return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
+        vue_value = (
+            [_condition_to_value(name, c) for name, c in parsed_value.items()]
+            if not isinstance(parsed_value, EmptyValue)
+            else []
+        )
+
+        return compute_validation_errors(compute_validators(self.form_spec), vue_value)
 
     def _to_disk(self, raw_value: object, parsed_value: Conditions) -> Conditions:
         return parsed_value

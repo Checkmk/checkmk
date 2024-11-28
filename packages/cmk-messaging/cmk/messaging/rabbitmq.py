@@ -381,25 +381,25 @@ def _cleanup_unused_definitions(
     old_definitions: Definitions, new_definitions: Definitions
 ) -> Iterator[subprocess.Popen[str]]:
     for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
-        yield _rabbitmqctl_process(("delete_user", user))
+        yield rabbitmqctl_process(("delete_user", user))
 
     for vhost in {v.name for v in old_definitions.vhosts} - {
         v.name for v in new_definitions.vhosts
     }:
-        yield _rabbitmqctl_process(("delete_vhost", vhost))
+        yield rabbitmqctl_process(("delete_vhost", vhost))
 
     # currently only shovels, but we don't have to care here
     for param in set(old_definitions.parameters) - set(new_definitions.parameters):
-        yield _rabbitmqctl_process(
+        yield rabbitmqctl_process(
             ("clear_parameter", "-p", param.vhost, param.component, param.name)
         )
 
 
 def _import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
-    return _rabbitmqctl_process(("import_definitions", str(definitions_file)))
+    return rabbitmqctl_process(("import_definitions", str(definitions_file)))
 
 
-def _rabbitmqctl_process(cmd: tuple[str, ...]) -> subprocess.Popen[str]:
+def rabbitmqctl_process(cmd: tuple[str, ...]) -> subprocess.Popen[str]:
     return subprocess.Popen(
         ["rabbitmqctl", *cmd],
         stdout=subprocess.PIPE,

@@ -429,7 +429,11 @@ def check_systemd_sockets(item: str, params: Mapping[str, Any], section: Section
 def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
     if item not in units:
-        yield Result(state=State(params["else"]), summary="Service not found")
+        yield Result(
+            state=State(params["else"]),
+            summary="Unit not found",
+            details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+        )
         return
     unit = units[item]
     # TODO: this defaults unknown states to CRIT with the default params

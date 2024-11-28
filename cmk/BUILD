@@ -1,14 +1,14 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
-load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:proto.bzl", "py_proto_library")
-load("//bazel/rules:doctest.bzl", "py_doc_test")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 
 # TODO: It would be way better if rules_proto would already support the mypy plugin, see:
 # https://github.com/protocolbuffers/protobuf/issues/10366
 load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@rules_python//python:proto.bzl", "py_proto_library")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:proto.bzl", "mypy_compile")
 
 genrule(

@@ -464,7 +464,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
     - NAME: "Package cmk-livestatus-client"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_PYTHON_FILES,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       DIR: "packages/cmk-livestatus-client"
       COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: "No cmk-livestatus-client files changed"

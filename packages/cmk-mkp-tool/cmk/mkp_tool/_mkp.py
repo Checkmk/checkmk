@@ -98,9 +98,7 @@ def manifest_template(
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
 ) -> Manifest:
-    return Manifest(  # type: ignore[call-arg]
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
+    return Manifest(
         title=f"Title of {name}",
         name=name,
         description="Please add a description here",
@@ -160,9 +158,7 @@ def create_mkp(
     site_paths: Callable[[PackagePart], Path],
     version_packaged: str,
 ) -> bytes:
-    manifest = Manifest(  # type: ignore[call-arg]
-        # unfortunately mypy does not understand that I can use the non-alias
-        # field names (which is the point of them) :-(
+    manifest = Manifest(
         title=manifest.title,
         name=manifest.name,
         description=manifest.description,

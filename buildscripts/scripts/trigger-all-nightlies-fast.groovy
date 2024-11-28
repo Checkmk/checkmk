@@ -18,9 +18,9 @@ def main() {
         [$class: 'StringParameterValue',  name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE],
     ];
 
-    def override_distros = params.EDITIONS.trim() ?: "";
-    if (override_distros) {
-        editions = override_distros.replaceAll(',', ' ').split(' ').grep();
+    def override_editions = params.EDITIONS.trim() ?: "";
+    if (override_editions) {
+        editions = override_editions.replaceAll(',', ' ').split(' ').grep();
     }
 
     print(

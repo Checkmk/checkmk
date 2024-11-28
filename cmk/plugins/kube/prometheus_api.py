@@ -102,13 +102,18 @@ class ResponseError(ParseModel):
 Response = Annotated[ResponseSuccess | ResponseError, Field(discriminator="status")]
 
 
+# `parse_raw_response` is passed as an argument to `NodeExporter`, and thus called 10 to 20 times.
+# Thus, creating `RESPONSE_ADAPTER` at import time (not during the call to `parse_raw_response`)
+# is the way to go. This variant slightly slows done the check plugin imports. TypeAdapter is faster
+# than RootModel (see CMK-19527), thus remains unchanged.
+# nosemgrep: type-adapter-detected
+RESPONSE_ADAPTER: TypeAdapter[Response] = TypeAdapter(Response)
+
+
 def parse_raw_response(
     response: bytes | str,
 ) -> Response | ValidationError | JSONDecodeError:
     try:
-        # Performance impact needs to be investigated (see CMK-19527)
-        # nosemgrep: type-adapter-detected
-        adapter: TypeAdapter[Response] = TypeAdapter(Response)
-        return adapter.validate_json(response)
+        return RESPONSE_ADAPTER.validate_json(response)
     except (ValidationError, JSONDecodeError) as e:
         return e

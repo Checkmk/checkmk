@@ -96,7 +96,9 @@ _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
-    # Performance impact needs to be investigated (see CMK-19527)
+    # This function is called once per agent_kube invocation. Moving the TypeAdapter definition to
+    # import time has no impact. TypeAdapter is faster than RootModel (see CMK-19527), thus
+    # remains unchanged.
     # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(list[_AllSamples])
     return adapter.validate_json(cluster_collector_metrics)

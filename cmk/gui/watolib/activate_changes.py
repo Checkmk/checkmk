@@ -115,7 +115,7 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.config_sync import (
-    create_rabbitmq_new_definitions_file,
+    create_rabbitmq_definitions_file,
     replication_path_registry,
     ReplicationPath,
     ReplicationPathRegistry,
@@ -137,6 +137,7 @@ from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.messaging import rabbitmq
+from cmk.messaging.rabbitmq import DEFINITIONS_PATH as RABBITMQ_DEFINITIONS_PATH
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -163,6 +164,8 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
+
+RABBITMQ_DEFS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_defs_hash"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
@@ -289,11 +292,8 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath(
             ty="dir",
             ident="rabbitmq",
-            site_path=rabbitmq.DEFINITIONS_PATH,
-            excludes=[
-                rabbitmq.DEFAULT_DEFINITIONS_FILE_NAME,
-                rabbitmq.ACTIVE_DEFINITIONS_FILE_NAME,
-            ],
+            site_path=RABBITMQ_DEFINITIONS_PATH,
+            excludes=["00-default.json"],
         ),
         ReplicationPath(
             ty="dir",
@@ -1297,6 +1297,21 @@ def default_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
+@tracer.start_as_current_span("create_and_activate_central_rabbitmq_changes")
+def create_and_activate_central_rabbitmq_changes(
+    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
+) -> None:
+    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
+    create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
+    new_definitions_hash = _create_folder_content_hash(
+        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
+    )
+
+    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+
+    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
+
+
 @contextmanager
 def _debug_log_message(msg: str) -> Iterator[None]:
     logger.debug(msg)
@@ -1472,9 +1487,8 @@ class ActivateChangesManager(ActivateChanges):
         with _debug_log_message("Starting activation"):
             self._start_activation()
 
-        with _debug_log_message("Update and activate central rabbitmq changes"):
-            create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
-            rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
+        with _debug_log_message("Create and activate central rabbitmq changes"):
+            create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             with (
@@ -2525,9 +2539,36 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
     return results
 
 
+def _create_folder_content_hash(folder_path: str) -> str:
+    sha256_hash = hashlib.sha256()
+    for root, _dir, files in sorted(os.walk(folder_path)):
+        for filename in sorted(files):
+            file_path = os.path.join(root, filename)
+            with open(file_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256_hash.update(chunk)
+
+    return sha256_hash.hexdigest()
+
+
+@tracer.start_as_current_span("_reload_rabbitmq_when_changed")
+def _reload_rabbitmq_when_changed(old_definitions_hash: str, new_definitions_hash: str) -> None:
+    if old_definitions_hash != new_definitions_hash:
+        # make sure stdout and stderr is available in local variables (crash report!)
+        process = subprocess.run(["omd", "reload", "rabbitmq"], capture_output=True, check=False)
+        process.check_returncode()
+
+
 @tracer.start_as_current_span("_activate_local_rabbitmq_changes")
 def _activate_local_rabbitmq_changes():
-    rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
+    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
+    new_definitions_hash = _create_folder_content_hash(
+        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
+    )
+
+    _reload_rabbitmq_when_changed(old_definitions_hash, new_definitions_hash)
+
+    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
 def _add_extensions_for_license_usage():

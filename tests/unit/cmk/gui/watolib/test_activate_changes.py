@@ -85,7 +85,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ty="dir",
             ident="rabbitmq",
             site_path="etc/rabbitmq/definitions.d",
-            excludes=["00-default.json", "definitions.json", ".*new*"],
+            excludes=["00-default.json", ".*new*"],
         ),
         ReplicationPath(
             ty="dir",

@@ -26,7 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.watolib.config_sync import (
     ABCSnapshotDataCollector,
     create_distributed_wato_files,
-    create_rabbitmq_new_definitions_file,
+    create_rabbitmq_definitions_file,
     get_site_globals,
     replication_path_registry,
     ReplicationPath,
@@ -138,7 +138,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 create_distributed_wato_files(
                     Path(snapshot_settings.work_dir), site_id, is_remote=True
                 )
-                create_rabbitmq_new_definitions_file(
+                create_rabbitmq_definitions_file(
                     Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
                 )
 

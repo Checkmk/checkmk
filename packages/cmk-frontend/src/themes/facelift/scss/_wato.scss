@@ -1377,3 +1377,29 @@ form.birule div.label_groups {
     flex-grow: unset;
   }
 }
+
+div.dcd_host_manager_state,
+div.dcd_hosts_about_cycle {
+  background-color: $bg-color !important;
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-top: 0 !important;
+  padding-left: 5px !important;
+
+  div.section {
+    height: 25px;
+    display: flex;
+
+    .title {
+      font-weight: 600;
+    }
+  }
+}
+
+h3.table.dcd_about_cycle {
+  margin-top: 20px;
+}
+
+table.dcd_host_processing {
+  margin-bottom: 20px;
+}

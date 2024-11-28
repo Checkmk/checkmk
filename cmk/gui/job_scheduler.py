@@ -87,12 +87,12 @@ def _setup_console_logging() -> None:
 
 def _run_scheduler() -> None:
     while True:
+        cycle_start = time.time()
+
         # gui_context is within the loop to ensure that config changes are automatically applied
         with gui_context(), SuperUserContext():
             try:
-                cycle_start = time.time()
                 run_scheduled_jobs(list(cron_job_registry.values()))
-                time.sleep(60 - (time.time() - cycle_start))
             except Exception:
                 crash = create_gui_crash_report()
                 logger.error(
@@ -100,6 +100,8 @@ def _run_scheduler() -> None:
                     crash.ident_to_text(),
                     exc_info=True,
                 )
+
+        time.sleep(60 - (time.time() - cycle_start))
 
 
 def _load_last_job_runs() -> dict[str, datetime.datetime]:

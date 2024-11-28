@@ -65,7 +65,6 @@ def test_registered_background_jobs() -> None:
 
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
         expected_jobs += [
-            "DiscoverRegisteredHostsBackgroundJob",
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",
             "ReportingBackgroundJob",

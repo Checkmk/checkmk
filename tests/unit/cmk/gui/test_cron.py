@@ -28,7 +28,7 @@ def test_registered_jobs() -> None:
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
         expected += [
             "execute_host_registration_job",
-            "execute_discover_registered_hosts_background_job",
+            "execute_discover_registered_hosts_job",
             "cleanup_stored_reports",
             "do_scheduled_reports",
             "ntop_instance_check",

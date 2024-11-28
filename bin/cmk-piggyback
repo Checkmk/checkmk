@@ -53,17 +53,17 @@ def _command_list(
 
     if args.type == "sources":
         sources = {pmd.source for datasets in messages.values() for pmd in datasets}
-        _write(f"{' '.join(sorted(sources))}\n")
+        sys.stdout.write(f"{' '.join(sorted(sources))}\n")
         return 0
 
     piggybacked = {str(h) for h in messages}
 
     if args.type == "piggybacked":
-        _write(f"{' '.join(sorted(piggybacked))}\n")
+        sys.stdout.write(f"{' '.join(sorted(piggybacked))}\n")
         return 0
 
     known_hosts = _get_monitored_hosts()
-    _write(f"{' '.join(sorted(piggybacked - known_hosts))}\n")
+    sys.stdout.write(f"{' '.join(sorted(piggybacked - known_hosts))}\n")
     return 0
 
 
@@ -88,7 +88,7 @@ def _command_sections(
     """
     now = int(time.time())
     for host in args.piggybacked:
-        _write(f"{_SECTION_TEMPLATE.format(host=host, service=args.service, time=now)}\n")
+        sys.stdout.write(f"{_SECTION_TEMPLATE.format(host=host, service=args.service, time=now)}\n")
     return 0
 
 
@@ -96,12 +96,6 @@ def _args_track(
     subparser: argparse.ArgumentParser,
 ) -> None:
     pass
-
-
-def _write(message: str) -> None:
-    """We need to immediately flush, to be able to read the output in real-time."""
-    sys.stdout.write(message)
-    sys.stdout.flush()
 
 
 def _command_track(
@@ -114,14 +108,14 @@ def _command_track(
     One message is printed for each incoming message (these are the same events that trigger
     the piggyback-hub).
     """
-    _write("Tracking incoming messages\n")
+    sys.stdout.write("Tracking incoming messages\n")
     try:
         for message in watch_new_messages(omd_root):
-            _write(
+            sys.stdout.write(
                 f"{message.meta.source} -> {message.meta.piggybacked}: {len(message.raw_data)} bytes\n"
             )
     except KeyboardInterrupt:
-        _write("\nStopped tracking\n")
+        sys.stdout.write("\nStopped tracking\n")
     return 0
 
 

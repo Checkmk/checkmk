@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 import os
 from dataclasses import asdict, dataclass
+from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.gui import log
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -95,6 +97,16 @@ class SiteRequest:
 @dataclass
 class DiscoveredHostLabelSyncResponse:
     updated_host_labels: list[UpdatedHostLabelsEntry]
+
+
+def register(cron_job_registry: CronJobRegistry) -> None:
+    cron_job_registry.register(
+        CronJob(
+            name="execute_host_label_sync_job",
+            callable=execute_host_label_sync_job,
+            interval=timedelta(minutes=1),
+        )
+    )
 
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:

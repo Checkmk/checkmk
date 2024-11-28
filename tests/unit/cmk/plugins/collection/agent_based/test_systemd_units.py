@@ -1008,7 +1008,13 @@ def test_discover_systemd_units_services_summary(
                 "states_default": 2,
             },
             SECTION,
-            [Result(state=State.CRIT, summary="Service not found")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Unit not found",
+                    details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+                )
+            ],
         ),
         (
             "something",
@@ -1018,7 +1024,13 @@ def test_discover_systemd_units_services_summary(
                 "states_default": 2,
             },
             Section(services={}, sockets={}),
-            [Result(state=State.CRIT, summary="Service not found")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Unit not found",
+                    details="Only units currently in memory are found. These can be shown with `systemctl --all --type service --type socket`.",
+                )
+            ],
         ),
     ],
 )

@@ -121,7 +121,7 @@ class WerkV1(BaseModel):
             date=datetime.datetime.fromtimestamp(self.date, tz=datetime.UTC),
             description=markdown_to_html(nowiki_to_markdown(self.description)),
             level=Level(self.level),
-            class_=Class(self.class_),  # type: ignore[call-arg]
+            class_=Class(self.class_),
             component=self.component,
             edition=Edition(self.edition),
         )

@@ -28,10 +28,10 @@ py_library(
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
-        requirement("markdown"),
+        requirement("gitpython"),
         requirement("lxml"),
+        requirement("markdown"),
         requirement("pydantic"),
-        requirement("GitPython"),
     ],
 )
 
@@ -39,10 +39,12 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = ["cmk-werks"],
+    tags = ["no-mypy"],
 )
 
 py_pytest_main(
     name = "__test__",
+    tags = ["no-mypy"],
 )
 
 py_test(

@@ -137,8 +137,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    setup_venv
-    mypy
+    "${BAZEL_CMD}" build --config=mypy //packages/cmk-werks:all
 }
 
 run_pylint() {

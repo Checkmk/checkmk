@@ -60,11 +60,11 @@ def heading(text, sty):
     # Modify paragraph text to include an anchor point with name bn
     h = Paragraph(text + '<a name="%s"/>' % bn, sty)
     # Store the bookmark name on the flowable so afterFlowable can see this
-    h._bookmarkName = bn
+    h._bookmarkName = bn  # noqa: SLF001 TODO & FIXME: Don't change private object's attributes :-|
     return h
 
 
-def add_page_number(canvas, doc):
+def add_page_number(canvas):
     page_num = canvas.getPageNumber()
     if page_num < 4:
         return

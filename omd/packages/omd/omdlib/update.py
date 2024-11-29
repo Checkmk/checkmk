@@ -89,26 +89,26 @@ def walk_in_DFS_order(path: Path) -> Iterator[Path]:
             yield Path(root).joinpath(file)
 
 
-def walk_managed(site_dir: Path, skel: Path) -> Iterator[str]:
+def walk_managed(skel: Path) -> Iterator[str]:
     for path in walk_in_DFS_order(skel):
         relpath = os.path.relpath(path, start=skel)
         yield relpath
 
 
 def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
-    for relpath in walk_managed(site_dir, new_skel):
+    for relpath in walk_managed(new_skel):
         if relpath != ".":
             store(site_dir, Path(relpath), backup_dir)
-    for relpath in walk_managed(site_dir, old_skel):
+    for relpath in walk_managed(old_skel):
         if relpath != "." and not os.path.lexists(new_skel / relpath):  # Already backed-up
             store(site_dir, Path(relpath), backup_dir)
 
 
 def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
-    for relpath in walk_managed(site_dir, old_skel):
+    for relpath in walk_managed(old_skel):
         if not (new_skel / relpath).exists():
             restore(site_dir, Path(relpath), backup_dir)
-    for relpath in reversed(list(walk_managed(site_dir, new_skel))):
+    for relpath in reversed(list(walk_managed(new_skel))):
         restore(site_dir, Path(relpath), backup_dir)
 
 

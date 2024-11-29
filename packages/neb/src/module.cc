@@ -643,20 +643,6 @@ void close_unix_socket() {
     }
 }
 
-int broker_host_status(int callback_type, void *data) {
-    auto *info = static_cast<nebstruct_host_status_data *>(data);
-    log_callback(callback_type, info->type);
-    switch (info->type) {
-        case NEBTYPE_HOSTSTATUS_UPDATE:
-            // TODO(sp) We do nothing here, why do we even register?
-        default:
-            // We should never see other event types here.
-            break;
-    }
-    counterIncrement(Counter::neb_callbacks);
-    return 0;
-}
-
 int broker_host_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_host_check_data *>(data);
     log_callback(callback_type, info->type);
@@ -1081,8 +1067,6 @@ int verify_event_broker_options() {
 }
 
 void register_callbacks() {
-    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA, fl_nagios_handle, 0,
-                          broker_host_status);  // Needed to start threads
     neb_register_callback(NEBCALLBACK_COMMENT_DATA, fl_nagios_handle, 0,
                           broker_comment);  // dynamic data
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, fl_nagios_handle, 0,
@@ -1108,7 +1092,6 @@ void register_callbacks() {
 }
 
 void deregister_callbacks() {
-    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host_status);
     neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
     neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,

@@ -2407,12 +2407,8 @@ def _search_text_matches(
     match_regex = re.compile(search_text, re.IGNORECASE)
     for pattern in [
         host.name(),
-        host.effective_attributes().get("ipaddress"),
-        host.effective_attributes().get("alias"),
-        host.site_id(),
+        str(host.effective_attributes()),
         get_site_config(host.site_id())["alias"],
-        str(host.tag_groups()),
-        str(host.labels()),
     ]:
         if match_regex.search(pattern):
             return True

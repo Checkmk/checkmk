@@ -8,12 +8,20 @@ from typing import Generic, Protocol, TypeVar
 
 from cmk.utils.user import UserId
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.pagetypes import (
     Overridable,
     OverridableInstances,
 )
 
-from cmk.update_config.registry import UpdateAction
+from cmk.update_config.plugins.pre_actions.utils import (
+    ConflictMode,
+    continue_per_users_choice,
+)
+from cmk.update_config.registry import (
+    PreUpdateAction,
+    UpdateAction,
+)
 
 _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)
 
@@ -55,3 +63,60 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
             user_id for (user_id, name) in instances.instances_dict() if user_id != UserId.builtin()
         ):
             self._updater.target_type.save_user_instances(instances, owner=user_id)
+
+
+class PreUpdatePagetypes(PreUpdateAction, Generic[_TOverridable_co]):
+    def __init__(
+        self,
+        *,
+        name: str,
+        title: str,
+        sort_index: int,
+        updater: PagetypeUpdater[_TOverridable_co],
+        element_name: str,
+    ) -> None:
+        super().__init__(
+            name=name,
+            title=title,
+            sort_index=sort_index,
+        )
+        self._updater = updater
+        self._element_name_for_logging = element_name
+
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
+        encountered_update_errors = False
+        encountered_deserialization_errors = False
+
+        for (user_id, element_id), raw_page_dict in self._updater.target_type.load_raw().items():
+            try:
+                updated_raw_page_dict = self._updater.update_raw_page_dict(raw_page_dict)
+            except Exception as exception:
+                encountered_update_errors = True
+                logger.error(
+                    f"Error while updating {self._element_name_for_logging}. ID: {element_id}. Owner: {user_id}. Error message:\n{exception}\n\n"
+                )
+            try:
+                self._updater.target_type.deserialize(updated_raw_page_dict)
+            except Exception as exception:
+                encountered_deserialization_errors = True
+                logger.error(
+                    f"Error while deserializing updated {self._element_name_for_logging}. ID: {element_id}. Owner: {user_id}. Error message:\n{exception}\n\n"
+                )
+
+        if encountered_update_errors and not continue_per_users_choice(
+            conflict_mode, _USER_PROMPT_IF_ERROR
+        ):
+            raise MKUserError(None, f"{self._element_name_for_logging} errors")
+        if encountered_deserialization_errors and not continue_per_users_choice(
+            conflict_mode, _USER_PROMPT_IF_ERROR
+        ):
+            raise MKUserError(None, f"{self._element_name_for_logging} errors")
+
+
+_USER_PROMPT_IF_ERROR = (
+    "You can abort the update process (A) or continue (c) the update. "
+    "Continuing might render your site in an invalid state. "
+    "It is possible that the errors shown above are due to configurations which were already invalid before the update. "
+    "You might be able to fix these elements by opening them in the UI and checking for errors. "
+    "Abort update? [A/c]\n"
+)

@@ -70,7 +70,7 @@ def test_main(monkeypatch: MonkeyPatch, capsys: CaptureFixture[str]) -> None:
         stdout="Found 107 inventory entries, software changes(!!), Found 50 status entries",
         stderr=None,
     )
-    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock)
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock)  # noqa: ARG005
 
     assert main(["--sw-changes=2", "test_host"]) == 2
 

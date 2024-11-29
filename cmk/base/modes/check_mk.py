@@ -46,7 +46,6 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
@@ -342,7 +341,6 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts = _list_all_hosts(
         config_cache,
-        config_cache.ruleset_matcher,
         args,
         options,
     )
@@ -353,7 +351,6 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
-    ruleset_matcher: RulesetMatcher,
     hostgroups: list[str],
     options: dict,
 ) -> list[HostName]:
@@ -1976,7 +1973,7 @@ def register_mode_check_discovery(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check_discovery(active_check_handler=lambda *_: None, keepalive=False)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -2545,7 +2542,7 @@ def register_mode_check(
 
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check(get_submitter, active_check_handler=lambda *_: None, keepalive=False)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -3005,7 +3002,7 @@ def register_mode_inventory_as_check(
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
     register_mode_inventory_as_check(
-        active_check_handler=lambda *args: None,
+        active_check_handler=lambda *_: None,
         keepalive=False,
     )
 

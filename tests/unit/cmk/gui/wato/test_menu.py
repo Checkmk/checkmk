@@ -80,6 +80,9 @@ def expected_items() -> dict[str, list[str]]:
         "wato.py?group=inventory&mode=rulesets",
     ]
 
+    if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
+        hosts_items.append("otel_collectors")
+
     users_items = []
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         users_items.append("customer_management")

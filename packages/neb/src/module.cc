@@ -710,9 +710,6 @@ int broker_comment(int callback_type, void *data) {
             // TODO(sp): We get a NEBTYPE_COMMENT_LOAD *and* a
             // NEBTYPE_COMMENT_ADD for a single ADD_*_COMMENT command, can we
             // remove one of those cases above?
-            Informational(fl_core->loggerLivestatus())
-                << (info->type == NEBTYPE_COMMENT_ADD ? "adding" : "loading")
-                << " new comment " << id;
             auto *hst = ::find_host(info->host_name);
             auto *svc = info->service_description == nullptr
                             ? nullptr
@@ -739,8 +736,6 @@ int broker_comment(int callback_type, void *data) {
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
-            Informational(fl_core->loggerLivestatus())
-                << "deleting comment " << id;
             if (fl_comments.erase(id) == 0) {
                 Informational(fl_logger_nagios)
                     << "cannot delete non-existing comment " << id;
@@ -766,9 +761,6 @@ int broker_downtime(int callback_type, void *data) {
             // NEBTYPE_DOWNTIME_ADD for a single SCHEDULE_*_DOWNTIME command,
             // can we remove one of those cases above? After that, we get a
             // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD, too.
-            Informational(fl_core->loggerLivestatus())
-                << (info->type == NEBTYPE_DOWNTIME_ADD ? "adding" : "loading")
-                << " new downtime " << id;
             auto *hst = ::find_host(info->host_name);
             auto *svc = info->service_description == nullptr
                             ? nullptr
@@ -796,8 +788,6 @@ int broker_downtime(int callback_type, void *data) {
             break;
         }
         case NEBTYPE_DOWNTIME_DELETE:
-            Informational(fl_core->loggerLivestatus())
-                << "deleting downtime " << id;
             if (fl_downtimes.erase(id) == 0) {
                 Informational(fl_logger_nagios)
                     << "cannot delete non-existing downtime " << id;

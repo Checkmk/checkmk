@@ -195,7 +195,7 @@ class Registry:
             return False
         return self.image_can_be_pulled_enterprise(image, edition)
 
-    def image_exists_enterprise(self, image: DockerImage, edition: str) -> bool:
+    def image_exists_enterprise(self, image: DockerImage, _edition: str) -> bool:
         url = f"{self.url}/v2/{image.image_name}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
         exists = (

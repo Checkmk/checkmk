@@ -51,7 +51,7 @@ def print_distros_for_use_case(args: Args, loaded_yaml: dict) -> None:
     print(" ".join(distros_for_use_case(edition_distros, edition, use_case)))
 
 
-def print_editions(args: Args, loaded_yaml: dict) -> None:
+def print_editions(_args: Args, loaded_yaml: dict) -> None:
     print(" ".join(sorted(loaded_yaml["editions"].keys())))
 
 

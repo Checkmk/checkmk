@@ -160,7 +160,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
         urllib.request.HTTPSHandler(
             debuglevel=0,
             context=(
-                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305
+                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305 # noqa: SLF001 TODO & FIXME: Do *NOT* use private functions of ssl module!
             ),
         ),
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
@@ -248,11 +248,10 @@ class FormParser(html.parser.HTMLParser):
         elif tag == "input":
             if self.current_form is None:
                 debug("Ignoring form field out of form tag", self.debug_enabled)
+            elif "name" in attrs:
+                self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
             else:
-                if "name" in attrs:
-                    self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
-                else:
-                    debug("Ignoring form field without name %r" % attrs, self.debug_enabled)
+                debug("Ignoring form field without name %r" % attrs, self.debug_enabled)
 
     def handle_endtag(self, tag):
         if tag == "form":

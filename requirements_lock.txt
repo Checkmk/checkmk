@@ -1253,9 +1253,9 @@ httpx==0.28.0 \
     # via
     #   -r requirements_cmk.txt
     #   schemathesis
-hypothesis==6.121.1 \
-    --hash=sha256:24b935d75485678814ad595790ed13c4d667aca82823e595cff04ab7ec58eaf1 \
-    --hash=sha256:41127b2fd3a8d50c4abd33854cec5a4634deecd861bd2186cb21e78b9e5bdf09
+hypothesis==6.121.2 \
+    --hash=sha256:43edc07f9f4758807fc6cf10309dd6a376f3d6d886a5ef345ca49fe80ca3d394 \
+    --hash=sha256:4c95ed50ef76cd073a43efab2d4c2297f0b3c85aafb6c1134aac0719dab56428
     # via
     #   -r requirements_cmk.txt
     #   hypothesis-graphql

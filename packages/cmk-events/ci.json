@@ -1,0 +1,4 @@
+{
+    "command_line": "BAZEL_CMD=../../scripts/run-bazel.sh TERM=xterm ./run --clean --all",
+    "maintainers": ["ronny.bruska@checkmk.com", "christopher.krause@checkmk.com"]
+}

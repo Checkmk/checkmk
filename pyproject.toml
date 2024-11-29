@@ -471,7 +471,7 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = ["cmk.mkp_tool.*"]
+module = ["cmk.mkp_tool.*", "cmk.events.*"]
 enable_error_code = [
   "explicit-override",
   "ignore-without-code",

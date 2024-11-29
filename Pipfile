@@ -150,6 +150,7 @@ cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-ccc = {editable = true, path = "./packages/cmk-ccc"}
 cmk-crypto = {editable = true, path = "./packages/cmk-crypto"}
+cmk-events = {editable = true, path = "./packages/cmk-events"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
 cmk-messaging = {editable = true, path = "./packages/cmk-messaging"}
 cmk-mkp-tool = {editable = true, path = "./packages/cmk-mkp-tool"}

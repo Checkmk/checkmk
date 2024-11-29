@@ -90,6 +90,7 @@ pip_compile(
         "//packages/cmk-agent-receiver:requirements.txt",
         "//packages/cmk-ccc:requirements.txt",
         "//packages/cmk-crypto:requirements.txt",
+        "//packages/cmk-events:requirements.txt",
         "//packages/cmk-graphing:requirements.txt",
         "//packages/cmk-livestatus-client:requirements.txt",
         "//packages/cmk-messaging:requirements.txt",

@@ -397,7 +397,9 @@ test-cycles:
 			$$(realpath -L ..)/cmk \
 			$$(realpath -L ..)/packages/cmk-agent-based/cmk \
 			$$(realpath -L ..)/packages/cmk-agent-receiver/cmk \
+			$$(realpath -L ..)/packages/cmk-ccc/cmk \
 			$$(realpath -L ..)/packages/cmk-crypto/cmk \
+			$$(realpath -L ..)/packages/cmk-events/cmk \
 			$$(realpath -L ..)/packages/cmk-graphing/cmk \
 			$$(realpath -L ..)/packages/cmk-livestatus-client/cmk \
 			$$(realpath -L ..)/packages/cmk-messaging/cmk \

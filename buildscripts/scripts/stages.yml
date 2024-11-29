@@ -140,6 +140,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_MKP_TOOL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
 
+    - NAME: CHANGED_CMK_EVENTS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/events/' || true"
+
     - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
 
@@ -455,6 +458,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-crypto.txt"
       TEXT_ON_SKIP: "No cmk-crypto files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-crypto.txt"
+
+    - NAME: "Package cmk-events"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_EVENTS_FILES
+      DIR: "packages/cmk-mkp-tool"
+      COMMAND: "../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-events.txt"
+      TEXT_ON_SKIP: "No cmk-events files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-events.txt"
 
     - NAME: "Package cmk-graphing"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_GRAPHING_FILES

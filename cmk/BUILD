@@ -168,6 +168,7 @@ CMK_PACKAGES = [
     "//packages/cmk-agent-receiver",
     "//packages/cmk-ccc",
     "//packages/cmk-crypto",
+    "//packages/cmk-events",
     "//packages/cmk-graphing",
     "//packages/cmk-livestatus-client",
     "//packages/cmk-livestatus-client:py_livestatus",

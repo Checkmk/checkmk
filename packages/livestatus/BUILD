@@ -43,12 +43,10 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":livestatus_poller",
         ":livestatus_headers",
+        ":livestatus_poller",
         "@asio",
         "@re2",
-        # rrdgraph for rrd_xport
-        "@rrdtool_native//:rrdgraph",
     ],
 )
 

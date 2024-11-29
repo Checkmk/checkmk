@@ -626,7 +626,7 @@ def test_services_split(
                         current_state="running",
                         description="LSB: Apache2 web server",
                         enabled_status=None,
-                        time_since_change=None,
+                        time_since_change=timedelta(days=2),
                         cpu_seconds=None,
                         memory=None,
                         number_of_tasks=None,

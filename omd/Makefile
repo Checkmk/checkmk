@@ -32,7 +32,6 @@ PACKAGES := \
     cpp-libs \
     perl-modules \
     Python \
-    protobuf \
     python3-modules \
     rrdtool \
     lcab \

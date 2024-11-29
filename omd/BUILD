@@ -5,7 +5,6 @@ pkg_tar(
     srcs = [
         "//omd/packages/Python:python_files_with_prefix_pkg",
         "//omd/packages/openssl:openssl_files_with_prefix_pkg",
-        "//omd/packages/protobuf",
         "//omd/packages/rrdtool:rrdtool_perl_bindings_files",
         "//omd/packages/rrdtool:rrdtool_with_prefix_pkg",
     ],
@@ -44,6 +43,7 @@ srcs = {
     srcs = [
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/net-snmp:net-snmp_files_pkg",
+        "//omd/packages/protobuf",
     ] + srcs[edition],
     extension = "tar.gz",
 ) for edition in [

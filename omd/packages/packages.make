@@ -226,7 +226,6 @@ include \
     packages/nrpe/nrpe.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/protobuf/protobuf.make \
     packages/Python/Python.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \

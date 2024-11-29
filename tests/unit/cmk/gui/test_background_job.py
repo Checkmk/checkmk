@@ -54,7 +54,6 @@ def test_registered_background_jobs() -> None:
         "UserSyncBackgroundJob",
         "UserProfileCleanupBackgroundJob",
         "ServiceDiscoveryBackgroundJob",
-        "ActivationCleanupBackgroundJob",
         "CheckmkAutomationBackgroundJob",
         "DiagnosticsDumpBackgroundJob",
         "SearchIndexBackgroundJob",

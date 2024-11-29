@@ -144,9 +144,6 @@ def test_list_activate_changes_star_etag(
     activation_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
     )
-    cleanup_start = mocker.patch(
-        "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
-    )
     restart_rabbitmq_when_changed = mocker.patch(
         f"{activate_changes.__name__}.{activate_changes._reload_rabbitmq_when_changed.__name__}",  # pylint: disable=protected-access
     )
@@ -168,7 +165,6 @@ def test_list_activate_changes_star_etag(
         with mock_livestatus(expect_status_query=True):
             clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
-    cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
     restart_rabbitmq_when_changed.assert_called_once()
 
@@ -183,9 +179,6 @@ def test_list_activate_changes_valid_etag(
 
     activation_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.ActivateChangesManager._start_activation"
-    )
-    cleanup_start = mocker.patch(
-        "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
     restart_rabbitmq_when_changed = mocker.patch(
         f"{activate_changes.__name__}.{activate_changes._reload_rabbitmq_when_changed.__name__}"  # pylint: disable=protected-access
@@ -207,6 +200,5 @@ def test_list_activate_changes_valid_etag(
         with mock_livestatus(expect_status_query=True):
             clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
-    cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
     restart_rabbitmq_when_changed.assert_called_once()

@@ -18,7 +18,7 @@ def test_registered_jobs() -> None:
         "execute_userdb_job",
         "execute_user_profile_cleanup_job",
         "execute_network_scan_job",
-        "execute_activation_cleanup_background_job",
+        "execute_activation_cleanup_job",
         "execute_sync_remote_sites",
         "execute_host_removal_job",
         "cleanup_topology_layouts",

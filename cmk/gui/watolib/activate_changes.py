@@ -1473,10 +1473,6 @@ class ActivateChangesManager(ActivateChanges):
             self._verify_valid_host_config()
         self._save_activation()
 
-        # Always do housekeeping. We chose to only delete activations older than one minute, as we
-        # don't want to accidentally "clean up" our soon-to-be started activations.
-        execute_activation_cleanup_background_job(maximum_age=60)
-
         with _debug_log_message("Calling pre-activate changes"):
             self._pre_activate_changes()
 
@@ -1846,13 +1842,7 @@ class ActivateChangesManager(ActivateChanges):
         return "site_%s.mk" % site_id
 
 
-class ActivationCleanupBackgroundJob(BackgroundJob):
-    job_prefix = "activation_cleanup"
-
-    @classmethod
-    def gui_title(cls):
-        return _("Activation cleanup")
-
+class ActivationCleanupJob:
     def __init__(self, maximum_age: int = 300) -> None:
         """
         Args:
@@ -1871,22 +1861,17 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 The default value is 300 (seconds), which are exactly 5 minutes.
 
         """
-        super().__init__(self.job_prefix)
         self.maximum_age = maximum_age
 
     def shall_start(self) -> bool:
         """Some basic preliminary check to decide quickly whether to start the job"""
         return bool(self._existing_activation_ids())
 
-    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
-        self._do_housekeeping()
-        job_interface.send_result_message(_("Activation cleanup finished"))
-
-    def _do_housekeeping(self) -> None:
+    def do_execute(self) -> None:
         """Cleanup non-running activation directories"""
         with store.lock_checkmk_configuration(configuration_lockfile):
             for activation_id in self._existing_activation_ids():
-                self._logger.info("Check activation: %s", activation_id)
+                logger.info("Check activation: %s", activation_id)
                 delete = False
                 manager = ActivateChangesManager()
 
@@ -1904,13 +1889,13 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                     except MKUserError:
                         # "Unknown activation process", is normal after activation -> Delete, but no
                         # error message logging
-                        self._logger.debug("Is not running")
+                        logger.debug("Is not running")
                 except Exception as e:
-                    self._logger.warning(
+                    logger.warning(
                         "  Failed to load activation (%s), trying to delete...", e, exc_info=True
                     )
 
-                self._logger.info("  -> %s", "Delete" if delete else "Keep")
+                logger.info("  -> %s", "Delete" if delete else "Keep")
                 if not delete:
                     continue
 
@@ -1936,10 +1921,13 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                     try:
                         shutil.rmtree(activation_dir)
                     except Exception:
-                        self._logger.error(
-                            "  Failed to delete the activation directory '%s'" % activation_dir,
+                        logger.error(
+                            "  Failed to delete the activation directory '%s'",
+                            activation_dir,
                             exc_info=True,
                         )
+
+        logger.info("Activation cleanup finished")
 
     def _existing_activation_ids(self) -> list[str]:
         files = set()
@@ -1960,31 +1948,17 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         return ids
 
 
-def execute_activation_cleanup_background_job(maximum_age: int | None = None) -> None:
+def execute_activation_cleanup_job() -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
-    if maximum_age is not None:
-        job = ActivationCleanupBackgroundJob(maximum_age=maximum_age)
-    else:
-        job = ActivationCleanupBackgroundJob()
+    job = ActivationCleanupJob(maximum_age=60)
 
     if not job.shall_start():
         logger.debug("Job shall not start")
         return
 
-    if (
-        result := job.start(
-            job.do_execute,
-            InitialStatusArgs(
-                title=job.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
-    ).is_error():
-        logger.debug(str(result))
+    job.do_execute()
 
 
 def _handle_distributed_sites_in_free(

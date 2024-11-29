@@ -36,10 +36,9 @@ from . import (
 )
 from .activate_changes import (
     ActivateChangesSchedulerBackgroundJob,
-    ActivationCleanupBackgroundJob,
     AutomationGetConfigSyncState,
     AutomationReceiveConfigSync,
-    execute_activation_cleanup_background_job,
+    execute_activation_cleanup_job,
 )
 from .agent_registration import AutomationRemoveTLSRegistration
 from .analyze_configuration import AutomationCheckAnalyzeConfig
@@ -199,7 +198,6 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(SearchIndexBackgroundJob)
-    job_registry.register(ActivationCleanupBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
     job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
@@ -259,9 +257,10 @@ def _register_nagvis_hooks() -> None:
 def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
     cron_job_registry.register(
         CronJob(
-            name="execute_activation_cleanup_background_job",
-            callable=execute_activation_cleanup_background_job,
+            name="execute_activation_cleanup_job",
+            callable=execute_activation_cleanup_job,
             interval=timedelta(minutes=1),
+            run_in_thread=True,
         )
     )
     cron_job_registry.register(

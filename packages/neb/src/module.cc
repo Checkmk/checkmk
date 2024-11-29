@@ -491,21 +491,24 @@ int broker_host_status(int callback_type __attribute__((__unused__)),
     return 0;
 }
 
-int broker_check(int callback_type, void *data) {
-    const int result = NEB_OK;
-    if (callback_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto *info = static_cast<nebstruct_service_check_data *>(data);
-        if (info->type == NEBTYPE_SERVICECHECK_PROCESSED) {
-            counterIncrement(Counter::service_checks);
-        }
-    } else if (callback_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto *info = static_cast<nebstruct_host_check_data *>(data);
-        if (info->type == NEBTYPE_HOSTCHECK_PROCESSED) {
-            counterIncrement(Counter::host_checks);
-        }
+int broker_host_check(int callback_type __attribute__((__unused__)),
+                      void *data) {
+    auto *info = static_cast<nebstruct_host_check_data *>(data);
+    if (info->type == NEBTYPE_HOSTCHECK_PROCESSED) {
+        counterIncrement(Counter::host_checks);
     }
     fl_core->triggers().notify_all(Triggers::Kind::check);
-    return result;
+    return 0;
+}
+
+int broker_service_check(int callback_type __attribute__((__unused__)),
+                         void *data) {
+    auto *info = static_cast<nebstruct_service_check_data *>(data);
+    if (info->type == NEBTYPE_SERVICECHECK_PROCESSED) {
+        counterIncrement(Counter::service_checks);
+    }
+    fl_core->triggers().notify_all(Triggers::Kind::check);
+    return 0;
 }
 
 int broker_comment(int callback_type __attribute__((__unused__)), void *data) {
@@ -826,9 +829,9 @@ void register_callbacks() {
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, fl_nagios_handle, 0,
                           broker_downtime);  // dynamic data
     neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_check);  // only for statistics
+                          broker_service_check);  // only for statistics
     neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_check);  // only for statistics
+                          broker_host_check);  // only for statistics
     neb_register_callback(NEBCALLBACK_LOG_DATA, fl_nagios_handle, 0,
                           broker_log);  // only for trigger 'log'
     neb_register_callback(
@@ -849,8 +852,9 @@ void deregister_callbacks() {
     neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host_status);
     neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, broker_check);
-    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_check);
+    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,
+                            broker_service_check);
+    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_host_check);
     neb_deregister_callback(NEBCALLBACK_LOG_DATA, broker_log);
     neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA,
                             broker_external_command);

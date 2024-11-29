@@ -92,6 +92,13 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                 ),
             ),
             (
+                "nw_changes",
+                MonitoringState(
+                    title=_("State when networking changes are detected"),
+                    default_value=0,
+                ),
+            ),
+            (
                 "fail_status",
                 MonitoringState(
                     title=_("State when inventory fails"),

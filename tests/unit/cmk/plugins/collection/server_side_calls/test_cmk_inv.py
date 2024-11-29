@@ -15,6 +15,7 @@ ARGS = [
     "--hw-changes=0",
     "--sw-changes=0",
     "--sw-missing=0",
+    "--nw-changes=0",
     "unittest_name",
 ]
 

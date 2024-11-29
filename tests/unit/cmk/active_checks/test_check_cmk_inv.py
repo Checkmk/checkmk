@@ -20,7 +20,12 @@ from cmk.active_checks.check_cmk_inv import get_command, main, parse_arguments
         (
             ["test_host"],
             argparse.Namespace(
-                hostname="test_host", inv_fail_status=1, hw_changes=0, sw_changes=0, sw_missing=0
+                hostname="test_host",
+                inv_fail_status=1,
+                hw_changes=0,
+                sw_changes=0,
+                sw_missing=0,
+                nw_changes=0,
             ),
         ),
         (
@@ -30,9 +35,15 @@ from cmk.active_checks.check_cmk_inv import get_command, main, parse_arguments
                 "--hw-changes=1",
                 "--sw-changes=1",
                 "--sw-missing=1",
+                "--nw-changes=1",
             ],
             argparse.Namespace(
-                hostname="test_host", inv_fail_status=2, hw_changes=1, sw_changes=1, sw_missing=1
+                hostname="test_host",
+                inv_fail_status=2,
+                hw_changes=1,
+                sw_changes=1,
+                sw_missing=1,
+                nw_changes=1,
             ),
         ),
     ],
@@ -43,7 +54,12 @@ def test_parse_arguments(argv: Sequence[str], expected_args: Sequence[str]) -> N
 
 def test_get_command() -> None:
     args = argparse.Namespace(
-        hostname="test_host", inv_fail_status=2, hw_changes=1, sw_changes=1, sw_missing=1
+        hostname="test_host",
+        inv_fail_status=2,
+        hw_changes=1,
+        sw_changes=1,
+        sw_missing=1,
+        nw_changes=1,
     )
 
     assert get_command(args) == [
@@ -52,6 +68,7 @@ def test_get_command() -> None:
         "--hw-changes=1",
         "--sw-changes=1",
         "--sw-missing=1",
+        "--nw-changes=1",
         "--inventory-as-check",
         "test_host",
     ]

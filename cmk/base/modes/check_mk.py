@@ -2995,6 +2995,13 @@ def register_mode_inventory_as_check(
                     argument_conv=int,
                     short_help="Use monitoring state S in case of error",
                 ),
+                Option(
+                    long_option="nw-changes",
+                    argument=True,
+                    argument_descr="S",
+                    argument_conv=int,
+                    short_help="Use monitoring state S for NW changes",
+                ),
             ],
         )
     )

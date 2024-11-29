@@ -63,6 +63,7 @@ __all__ = [
 
 _SDPATH_HARDWARE = (SDNodeName("hardware"),)
 _SDPATH_SOFTWARE = (SDNodeName("software"),)
+_SDPATH_NETWORKING = (SDNodeName("networking"),)
 _SDPATH_SOFTWARE_PACKAGES = (SDNodeName("software"), SDNodeName("packages"))
 _SDPATH_CLUSTER = (
     SDNodeName("software"),
@@ -96,6 +97,7 @@ class HWSWInventoryParameters:
     hw_changes: int
     sw_changes: int
     sw_missing: int
+    nw_changes: int
 
     # Do not use source states which would overwrite "State when
     # inventory fails" in the ruleset "Do HW/SW Inventory".
@@ -109,6 +111,7 @@ class HWSWInventoryParameters:
             hw_changes=int(raw_parameters.get("hw-changes", 0)),
             sw_changes=int(raw_parameters.get("sw-changes", 0)),
             sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            nw_changes=int(raw_parameters.get("nw-changes", 0)),
             fail_status=int(raw_parameters.get("inv-fail-status", 1)),
             status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
@@ -629,6 +632,9 @@ def _check_trees(
 
     if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
+
+    if previous_tree.get_tree(_SDPATH_NETWORKING) != inventory_tree.get_tree(_SDPATH_NETWORKING):
+        yield ActiveCheckResult(parameters.nw_changes, "networking changes")
 
     if status_data_tree:
         yield ActiveCheckResult(0, f"Found {len(status_data_tree)} status entries")

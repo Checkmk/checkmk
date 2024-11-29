@@ -1314,13 +1314,15 @@ class Site:
             crash_json = crash_info.parent / (crash_info.stem + ".json")
             crash_info.rename(crash_json)
 
-    def report_crashes(self):
-        crash_dirs = [
+    def crash_reports_dirs(self) -> list[Path]:
+        return [
             self.crash_report_dir / crash_type / crash_id
             for crash_type in self.listdir(self.crash_report_dir)
             for crash_id in self.listdir(self.crash_report_dir / crash_type)
         ]
-        for crash_dir in crash_dirs:
+
+    def report_crashes(self):
+        for crash_dir in self.crash_reports_dirs():
             crash_file = crash_dir / "crash.info"
             try:
                 crash = json.loads(self.read_file(crash_file))

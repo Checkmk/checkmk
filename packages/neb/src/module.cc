@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cerrno>
 #include <charconv>
@@ -24,8 +25,10 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
@@ -304,6 +307,161 @@ private:
         }
     };
 };
+
+std::string_view callback_name(int callback_type) {
+    static constexpr std::array<std::pair<int, std::string_view>, 33> table{{
+        {NEBCALLBACK_RESERVED0, "RESERVED0"sv},
+        {NEBCALLBACK_RESERVED1, "RESERVED1"sv},
+        {NEBCALLBACK_RESERVED2, "RESERVED2"sv},
+        {NEBCALLBACK_RESERVED3, "RESERVED3"sv},
+        {NEBCALLBACK_RESERVED4, "RESERVED4"sv},
+        {NEBCALLBACK_RAW_DATA, "RAW"sv},
+        {NEBCALLBACK_NEB_DATA, "NEB"sv},
+        {NEBCALLBACK_PROCESS_DATA, "PROCESS"sv},
+        {NEBCALLBACK_TIMED_EVENT_DATA, "TIMED_EVENT"sv},
+        {NEBCALLBACK_LOG_DATA, "LOG"sv},
+        {NEBCALLBACK_SYSTEM_COMMAND_DATA, "SYSTEM_COMMAND"sv},
+        {NEBCALLBACK_EVENT_HANDLER_DATA, "EVENT_HANDLER"sv},
+        {NEBCALLBACK_NOTIFICATION_DATA, "NOTIFICATION"sv},
+        {NEBCALLBACK_SERVICE_CHECK_DATA, "SERVICE_CHECK"sv},
+        {NEBCALLBACK_HOST_CHECK_DATA, "HOST_CHECK"sv},
+        {NEBCALLBACK_COMMENT_DATA, "COMMENT"sv},
+        {NEBCALLBACK_DOWNTIME_DATA, "DOWNTIME"sv},
+        {NEBCALLBACK_FLAPPING_DATA, "FLAPPING"sv},
+        {NEBCALLBACK_PROGRAM_STATUS_DATA, "PROGRAM_STATUS"sv},
+        {NEBCALLBACK_HOST_STATUS_DATA, "HOST_STATUS"sv},
+        {NEBCALLBACK_SERVICE_STATUS_DATA, "SERVICE_STATUS"sv},
+        {NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, "ADAPTIVE_PROGRAM"sv},
+        {NEBCALLBACK_ADAPTIVE_HOST_DATA, "ADAPTIVE_HOST"sv},
+        {NEBCALLBACK_ADAPTIVE_SERVICE_DATA, "ADAPTIVE_SERVICE"sv},
+        {NEBCALLBACK_EXTERNAL_COMMAND_DATA, "EXTERNAL_COMMAND"sv},
+        {NEBCALLBACK_AGGREGATED_STATUS_DATA, "AGGREGATED_STATUS"sv},
+        {NEBCALLBACK_RETENTION_DATA, "RETENTION"sv},
+        {NEBCALLBACK_CONTACT_NOTIFICATION_DATA, "CONTACT_NOTIFICATION"sv},
+        {NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA,
+         "CONTACT_NOTIFICATION_METHOD"sv},
+        {NEBCALLBACK_ACKNOWLEDGEMENT_DATA, "ACKNOWLEDGEMENT"sv},
+        {NEBCALLBACK_STATE_CHANGE_DATA, "STATE_CHANGE"sv},
+        {NEBCALLBACK_CONTACT_STATUS_DATA, "CONTACT_STATUS"sv},
+        {NEBCALLBACK_ADAPTIVE_CONTACT_DATA, "ADAPTIVE_CONTACT"sv},
+    }};
+    const auto *it = std::find_if(
+        begin(table), end(table),
+        [&](const auto &entry) { return entry.first == callback_type; });
+    return it == end(table) ? "UNKNOWN"sv : it->second;
+}
+
+std::string_view data_type_name(int type) {
+    static constexpr std::array<std::pair<int, std::string_view>, 71> table{{
+        {NEBTYPE_NONE, "NONE"sv},
+        //
+        {NEBTYPE_HELLO, "HELLO"sv},
+        {NEBTYPE_GOODBYE, "GOODBYE"sv},
+        {NEBTYPE_INFO, "INFO"sv},
+        //
+        {NEBTYPE_PROCESS_START, "PROCESS_START"sv},
+        {NEBTYPE_PROCESS_DAEMONIZE, "PROCESS_DAEMONIZE"sv},
+        {NEBTYPE_PROCESS_RESTART, "PROCESS_RESTART"sv},
+        {NEBTYPE_PROCESS_SHUTDOWN, "PROCESS_SHUTDOWN"sv},
+        {NEBTYPE_PROCESS_PRELAUNCH, "PROCESS_PRELAUNCH"sv},
+        {NEBTYPE_PROCESS_EVENTLOOPSTART, "PROCESS_EVENTLOOPSTART"sv},
+        {NEBTYPE_PROCESS_EVENTLOOPEND, "PROCESS_EVENTLOOPEND"sv},
+        //
+        {NEBTYPE_TIMEDEVENT_ADD, "TIMEDEVENT_ADD"sv},
+        {NEBTYPE_TIMEDEVENT_REMOVE, "TIMEDEVENT_REMOVE"sv},
+        {NEBTYPE_TIMEDEVENT_EXECUTE, "TIMEDEVENT_EXECUTE"sv},
+        {NEBTYPE_TIMEDEVENT_DELAY, "TIMEDEVENT_DELAY"sv},
+        {NEBTYPE_TIMEDEVENT_SKIP, "TIMEDEVENT_SKIP"sv},
+        {NEBTYPE_TIMEDEVENT_SLEEP, "TIMEDEVENT_SLEEP"sv},
+        //
+        {NEBTYPE_LOG_DATA, "LOG_DATA"sv},
+        {NEBTYPE_LOG_ROTATION, "LOG_ROTATION"sv},
+        //
+        {NEBTYPE_SYSTEM_COMMAND_START, "SYSTEM_COMMAND_START"sv},
+        {NEBTYPE_SYSTEM_COMMAND_END, "SYSTEM_COMMAND_END"sv},
+        //
+        {NEBTYPE_EVENTHANDLER_START, "EVENTHANDLER_START"sv},
+        {NEBTYPE_EVENTHANDLER_END, "EVENTHANDLER_END"sv},
+        //
+        {NEBTYPE_NOTIFICATION_START, "NOTIFICATION_START"sv},
+        {NEBTYPE_NOTIFICATION_END, "NOTIFICATION_END"sv},
+        {NEBTYPE_CONTACTNOTIFICATION_START, "CONTACTNOTIFICATION_START"sv},
+        {NEBTYPE_CONTACTNOTIFICATION_END, "CONTACTNOTIFICATION_END"sv},
+        {NEBTYPE_CONTACTNOTIFICATIONMETHOD_START,
+         "CONTACTNOTIFICATIONMETHOD_START"sv},
+        {NEBTYPE_CONTACTNOTIFICATIONMETHOD_END,
+         "CONTACTNOTIFICATIONMETHOD_END"sv},
+        //
+        {NEBTYPE_SERVICECHECK_INITIATE, "SERVICECHECK_INITIATE"sv},
+        {NEBTYPE_SERVICECHECK_PROCESSED, "SERVICECHECK_PROCESSED"sv},
+        {NEBTYPE_SERVICECHECK_RAW_START, "SERVICECHECK_RAW_START"sv},
+        {NEBTYPE_SERVICECHECK_RAW_END, "SERVICECHECK_RAW_END"sv},
+        {NEBTYPE_SERVICECHECK_ASYNC_PRECHECK, "SERVICECHECK_ASYNC_PRECHECK"sv},
+        //
+        {NEBTYPE_HOSTCHECK_INITIATE, "HOSTCHECK_INITIATE"sv},
+        {NEBTYPE_HOSTCHECK_PROCESSED, "HOSTCHECK_PROCESSED"sv},
+        {NEBTYPE_HOSTCHECK_RAW_START, "HOSTCHECK_RAW_START"sv},
+        {NEBTYPE_HOSTCHECK_RAW_END, "HOSTCHECK_RAW_END"sv},
+        {NEBTYPE_HOSTCHECK_ASYNC_PRECHECK, "HOSTCHECK_ASYNC_PRECHECK"sv},
+        {NEBTYPE_HOSTCHECK_SYNC_PRECHECK, "HOSTCHECK_SYNC_PRECHECK"sv},
+        //
+        {NEBTYPE_COMMENT_ADD, "COMMENT_ADD"sv},
+        {NEBTYPE_COMMENT_DELETE, "COMMENT_DELETE"sv},
+        {NEBTYPE_COMMENT_LOAD, "COMMENT_LOAD"sv},
+        //
+        {NEBTYPE_FLAPPING_START, "FLAPPING_START"sv},
+        {NEBTYPE_FLAPPING_STOP, "FLAPPING_STOP"sv},
+        //
+        {NEBTYPE_DOWNTIME_ADD, "DOWNTIME_ADD"sv},
+        {NEBTYPE_DOWNTIME_DELETE, "DOWNTIME_DELETE"sv},
+        {NEBTYPE_DOWNTIME_LOAD, "DOWNTIME_LOAD"sv},
+        {NEBTYPE_DOWNTIME_START, "DOWNTIME_START"sv},
+        {NEBTYPE_DOWNTIME_STOP, "DOWNTIME_STOP"sv},
+        //
+        {NEBTYPE_PROGRAMSTATUS_UPDATE, "PROGRAMSTATUS_UPDATE"sv},
+        {NEBTYPE_HOSTSTATUS_UPDATE, "HOSTSTATUS_UPDATE"sv},
+        {NEBTYPE_SERVICESTATUS_UPDATE, "SERVICESTATUS_UPDATE"sv},
+        {NEBTYPE_CONTACTSTATUS_UPDATE, "CONTACTSTATUS_UPDATE"sv},
+        //
+        {NEBTYPE_ADAPTIVEPROGRAM_UPDATE, "ADAPTIVEPROGRAM_UPDATE"sv},
+        {NEBTYPE_ADAPTIVEHOST_UPDATE, "ADAPTIVEHOST_UPDATE"sv},
+        {NEBTYPE_ADAPTIVESERVICE_UPDATE, "ADAPTIVESERVICE_UPDATE"sv},
+        {NEBTYPE_ADAPTIVECONTACT_UPDATE, "ADAPTIVECONTACT_UPDATE"sv},
+
+        {NEBTYPE_EXTERNALCOMMAND_START, "EXTERNALCOMMAND_START"sv},
+        {NEBTYPE_EXTERNALCOMMAND_END, "EXTERNALCOMMAND_END"sv},
+        //
+        {NEBTYPE_AGGREGATEDSTATUS_STARTDUMP, "AGGREGATEDSTATUS_STARTDUMP"sv},
+        {NEBTYPE_AGGREGATEDSTATUS_ENDDUMP, "AGGREGATEDSTATUS_ENDDUMP"sv},
+        //
+        {NEBTYPE_RETENTIONDATA_STARTLOAD, "RETENTIONDATA_STARTLOAD"sv},
+        {NEBTYPE_RETENTIONDATA_ENDLOAD, "RETENTIONDATA_ENDLOAD"sv},
+        {NEBTYPE_RETENTIONDATA_STARTSAVE, "RETENTIONDATA_STARTSAVE"sv},
+        {NEBTYPE_RETENTIONDATA_ENDSAVE, "RETENTIONDATA_ENDSAVE"sv},
+        //
+        {NEBTYPE_ACKNOWLEDGEMENT_ADD, "ACKNOWLEDGEMENT_ADD"sv},
+        {NEBTYPE_ACKNOWLEDGEMENT_REMOVE, "ACKNOWLEDGEMENT_REMOVE"sv},
+        {NEBTYPE_ACKNOWLEDGEMENT_LOAD, "ACKNOWLEDGEMENT_LOAD"sv},
+        //
+        {NEBTYPE_STATECHANGE_START, "STATECHANGE_START"sv},
+        {NEBTYPE_STATECHANGE_END, "STATECHANGE_END"sv},
+    }};
+    const auto *it =
+        std::find_if(begin(table), end(table),
+                     [&](const auto &entry) { return entry.first == type; });
+    return it == end(table) ? "UNKNOWN"sv : it->second;
+}
+
+void log_callback(int callback_type, int type) {
+    // TODO(sp) This is quite a hack because we get callbacks *very* early and
+    // our loggers have not been set up then.
+    if (fl_livestatus_log_level == LogLevel::debug) {
+        std::ofstream{fl_paths.log_file, std::ios::app}
+            << FormattedTimePoint(std::chrono::system_clock::now())
+            << " [nagios] " << callback_name(callback_type)
+            << " callback: " << data_type_name(type) << "\n";
+    }
+}
 }  // namespace
 
 void start_threads() {
@@ -485,15 +643,16 @@ void close_unix_socket() {
     }
 }
 
-int broker_host_status(int callback_type __attribute__((__unused__)),
-                       void *data __attribute__((__unused__))) {
+int broker_host_status(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_host_status_data *>(data);
+    log_callback(callback_type, info->type);
     counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-int broker_host_check(int callback_type __attribute__((__unused__)),
-                      void *data) {
+int broker_host_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_host_check_data *>(data);
+    log_callback(callback_type, info->type);
     if (info->type == NEBTYPE_HOSTCHECK_PROCESSED) {
         counterIncrement(Counter::host_checks);
     }
@@ -501,9 +660,9 @@ int broker_host_check(int callback_type __attribute__((__unused__)),
     return 0;
 }
 
-int broker_service_check(int callback_type __attribute__((__unused__)),
-                         void *data) {
+int broker_service_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_service_check_data *>(data);
+    log_callback(callback_type, info->type);
     if (info->type == NEBTYPE_SERVICECHECK_PROCESSED) {
         counterIncrement(Counter::service_checks);
     }
@@ -511,8 +670,9 @@ int broker_service_check(int callback_type __attribute__((__unused__)),
     return 0;
 }
 
-int broker_comment(int callback_type __attribute__((__unused__)), void *data) {
+int broker_comment(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_comment_data *>(data);
+    log_callback(callback_type, info->type);
     const unsigned long id = info->comment_id;
     switch (info->type) {
         case NEBTYPE_COMMENT_ADD:
@@ -563,8 +723,9 @@ int broker_comment(int callback_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-int broker_downtime(int callback_type __attribute__((__unused__)), void *data) {
+int broker_downtime(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_downtime_data *>(data);
+    log_callback(callback_type, info->type);
     const unsigned long id = info->downtime_id;
     switch (info->type) {
         case NEBTYPE_DOWNTIME_ADD:
@@ -628,12 +789,12 @@ int broker_downtime(int callback_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-int broker_log(int callback_type __attribute__((__unused__)),
-               void *data __attribute__((__unused__))) {
+int broker_log(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_log_data *>(data);
+    log_callback(callback_type, info->type);
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
-    // NOTE: We use logging very early, even before the core is
-    // instantiated!
+    // NOTE: We use logging very early, even before the core is instantiated!
     if (fl_core != nullptr) {
         fl_core->triggers().notify_all(Triggers::Kind::log);
     }
@@ -641,9 +802,9 @@ int broker_log(int callback_type __attribute__((__unused__)),
 }
 
 // called twice (start/end) for each external command, even builtin ones
-int broker_external_command(int callback_type __attribute__((__unused__)),
-                            void *data) {
+int broker_external_command(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_external_command_data *>(data);
+    log_callback(callback_type, info->type);
     if (info->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (info->command_type == CMD_CUSTOM_COMMAND &&
@@ -658,15 +819,17 @@ int broker_external_command(int callback_type __attribute__((__unused__)),
     return 0;
 }
 
-int broker_state_change(int callback_type __attribute__((__unused__)),
-                        void *data __attribute__((__unused__))) {
+int broker_state_change(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_statechange_data *>(data);
+    log_callback(callback_type, info->type);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::state);
     return 0;
 }
 
-int broker_adaptive_program(int callback_type __attribute__((__unused__)),
-                            void *data __attribute__((__unused__))) {
+int broker_adaptive_program(int callback_type, void *data) {
+    auto *info = static_cast<nebstruct_adaptive_program_data *>(data);
+    log_callback(callback_type, info->type);
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::program);
     return 0;
@@ -692,10 +855,10 @@ void livestatus_log_initial_states() {
     g_timeperiods_cache->logCurrentTimeperiods();
 }
 
-int broker_timed_event(int callback_type __attribute__((__unused__)),
-                       void *data) {
-    counterIncrement(Counter::neb_callbacks);
+int broker_timed_event(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_timed_event_data *>(data);
+    log_callback(callback_type, info->type);
+    counterIncrement(Counter::neb_callbacks);
     if (info->event_type == EVENT_LOG_ROTATION) {
         if (fl_thread_running == 1) {
             livestatus_log_initial_states();
@@ -708,8 +871,9 @@ int broker_timed_event(int callback_type __attribute__((__unused__)),
     return 0;
 }
 
-int broker_process(int callback_type __attribute__((__unused__)), void *data) {
+int broker_process(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_process_data *>(data);
+    log_callback(callback_type, info->type);
     switch (info->type) {
         case NEBTYPE_PROCESS_START:
             try {

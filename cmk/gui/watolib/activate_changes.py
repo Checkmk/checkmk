@@ -2329,7 +2329,7 @@ def _create_broker_certificates_for_remote_sites(
                 (
                     broker_sync,
                     central_ca,
-                    customer_ca.cert_bundle if customer_ca else None,
+                    customer_ca,
                     settings,
                     site_activation_states[site_id],
                     trace.get_current_span(),

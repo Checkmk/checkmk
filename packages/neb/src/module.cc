@@ -485,22 +485,22 @@ void close_unix_socket() {
     }
 }
 
-int broker_host(int event_type __attribute__((__unused__)),
-                void *data __attribute__((__unused__))) {
+int broker_host_status(int callback_type __attribute__((__unused__)),
+                       void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-int broker_check(int event_type, void *data) {
+int broker_check(int callback_type, void *data) {
     const int result = NEB_OK;
-    if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        auto *c = static_cast<nebstruct_service_check_data *>(data);
-        if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
+    if (callback_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
+        auto *info = static_cast<nebstruct_service_check_data *>(data);
+        if (info->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             counterIncrement(Counter::service_checks);
         }
-    } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        auto *c = static_cast<nebstruct_host_check_data *>(data);
-        if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
+    } else if (callback_type == NEBCALLBACK_HOST_CHECK_DATA) {
+        auto *info = static_cast<nebstruct_host_check_data *>(data);
+        if (info->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             counterIncrement(Counter::host_checks);
         }
     }
@@ -508,40 +508,40 @@ int broker_check(int event_type, void *data) {
     return result;
 }
 
-int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    auto *co = static_cast<nebstruct_comment_data *>(data);
-    const unsigned long id = co->comment_id;
-    switch (co->type) {
+int broker_comment(int callback_type __attribute__((__unused__)), void *data) {
+    auto *info = static_cast<nebstruct_comment_data *>(data);
+    const unsigned long id = info->comment_id;
+    switch (info->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD: {
             // TODO(sp): We get a NEBTYPE_COMMENT_LOAD *and* a
             // NEBTYPE_COMMENT_ADD for a single ADD_*_COMMENT command, can we
             // remove on of those cases above?
             Informational(fl_core->loggerLivestatus())
-                << (co->type == NEBTYPE_COMMENT_ADD ? "adding" : "loading")
+                << (info->type == NEBTYPE_COMMENT_ADD ? "adding" : "loading")
                 << " new comment " << id;
-            auto *hst = ::find_host(co->host_name);
-            auto *svc =
-                co->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(co->host_name, co->service_description);
+            auto *hst = ::find_host(info->host_name);
+            auto *svc = info->service_description == nullptr
+                            ? nullptr
+                            : ::find_service(info->host_name,
+                                             info->service_description);
             fl_comments[id] = std::make_unique<Comment>(Comment{
-                ._id = co->comment_id,
-                ._author = co->author_name,
-                ._comment = co->comment_data,
+                ._id = info->comment_id,
+                ._author = info->author_name,
+                ._comment = info->comment_data,
                 ._entry_type = static_cast<CommentType>(
-                    static_cast<int32_t>(co->entry_type)),
+                    static_cast<int32_t>(info->entry_type)),
                 ._entry_time =
-                    std::chrono::system_clock::from_time_t(co->entry_time),
-                ._is_service = co->service_description != nullptr,
+                    std::chrono::system_clock::from_time_t(info->entry_time),
+                ._is_service = info->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
                 ._expire_time =
-                    std::chrono::system_clock::from_time_t(co->expire_time),
-                ._persistent = co->persistent != 0,
+                    std::chrono::system_clock::from_time_t(info->expire_time),
+                ._persistent = info->persistent != 0,
                 ._source = static_cast<CommentSource>(
-                    static_cast<int32_t>(co->source)),
-                ._expires = co->expires != 0});
+                    static_cast<int32_t>(info->source)),
+                ._expires = info->expires != 0});
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
@@ -560,10 +560,10 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    const unsigned long id = dt->downtime_id;
-    switch (dt->type) {
+int broker_downtime(int callback_type __attribute__((__unused__)), void *data) {
+    auto *info = static_cast<nebstruct_downtime_data *>(data);
+    const unsigned long id = info->downtime_id;
+    switch (info->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD: {
             // TODO(sp): We get a NEBTYPE_DOWNTIME_LOAD *and* a
@@ -571,29 +571,29 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
             // can we remove on of those cases above? After that, we get a
             // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD.
             Informational(fl_core->loggerLivestatus())
-                << (dt->type == NEBTYPE_DOWNTIME_ADD ? "adding" : "loading")
+                << (info->type == NEBTYPE_DOWNTIME_ADD ? "adding" : "loading")
                 << " new downtime " << id;
-            auto *hst = ::find_host(dt->host_name);
-            auto *svc =
-                dt->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(dt->host_name, dt->service_description);
+            auto *hst = ::find_host(info->host_name);
+            auto *svc = info->service_description == nullptr
+                            ? nullptr
+                            : ::find_service(info->host_name,
+                                             info->service_description);
             fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
-                ._id = static_cast<int32_t>(dt->downtime_id),
-                ._author = dt->author_name,
-                ._comment = dt->comment_data,
+                ._id = static_cast<int32_t>(info->downtime_id),
+                ._author = info->author_name,
+                ._comment = info->comment_data,
                 ._origin_is_rule = false,
                 ._entry_time =
-                    std::chrono::system_clock::from_time_t(dt->entry_time),
+                    std::chrono::system_clock::from_time_t(info->entry_time),
                 ._start_time =
-                    std::chrono::system_clock::from_time_t(dt->start_time),
+                    std::chrono::system_clock::from_time_t(info->start_time),
                 ._end_time =
-                    std::chrono::system_clock::from_time_t(dt->end_time),
-                ._fixed = dt->fixed != 0,
-                ._duration = std::chrono::seconds{dt->duration},
+                    std::chrono::system_clock::from_time_t(info->end_time),
+                ._fixed = info->fixed != 0,
+                ._duration = std::chrono::seconds{info->duration},
                 ._host = hst,
                 ._service = svc,
-                ._triggered_by = static_cast<int32_t>(dt->triggered_by),
+                ._triggered_by = static_cast<int32_t>(info->triggered_by),
                 ._is_active = false,  // TODO(sp) initial state?
             });
             break;
@@ -625,7 +625,7 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-int broker_log(int event_type __attribute__((__unused__)),
+int broker_log(int callback_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     counterIncrement(Counter::log_messages);
@@ -638,13 +638,14 @@ int broker_log(int event_type __attribute__((__unused__)),
 }
 
 // called twice (start/end) for each external command, even builtin ones
-int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    auto *sc = static_cast<nebstruct_external_command_data *>(data);
-    if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
+int broker_external_command(int callback_type __attribute__((__unused__)),
+                            void *data) {
+    auto *info = static_cast<nebstruct_external_command_data *>(data);
+    if (info->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
-        if (sc->command_type == CMD_CUSTOM_COMMAND &&
-            sc->command_string == "_LOG"s) {
-            write_to_all_logs(sc->command_args, -1);
+        if (info->command_type == CMD_CUSTOM_COMMAND &&
+            info->command_string == "_LOG"s) {
+            write_to_all_logs(info->command_args, -1);
             counterIncrement(Counter::log_messages);
             fl_core->triggers().notify_all(Triggers::Kind::log);
         }
@@ -654,15 +655,15 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
-int broker_state(int event_type __attribute__((__unused__)),
-                 void *data __attribute__((__unused__))) {
+int broker_state_change(int callback_type __attribute__((__unused__)),
+                        void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::state);
     return 0;
 }
 
-int broker_program(int event_type __attribute__((__unused__)),
-                   void *data __attribute__((__unused__))) {
+int broker_adaptive_program(int callback_type __attribute__((__unused__)),
+                            void *data __attribute__((__unused__))) {
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::program);
     return 0;
@@ -688,10 +689,11 @@ void livestatus_log_initial_states() {
     g_timeperiods_cache->logCurrentTimeperiods();
 }
 
-int broker_event(int event_type __attribute__((__unused__)), void *data) {
+int broker_timed_event(int callback_type __attribute__((__unused__)),
+                       void *data) {
     counterIncrement(Counter::neb_callbacks);
-    auto *ts = static_cast<struct nebstruct_timed_event_struct *>(data);
-    if (ts->event_type == EVENT_LOG_ROTATION) {
+    auto *info = static_cast<nebstruct_timed_event_data *>(data);
+    if (info->event_type == EVENT_LOG_ROTATION) {
         if (fl_thread_running == 1) {
             livestatus_log_initial_states();
         } else if (log_initial_states == 1) {
@@ -699,13 +701,13 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
             Informational(fl_logger_nagios) << "logging initial states";
         }
     }
-    g_timeperiods_cache->update(from_timeval(ts->timestamp));
+    g_timeperiods_cache->update(from_timeval(info->timestamp));
     return 0;
 }
 
-int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    auto *ps = static_cast<struct nebstruct_process_struct *>(data);
-    switch (ps->type) {
+int broker_process(int callback_type __attribute__((__unused__)), void *data) {
+    auto *info = static_cast<nebstruct_process_data *>(data);
+    switch (info->type) {
         case NEBTYPE_PROCESS_START:
             try {
                 auto now = std::chrono::system_clock::now();
@@ -734,7 +736,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
             }
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
-            g_timeperiods_cache->update(from_timeval(ps->timestamp));
+            g_timeperiods_cache->update(from_timeval(info->timestamp));
             start_threads();
             fl_core->dumpPaths(fl_core->loggerLivestatus());
             break;
@@ -818,7 +820,7 @@ int verify_event_broker_options() {
 
 void register_callbacks() {
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA, fl_nagios_handle, 0,
-                          broker_host);  // Needed to start threads
+                          broker_host_status);  // Needed to start threads
     neb_register_callback(NEBCALLBACK_COMMENT_DATA, fl_nagios_handle, 0,
                           broker_comment);  // dynamic data
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, fl_nagios_handle, 0,
@@ -829,32 +831,34 @@ void register_callbacks() {
                           broker_check);  // only for statistics
     neb_register_callback(NEBCALLBACK_LOG_DATA, fl_nagios_handle, 0,
                           broker_log);  // only for trigger 'log'
-    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, fl_nagios_handle,
-                          0,
-                          broker_command);  // only for trigger 'command'
+    neb_register_callback(
+        NEBCALLBACK_EXTERNAL_COMMAND_DATA, fl_nagios_handle, 0,
+        broker_external_command);  // only for trigger 'command'
     neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA, fl_nagios_handle, 0,
-                          broker_state);  // only for trigger 'state'
-    neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, fl_nagios_handle,
-                          0,
-                          broker_program);  // only for trigger 'program'
+                          broker_state_change);  // only for trigger 'state'
+    neb_register_callback(
+        NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, fl_nagios_handle, 0,
+        broker_adaptive_program);  // only for trigger 'program'
     neb_register_callback(NEBCALLBACK_PROCESS_DATA, fl_nagios_handle, 0,
                           broker_process);  // used for starting threads
     neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA, fl_nagios_handle, 0,
-                          broker_event);  // used for timeperiods cache
+                          broker_timed_event);  // used for timeperiods cache
 }
 
 void deregister_callbacks() {
-    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host);
+    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA, broker_host_status);
     neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
     neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA, broker_check);
     neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_check);
     neb_deregister_callback(NEBCALLBACK_LOG_DATA, broker_log);
-    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
-    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA, broker_state);
-    neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
-    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, broker_program);
-    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_event);
+    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA,
+                            broker_external_command);
+    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA, broker_state_change);
+    neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
+                            broker_adaptive_program);
+    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, broker_adaptive_program);
+    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_timed_event);
 }
 
 std::filesystem::path check_path(const std::string &name,

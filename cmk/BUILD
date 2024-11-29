@@ -11,6 +11,11 @@ load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_cons
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:proto.bzl", "mypy_compile")
 
+# For packaging only:
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
 genrule(
     name = "_generate_requirements_in",
     srcs = [
@@ -337,4 +342,56 @@ py_doc_test(
     env = {
         "PYTHONWARNINGS": "ignore",
     },
+)
+
+# Packaging proto bindings for deployment
+# Python __init__.py files are needed for loading proto files
+write_file(
+    name = "init_py_dummy",
+    out = "__init__.py",
+    content = [
+        "#!/usr/bin/env python3",
+        "# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2",
+        "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and",
+        "# conditions defined in the file COPYING, which is part of this source code package.",
+    ],
+)
+
+init_prefixes = [
+    "",
+    "state/",
+    "cycletime/",
+    "config/",
+    "state/v1/",
+    "cycletime/v1/",
+    "config/v1/",
+]
+
+[pkg_files(
+    name = "%sproto_init" % prefix.replace("/", "_"),
+    srcs = ["init_py_dummy"],
+    prefix = "cmc_proto/" + prefix,
+    strip_prefix = "",
+) for prefix in init_prefixes]
+
+pkg_files(
+    name = "python_proto_pkg_files",
+    srcs = [
+        ":config_proto_pb2",
+        ":state_proto_pb2",
+    ],
+    strip_prefix = "",
+)
+
+pkg_filegroup(
+    name = "python_proto_pkg",
+    srcs = [":python_proto_pkg_files"] +
+           ["%sproto_init" % prefix.replace("/", "_") for prefix in init_prefixes],
+    prefix = "lib/python3/",
+    visibility = ["//omd:__pkg__"],
+)
+
+pkg_tar(
+    name = "python_proto_tar",
+    srcs = [":python_proto_pkg"],
 )

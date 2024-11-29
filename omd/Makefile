@@ -141,7 +141,7 @@ BOM := bill-of-materials.json
 .PHONY: install cma rpm deb clean install-clean venv
 
 # Called while building the .rpm/.deb packages
-install: $(INSTALL_GLOBAL)
+install: $(INSTALL_GLOBAL) $(DEPS_INSTALL_BAZEL)
 	python3 ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages

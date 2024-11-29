@@ -32,3 +32,23 @@ pkg_tar(
         "//packages/cmk-werks:pkg_tar",
     ],
 )
+
+srcs = {
+    "cre": [],
+    "cce": ["//cmk:python_proto_pkg"],
+    "cee": ["//cmk:python_proto_pkg"],
+    "cme": ["//cmk:python_proto_pkg"],
+    "cse": ["//cmk:python_proto_pkg"],
+}
+
+[pkg_tar(
+    name = "deps_install_" + edition,
+    srcs = [] + srcs[edition],
+    extension = "tar.gz",
+) for edition in [
+    "cre",
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]

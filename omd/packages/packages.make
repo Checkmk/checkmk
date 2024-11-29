@@ -23,10 +23,12 @@ BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 # This is now done inside of Bazel
 # This target can be removed once `dest` is created inside of Bazel
 INTERMEDIATE_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/intermediate_install_bazel'
+DEPS_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/deps_install_bazel'
 
 # Human make target
 .PHONY: intermediate_install_bazel
 intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
+deps_install_bazel: $(DEPS_INSTALL_BAZEL)
 
 $(INTERMEDIATE_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
@@ -59,6 +61,27 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
 
+$(DEPS_INSTALL_BAZEL):
+	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
+	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
+	#       resulting in different builds
+	$(BAZEL_CMD) build \
+	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
+	    //omd:deps_install_$(EDITION_SHORT)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
+	tar -C $(DESTDIR)$(OMD_ROOT) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
+
+	# compile pyc files explicitly selecting `checked-hash` invalidation mode
+	@if [ "$(EDITION_SHORT)" != "cre" ]; then \
+	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall\
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(DESTDIR)$(OMD_ROOT)/lib/python3/" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/python3/cmc_proto"; \
+	fi
+
+	mkdir -p $(BUILD_HELPER_DIR)/
+	touch $@
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))

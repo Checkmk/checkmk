@@ -297,7 +297,7 @@ def process_check_output(  # pylint: disable=too-many-branches
     check_results = {
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
-    for check_id in check_results:
+    for check_id, results in check_results.items():
         if check_id in SkippedChecks.SKIPPED_CHECKS:
             logger.info("Check %s currently skipped", check_id)
             passed = True
@@ -305,19 +305,19 @@ def process_check_output(  # pylint: disable=too-many-branches
 
         logger.debug('> Processing check id "%s"...', check_id)
         if config.mode == CheckModes.ADD and not check_canons.get(check_id):
-            check_canons[check_id] = check_results[check_id]
+            check_canons[check_id] = results
             logger.info("[%s] Canon added!", check_id)
 
         logger.debug('> Verifying check id "%s"...', check_id)
         check_success, diff = _verify_check_result(
             check_id,
             check_canons.get(check_id, {}),
-            check_results[check_id],
+            results,
             output_dir,
             config.mode,
         )
         if config.mode == CheckModes.UPDATE and diff:
-            check_canons[check_id] = check_results[check_id]
+            check_canons[check_id] = results
             logger.info("[%s] Canon updated!", check_id)
             passed = True
             continue
@@ -577,15 +577,12 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
                 pending_checks.pop(host_name, None)
                 continue
 
-    for host_name in pending_checks:
+    for host_name, value in pending_checks.items():
         logger.info(
             '%s pending service(s) found on host "%s": %s',
-            len(pending_checks[host_name]),
+            len(value),
             host_name,
-            ",".join(
-                _.get("extensions", {}).get("description", _.get("id"))
-                for _ in pending_checks[host_name]
-            ),
+            ",".join(_.get("extensions", {}).get("description", _.get("id")) for _ in value),
         )
 
 

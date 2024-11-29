@@ -252,8 +252,8 @@ def test_diagnostics_element_environment_content(
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
     with monkeypatch.context() as m:
-        for key in environment_vars:
-            m.setenv(key, environment_vars[key])
+        for key, value in environment_vars.items():
+            m.setenv(key, value)
 
         diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")
@@ -265,8 +265,8 @@ def test_diagnostics_element_environment_content(
         content = json.loads(filepath.open().read())
         assert "France" in content
 
-        for key in environment_vars:
-            assert content[key] == environment_vars[key]
+        for key, value in environment_vars.items():
+            assert content[key] == value
 
         assert content["OMD_SITE"] == cmk.ccc.site.omd_site()
 

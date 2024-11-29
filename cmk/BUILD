@@ -126,7 +126,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "setproctitle",
     "setuptools-scm",
     "snmpsim-lextudio",
-    "typing-extensions",
     "urllib3",
     "vcrpy",
     "watchdog",

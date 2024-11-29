@@ -23,10 +23,9 @@ import sys
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
-from typing_extensions import TypedDict
 
 LOG = logging.getLogger("validate_changes")
 

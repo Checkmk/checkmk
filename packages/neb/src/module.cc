@@ -646,6 +646,13 @@ void close_unix_socket() {
 int broker_host_status(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_host_status_data *>(data);
     log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_HOSTSTATUS_UPDATE:
+            // TODO(sp) We do nothing here, why do we even register?
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     return 0;
 }
@@ -653,20 +660,43 @@ int broker_host_status(int callback_type, void *data) {
 int broker_host_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_host_check_data *>(data);
     log_callback(callback_type, info->type);
-    if (info->type == NEBTYPE_HOSTCHECK_PROCESSED) {
-        counterIncrement(Counter::host_checks);
+    switch (info->type) {
+        case NEBTYPE_HOSTCHECK_INITIATE:
+        case NEBTYPE_HOSTCHECK_ASYNC_PRECHECK:
+        case NEBTYPE_HOSTCHECK_SYNC_PRECHECK:
+        case NEBTYPE_HOSTCHECK_RAW_START:
+        case NEBTYPE_HOSTCHECK_RAW_END:
+            break;
+        case NEBTYPE_HOSTCHECK_PROCESSED:
+            counterIncrement(Counter::host_checks);
+            fl_core->triggers().notify_all(Triggers::Kind::check);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
-    fl_core->triggers().notify_all(Triggers::Kind::check);
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
 int broker_service_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_service_check_data *>(data);
     log_callback(callback_type, info->type);
-    if (info->type == NEBTYPE_SERVICECHECK_PROCESSED) {
-        counterIncrement(Counter::service_checks);
+    switch (info->type) {
+        case NEBTYPE_SERVICECHECK_INITIATE:
+        case NEBTYPE_SERVICECHECK_ASYNC_PRECHECK:
+        case NEBTYPE_SERVICECHECK_RAW_START:
+        case NEBTYPE_SERVICECHECK_RAW_END:
+            break;
+        case NEBTYPE_SERVICECHECK_PROCESSED:
+            counterIncrement(Counter::service_checks);
+            fl_core->triggers().notify_all(Triggers::Kind::check);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
-    fl_core->triggers().notify_all(Triggers::Kind::check);
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
@@ -679,7 +709,7 @@ int broker_comment(int callback_type, void *data) {
         case NEBTYPE_COMMENT_LOAD: {
             // TODO(sp): We get a NEBTYPE_COMMENT_LOAD *and* a
             // NEBTYPE_COMMENT_ADD for a single ADD_*_COMMENT command, can we
-            // remove on of those cases above?
+            // remove one of those cases above?
             Informational(fl_core->loggerLivestatus())
                 << (info->type == NEBTYPE_COMMENT_ADD ? "adding" : "loading")
                 << " new comment " << id;
@@ -705,6 +735,7 @@ int broker_comment(int callback_type, void *data) {
                 ._source = static_cast<CommentSource>(
                     static_cast<int32_t>(info->source)),
                 ._expires = info->expires != 0});
+            fl_core->triggers().notify_all(Triggers::Kind::comment);
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
@@ -714,12 +745,13 @@ int broker_comment(int callback_type, void *data) {
                 Informational(fl_logger_nagios)
                     << "cannot delete non-existing comment " << id;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::comment);
             break;
         default:
+            // We should never see other event types here.
             break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
 }
 
@@ -732,8 +764,8 @@ int broker_downtime(int callback_type, void *data) {
         case NEBTYPE_DOWNTIME_LOAD: {
             // TODO(sp): We get a NEBTYPE_DOWNTIME_LOAD *and* a
             // NEBTYPE_DOWNTIME_ADD for a single SCHEDULE_*_DOWNTIME command,
-            // can we remove on of those cases above? After that, we get a
-            // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD.
+            // can we remove one of those cases above? After that, we get a
+            // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD, too.
             Informational(fl_core->loggerLivestatus())
                 << (info->type == NEBTYPE_DOWNTIME_ADD ? "adding" : "loading")
                 << " new downtime " << id;
@@ -760,6 +792,7 @@ int broker_downtime(int callback_type, void *data) {
                 ._triggered_by = static_cast<int32_t>(info->triggered_by),
                 ._is_active = false,  // TODO(sp) initial state?
             });
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         }
         case NEBTYPE_DOWNTIME_DELETE:
@@ -769,69 +802,103 @@ int broker_downtime(int callback_type, void *data) {
                 Informational(fl_logger_nagios)
                     << "cannot delete non-existing downtime " << id;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         case NEBTYPE_DOWNTIME_START:
             if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
                 it->second->_is_active = true;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
 
         case NEBTYPE_DOWNTIME_STOP:
             if (auto it = fl_downtimes.find(id); it != fl_downtimes.end()) {
                 it->second->_is_active = false;
             }
+            fl_core->triggers().notify_all(Triggers::Kind::downtime);
             break;
         default:
+            // We should never see other event types here.
             break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
 }
 
 int broker_log(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_log_data *>(data);
     log_callback(callback_type, info->type);
-    counterIncrement(Counter::neb_callbacks);
-    counterIncrement(Counter::log_messages);
-    // NOTE: We use logging very early, even before the core is instantiated!
-    if (fl_core != nullptr) {
-        fl_core->triggers().notify_all(Triggers::Kind::log);
+    switch (info->type) {
+        case NEBTYPE_LOG_DATA:
+            // Note that we are called *after* the entry has been written to the
+            // Nagios log file.
+            counterIncrement(Counter::log_messages);
+            // NOTE: We use logging very early, even before the core is
+            // instantiated!
+            if (fl_core != nullptr) {
+                fl_core->triggers().notify_all(Triggers::Kind::log);
+            }
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
-// called twice (start/end) for each external command, even builtin ones
 int broker_external_command(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_external_command_data *>(data);
     log_callback(callback_type, info->type);
-    if (info->type == NEBTYPE_EXTERNALCOMMAND_START) {
-        counterIncrement(Counter::commands);
-        if (info->command_type == CMD_CUSTOM_COMMAND &&
-            info->command_string == "_LOG"s) {
-            write_to_all_logs(info->command_args, -1);
-            counterIncrement(Counter::log_messages);
-            fl_core->triggers().notify_all(Triggers::Kind::log);
-        }
+    switch (info->type) {
+        case NEBTYPE_EXTERNALCOMMAND_START:
+            counterIncrement(Counter::commands);
+            if (info->command_type == CMD_CUSTOM_COMMAND &&
+                info->command_string == "_LOG"s) {
+                write_to_all_logs(info->command_args, -1);
+                counterIncrement(Counter::log_messages);
+                fl_core->triggers().notify_all(Triggers::Kind::log);
+            }
+            fl_core->triggers().notify_all(Triggers::Kind::command);
+            break;
+        case NEBTYPE_EXTERNALCOMMAND_END:
+        default:
+            // We should never see other event types here.
+            break;
     }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::command);
     return 0;
 }
 
 int broker_state_change(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_statechange_data *>(data);
     log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_STATECHANGE_START:
+        case NEBTYPE_STATECHANGE_END:
+            // Called after a host/service state change
+            fl_core->triggers().notify_all(Triggers::Kind::state);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::state);
     return 0;
 }
 
 int broker_adaptive_program(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_adaptive_program_data *>(data);
     log_callback(callback_type, info->type);
+    switch (info->type) {
+        case NEBTYPE_ADAPTIVEPROGRAM_UPDATE:
+            fl_core->triggers().notify_all(Triggers::Kind::program);
+            break;
+        default:
+            // We should never see other event types here.
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
-    fl_core->triggers().notify_all(Triggers::Kind::program);
     return 0;
 }
 
@@ -858,24 +925,46 @@ void livestatus_log_initial_states() {
 int broker_timed_event(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_timed_event_data *>(data);
     log_callback(callback_type, info->type);
-    counterIncrement(Counter::neb_callbacks);
-    if (info->event_type == EVENT_LOG_ROTATION) {
-        if (fl_thread_running == 1) {
-            livestatus_log_initial_states();
-        } else if (log_initial_states == 1) {
-            // initial info during startup
-            Informational(fl_logger_nagios) << "logging initial states";
-        }
+    switch (info->type) {
+        case NEBTYPE_TIMEDEVENT_ADD:
+        case NEBTYPE_TIMEDEVENT_REMOVE:
+        case NEBTYPE_TIMEDEVENT_EXECUTE:
+        case NEBTYPE_TIMEDEVENT_DELAY:
+        case NEBTYPE_TIMEDEVENT_SKIP:
+        case NEBTYPE_TIMEDEVENT_SLEEP:
+            // TODO(sp) Do we really want to do this for all event types above?
+            if (info->event_type == EVENT_LOG_ROTATION) {
+                if (fl_thread_running == 1) {
+                    livestatus_log_initial_states();
+                } else if (log_initial_states == 1) {
+                    // initial info during startup
+                    Informational(fl_logger_nagios) << "logging initial states";
+                }
+            }
+            g_timeperiods_cache->update(from_timeval(info->timestamp));
+            break;
+        default:
+            // We should never see other event types here.
+            break;
     }
-    g_timeperiods_cache->update(from_timeval(info->timestamp));
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
 int broker_process(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_process_data *>(data);
     log_callback(callback_type, info->type);
+    // The event types below are in chronological order.
     switch (info->type) {
+        case NEBTYPE_PROCESS_PRELAUNCH:
+            // Called prior to reading/parsing object configuration files.
+            break;
         case NEBTYPE_PROCESS_START:
+            // Called after reading all configuration objects and after passing
+            // the pre-flight check. Called before entering daemon mode, opening
+            // command pipe, starting worker threads, intitializing the status,
+            // comments, downtime, performance and initial host/service
+            // structures.
             try {
                 auto now = std::chrono::system_clock::now();
                 auto state_file_created = mk::state_file_created(
@@ -902,14 +991,30 @@ int broker_process(int callback_type, void *data) {
                 exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)
             }
             break;
+        case NEBTYPE_PROCESS_DAEMONIZE:
+            // Called right after Nagios successfully "daemonizes"; that is,
+            // detaches from the controlling terminal and is running in the
+            // background.
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
+            // Called immediately prior to entering the main event execution.
             g_timeperiods_cache->update(from_timeval(info->timestamp));
             start_threads();
             fl_core->dumpPaths(fl_core->loggerLivestatus());
             break;
+        case NEBTYPE_PROCESS_EVENTLOOPEND:
+            // Called immediately after exiting the main event execution loop
+            // (due to either a shutdown or a restart)
+        case NEBTYPE_PROCESS_SHUTDOWN:
+            // Invoked if exiting due to either a process-initiated (abnormal)
+            // or a user-initiated (normal) shutdown
+        case NEBTYPE_PROCESS_RESTART:
+            // Invoked if exiting due to a user-initiated restart. Always
+            // invoked after NEBTYPE_EVENLOOPEND.
         default:
+            // We should never see other event types here.
             break;
     }
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 

@@ -54,6 +54,7 @@ ignore = [
 "packages/cmk-agent-based/cmk/*" = ["PLR2004"]
 "cmk/*" = ["A", "ARG", "RUF100", "UP", "SLF"]
 "tests/*" = ["A", "ARG", "RUF100", "SLF"]
+"agents/*" = ["ARG", "SLF"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

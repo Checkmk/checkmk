@@ -47,7 +47,7 @@ except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):
-    RecursionError = RuntimeError  # pylint: disable=redefined-builtin
+    RecursionError = RuntimeError  # pylint: disable=redefined-builtin # noqa: A001
 
 # #############################################################################
 

@@ -902,7 +902,7 @@ void livestatus_parse_argument(Logger *logger, std::string_view param_name,
         } else {
             fl_livestatus_log_level = LogLevel::notice;
         }
-        Notice(logger) << "setting debug level to " << fl_livestatus_log_level;
+        Notice(logger) << "setting log level to " << fl_livestatus_log_level;
     } else if (param_name == "max_cached_messages"sv) {
         fl_limits._max_cached_messages = parse_number<size_t>(param_value);
         Notice(logger) << "setting max number of cached log messages to "

@@ -40,7 +40,7 @@ exit_failure() {
 
 case "$1" in
     start)
-        echo -n 'Starting cmk-ui-jobs...'
+        echo -n 'Starting ui-job-scheduler...'
         # shellcheck disable=SC2086 # Yes, we want splitting for OPTS.
         if process_is_running; then
             exit_successfully 'Already running.'
@@ -53,7 +53,7 @@ case "$1" in
         fi
         ;;
     stop)
-        echo -n 'Stopping cmk-ui-jobs...'
+        echo -n 'Stopping ui-job-scheduler...'
         if [ -z "$THE_PID" ]; then
             exit_successfully 'not running.'
         fi
@@ -94,7 +94,7 @@ case "$1" in
         ;;
 
     reload)
-        echo -n 'Reloading cmk-ui-jobs...'
+        echo -n 'Reloading ui-job-scheduler...'
         if [ -z "$THE_PID" ]; then
             echo 'Not running.'
             exit 1
@@ -105,7 +105,7 @@ case "$1" in
         ;;
 
     status)
-        echo -n 'Checking status of cmk-ui-jobs...'
+        echo -n 'Checking status of ui-job-scheduler...'
         if [ -z "$THE_PID" ]; then
             exit_failure 'not running (PID file missing)'
         fi

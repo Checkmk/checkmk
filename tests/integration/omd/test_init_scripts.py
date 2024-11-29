@@ -11,7 +11,7 @@ def test_init_scripts(site: Site) -> None:
         "agent-receiver",
         "apache",
         "automation-helper",
-        "cmk-ui-jobs",
+        "ui-job-scheduler",
         "core",
         "crontab",
         "mkeventd",

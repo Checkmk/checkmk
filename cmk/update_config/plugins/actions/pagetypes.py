@@ -75,21 +75,19 @@ class PagetypeTopicsUpdater:
     def __init__(self) -> None:
         self.target_type: Final = PagetypeTopics
 
+    def update_raw_page_dict(self, page_dict: dict[str, object]) -> dict[str, object]:
+        return page_dict | {
+            "icon_name": (
+                page_dict["icon_name"]
+                # transparent icon
+                or "trans"
+            )
+        }
+
     def __call__(
         self, page_dicts: Mapping[InstanceId, dict[str, object]]
     ) -> Mapping[InstanceId, dict[str, object]]:
-        return {
-            instance_id: page_dict
-            | {
-                "icon_name": (
-                    icon_name
-                    if (icon_name := page_dict["icon_name"])
-                    # transparent icon
-                    else "trans"
-                )
-            }
-            for instance_id, page_dict in page_dicts.items()
-        }
+        return {k: self.update_raw_page_dict(v) for k, v in page_dicts.items()}
 
 
 pagetype_updater_registry.register(PagetypeTopicsUpdater())

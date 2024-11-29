@@ -152,7 +152,8 @@ class UnitStatus:
         name = entry[0][1].split(".", 1)[0]
         enabled_status = entry[1][3].rstrip(";)") if len(entry[1]) >= 4 else None
 
-        timestr = " ".join(entry[2]).split(";", 1)[-1]
+        time_line = next((line for line in entry if line[0].lstrip().startswith("Active:")), [])
+        timestr = " ".join(time_line).split(";", 1)[-1]
         if "ago" in timestr:
             time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
         else:

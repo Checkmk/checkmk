@@ -95,7 +95,12 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
         # This reduces the probability to break the logic of automated processes. This has the
         # advantage that we can do it in this central place. The disadvantage is that the changes
         # are synced later to the central site, which seems to be acceptable.
-        site_changes = [c for c in SiteChanges(site_id).read() if c["time"] < time.time() - 600]
+        site_changes = SiteChanges(site_id).read()
+        # We could filter out the changes within the 600 seconds if clear-site-changes would only
+        # delete the synced changes. To deal with that we don't sync any change if there is a
+        # change within the last 600 seconds.
+        if max(c["time"] for c in site_changes) > time.time() - 600:
+            site_changes = []
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()
 

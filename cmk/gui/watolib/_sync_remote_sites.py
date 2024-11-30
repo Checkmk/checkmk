@@ -79,7 +79,23 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
         site_id = omd_site()
 
         audit_logs = AuditLogStore().get_entries_since(timestamp=api_request)
-        site_changes = SiteChanges(site_id).read()
+
+        # The sync (and later deletion with clear-site-changes) of the site changes was built to
+        # synchronize changes which would not be activated on the remote site (See SUP-9139). For
+        # automated processes which do an activation however, this mechanism introduces a race
+        # condition.
+        # When e.g. DiscoverRegisteredHostsJob creates a change and activates it, it may happen
+        # that the sync + deletion happens before the activation is finished. In this case the
+        # activation may not activate the change as intended, breaking the logic of the job.
+        #
+        # We could introduce a lock here, but it is not clear which parts of the system have
+        # a similar behavior as the DiscoverRegisteredHostsJob, so we don't know where to apply
+        # the lock.
+        # Another approach is to only sync not activated site changes which have a certain age.
+        # This reduces the probability to break the logic of automated processes. This has the
+        # advantage that we can do it in this central place. The disadvantage is that the changes
+        # are synced later to the central site, which seems to be acceptable.
+        site_changes = [c for c in SiteChanges(site_id).read() if c["time"] < time.time() - 600]
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()
 

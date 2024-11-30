@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-11-25 15:09+0000\n"
+"PO-Revision-Date: 2024-11-29 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -233,6 +233,10 @@ msgstr ""
 
 msgid "\"not\" is the abbreviation for \"and not\","
 msgstr "\"not\" ist die Abkürzung für \"and not\","
+
+#, fuzzy, python-format
+msgid "# %s - Cycle details"
+msgstr "BI Servicedetails"
 
 msgid "# Containers"
 msgstr "# Container"
@@ -761,10 +765,6 @@ msgid "%s: Service discovery: Permission denied"
 msgstr "%s: Service-Erkennung: Berechtigung verweigert"
 
 #, python-format
-msgid "%s: Services: %s, Host labels: %s"
-msgstr "%s: Services: %s, Host-Labels: %s"
-
-#, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Verwendet SSL"
 
@@ -776,7 +776,7 @@ msgid ""
 "trial expiration, including hosts added via CMCDump"
 msgstr ""
 "„Änderungen aktivieren“ ist gesperrt. Verteiltes Monitoring ist nach Ablauf "
-"der Testphase nicht mehr verfügbar, einschließlich der über CMCDump "
+"des Testzeitraums nicht mehr verfügbar, einschließlich der über CMCDump "
 "hinzugefügten Hosts"
 
 msgid "'Cleared' state"
@@ -985,9 +985,8 @@ msgstr "-.-- %"
 msgid "-.-- ms"
 msgstr "-.-- ms"
 
-#, fuzzy
 msgid "."
-msgstr "s."
+msgstr "."
 
 #, python-format
 msgid "... (%d more)"
@@ -2830,6 +2829,10 @@ msgstr "Breche Änderung ab."
 msgid "About Checkmk"
 msgstr "Über Checkmk"
 
+#, fuzzy
+msgid "About the processing cycle"
+msgstr "Neueste Verarbeitungszyklen"
+
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Absolutes Level der Gesamtanzahl von benutzten Datei-Deskriptoren"
 
@@ -3406,6 +3409,10 @@ msgstr "Änderungen durch %s aktiviert."
 msgid "Activating"
 msgstr "Aktiviere"
 
+#, fuzzy
+msgid "Activating changes: "
+msgstr "Änderungen aktivieren"
+
 msgid "Activation"
 msgstr "Aktivierung"
 
@@ -3416,12 +3423,6 @@ msgid ""
 msgstr ""
 "Aktivierung blockiert.<br>%s aktiviert gerade Änderungen auf dieser Instanz."
 "<br>Die laufende Aktivierung wurde von Checkmk %s ausgeführt."
-
-msgid "Activation cleanup"
-msgstr "Aktivierung aufräumen"
-
-msgid "Activation cleanup finished"
-msgstr "Aktivierung aufräumen abgeschlossen"
 
 msgid "Activation has finished."
 msgstr "Aktivierung ist abgeschlossen."
@@ -8766,7 +8767,7 @@ msgstr ""
 "Services."
 
 msgid "Beta Trial"
-msgstr "Beta-Test"
+msgstr "Beta-Testzeitraum"
 
 msgid "Beta phase: too many services"
 msgstr "Beta-Phase: zu viele Services"
@@ -9185,9 +9186,8 @@ msgstr ""
 "Knöpfe für das globale Umschalten von Zuständen wie die Aktivierung von "
 "Checks und Benachrichtigungen"
 
-#, fuzzy
 msgid "Buy a license"
-msgstr "eine Lizenz kaufen"
+msgstr "Eine Lizenz kaufen"
 
 msgid "By"
 msgstr "Von"
@@ -9312,10 +9312,10 @@ msgid ""
 msgstr ""
 "Durch Aktivierung dieser Option werden die kompletten kombinierten "
 "Regelbedingungen umgekehrt. Das bedeutet, dass diese Regel ausgeführt wird, "
-"wenn mindestens eine der Bedingungen <b>nicht</b> zutrifft. Dies ist z.B. "
-"nützlich, um ein Regelpaket zu überspringen, wenn der Nachrichtentext nicht "
-"<tt>ORA-</tt> enthält. Bemerkung: Wenn eine invertierte Regel greift, kann "
-"es nie Match-Gruppen geben."
+"wenn mindestens eine der Bedingungen <b>nicht</b> zutrifft. Dies kann z.B. "
+"genutzt werden, um ein Regelpaket zu überspringen, wenn der Nachrichtentext "
+"nicht <tt>ORA-</tt> enthält. Bemerkung: Wenn eine invertierte Regel greift, "
+"kann es nie Match-Gruppen geben."
 
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
@@ -11623,9 +11623,6 @@ msgstr "Check-Timeout für Services (Micro Core)"
 msgid "Check type"
 msgstr "Check-Typ"
 
-msgid "Check types"
-msgstr "Check-Typen"
-
 msgid "Check uniserv service"
 msgstr "uniserv-Dienst überwachen"
 
@@ -11703,9 +11700,8 @@ msgstr ""
 msgid "Checkmk Appliance information"
 msgstr "Checkmk Appliance Information"
 
-#, fuzzy
 msgid "Checkmk Cloud Trial"
-msgstr "Checkmk Cloud"
+msgstr "Checkmk Cloud Testzeitraum"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
@@ -11859,6 +11855,9 @@ msgstr "Checkmk-Partner und -Reseller"
 
 msgid "Checkmk server URL"
 msgstr "Checkmk Server URL"
+
+msgid "Checkmk server host"
+msgstr "Checkmk-Server Host"
 
 msgid "Checkmk servers"
 msgstr "Checkmk Server"
@@ -13860,10 +13859,6 @@ msgstr "Diskrepanz konfigurierter Features"
 msgid "Configured time period parameters"
 msgstr "Konfigurierte Parameter der Zeitperiode"
 
-#, python-format
-msgid "Configured with %s Quick setup"
-msgstr "Mit %s Quick Setup konfiguriert"
-
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr ""
@@ -14659,6 +14654,10 @@ msgstr ""
 "Checkmk Support. Sie müssen auch sicherstellen, dass Ihr Checkmk den "
 "Lizenzserver erreichen kann. Bitte prüfen Sie Ihre Firewall- und Proxy-"
 "Einstellungen."
+
+#, fuzzy, python-format
+msgid "Could not connect to the remote site (%s)"
+msgstr "Kann sich nicht mit Remote-Instanz %s verbinden"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -15993,6 +15992,32 @@ msgstr "Angepasst"
 
 msgid "Cut everything after first space"
 msgstr "Alles ab dem ersten Leerzeichen abschneiden"
+
+#, python-format
+msgid ""
+"Cycle %d not found, the information is expired, please return back to select "
+"a cycle"
+msgstr ""
+
+msgid "Cycle id"
+msgstr "Zyklus-ID"
+
+#, fuzzy
+msgid "Cycle not found"
+msgstr "Seite nicht gefunden"
+
+msgid ""
+"Cycle not found, the information is expired, please return back to select a "
+"cycle"
+msgstr ""
+
+#, fuzzy
+msgid "Cycle steps"
+msgstr "Zyklus-ID"
+
+#, fuzzy
+msgid "Cycles"
+msgstr "Zyklus-ID"
 
 msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - gedrosselte Serververbindungen"
@@ -18518,6 +18543,9 @@ msgstr "Diese Instanz deaktivieren"
 msgid "Disable this test"
 msgstr "Diesen Test deaktiveren"
 
+msgid "Disable time specific parameters"
+msgstr "Deaktiviere zeitspezifische Parameter"
+
 msgid "Disable timespecific parameters"
 msgstr "Zeitspezifische Parameter deaktivieren"
 
@@ -18617,17 +18645,11 @@ msgstr "Finden Sie individuelle Services für jede CPU"
 msgid "Discover packages"
 msgstr "Pakete entdecken"
 
-msgid "Discover registered hosts"
-msgstr "Registrierte Hosts erkennen"
-
 msgid "Discover services during creation"
 msgstr "Erkennen von Services während der Erstellung"
 
 msgid "Discover single interfaces"
 msgstr "Erkenne einzelne Schnittstellen"
-
-msgid "Discovered host label synchronization"
-msgstr "Synchronisation entdeckter (Host-) label"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -21320,6 +21342,9 @@ msgstr "Aktiviere dieses Paket"
 msgid "Enable this site"
 msgstr "Diese Instanz aktivieren"
 
+msgid "Enable time specific parameters"
+msgstr "Aktiviere zeitspezifische Parameter"
+
 msgid "Enable timespecific parameters"
 msgstr "Zeitspezifische Parameter aktivieren"
 
@@ -21909,10 +21934,6 @@ msgstr "Fehler in Ansicht: %s"
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Fehler bei der Darstellung von Elementtyp '%s'"
-
-#, python-format
-msgid "Error: %s"
-msgstr "Fehler: %s"
 
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
@@ -23221,10 +23242,6 @@ msgstr "Das passende Zertifikat konnte in der Kette nicht gefunden werden"
 #, python-format
 msgid "Failed to generate REST API specification: %s"
 msgstr "Fehlgeschlagene Erzeugung der REST-API Spezifikation: %s"
-
-#, python-format
-msgid "Failed to get changes from sites: %s."
-msgstr "Fehler beim Holen der Änderungen von den Instanzen: %s."
 
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
@@ -25285,6 +25302,10 @@ msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 
 msgid "Go to \"All hosts\""
 msgstr "Gehe zu \"Alle Hosts\""
+
+#, python-format
+msgid "Go to %s overview"
+msgstr "Gehe zu %s Übersicht"
 
 msgid "Go to AWS root account > Services > IAM."
 msgstr "Gehe zu AWS-Stammkonto > Services > IAM."
@@ -28478,6 +28499,9 @@ msgstr "Host-Name des Geräts"
 msgid "Host name or IPv4 address for listener"
 msgstr "Host-Name oder IPv4-Adresse des Listeners"
 
+msgid "Host name or address"
+msgstr "Host-Name oder -Adresse"
+
 msgid "Host name or alias (regex)"
 msgstr "Host-Name oder Alias (regex)"
 
@@ -28576,6 +28600,10 @@ msgstr "Hostprobleme für NagStaMon"
 msgid "Host processing"
 msgstr "Host-Verarbeitung"
 
+#, fuzzy
+msgid "Host processing: "
+msgstr "Host-Verarbeitung"
+
 msgid "Host properties"
 msgstr "Hosteigenschaften"
 
@@ -28587,14 +28615,8 @@ msgid "Host properties, such as labels or contact groups, are inherited."
 msgstr ""
 "Host-Eigenschaften, wie Beschriftungen oder Kontaktgruppen, werden vererbt."
 
-msgid "Host registration"
-msgstr "Host-Registrierung"
-
 msgid "Host related aggregations"
 msgstr "Host-bezogene Aggregate"
-
-msgid "Host removal"
-msgstr "Host-Entfernung"
 
 msgid "Host renaming"
 msgstr "Host umbenennen"
@@ -31110,13 +31132,13 @@ msgstr ""
 "bitte das Checkmk-Verkaufsteam unter %s und erneuern Sie Ihre Lizenz. Wenn "
 "Sie Ihre Lizenz über %s erworben haben, kontaktieren Sie diesen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "If you want to continue to use Checkmk, please contact the Checkmk sales "
 "team at %s."
 msgstr ""
-"Wenn Sie Checkmk weiterhin nutzen möchten, erwerben Sie bitte eine Lizenz, "
-"die %s unterstützt oder kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
+"Wenn Sie Checkmk weiterhin nutzen möchten, kontaktieren Sie das Checkmk-"
+"Verkaufsteam unter %s."
 
 #, python-format
 msgid ""
@@ -32918,6 +32940,10 @@ msgstr "Ungülitge Endzeit"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 
+#, fuzzy
+msgid "Invalid file"
+msgstr "Ungültiger Dateiname"
+
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
 
@@ -34192,11 +34218,12 @@ msgstr "Beschriftungsoptionen"
 msgid "Labels"
 msgstr "Labels"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Mit Hilfe von Labels können Sie Ihre Hosts flexibel gruppieren, um später an "
 "anderer Stelle in Checkmk auf sie zu verweisen, z.B. in Regelketten. "
@@ -35226,13 +35253,15 @@ msgstr "Die Lizenz ist abgelaufen: 'Änderungen aktivieren' ist blockiert"
 msgid "License expired: Renew license now"
 msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
 
-#, fuzzy
 msgid "License expired: Renew license now to avoid site deletion."
-msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
+msgstr ""
+"Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die Löschung "
+"der Instanz zu vermeiden."
 
-#, fuzzy
 msgid "License expired: Renew license now to reactivate change activation."
-msgstr "Die Lizenz ist abgelaufen: Verlängern Sie Ihre Lizenz jetzt"
+msgstr ""
+"Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die "
+"Aktivierung von Änderungen wieder freizuschalten."
 
 msgid "License start"
 msgstr "Lizenzbeginn"
@@ -35246,16 +35275,14 @@ msgstr "Lizenzzustand: Free"
 msgid "License suspended: 'Activate changes' is blocked"
 msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert"
 
-#, fuzzy
 msgid "License suspended: 'Activate changes' is blocked."
-msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert"
+msgstr "Lizenz ausgesetzt: \"Änderungen aktivieren\" ist blockiert."
 
 msgid "License suspended: Contact Checkmk sales team now"
 msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
 
-#, fuzzy
 msgid "License suspended: Contact Checkmk sales team now."
-msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
+msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam."
 
 msgid "License usage"
 msgstr "Lizenznutzung"
@@ -35276,9 +35303,8 @@ msgstr ""
 msgid "Licensed"
 msgstr "Lizenziert"
 
-#, fuzzy
 msgid "Licensed phase: too many services."
-msgstr "Beta-Phase: zu viele Services"
+msgstr "Lizenzierte Phase: zu viele Services."
 
 msgid "Licensed services"
 msgstr "Lizenzierte Services"
@@ -40797,6 +40823,10 @@ msgstr "Nächster Lauf"
 msgid "Next check"
 msgstr "Nächster Check"
 
+#, fuzzy
+msgid "Next cycle"
+msgstr "Nächster Check"
+
 msgid "Next notification"
 msgstr "Nächste Benachrichtigung"
 
@@ -40907,9 +40937,6 @@ msgstr "Keine zusätzlichen Konfigurationsoptionen für diese Methode."
 msgid "No agent labels present."
 msgstr "Keine Agentenlabels vorhanden."
 
-msgid "No agent registration requests processed"
-msgstr "Keine Anträge auf Agentenregistrierung verarbeitet"
-
 msgid "No appropriate request ID"
 msgstr "Keine passende Anfrage-ID"
 
@@ -40982,18 +41009,12 @@ msgstr "Keine Daten."
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
 
-msgid "No declined requests"
-msgstr "Keine abgelehnten Anfragen"
-
 #, python-format
 msgid ""
 "No detail renderer for crash of type '%s' available. Details structure is:"
 msgstr ""
 "Kein Detail-Renderer für Crash vom Typ '%s' vorhanden. Detaillierte Struktur "
 "ist:"
-
-msgid "No discoverable hosts found"
-msgstr "Keine erkennbaren Hosts gefunden"
 
 msgid "No discovery information available. Please perform a rescan."
 msgstr ""
@@ -41058,9 +41079,6 @@ msgid ""
 msgstr ""
 "Keine historischen Metriken vorhanden, obwohl der Check Metriken liefert. "
 "Eventuell ist die Verarbeitung von Metriken deaktiviert."
-
-msgid "No hosts discovered"
-msgstr "Keine Hosts erkannt"
 
 msgid "No hosts to be discovered"
 msgstr "Keine Hosts zu entdecken"
@@ -41140,8 +41158,9 @@ msgstr "Keine Merkmale zum Hinzufügen"
 msgid "No names defined"
 msgstr "Keine Namen definiert"
 
-msgid "No need for syncing sites"
-msgstr "Synchronisierung von Instanzen nicht nötig"
+#, fuzzy
+msgid "No next cycle available"
+msgstr "Keine Elemente verfügbar"
 
 #, python-format
 msgid "No notification parameters for method '%s' found"
@@ -41172,15 +41191,15 @@ msgstr "Keine ausstehenden Änderungen."
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
 
+#, fuzzy
+msgid "No previous cycle available"
+msgstr "Keine Optionen vorhanden"
+
 msgid "No proxy"
 msgstr "Kein Proxy"
 
 msgid "No re-executions"
 msgstr "Keine Wiederausführungen"
-
-#, python-format
-msgid "No remote %s processed."
-msgstr "Keine Remote %s verarbeitet."
 
 msgid "No replication with this site"
 msgstr "Keine Replikation mit dieser Instanz"
@@ -41397,9 +41416,6 @@ msgstr "Grundrauschen"
 
 msgid "Nominal frequencies"
 msgstr "Nominelle Frequenzen"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Hier sind nur ASCII-Zeichen erlaubt."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -43167,6 +43183,9 @@ msgid ""
 "Once you reach 100%, further change activations will be blocked. Avoid "
 "interruptions by upgrading your license to extend your service limit, "
 msgstr ""
+"Sobald Sie 100 % erreicht haben, werden weitere Änderungsaktivierungen "
+"blockiert. Vermeiden Sie Unterbrechungen, indem Sie Ihre Lizenz aufrüsten, "
+"um Ihr Service-Limit zu erweitern, "
 
 msgid ""
 "One Metric History painter time range is set to inherit from report, yet "
@@ -43589,6 +43608,9 @@ msgstr "OpenVMS-Prozesse"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPN-Klienten"
+
+msgid "Opentelemetry (Experimental)"
+msgstr ""
 
 msgid "Operating CPU"
 msgstr "Betriebs-CPU"
@@ -44604,8 +44626,8 @@ msgid ""
 "number of services from %s to %s to meet the maximum service limit of "
 "Checkmk in license state 'Free'"
 msgstr ""
-"Andernfalls wird Ihr Checkmk nach Ablauf der Testphase automatisch in den "
-"Lizenzzustand 'Free' umgewandelt. In diesem Lizenzzustand müssen Sie die "
+"Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums automatisch in "
+"den Lizenzzustand 'Free' umgewandelt. In diesem Lizenzzustand müssen Sie die "
 "Anzahl der Services von %s auf %s reduzieren, um die maximale Service-Grenze "
 "von Checkmk im Lizenzzustand 'Free' zu erfüllen"
 
@@ -45642,6 +45664,10 @@ msgstr ""
 "konfigurieren.<br><br><b>Verteiltes Setup:</b><br>Stellen Sie sicher, dass "
 "der Host und alle seine Parents von der gleichen Instanz überwacht werden."
 
+#, python-format
+msgid "Part of Quick setup: %s"
+msgstr "Teil des Quick Setup: %s"
+
 msgid "Partial backup"
 msgstr "Partielles Backup"
 
@@ -46626,20 +46652,17 @@ msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 msgid "Please add at least one column to your view."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 
-#, fuzzy
 msgid "Please add at least one contact group"
-msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
+msgstr "Bitte fügen Sie mindestens eine Kontaktgruppe hinzu."
 
-#, fuzzy
 msgid "Please add at least one email address"
-msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+msgstr "Bitte fügen Sie mindestens eine E-Mail-Adresse hinzu."
 
 msgid "Please add at least one endpoint to monitor"
 msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
 
-#, fuzzy
 msgid "Please add at least one macro"
-msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
+msgstr "Bitte fügen Sie mindestens ein Makro hinzu."
 
 msgid "Please add at least one recipient"
 msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
@@ -46647,9 +46670,8 @@ msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
 msgid "Please add at least one tag condition."
 msgstr "Bitte fügen Sie mindestens eine Merkmalsbedingung hinzu."
 
-#, fuzzy
 msgid "Please add at least one user"
-msgstr "Bitte fügen Sie mindestens einen Empfänger hinzu."
+msgstr "Bitte fügen Sie mindestens einen Benutzer hinzu."
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -47523,10 +47545,11 @@ msgid "Positive match (Add matching hosts to the set)"
 msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
 
 msgid "Positive match (Add matching services to the set)"
-msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
+msgstr "Positive Übereinstimmung (Füge der Liste passende Services hinzu)"
 
 msgid "Positive match (Add services hosts to the set)"
-msgstr "Positive match (Add services/hosts to the set)"
+msgstr ""
+"Positive Übereinstimmung (Füge der Liste passende Services / Hosts hinzu)"
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -47768,6 +47791,10 @@ msgstr ""
 
 msgid "Preview this report"
 msgstr "Vorschau dieses Berichts"
+
+#, fuzzy
+msgid "Previous cycle"
+msgstr "Kürzlich entdeckt"
 
 msgid "Previously discovered"
 msgstr "Kürzlich entdeckt"
@@ -49163,8 +49190,8 @@ msgstr "Jüngste Ereignishistorie"
 msgid "Recent processing batches"
 msgstr "Neueste Verarbeitungs-Batches"
 
-msgid "Recent processing transactions"
-msgstr "Neueste Verarbeitungstransaktionen"
+msgid "Recent processing cycles"
+msgstr "Neueste Verarbeitungszyklen"
 
 msgid "Recently changed services"
 msgstr "Kürzlich geänderte Services"
@@ -50102,6 +50129,10 @@ msgstr "Diese Wartungszeit wiederholen"
 #, python-format
 msgid "Repeats every %s"
 msgstr "Wird alle %s wiederholt"
+
+#, fuzzy
+msgid "Replace file"
+msgstr "Ersetzen durch"
 
 msgid "Replace hierarchical root with this node"
 msgstr "Hierarchische Wurzel durch diesen Knoten ersetzen"
@@ -51775,7 +51806,7 @@ msgid "SIP - Sends timed out"
 msgstr "SIP - Sende-Timeouts"
 
 msgid "SKIP PACK"
-msgstr "Paket auslassen"
+msgstr "Paket überspringen"
 
 msgid "SLA"
 msgstr "SLA"
@@ -53366,7 +53397,7 @@ msgid "Service Level Agreements"
 msgstr "Service Level Agreements"
 
 msgid "Service Limit Reached: Action Required."
-msgstr ""
+msgstr "Service-Limit erreicht: Maßnahme erforderlich."
 
 msgid "Service Name"
 msgstr "Service-Name"
@@ -53475,6 +53506,10 @@ msgstr "Servicedetails"
 
 msgid "Service discovery"
 msgstr "Service-Erkennung"
+
+#, fuzzy
+msgid "Service discovery and activation: "
+msgstr "Service-Erkennung lief am"
 
 msgid "Service discovery details"
 msgstr "Details der Service-Erkennung"
@@ -54727,6 +54762,9 @@ msgstr "Alle anzeigen"
 msgid "Show all %s topics"
 msgstr "Alle %s-Themen anzeigen"
 
+msgid "Show all cycles"
+msgstr "Alle Zyklen anzeigen"
+
 msgid "Show all hosts"
 msgstr "Zeige alle Hosts"
 
@@ -54742,14 +54780,8 @@ msgstr "Alle Regeln anzeigen"
 msgid "Show all topics"
 msgstr "Alle Themen anzeigen"
 
-msgid "Show all transactions"
-msgstr "Alle Transaktionen anzeigen"
-
 msgid "Show bar visualization"
 msgstr "Balkenansicht anzeigen"
-
-msgid "Show batch details"
-msgstr "Batch-Details anzeigen"
 
 msgid "Show check parameters"
 msgstr "Check-Parameter anzeigen"
@@ -54771,6 +54803,10 @@ msgstr "Bedienelemente anzeigen"
 
 msgid "Show current / last state of this backup job"
 msgstr "Den aktuellen / letzten Zustand des Backup-Jobs einsehen"
+
+#, fuzzy
+msgid "Show cycle details"
+msgstr "Details anzeigen"
 
 msgid "Show data only on search"
 msgstr "Daten nur bei Suche zeigen"
@@ -55278,10 +55314,10 @@ msgid "Silently ignore new or missing resources"
 msgstr "Neue oder fehlende Ressourcen stillschweigend ignorieren"
 
 msgid "Silently ignore the problem, skip this graph"
-msgstr "Problem stillschweigend ignorieren, diesen Graphen auslassen"
+msgstr "Problem stillschweigend ignorieren, diesen Graph überspringen"
 
 msgid "Silently skip exceeding messages"
-msgstr "Übrige Nachrichten stillschweigend auslassen"
+msgstr "Übrige Nachrichten stillschweigend überspringen"
 
 msgid "Simple Notification Service (SNS)"
 msgstr "Simple Notification Service (SNS)"
@@ -55677,20 +55713,23 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
 
+msgid "Skip SSL certificate verification"
+msgstr "SSL Zertifikatsverifizierung überspringen"
+
 msgid "Skip TLS certificate verification"
 msgstr "TLS Zertifikatsverifizierung überspringen"
 
 msgid "Skip exceeding messages, create one critical message"
-msgstr "Übrige Nachrichten auslassen, eine kritische Nachricht erstellen"
+msgstr "Übrige Meldungen überspringen, eine kritische Meldung erstellen"
 
 msgid "Skip exceeding messages, create one warning message"
-msgstr "Übrige Nachrichten auslassen, eine Warnnachricht erstellen"
+msgstr "Übrige Meldungen überspringen, eine Warnmeldung erstellen"
 
 msgid "Skip hosts hosts with non-empty parents (also if inherited)"
 msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
 msgid "Skip hosts with explicit parent definitions (even if empty)"
-msgstr "Hosts mit expliziten Parent-Zuordnungen überspringen (auch wenn leer!)"
+msgstr "Hosts mit expliziten Parent-Zuordnungen überspringen (auch wenn leer)"
 
 msgid "Skip monitoring non discovered hosts"
 msgstr "Monitoring nicht-ermittelter Hosts überspringen"
@@ -55706,15 +55745,18 @@ msgstr "Überspringen Sie die folgenden SIDs (falls gefunden)"
 
 msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
-"Dieses Regelpaket auslassen, Regelausführung mit nächstem Regelpaket "
+"Dieses Regelpaket überspringen, Regelausführung mit nächstem Regelpaket "
 "fortsetzen"
+
+msgid "Skip verification (insecure)"
+msgstr "Verifizierung überspringen (unsicher)"
 
 msgid "Skipped"
 msgstr "Übersprungen"
 
 #, python-format
 msgid "Skipped %s: %s"
-msgstr "%s ausgelassen: %s"
+msgstr "%s übersprungen: %s"
 
 msgid "Skipped the configuration test."
 msgstr "Konfigurationstest wurde übersprungen."
@@ -55730,7 +55772,7 @@ msgstr ""
 "sind."
 
 msgid "Skipping this test (plug-in is not enabled)"
-msgstr "Diesen Test auslassen (Plugin ist nicht aktiviert)"
+msgstr "Diesen Test überspringen (Plugin ist nicht aktiviert)"
 
 msgid "Skype for Business"
 msgstr "Skype for Business"
@@ -56003,6 +56045,18 @@ msgid ""
 msgstr ""
 "Einige LUNS, insbesonders jfs formatiert, können einen inkorrekten Wert für "
 "den verwendeten Speicherplatz melden"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
+"Einige der Diagnosedaten müssen von dem Host gesammelt werden, der den "
+"Checkmk-Server der betreffenden Instanz verkörpert. Falls Ihr Checkmk-Server "
+"sich nicht selbst überwacht, sondern von einer anderen Instanz überwacht "
+"wird (was eigentlich empfohlen wird), geben Sie bitte den Namen dieses Hosts "
+"hier ein."
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -56339,6 +56393,9 @@ msgstr ""
 
 msgid "Specify DNS Server"
 msgstr "DNS Server angeben"
+
+msgid "Specify Proxmox VE host via.."
+msgstr "Spezifizieren Sie den Proxmox VE-Host über..."
 
 msgid "Specify RPM package tags (Linux)"
 msgstr "Spezifizieren von RPM-Paket-Merkmalen (Linux)"
@@ -56826,6 +56883,11 @@ msgstr ""
 "Geben Sie die Schwellwerte für den belegten Speicher an. Der belegte "
 "Speicher besteht aus verwendetem und vom Kernel reserviertem Speicher."
 
+msgid "Specify the time periods for which the parameters should be used."
+msgstr ""
+"Geben Sie die Zeitperioden an, für welche die Parameter verwendet werden "
+"sollen."
+
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Legen Sie das Token für die Verbindung zur InfluxDB fest."
 
@@ -57228,10 +57290,6 @@ msgstr "Beginn:"
 
 msgid "Started"
 msgstr "Gestartet"
-
-#, python-format
-msgid "Started activate changes: %s"
-msgstr "Änderungen aktivieren begonnen: %s"
 
 #, python-format
 msgid "Started at %s"
@@ -58294,10 +58352,6 @@ msgstr "Speichergröße"
 msgid "Stored Location"
 msgstr "Gespeicherter Ort"
 
-#, python-format
-msgid "Stored declined bundle: %s"
-msgstr "Gespeichertes abgelehntes Bundle: %s"
-
 msgid "Stored messages"
 msgstr "Gespeicherte Nachrichten"
 
@@ -58504,10 +58558,6 @@ msgstr "Alle ausstehenden Änderungen wurden erfolgreich verworfen."
 
 msgid "Successfully discovered hosts"
 msgstr "Erfolgreich erkannte Hosts"
-
-#, python-format
-msgid "Successfully got %s from sites: %s<br>%s"
-msgstr "Erfolgreich %s der Instanzen: %s<br>%s erhalten"
 
 #, python-format
 msgid "Successfully logged into remote site %s."
@@ -58751,9 +58801,6 @@ msgstr "Sync-Latenz"
 msgid "Sync losses"
 msgstr "Sync-Verluste"
 
-msgid "Sync remote site changes and audit log"
-msgstr "Änderungen der Remote-Instanz und Audit-Log synchronisieren"
-
 msgid "Sync users with all connections"
 msgstr "Nutzer über alle Verbindungen synchronisieren"
 
@@ -58765,10 +58812,6 @@ msgstr "Mit den folgenden LDAP-Verbindungen synchronisieren"
 
 msgid "Sync-Plug-in: Roles"
 msgstr "Sync-Plugins: Rollen"
-
-#, python-format
-msgid "Synced created hosts with sites: %s"
-msgstr "Synchronisierte erstellte Hosts mit Instanzen: %s"
 
 msgid "Synchronicity / caching"
 msgstr "Synchronizität / Caching"
@@ -62523,7 +62566,7 @@ msgid ""
 msgstr ""
 "Der Monitoring-Kern kann nicht erreicht werden und die aktuelle Anzahl der "
 "Services kann nicht ermittelt werden. Wenn Sie mehr als 750 Services haben, "
-"müssen Sie vor Ablauf der 30-tägigen Testphase eine gültige Lizenz "
+"müssen Sie vor Ablauf des 30-tägigen Testzeitraums eine gültige Lizenz "
 "beantragen."
 
 msgid ""
@@ -64003,9 +64046,6 @@ msgid ""
 msgstr ""
 "Das Suffix .new ist ein reserviertes Keyword und kann nicht als Aggregations-"
 "ID verwendet werden"
-
-msgid "The synchronization finished."
-msgstr "Die Synchronisierung ist abgeschlossen."
 
 msgid "The syslog tag"
 msgstr "Das Syslog-Merkmal"
@@ -69256,13 +69296,13 @@ msgstr "Dieses Jahr"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {qs_name} configuration using Quick setup. "
-"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {qs_name}."
+"This {type_name} is part of the {qs_name} configuration bundle.<br>It "
+"contains further parts that are accessible and summarized in an overview "
+"page."
 msgstr ""
-"Dieser {type_name} ist Teil der {qs_name}-Konfiguration mit Quick Setup. "
-"Einige Optionen können nicht bearbeitet werden, um Konflikte zu vermeiden."
-"<br>Gehen Sie zu Quick Setup, um alle Parameter von {qs_name} zu bearbeiten."
+"Dieses {type_name} ist Teil des {qs_name} Konfigurationsbündels.<br>Es "
+"enthält weitere Teile, die auf einer Übersichtsseite zugänglich sind und "
+"zusammengefasst werden."
 
 msgid "Thread creations per second"
 msgstr "Threaderstellungen pro Sekunde"
@@ -70089,10 +70129,10 @@ msgstr ""
 "String-Darstellung einer kompatiblen Python-Datenstruktur vorliegen."
 
 msgid "To unlock higher limits, purchase a license "
-msgstr ""
+msgstr "Um höhere Limits freizuschalten, erwerben Sie eine Lizenz "
 
 msgid "To unlock higher limits, upgrade your license "
-msgstr ""
+msgstr "Um höhere Limits freizuschalten, erweitern Sie Ihre Lizenz "
 
 msgid "To:"
 msgstr "An:"
@@ -70349,6 +70389,10 @@ msgstr "Dokumente insgesamt"
 msgid "Total duration"
 msgstr "Gesamtdauer"
 
+#, fuzzy
+msgid "Total duration: "
+msgstr "Gesamtdauer"
+
 msgid "Total error rate"
 msgstr "Gesamt-Fehlerrate"
 
@@ -70372,6 +70416,10 @@ msgstr "Gesamtes Trefferverhältnis"
 
 msgid "Total host problems"
 msgstr "Gesamtanzahl Host-Probleme"
+
+#, fuzzy
+msgid "Total hosts: "
+msgstr "Veraltete Hosts"
 
 msgid "Total index failure count upper levels"
 msgstr "Obergrenzen für Gesamtfehler Index Anzahl"
@@ -72204,9 +72252,6 @@ msgstr "Transaktionslogs"
 msgid "Transaction count"
 msgstr "Anzahl der Transaktionen"
 
-msgid "Transaction id"
-msgstr "Transaktions-ID"
-
 msgid "Transaction logs disk usage"
 msgstr "Transaktionsprotokolle der Festplattenauslastung"
 
@@ -72322,35 +72367,32 @@ msgstr "Metriken aus Trends"
 msgid "Treshold"
 msgstr "Schwellwert"
 
-#, fuzzy
 msgid "Trial"
-msgstr "Seriennummer"
+msgstr "Testzeitraum"
 
 msgid "Trial expired"
-msgstr "Testversion abgelaufen"
+msgstr "Testzeitraum abgelaufen"
 
 msgid "Trial period ended"
 msgstr "Testzeitraum abgelaufen"
 
 msgid "Trial period ended: 'Activate changes' is blocked"
-msgstr "Testzeitraum beendet: \"Änderungen aktivieren\" ist blockiert"
+msgstr "Testzeitraum abgelaufen: \"Änderungen aktivieren\" ist blockiert"
 
 msgid "Trial period ended: Distributed setup not allowed"
-msgstr "Testzeitraum beendet: Ein verteiltes Setup ist nicht erlaubt"
+msgstr "Testzeitraum abgelaufen: Ein verteiltes Setup ist nicht erlaubt"
 
 msgid "Trial period ended: Reduce your number of services"
-msgstr "Testzeitraum beendet: Reduzieren Sie die Anzahl der Services"
+msgstr "Testzeitraum abgelaufen: Reduzieren Sie die Anzahl der Services"
 
-#, fuzzy
 msgid "Trial phase: too many services."
-msgstr "Beta-Phase: zu viele Services"
+msgstr "Testzeitraum: zu viele Services."
 
 msgid "Trial time is undefined during the beta phase"
-msgstr "Die Probezeit ist während der Beta-Phase nicht definiert"
+msgstr "Der Testzeitraum ist während der Beta-Phase nicht definiert"
 
-#, fuzzy
 msgid "Trial time left is visible in the user admin panel"
-msgstr "Die Probezeit ist während der Beta-Phase nicht definiert"
+msgstr "Der verbleibende Testzeitraum ist im Benutzer Admin-Panel sichtbar"
 
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
@@ -76533,9 +76575,8 @@ msgstr "Regelbasierte effektive Parameter dieses Hosts anzeigen"
 msgid "View timeline"
 msgstr "Zeitleiste anzeigen"
 
-#, fuzzy
 msgid "View trial details"
-msgstr "Zusätzliche Details"
+msgstr "Details zum Testzeitraum ansehen"
 
 msgid "Viewport information"
 msgstr "Viewport-Informationen"
@@ -77110,9 +77151,9 @@ msgstr "Warnung: Die Host-Konfiguration ist ungültig!"
 msgid "Warning: This host has an invalid configuration: "
 msgstr "Warnung: Die Host-Konfiguration ist ungültig: "
 
-#, python-format
+#, fuzzy, python-format
 msgid "Warning: You are over 90% of your service limit."
-msgstr ""
+msgstr "Warnung: Sie haben 90% Ihres Service-Limits überschritten."
 
 msgid "Warnings:"
 msgstr "Warnungen:"
@@ -78527,6 +78568,8 @@ msgid ""
 "With this activation you will have %s services activated which exceeds your "
 "limit of %s services."
 msgstr ""
+"Durch diese Aktivierung haben Sie %s Services aktiviert, was Ihr Limit von "
+"%s Services überschreitet."
 
 msgid ""
 "With this configuration, Checkmk will alert if the actual (not averaged) "
@@ -79608,6 +79651,8 @@ msgstr ""
 
 msgid "You can easily increase your site's capacity by upgrading your plan."
 msgstr ""
+"Sie können die Kapazität Ihrer Instanz ganz einfach erhöhen, indem Sie ein "
+"Upgrade Ihres Plans durchführen."
 
 msgid ""
 "You can either specify individual conditions for this rule, or use a set of "
@@ -80635,9 +80680,9 @@ msgstr ""
 msgid "You have permission to this host."
 msgstr "Für diesen Host haben Sie Berechtigungen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have reached your limit of %s. "
-msgstr "Sie haben %d %s für die Migration ausgewählt: %s"
+msgstr "Sie haben Ihr Limit von %s erreicht. "
 
 #, python-format
 msgid "You have selected %d %s for migration: %s"
@@ -81081,9 +81126,9 @@ msgstr ""
 "interessieren, dann finden Sie Details auf <a href=\"https://checkmk.com/"
 "checkmk_support_contract.html\" target=\"_blank\">unserer Website</a>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your current service limit is %s. "
-msgstr "Überwache Service-Limits"
+msgstr "Ihr aktuelles Service-Limit beträgt %s. "
 
 msgid "Your end date is before your start date."
 msgstr "Ihr Enddatum ist vor dem Startdatum."
@@ -81099,6 +81144,8 @@ msgid ""
 "Your free trial is active! Please note that your site will be deleted when "
 "the trial period ends. "
 msgstr ""
+"Ihr kostenloser Testzeitraum ist aktiv! Bitte beachten Sie, dass Ihre "
+"Instanz am Ende des Testzeitraums gelöscht wird. "
 
 msgid "Your host name has an invalid format."
 msgstr "Der Host-Name hat ein ungültiges Format."
@@ -81139,13 +81186,13 @@ msgstr ""
 "Ihre Lizenz wurde ausgesetzt. Bitte kontaktieren Sie das Checkmk-"
 "Vertriebsteam unter %s."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your license has been suspended. Please contact the Checkmk sales team at "
 "%s. "
 msgstr ""
 "Ihre Lizenz wurde ausgesetzt. Bitte kontaktieren Sie das Checkmk-"
-"Vertriebsteam unter %s."
+"Vertriebsteam unter %s. "
 
 msgid ""
 "Your license has been suspended. Until it is reactivated, 'Activate changes' "
@@ -81167,9 +81214,9 @@ msgstr ""
 msgid "Your license has expired on %s."
 msgstr "Ihre Lizenz ist am %s abgelaufen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your license has expired on %s. "
-msgstr "Ihre Lizenz ist am %s abgelaufen."
+msgstr "Ihre Lizenz ist am %s abgelaufen. "
 
 #, python-format
 msgid ""
@@ -82105,7 +82152,7 @@ msgid "height"
 msgstr "Höhe"
 
 msgid "here"
-msgstr ""
+msgstr "hier"
 
 msgid "hide folder names"
 msgstr "blende Ordner-Namen aus"
@@ -83309,7 +83356,7 @@ msgid "up"
 msgstr "ein"
 
 msgid "upgrade here"
-msgstr ""
+msgstr "führen Sie hier ein Upgrade durch"
 
 msgid "upper limit"
 msgstr "Oberer Grenze"
@@ -83509,14 +83556,135 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit by "
 "deleting one or more hosts from your config."
 msgstr ""
+"\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
+"unterschritten haben, indem Sie einen oder mehrere Hosts aus Ihrer "
+"Konfiguration gelöscht haben."
 
 msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+"\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
+"unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
+
+#, python-format
+#~ msgid "%s: Services: %s, Host labels: %s"
+#~ msgstr "%s: Services: %s, Host-Labels: %s"
+
+#~ msgid "Activation cleanup"
+#~ msgstr "Aktivierung aufräumen"
+
+#~ msgid "Activation cleanup finished"
+#~ msgstr "Aktivierung aufräumen abgeschlossen"
+
+#~ msgid "Discover registered hosts"
+#~ msgstr "Registrierte Hosts erkennen"
+
+#~ msgid "Discovered host label synchronization"
+#~ msgstr "Synchronisation entdeckter (Host-) label"
+
+#, python-format
+#~ msgid "Error: %s"
+#~ msgstr "Fehler: %s"
+
+#~ msgid "Host registration"
+#~ msgstr "Host-Registrierung"
+
+#~ msgid "Host removal"
+#~ msgstr "Host-Entfernung"
+
+#~ msgid "No agent registration requests processed"
+#~ msgstr "Keine Anträge auf Agentenregistrierung verarbeitet"
+
+#~ msgid "No declined requests"
+#~ msgstr "Keine abgelehnten Anfragen"
+
+#~ msgid "No discoverable hosts found"
+#~ msgstr "Keine erkennbaren Hosts gefunden"
+
+#~ msgid "No hosts discovered"
+#~ msgstr "Keine Hosts erkannt"
+
+#~ msgid "No need for syncing sites"
+#~ msgstr "Synchronisierung von Instanzen nicht nötig"
+
+#, fuzzy
+#~ msgid "Service discovery and activate changes"
+#~ msgstr "Service-Erkennung lief am"
+
+#, fuzzy
+#~ msgid "Some value"
+#~ msgstr "Wert entfernen"
+
+#, python-format
+#~ msgid "Started activate changes: %s"
+#~ msgstr "Änderungen aktivieren begonnen: %s"
+
+#, fuzzy
+#~ msgid "State of the host manager"
+#~ msgstr "Zustand eines Hosts"
+
+#, python-format
+#~ msgid "Stored declined bundle: %s"
+#~ msgstr "Gespeichertes abgelehntes Bundle: %s"
+
+#, python-format
+#~ msgid "Synced created hosts with sites: %s"
+#~ msgstr "Synchronisierte erstellte Hosts mit Instanzen: %s"
+
+#~ msgid "The synchronization finished."
+#~ msgstr "Die Synchronisierung ist abgeschlossen."
+
+#~ msgid "Check types"
+#~ msgstr "Check-Typen"
+
+#, python-format
+#~ msgid "Failed to get changes from sites: %s."
+#~ msgstr "Fehler beim Holen der Änderungen von den Instanzen: %s."
+
+#, python-format
+#~ msgid "No remote %s processed."
+#~ msgstr "Keine Remote %s verarbeitet."
+
+#~ msgid "Show batch details"
+#~ msgstr "Batch-Details anzeigen"
+
+#, python-format
+#~ msgid "Successfully got %s from sites: %s<br>%s"
+#~ msgstr "Erfolgreich %s der Instanzen: %s<br>%s erhalten"
+
+#~ msgid "Sync remote site changes and audit log"
+#~ msgstr "Änderungen der Remote-Instanz und Audit-Log synchronisieren"
+
+#, python-format
+#~ msgid "Configured with %s Quick setup"
+#~ msgstr "Mit %s Quick Setup konfiguriert"
+
+#~ msgid "Recent processing transactions"
+#~ msgstr "Neueste Verarbeitungstransaktionen"
+
+#~ msgid "Show all transactions"
+#~ msgstr "Alle Transaktionen anzeigen"
+
+#, python-brace-format
+#~ msgid ""
+#~ "This {type_name} is part of the {qs_name} configuration using Quick "
+#~ "setup. Some options cannot be edited to avoid conflicts.<br>Go to Quick "
+#~ "setup to edit all parameters of {qs_name}."
+#~ msgstr ""
+#~ "Dieser {type_name} ist Teil der {qs_name}-Konfiguration mit Quick Setup. "
+#~ "Einige Optionen können nicht bearbeitet werden, um Konflikte zu vermeiden."
+#~ "<br>Gehen Sie zu Quick Setup, um alle Parameter von {qs_name} zu "
+#~ "bearbeiten."
+
+#~ msgid "Transaction id"
+#~ msgstr "Transaktions-ID"
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Hier sind nur ASCII-Zeichen erlaubt."
 
 #, python-format
 #~ msgid "Creating scheduled report '%s'..."
@@ -84143,9 +84311,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #, python-format
 #~ msgid "No custom graph with the name <tt>%s</tt>"
 #~ msgstr "Kein benutzerdefinierter Graph mit dem Namen <tt>%s</tt>"
-
-#~ msgid "Quick setup"
-#~ msgstr "Quick Setup"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

@@ -232,6 +232,10 @@ msgstr ""
 msgid "\"not\" is the abbreviation for \"and not\","
 msgstr ""
 
+#, fuzzy, python-format
+msgid "# %s - Cycle details"
+msgstr "Detalii despre serviciul BI"
+
 msgid "# Containers"
 msgstr "# Containere"
 
@@ -757,10 +761,6 @@ msgstr ""
 #, python-format
 msgid "%s: Service discovery: Permission denied"
 msgstr "%s: Descoperirea serviciilor: Permisiune refuzată"
-
-#, fuzzy, python-format
-msgid "%s: Services: %s, Host labels: %s"
-msgstr "%s: Servicii: %s, Etichete gazdă: %s"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -2876,6 +2876,10 @@ msgstr "Renunț la modificări."
 msgid "About Checkmk"
 msgstr "Despre Checkmk"
 
+#, fuzzy
+msgid "About the processing cycle"
+msgstr "Timpul de procesare a evenimentelor"
+
 msgid "Absolut level for total number of used file descriptors"
 msgstr ""
 "Nivelul absolut pentru numărul total de descriptori de fișiere utilizați"
@@ -3472,6 +3476,10 @@ msgstr "Modificări activate de %s."
 msgid "Activating"
 msgstr "Activarea"
 
+#, fuzzy
+msgid "Activating changes: "
+msgstr "A activat modificările"
+
 msgid "Activation"
 msgstr "Activare"
 
@@ -3482,12 +3490,6 @@ msgid ""
 msgstr ""
 "Activare blocată.<br>%s activează în prezent modificări pe acest site."
 "<br>Activarea în curs a fost executată de Checkmk %s."
-
-msgid "Activation cleanup"
-msgstr "Curățarea activării"
-
-msgid "Activation cleanup finished"
-msgstr "Curățarea activării s-a încheiat"
 
 msgid "Activation has finished."
 msgstr "Activarea s-a încheiat."
@@ -12047,9 +12049,6 @@ msgstr "Verificarea timeout-ului pentru servicii (Microcore)"
 msgid "Check type"
 msgstr "Tipul de verificare"
 
-msgid "Check types"
-msgstr "Tipuri de cecuri"
-
 msgid "Check uniserv service"
 msgstr "Verificați serviciul uniserv"
 
@@ -12285,6 +12284,10 @@ msgstr "Checkmk partener sau distribuitor"
 
 msgid "Checkmk server URL"
 msgstr "URL-ul serverului Checkmk"
+
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Serverele Checkmk"
 
 msgid "Checkmk servers"
 msgstr "Serverele Checkmk"
@@ -14350,10 +14353,6 @@ msgstr "Nepotrivire între caracteristicile configurate"
 msgid "Configured time period parameters"
 msgstr "Parametrii perioadei de timp configurate"
 
-#, python-format
-msgid "Configured with %s Quick setup"
-msgstr ""
-
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr ""
@@ -15168,6 +15167,10 @@ msgstr ""
 "serviciul de asistență Checkmk. De asemenea, trebuie să vă asigurați că "
 "Checkmk-ul dvs. poate ajunge la serverul de licențe. Vă rugăm să verificați "
 "setările firewall și proxy."
+
+#, fuzzy, python-format
+msgid "Could not connect to the remote site (%s)"
+msgstr "Nu se poate conecta la site-ul la distanță: %s."
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -16535,6 +16538,30 @@ msgstr "Personalizat"
 
 msgid "Cut everything after first space"
 msgstr "Tăiați totul după primul spațiu"
+
+#, python-format
+msgid ""
+"Cycle %d not found, the information is expired, please return back to select "
+"a cycle"
+msgstr ""
+
+msgid "Cycle id"
+msgstr ""
+
+#, fuzzy
+msgid "Cycle not found"
+msgstr "Pagina nu a fost găsită"
+
+msgid ""
+"Cycle not found, the information is expired, please return back to select a "
+"cycle"
+msgstr ""
+
+msgid "Cycle steps"
+msgstr ""
+
+msgid "Cycles"
+msgstr ""
 
 #, fuzzy
 msgid "DATAPROXY - Throttled server connections"
@@ -19195,6 +19222,10 @@ msgstr "Dezactivați acest site"
 msgid "Disable this test"
 msgstr "Dezactivați acest test"
 
+#, fuzzy
+msgid "Disable time specific parameters"
+msgstr "Dezactivarea parametrilor temporali specifici"
+
 msgid "Disable timespecific parameters"
 msgstr "Dezactivarea parametrilor temporali specifici"
 
@@ -19297,17 +19328,11 @@ msgstr ""
 msgid "Discover packages"
 msgstr "Descoperiți pachetele"
 
-msgid "Discover registered hosts"
-msgstr "Descoperiți gazdele înregistrate"
-
 msgid "Discover services during creation"
 msgstr "Descoperiți serviciile în timpul creării"
 
 msgid "Discover single interfaces"
 msgstr "Descoperiți interfețe unice"
-
-msgid "Discovered host label synchronization"
-msgstr "Sincronizarea etichetelor gazdă descoperite"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -22117,6 +22142,10 @@ msgstr "Activați acest pachet"
 msgid "Enable this site"
 msgstr "Activați acest site"
 
+#, fuzzy
+msgid "Enable time specific parameters"
+msgstr "Activați parametrii temporali specifici"
+
 msgid "Enable timespecific parameters"
 msgstr "Activați parametrii temporali specifici"
 
@@ -22704,10 +22733,6 @@ msgstr "Eroare de afișare a vizualizării: %s."
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Eroare la redarea elementului de tip '%s'"
-
-#, python-format
-msgid "Error: %s"
-msgstr "Eroare: %s"
 
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
@@ -24070,10 +24095,6 @@ msgstr "Nu a reușit să găsească certificatul corespunzător în lanț"
 #, python-format
 msgid "Failed to generate REST API specification: %s"
 msgstr "Nu s-a reușit generarea specificației REST API: %s"
-
-#, python-format
-msgid "Failed to get changes from sites: %s."
-msgstr "Nu a reușit să obțină modificări de la site-uri: %s."
 
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
@@ -26173,6 +26194,10 @@ msgstr "Devine critic dacă sunt folosite toate licențele"
 #, fuzzy
 msgid "Go to \"All hosts\""
 msgstr "Toate gazdele"
+
+#, fuzzy, python-format
+msgid "Go to %s overview"
+msgstr "Prezentare generală a gazdei"
 
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
@@ -29699,6 +29724,10 @@ msgid "Host name or IPv4 address for listener"
 msgstr "Numele de gazdă sau adresa IPv4 pentru ascultător"
 
 #, fuzzy
+msgid "Host name or address"
+msgstr "Nume gazdă / adresă IP"
+
+#, fuzzy
 msgid "Host name or alias (regex)"
 msgstr "Numele de gazdă sau alias (regex)"
 
@@ -29813,6 +29842,10 @@ msgstr "Probleme cu gazdele pentru NagStaMon"
 msgid "Host processing"
 msgstr "Prelucrarea RRD"
 
+#, fuzzy
+msgid "Host processing: "
+msgstr "Prelucrarea RRD"
+
 msgid "Host properties"
 msgstr "Proprietăți gazdă"
 
@@ -29825,14 +29858,8 @@ msgstr ""
 "Proprietățile gazdei, cum ar fi etichetele sau grupurile de contacte, sunt "
 "moștenite."
 
-msgid "Host registration"
-msgstr "Înregistrare gazdă"
-
 msgid "Host related aggregations"
 msgstr "Agregări legate de gazdă"
-
-msgid "Host removal"
-msgstr "Îndepărtarea gazdei"
 
 msgid "Host renaming"
 msgstr "Redenumirea gazdei"
@@ -34268,6 +34295,10 @@ msgstr "Ora de încheiere invalidă dată"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 
+#, fuzzy
+msgid "Invalid file"
+msgstr "Nume de fișier invalid"
+
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
 
@@ -35612,11 +35643,12 @@ msgstr "Opțiuni de etichetare"
 msgid "Labels"
 msgstr "Etichete"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Etichetele vă permit să vă grupați în mod flexibil gazdele pentru a vă "
 "referi la ele mai târziu în alte locuri din Checkmk, de exemplu, în "
@@ -42464,6 +42496,10 @@ msgstr "Următoarea cursă"
 msgid "Next check"
 msgstr "Următoarea verificare"
 
+#, fuzzy
+msgid "Next cycle"
+msgstr "Următoarea verificare"
+
 msgid "Next notification"
 msgstr "Următoarea notificare"
 
@@ -42583,9 +42619,6 @@ msgstr "Nu există opțiuni suplimentare de configurare pentru această metodă.
 msgid "No agent labels present."
 msgstr "Nu sunt prezente etichete de agent."
 
-msgid "No agent registration requests processed"
-msgstr "Nu au fost procesate cereri de înregistrare a agenților"
-
 msgid "No appropriate request ID"
 msgstr "Nu există un ID de cerere corespunzător"
 
@@ -42659,18 +42692,12 @@ msgstr "Nu există date."
 msgid "No datasource defined."
 msgstr "Nu este definită nicio sursă de date."
 
-msgid "No declined requests"
-msgstr "Nu există cereri refuzate"
-
 #, python-format
 msgid ""
 "No detail renderer for crash of type '%s' available. Details structure is:"
 msgstr ""
 "Nu este disponibil un renderizator de detalii pentru accident de tip '%s'. "
 "Structura detaliilor este:"
-
-msgid "No discoverable hosts found"
-msgstr "Nu s-au găsit gazde care să poată fi descoperite"
 
 msgid "No discovery information available. Please perform a rescan."
 msgstr ""
@@ -42736,9 +42763,6 @@ msgid ""
 msgstr ""
 "Nu sunt înregistrați parametri istorici, dar sunt disponibile date de "
 "performanță. Poate că procesarea datelor de performanță este dezactivată."
-
-msgid "No hosts discovered"
-msgstr "Nu au fost descoperite gazde"
 
 msgid "No hosts to be discovered"
 msgstr "Nu există gazde care să fie descoperite"
@@ -42821,8 +42845,9 @@ msgstr ""
 msgid "No names defined"
 msgstr "Nu sunt definite conexiuni"
 
-msgid "No need for syncing sites"
-msgstr "Nu este nevoie de site-uri de sincronizare"
+#, fuzzy
+msgid "No next cycle available"
+msgstr "nu este disponibil"
 
 #, fuzzy, python-format
 msgid "No notification parameters for method '%s' found"
@@ -42856,15 +42881,15 @@ msgstr "Nu există modificări în așteptare."
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
 
+#, fuzzy
+msgid "No previous cycle available"
+msgstr "Nu există informații disponibile"
+
 msgid "No proxy"
 msgstr "Fără proxy"
 
 msgid "No re-executions"
 msgstr "Fără re-executări"
-
-#, python-format
-msgid "No remote %s processed."
-msgstr "Nu a fost procesată nicio telecomandă %s."
 
 msgid "No replication with this site"
 msgstr "Nu există replicare cu acest site"
@@ -43089,9 +43114,6 @@ msgstr "Nivelul de zgomot"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Frecvențe nominale"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Caracterele non-ASCII nu sunt permise aici."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -45347,6 +45369,9 @@ msgstr "Procesele OpenVMS"
 
 msgid "OpenVPN clients"
 msgstr "Clienți OpenVPN"
+
+msgid "Opentelemetry (Experimental)"
+msgstr ""
 
 msgid "Operating CPU"
 msgstr "Operare CPU"
@@ -47644,6 +47669,10 @@ msgstr ""
 "b><br>Asigurați-vă că gazda și toți părinții săi sunt monitorizați de "
 "același site."
 
+#, fuzzy, python-format
+msgid "Part of Quick setup: %s"
+msgstr "Configurare rapidă"
+
 msgid "Partial backup"
 msgstr "Copie de rezervă parțială"
 
@@ -49851,6 +49880,10 @@ msgstr ""
 msgid "Preview this report"
 msgstr "Previzualizați acest raport"
 
+#, fuzzy
+msgid "Previous cycle"
+msgstr "Descoperit anterior"
+
 msgid "Previously discovered"
 msgstr "Descoperit anterior"
 
@@ -51310,7 +51343,7 @@ msgid "Recent processing batches"
 msgstr "Timpul de procesare a evenimentelor"
 
 #, fuzzy
-msgid "Recent processing transactions"
+msgid "Recent processing cycles"
 msgstr "Timpul de procesare a evenimentelor"
 
 msgid "Recently changed services"
@@ -52273,6 +52306,10 @@ msgstr "Repetați acest timp de oprire"
 #, python-format
 msgid "Repeats every %s"
 msgstr "Se repetă la fiecare %s"
+
+#, fuzzy
+msgid "Replace file"
+msgstr "Înlocuiți cu"
 
 msgid "Replace hierarchical root with this node"
 msgstr "Înlocuiți rădăcina ierarhică cu acest nod"
@@ -55760,6 +55797,10 @@ msgstr "Detalii despre serviciul BI"
 msgid "Service discovery"
 msgstr "Descoperirea serviciilor"
 
+#, fuzzy
+msgid "Service discovery and activation: "
+msgstr "Descoperirea serviciilor: "
+
 msgid "Service discovery details"
 msgstr "Detalii de descoperire a serviciului"
 
@@ -57101,6 +57142,10 @@ msgstr "Arată tot"
 msgid "Show all %s topics"
 msgstr "Afișați toate subiectele %s"
 
+#, fuzzy
+msgid "Show all cycles"
+msgstr "Afișați toate regulile"
+
 msgid "Show all hosts"
 msgstr "Afișați toate gazdele"
 
@@ -57116,16 +57161,8 @@ msgstr "Afișați toate regulile"
 msgid "Show all topics"
 msgstr "Afișați toate subiectele"
 
-#, fuzzy
-msgid "Show all transactions"
-msgstr "Afișați toate rezultatele"
-
 msgid "Show bar visualization"
 msgstr "Afișați vizualizarea barei"
-
-#, fuzzy
-msgid "Show batch details"
-msgstr "Arată detalii"
 
 msgid "Show check parameters"
 msgstr "Afișarea parametrilor de verificare"
@@ -57148,6 +57185,10 @@ msgstr "Afișați comenzile"
 
 msgid "Show current / last state of this backup job"
 msgstr "Afișează starea curentă / ultima stare a acestei sarcini de backup"
+
+#, fuzzy
+msgid "Show cycle details"
+msgstr "Arată detalii"
 
 msgid "Show data only on search"
 msgstr "Afișați datele numai la căutare"
@@ -58072,6 +58113,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Mărimea, vârsta și numărul de grupuri de fișiere (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "Verificarea certificatului SSL"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "Verificarea certificatului SSL"
 
@@ -58109,6 +58154,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Săriți acest pachet de reguli, continuați executarea regulilor cu următorul "
 "pachet de reguli"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Ignoră erorile de certificat (nesigur)"
 
 #, fuzzy
 msgid "Skipped"
@@ -58408,6 +58457,13 @@ msgid ""
 msgstr ""
 "Unele unități, de exemplu cele formatate jfs, tind să raporteze valori "
 "incorecte ale spațiului utilizat."
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -58752,6 +58808,9 @@ msgstr ""
 
 msgid "Specify DNS Server"
 msgstr "Specificați serverul DNS"
+
+msgid "Specify Proxmox VE host via.."
+msgstr ""
 
 msgid "Specify RPM package tags (Linux)"
 msgstr "Specificați etichetele pachetelor RPM (Linux)"
@@ -59246,6 +59305,12 @@ msgstr ""
 "Specificați nivelurile de prag pentru memoria ocupată. Memoria ocupată este "
 "formată din memoria utilizată și memoria rezervată de kernel."
 
+#, fuzzy
+msgid "Specify the time periods for which the parameters should be used."
+msgstr ""
+"Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
+"istoricul evenimentelor."
+
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 "Specificați token-ul care va fi utilizat pentru a vă conecta la InfluxDB."
@@ -59653,10 +59718,6 @@ msgstr "Începeți:"
 
 msgid "Started"
 msgstr "A început cu"
-
-#, python-format
-msgid "Started activate changes: %s"
-msgstr "A început să activeze modificările: %s"
 
 #, python-format
 msgid "Started at %s"
@@ -60772,10 +60833,6 @@ msgstr "Dimensiunea magazinului"
 msgid "Stored Location"
 msgstr "Locația sistemului"
 
-#, python-format
-msgid "Stored declined bundle: %s"
-msgstr "Pachet refuzat stocat: %s"
-
 msgid "Stored messages"
 msgstr "Mesaje stocate"
 
@@ -60991,10 +61048,6 @@ msgstr "A eliminat cu succes toate modificările în așteptare."
 
 msgid "Successfully discovered hosts"
 msgstr "Gazde descoperite cu succes"
-
-#, python-format
-msgid "Successfully got %s from sites: %s<br>%s"
-msgstr "Ați obținut cu succes %s de pe site-urile: %s<br>%s"
 
 #, python-format
 msgid "Successfully logged into remote site %s."
@@ -61250,11 +61303,6 @@ msgstr "Latență de sincronizare"
 msgid "Sync losses"
 msgstr "Pierderi de sincronizare"
 
-msgid "Sync remote site changes and audit log"
-msgstr ""
-"Sincronizarea modificărilor de pe site-ul de la distanță și a jurnalului de "
-"audit"
-
 msgid "Sync users with all connections"
 msgstr "Sincronizarea utilizatorilor cu toate conexiunile"
 
@@ -61267,10 +61315,6 @@ msgstr "Sincronizare cu următoarele conexiuni LDAP"
 #, fuzzy
 msgid "Sync-Plug-in: Roles"
 msgstr "Sync-Plugin: Roluri"
-
-#, python-format
-msgid "Synced created hosts with sites: %s"
-msgstr "Sincronizarea gazdelor create cu site-urile: %s"
 
 #, fuzzy
 msgid "Synchronicity / caching"
@@ -66525,9 +66569,6 @@ msgid ""
 msgstr ""
 "Sufixul .new este un cuvânt cheie rezervat și nu poate fi utilizat ca id de "
 "agregare."
-
-msgid "The synchronization finished."
-msgstr "Sincronizarea s-a încheiat."
 
 msgid "The syslog tag"
 msgstr "Tagul Aplicatiei in syslog"
@@ -71831,9 +71872,9 @@ msgstr "În acest an"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {qs_name} configuration using Quick setup. "
-"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {qs_name}."
+"This {type_name} is part of the {qs_name} configuration bundle.<br>It "
+"contains further parts that are accessible and summarized in an overview "
+"page."
 msgstr ""
 
 msgid "Thread creations per second"
@@ -72953,6 +72994,10 @@ msgstr "Total documente"
 msgid "Total duration"
 msgstr "Durata totală"
 
+#, fuzzy
+msgid "Total duration: "
+msgstr "Durata totală"
+
 msgid "Total error rate"
 msgstr "Rata totală de eroare"
 
@@ -72976,6 +73021,10 @@ msgstr "Rata totală de succes"
 
 msgid "Total host problems"
 msgstr "Total probleme cu gazdele"
+
+#, fuzzy
+msgid "Total hosts: "
+msgstr "Gazde învechite"
 
 msgid "Total index failure count upper levels"
 msgstr "Numărul total de eșecuri ale indicelui niveluri superioare"
@@ -75245,10 +75294,6 @@ msgstr "Jurnalele de tranzacții"
 
 msgid "Transaction count"
 msgstr "Numărul de tranzacții"
-
-#, fuzzy
-msgid "Transaction id"
-msgstr "Tranzacții"
 
 msgid "Transaction logs disk usage"
 msgstr "Jurnalele de tranzacție utilizarea discului"
@@ -86850,6 +86895,113 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy, python-format
+#~ msgid "%s: Services: %s, Host labels: %s"
+#~ msgstr "%s: Servicii: %s, Etichete gazdă: %s"
+
+#~ msgid "Activation cleanup"
+#~ msgstr "Curățarea activării"
+
+#~ msgid "Activation cleanup finished"
+#~ msgstr "Curățarea activării s-a încheiat"
+
+#~ msgid "Discover registered hosts"
+#~ msgstr "Descoperiți gazdele înregistrate"
+
+#~ msgid "Discovered host label synchronization"
+#~ msgstr "Sincronizarea etichetelor gazdă descoperite"
+
+#, python-format
+#~ msgid "Error: %s"
+#~ msgstr "Eroare: %s"
+
+#~ msgid "Host registration"
+#~ msgstr "Înregistrare gazdă"
+
+#~ msgid "Host removal"
+#~ msgstr "Îndepărtarea gazdei"
+
+#~ msgid "No agent registration requests processed"
+#~ msgstr "Nu au fost procesate cereri de înregistrare a agenților"
+
+#~ msgid "No declined requests"
+#~ msgstr "Nu există cereri refuzate"
+
+#~ msgid "No discoverable hosts found"
+#~ msgstr "Nu s-au găsit gazde care să poată fi descoperite"
+
+#~ msgid "No hosts discovered"
+#~ msgstr "Nu au fost descoperite gazde"
+
+#~ msgid "No need for syncing sites"
+#~ msgstr "Nu este nevoie de site-uri de sincronizare"
+
+#, fuzzy
+#~ msgid "Service discovery and activate changes"
+#~ msgstr "Descoperirea serviciilor: "
+
+#, fuzzy
+#~ msgid "Some value"
+#~ msgstr "Eliminați toate"
+
+#, python-format
+#~ msgid "Started activate changes: %s"
+#~ msgstr "A început să activeze modificările: %s"
+
+#, fuzzy
+#~ msgid "State of the host manager"
+#~ msgstr "Starea unei gazde"
+
+#, python-format
+#~ msgid "Stored declined bundle: %s"
+#~ msgstr "Pachet refuzat stocat: %s"
+
+#, python-format
+#~ msgid "Synced created hosts with sites: %s"
+#~ msgstr "Sincronizarea gazdelor create cu site-urile: %s"
+
+#~ msgid "The synchronization finished."
+#~ msgstr "Sincronizarea s-a încheiat."
+
+#~ msgid "Check types"
+#~ msgstr "Tipuri de cecuri"
+
+#, python-format
+#~ msgid "Failed to get changes from sites: %s."
+#~ msgstr "Nu a reușit să obțină modificări de la site-uri: %s."
+
+#, python-format
+#~ msgid "No remote %s processed."
+#~ msgstr "Nu a fost procesată nicio telecomandă %s."
+
+#, fuzzy
+#~ msgid "Show batch details"
+#~ msgstr "Arată detalii"
+
+#, python-format
+#~ msgid "Successfully got %s from sites: %s<br>%s"
+#~ msgstr "Ați obținut cu succes %s de pe site-urile: %s<br>%s"
+
+#~ msgid "Sync remote site changes and audit log"
+#~ msgstr ""
+#~ "Sincronizarea modificărilor de pe site-ul de la distanță și a jurnalului "
+#~ "de audit"
+
+#, fuzzy
+#~ msgid "Recent processing transactions"
+#~ msgstr "Timpul de procesare a evenimentelor"
+
+#, fuzzy
+#~ msgid "Show all transactions"
+#~ msgstr "Afișați toate rezultatele"
+
+#, fuzzy
+#~ msgid "Transaction id"
+#~ msgstr "Tranzacții"
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Caracterele non-ASCII nu sunt permise aici."
+
 #, python-format
 #~ msgid "Creating scheduled report '%s'..."
 #~ msgstr "Crearea raportului programat '%s'..."
@@ -87362,9 +87514,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, python-format
 #~ msgid "No custom graph with the name <tt>%s</tt>"
 #~ msgstr "Nu există niciun grafic personalizat cu numele <tt>%s</tt>."
-
-#~ msgid "Quick setup"
-#~ msgstr "Configurare rapidă"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

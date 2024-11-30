@@ -228,6 +228,10 @@ msgstr ""
 msgid "\"not\" is the abbreviation for \"and not\","
 msgstr "「not」は「そして〜でない」という意味です、"
 
+#, fuzzy, python-format
+msgid "# %s - Cycle details"
+msgstr "BIサービスの詳細"
+
 msgid "# Containers"
 msgstr "# コンテナ"
 
@@ -749,10 +753,6 @@ msgstr ""
 #, python-format
 msgid "%s: Service discovery: Permission denied"
 msgstr "%s:サービス検出:パーミッションが拒否されました"
-
-#, python-format
-msgid "%s: Services: %s, Host labels: %s"
-msgstr "%s: サービス:%s、ホストラベル:%s"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -2758,6 +2758,10 @@ msgstr "変更を中止します。"
 msgid "About Checkmk"
 msgstr "Checkmkについて"
 
+#, fuzzy
+msgid "About the processing cycle"
+msgstr "イベント処理時間"
+
 msgid "Absolut level for total number of used file descriptors"
 msgstr "使用されたファイル記述子の総数の絶対レベル"
 
@@ -3329,6 +3333,10 @@ msgstr "%s によるアクティブ化された変更。"
 msgid "Activating"
 msgstr "アクティベート"
 
+#, fuzzy
+msgid "Activating changes: "
+msgstr "変更を有効にしました"
+
 msgid "Activation"
 msgstr "アクティベーション"
 
@@ -3339,12 +3347,6 @@ msgid ""
 msgstr ""
 "アクティブ化がブロックされました。<br>%s は現在このサイトの変更をアクティブ化"
 "しています。<br>進行中のアクティブ化が Checkmk %s から実行されました。"
-
-msgid "Activation cleanup"
-msgstr "アクティベーションのクリーンアップ"
-
-msgid "Activation cleanup finished"
-msgstr "アクティベーションのクリーンアップが終了しました"
 
 msgid "Activation has finished."
 msgstr "アクティベーションが終了しました。"
@@ -11542,9 +11544,6 @@ msgstr "サービスのタイムアウトを確認する(Micro core)"
 msgid "Check type"
 msgstr "タイプを確認してください"
 
-msgid "Check types"
-msgstr "タイプを確認する"
-
 msgid "Check uniserv service"
 msgstr "uniservサービスを確認する"
 
@@ -11773,6 +11772,10 @@ msgstr "Checkmkパートナーまたはリセラー"
 
 msgid "Checkmk server URL"
 msgstr "CheckmkサーバーURL"
+
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Checkmkサーバー"
 
 msgid "Checkmk servers"
 msgstr "Checkmkサーバー"
@@ -13722,10 +13725,6 @@ msgstr "構成された機能の不一致"
 msgid "Configured time period parameters"
 msgstr "構成された期間パラメーター"
 
-#, python-format
-msgid "Configured with %s Quick setup"
-msgstr ""
-
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr "ネットワークトポロジビューで使用可能なフィルタの数を設定します。"
@@ -14505,6 +14504,10 @@ msgstr ""
 "ラーが続く場合は、Checkmk サポートにお問い合わせください。また、Checkmkがライ"
 "センスサーバーに到達できることを確認する必要があります。ファイアウォールとプ"
 "ロキシの設定を確認してください。"
+
+#, fuzzy, python-format
+msgid "Could not connect to the remote site (%s)"
+msgstr "リモートサイトに接続できません:%s"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -15829,6 +15832,30 @@ msgstr "カスタマイズ"
 
 msgid "Cut everything after first space"
 msgstr "最初のスペースの後にすべてをカットします"
+
+#, python-format
+msgid ""
+"Cycle %d not found, the information is expired, please return back to select "
+"a cycle"
+msgstr ""
+
+msgid "Cycle id"
+msgstr ""
+
+#, fuzzy
+msgid "Cycle not found"
+msgstr "ページが見つかりません"
+
+msgid ""
+"Cycle not found, the information is expired, please return back to select a "
+"cycle"
+msgstr ""
+
+msgid "Cycle steps"
+msgstr ""
+
+msgid "Cycles"
+msgstr ""
 
 msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - スロットルされたサーバー接続"
@@ -18345,6 +18372,10 @@ msgstr "サイトを無効化"
 msgid "Disable this test"
 msgstr "このテストを無効にする"
 
+#, fuzzy
+msgid "Disable time specific parameters"
+msgstr "時間固有のパラメータを無効にする"
+
 msgid "Disable timespecific parameters"
 msgstr "時間固有のパラメータを無効にする"
 
@@ -18442,17 +18473,11 @@ msgstr "各CPUに対応した個別のサービスを発見する"
 msgid "Discover packages"
 msgstr "パッケージを発見"
 
-msgid "Discover registered hosts"
-msgstr "登録されたホストを検出"
-
 msgid "Discover services during creation"
 msgstr "作成中にサービスを発見する"
 
 msgid "Discover single interfaces"
 msgstr "単一のインターフェースを発見する"
-
-msgid "Discovered host label synchronization"
-msgstr "発見されたホストラベルの同期"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -21125,6 +21150,10 @@ msgstr "このパッケージを有効にする"
 msgid "Enable this site"
 msgstr "サイトを有効化"
 
+#, fuzzy
+msgid "Enable time specific parameters"
+msgstr "時間固有のパラメータを有効にする"
+
 msgid "Enable timespecific parameters"
 msgstr "時間固有のパラメータを有効にする"
 
@@ -21688,10 +21717,6 @@ msgstr "ビューの表示中にエラーが発生しました: %s"
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "要素タイプ '%s'のレンダリング中にエラーが発生しました"
-
-#, python-format
-msgid "Error: %s"
-msgstr "エラー: %s"
 
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
@@ -23040,10 +23065,6 @@ msgstr "チェーン内の一致する証明書を見つけることができま
 #, fuzzy, python-format
 msgid "Failed to generate REST API specification: %s"
 msgstr "ピア証明書のフェッチに失敗しました(%s)"
-
-#, python-format
-msgid "Failed to get changes from sites: %s."
-msgstr "サイトからの変更の取得に失敗しました: %s."
 
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
@@ -25115,6 +25136,10 @@ msgstr "すべてのライセンスが使用されている場合はクリティ
 #, fuzzy
 msgid "Go to \"All hosts\""
 msgstr "すべてのホスト"
+
+#, fuzzy, python-format
+msgid "Go to %s overview"
+msgstr "ホストの概要"
 
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
@@ -28611,6 +28636,10 @@ msgid "Host name or IPv4 address for listener"
 msgstr "リスナーのホスト名またはIPv4アドレス"
 
 #, fuzzy
+msgid "Host name or address"
+msgstr "ホスト名/IPアドレス"
+
+#, fuzzy
 msgid "Host name or alias (regex)"
 msgstr "ホスト名またはエイリアス(正規表現)"
 
@@ -28721,6 +28750,10 @@ msgstr "NagStaMonのホストの問題"
 msgid "Host processing"
 msgstr "RRD処理"
 
+#, fuzzy
+msgid "Host processing: "
+msgstr "RRD処理"
+
 msgid "Host properties"
 msgstr "ホストのプロパティ"
 
@@ -28731,14 +28764,8 @@ msgstr "ホストプロパティ: %s"
 msgid "Host properties, such as labels or contact groups, are inherited."
 msgstr "ラベルやコンタクトグループなどのホストプロパティは継承されます。"
 
-msgid "Host registration"
-msgstr "ホスト登録"
-
 msgid "Host related aggregations"
 msgstr "ホスト関連の集計"
-
-msgid "Host removal"
-msgstr "ホスト削除"
 
 msgid "Host renaming"
 msgstr "ホストの名前変更"
@@ -33028,6 +33055,10 @@ msgstr "無効な終了時刻が指定されました"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 
+#, fuzzy
+msgid "Invalid file"
+msgstr "無効なファイル名"
+
 msgid "Invalid file name"
 msgstr "無効なファイル名"
 
@@ -34350,11 +34381,12 @@ msgstr "ラベル付けオプション"
 msgid "Labels"
 msgstr "ラベル"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "ラベルにより、ホストを柔軟にグループ化し、ルールチェーンなどCheckmkの他の場所"
 "で参照できるようにすることができます。<br><b>ラベルフォーマット:</b>  key:"
@@ -41129,6 +41161,10 @@ msgstr "次の実行"
 msgid "Next check"
 msgstr "次のチェック"
 
+#, fuzzy
+msgid "Next cycle"
+msgstr "次のチェック"
+
 msgid "Next notification"
 msgstr "次の通知"
 
@@ -41248,9 +41284,6 @@ msgstr "このメソッドには追加の設定オプションはありません
 msgid "No agent labels present."
 msgstr "エージェントラベルはありません。"
 
-msgid "No agent registration requests processed"
-msgstr "エージェント登録リクエストは処理なし"
-
 msgid "No appropriate request ID"
 msgstr "適切なリクエストIDがない"
 
@@ -41325,18 +41358,12 @@ msgstr "データなし。"
 msgid "No datasource defined."
 msgstr "データソースが定義されていません。"
 
-msgid "No declined requests"
-msgstr "リクエスト拒否なし"
-
 #, python-format
 msgid ""
 "No detail renderer for crash of type '%s' available. Details structure is:"
 msgstr ""
 "タイプ '%s'のクラッシュの詳細レンダラーは利用できません。詳細構造は次のとおり"
 "です。"
-
-msgid "No discoverable hosts found"
-msgstr "検出可能なホストが見つかりません"
 
 msgid "No discovery information available. Please perform a rescan."
 msgstr "利用可能な発見情報はありません。再スキャンを実行してください。"
@@ -41400,9 +41427,6 @@ msgid ""
 msgstr ""
 "過去の指標は記録されていませんが、パフォーマンスデータは利用できます。パ"
 "フォーマンスデータ処理が無効になっている可能性があります。"
-
-msgid "No hosts discovered"
-msgstr "ホスト検出なし"
 
 msgid "No hosts to be discovered"
 msgstr "検出されるホストがありません"
@@ -41483,8 +41507,9 @@ msgstr ""
 msgid "No names defined"
 msgstr "接続が定義されていません"
 
-msgid "No need for syncing sites"
-msgstr "サイト同期不要"
+#, fuzzy
+msgid "No next cycle available"
+msgstr "利用不可"
 
 #, fuzzy, python-format
 msgid "No notification parameters for method '%s' found"
@@ -41519,16 +41544,16 @@ msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
 
 #, fuzzy
+msgid "No previous cycle available"
+msgstr "利用可能な情報はありません"
+
+#, fuzzy
 msgid "No proxy"
 msgstr "プロキシを使う"
 
 #, fuzzy
 msgid "No re-executions"
 msgstr "同時実行"
-
-#, python-format
-msgid "No remote %s processed."
-msgstr "リモート %s は処理されていません。"
 
 msgid "No replication with this site"
 msgstr "このサイトとの複製はありません"
@@ -41753,9 +41778,6 @@ msgstr "ノイズフロア"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "名目周波数"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "ここでは非ASCII文字は使用できません。"
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -43962,6 +43984,9 @@ msgstr "OpenVMSのプロセス"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPNクライアント"
+
+msgid "Opentelemetry (Experimental)"
+msgstr ""
 
 msgid "Operating CPU"
 msgstr "動作中のCPU"
@@ -46231,6 +46256,10 @@ msgstr ""
 "<br><br><b>分散設定:</b><br>ホストとそのすべての親が同じサイトで監視されてい"
 "ることを確認してください。"
 
+#, fuzzy, python-format
+msgid "Part of Quick setup: %s"
+msgstr "クイックセットアップ"
+
 msgid "Partial backup"
 msgstr "部分的なバックアップ"
 
@@ -48393,6 +48422,10 @@ msgid "Preview this report"
 msgstr "このレポートをプレビューする"
 
 #, fuzzy
+msgid "Previous cycle"
+msgstr "プロセスディスカバリー"
+
+#, fuzzy
 msgid "Previously discovered"
 msgstr "プロセスディスカバリー"
 
@@ -49856,7 +49889,7 @@ msgid "Recent processing batches"
 msgstr "イベント処理時間"
 
 #, fuzzy
-msgid "Recent processing transactions"
+msgid "Recent processing cycles"
 msgstr "イベント処理時間"
 
 msgid "Recently changed services"
@@ -50818,6 +50851,10 @@ msgstr "このダウンタイムを繰り返す"
 #, python-format
 msgid "Repeats every %s"
 msgstr "%sを常に繰り返す"
+
+#, fuzzy
+msgid "Replace file"
+msgstr "と置換する"
 
 msgid "Replace hierarchical root with this node"
 msgstr "階層ルートをこのノードに置き換える"
@@ -54262,6 +54299,10 @@ msgstr "BIサービスの詳細"
 msgid "Service discovery"
 msgstr "サービスディスカバリ"
 
+#, fuzzy
+msgid "Service discovery and activation: "
+msgstr "サービスディスカバリ: "
+
 msgid "Service discovery details"
 msgstr "サービスディスカバリーの詳細"
 
@@ -55539,6 +55580,10 @@ msgstr "すべて表示する"
 msgid "Show all %s topics"
 msgstr "すべての %s トピックを表示"
 
+#, fuzzy
+msgid "Show all cycles"
+msgstr "すべてのルールを表示"
+
 msgid "Show all hosts"
 msgstr "すべてのホストを表示"
 
@@ -55555,16 +55600,8 @@ msgid "Show all topics"
 msgstr "全てのトピックを表示"
 
 #, fuzzy
-msgid "Show all transactions"
-msgstr "すべての結果を表示"
-
-#, fuzzy
 msgid "Show bar visualization"
 msgstr "BIの視覚化"
-
-#, fuzzy
-msgid "Show batch details"
-msgstr "詳細を表示"
 
 msgid "Show check parameters"
 msgstr "チェックパラメータを表示する"
@@ -55587,6 +55624,10 @@ msgstr "コントロールを表示"
 
 msgid "Show current / last state of this backup job"
 msgstr "このバックアップジョブの現在/最後の状態を表示する"
+
+#, fuzzy
+msgid "Show cycle details"
+msgstr "詳細を表示"
 
 msgid "Show data only on search"
 msgstr "検索時にのみデータを表示"
@@ -56502,6 +56543,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "ファイルグループのサイズ、経過時間、および数(mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "SSL証明書の検証"
 
@@ -56534,6 +56579,10 @@ msgstr "次のSIDsをスキップします(見つかった場合)"
 msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "このルールパックをスキップし、次のルールパックでルールの実行を続行します"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "証明書エラーを無視する(安全でない)"
 
 #, fuzzy
 msgid "Skipped"
@@ -56826,6 +56875,13 @@ msgid ""
 "Some luns, e.g. jfs formatted, tend to report incorrect used space values"
 msgstr ""
 "一部のLUN(jfs形式など)は、誤った使用済みスペース値を報告する傾向があります"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -57163,6 +57219,9 @@ msgstr ""
 
 msgid "Specify DNS Server"
 msgstr "DNSサーバーを指定する"
+
+msgid "Specify Proxmox VE host via.."
+msgstr ""
 
 msgid "Specify RPM package tags (Linux)"
 msgstr "RPMパッケージタグの指定(Linux)"
@@ -57619,6 +57678,10 @@ msgstr ""
 "占有メモリの閾値を指定する。占有メモリは、使用済みメモリとカーネル予約メモリ"
 "で構成される。"
 
+#, fuzzy
+msgid "Specify the time periods for which the parameters should be used."
+msgstr "イベント履歴の新しいファイルが作成される期間を指定します。"
+
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "InfluxDBへの接続に使用するトークンを指定します。"
 
@@ -58011,10 +58074,6 @@ msgstr "開始:"
 
 msgid "Started"
 msgstr "開始"
-
-#, python-format
-msgid "Started activate changes: %s"
-msgstr "変更の有効化を開始しました: %s"
 
 #, python-format
 msgid "Started at %s"
@@ -59104,10 +59163,6 @@ msgstr "サイズ保管する"
 msgid "Stored Location"
 msgstr "システムの場所"
 
-#, python-format
-msgid "Stored declined bundle: %s"
-msgstr "保存済みの拒否されたバンドル: %s"
-
 msgid "Stored messages"
 msgstr "保存されたメッセージ"
 
@@ -59320,10 +59375,6 @@ msgstr "保留中のすべての変更を正常に破棄しました。"
 
 msgid "Successfully discovered hosts"
 msgstr "ホストの検出に成功"
-
-#, python-format
-msgid "Successfully got %s from sites: %s<br>%s"
-msgstr "サイトからの %s の取得に成功しました: %s<br>%s"
 
 #, python-format
 msgid "Successfully logged into remote site %s."
@@ -59579,9 +59630,6 @@ msgstr "同期レイテンシ"
 msgid "Sync losses"
 msgstr "同期損失"
 
-msgid "Sync remote site changes and audit log"
-msgstr "リモートサイトの変更と監査ログを同期"
-
 msgid "Sync users with all connections"
 msgstr "ユーザーをすべての接続と同期する"
 
@@ -59594,10 +59642,6 @@ msgstr "次のLDAP接続と同期します"
 #, fuzzy
 msgid "Sync-Plug-in: Roles"
 msgstr "同期プラグイン: 役割"
-
-#, python-format
-msgid "Synced created hosts with sites: %s"
-msgstr "作成されたホストをサイトに同期しました: %s"
 
 #, fuzzy
 msgid "Synchronicity / caching"
@@ -64654,9 +64698,6 @@ msgstr ""
 "接尾辞.newは予約キーワードであり、アグリゲーションIDとして使用することはでき"
 "ません"
 
-msgid "The synchronization finished."
-msgstr "同期終了。"
-
 msgid "The syslog tag"
 msgstr "Syslogタグ"
 
@@ -69682,9 +69723,9 @@ msgstr "今年"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {qs_name} configuration using Quick setup. "
-"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {qs_name}."
+"This {type_name} is part of the {qs_name} configuration bundle.<br>It "
+"contains further parts that are accessible and summarized in an overview "
+"page."
 msgstr ""
 
 msgid "Thread creations per second"
@@ -70783,6 +70824,10 @@ msgstr "総ドキュメント"
 msgid "Total duration"
 msgstr "総所要直"
 
+#, fuzzy
+msgid "Total duration: "
+msgstr "総所要直"
+
 msgid "Total error rate"
 msgstr "総エラー率"
 
@@ -70806,6 +70851,10 @@ msgstr "総ヒット率"
 
 msgid "Total host problems"
 msgstr "ホストの問題総数"
+
+#, fuzzy
+msgid "Total hosts: "
+msgstr "古いホスト"
 
 msgid "Total index failure count upper levels"
 msgstr "合計インデックス障害カウントの上位レベル"
@@ -73150,10 +73199,6 @@ msgstr "トランザクションログ"
 
 msgid "Transaction count"
 msgstr "トランザクション数"
-
-#, fuzzy
-msgid "Transaction id"
-msgstr "トランザクション"
 
 #, fuzzy
 msgid "Transaction logs disk usage"
@@ -84484,6 +84529,111 @@ msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 #, python-format
+#~ msgid "%s: Services: %s, Host labels: %s"
+#~ msgstr "%s: サービス:%s、ホストラベル:%s"
+
+#~ msgid "Activation cleanup"
+#~ msgstr "アクティベーションのクリーンアップ"
+
+#~ msgid "Activation cleanup finished"
+#~ msgstr "アクティベーションのクリーンアップが終了しました"
+
+#~ msgid "Discover registered hosts"
+#~ msgstr "登録されたホストを検出"
+
+#~ msgid "Discovered host label synchronization"
+#~ msgstr "発見されたホストラベルの同期"
+
+#, python-format
+#~ msgid "Error: %s"
+#~ msgstr "エラー: %s"
+
+#~ msgid "Host registration"
+#~ msgstr "ホスト登録"
+
+#~ msgid "Host removal"
+#~ msgstr "ホスト削除"
+
+#~ msgid "No agent registration requests processed"
+#~ msgstr "エージェント登録リクエストは処理なし"
+
+#~ msgid "No declined requests"
+#~ msgstr "リクエスト拒否なし"
+
+#~ msgid "No discoverable hosts found"
+#~ msgstr "検出可能なホストが見つかりません"
+
+#~ msgid "No hosts discovered"
+#~ msgstr "ホスト検出なし"
+
+#~ msgid "No need for syncing sites"
+#~ msgstr "サイト同期不要"
+
+#, fuzzy
+#~ msgid "Service discovery and activate changes"
+#~ msgstr "サービスディスカバリ: "
+
+#, fuzzy
+#~ msgid "Some value"
+#~ msgstr "すべて削除する"
+
+#, python-format
+#~ msgid "Started activate changes: %s"
+#~ msgstr "変更の有効化を開始しました: %s"
+
+#, fuzzy
+#~ msgid "State of the host manager"
+#~ msgstr "ホストの状態"
+
+#, python-format
+#~ msgid "Stored declined bundle: %s"
+#~ msgstr "保存済みの拒否されたバンドル: %s"
+
+#, python-format
+#~ msgid "Synced created hosts with sites: %s"
+#~ msgstr "作成されたホストをサイトに同期しました: %s"
+
+#~ msgid "The synchronization finished."
+#~ msgstr "同期終了。"
+
+#~ msgid "Check types"
+#~ msgstr "タイプを確認する"
+
+#, python-format
+#~ msgid "Failed to get changes from sites: %s."
+#~ msgstr "サイトからの変更の取得に失敗しました: %s."
+
+#, python-format
+#~ msgid "No remote %s processed."
+#~ msgstr "リモート %s は処理されていません。"
+
+#, fuzzy
+#~ msgid "Show batch details"
+#~ msgstr "詳細を表示"
+
+#, python-format
+#~ msgid "Successfully got %s from sites: %s<br>%s"
+#~ msgstr "サイトからの %s の取得に成功しました: %s<br>%s"
+
+#~ msgid "Sync remote site changes and audit log"
+#~ msgstr "リモートサイトの変更と監査ログを同期"
+
+#, fuzzy
+#~ msgid "Recent processing transactions"
+#~ msgstr "イベント処理時間"
+
+#, fuzzy
+#~ msgid "Show all transactions"
+#~ msgstr "すべての結果を表示"
+
+#, fuzzy
+#~ msgid "Transaction id"
+#~ msgstr "トランザクション"
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "ここでは非ASCII文字は使用できません。"
+
+#, python-format
 #~ msgid "Creating scheduled report '%s'..."
 #~ msgstr "スケジュールされたレポート '%s'を作成しています..."
 
@@ -84987,9 +85137,6 @@ msgstr ""
 #, python-format
 #~ msgid "No custom graph with the name <tt>%s</tt>"
 #~ msgstr "<tt>%s</tt>という名前のカスタムグラフはありません"
-
-#~ msgid "Quick setup"
-#~ msgstr "クイックセットアップ"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

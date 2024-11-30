@@ -235,6 +235,10 @@ msgstr ""
 msgid "\"not\" is the abbreviation for \"and not\","
 msgstr ""
 
+#, fuzzy, python-format
+msgid "# %s - Cycle details"
+msgstr "Detalhes do serviço de BI"
+
 msgid "# Containers"
 msgstr "# Contentores"
 
@@ -757,10 +761,6 @@ msgstr ""
 #, python-format
 msgid "%s: Service discovery: Permission denied"
 msgstr "%s: Descoberta de serviço: Permissão negada"
-
-#, fuzzy, python-format
-msgid "%s: Services: %s, Host labels: %s"
-msgstr "%s: Serviços: %s, Etiquetas de anfitrião: %s"
 
 #, python-format
 msgid "%s: Uses SSL"
@@ -2856,6 +2856,10 @@ msgstr "A abortar a mudança."
 msgid "About Checkmk"
 msgstr "Sobre a Checkmk"
 
+#, fuzzy
+msgid "About the processing cycle"
+msgstr "Tempo de processamento de eventos"
+
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Nível absoluto para o número total de descritores de arquivo usados"
 
@@ -3455,6 +3459,10 @@ msgstr "Alterações ativadas por %s."
 msgid "Activating"
 msgstr "Activando"
 
+#, fuzzy
+msgid "Activating changes: "
+msgstr "Activou as alterações"
+
 msgid "Activation"
 msgstr "Ativação"
 
@@ -3463,12 +3471,6 @@ msgid ""
 "Activation blocked.<br>%s is currently activating changes on this site."
 "<br>Ongoing activation has been executed from Checkmk %s."
 msgstr ""
-
-msgid "Activation cleanup"
-msgstr "Limpeza da ativação"
-
-msgid "Activation cleanup finished"
-msgstr "Limpeza da ativação concluída"
 
 msgid "Activation has finished."
 msgstr "A ativação terminou."
@@ -12032,9 +12034,6 @@ msgstr "Check timeout para serviços (Microcore)"
 msgid "Check type"
 msgstr "Tipo de cheque"
 
-msgid "Check types"
-msgstr "Tipos de cheques"
-
 msgid "Check uniserv service"
 msgstr "Verificar serviço uniserv"
 
@@ -12273,6 +12272,10 @@ msgstr "Parceiro ou revendedor Checkmk"
 
 msgid "Checkmk server URL"
 msgstr "URL do servidor Checkmk"
+
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Servidores Checkmk"
 
 msgid "Checkmk servers"
 msgstr "Servidores Checkmk"
@@ -14339,10 +14342,6 @@ msgstr "Descoordenação de características configurada"
 msgid "Configured time period parameters"
 msgstr "Parâmetros do período de tempo configurado"
 
-#, python-format
-msgid "Configured with %s Quick setup"
-msgstr ""
-
 msgid ""
 "Configures the number of available filters in the network topology view."
 msgstr ""
@@ -15158,6 +15157,10 @@ msgstr ""
 "A ligação ao servidor de licenças (%s) falhou. É necessário certificar-se de "
 "que o Checkmk consegue aceder ao servidor de licenças. Por favor, verifique "
 "as definições da sua firewall e proxy.<br><br>Detalhes: %s"
+
+#, fuzzy, python-format
+msgid "Could not connect to the remote site (%s)"
+msgstr "Não se pode ligar ao local remoto: %s"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -16523,6 +16526,30 @@ msgstr "Personalizado"
 
 msgid "Cut everything after first space"
 msgstr "Cortar tudo depois do primeiro espaço"
+
+#, python-format
+msgid ""
+"Cycle %d not found, the information is expired, please return back to select "
+"a cycle"
+msgstr ""
+
+msgid "Cycle id"
+msgstr ""
+
+#, fuzzy
+msgid "Cycle not found"
+msgstr "Página não encontrada"
+
+msgid ""
+"Cycle not found, the information is expired, please return back to select a "
+"cycle"
+msgstr ""
+
+msgid "Cycle steps"
+msgstr ""
+
+msgid "Cycles"
+msgstr ""
 
 #, fuzzy
 msgid "DATAPROXY - Throttled server connections"
@@ -19170,6 +19197,10 @@ msgstr "Desactivar este sítio"
 msgid "Disable this test"
 msgstr "Desabilitar este teste"
 
+#, fuzzy
+msgid "Disable time specific parameters"
+msgstr "Desabilitar parâmetros específicos de tempo"
+
 msgid "Disable timespecific parameters"
 msgstr "Desabilitar parâmetros específicos de tempo"
 
@@ -19270,17 +19301,11 @@ msgstr "Descubra serviços individuais para cada CPU"
 msgid "Discover packages"
 msgstr "Descubra os pacotes"
 
-msgid "Discover registered hosts"
-msgstr "Descobrir anfitriões registados"
-
 msgid "Discover services during creation"
 msgstr "Descubra os serviços durante a criação"
 
 msgid "Discover single interfaces"
 msgstr "Descubra interfaces únicas"
-
-msgid "Discovered host label synchronization"
-msgstr "Descoberta da sincronização do host label"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -22072,6 +22097,10 @@ msgstr "Habilite este pacote"
 msgid "Enable this site"
 msgstr "Activar este sítio"
 
+#, fuzzy
+msgid "Enable time specific parameters"
+msgstr "Habilitar parâmetros específicos de tempo"
+
 msgid "Enable timespecific parameters"
 msgstr "Habilitar parâmetros específicos de tempo"
 
@@ -22662,10 +22691,6 @@ msgstr "Erro ao mostrar vista: %s"
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Erro ao renderizar elementos do tipo '%s'"
-
-#, python-format
-msgid "Error: %s"
-msgstr "Erro: %s"
 
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
@@ -24019,10 +24044,6 @@ msgstr "Falha em encontrar um certificado correspondente na cadeia"
 #, fuzzy, python-format
 msgid "Failed to generate REST API specification: %s"
 msgstr "Falha na obtenção do certificado do par (%s)"
-
-#, python-format
-msgid "Failed to get changes from sites: %s."
-msgstr "Falha ao obter alterações dos sítios: %s."
 
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
@@ -26139,6 +26160,10 @@ msgstr "Fique crítico se todas as licenças forem utilizadas"
 #, fuzzy
 msgid "Go to \"All hosts\""
 msgstr "Todos os anfitriões"
+
+#, fuzzy, python-format
+msgid "Go to %s overview"
+msgstr "Visão geral do anfitrião"
 
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
@@ -29672,6 +29697,10 @@ msgid "Host name or IPv4 address for listener"
 msgstr "Hostname ou endereço IPv4 para o ouvinte"
 
 #, fuzzy
+msgid "Host name or address"
+msgstr "Nome do anfitrião / endereço IP"
+
+#, fuzzy
 msgid "Host name or alias (regex)"
 msgstr "Nome de anfitrião ou alias (regex)"
 
@@ -29786,6 +29815,10 @@ msgstr "Problemas de hospedagem para o NagStaMon"
 msgid "Host processing"
 msgstr "processamento do DRR"
 
+#, fuzzy
+msgid "Host processing: "
+msgstr "processamento do DRR"
+
 msgid "Host properties"
 msgstr "Propriedades anfitriãs"
 
@@ -29796,14 +29829,8 @@ msgstr "Propriedades anfitriãs de: %s"
 msgid "Host properties, such as labels or contact groups, are inherited."
 msgstr ""
 
-msgid "Host registration"
-msgstr "Registo do anfitrião"
-
 msgid "Host related aggregations"
 msgstr "Agregados relacionados com o anfitrião"
-
-msgid "Host removal"
-msgstr "Remoção do anfitrião"
 
 msgid "Host renaming"
 msgstr "Mudança de nome do anfitrião"
@@ -34180,6 +34207,10 @@ msgstr "Tempo final inválido dado"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Inválido esperado exigível para %s em idx %d: %r"
 
+#, fuzzy
+msgid "Invalid file"
+msgstr "Nome de arquivo inválido"
+
 msgid "Invalid file name"
 msgstr "Nome de arquivo inválido"
 
@@ -35521,11 +35552,12 @@ msgstr "Opções de Rotulagem"
 msgid "Labels"
 msgstr "Etiquetas"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "As etiquetas permitem-lhe agrupar de forma flexível os seus anfitriões de "
 "modo a referi-los mais tarde noutros locais do Checkmk, por exemplo, em "
@@ -42386,6 +42418,10 @@ msgstr "Próxima execução"
 msgid "Next check"
 msgstr "Próxima verificação"
 
+#, fuzzy
+msgid "Next cycle"
+msgstr "Próxima verificação"
+
 msgid "Next notification"
 msgstr "Próxima notificação"
 
@@ -42505,9 +42541,6 @@ msgstr ""
 msgid "No agent labels present."
 msgstr "Não existem rótulos de agentes."
 
-msgid "No agent registration requests processed"
-msgstr "Não foram processados pedidos de registo de agentes"
-
 msgid "No appropriate request ID"
 msgstr "Sem ID de pedido adequado"
 
@@ -42582,18 +42615,12 @@ msgstr "Sem dados."
 msgid "No datasource defined."
 msgstr "Nenhuma fonte de dados definida."
 
-msgid "No declined requests"
-msgstr "Nenhum pedido recusado"
-
 #, python-format
 msgid ""
 "No detail renderer for crash of type '%s' available. Details structure is:"
 msgstr ""
 "Nenhum renderizador de detalhes para crash do tipo '%s' disponível. A "
 "estrutura dos detalhes é:"
-
-msgid "No discoverable hosts found"
-msgstr "Não foram encontrados anfitriões detectáveis"
 
 msgid "No discovery information available. Please perform a rescan."
 msgstr ""
@@ -42660,9 +42687,6 @@ msgid ""
 msgstr ""
 "Não há métricas históricas registradas, mas dados de desempenho estão "
 "disponíveis. Talvez o processamento de dados de desempenho esteja desativado."
-
-msgid "No hosts discovered"
-msgstr "Nenhum anfitrião descoberto"
 
 msgid "No hosts to be discovered"
 msgstr "Nenhum anfitrião a ser descoberto"
@@ -42742,8 +42766,9 @@ msgstr ""
 msgid "No names defined"
 msgstr "Nenhuma ligação definida"
 
-msgid "No need for syncing sites"
-msgstr "Não é necessário sincronizar sítios"
+#, fuzzy
+msgid "No next cycle available"
+msgstr "não disponíveis"
 
 #, fuzzy, python-format
 msgid "No notification parameters for method '%s' found"
@@ -42779,16 +42804,16 @@ msgid "No performance data: %s"
 msgstr "Sem dados de desempenho: %s"
 
 #, fuzzy
+msgid "No previous cycle available"
+msgstr "Não há informação disponível"
+
+#, fuzzy
 msgid "No proxy"
 msgstr "Use proxy"
 
 #, fuzzy
 msgid "No re-executions"
 msgstr "Execuções simultâneas"
-
-#, fuzzy, python-format
-msgid "No remote %s processed."
-msgstr "Nenhum %s remoto processado."
 
 msgid "No replication with this site"
 msgstr "Sem replicação com este site"
@@ -43015,9 +43040,6 @@ msgstr "Piso de Ruído"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Freqüências Nominais"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Não são permitidos aqui caracteres não-ASCII."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -45251,6 +45273,9 @@ msgstr "Processos OpenVMS"
 
 msgid "OpenVPN clients"
 msgstr "Clientes OpenVPN"
+
+msgid "Opentelemetry (Experimental)"
+msgstr ""
 
 msgid "Operating CPU"
 msgstr "CPU em funcionamento"
@@ -47550,6 +47575,10 @@ msgstr ""
 "manualmente os Pais.<br><br><b>Configuração distribuída:</b><br>Certifique-"
 "se de que o anfitrião e todos os seus Pais são monitorizados pelo mesmo site."
 
+#, fuzzy, python-format
+msgid "Part of Quick setup: %s"
+msgstr "Configuração rápida"
+
 msgid "Partial backup"
 msgstr "Backup parcial"
 
@@ -49759,6 +49788,10 @@ msgid "Preview this report"
 msgstr "Pré-visualizar este relatório"
 
 #, fuzzy
+msgid "Previous cycle"
+msgstr "Descoberta do processo"
+
+#, fuzzy
 msgid "Previously discovered"
 msgstr "Descoberta do processo"
 
@@ -51214,7 +51247,7 @@ msgid "Recent processing batches"
 msgstr "Tempo de processamento de eventos"
 
 #, fuzzy
-msgid "Recent processing transactions"
+msgid "Recent processing cycles"
 msgstr "Tempo de processamento de eventos"
 
 msgid "Recently changed services"
@@ -52191,6 +52224,10 @@ msgstr "Repita este tempo parado"
 #, fuzzy, python-format
 msgid "Repeats every %s"
 msgstr "repetir a cada 20'th row"
+
+#, fuzzy
+msgid "Replace file"
+msgstr "Substituir por"
 
 msgid "Replace hierarchical root with this node"
 msgstr ""
@@ -55664,6 +55701,10 @@ msgstr "Detalhes do serviço de BI"
 msgid "Service discovery"
 msgstr "Descoberta de serviços"
 
+#, fuzzy
+msgid "Service discovery and activation: "
+msgstr "Descoberta de serviços: "
+
 msgid "Service discovery details"
 msgstr "Detalhes da descoberta do serviço"
 
@@ -56958,6 +56999,10 @@ msgstr "Mostrar tudo"
 msgid "Show all %s topics"
 msgstr "Mostrar todos os %s tópicos"
 
+#, fuzzy
+msgid "Show all cycles"
+msgstr "Mostrar todas as regras"
+
 msgid "Show all hosts"
 msgstr "Mostrar todos os anfitriões"
 
@@ -56974,16 +57019,8 @@ msgid "Show all topics"
 msgstr "Mostrar todos os tópicos"
 
 #, fuzzy
-msgid "Show all transactions"
-msgstr "Mostrar todos os resultados"
-
-#, fuzzy
 msgid "Show bar visualization"
 msgstr "visualização do BI"
-
-#, fuzzy
-msgid "Show batch details"
-msgstr "Mostrar detalhes"
 
 msgid "Show check parameters"
 msgstr "Mostrar parâmetros de verificação"
@@ -57006,6 +57043,10 @@ msgstr "Mostrar controles"
 
 msgid "Show current / last state of this backup job"
 msgstr "Mostrar estado actual / último estado deste trabalho de backup"
+
+#, fuzzy
+msgid "Show cycle details"
+msgstr "Mostrar detalhes"
 
 msgid "Show data only on search"
 msgstr "Mostrar dados apenas na pesquisa"
@@ -57937,6 +57978,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Tamanho, idade e contagem dos grupos de ficheiros (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "verificação do certificado SSL"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "verificação do certificado SSL"
 
@@ -57971,6 +58016,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Pular este pacote de regras, continuar a execução das regras com o próximo "
 "pacote de regras"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Ignorar erros de certificado (inseguro)"
 
 #, fuzzy
 msgid "Skipped"
@@ -58272,6 +58321,13 @@ msgid ""
 msgstr ""
 "Algumas sóis, por exemplo, formatadas em jfs, tendem a reportar valores de "
 "espaço usados incorrectos"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -58616,6 +58672,9 @@ msgstr ""
 
 msgid "Specify DNS Server"
 msgstr "Especificar Servidor DNS"
+
+msgid "Specify Proxmox VE host via.."
+msgstr ""
 
 msgid "Specify RPM package tags (Linux)"
 msgstr "Especificar tags de pacotes RPM (Linux)"
@@ -59094,6 +59153,12 @@ msgstr ""
 "Especifique os níveis limiares para a memória ocupada. A memória ocupada "
 "consiste na memória usada e na memória reservada do kernel."
 
+#, fuzzy
+msgid "Specify the time periods for which the parameters should be used."
+msgstr ""
+"Especificar o período de tempo em que um novo arquivo para o histórico do "
+"evento será criado."
+
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Especifique o token a ser usado para se conectar ao InfluxDB."
 
@@ -59500,10 +59565,6 @@ msgstr "Início"
 
 msgid "Started"
 msgstr "Iniciado em"
-
-#, python-format
-msgid "Started activate changes: %s"
-msgstr "Começou a ativar as alterações: %s"
 
 #, python-format
 msgid "Started at %s"
@@ -60608,10 +60669,6 @@ msgstr "Tamanho da loja"
 msgid "Stored Location"
 msgstr "Localização do sistema"
 
-#, python-format
-msgid "Stored declined bundle: %s"
-msgstr "Pacote armazenado recusado: %s"
-
 msgid "Stored messages"
 msgstr "Mensagens armazenadas"
 
@@ -60827,10 +60884,6 @@ msgstr "Descartou com sucesso todas as alterações pendentes."
 
 msgid "Successfully discovered hosts"
 msgstr "Anfitriões descobertos com sucesso"
-
-#, fuzzy, python-format
-msgid "Successfully got %s from sites: %s<br>%s"
-msgstr "Obteve com êxito %s dos sítios: %s<br>%s"
 
 #, python-format
 msgid "Successfully logged into remote site %s."
@@ -61089,9 +61142,6 @@ msgstr "Latência de sincronização"
 msgid "Sync losses"
 msgstr "Perdas na sincronização"
 
-msgid "Sync remote site changes and audit log"
-msgstr "Sincronizar as alterações do sítio remoto e o registo de auditoria"
-
 msgid "Sync users with all connections"
 msgstr "Sincronizar usuários com todas as conexões"
 
@@ -61104,10 +61154,6 @@ msgstr "Sincronize com as seguintes conexões LDAP"
 #, fuzzy
 msgid "Sync-Plug-in: Roles"
 msgstr "Sync-Plugin: Papéis"
-
-#, python-format
-msgid "Synced created hosts with sites: %s"
-msgstr "Anfitriões criados sincronizados com sites: %s"
 
 #, fuzzy
 msgid "Synchronicity / caching"
@@ -66322,9 +66368,6 @@ msgid ""
 msgstr ""
 "O sufixo .new é uma palavra-chave reservada e não pode ser utilizado como id "
 "de agregação"
-
-msgid "The synchronization finished."
-msgstr "A sincronização terminou."
 
 msgid "The syslog tag"
 msgstr "A etiqueta syslog"
@@ -71543,9 +71586,9 @@ msgstr "Este ano"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {qs_name} configuration using Quick setup. "
-"Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {qs_name}."
+"This {type_name} is part of the {qs_name} configuration bundle.<br>It "
+"contains further parts that are accessible and summarized in an overview "
+"page."
 msgstr ""
 
 msgid "Thread creations per second"
@@ -72664,6 +72707,10 @@ msgstr "Total de documentos"
 msgid "Total duration"
 msgstr "Duração total"
 
+#, fuzzy
+msgid "Total duration: "
+msgstr "Duração total"
+
 msgid "Total error rate"
 msgstr "Taxa de erro total"
 
@@ -72687,6 +72734,10 @@ msgstr "Índice de acerto total"
 
 msgid "Total host problems"
 msgstr "Total de problemas com o anfitrião"
+
+#, fuzzy
+msgid "Total hosts: "
+msgstr "Anfitriões antigos"
 
 msgid "Total index failure count upper levels"
 msgstr "Contagem total de falhas do índice níveis superiores"
@@ -75030,10 +75081,6 @@ msgstr "Transactionlog"
 
 msgid "Transaction count"
 msgstr "Contagem das transações"
-
-#, fuzzy
-msgid "Transaction id"
-msgstr "Transacções"
 
 #, fuzzy
 msgid "Transaction logs disk usage"
@@ -86573,6 +86620,111 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
 
+#, fuzzy, python-format
+#~ msgid "%s: Services: %s, Host labels: %s"
+#~ msgstr "%s: Serviços: %s, Etiquetas de anfitrião: %s"
+
+#~ msgid "Activation cleanup"
+#~ msgstr "Limpeza da ativação"
+
+#~ msgid "Activation cleanup finished"
+#~ msgstr "Limpeza da ativação concluída"
+
+#~ msgid "Discover registered hosts"
+#~ msgstr "Descobrir anfitriões registados"
+
+#~ msgid "Discovered host label synchronization"
+#~ msgstr "Descoberta da sincronização do host label"
+
+#, python-format
+#~ msgid "Error: %s"
+#~ msgstr "Erro: %s"
+
+#~ msgid "Host registration"
+#~ msgstr "Registo do anfitrião"
+
+#~ msgid "Host removal"
+#~ msgstr "Remoção do anfitrião"
+
+#~ msgid "No agent registration requests processed"
+#~ msgstr "Não foram processados pedidos de registo de agentes"
+
+#~ msgid "No declined requests"
+#~ msgstr "Nenhum pedido recusado"
+
+#~ msgid "No discoverable hosts found"
+#~ msgstr "Não foram encontrados anfitriões detectáveis"
+
+#~ msgid "No hosts discovered"
+#~ msgstr "Nenhum anfitrião descoberto"
+
+#~ msgid "No need for syncing sites"
+#~ msgstr "Não é necessário sincronizar sítios"
+
+#, fuzzy
+#~ msgid "Service discovery and activate changes"
+#~ msgstr "Descoberta de serviços: "
+
+#, fuzzy
+#~ msgid "Some value"
+#~ msgstr "Remover tudo"
+
+#, python-format
+#~ msgid "Started activate changes: %s"
+#~ msgstr "Começou a ativar as alterações: %s"
+
+#, fuzzy
+#~ msgid "State of the host manager"
+#~ msgstr "Estado de um país anfitrião"
+
+#, python-format
+#~ msgid "Stored declined bundle: %s"
+#~ msgstr "Pacote armazenado recusado: %s"
+
+#, python-format
+#~ msgid "Synced created hosts with sites: %s"
+#~ msgstr "Anfitriões criados sincronizados com sites: %s"
+
+#~ msgid "The synchronization finished."
+#~ msgstr "A sincronização terminou."
+
+#~ msgid "Check types"
+#~ msgstr "Tipos de cheques"
+
+#, python-format
+#~ msgid "Failed to get changes from sites: %s."
+#~ msgstr "Falha ao obter alterações dos sítios: %s."
+
+#, fuzzy, python-format
+#~ msgid "No remote %s processed."
+#~ msgstr "Nenhum %s remoto processado."
+
+#, fuzzy
+#~ msgid "Show batch details"
+#~ msgstr "Mostrar detalhes"
+
+#, fuzzy, python-format
+#~ msgid "Successfully got %s from sites: %s<br>%s"
+#~ msgstr "Obteve com êxito %s dos sítios: %s<br>%s"
+
+#~ msgid "Sync remote site changes and audit log"
+#~ msgstr "Sincronizar as alterações do sítio remoto e o registo de auditoria"
+
+#, fuzzy
+#~ msgid "Recent processing transactions"
+#~ msgstr "Tempo de processamento de eventos"
+
+#, fuzzy
+#~ msgid "Show all transactions"
+#~ msgstr "Mostrar todos os resultados"
+
+#, fuzzy
+#~ msgid "Transaction id"
+#~ msgstr "Transacções"
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Não são permitidos aqui caracteres não-ASCII."
+
 #, python-format
 #~ msgid "Creating scheduled report '%s'..."
 #~ msgstr "Criando relatórios programados '%s'..."
@@ -87068,9 +87220,6 @@ msgstr "Use SSL para a conexão."
 #, python-format
 #~ msgid "No custom graph with the name <tt>%s</tt>"
 #~ msgstr "Nenhum gráfico personalizado com o nome <tt>%s</tt>"
-
-#~ msgid "Quick setup"
-#~ msgstr "Configuração rápida"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

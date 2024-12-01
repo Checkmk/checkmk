@@ -143,7 +143,12 @@ class HPMSAConnection:
 
     def login(self, username: str, password: str) -> None:
         try:
-            session_key = self._get_session_key(hashlib.sha256, username, password)
+            try:
+                # Attempt to use sha256 to generate the session key
+                session_key = self._get_session_key(hashlib.sha256, username, password)
+            except (requests.exceptions.ConnectionError, AuthError):
+                # Fallback to md5 within the same API context
+                session_key = self._get_session_key(hashlib.md5, username, password)
         except (requests.exceptions.ConnectionError, AuthError):
             # Try to connect to old API if no connection to new API can be established
             self._base_url = "https://%s/v3/api/" % self._host

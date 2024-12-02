@@ -125,7 +125,7 @@ explicit_package_bases = true
 # TODO: `mypy_path` shouldn't be required with Bazel.
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmc-protocols:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
     $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\

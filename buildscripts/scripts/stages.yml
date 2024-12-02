@@ -77,7 +77,7 @@ VARIABLES:
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_CMC_PROTO_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/cmc-protocols' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmc-protocols' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_SW_DOC_FILES

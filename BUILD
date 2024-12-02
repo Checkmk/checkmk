@@ -146,19 +146,19 @@ create_venv(
 
 copy_file(
     name = "_cmc_config_proto",
-    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/config/v1/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/config/v1/types.proto",
     out = "cmc_proto/config/v1/types.proto",
 )
 
 copy_file(
     name = "_cmc_cycletime_proto",
-    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/cycletime/v1/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/cycletime/v1/types.proto",
     out = "cmc_proto/cycletime/v1/types.proto",
 )
 
 copy_file(
     name = "_cmc_state_proto",
-    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/state/v1/types.proto",
+    src = "//non-free/packages/cmc-protocols/protocols:checkmk/cmc/state/v1/types.proto",
     out = "cmc_proto/state/v1/types.proto",
 )
 

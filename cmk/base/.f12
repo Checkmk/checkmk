@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-(cd ../../non-free/cmc-protocols && bash .f12)
+(cd ../../non-free/packages/cmc-protocols && bash .f12)
 (cd .. && bash .f12)

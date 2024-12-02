@@ -208,7 +208,7 @@ linesofcode:
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C non-free/cmc-protocols protobuf-files
+	$(MAKE) -C non-free/packages/cmc-protocols protobuf-files
 endif
 
 format: format-python format-c format-shell format-bazel

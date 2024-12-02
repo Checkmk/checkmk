@@ -52,7 +52,7 @@ def add_python_paths() -> None:
 def add_protocols_path():
     sys.path.insert(0, str(repo_path()))
     if is_enterprise_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "cmc-protocols"))
+        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))
 
 
 def add_otel_collector_path() -> None:

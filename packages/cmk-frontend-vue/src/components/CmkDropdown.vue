@@ -17,7 +17,7 @@ const {
   inputHint = '',
   noResultsHint = '',
   disabled = false,
-  componentId = '',
+  componentId = null,
   noElementsText = '',
   options,
   showFilter
@@ -27,7 +27,7 @@ const {
   inputHint?: string
   noResultsHint?: string
   disabled?: boolean
-  componentId?: string
+  componentId?: string | null
   noElementsText?: string
 }>()
 

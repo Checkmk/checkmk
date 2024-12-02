@@ -7,6 +7,7 @@
 
 import dataclasses
 from pathlib import Path
+from threading import Thread
 from typing import Final
 
 import gunicorn.app.base  # type: ignore[import-untyped]
@@ -27,8 +28,9 @@ class ApplicationServerConfig:
 
 
 class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
-    def __init__(self, app: FastAPI, cfg: ApplicationServerConfig) -> None:
+    def __init__(self, app: FastAPI, watcher: Thread, cfg: ApplicationServerConfig) -> None:
         self._app = app
+        self._watcher = watcher
         self._options = {
             "daemon": cfg.daemon,
             "umask": 0o077,
@@ -53,4 +55,5 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
         assert self.cfg is not None, "Gunicorn server config is required to run application."
         if self.cfg.daemon:
             gunicorn.util.daemonize()
+        self._watcher.start()
         super().run()

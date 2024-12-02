@@ -19,6 +19,7 @@ from ._app import get_application, reload_automation_config
 from ._cache import Cache
 from ._log import configure_app_logger, configure_watcher_logger
 from ._server import ApplicationServer, ApplicationServerConfig
+from ._watcher import Watcher, WatcherConfig
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
 APPLICATION_LOG_DIRECTORY: Final = "automation-helper"
@@ -45,6 +46,9 @@ def main() -> int:
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)
 
+        watcher_config = WatcherConfig.load(root=omd_root)
+        watcher = Watcher(watcher_config)
+
         app = get_application(
             engine=automations,
             cache=cache,
@@ -58,7 +62,7 @@ def main() -> int:
             error_log=log_directory / APPLICATION_ERROR_LOG,
         )
 
-        ApplicationServer(app, server_config).run()
+        ApplicationServer(app, watcher, server_config).run()
 
     except Exception:
         return 1

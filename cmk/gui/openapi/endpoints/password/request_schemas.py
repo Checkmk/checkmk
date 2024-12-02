@@ -27,7 +27,6 @@ class InputPassword(BaseSchema):
         description="An optional comment to explain the purpose of this password.",
         load_default="",
     )
-
     documentation_url = fields.String(
         required=False,
         attribute="docu_url",
@@ -35,21 +34,25 @@ class InputPassword(BaseSchema):
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
         load_default="",
     )
-
     password = fields.String(
         required=True,
         example="password",
         description="The password string",
         minLength=1,
     )
-
-    owner = gui_fields.PasswordOwner(
+    # TODO: DEPRECATED(17274) - remove in 2.5
+    owner = gui_fields.PasswordEditableBy(
         example="admin",
-        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
-        required=True,
+        description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        required=False,
         attribute="owned_by",
+        deprecated=True,
     )
-
+    editable_by = gui_fields.PasswordEditableBy(
+        example="admin",
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords. By default, the admin group is the owner of a password.",
+        required=False,
+    )
     shared = fields.List(
         gui_fields.PasswordShare(
             example="all",
@@ -74,34 +77,36 @@ class UpdatePassword(BaseSchema):
         example="Kubernetes login",
         description="The name of your password for easy recognition.",
     )
-
     comment = fields.String(
         required=False,
         example="Kommentar",
         description="An optional comment to explain the purpose of this password.",
     )
-
     documentation_url = fields.String(
         required=False,
         attribute="docu_url",
         example="localhost",
         description="An optional URL pointing to documentation or any other page. You can use either global URLs (beginning with http://), absolute local urls (beginning with /) or relative URLs (that are relative to check_mk/).",
     )
-
     password = fields.String(
         required=False,
         example="password",
         description="The password string",
         minLength=1,
     )
-
-    owner = gui_fields.PasswordOwner(
+    # TODO: DEPRECATED(17274) - remove in 2.5
+    owner = gui_fields.PasswordEditableBy(
+        example="admin",
+        description="Deprecated - use `editable_by` instead. Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
+        required=False,
+        attribute="owned_by",
+        deprecated=True,
+    )
+    editable_by = gui_fields.PasswordEditableBy(
         example="admin",
         description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         required=False,
-        attribute="owned_by",
     )
-
     shared = fields.List(
         gui_fields.PasswordShare(
             example="all",

@@ -1404,24 +1404,29 @@ class PasswordClient(RestApiClient):
         self,
         ident: str,
         title: str,
-        owner: str,
         password: str,
         shared: Sequence[str],
+        editable_by: str | None = None,
+        _owner: str | None = None,
+        comment: str | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "ident": ident,
-            "title": title,
-            "owner": owner,
-            "password": password,
-            "shared": shared,
-            "customer": "provider" if customer is None else customer,
-        }
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
-            body=body,
+            body=_only_set_keys(
+                {
+                    "ident": ident,
+                    "title": title,
+                    "password": password,
+                    "shared": shared,
+                    "editable_by": editable_by,
+                    "owner": _owner,
+                    "comment": comment,
+                    "customer": "provider" if customer is None else customer,
+                }
+            ),
             expect_ok=expect_ok,
         )
 
@@ -1446,24 +1451,38 @@ class PasswordClient(RestApiClient):
     def edit(
         self,
         ident: str,
-        title: str,
-        owner: str,
-        password: str,
-        shared: Sequence[str],
+        title: str | None = None,
+        comment: str | None = None,
+        editable_by: str | None = None,
+        password: str | None = None,
+        shared: Sequence[str] | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "title": title,
-            "owner": owner,
-            "password": password,
-            "shared": shared,
-            "customer": "provider" if customer is None else customer,
-        }
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{ident}",
-            body=body,
+            body=_only_set_keys(
+                {
+                    "title": title,
+                    "comment": comment,
+                    "editable_by": editable_by,
+                    "password": password,
+                    "shared": shared,
+                    "customer": customer,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        ident: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{ident}",
             expect_ok=expect_ok,
         )
 

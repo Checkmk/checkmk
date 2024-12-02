@@ -27,7 +27,11 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
 from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
-from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
+from cmk.gui.openapi.endpoints.utils import (
+    complement_customer,
+    mutually_exclusive_fields,
+    update_customer_info,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -80,12 +84,15 @@ def create_password(params: Mapping[str, Any]) -> Response:
         not in (
             "ident",
             "owned_by",
+            "editable_by",
             "customer",
         )
     }
     if version.edition(paths.omd_root) is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
-    password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
+    password_details["owned_by"] = mutually_exclusive_fields(
+        str, body, "owned_by", "editable_by", default="admin"
+    )
     save_password(ident, cast(Password, password_details), new_password=True)
     return _serve_password(ident, load_password(ident))
 
@@ -106,6 +113,11 @@ def update_password(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.passwords")
     body = params["body"]
     ident = params["name"]
+
+    owned_by = mutually_exclusive_fields(str, body, "owned_by", "editable_by")
+    body.pop("editable_by", None)
+    if owned_by is not None:
+        body["owned_by"] = owned_by
     try:
         password_details = load_password_to_modify(ident)
     except KeyError:

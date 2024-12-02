@@ -433,7 +433,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 | DiscoveryAction.BULK_UPDATE
                 | DiscoveryAction.UPDATE_SERVICES
                 | DiscoveryAction.UPDATE_SERVICE_LABELS
-                | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                | DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS
+                | DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
             ):
                 discovery_result = perform_service_discovery(
                     action=action,
@@ -950,6 +951,7 @@ class DiscoveryPageRenderer:
 
         if has_changed_services:
             enable_page_menu_entry(html, "update_service_labels")
+            enable_page_menu_entry(html, "update_discovery_parameters")
 
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
@@ -1304,13 +1306,13 @@ class DiscoveryPageRenderer:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(
                         url="",
-                        title=_("Update service labels"),
-                        icon="update_service_labels",
+                        title=_("Accept service properties"),
+                        icon="accept",
                         class_=button_classes,
                         onclick=_start_js_call(
                             self._host,
                             self._options._replace(
-                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_PROPERTIES
                             ),
                             request_vars={
                                 "update_target": DiscoveryState.MONITORED,
@@ -2166,6 +2168,24 @@ def _page_menu_selected_services_entries(
             )
         ),
         name="update_service_labels",
+        is_enabled=False,
+        is_shortcut=False,
+        css_classes=["action"],
+    )
+    yield PageMenuEntry(
+        title=_("Update discovery parameters"),
+        icon_name="update_discovery_parameters",
+        item=make_javascript_link(
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS),
+                request_vars={
+                    "update_target": DiscoveryState.MONITORED,
+                    "update_source": DiscoveryState.CHANGED,
+                },
+            )
+        ),
+        name="update_discovery_parameters",
         is_enabled=False,
         is_shortcut=False,
         css_classes=["action"],

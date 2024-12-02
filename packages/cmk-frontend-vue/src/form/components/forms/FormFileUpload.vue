@@ -33,20 +33,22 @@ const componentId = useId()
 </script>
 
 <template>
-  <input v-if="value.file_name === null" :id="componentId" :name="data.input_uuid" type="file" />
-  <div v-if="value.file_name" class="replace">
-    <CmkButton variant="secondary" size="small" @click="value.file_name = null">{{
-      spec.i18n.replace_file
-    }}</CmkButton>
-    <label class="filename"> {{ value.file_name }}</label>
-  </div>
-  <FormValidation :validation="validation"></FormValidation>
+  <span>
+    <input v-if="value.file_name === null" :id="componentId" :name="data.input_uuid" type="file" />
+    <div v-if="value.file_name" class="replace">
+      <CmkButton variant="secondary" size="small" @click="value.file_name = null">{{
+        spec.i18n.replace_file
+      }}</CmkButton>
+      <label class="filename"> {{ value.file_name }}</label>
+    </div>
+    <FormValidation :validation="validation"></FormValidation>
+  </span>
 </template>
 
 <style scoped>
 div.replace {
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: -8px;
 
   label.filename {
     padding-left: 10px;

@@ -16,7 +16,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import FileUpload
 
 from ._base import FormSpecVisitor
@@ -126,6 +126,23 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error("", Title("Invalid file"))
+
+        if self.form_spec.mime_types and parsed_value.file_type not in self.form_spec.mime_types:
+            return create_validation_error(
+                "",
+                Message("Invalid mime type, supported types are: %s")
+                % ", ".join(self.form_spec.mime_types),
+            )
+        if (
+            self.form_spec.extensions
+            and parsed_value.file_name
+            and not any(parsed_value.file_name.endswith(ext) for ext in self.form_spec.extensions)
+        ):
+            return create_validation_error(
+                "",
+                Message("Invalid file extension, supported extensions are: %s")
+                % ", ".join(self.form_spec.extensions),
+            )
         return []
 
     def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> object:

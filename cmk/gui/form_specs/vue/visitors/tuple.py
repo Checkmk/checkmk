@@ -6,6 +6,7 @@ from typing import Any
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
 
@@ -54,6 +55,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, tuple[object, ...]]):
                 title=title,
                 help=help_text,
                 elements=vue_specs,
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 layout=shared_type_defs.TupleLayout(self.form_spec.layout),
                 show_titles=self.form_spec.show_titles,
                 i18n_base=base_i18n_form_spec(),

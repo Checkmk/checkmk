@@ -10,6 +10,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
@@ -64,6 +65,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
                 title=title,
                 help=help_text,
                 i18n_base=base_i18n_form_spec(),
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 topics=topics,
             ),
             topic_values,

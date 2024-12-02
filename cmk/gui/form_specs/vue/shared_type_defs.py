@@ -275,8 +275,8 @@ class FormSpec:
     type: str
     title: str
     help: str
+    validators: list[Validator]
     i18n_base: I18nFormSpecBase
-    validators: list[Validator] = field(default_factory=lambda: [])
 
 
 @dataclass(kw_only=True)

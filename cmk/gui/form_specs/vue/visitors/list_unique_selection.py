@@ -12,6 +12,7 @@ from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueSingleChoiceElement,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
@@ -68,6 +69,7 @@ class ListUniqueSelectionVisitor(Generic[T], FormSpecVisitor[ListUniqueSelection
             shared_type_defs.ListUniqueSelection(
                 title=title,
                 help=help_text,
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 element_template=element_schema,
                 element_default_value=element_vue_default_value,
                 add_element_label=self.form_spec.add_element_label.localize(

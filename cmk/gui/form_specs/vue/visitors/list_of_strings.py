@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 from cmk.gui.form_specs.private import ListOfStrings
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
 
@@ -54,6 +55,7 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, Sequence[str]]):
             shared_type_defs.ListOfStrings(
                 title=title,
                 help=help_text,
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 string_spec=string_spec,
                 string_default_value=string_default_value,
                 i18n_base=base_i18n_form_spec(),

@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1.form_specs._composed import NoGroup
@@ -114,6 +115,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 groups=[],
                 title=title,
                 help=help_text,
+                validators=build_vue_validators(compute_validators(self.form_spec)),
                 elements=elements_keyspec,
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),

@@ -19,8 +19,7 @@
                     "items": {
                         "type": "object",
                         "$ref": "validators.json#/$defs/validator"
-                    },
-                    "default": []
+                    }
                 },
                 "i18n_base": {
                     "type": "object",

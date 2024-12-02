@@ -83,6 +83,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                         shared_type_defs.LegacyValuespec(
                             title=title,
                             help=help_text,
+                            validators=[],
                             varprefix=varprefix,
                             i18n_base=base_i18n_form_spec(),
                         ),
@@ -99,6 +100,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
             shared_type_defs.LegacyValuespec(
                 title=title,
                 help=help_text,
+                validators=[],
                 varprefix=varprefix,
                 i18n_base=base_i18n_form_spec(),
             ),

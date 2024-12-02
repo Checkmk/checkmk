@@ -228,7 +228,6 @@ include \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/mod_wsgi/mod_wsgi.make \
-    packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \

@@ -32,7 +32,6 @@ PACKAGES := \
     cpp-libs \
     Python \
     python3-modules \
-    rrdtool \
     lcab \
     msitools \
     apache-omd \
@@ -182,7 +181,7 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	set -e ; \
 	OUTPUT=""; \
-	cd packages ; for p in $(PACKAGES) ; do \
+	cd packages ; for p in $(PACKAGES) rrdtool; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
 	        OUTPUT="$${OUTPUT}# $$p\n$$(cat $$p/skel.permissions)\n"; \
 	    fi ; \

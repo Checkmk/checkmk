@@ -59,7 +59,7 @@ configure_make(
     env = {
         "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "RANLIB": "ranlib",
-        "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules/perl-modules",
+        "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules",
         "CFLAGS": "'-Dredacted=\"redacted\"'",
         "top_builddir": ".",
     },

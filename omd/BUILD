@@ -6,8 +6,6 @@ pkg_tar(
     srcs = [
         "//omd/packages/Python:python_files_with_prefix_pkg",
         "//omd/packages/openssl:openssl_files_with_prefix_pkg",
-        "//omd/packages/rrdtool:rrdtool_perl_bindings_files",
-        "//omd/packages/rrdtool:rrdtool_with_prefix_pkg",
     ],
     extension = "tar.gz",
     visibility = ["//visibility:public"],
@@ -35,13 +33,17 @@ pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
         "//omd/packages/freetds:freetds_pkg",
-        "//omd/packages/net-snmp:net-snmp_files_pkg",
         "//omd/packages/protobuf",
         "//packages/site/check-http:check_http_pkg",
     ],
     extension = "tar.gz",
     deps = [
+        #added here instead of above because of disappearing file
         "//omd/packages/perl-modules",
+        "//omd/packages/rrdtool:rrdtool_tar",
+        "//omd/packages/net-snmp:net-snmp_tar",
+        "//omd/packages/rrdtool:rrdtool_perl_bindings",
+        "//omd/packages/rrdtool:rrdtool_python_tar",
     ] + edition_deps[edition],
 ) for edition in [
     "cre",

@@ -34,6 +34,17 @@ pub struct Cli {
     #[arg(short = 'k', long="header", value_parser=split_header::<HeaderName, HeaderValue>)]
     pub headers: Vec<(HeaderName, HeaderValue)>,
 
+    /// Disable certificate verification
+    ///
+    /// You should think very carefully before using this method.
+    /// If invalid certificates are trusted, any certificate for any
+    /// site will be trusted for use. This includes expired certificates.
+    /// This introduces significant vulnerabilities, and should only
+    /// be used as a last resort.
+    // #[arg(short = 'D', long = "disable-cert", verbatim_doc_comment)]
+    #[arg(short = 'D', long = "disable-cert", verbatim_doc_comment, action = clap::ArgAction::SetTrue)]
+    pub disable_certificate_verification: bool,
+
     /// URL to check
     #[arg(short, long)]
     pub url: Url,

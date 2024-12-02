@@ -34,6 +34,7 @@ pub struct CheckParameters {
     pub body_matchers: Vec<TextMatcher>,
     pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
     pub certificate_levels: Option<LowerLevels<u64>>,
+    pub disable_certificate_verification: bool,
 }
 
 pub enum TextMatcher {
@@ -112,6 +113,7 @@ pub fn collect_response_checks(
         .chain(check_certificate(
             response.tls_info,
             params.certificate_levels,
+            params.disable_certificate_verification,
         ))
         .chain(check_user_agent(request_information.user_agent))
         .chain(check_headers(&response.headers, params.header_matchers))
@@ -505,7 +507,15 @@ fn check_page_age(
 fn check_certificate(
     tls_info: Option<TlsInfo>,
     certificate_levels: Option<LowerLevels<u64>>,
+    disable_certificate_verification: bool,
 ) -> Vec<Option<CheckResult>> {
+    if disable_certificate_verification {
+        return vec![CheckResult::details(
+            State::Ok,
+            "Server certificate validity: ignored",
+        )];
+    }
+
     let Some(cert) = tls_info.as_ref().and_then(|t| t.peer_certificate()) else {
         // If the outer tlsinfo is None, we didn't fetch it -> OK
         // If the inner peer cert is None, there is no certificate and we're talking plain HTTP.

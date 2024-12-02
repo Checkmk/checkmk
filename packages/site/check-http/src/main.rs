@@ -137,6 +137,7 @@ fn make_configs(
             } else {
                 None
             },
+            disable_certificate_verification: args.disable_certificate_verification,
         },
         RequestConfig {
             url: args.url.clone(),
@@ -209,6 +210,7 @@ fn make_configs(
                 (x, None) => LowerLevels::warn(x),
                 (x, Some(y)) => LowerLevels::warn_crit(x, y),
             }),
+            disable_certificate_verification: args.disable_certificate_verification,
         },
     )
 }

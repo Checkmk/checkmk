@@ -93,6 +93,7 @@ fn make_standard_configs(
             ignore_proxy_env: false,
             proxy_url: None,
             proxy_auth: None,
+            disable_certificate_verification: false,
         },
         RequestConfig {
             url: url.clone(),
@@ -121,6 +122,7 @@ fn make_standard_configs(
             body_matchers: vec![],
             header_matchers: vec![],
             certificate_levels: None,
+            disable_certificate_verification: false,
         },
     )
 }

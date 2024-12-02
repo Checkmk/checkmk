@@ -42,6 +42,7 @@ pub struct ClientConfig {
     pub ignore_proxy_env: bool,
     pub proxy_url: Option<String>,
     pub proxy_auth: Option<(String, String)>,
+    pub disable_certificate_verification: bool,
 }
 
 pub struct ClientAdapter {
@@ -60,7 +61,8 @@ impl ClientAdapter {
 }
 
 fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
-    let client = reqwest::Client::builder();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(cfg.disable_certificate_verification);
 
     let client = if cfg.ignore_proxy_env {
         client.no_proxy()

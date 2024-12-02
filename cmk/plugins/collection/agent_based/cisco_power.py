@@ -45,22 +45,22 @@ cisco_power_sources = (
 )
 
 
-def item_name_from(description: str, sensor_id: str) -> str:
+def item_name_from(description: str) -> str:
     """Returns a combination from device description and OID index which can
     be used as service item name.
-    >>> item_name_from("", "123")
-    ' 123'
-    >>> item_name_from("removed", "123")
-    'removed 123'
-    >>> item_name_from("Switch#1, PowerSupply#1, Status is Normal, RPS Not Present", "123")
+    >>> item_name_from("")
+    'supply'
+    >>> item_name_from("removed")
+    'removed'
+    >>> item_name_from("Switch#1, PowerSupply#1, Status is Normal, RPS Not Present")
     'Switch 1 PowerSupply 1'
-    >>> item_name_from("Sw1, PS1 Normal, RPS NotExist", "123")
+    >>> item_name_from("Sw1, PS1 Normal, RPS NotExist")
     'Sw1 PS1'
-    >>> item_name_from("Switch 1 - Power Supply A, Normal", "123")
-    'Switch 1 - Power Supply A 123'
-    >>> item_name_from("Sw1, PSA Normal", "123")
-    'Sw1 PSA 123'
-    >>> item_name_from("Switch#1, PowerSupply 1", "123")
+    >>> item_name_from("Switch 1 - Power Supply A, Normal")
+    'Switch 1 - Power Supply A'
+    >>> item_name_from("Sw1, PSA Normal")
+    'Sw1 PSA'
+    >>> item_name_from("Switch#1, PowerSupply 1")
     'Switch 1 PowerSupply 1'
     """
     # The 'description part' of given description string which might
@@ -79,13 +79,7 @@ def item_name_from(description: str, sensor_id: str) -> str:
     else:
         device_description = " ".join(splitted[:-1])
 
-    item = device_description.replace("#", " ")
-    # Different sensors may have identical descriptions. To prevent
-    # duplicate items the sensor_id is appended. This leads to
-    # redundant information sensors are enumerated with letters like
-    # e.g. "PSA" and "PSB", but to be backwards compatible we do not
-    # modify this behaviour.
-    return item if item and item[-1].isdigit() else f"{item} {sensor_id}"
+    return device_description.replace("#", " ") or "supply"
 
 
 def inventory_cisco_power(section: StringTable) -> DiscoveryResult:
@@ -95,7 +89,7 @@ def inventory_cisco_power(section: StringTable) -> DiscoveryResult:
     discovered: dict[str, list[str]] = {}
 
     for sid, textinfo in (head for *head, state, _source in section if state != "5"):
-        discovered.setdefault(item_name_from(textinfo, sid), []).append(sid)
+        discovered.setdefault(item_name_from(textinfo), []).append(sid)
 
     for name, entries in discovered.items():
         if len(entries) == 1:
@@ -106,7 +100,7 @@ def inventory_cisco_power(section: StringTable) -> DiscoveryResult:
 
 def check_cisco_power(item: str, section: StringTable) -> CheckResult:
     for sid, textinfo, state_str, source_str in section:
-        item_name_base = item_name_from(textinfo, sid)
+        item_name_base = item_name_from(textinfo)
         if item in (item_name_base, f"{item_name_base} {sid}", f"{item_name_base}/{sid}"):
             state = int(state_str)
             source = int(source_str)

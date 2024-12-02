@@ -1,6 +1,6 @@
 #
 # This is the configuration file for the pre-commit framework.
-# To use this you need to install it seperately and activate it for your repository.
+# To use this you need to install it separately and activate it for your repository.
 # To do so issue the following commands:
 #
 #     pip3 install pre-commit

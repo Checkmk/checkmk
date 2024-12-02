@@ -5,6 +5,7 @@
 import re
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
+from functools import lru_cache
 from typing import Final
 
 from cmk.utils.hostaddress import HostAddress
@@ -15,6 +16,23 @@ _Value = int
 
 
 PiggybackTimeSettings = Sequence[tuple[_HostCondition, _KeyName, _Value]]
+
+
+@lru_cache(maxsize=128)
+def _compile(pattern: str) -> re.Pattern:
+    """Compile a regular expression pattern and cache the result.
+
+    Caching by the re module is limited to 512 entries.
+    We here call the function with no more different arguments then the user
+    specified in their configuration, but we might be in the context of checking
+    a host, in which case the patterns of various passive services might be much
+    more.
+
+    Since we're calling this for every host with a piggyback data source, we'll
+    cache the compiled patterns. Since we don't have to share this cache,
+    128 entries should be enough.
+    """
+    return re.compile(pattern)
 
 
 class Config:
@@ -44,7 +62,7 @@ class Config:
             yield None
         elif not expr.startswith("~"):
             yield HostAddress(expr)
-        elif re.match(expr[1:], piggybacked):
+        elif _compile(expr[1:]).match(piggybacked):
             yield piggybacked
 
     def _match(self, key: str, source_hostname: HostAddress) -> int:

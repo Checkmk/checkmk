@@ -47,6 +47,7 @@ define __spec_install_pre %{___build_pre} &&\
 /var/lib/check_mk_agent
 /var/lib/cmk-agent/cmk-agent-ctl.gz
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
+/var/lib/cmk-agent/scripts/manage-binaries.sh
 /var/lib/cmk-agent/scripts/migrate.sh
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket
@@ -85,6 +86,8 @@ fi
 
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
 
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh install
+
 %preun
 
 case "$1" in
@@ -93,3 +96,5 @@ case "$1" in
         /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
         ;;
 esac
+
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove

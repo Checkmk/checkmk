@@ -6,3 +6,5 @@ case "$1" in
         /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
         ;;
 esac
+
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove

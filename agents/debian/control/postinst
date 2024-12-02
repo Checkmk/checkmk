@@ -16,3 +16,5 @@ if "/usr/bin"/cmk-agent-ctl --version >/dev/null 2>&1; then
 fi
 
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
+
+/bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh install

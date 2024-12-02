@@ -176,6 +176,20 @@ strip_binaries() {
     fi
 }
 
+prepare_gplusplus_sources_list() {
+    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
+    # find the right repository name for the distro and version
+    # using "add-apt-repository" would require the installation of "software-properties-common"
+    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
+    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
+        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
+            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
+        fi
+    else
+        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
+    fi
+}
+
 install_for_python_dev() {
     print_green "Installing everything for Python development ..."
 
@@ -238,8 +252,9 @@ strip_for_python() {
 install_for_cpp_dev() {
     print_green "Installing everything for CPP development ..."
 
+    prepare_gplusplus_sources_list
+
     local PACKAGES_TO_INSTALL=(
-        "pkg-config"      # used by install-protobuf-cpp.sh
         "bison"           # to build binutils
         "texinfo"         # to build gdb
         "tk-dev"          # to build gdb
@@ -262,65 +277,19 @@ install_for_cpp_dev() {
         "libxslt-dev"
         "p7zip-full"
         "zlib1g-dev"
+        # onwards packages are required due to CMK-20216
+        "g++-$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)"
+        # required by packages/glib and therfore transitive by python unit tests
+        # this might not be installed if only bazel is installed
+        "libglib2.0-dev"
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
 
     export TARGET_DIR="${INSTALL_PATH}"
-    # /usr/bin/gdb: error while loading shared libraries: libpython3.11.so.1.0:
-    # cannot open shared object file: No such file or directory
-    "${SCRIPT_DIR}"/install-gnu-toolchain.sh
-    "${SCRIPT_DIR}"/install-valgrind.sh
-    "${SCRIPT_DIR}"/install-cmake.sh
-    "${SCRIPT_DIR}"/install-clang.sh
-    "${SCRIPT_DIR}"/install-protobuf-cpp.sh
-
-    if [[ $STRIP_LATER -eq 1 ]]; then
-        print_blue "strip_binaries during CPP setup"
-        strip_for_cpp
-        "${SCRIPT_DIR}"/install-gnu-toolchain.sh link-only
-        "${SCRIPT_DIR}"/install-valgrind.sh link-only
-        "${SCRIPT_DIR}"/install-cmake.sh link-only
-        # no need to link aka install protobuf again
-        # "${SCRIPT_DIR}"/install-protobuf-cpp.sh --link-only
-    fi
 
     "${SCRIPT_DIR}"/install-patchelf.sh
 
     print_green "Installation for CPP development done"
-}
-
-strip_for_cpp() {
-    # strip only the content of the latest created directory
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "gcc-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "iwyu-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "valgrind-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "cmake-*" -print -quit | head -n 1)"
-    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "protobuf-*" -print -quit | head -n 1)"
-}
-
-install_for_gdb() {
-    print_green "Installing everything for GDB ..."
-
-    # install GDB after Python as it requires shared object files, see CMK-15854
-    install_for_python_dev
-    # after here we're potentially root again, without knowledge of $HOME/.pyenv of a user
-
-    # source potential default pyenv path as the user calling this script did not source its bashrc file at this point
-    potential_sudo_user_home=$(eval echo ~"${SUDO_USER:-root}")
-    if [[ -d "${potential_sudo_user_home}/.pyenv/bin" ]]; then
-        print_debug "Potential pyenv installation found at: ${potential_sudo_user_home}"
-        export PYENV_ROOT="${potential_sudo_user_home}/.pyenv"
-        export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-    else
-        # maybe it has been installed without pyenv ...
-        export PATH="${TARGET_DIR}/bin:$PATH"
-    fi
-    test_package "python3 --version" "$(get_desired_python_version "${SCRIPT_DIR}")"
-
-    "${SCRIPT_DIR}"/install-gdb.sh
-
-    print_green "Installation for GDB with $(python3 --version) done"
 }
 
 install_cmk_package_dependencies() {
@@ -377,21 +346,11 @@ install_for_bazel() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-bazel.sh
 
-    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
-    # find the right repository name for the distro and version
-    # using "add-apt-repository" would require the installation of "software-properties-common"
-    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
-    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
-        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
-            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
-        fi
-    else
-        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
-    fi
+    prepare_gplusplus_sources_list
 
     local PACKAGES_TO_INSTALL=(
         "golang-go"
-        "g++-13"
+        "g++-$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)"
         # required by packages/glib and therfore transitive by python unit tests
         # this might not be installed if only bazel is installed
         "libglib2.0-dev"
@@ -545,11 +504,6 @@ fi
 if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
     install_for_python_dev
 fi
-if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
-    # Python needs to be installed before GDB as "libpython3.10.so.1.0" is required
-    # "python3-dev" package might provide a different version than specified
-    install_for_gdb
-fi
 if [[ $INSTALL_FOR_RUST -eq 1 ]]; then
     install_for_rust_dev
 fi
@@ -562,16 +516,6 @@ fi
 
 if [[ $STRIP_LATER -gt 1 ]]; then
     print_blue "strip_binaries finally"
-
-    if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
-        print_debug "Link CPP things"
-        strip_for_cpp
-        "${SCRIPT_DIR}"/install-gnu-toolchain.sh link-only
-        "${SCRIPT_DIR}"/install-valgrind.sh link-only
-        "${SCRIPT_DIR}"/install-cmake.sh link-only
-        # no need to link aka install protobuf again
-        # "${SCRIPT_DIR}"/install-protobuf-cpp.sh link-only
-    fi
 
     if [[ $INSTALL_FOR_PYTHON -eq 1 && $INSTALLED_BY_PYENV -eq 0 ]]; then
         print_debug "Link Python"

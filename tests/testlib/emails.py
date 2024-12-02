@@ -161,7 +161,7 @@ def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[
     user_name = faker.user_name()
     email_address = f"{user_name}@test.com"
 
-    site.openapi.create_user(
+    site.openapi.users.create(
         username=user_name,
         fullname=faker.name(),
         password=faker.password(length=12),
@@ -172,5 +172,5 @@ def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[
     )
     site.openapi.activate_changes_and_wait_for_completion()
     yield user_name, email_address
-    site.openapi.delete_user(user_name)
+    site.openapi.users.delete(user_name)
     site.openapi.activate_changes_and_wait_for_completion()

@@ -61,10 +61,10 @@ def fake_notification_parameter(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="test_user")
 def fixture_test_user(site: Site) -> Iterator[None]:
-    initial_users = site.openapi.get_all_users()
+    initial_users = site.openapi.users.get_all()
 
     username = "hh"
-    site.openapi.create_user(
+    site.openapi.users.create(
         username=username,
         fullname="Harry Hirsch",
         password="1234abcdabcd",
@@ -73,13 +73,13 @@ def fixture_test_user(site: Site) -> Iterator[None]:
         customer="global" if site.version.is_managed_edition() else None,
     )
 
-    all_users = site.openapi.get_all_users()
+    all_users = site.openapi.users.get_all()
     assert len(all_users) == len(initial_users) + 1
 
     try:
         yield
     finally:
-        site.openapi.delete_user(username)
+        site.openapi.users.delete(username)
 
 
 @pytest.fixture(name="host")

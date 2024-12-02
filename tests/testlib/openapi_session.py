@@ -107,6 +107,8 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
 
+        self.users = UsersAPI(self)
+
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
@@ -211,76 +213,6 @@ class CMKOpenApiSession(requests.Session):
         ), f"There are pending changes that were not activated: {pending_changes}"
 
         return True
-
-    def create_user(
-        self,
-        username: str,
-        fullname: str,
-        password: str,
-        email: str,
-        contactgroups: list[str],
-        customer: None | str = None,
-        roles: list[str] | None = None,
-    ) -> None:
-        body = {
-            "username": username,
-            "fullname": fullname,
-            "auth_option": {
-                "auth_type": "password",
-                "password": password,
-            },
-            "contact_options": {
-                "email": email,
-            },
-            "contactgroups": contactgroups,
-            "roles": roles or [],
-        }
-        if customer:
-            body["customer"] = customer
-        response = self.post(
-            "domain-types/user_config/collections/all",
-            json=body,
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_all_users(self) -> list[User]:
-        response = self.get("domain-types/user_config/collections/all")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
-
-    def get_user(self, username: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the user details and the Etag header if the user was found
-            None if the user was not found
-        """
-        response = self.get(f"/objects/user_config/{username}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
-        response = self.put(
-            f"objects/user_config/{username}",
-            headers={
-                "If-Match": etag,
-            },
-            json=user_spec,
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def delete_user(self, username: str) -> None:
-        response = self.delete(f"/objects/user_config/{username}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
     def create_folder(
         self,
@@ -1057,4 +989,81 @@ class CMKOpenApiSession(requests.Session):
             },
         )
         if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+
+class BaseAPI:
+    def __init__(self, session: CMKOpenApiSession) -> None:
+        self.session = session
+
+
+class UsersAPI(BaseAPI):
+    def create(
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        customer: None | str = None,
+        roles: list[str] | None = None,
+    ) -> None:
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": {
+                "auth_type": "password",
+                "password": password,
+            },
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+            "roles": roles or [],
+        }
+        if customer:
+            body["customer"] = customer
+        response = self.session.post(
+            "domain-types/user_config/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[User]:
+        response = self.session.get("domain-types/user_config/collections/all")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
+
+    def get(self, username: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the user details and the Etag header if the user was found
+            None if the user was not found
+        """
+        response = self.session.get(f"/objects/user_config/{username}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def edit(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
+        response = self.session.put(
+            f"objects/user_config/{username}",
+            headers={
+                "If-Match": etag,
+            },
+            json=user_spec,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def delete(self, username: str) -> None:
+        response = self.session.delete(f"/objects/user_config/{username}")
+        if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

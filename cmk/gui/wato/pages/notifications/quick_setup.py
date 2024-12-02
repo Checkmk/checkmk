@@ -27,6 +27,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+    StringAutocompleter,
     World,
 )
 from cmk.gui.form_specs.private.list_unique_selection import (
@@ -34,6 +35,7 @@ from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueSingleChoiceElement,
 )
 from cmk.gui.form_specs.vue.shared_type_defs import (
+    Autocompleter,
     CascadingSingleChoiceLayout,
     Condition,
     ConditionGroup,
@@ -553,18 +555,26 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         layout=MultipleChoiceExtendedLayout.dual_list,
                                     ),
                                 ),
-                                "match_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "match_hosts": DictElement(
+                                    parameter_form=ListOfStrings(
                                         title=Title("Hosts"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
+                                        string_spec=StringAutocompleter(
+                                            autocompleter=Autocompleter(
+                                                fetch_method="ajax_vs_autocomplete",
+                                                data={"ident": "config_hostname", "params": {}},
+                                            ),
+                                        ),
                                     ),
                                 ),
-                                "exclude_hosts": DictElement(  # TODO: Waiting on team engelbart
-                                    parameter_form=FixedValue(
+                                "exclude_hosts": DictElement(
+                                    parameter_form=ListOfStrings(
                                         title=Title("Exclude hosts"),
-                                        help_text=Help("Waiting on team Engelbart"),
-                                        value=None,
+                                        string_spec=StringAutocompleter(
+                                            autocompleter=Autocompleter(
+                                                fetch_method="ajax_vs_autocomplete",
+                                                data={"ident": "config_hostname", "params": {}},
+                                            ),
+                                        ),
                                     ),
                                 ),
                             },

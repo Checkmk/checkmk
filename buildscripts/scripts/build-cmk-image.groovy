@@ -130,8 +130,9 @@ def main() {
                     }
 
                     def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
-                    on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
-                        stage("Upload ${filename}") {
+                    on_dry_run_omit(LONG_RUNNING, "Upload to internal registry") {
+                        stage("Upload to internal registry") {
+                            println("Uploading ${filename}");
                             artifacts_helper.upload_via_rsync(
                                 "${package_dir}",
                                 "${cmk_version_rc_aware}",
@@ -151,7 +152,11 @@ def main() {
                         perform_public_upload = false;
                     }
 
-                    smart_stage(name: "Upload ${filename}", condition: perform_public_upload) {
+                    smart_stage(
+                        name: "Upload to public registry",
+                        condition: perform_public_upload
+                    ) {
+                        println("Uploading ${filename}");
                         artifacts_helper.upload_via_rsync(
                             "${package_dir}",
                             "${cmk_version_rc_aware}",

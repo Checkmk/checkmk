@@ -1792,7 +1792,7 @@ def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOpti
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("Services"),
+                        title=_("On selected services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -2009,6 +2009,17 @@ def _page_menu_service_configuration_entries(
     )
 
     yield PageMenuEntry(
+        title=_("Remove all and find new"),
+        icon_name="services_tabula_rasa",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
+        ),
+        name="tabula_rasa",
+        is_enabled=False,
+        css_classes=["action"],
+    )
+
+    yield PageMenuEntry(
         title=_("Rescan"),
         icon_name="services_refresh",
         item=make_javascript_link(
@@ -2017,17 +2028,6 @@ def _page_menu_service_configuration_entries(
         name="refresh",
         is_enabled=False,
         is_shortcut=True,
-        css_classes=["action"],
-    )
-
-    yield PageMenuEntry(
-        title=_("Remove all and find new"),
-        icon_name="services_tabula_rasa",
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
-        ),
-        name="tabula_rasa",
-        is_enabled=False,
         css_classes=["action"],
     )
 

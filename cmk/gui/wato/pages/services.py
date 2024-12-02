@@ -1040,6 +1040,30 @@ class DiscoveryPageRenderer:
             table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
+        unchanged_labels: Labels = {}
+        changed_labels: Labels = {}
+        added_labels: Labels = {}
+        removed_labels: Labels = {}
+        if entry.check_source == DiscoveryState.CHANGED:
+            unchanged_labels, changed_labels, added_labels, removed_labels = (
+                self._calculate_changes(entry.old_labels, entry.new_labels)
+            )
+            _unchanged_parameters, changed_parameters, added_parameters, removed_parameters = (
+                self._calculate_changes(
+                    entry.old_discovered_parameters, entry.new_discovered_parameters
+                )
+            )
+
+            table.cell(_("Discovered changes"))
+            self._show_discovered_changes(
+                changed_labels,
+                added_labels,
+                removed_labels,
+                changed_parameters,
+                added_parameters,
+                removed_parameters,
+            )
+
         if self._options.show_discovered_labels:
             table.cell(
                 _("Previously discovered")
@@ -1047,27 +1071,8 @@ class DiscoveryPageRenderer:
                 else _("Discovered service labels")
             )
             self._show_discovered_labels(entry.old_labels)
+
             if entry.check_source == DiscoveryState.CHANGED:
-                unchanged_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value == entry.old_labels[label]
-                }
-                changed_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label in entry.old_labels and value != entry.old_labels[label]
-                }
-                added_labels = {
-                    label: value
-                    for label, value in entry.new_labels.items()
-                    if label not in entry.old_labels
-                }
-                removed_labels = {
-                    label: value
-                    for label, value in entry.old_labels.items()
-                    if label not in entry.new_labels
-                }
                 table.cell(_("Newly discovered"))
                 self._show_discovered_labels(unchanged_labels)
                 self._show_discovered_labels(changed_labels, override_label_render_type="changed")
@@ -1079,6 +1084,77 @@ class DiscoveryPageRenderer:
                 _("Check plug-in"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
                 css=["plugins"],
+            )
+
+    @staticmethod
+    def _calculate_changes(
+        old: Mapping[str, Any], new: Mapping[str, Any]
+    ) -> tuple[Mapping[str, Any], Mapping[str, Any], Mapping[str, Any], Mapping[str, Any]]:
+        unchanged = {}
+        changed = {}
+        added = {}
+        removed = {}
+        for key, value in new.items():
+            if key in old and value == old[key]:
+                unchanged[key] = value
+            if key in old and value != old[key]:
+                changed[key] = value
+            if key not in old:
+                added[key] = value
+        for key, value in old.items():
+            if key not in new:
+                removed[key] = value
+        return unchanged, changed, added, removed
+
+    def _show_discovered_changes(
+        self,
+        changed_labels: Labels,
+        added_labels: Labels,
+        removed_labels: Labels,
+        changed_parameters: Mapping[str, Any],
+        added_parameters: Mapping[str, Any],
+        removed_parameters: Mapping[str, Any],
+    ) -> None:
+        if changed_labels:
+            html.p(
+                ungettext("%d changed label", "%d changed labels", len(changed_labels))
+                % len(changed_labels)
+            )
+        if added_labels:
+            html.p(
+                ungettext("%d new label", "%d new labels", len(added_labels)) % len(added_labels)
+            )
+        if removed_labels:
+            html.p(
+                ungettext("%d removed label", "%d removed labels", len(removed_labels))
+                % len(removed_labels)
+            )
+        if changed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter changed",
+                    "%d discovery parameters changed",
+                    len(changed_parameters),
+                )
+                % len(changed_parameters)
+            )
+        if added_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter added",
+                    "%d discovery parameters added",
+                    len(added_parameters),
+                )
+                % len(added_parameters)
+            )
+        if removed_parameters:
+            html.p(
+                ungettext(
+                    "%d discovery parameter removed",
+                    "%d discovery parameters removed",
+                    len(removed_parameters),
+                )
+                % len(removed_parameters)
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:

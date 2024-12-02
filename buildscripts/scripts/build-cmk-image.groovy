@@ -87,11 +87,11 @@ def main() {
                 usernameVariable: 'NEXUS_USERNAME'),
         ]) {
             dir("${checkout_dir}") {
-                conditional_stage('Prepare package directory', build_image) {
+                smart_stage(name: 'Prepare package directory', condition: build_image) {
                     cleanup_directory("${package_dir}");
                 }
 
-                conditional_stage('Build Image', build_image) {
+                smart_stage(name: 'Build Image', condition: build_image) {
                     on_dry_run_omit(LONG_RUNNING, "Download build sources") {
                         artifacts_helper.download_deb(
                             "${INTERNAL_DEPLOY_DEST}",
@@ -142,24 +142,27 @@ def main() {
                         }
                     }
 
-                    if (branch_name.contains("sandbox") ) {
+                    def perform_public_upload = true;
+                    if (branch_name.contains("sandbox")) {
                         print("Skip uploading ${filename} due to sandbox branch");
-                    } else if ("${EDITION}" == "saas"){
+                        perform_public_upload = false;
+                    } else if ("${EDITION}" == "saas") {
                         print("Skip uploading ${filename} due to saas edition");
-                    } else {
-                        stage("Upload ${filename}") {
-                            artifacts_helper.upload_via_rsync(
-                                "${package_dir}",
-                                "${cmk_version_rc_aware}",
-                                "${filename}",
-                                "${WEB_DEPLOY_DEST}",
-                                "${WEB_DEPLOY_PORT}",
-                            );
-                        }
+                        perform_public_upload = false;
+                    }
+
+                    smart_stage(name: "Upload ${filename}", condition: perform_public_upload) {
+                        artifacts_helper.upload_via_rsync(
+                            "${package_dir}",
+                            "${cmk_version_rc_aware}",
+                            "${filename}",
+                            "${WEB_DEPLOY_DEST}",
+                            "${WEB_DEPLOY_PORT}",
+                        );
                     }
                 }
 
-                conditional_stage("Load image", !build_image) {
+                smart_stage(name: "Load image", condition: !build_image) {
                     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                         sh("""
                             scripts/run-pipenv run python \
@@ -175,7 +178,7 @@ def main() {
                     }
                 }
 
-                conditional_stage("Push images", push_to_registry) {
+                smart_stage(name: "Push images", condition: push_to_registry) {
                     sh("""
                         scripts/run-pipenv run python \
                         buildscripts/scripts/build-cmk-container.py \

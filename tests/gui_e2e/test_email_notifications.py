@@ -14,10 +14,10 @@ from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.email import EmailPage
 from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
-from tests.testlib.playwright.pom.setup.edit_notification_rule import (
+from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
+from tests.testlib.playwright.pom.setup.notification_rules import (
     AddNotificationRule,
 )
-from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
 from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.site import Site
 

@@ -325,11 +325,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             ),
             raise_errors=not discovery_options.ignore_errors,
         )
-        discovery_result = discovery_result._replace(
-            check_table=tuple(
-                self._reclassify_changed_discovery_parameters_services(discovery_result.check_table)
-            )
-        )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
                 check_table=(),
@@ -463,38 +458,6 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result
-
-    def _reclassify_changed_discovery_parameters_services(
-        self, check_table: Iterable[CheckPreviewEntry]
-    ) -> Iterable[CheckPreviewEntry]:
-        # Currently services with changed discovery parameters are classified as changed by
-        # the backend. At the moment we have no convenient way to display the information
-        # provided by discovery parameters. Therefore, they are reclassified as unchanged.
-        for entry in check_table:
-            if (
-                entry.check_source == DiscoveryState.CHANGED
-                and entry.old_discovered_parameters != entry.new_discovered_parameters
-                and entry.old_labels == entry.new_labels
-            ):
-                yield CheckPreviewEntry(
-                    check_source=DiscoveryState.MONITORED,
-                    check_plugin_name=entry.check_plugin_name,
-                    ruleset_name=entry.ruleset_name,
-                    discovery_ruleset_name=entry.discovery_ruleset_name,
-                    item=entry.item,
-                    old_discovered_parameters=entry.old_discovered_parameters,
-                    new_discovered_parameters=entry.new_discovered_parameters,
-                    effective_parameters=entry.effective_parameters,
-                    description=entry.description,
-                    state=entry.state,
-                    output=entry.output,
-                    metrics=entry.metrics,
-                    old_labels=entry.old_labels,
-                    new_labels=entry.new_labels,
-                    found_on_nodes=entry.found_on_nodes,
-                )
-                continue
-            yield entry
 
     @staticmethod
     def _resolve_selected_services(

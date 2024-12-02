@@ -36,7 +36,7 @@ case "$1" in
     stop)
         echo -n 'Stopping jaeger...'
         if [ -z "$THE_PID" ]; then
-            echo 'Not running.'
+            echo 'not running.'
         elif ! kill -0 "$THE_PID"; then
             echo 'found stale PID file, not running...'
             rm -f "$PIDFILE"

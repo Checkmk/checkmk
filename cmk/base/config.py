@@ -2744,12 +2744,6 @@ class ConfigCache:
         """
 
         def snmp_fetch_interval_impl() -> int | None:
-            # TODO: move this up the call stack, of course.
-            plugins = agent_based_register.get_previously_loaded_plugins()
-
-            if section_name not in plugins.snmp_sections:
-                return None  # no values at all for non snmp section
-
             # Previous to 1.5 "match" could be a check name (including subchecks) instead of
             # only main check names -> section names. This has been cleaned up, but we still
             # need to be compatible. Strip of the sub check part of "match".

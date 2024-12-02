@@ -22,7 +22,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import FolderRulesets, InvalidRuleException
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import load_timeperiods
-from cmk.gui.watolib.utils import wato_root_dir
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -40,59 +39,62 @@ class ValidateConfigFiles(UpdateAction):
         3. Validate rules of rulesets in folders
         """
 
-        failures: bool = False
-        counter = 1
+        etc_wato_path = Path("etc/check_mk/conf.d/wato")
+        faulty_configurations: list[str] = []
         for relative_file_path in config_file_registry:
             result, has_failure = _run_and_evaluate_validation(
                 relative_file_path,
-                counter,
                 config_file_registry[relative_file_path].read_file_and_validate,
             )
-            failures |= has_failure
-            counter += 1
-            logger.info(result)
+            if has_failure:
+                faulty_configurations.append(result)
 
         # Validate timeperiods.mk
         result, has_failure = _run_and_evaluate_validation(
-            str(Path(wato_root_dir()) / "timeperiods.mk"),
-            counter,
+            str(etc_wato_path / "timeperiods.mk"),
             lambda: validate_timeperiods(load_timeperiods()),
         )
-        failures |= has_failure
-        counter += 1
-        logger.info(result)
+        if has_failure:
+            faulty_configurations.append(result)
 
         # Validate rulesets in folders
         rule_validator = TypeAdapter(RuleSpec)  # nosemgrep: type-adapter-detected
         for folder_path, validate_result, has_failure in _validate_folder_ruleset_rules(
             folder_tree().root_folder(), rule_validator
         ):
+            if has_failure:
+                faulty_configurations.append(
+                    _file_format(str(etc_wato_path / f"{folder_path}/rules.mk") + validate_result)
+                )
+
+        if faulty_configurations:
             logger.info(
-                _file_format(f"{folder_path}/rules.mk", row_number=counter) + validate_result
+                "\n"
+                "       We have identified an issue with the configuration of your site.\n\n"
+                "       Currently, this is a warning to make you aware of a potential problem.\n"
+                "       Our validation process checks your configuration files against a work-in-progress internal representation.\n"
+                "       In this case, we found at least one mismatch between the two.\n\n"
+                "       For now you can proceed with the update of your site.\n"
+                "       However, in the future we will treat this as an error and stop the update procedure.\n"
+                "       To prevent any interruptions, we kindly ask you to notify us about this issue.\n\n"
+                "       Please send us a support ticket if you believe there are no issues with your relevant configuration mk files.\n"
+                "       Be sure to include the name of the configuration file, the displayed error message and \n"
+                "       if possible the mk file itself.\n"
+                "       This information will help us investigate further and determine whether improvements are needed.\n\n"
+                "       The following mk files had issues during the validation:\n"
             )
-            failures |= has_failure
-            counter += 1
-
-        if failures:
-            logger.info(
-                "    We found an issue with the configuration of your site.\n"
-                "    Currently it is just a warning to make you aware of the potential problem.\n"
-                "    For now you can proceed with the update of your site.\n\n"
-                "    However, in the future we will treat this as an error and stop the update procedure.\n"
-                "    Because of this, it is important that you make us aware of the issue.\n"
-                "    Please send us a support ticket with the information provided here so that we can work\n"
-                "    out whether there is migration code missing or the validation needs to be improved.\n\n"
-            )
+            for message in faulty_configurations:
+                logger.info(message)
 
 
-def _file_format(file_path: str, row_number: int) -> str:
-    return f"    {tty.yellow}{row_number:02d}{tty.normal} {file_path:.<60} "
+def _file_format(file_path: str) -> str:
+    return f"\t{file_path:.<60} "
 
 
 def _run_and_evaluate_validation(
-    file_path: str, counter: int, validation_call: Callable[[], None]
+    file_path: str, validation_call: Callable[[], None]
 ) -> tuple[str, bool]:
-    evaluation_message = _file_format(file_path, counter)
+    evaluation_message = _file_format(file_path)
     has_failure = False
     try:
         validation_call()

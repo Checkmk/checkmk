@@ -84,7 +84,7 @@ def get_application(
             timeout = APPLICATION_MAX_REQUEST_TIMEOUT
         try:
             return await asyncio.wait_for(call_next(request), timeout=float(timeout))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             resp = AutomationResponse(
                 exit_code=AutomationExitCode.TIMEOUT,
                 output=f"Timed out after {timeout} seconds",

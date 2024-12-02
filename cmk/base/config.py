@@ -2744,15 +2744,12 @@ class ConfigCache:
         """
 
         def snmp_fetch_interval_impl() -> int | None:
-            # Previous to 1.5 "match" could be a check name (including subchecks) instead of
-            # only main check names -> section names. This has been cleaned up, but we still
-            # need to be compatible. Strip of the sub check part of "match".
-            for match, minutes in self.ruleset_matcher.get_host_values(
+            for sections, (_option_id, seconds) in self.ruleset_matcher.get_host_values(
                 host_name,
                 snmp_check_interval,
             ):
-                if match is None or match.split(".")[0] == str(section_name):
-                    return minutes * 60  # use first match
+                if str(section_name) in sections:
+                    return None if seconds is None else round(seconds)  # use first match
 
             return None
 

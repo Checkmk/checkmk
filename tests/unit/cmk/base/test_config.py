@@ -1780,7 +1780,7 @@ def test_snmp_check_interval(
             {
                 "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
-                "value": ("snmp_uptime", 4),
+                "value": (["snmp_uptime"], ("cached", 240)),
             },
         ],
     )

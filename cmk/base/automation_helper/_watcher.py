@@ -19,6 +19,9 @@ class AutomationWatcherHandler(PatternMatchingEventHandler):
         patterns_ = list(patterns) if patterns else None
         super().__init__(patterns=patterns_, ignore_directories=ignore_directories)
 
+    def on_moved(self, event: FileSystemEvent) -> None:
+        self._log_handled_event(event)
+
     def on_created(self, event: FileSystemEvent) -> None:
         self._log_handled_event(event)
 
@@ -30,7 +33,11 @@ class AutomationWatcherHandler(PatternMatchingEventHandler):
 
     @classmethod
     def _log_handled_event(cls, event: FileSystemEvent) -> None:
-        watcher_logger.info("%s (%s)", event.src_path, event.event_type)
+        match event.event_type:
+            case "moved":
+                watcher_logger.info("%s (overwritten)", event.dest_path)
+            case _:
+                watcher_logger.info("%s (%s)", event.src_path, event.event_type)
 
 
 class Schedule(pydantic.BaseModel, frozen=True):

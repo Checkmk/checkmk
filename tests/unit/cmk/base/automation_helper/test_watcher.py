@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import shutil
 import time
 from pathlib import Path
 from typing import ContextManager, Final
@@ -13,9 +14,11 @@ from watchdog.events import (
     DirCreatedEvent,
     DirDeletedEvent,
     DirModifiedEvent,
+    DirMovedEvent,
     FileCreatedEvent,
     FileDeletedEvent,
     FileModifiedEvent,
+    FileMovedEvent,
     FileSystemEvent,
 )
 
@@ -72,6 +75,22 @@ def wait_for_observer_log_output(
     return output
 
 
+@pytest.mark.xfail(reason="Cannot reproduce the 'moved' event with shutil")
+def test_observer_handles_moved_mk_file(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, observer: ContextManager, target_file: Path
+) -> None:
+    target_file.write_bytes(b"hello")
+    tmp_file = tmp_path / f"{MK_FILE}.tmp"
+    tmp_file.write_bytes(b"goodbye")
+
+    with caplog.at_level(logging.INFO):
+        with observer:
+            shutil.move(tmp_file, target_file)
+            log_output = wait_for_observer_log_output(caplog)
+
+    assert "foo.mk (overwritten)" in log_output
+
+
 def test_observer_handles_created_mk_file(
     caplog: pytest.LogCaptureFixture, observer: ContextManager, target_file: Path
 ) -> None:
@@ -123,6 +142,11 @@ def test_observer_also_handles_txt_files(
 @pytest.mark.parametrize(
     "event, output",
     [
+        pytest.param(
+            FileMovedEvent(src_path="", dest_path=MK_FILE),
+            "foo.mk (overwritten)",
+            id="file overwritten",
+        ),
         pytest.param(FileCreatedEvent(src_path=MK_FILE), "foo.mk (created)", id="file created"),
         pytest.param(FileModifiedEvent(src_path=MK_FILE), "foo.mk (modified)", id="file modified"),
         pytest.param(FileDeletedEvent(src_path=MK_FILE), "foo.mk (deleted)", id="file deleted"),
@@ -143,6 +167,7 @@ def test_automation_watcher_logging_pattern_match(
 @pytest.mark.parametrize(
     "event",
     [
+        pytest.param(FileMovedEvent(src_path="", dest_path=TXT_FILE), id="no match overwritten"),
         pytest.param(FileCreatedEvent(src_path=TXT_FILE), id="no match created"),
         pytest.param(FileModifiedEvent(src_path=TXT_FILE), id="no match modified"),
         pytest.param(FileDeletedEvent(src_path=TXT_FILE), id="no match deleted"),
@@ -162,6 +187,11 @@ def test_automation_watcher_logging_no_match(
 @pytest.mark.parametrize(
     "event, output",
     [
+        pytest.param(
+            DirMovedEvent(src_path="", dest_path=DIRECTORY),
+            "local (overwritten)",
+            id="dir overwritten",
+        ),
         pytest.param(DirCreatedEvent(src_path=DIRECTORY), "local (created)", id="dir created"),
         pytest.param(DirModifiedEvent(src_path=DIRECTORY), "local (modified)", id="dir modified"),
         pytest.param(DirDeletedEvent(src_path=DIRECTORY), "local (deleted)", id="dir deleted"),
@@ -182,6 +212,10 @@ def test_automation_watcher_logging_directory_match(
 @pytest.mark.parametrize(
     "event",
     [
+        pytest.param(
+            DirMovedEvent(src_path="", dest_path=DIRECTORY),
+            id="no match dir overwritten",
+        ),
         pytest.param(DirCreatedEvent(src_path=DIRECTORY), id="no match dir created"),
         pytest.param(DirModifiedEvent(src_path=DIRECTORY), id="no match dir modified"),
         pytest.param(DirDeletedEvent(src_path=DIRECTORY), id="no match dir deleted"),

@@ -177,10 +177,12 @@ where
             }
         };
         let state = evaluate(&value);
+        // According to documentation the details default to the summary.
+        // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
         let (summary, details) = match (output, state) {
             (OutputType::Notice(text), State::Ok) => (None, Some(text)),
-            (OutputType::Notice(text), _) => (Some(text), None),
-            (OutputType::Summary(text), _) => (Some(text), None),
+            (OutputType::Notice(text), _) => (Some(text.clone()), Some(text)),
+            (OutputType::Summary(text), _) => (Some(text.clone()), Some(text)),
         };
         CheckResult {
             state,
@@ -1046,6 +1048,9 @@ mod test_writer_format {
         let check = levels.check(15, OutputType::Notice("notice".to_string()), args);
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
-        assert_eq!(format!("{}", coll), "notice (!) | label=15ms;10;20;;");
+        assert_eq!(
+            format!("{}", coll),
+            "notice (!) | label=15ms;10;20;;\nnotice"
+        );
     }
 }

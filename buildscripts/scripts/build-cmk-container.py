@@ -292,7 +292,7 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
 def needed_packages(mk_file: str, output_file: str) -> None:
     """Extract needed packages from MK file"""
     packages = []
-    with open(Path(mk_file).resolve(), "r") as file:
+    with open(Path(mk_file).resolve()) as file:
         lines = [line.rstrip() for line in file]
         for line in lines:
             this = re.findall(r"^(OS_PACKAGES\s*\+=\s*)(.*?)(?=#|$)", line)

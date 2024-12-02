@@ -511,7 +511,7 @@ def get_services_with_status(
             {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}.get(state, "UNDEFINED"),
             pformat(services),
         )
-    services_list = set(_ for _ in services_by_state[service_status] if _ not in skipped_services)
+    services_list = {_ for _ in services_by_state[service_status] if _ not in skipped_services}
     return services_list
 
 
@@ -534,7 +534,7 @@ def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[
     logger.info("Parsing logs for '%s' in %s", pattern, pathname)
     match_dict: dict[str, list[str]] = {}
     for file_path in glob.glob(str(pathname), recursive=True):
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             for line in file:
                 if pattern_obj.search(line):
                     logger.info("Match found in %s: %s", file_path, line.strip())

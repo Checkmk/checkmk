@@ -297,7 +297,7 @@ class SyncRemoteSitesJob:
         if not last_changes or not synced_remote_sites:
             return "No remote %s processed." % change_name
 
-        return "Successfully got %s from sites: %s\n%s" % (
+        return "Successfully got {} from sites: {}\n{}".format(
             change_name,
             ", ".join(sorted(synced_remote_sites)),
             "\n".join(

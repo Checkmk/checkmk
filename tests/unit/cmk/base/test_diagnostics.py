@@ -945,7 +945,7 @@ def test_diagnostics_element_cma_content(tmp_path):
         "/ro/usr/share/cma/version": "1.7.5",
     }
 
-    def open_side_effect(name, options):
+    def open_side_effect(name, *_args, **_kwargs):
         return mock_open(read_data=data_dict.get(name))()
 
     with patch("builtins.open") as bo:

@@ -46,7 +46,7 @@ class SubprocessExecutor(AutomationExecutor):
         )
 
         if completed_process.stderr:
-            logger.warning("'%s' returned stderr: '%s'" % (cmd_descr, completed_process.stderr))
+            logger.warning(f"'{cmd_descr}' returned stderr: '{completed_process.stderr}'")
 
         return LocalAutomationResult(
             exit_code=completed_process.returncode,

@@ -59,9 +59,7 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def single_user_session_enabled(
-    set_config: SetConfig, user_id: UserId
-) -> Generator[None, None, None]:
+def single_user_session_enabled(set_config: SetConfig, user_id: UserId) -> Generator[None]:
     with set_config(single_user_session=10):
         assert active_config.single_user_session == 10
         yield
@@ -647,9 +645,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def make_cme(
-    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
-) -> Generator[None, None, None]:
+def make_cme(monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig) -> Generator[None]:
     monkeypatch.setattr(cmk.ccc.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.ccc.version.edition(cmk.utils.paths.omd_root) is cmk.ccc.version.Edition.CME
 

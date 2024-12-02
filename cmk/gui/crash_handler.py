@@ -128,7 +128,7 @@ def _show_crash_dump_message(
 
 
 def crash_dump_message(crash: GUICrashReport, show_crash_link: bool) -> str:
-    message = "%s: %s<br>\n<br>\n" % (_("Internal error"), crash.crash_info["exc_value"])
+    message = "{}: {}<br>\n<br>\n".format(_("Internal error"), crash.crash_info["exc_value"])
 
     # Do not reveal crash context information to unauthenticated users or not permitted
     # users to prevent disclosure of internal information

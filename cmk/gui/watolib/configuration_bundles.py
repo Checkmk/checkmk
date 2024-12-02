@@ -76,7 +76,7 @@ def bundle_domains() -> Mapping[RuleGroupType, set[DomainDefinition]]:
 def _get_affected_entities(bundle_group: str) -> set[Entity]:
     rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
     bundle_domain = bundle_domains().get(rule_group_type, None)
-    return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
+    return {domain.entity for domain in bundle_domain} if bundle_domain else ALL_ENTITIES
 
 
 class CreateHost(TypedDict):

@@ -2439,7 +2439,7 @@ class TimelineContainer:
 
 def split_time_range(
     start: AVTimeStamp, end: AVTimeStamp, interval: AVTimeStamp
-) -> Generator[AVTimeRange, None, None]:
+) -> Generator[AVTimeRange]:
     """
     Split a time range into smaller ranges of a given interval.
 

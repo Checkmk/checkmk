@@ -94,7 +94,7 @@ def _session(
         {
             "Authorization": "Basic %s"
             % (
-                base64.encodebytes(f"{username}:{password}".encode("utf-8"))
+                base64.encodebytes(f"{username}:{password}".encode())
                 .decode("utf-8")
                 .replace("\n", "")
             ),

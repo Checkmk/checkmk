@@ -1349,7 +1349,7 @@ def _make_group_as_nested_dict(
         for key, dict_element in dict_elements.items()
     ]
 
-    all_group_elements_hidden = set(key_props.hidden) == set(key for key, _ in elements)
+    all_group_elements_hidden = set(key_props.hidden) == {key for key, _ in elements}
     return (
         legacy_valuespecs.Dictionary(
             elements=elements,

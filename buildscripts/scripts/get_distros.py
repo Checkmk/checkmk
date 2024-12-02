@@ -33,14 +33,14 @@ def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
 
 def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> Iterable[str]:
     return sorted(
-        set(
+        {
             distro
             for _edition, use_cases in edition_distros.items()
             if edition in (_edition, "all")
             for _use_case, distros in use_cases.items()
             if use_case in (_use_case, "all")
             for distro in flatten(distros)
-        )
+        }
     )
 
 

@@ -63,7 +63,7 @@ class EmailManager:
         """
         for file_name in self.unread_folder.iterdir():
             file_path = self.unread_folder / file_name
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 msg = email.message_from_file(file, policy=default)
                 logger.info("Email received, subject: '%s'", msg.get("Subject"))
                 if email_subject is None or msg.get("Subject") == email_subject:
@@ -98,7 +98,7 @@ class EmailManager:
         expected_text_content: dict[str, str],
     ) -> None:
         """Check that the email has expected fields and text content."""
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             msg = email.message_from_file(file, policy=default)
             logger.info("Check that email fields have expected values")
             for field, expected_value in expected_fields.items():
@@ -119,7 +119,7 @@ class EmailManager:
 
     def copy_html_content_into_file(self, file_path: Path) -> Path:
         """Copy the html content of the email into a file and return the file path."""
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             msg = email.message_from_file(file, policy=default)
             for part in msg.walk():
                 if part.get_content_type() == "text/html":

@@ -1532,7 +1532,7 @@ def service_description_to_condition(service_description: str) -> HostOrServiceC
 def rules_grouped_by_folder(
     rules: list[tuple[Folder, int, Rule]],
     current_folder: Folder,
-) -> Generator[tuple[Folder, Iterator[tuple[Folder, int, Rule]]], None, None]:
+) -> Generator[tuple[Folder, Iterator[tuple[Folder, int, Rule]]]]:
     """Get ruleset groups in correct sort order. Sort by title_path() to honor
     renamed folders"""
     sorted_rules: list[tuple[Folder, int, Rule]] = sorted(

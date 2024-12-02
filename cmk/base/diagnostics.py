@@ -809,7 +809,7 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 def _try_to_read(filename: str | Path) -> list[str]:
     try:
-        with open(filename, "r") as f:
+        with open(filename) as f:
             content = f.readlines()
 
     except (PermissionError, FileNotFoundError):

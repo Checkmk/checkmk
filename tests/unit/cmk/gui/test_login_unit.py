@@ -211,9 +211,7 @@ def fixture_pre_20_cookie() -> Iterator[str]:
 
 
 @pytest.fixture(name="session_id")
-def fixture_session_id(
-    flask_app: flask.Flask, with_user: tuple[UserId, str]
-) -> Generator[str, None, None]:
+def fixture_session_id(flask_app: flask.Flask, with_user: tuple[UserId, str]) -> Generator[str]:
     with flask_app.test_request_context(
         environ_overrides={"REMOTE_USER": with_user[0]},
     ):

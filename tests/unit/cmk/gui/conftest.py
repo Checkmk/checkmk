@@ -407,7 +407,7 @@ class WebTestAppForCMK(FlaskClient):
         """
 
         @contextmanager
-        def _update_environ_base(extra_env: dict) -> Generator[None, None, None]:
+        def _update_environ_base(extra_env: dict) -> Generator[None]:
             backup = dict(self.environ_base)
             self.environ_base.update(extra_env)
             try:
@@ -565,7 +565,7 @@ def _reset_cache_for_folders_and_hosts_setup() -> None:
 
 
 @pytest.fixture()
-def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request, None, None]:
+def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
     # environment dict. When however a Request is passed in, the environment of the Request will
@@ -577,7 +577,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
 @pytest.fixture()
 def admin_auth_request(
     with_admin: tuple[UserId, str],
-) -> typing.Generator[http.Request, None, None]:
+) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
     # environment dict. When however a Request is passed in, the environment of the Request will

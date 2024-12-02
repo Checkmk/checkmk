@@ -12,7 +12,7 @@ def test_hack_apply_map_special_agents_is_complete() -> None:
     # TODO CMK-20557 Quickfix: otel is part of cce
     assert set(password_store.hack.HACK_AGENTS) == {
         p.name for p in load_special_agents(raise_errors=True).values()
-    } - set(["otel"])
+    } - {"otel"}
 
 
 def test_hack_apply_map_active_checks_is_complete() -> None:

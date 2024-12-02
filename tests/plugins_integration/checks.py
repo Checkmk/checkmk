@@ -377,11 +377,11 @@ def setup_site(site: Site, dump_path: str) -> None:
 
     for dump_type in config.dump_types:  # type: ignore[union-attr]
         host_folder = f"/{dump_type}"
-        if site.openapi.get_folder(host_folder):
+        if site.openapi.folders.get(host_folder):
             logger.info('Host folder "%s" already exists!', host_folder)
         else:
             logger.info('Creating host folder "%s"...', host_folder)
-            site.openapi.create_folder(host_folder)
+            site.openapi.folders.create(host_folder)
         ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
         logger.info('Creating rule "%s"...', ruleset_name)
         site.openapi.create_rule(

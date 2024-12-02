@@ -108,6 +108,7 @@ class CMKOpenApiSession(requests.Session):
         self.set_authentication_header(user, password)
 
         self.users = UsersAPI(self)
+        self.folders = FoldersAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -213,45 +214,6 @@ class CMKOpenApiSession(requests.Session):
         ), f"There are pending changes that were not activated: {pending_changes}"
 
         return True
-
-    def create_folder(
-        self,
-        folder: str,
-        title: str | None = None,
-        attributes: Mapping[str, Any] | None = None,
-    ) -> None:
-        if folder.count("/") > 1:
-            parent_folder, folder_name = folder.rsplit("/", 1)
-        else:
-            parent_folder = "/"
-            folder_name = folder.replace("/", "")
-        response = self.post(
-            "/domain-types/folder_config/collections/all",
-            json={
-                "name": folder_name,
-                "title": title if title else folder_name,
-                "parent": parent_folder,
-                "attributes": attributes if attributes else {},
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_folder(self, folder: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the folder details and the Etag header if the folder was found
-            None if the folder was not found
-        """
-        response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
 
     def create_host(
         self,
@@ -1067,3 +1029,44 @@ class UsersAPI(BaseAPI):
         response = self.session.delete(f"/objects/user_config/{username}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class FoldersAPI(BaseAPI):
+    def create(
+        self,
+        folder: str,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
+    ) -> None:
+        if folder.count("/") > 1:
+            parent_folder, folder_name = folder.rsplit("/", 1)
+        else:
+            parent_folder = "/"
+            folder_name = folder.replace("/", "")
+        response = self.session.post(
+            "/domain-types/folder_config/collections/all",
+            json={
+                "name": folder_name,
+                "title": title if title else folder_name,
+                "parent": parent_folder,
+                "attributes": attributes if attributes else {},
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, folder: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the folder details and the Etag header if the folder was found
+            None if the folder was not found
+        """
+        response = self.session.get(f"/objects/folder_config/{folder.replace('/', '~')}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )

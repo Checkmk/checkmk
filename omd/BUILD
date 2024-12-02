@@ -11,7 +11,6 @@ pkg_tar(
     extension = "tar.gz",
     visibility = ["//visibility:public"],
     deps = [
-        "//omd/packages/perl-modules:perl-modules.tar",
         "//omd/packages/python3-modules:python3-modules.tar",
         "//omd/packages/rrdtool:rrdtool_python_tar",
         "//packages/cmk-agent-based:pkg_tar",
@@ -47,6 +46,9 @@ srcs = {
         "//omd/packages/protobuf",
     ] + srcs[edition],
     extension = "tar.gz",
+    deps = [
+        "//omd/packages/perl-modules",
+    ],
 ) for edition in [
     "cre",
     "cce",

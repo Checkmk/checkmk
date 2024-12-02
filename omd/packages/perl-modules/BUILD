@@ -82,7 +82,7 @@ genrule(
         mkdir -p perl-modules/lib/perl5/CPAN
         cp $(execpath //omd/packages/perl-modules:MyConfig.pm) perl-modules/lib/perl5/CPAN/MyConfig.skel
 
-        tar cf $@ perl-modules
+        tar cf $@ -C perl-modules .
     """,
     visibility = ["//visibility:public"],
 )

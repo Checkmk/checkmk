@@ -30,7 +30,6 @@ PACKAGES := \
     redis \
     libgsf \
     cpp-libs \
-    perl-modules \
     Python \
     python3-modules \
     rrdtool \

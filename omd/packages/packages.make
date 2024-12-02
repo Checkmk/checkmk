@@ -210,7 +210,6 @@ include \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
-    packages/perl-modules/perl-modules.make \
     packages/cpp-libs/cpp-libs.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \

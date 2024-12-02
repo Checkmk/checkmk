@@ -151,9 +151,9 @@ def setup_site_data(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="some_store_id",
         title="foobar",
-        owner="admin",
         password="tt",
         shared=["all"],
+        editable_by="admin",
         customer="global",
     )
 

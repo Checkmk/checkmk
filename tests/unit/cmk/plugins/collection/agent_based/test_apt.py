@@ -257,7 +257,11 @@ def test_apt_discovery() -> None:
         pytest.param(
             DEFAULT_PARAMS,
             Section([], [], []),
-            [Result(state=State.OK, summary="No updates pending for installation")],
+            [
+                Result(state=State.OK, summary="No updates pending for installation"),
+                Metric("normal_updates", 0.0),
+                Metric("security_updates", 0.0),
+            ],
             id="Nothing pending for installation.",
         ),
         pytest.param(

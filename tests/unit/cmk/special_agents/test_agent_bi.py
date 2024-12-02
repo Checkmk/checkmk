@@ -5,8 +5,9 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Mapping
-from typing import Any
+import io
+import json
+from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
@@ -23,7 +24,12 @@ from tests.unit.cmk.gui.conftest import (  # pylint: disable=unused-import
 )
 from tests.unit.cmk.gui.users import create_and_destroy_user
 
-from cmk.special_agents.agent_bi import AggregationRawdataGenerator
+from cmk.special_agents.agent_bi import (
+    AgentBiAuthentication,
+    AgentBiConfig,
+    AggregationRawdataGenerator,
+    merge_config,
+)
 
 
 class TestAggregationRawdataGenerator:
@@ -37,51 +43,40 @@ class TestAggregationRawdataGenerator:
         ],
         [
             pytest.param(
-                {
-                    "site": "local",
-                    "credentials": "automation",
-                },
+                AgentBiConfig(
+                    site_url=None,
+                    authentication=None,
+                ),
                 "automation",
                 "Ischbinwischtisch",
                 "http://localhost:5002/NO_SITE",
                 id="standard_automation_user",
             ),
             pytest.param(
-                {
-                    "site": (
-                        "url",
-                        "http://somewhere:3000/some_site",
+                AgentBiConfig(
+                    site_url="http://somewhere:3000/some_site",
+                    authentication=AgentBiAuthentication(
+                        username="the_dude",
+                        secret_id=1337,
+                        password_store_path=Path("/mocked/away"),
+                        password_store_identifier="the_dude_secret",
                     ),
-                    "credentials": (
-                        "configured",
-                        (
-                            "the_dude",
-                            (
-                                "password",
-                                "white_russian",
-                            ),
-                        ),
-                    ),
-                },
+                ),
                 "the_dude",
                 "white_russian",
                 "http://somewhere:3000/some_site",
                 id="other_automation_user_explicit_password",
             ),
             pytest.param(
-                {
-                    "site": "local",
-                    "credentials": (
-                        "configured",
-                        (
-                            "the_dude",
-                            (
-                                "store",
-                                "the_dude_secret",
-                            ),
-                        ),
+                AgentBiConfig(
+                    site_url=None,
+                    authentication=AgentBiAuthentication(
+                        username="the_dude",
+                        secret_id=42,
+                        password_store_path=Path("/mocked/away"),
+                        password_store_identifier="the_dude_secret",
                     ),
-                },
+                ),
                 "the_dude",
                 "white_russian",
                 "http://localhost:5002/NO_SITE",
@@ -92,7 +87,7 @@ class TestAggregationRawdataGenerator:
     def test_init(
         self,
         mocker: MockerFixture,
-        config: Mapping[str, Any],
+        config: AgentBiConfig,
         expected_username: str,
         expected_password: str,
         expected_site_url: str,
@@ -109,7 +104,43 @@ class TestAggregationRawdataGenerator:
             username=expected_username,
         ):
             agg_gen = AggregationRawdataGenerator(config)
+            assert agg_gen._get_bearer_token() == f"Bearer {expected_username} {expected_password}"
         assert agg_gen._config == config
-        assert agg_gen._username == expected_username
-        assert agg_gen._secret == expected_password
         assert agg_gen._site_url == expected_site_url
+
+
+def test_merge_config() -> None:
+    merged_configs = merge_config(
+        ["--nosecret", "--nosecret", "foo:/bar", "bar:/foo", "--nosecret", "id:/path"],
+        io.BytesIO(
+            json.dumps(
+                [
+                    {},
+                    {},
+                    {"authentication": {"username": "user", "secret_id": 2}},
+                    {"authentication": {"username": "user", "secret_id": 3}},
+                    {},
+                    {"authentication": {"username": "user", "secret_id": 5}},
+                ]
+            ).encode("utf-8")
+        ),
+    )
+    assert merged_configs[0].authentication is None
+    assert merged_configs[1].authentication is None
+
+    assert merged_configs[2].authentication is not None
+    assert merged_configs[2].authentication.secret_id == 2
+    assert merged_configs[2].authentication.password_store_path == Path("/bar")
+    assert merged_configs[2].authentication.password_store_identifier == "foo"
+
+    assert merged_configs[3].authentication is not None
+    assert merged_configs[3].authentication.secret_id == 3
+    assert merged_configs[3].authentication.password_store_path == Path("/foo")
+    assert merged_configs[3].authentication.password_store_identifier == "bar"
+
+    assert merged_configs[4].authentication is None
+
+    assert merged_configs[5].authentication is not None
+    assert merged_configs[5].authentication.secret_id == 5
+    assert merged_configs[5].authentication.password_store_path == Path("/path")
+    assert merged_configs[5].authentication.password_store_identifier == "id"

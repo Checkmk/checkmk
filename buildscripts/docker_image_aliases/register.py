@@ -56,9 +56,7 @@ def cmd_result(cmd: str, cwd: Optional[str] = None) -> Sequence[str]:
     """Run @cmd and return non-empty lines"""
     return [
         line
-        for line in subprocess.check_output(
-            shlex.split(cmd), cwd=cwd, universal_newlines=True
-        ).split("\n")
+        for line in subprocess.check_output(shlex.split(cmd), cwd=cwd, text=True).split("\n")
         if line.strip()
     ]
 

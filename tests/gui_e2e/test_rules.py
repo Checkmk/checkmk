@@ -127,7 +127,7 @@ def test_create_rules(
     ):
         # set up a host group
         host_group_name = "test-rules"
-        test_site.openapi.create_host_group(host_group_name, host_group_name)
+        test_site.openapi.host_groups.create(host_group_name, host_group_name)
 
         # set up "Custom icons and actions"
         dashboard_page.main_menu.setup_searchbar.fill("Custom icons and actions")

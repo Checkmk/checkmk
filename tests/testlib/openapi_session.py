@@ -111,6 +111,7 @@ class CMKOpenApiSession(requests.Session):
         self.users = UsersAPI(self)
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
+        self.host_groups = HostGroupsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -216,29 +217,6 @@ class CMKOpenApiSession(requests.Session):
         ), f"There are pending changes that were not activated: {pending_changes}"
 
         return True
-
-    def create_host_group(self, name: str, alias: str) -> requests.Response:
-        response = self.post(
-            "/domain-types/host_group_config/collections/all",
-            json={"name": name, "alias": alias},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def get_host_group(self, name: str) -> tuple[dict[Any, str], str]:
-        response = self.get(f"/objects/host_group_config/{name}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def delete_host_group(self, name: str) -> None:
-        response = self.delete(f"/objects/host_group_config/{name}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
     def discover_services(
         self,
@@ -1074,3 +1052,28 @@ class HostsAPI(BaseAPI):
             assert (
                 self.get(hostname_new) is not None
             ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
+
+
+class HostGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        response = self.session.post(
+            "/domain-types/host_group_config/collections/all",
+            json={"name": name, "alias": alias},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get(self, name: str) -> tuple[dict[Any, str], str]:
+        response = self.session.get(f"/objects/host_group_config/{name}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)

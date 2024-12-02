@@ -11,7 +11,6 @@
 import java.time.LocalDate
 
 def main() {
-
     /// make sure the listed parameters are set
     check_job_parameters([
         "VERSION",
@@ -70,7 +69,6 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = true;
-
     def run_int_tests = true;
     def run_fips_tests = edition == "enterprise";
     def run_comp_tests = !(edition in ["saas"]);
@@ -95,14 +93,20 @@ def main() {
     def success = true;
 
     stage("Build Packages") {
-        build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
+        build(
+            job: "${base_folder}/build-cmk-packages",
+            parameters: job_parameters
+        );
     }
 
     success &= smart_stage(
             name: "Build CMK IMAGE",
             condition: build_image,
             raiseOnError: false,) {
-        build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
+        build(
+            job: "${base_folder}/build-cmk-image",
+            parameters: job_parameters
+        );
     }
 
     parallel([
@@ -111,7 +115,10 @@ def main() {
                     name: "Integration Test for Docker Container",
                     condition: run_image_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
+                build(
+                    job: "${base_folder}/test-integration-docker",
+                    parameters: job_parameters
+                );
             }
         },
         "Composition Test for Packages": {
@@ -119,16 +126,25 @@ def main() {
                     name: "Composition Test for Packages",
                     condition: run_comp_tests,
                     raiseOnError: false,) {
-                build(job: "${base_folder}/test-composition", parameters: job_parameters);
+                build(
+                    job: "${base_folder}/test-composition",
+                    parameters: job_parameters
+                );
             }
         },
         "System Tests for FIPS compliance": {
             success &= smart_stage(
-                name: "System Tests for FIPS compliance",
-                condition: run_fips_tests,
-                raiseOnError: false,) {
-                build(job: "${base_folder}/test-integration-fips", parameters: job_parameters_common + job_parameters_fips);
-                build(job: "${base_folder}/test-composition-fips", parameters: job_parameters_common + job_parameters_fips);
+                    name: "System Tests for FIPS compliance",
+                    condition: run_fips_tests,
+                    raiseOnError: false,) {
+                build(
+                    job: "${base_folder}/test-integration-fips",
+                    parameters: job_parameters_common + job_parameters_fips
+                );
+                build(
+                    job: "${base_folder}/test-composition-fips",
+                    parameters: job_parameters_common + job_parameters_fips
+                );
             }
         },
     ]);
@@ -137,21 +153,30 @@ def main() {
             name: "Integration Test for Packages",
             condition: run_int_tests,
             raiseOnError: false,) {
-        build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+        build(
+            job: "${base_folder}/test-integration-packages",
+            parameters: job_parameters
+        );
     }
 
     success &= smart_stage(
             name: "Update Test",
             condition: run_update_tests,
             raiseOnError: false,) {
-        build(job: "${base_folder}/test-update", parameters: job_parameters);
+        build(
+            job: "${base_folder}/test-update",
+            parameters: job_parameters
+        );
     }
 
     success &= smart_stage(
             name: "Trigger SaaS Gitlab jobs",
             condition: success && edition == "saas",
             raiseOnError: false,) {
-        build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);
+        build(
+            job: "${base_folder}/trigger-saas-gitlab",
+            parameters: job_parameters
+        );
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

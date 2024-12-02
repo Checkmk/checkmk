@@ -45,7 +45,7 @@ configure_make(
         "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
         "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
         "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/python3-modules/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [

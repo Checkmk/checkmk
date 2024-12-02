@@ -10,7 +10,7 @@ def package_wheel(
         # TODO: As soon as we have all omd/packages in bazel, we won't need the intermediate install target anymore.
         # Then we can also completely remove the "python3-modules" prefix - currently it will be deployed to $(DESTDIR) via
         # $(PYTHON3_MODULES_INSTALL) in python3-modules.make
-        intermediate_prefix = "python3-modules/"):
+        intermediate_prefix = ""):
     """Packages a python wheel into our omd site-packages.
 
     Args:

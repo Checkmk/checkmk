@@ -2,17 +2,24 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
 
-pkg_tar(
-    name = "intermediate_install",
+[pkg_tar(
+    name = "deps_install_" + edition,
     srcs = [
-        "//omd/packages/Python:python_files_with_prefix_pkg",
-        "//omd/packages/openssl:openssl_files_with_prefix_pkg",
+        "//omd/packages/freetds:freetds_pkg",
+        "//omd/packages/protobuf",
+        "//packages/site/check-http:check_http_pkg",
     ],
     extension = "tar.gz",
-    visibility = ["//visibility:public"],
     deps = [
+        #added here instead of above because of disappearing file
+        "//omd/packages/Python:python_tar",
+        "//omd/packages/net-snmp:net-snmp_tar",
+        "//omd/packages/openssl:openssl_tar",
+        "//omd/packages/perl-modules",
         "//omd/packages/python3-modules:python3-modules.tar",
+        "//omd/packages/rrdtool:rrdtool_perl_bindings",
         "//omd/packages/rrdtool:rrdtool_python_tar",
+        "//omd/packages/rrdtool:rrdtool_tar",
         "//packages/cmk-agent-based:pkg_tar",
         "//packages/cmk-agent-receiver:pkg_tar",
         "//packages/cmk-ccc:pkg_tar",
@@ -27,24 +34,6 @@ pkg_tar(
         "//packages/cmk-server-side-calls:pkg_tar",
         "//packages/cmk-trace:pkg_tar",
         "//packages/cmk-werks:pkg_tar",
-    ],
-)
-
-[pkg_tar(
-    name = "deps_install_" + edition,
-    srcs = [
-        "//omd/packages/freetds:freetds_pkg",
-        "//omd/packages/protobuf",
-        "//packages/site/check-http:check_http_pkg",
-    ],
-    extension = "tar.gz",
-    deps = [
-        #added here instead of above because of disappearing file
-        "//omd/packages/perl-modules",
-        "//omd/packages/rrdtool:rrdtool_tar",
-        "//omd/packages/net-snmp:net-snmp_tar",
-        "//omd/packages/rrdtool:rrdtool_perl_bindings",
-        "//omd/packages/rrdtool:rrdtool_python_tar",
     ] + edition_deps[edition],
 ) for edition in [
     "cre",

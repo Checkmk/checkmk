@@ -146,7 +146,6 @@ pkg_filegroup(
         ":openssl_empty_dirs",
         ":openssl_executables_pkg",
         ":openssl_lib_symlinks_pkg",
-        ":openssl_lib_with_rpath_pkg",
         ":openssl_rest_pkg",
         ":openssl_skel_symlinks_pkg",
     ],
@@ -157,28 +156,5 @@ pkg_tar(
     name = "openssl_tar",
     srcs = [":openssl_files_pkg"],
     package_file_name = "openssl.tar",
-    visibility = ["//visibility:public"],
-)
-
-# The prefixed version will be obsolete as soon as we remove
-# intermediate install (protobuf still depends on it)
-pkg_filegroup(
-    name = "openssl_files_with_prefix_pkg",
-    srcs = [
-        ":openssl_bin_pkg",
-        ":openssl_empty_dirs",
-        ":openssl_executables_pkg",
-        ":openssl_lib_symlinks_pkg",
-        ":openssl_rest_pkg",
-        ":openssl_skel_symlinks_pkg",
-    ],
-    prefix = "openssl",
-    visibility = ["//visibility:public"],
-)
-
-pkg_tar(
-    name = "openssl_with_prefix_tar",
-    srcs = [":openssl_files_with_prefix_pkg"],
-    package_file_name = "openssl_with_prefix.tar",
     visibility = ["//visibility:public"],
 )

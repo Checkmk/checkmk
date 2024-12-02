@@ -22,29 +22,35 @@ BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 # intermediate_install used to be necessary to link external dependecies with each other.
 # This is now done inside of Bazel
 # This target can be removed once `dest` is created inside of Bazel
-INTERMEDIATE_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/intermediate_install_bazel'
 DEPS_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/deps_install_bazel'
 
 # Human make target
-.PHONY: intermediate_install_bazel
-intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
+.PHONY: deps_install_bazel
 deps_install_bazel: $(DEPS_INSTALL_BAZEL)
 
-NET_SNMP_PYTHONPATH := $(DESTDIR)$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages
-
-$(INTERMEDIATE_INSTALL_BAZEL):
+$(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
 	$(BAZEL_CMD) build \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    //omd:intermediate_install
-	mkdir -p $(INTERMEDIATE_INSTALL_BASE)
-	tar -C $(INTERMEDIATE_INSTALL_BASE) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
+	    //omd:deps_install_$(EDITION_SHORT)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
+	tar -C $(DESTDIR)$(OMD_ROOT) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
 
 	#TODO: The following code should be executed by Bazel instead of make
 	# Fix sysconfigdata
-	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
+	$(SED) -i "s|/replace-me|$(OMD_ROOT)|g" \
+	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/_sysconfigdata__linux_x86_64-linux-gnu.py
+
+	# pre-compile pyc files enforcing `checked-hash` invalidation
+	# note: this is a workaround and should be handled in according Bazel project
+	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
+	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
+	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
 
 	# This will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
@@ -58,36 +64,7 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	    --inplace \
 	    "/home/.*?/openssl.build_tmpdir/openssl/" \
 	    "$(OMD_ROOT)/" \
-	    "$(OPENSSL_INSTALL_DIR)/lib/libcrypto.so.3"
-
-	mkdir -p $(BUILD_HELPER_DIR)/
-	touch $@
-
-$(DEPS_INSTALL_BAZEL):
-	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
-	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
-	#       resulting in different builds
-	$(BAZEL_CMD) build \
-	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
-	    //omd:deps_install_$(EDITION_SHORT)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)
-	tar -C $(DESTDIR)$(OMD_ROOT) -xf $(BAZEL_BIN)/omd/deps_install_$(EDITION_SHORT).tar.gz
-
-	# compile pyc files explicitly selecting `checked-hash` invalidation mode
-	@if [ "$(EDITION_SHORT)" != "cre" ]; then \
-	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall\
-	    -f \
-	    --invalidation-mode=checked-hash \
-	    -s "$(DESTDIR)$(OMD_ROOT)/lib/python3/" \
-	    "$(DESTDIR)$(OMD_ROOT)/lib/python3/cmc_proto"; \
-	fi
-
-	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
-	    -f \
-	    --invalidation-mode=checked-hash \
-	    -s "$(NET_SNMP_PYTHONPATH)/" \
-	    -o 0 -o 1 -o 2 -j0 \
-	    "$(NET_SNMP_PYTHONPATH)/netsnmp/"
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"
 
 	mkdir -p $(BUILD_HELPER_DIR)/
 	touch $@
@@ -202,7 +179,6 @@ debug:
 
 # Include rules to make packages
 include \
-    packages/openssl/openssl.make \
     packages/erlang/erlang.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
@@ -219,13 +195,13 @@ include \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
+    packages/Python/Python.make \
+    packages/python3-modules/python3-modules.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
-    packages/Python/Python.make \
-    packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
     packages/mod_wsgi/mod_wsgi.make \
     packages/mk-livestatus/mk-livestatus.make \

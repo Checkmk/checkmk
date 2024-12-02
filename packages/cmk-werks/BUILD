@@ -26,7 +26,10 @@ py_library(
         "cmk/werks/validate.py",
     ],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//omd:__pkg__",
+    ],
     deps = [
         requirement("gitpython"),
         requirement("lxml"),

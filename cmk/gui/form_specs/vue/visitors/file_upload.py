@@ -5,7 +5,6 @@
 import base64
 import uuid
 from dataclasses import dataclass, field
-from typing import Optional
 
 from werkzeug.datastructures import FileStorage
 
@@ -36,9 +35,9 @@ FileContentEncrypted = str
 @dataclass(frozen=True, kw_only=True)
 class FileUploadModel:
     input_uuid: str = field(default_factory=lambda: str(uuid.uuid4()))
-    file_name: Optional[FileName] = None
-    file_type: Optional[FileType] = None
-    file_content_encrypted: Optional[FileContentEncrypted] = None
+    file_name: FileName | None = None
+    file_type: FileType | None = None
+    file_content_encrypted: FileContentEncrypted | None = None
 
 
 @request_memoize()

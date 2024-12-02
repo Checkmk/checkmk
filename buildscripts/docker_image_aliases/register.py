@@ -27,7 +27,6 @@ import subprocess
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
 
 import docker  # type: ignore[import-untyped]
 import yaml
@@ -53,7 +52,7 @@ def split_source_name(raw_source: str) -> tuple[str, str, list[str]]:
     return "/".join(registry_name), base_name, tags if tags else ["latest"]
 
 
-def cmd_result(cmd: str, cwd: Optional[str] = None) -> Sequence[str]:
+def cmd_result(cmd: str, cwd: str | None = None) -> Sequence[str]:
     """Run @cmd and return non-empty lines"""
     return [
         line

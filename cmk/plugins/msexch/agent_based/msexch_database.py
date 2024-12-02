@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -32,10 +32,10 @@ _counter_to_var = {
 
 @dataclass(frozen=True)
 class DbPerfData:
-    read_attached_latency_s: Optional[float] = None
-    read_recovery_latency_s: Optional[float] = None
-    write_latency_s: Optional[float] = None
-    log_latency_s: Optional[float] = None
+    read_attached_latency_s: float | None = None
+    read_recovery_latency_s: float | None = None
+    write_latency_s: float | None = None
+    log_latency_s: float | None = None
 
 
 def _delocalize_de_DE(value: str) -> str:

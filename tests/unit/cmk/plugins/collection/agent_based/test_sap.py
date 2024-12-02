@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
 
 import pytest
 
@@ -152,7 +151,7 @@ def test_sap_value_discovery(match: tuple[str, str], expected_services: list[Ser
         ),
     ],
 )
-def test_sap_check(item: str, params: dict[str, int], results: Optional[CheckResult]) -> None:
+def test_sap_check(item: str, params: dict[str, int], results: CheckResult | None) -> None:
     if results is None:
         with pytest.raises(IgnoreResultsError):
             list(sap.check_sap_value(item, params, SECTION))

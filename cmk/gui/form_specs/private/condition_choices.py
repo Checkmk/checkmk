@@ -2,8 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 from cmk.gui.form_specs.vue.shared_type_defs import ConditionGroup
 

@@ -49,7 +49,6 @@ import tarfile
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Union
 
 import docker  # type: ignore[import-untyped]
 
@@ -126,7 +125,7 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def run_cmd(
-    cmd: Union[list[str], str],
+    cmd: list[str] | str,
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:

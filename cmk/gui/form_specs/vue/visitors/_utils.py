@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
 from collections.abc import Callable, Sequence
-from typing import Any, Optional, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
@@ -30,7 +30,7 @@ class SupportsLocalize(Protocol):
     def localize(self, localizer: Callable[[str], str]) -> str: ...
 
 
-def localize(localizable: Optional[SupportsLocalize]) -> str:
+def localize(localizable: SupportsLocalize | None) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
 
 

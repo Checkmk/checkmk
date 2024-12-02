@@ -5,7 +5,8 @@
 
 import logging
 from pathlib import Path
-from typing import NamedTuple
+from types import TracebackType
+from typing import NamedTuple, Self
 
 from tests.testlib.repo import repo_path
 from tests.testlib.utils import run
@@ -37,11 +38,16 @@ class OpenLDAPManager:
         self.content_file_path = ldif_path / "ldap_content.ldif"
         self.admin_password = admin_password
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.setup_open_ldap()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.teardown_open_ldap()
 
     def create_ldap_content_file(self) -> None:

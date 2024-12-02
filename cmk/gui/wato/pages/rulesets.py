@@ -2117,10 +2117,6 @@ class ABCEditRuleMode(WatoMode):
                     registered_form_spec,
                     self._vue_field_id(),
                 )
-                # For testing, validate this datatype/value again within legacy valuespec
-                # This should not throw any errors
-                self._ruleset.valuespec().validate_datatype(value, "ve")
-                self._ruleset.valuespec().validate_value(value, "ve")
             case ExperimentalRenderMode.BACKEND:
                 value = self._ruleset.valuespec().from_html_vars("ve")
                 self._ruleset.valuespec().validate_value(value, "ve")

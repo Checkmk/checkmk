@@ -1427,7 +1427,9 @@ def _instantiate_skel(path: str, replacements: Replacements) -> bytes:
         return b""  # e.g. due to permission error
 
 
-def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
+def initialize_site_ca(
+    site: SiteContext, site_key_size: int = 4096, root_key_size: int = 4096
+) -> None:
     """Initialize the site local CA and create the default site certificate
     This will be used e.g. for serving SSL secured livestatus
 
@@ -1436,7 +1438,9 @@ def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
     """
     ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CN_TEMPLATE.format(site.name)),
+        root_ca=RootCA.load_or_create(
+            root_cert_path(ca_path), CN_TEMPLATE.format(site.name), key_size=root_key_size
+        ),
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):

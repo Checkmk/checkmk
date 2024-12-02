@@ -1,0 +1,58 @@
+rules:
+  - id: key-size-unit-test
+    languages:
+      - python
+    severity: ERROR
+    message: RSA key size should be set to 1024-bit in unit test.
+    paths:
+        include:
+          - "tests/unit"
+    pattern-either:
+      - patterns:
+          - pattern-inside: |
+              from cmk.gui.cee.saml2._config import
+              replace_builtin_signature_cert
+              ...
+          - patterns:
+              - pattern: |
+                  replace_builtin_signature_cert(...)
+              - pattern-not: |
+                  replace_builtin_signature_cert(..., default_key_size=1024,...)
+      - patterns:
+          - pattern: |
+              $MODE._create_key(...)
+          - pattern-not : |
+              $MODE._create_key(..., default_key_size=1024,...)
+      - patterns:
+          - pattern-inside: |
+              from cmk.gui import key_mgmt
+              ...
+          - patterns:
+              - pattern: |
+                  key_mgmt.generate_key(...)
+              - pattern-not: |
+                  key_mgmt.generate_key(..., key_size=1024,...)
+      - patterns:
+          - pattern: |
+              $MOD.initialize_site_ca(...)
+          - pattern-not: |
+              $MOD.initialize_site_ca(..., site_key_size=1024, root_key_size=1024,...)
+      - patterns:
+          - pattern-inside: |
+              from cmk.utils.certs import RootCA
+              ...
+          - patterns:
+              - pattern: |
+                  RootCA.load_or_create(...)
+              - pattern-not: |
+                  RootCA.load_or_create(...,key_size=1024,...)
+      - patterns:
+          - pattern: |
+              PrivateKey.generate_rsa(...)
+          - pattern-not: |
+              PrivateKey.generate_rsa(...,key_size=1024,...)
+      - patterns:
+          - pattern: |
+              CertificateWithPrivateKey.generate_self_signed(...)
+          - pattern-not: |
+              CertificateWithPrivateKey.generate_self_signed(...,key_size=1024,...)

@@ -258,7 +258,7 @@ class TestConfigDomainCACertificates:
         )
 
         assert not site_pem.exists()
-        omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024)
+        omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
 
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])
         assert SiteId(site_id) in remote_cas

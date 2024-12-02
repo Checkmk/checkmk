@@ -275,7 +275,9 @@ class PageEditKey:
             )
         return None
 
-    def _create_key(self, alias: str, passphrase: PasswordType) -> None:
+    def _create_key(
+        self, alias: str, passphrase: PasswordType, default_key_size: int = 4096
+    ) -> None:
         keys = self.key_store.load()
 
         new_id = 1
@@ -283,7 +285,7 @@ class PageEditKey:
             new_id = max(new_id, key_id + 1)
 
         assert user.id is not None
-        key = generate_key(alias, passphrase, user.id, omd_site())
+        key = generate_key(alias, passphrase, user.id, omd_site(), key_size=default_key_size)
         self._log_create_key(key.to_certificate())
         keys[new_id] = key
         self.key_store.save(keys)

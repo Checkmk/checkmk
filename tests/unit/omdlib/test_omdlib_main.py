@@ -37,7 +37,7 @@ def test_initialize_site_ca(
     )
 
     assert not site_pem.exists()
-    omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024)
+    omdlib.main.initialize_site_ca(SiteContext(site_id), site_key_size=1024, root_key_size=1024)
 
     assert ca_pem.exists()
     ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())

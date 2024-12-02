@@ -23,7 +23,7 @@ CA_NAME = "test-ca"
 def fixture_ca(tmp_path: Path) -> CertificateAuthority:
     ca_path = tmp_path / "ca"
     return CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CA_NAME),
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CA_NAME, key_size=1024),
         ca_path=ca_path,
     )
 

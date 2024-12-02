@@ -144,7 +144,7 @@ def _build_perfdata(
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
-def check_levels(  # noqa: PLR0913
+def check_levels(
     value: int | float,
     dsname: None | str,
     params: Any,

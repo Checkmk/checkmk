@@ -23,7 +23,7 @@ from cmk.utils.user import UserId
 
 import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
-import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
+import cmk.gui.userdb.session  # pylint: disable-unused-import
 from cmk.gui import http, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError

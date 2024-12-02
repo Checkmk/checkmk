@@ -145,7 +145,7 @@ class AgentSection(Generic[_Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         name: str,
@@ -311,7 +311,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         name: str,
@@ -468,7 +468,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
         name: str,

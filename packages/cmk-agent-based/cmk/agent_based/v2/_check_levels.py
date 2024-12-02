@@ -81,7 +81,7 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(  # noqa: PLR0913
+def _check_predictive_levels(
     value: float,
     metric_name: str,
     predicted_value: float | None,
@@ -168,7 +168,7 @@ def _summarize_predictions(
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
-def check_levels(  # noqa: PLR0913
+def check_levels(
     value: float,
     *,
     levels_upper: LevelsT[_NumberT] | None = None,

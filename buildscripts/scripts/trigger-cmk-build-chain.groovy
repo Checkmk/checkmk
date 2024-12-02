@@ -140,10 +140,12 @@ def main() {
                 build(
                     job: "${base_folder}/test-integration-fips",
                     parameters: job_parameters_common + job_parameters_fips
+                    wait: false,
                 );
                 build(
                     job: "${base_folder}/test-composition-fips",
                     parameters: job_parameters_common + job_parameters_fips
+                    wait: false,
                 );
             }
         },

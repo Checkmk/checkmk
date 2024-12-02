@@ -84,6 +84,7 @@ const api: API<ObjectId, ObjectId> = {
             type: 'string',
             title: 'string title',
             help: 'some string help',
+            label: null,
             i18n_base: { required: 'required' },
             validators: [],
             input_hint: null,

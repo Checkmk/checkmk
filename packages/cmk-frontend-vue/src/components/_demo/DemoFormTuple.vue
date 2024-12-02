@@ -20,6 +20,7 @@ function getStringSpec(name: string): String {
     title: `title ${name}`,
     help: `some string help ${name}`,
     i18n_base: { required: 'required' },
+    label: null,
     input_hint: `some string input hint ${name}`,
     field_size: 'SMALL',
     autocompleter: null,

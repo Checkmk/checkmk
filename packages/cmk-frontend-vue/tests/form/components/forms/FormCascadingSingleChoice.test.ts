@@ -21,6 +21,7 @@ const stringValidators: FormSpec.Validator[] = [
 const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'nestedStringTitle',
+  label: 'nestedStringLabel',
   help: 'nestedStringHelp',
   i18n_base: { required: 'required' },
   validators: stringValidators,
@@ -76,7 +77,7 @@ test('FormCascadingSingleChoice displays data', async () => {
     name: 'stringChoiceTitle'
   })
 
-  const stringElement = screen.getByRole<HTMLInputElement>('textbox', {})
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox', { name: 'nestedStringLabel' })
   expect(stringElement.value).toBe('some_value')
 
   expect(getCurrentData()).toMatch('["stringChoice","some_value"]')

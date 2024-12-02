@@ -183,9 +183,9 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   "
                   class="checkbox"
                 >
-                  <label v-if="dict_element.dict_config.required">
+                  <span v-if="dict_element.dict_config.required">
                     {{ dict_element.dict_config.parameter_form.title }}
-                  </label>
+                  </span>
                   <CmkCheckbox
                     v-else
                     v-model="dict_element.is_active"
@@ -197,6 +197,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                 </span>
               </template>
               <div
+                :aria-label="dict_element.dict_config.parameter_form.title"
                 :class="{
                   indent: indentRequired(dict_element.dict_config),
                   dictelement: indentRequired(dict_element.dict_config),
@@ -208,7 +209,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   v-model:data="data[dict_element.dict_config.name]"
                   :spec="dict_element.dict_config.parameter_form"
                   :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                  :aria-label="dict_element.dict_config.parameter_form.title"
                 />
               </div>
             </div>

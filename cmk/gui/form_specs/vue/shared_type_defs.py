@@ -303,6 +303,7 @@ class LegacyValuespec(FormSpec):
 
 @dataclass(kw_only=True)
 class String(FormSpec):
+    label: Optional[str]
     input_hint: Optional[str]
     field_size: StringFieldSize
     autocompleter: Optional[Autocompleter]

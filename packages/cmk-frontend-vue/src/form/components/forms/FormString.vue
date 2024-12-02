@@ -79,6 +79,7 @@ function resetInput() {
 </script>
 
 <template>
+  <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
   <input
     v-if="!spec.autocompleter"
     :id="componentId"

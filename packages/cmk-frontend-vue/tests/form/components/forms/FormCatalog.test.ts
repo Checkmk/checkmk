@@ -22,6 +22,7 @@ function getStringFormspec(
   return {
     type: 'string',
     title: title,
+    label: null,
     help: `ut help ${title}`,
     i18n_base: { required: 'required' },
     validators: [],

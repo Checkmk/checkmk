@@ -15,6 +15,7 @@ const embeddedSpec: String = {
   type: 'string',
   title: 'some string title',
   help: 'some string help',
+  label: null,
   i18n_base: { required: 'required' },
   input_hint: 'some string input hint',
   field_size: 'SMALL',

@@ -21,6 +21,7 @@ const spec: FormSpec.String = {
   type: 'string',
   title: 'fooTitle',
   help: 'fooHelp',
+  label: 'fooLabel',
   i18n_base: { required: 'required' },
   validators: validators,
   input_hint: 'fooInputHint',
@@ -37,7 +38,7 @@ test('FormString renders value', () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
 
   expect(element.value).toBe('fooData')
 })
@@ -49,7 +50,7 @@ test('FormString updates data', async () => {
     backendValidation: []
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, 'some_other_value')
 
   expect(getCurrentData()).toBe('"some_other_value"')
@@ -64,7 +65,7 @@ test('FormString checks validators', async () => {
     }
   })
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -86,6 +87,6 @@ test('FormString renders backend validation messages', async () => {
   })
 
   await screen.findByText('Backend error message')
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   expect(element.value).toBe('some_invalid_value')
 })

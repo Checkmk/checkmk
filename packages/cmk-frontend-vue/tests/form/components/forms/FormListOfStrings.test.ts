@@ -20,6 +20,7 @@ const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: null,
   i18n_base: { required: 'required' },
   validators: stringValidators,
   input_hint: '',

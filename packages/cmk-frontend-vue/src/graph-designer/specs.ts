@@ -28,6 +28,7 @@ export function makeString(
     type: 'string',
     title: title,
     help: '',
+    label: null,
     i18n_base: { required: 'required' },
     validators: [],
     input_hint: inputHint,

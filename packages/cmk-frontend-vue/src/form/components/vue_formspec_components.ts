@@ -54,6 +54,7 @@ export type Float = FormSpec & {
 };
 export type String = FormSpec & {
   type: "string";
+  label: string | null;
   input_hint: string | null;
   field_size: StringFieldSize;
   autocompleter: null | Autocompleter;

@@ -17,6 +17,7 @@ from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
+    compute_label,
     compute_validation_errors,
     create_validation_error,
     get_prefill_default,
@@ -49,6 +50,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
             shared_type_defs.String(
                 title=title,
                 help=help_text,
+                label=compute_label(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
                 input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),

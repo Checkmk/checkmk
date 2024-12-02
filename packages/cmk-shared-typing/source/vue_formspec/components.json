@@ -122,6 +122,9 @@
                             "const": "string",
                             "default": "string"
                         },
+                        "label": {
+                            "type": ["string", "null"]
+                        },
                         "input_hint": {
                             "type": ["string", "null"]
                         },
@@ -142,6 +145,7 @@
                     },
                     "required": [
                         "type",
+                        "label",
                         "placeholder",
                         "input_hint",
                         "field_size",

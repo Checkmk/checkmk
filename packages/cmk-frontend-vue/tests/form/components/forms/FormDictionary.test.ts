@@ -22,6 +22,7 @@ const stringFormSpec: FormSpec.String = {
   type: 'string',
   title: 'barTitle',
   help: 'barHelp',
+  label: 'barLabel',
   i18n_base: { required: 'required' },
   validators: stringValidators,
   input_hint: '',
@@ -79,7 +80,7 @@ test('FormDictionary displays dictelement data', async () => {
   const checkbox = screen.getByRole<HTMLInputElement>('checkbox', { name: 'barTitle' })
   await waitFor(() => expect(checkbox.getAttribute('aria-checked')).toBe('true'))
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'barLabel' })
   expect(element.value).toBe('some_value')
 
   expect(getCurrentData()).toBe('{"bar":"some_value"}')
@@ -97,7 +98,7 @@ test('FormDictionary checking non-required element fills default', async () => {
   const checkbox = screen.getByRole('checkbox', { name: 'barTitle' })
   await fireEvent.click(checkbox)
 
-  const element = screen.getByRole<HTMLInputElement>('textbox')
+  const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'barLabel' })
   expect(element.value).toBe('baz')
 })
 
@@ -113,7 +114,7 @@ test('FormDictionary enable element, check frontend validators', async () => {
   const checkbox = screen.getByRole('checkbox', { name: 'barTitle' })
   await fireEvent.click(checkbox)
 
-  const element = screen.getByRole('textbox')
+  const element = screen.getByRole('textbox', { name: 'barLabel' })
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')
@@ -192,7 +193,7 @@ test('FormDictionary checks frontend validators on existing element', async () =
     }
   })
 
-  const element = await screen.getByRole('textbox')
+  const element = screen.getByRole('textbox', { name: 'barLabel' })
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')

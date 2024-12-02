@@ -159,7 +159,10 @@ def main() {
     def win_project_name = "${jenkins_base_folder}/winagt-build";
     def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
 
-    conditional_stage("Build agent artifacts fast", !params.FAKE_WINDOWS_ARTIFACTS) {
+    smart_stage(
+        name: "Build agent artifacts fast",
+        condition: !params.FAKE_WINDOWS_ARTIFACTS,
+    ) {
         inside_container(ulimit_nofile: 1024) {
             dir("${checkout_dir}") {
                 // Initialize our virtual environment before parallelization
@@ -175,10 +178,14 @@ def main() {
     }
 
     // TODO iterate over all agent variants and put the condition per edition
-    //      in the conditional_stage
+    //      in the smart_stage
     def agent_builds = agent_list.collectEntries { agent ->
-        [("agent ${agent}") : {
-                conditional_stage("Build Agent for ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
+        [
+            ("agent ${agent}") : {
+                smart_stage(
+                    name: "Build Agent for ${agent}",
+                    condition: !params.FAKE_WINDOWS_ARTIFACTS,
+                ) {
                     if (agent == "windows") {
                         copyArtifacts(
                             projectName: win_project_name,
@@ -204,7 +211,8 @@ def main() {
                         }
                     }
                 }
-            }]
+            }
+        ]
     }
     parallel agent_builds;
 
@@ -256,12 +264,17 @@ def main() {
     def package_builds = all_distros.collectEntries { distro ->
         [("distro ${distro}") : {
             if (! (distro in distros)) {
-                conditional_stage("${distro} initialize workspace", false) {}
-                conditional_stage("${distro} build package", false) {}
-                conditional_stage("${distro} sign package", false) {}
-                conditional_stage("${distro} test package", false) {}
-                conditional_stage("${distro} copy package", false) {}
-                conditional_stage("${distro} upload package", false) {}
+                // Add empty stages for the Jenkins UI overview.
+                // Keep these stage names in line with the ones following later.
+                // It is currently implemented this way, because the following
+                // stages execute work in a separate workspace, which we want to
+                // avoid.
+                smart_stage(name: "${distro} initialize workspace", condition: false) {}
+                smart_stage(name: "${distro} build package", condition: false) {}
+                smart_stage(name: "${distro} sign package", condition: false) {}
+                smart_stage(name: "${distro} test package", condition: false) {}
+                smart_stage(name: "${distro} copy package", condition: false) {}
+                smart_stage(name: "${distro} upload package", condition: false) {}
                 return;
             }
             // The following node call allocates a new workspace for each
@@ -416,7 +429,10 @@ def main() {
         bazel_logs.try_plot_cache_hits(bazel_log_prefix, distros);
     }
 
-    conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
+    smart_stage(
+        name: 'Upload',
+        condition: !jenkins_base_folder.startsWith("Testing"),
+    ) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>

@@ -11,7 +11,8 @@ from urllib.parse import urljoin
 import pytest
 from playwright.sync_api import BrowserContext, expect, Page
 
-from tests.testlib.open_ldap import Group, OpenLDAPManager, User
+from tests.gui_e2e.testlib.open_ldap import Group, OpenLDAPManager, User
+
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site

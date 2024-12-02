@@ -65,6 +65,8 @@ def start_automation_watcher_observer(root: Path, schedules: Sequence[Schedule])
     try:
         observer.start()
         yield
+    except Exception as err:
+        watcher_logger.exception(err)
     finally:
         observer.stop()
         observer.join()

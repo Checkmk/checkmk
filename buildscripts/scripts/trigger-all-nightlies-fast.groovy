@@ -4,6 +4,8 @@
 
 /// This job will trigger all other nightly build chains on a fixed node
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 def main() {
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/";
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -34,29 +36,59 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    for ( edition in all_editions ) {
-        def run_condition = edition in editions_to_test;
-        println("Should ${edition} be triggered? ${run_condition}");
+    def build_for_parallel = [:];
+    def parallel_stages_states = [];
 
-        smart_stage(
-            name: "Trigger ${edition}",
-            condition: run_condition,
-            raiseOnError: false,
-        ) {
-            catchError(buildResult: "FAILURE", stageResult: "FAILURE") {
+    all_editions.each { item ->
+        def edition = item;
+        def stepName = "Trigger ${edition}";
+
+        build_for_parallel[stepName] ) { ->
+            def run_condition = edition in editions_to_test;
+            println("Should ${edition} be triggered? ${run_condition}");
+
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: false,
+            ) {
+                def this_exit_successfully = false;
                 def this_job_parameters = job_parameters + [$class: 'StringParameterValue', name: 'EDITION', value: edition];
-
                 print(
                     """
                     |===== CONFIGURATION ===============================
                     |this_job_parameters:... │${this_job_parameters}│
                     |===================================================
                     """.stripMargin());
-
-                build(job: "${base_folder}/trigger-cmk-build-chain-${edition}", parameters: this_job_parameters);
+                def job = build(
+                    job: "${base_folder}/trigger-cmk-build-chain-${edition}",
+                    propagate: false,   // do not raise here, continue, get status via result property later
+                    parameters: this_job_parameters,
+                );
+                println("job result is: ${job.result}");
+                // be really really sure if it is a success
+                if (job.result == "SUCCESS") {
+                    this_exit_successfully = true;
+                } else {
+                    error("${edition} failed");
+                }
+                parallel_stages_states.add(this_exit_successfully);
             }
         }
     }
+
+    stage('Run trigger all nightlies') {
+        parallel build_for_parallel;
+    }
+
+    println("All stages results: ${parallel_stages_states}");
+    all_true = parallel_stages_states.every { it == true } == true;
+    currentBuild.result = all_true ? "SUCCESS" : "FAILED";
 }
 
 return this;

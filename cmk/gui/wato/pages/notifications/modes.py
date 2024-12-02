@@ -3162,7 +3162,7 @@ class ABCNotificationParameterMode(WatoMode):
             if self._clone_id and not request.var("_clear"):
                 try:
                     self._parameter = deepcopy(method_parameters[self._clone_id])
-                except IndexError:
+                except KeyError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
             else:
                 self._parameter = NotificationParameterItem(

@@ -71,8 +71,11 @@ const selectedOption = computed({
     return data.value[0] as string
   },
   set(value: string) {
-    // keep old data in case user switches back and they don't loose their modifications
+    // Keep old data in case user switches back and they don't loose their modifications
     currentValues[data.value[0]] = data.value[1]
+
+    // Erase backend validation. It does not make sense to keep it when switching between elements.
+    elementValidation.value = []
 
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]

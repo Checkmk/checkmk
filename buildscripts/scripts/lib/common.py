@@ -7,11 +7,11 @@ Common parts of buildscripts scripts
 """
 
 import argparse
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from os import chdir, getcwd
 from pathlib import Path
-from typing import Iterator, Union
+from typing import Union
 
 import yaml
 

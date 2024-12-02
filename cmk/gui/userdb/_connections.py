@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, Literal, Mapping, NewType, NotRequired, Sequence, TypedDict
+from typing import Any, cast, Literal, NewType, NotRequired, TypedDict
 
 from cmk.ccc import store
 

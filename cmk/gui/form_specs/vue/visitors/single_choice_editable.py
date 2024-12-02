@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Sequence
+from collections.abc import Sequence
+from typing import Callable
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
 from cmk.gui.form_specs.vue import shared_type_defs

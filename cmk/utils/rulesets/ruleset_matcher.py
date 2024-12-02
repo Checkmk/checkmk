@@ -11,11 +11,9 @@ from re import Pattern
 from typing import (
     Any,
     cast,
-    FrozenSet,
     Generic,
     NamedTuple,
     NotRequired,
-    Set,
     TypeAlias,
     TypedDict,
     TypeGuard,
@@ -185,7 +183,7 @@ class RulesetMatcher:
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
         label_manager: LabelManager,
-        all_configured_hosts: FrozenSet[HostName],
+        all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
         builtin_host_labels_store: BuiltinHostLabelsStore,
@@ -506,7 +504,7 @@ class RulesetOptimizer:
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
         label_manager: LabelManager,
-        all_configured_hosts: FrozenSet[HostName],
+        all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
         builtin_host_labels_store: BuiltinHostLabelsStore,
@@ -567,11 +565,11 @@ class RulesetOptimizer:
         self.__host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
-    def all_processed_hosts(self) -> FrozenSet[HostName]:
+    def all_processed_hosts(self) -> frozenset[HostName]:
         """Returns a set of all processed hosts"""
         return self._all_processed_hosts
 
-    def set_all_processed_hosts(self, all_processed_hosts: Set[HostName]) -> None:
+    def set_all_processed_hosts(self, all_processed_hosts: set[HostName]) -> None:
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
         for hostname in self._all_processed_hosts:

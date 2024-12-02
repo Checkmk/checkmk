@@ -25,8 +25,9 @@ import os
 import shlex
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import Optional
 
 import docker  # type: ignore[import-untyped]
 import yaml
@@ -35,7 +36,7 @@ LOG = logging.getLogger("register-dia")
 REGISTRY = "artifacts.lan.tribe29.com:4000"
 
 
-def split_source_name(raw_source: str) -> Tuple[str, str, List[str]]:
+def split_source_name(raw_source: str) -> tuple[str, str, list[str]]:
     """
     >>> split_source_name("artifacts.lan.tribe29.com:4000/debian:latest")
     ('artifacts.lan.tribe29.com:4000', 'debian', ['latest'])
@@ -76,7 +77,7 @@ def cmk_branch(directory: str) -> str:
     )
 
 
-def git_info() -> List[str]:
+def git_info() -> list[str]:
     cwd = os.path.dirname(__file__)
     a, b = cmk_branch(directory=cwd), commit_id(directory=cwd)
     return [a, b]

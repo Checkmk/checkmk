@@ -8,8 +8,9 @@ import io
 import re
 import sys
 import time
+from collections.abc import AsyncGenerator, Coroutine, Iterator, Sequence
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
-from typing import AsyncGenerator, Callable, Coroutine, Final, Iterator, Protocol, Sequence
+from typing import Callable, Final, Protocol
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import Type
 
 import pytest
 from playwright.sync_api import expect
@@ -71,7 +70,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
 )
 def test_host_dashboard(
     dashboard_page: Dashboard,
-    dashboard_class: Type[LinuxHostsDashboard | WindowsHostsDashboard],
+    dashboard_class: type[LinuxHostsDashboard | WindowsHostsDashboard],
     dashlets_expected_row_count: dict[str, int],
     hosts: str,
     request: pytest.FixtureRequest,

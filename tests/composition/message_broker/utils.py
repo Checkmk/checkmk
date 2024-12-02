@@ -7,8 +7,9 @@ import logging
 import re
 import signal
 import subprocess
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import IO, Iterator
+from typing import IO
 
 import pytest
 

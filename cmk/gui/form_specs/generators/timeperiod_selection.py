@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.i18n import translate_to_current_language

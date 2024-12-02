@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # from typing import
-from collections.abc import Callable, Mapping
-from typing import Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (

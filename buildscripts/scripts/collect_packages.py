@@ -5,9 +5,9 @@
 import argparse
 import json
 import sys
+from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterator
 
 
 @dataclass

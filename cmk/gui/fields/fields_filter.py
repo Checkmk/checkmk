@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from enum import Enum
 from functools import cache
-from typing import Any, Literal, Mapping, NotRequired, TypedDict, TypeVar
+from typing import Any, Literal, NotRequired, TypedDict, TypeVar
 
 import pyparsing as pp
 

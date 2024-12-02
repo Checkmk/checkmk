@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
 from pathlib import Path
 from typing import (
     Any,
-    Container,
     get_args,
     Literal,
     NewType,

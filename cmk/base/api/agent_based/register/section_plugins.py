@@ -8,7 +8,7 @@ import functools
 import inspect
 import itertools
 from collections.abc import Generator, Sequence
-from typing import Any, List
+from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -52,11 +52,11 @@ def create_parse_annotation(
     if is_list:
         if needs_bytes:
             return {
-                (List[StringByteTable], "List[StringByteTable]"),
+                (list[StringByteTable], "List[StringByteTable]"),
                 (list[StringByteTable], "list[StringByteTable]"),
             }
         return {
-            (List[StringTable], "List[StringTable]"),
+            (list[StringTable], "List[StringTable]"),
             (list[StringTable], "list[StringTable]"),
         }
     if needs_bytes:

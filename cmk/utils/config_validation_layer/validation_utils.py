@@ -25,11 +25,10 @@ class ConfigValidationError(MKConfigError):
         self.pydantic_error = pydantic_error
 
     def __str__(self) -> str:
-        error_msg = f"""
-        {tty.red}Current config: '{self.which_file}'{tty.normal}
-        {pformat(self.original_data).replace('\n', '\n\t')}
-        \n\t{tty.red}Config errors ({self.pydantic_error.error_count()}){tty.normal}
-        """
+        error_count = self.pydantic_error.error_count()
+        error_msg = (
+            f"{tty.red}{error_count} config error{'s' if error_count > 1 else ''}{tty.normal}\n\t"
+        )
 
         for error in self.pydantic_error.errors():
             error_msg += f'{(pformat(error)).replace("\n", "\n\t")}\n\n\t'

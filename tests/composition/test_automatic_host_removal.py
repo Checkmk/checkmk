@@ -39,18 +39,18 @@ def test_automatic_host_removal(
     )
 
     try:
-        central_site.openapi.create_host(
+        central_site.openapi.hosts.create(
             hostname=unresolvable_host_central,
             attributes={"site": central_site.id},
         )
-        central_site.openapi.create_host(
+        central_site.openapi.hosts.create(
             hostname=unresolvable_host_remote,
             attributes={"site": remote_site.id},
         )
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
         def _host_removal_done() -> bool:
-            hostnames = {_["id"] for _ in central_site.openapi.get_hosts()}
+            hostnames = {_["id"] for _ in central_site.openapi.hosts.get_all()}
             return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})
 
         logger.info("Waiting for hosts to be removed")

@@ -109,6 +109,7 @@ class CMKOpenApiSession(requests.Session):
 
         self.users = UsersAPI(self)
         self.folders = FoldersAPI(self)
+        self.hosts = HostsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -202,7 +203,7 @@ class CMKOpenApiSession(requests.Session):
             * False if there are no changes to be activated
         """
         logger.info("Activate changes and wait %ds for completion...", timeout)
-        with self._wait_for_completion(timeout, "get", "activate_changes"):
+        with self.wait_for_completion(timeout, "get", "activate_changes"):
             try:
                 self.activate_changes(sites, force_foreign_changes)
             except NoActiveChanges:
@@ -214,132 +215,6 @@ class CMKOpenApiSession(requests.Session):
         ), f"There are pending changes that were not activated: {pending_changes}"
 
         return True
-
-    def create_host(
-        self,
-        hostname: str,
-        folder: str = "/",
-        attributes: Mapping[str, Any] | None = None,
-        bake_agent: bool = False,
-    ) -> requests.Response:
-        query_string = "?bake_agent=1" if bake_agent else ""
-        response = self.post(
-            f"/domain-types/host_config/collections/all{query_string}",
-            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return response
-
-    def bulk_create_hosts(
-        self,
-        entries: list[dict[str, Any]],
-        bake_agent: bool = False,
-        ignore_existing: bool = False,
-    ) -> list[dict[str, Any]]:
-        if ignore_existing:
-            existing_hosts = [_.get("id") for _ in self.get_hosts()]
-            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
-        query_string = "?bake_agent=1" if bake_agent else ""
-        response = self.post(
-            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
-            json={"entries": entries},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()
-        return value
-
-    def get_host(self, hostname: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the host details and the Etag header if the host was found
-            None if the host was not found
-        """
-        response = self.get(f"/objects/host_config/{hostname}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def update_host_attributes(
-        self,
-        host_name: str,
-        update_attributes: Mapping[str, object],
-    ) -> None:
-        response = self.put(
-            url=f"/objects/host_config/{host_name}",
-            json={"update_attributes": update_attributes},
-            headers={
-                "If-Match": "*",
-                "Content-Type": "application/json",
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_hosts(self) -> list[dict[str, Any]]:
-        response = self.get(
-            "/domain-types/host_config/collections/all", params={"include_links": False}
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
-
-    def delete_host(self, hostname: str) -> None:
-        response = self.delete(f"/objects/host_config/{hostname}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def bulk_delete_hosts(self, hostnames: list[str]) -> None:
-        response = self.post(
-            "/domain-types/host_config/actions/bulk-delete/invoke",
-            json={"entries": hostnames},
-        )
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
-        response = self.put(
-            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
-            headers={
-                "If-Match": etag,
-                "Content-Type": "application/json",
-            },
-            json={"new_name": hostname_new},
-            allow_redirects=False,
-        )
-        if 300 <= response.status_code < 400:
-            # rename pending
-            raise Redirect(redirect_url=response.headers["Location"])
-        if not response.status_code == 200:
-            raise UnexpectedResponse.from_response(response)
-
-    @tracer.start_as_current_span("rename_host_and_wait_for_completion")
-    def rename_host_and_wait_for_completion(
-        self,
-        *,
-        hostname_old: str,
-        hostname_new: str,
-        etag: str,
-        timeout: int = 120,
-    ) -> None:
-        logger.info(
-            "Rename host %s to %s and wait %ds for completion...",
-            hostname_old,
-            hostname_new,
-            timeout,
-        )
-        with self._wait_for_completion(timeout, "get", "rename_host"):
-            self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
-            assert (
-                self.get_host(hostname_new) is not None
-            ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
 
     def create_host_group(self, name: str, alias: str) -> requests.Response:
         response = self.post(
@@ -466,7 +341,7 @@ class CMKOpenApiSession(requests.Session):
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
     ) -> None:
-        with self._wait_for_completion(timeout, "get", "discover_services"):
+        with self.wait_for_completion(timeout, "get", "discover_services"):
             self.discover_services(hostname, mode)
             discovery_status = self.get_discovery_status(hostname)
             assert (
@@ -480,7 +355,7 @@ class CMKOpenApiSession(requests.Session):
         return {str(k): v for k, v in response.json().items()}
 
     @contextmanager
-    def _wait_for_completion(
+    def wait_for_completion(
         self,
         timeout: int,
         http_method_for_redirection: HTTPMethod,
@@ -1070,3 +945,131 @@ class FoldersAPI(BaseAPI):
             response.json()["extensions"],
             response.headers["Etag"],
         )
+
+
+class HostsAPI(BaseAPI):
+    def create(
+        self,
+        hostname: str,
+        folder: str = "/",
+        attributes: Mapping[str, Any] | None = None,
+        bake_agent: bool = False,
+    ) -> requests.Response:
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/collections/all{query_string}",
+            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def bulk_create(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: bool = False,
+        ignore_existing: bool = False,
+    ) -> list[dict[str, Any]]:
+        if ignore_existing:
+            existing_hosts = [_.get("id") for _ in self.get_all()]
+            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.session.post(
+            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
+            json={"entries": entries},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()
+        return value
+
+    def get(self, hostname: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the host details and the Etag header if the host was found
+            None if the host was not found
+        """
+        response = self.session.get(f"/objects/host_config/{hostname}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def update(
+        self,
+        host_name: str,
+        update_attributes: Mapping[str, object],
+    ) -> None:
+        response = self.session.put(
+            url=f"/objects/host_config/{host_name}",
+            json={"update_attributes": update_attributes},
+            headers={
+                "If-Match": "*",
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/host_config/collections/all", params={"include_links": False}
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def delete(self, hostname: str) -> None:
+        response = self.session.delete(f"/objects/host_config/{hostname}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def bulk_delete(self, hostnames: list[str]) -> None:
+        response = self.session.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def rename(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
+        response = self.session.put(
+            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
+            headers={
+                "If-Match": etag,
+                "Content-Type": "application/json",
+            },
+            json={"new_name": hostname_new},
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            # rename pending
+            raise Redirect(redirect_url=response.headers["Location"])
+        if not response.status_code == 200:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.start_as_current_span("rename_and_wait_for_completion")
+    def rename_and_wait_for_completion(
+        self,
+        *,
+        hostname_old: str,
+        hostname_new: str,
+        etag: str,
+        timeout: int = 120,
+    ) -> None:
+        logger.info(
+            "Rename host %s to %s and wait %ds for completion...",
+            hostname_old,
+            hostname_new,
+            timeout,
+        )
+        with self.session.wait_for_completion(timeout, "get", "rename_host"):
+            self.rename(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+            assert (
+                self.get(hostname_new) is not None
+            ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'

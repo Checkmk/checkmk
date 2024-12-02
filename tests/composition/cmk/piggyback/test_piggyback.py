@@ -37,12 +37,12 @@ def _setup_source_host(
         "tag_agent": "cmk-agent",
     }
     try:
-        central_site.openapi.create_host(
+        central_site.openapi.hosts.create(
             hostname=hostname_source, attributes=host_attributes, bake_agent=False
         )
         yield
     finally:
-        central_site.openapi.delete_host(hostname_source)
+        central_site.openapi.hosts.delete(hostname_source)
 
 
 @contextmanager
@@ -50,7 +50,7 @@ def _setup_piggyback_host(
     source_site: Site, site_id_target: str, hostname_piggyback: str
 ) -> Iterator[None]:
     try:
-        source_site.openapi.create_host(
+        source_site.openapi.hosts.create(
             hostname=hostname_piggyback,
             attributes={
                 "site": site_id_target,
@@ -62,7 +62,7 @@ def _setup_piggyback_host(
         source_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
         yield
     finally:
-        source_site.openapi.delete_host(hostname_piggyback)
+        source_site.openapi.hosts.delete(hostname_piggyback)
         source_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
@@ -136,7 +136,7 @@ def _create_and_rename_host(
     source_site: Site, site_id_target: str, hostname_piggyback: str
 ) -> Iterator[None]:
     try:
-        source_site.openapi.create_host(
+        source_site.openapi.hosts.create(
             hostname="other_host",
             attributes={
                 "site": site_id_target,
@@ -148,13 +148,13 @@ def _create_and_rename_host(
 
         source_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
-        source_site.openapi.rename_host_and_wait_for_completion(
+        source_site.openapi.hosts.rename_and_wait_for_completion(
             hostname_old="other_host", hostname_new=hostname_piggyback, etag="*"
         )
         source_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
         yield
     finally:
-        source_site.openapi.delete_host(hostname_piggyback)
+        source_site.openapi.hosts.delete(hostname_piggyback)
         source_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 
@@ -262,7 +262,7 @@ def test_piggyback_hub_disabled_remote_site(
 
 
 def _move_host(central_site: Site, to_remote_site: str, hostname_piggyback: str) -> None:
-    central_site.openapi.update_host_attributes(
+    central_site.openapi.hosts.update(
         hostname_piggyback,
         update_attributes={"site": to_remote_site},
     )

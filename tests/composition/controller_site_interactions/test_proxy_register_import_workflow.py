@@ -23,7 +23,7 @@ def test_proxy_register_import_workflow(
     agent_ctl: Path,
 ) -> None:
     hostname = HostName("proxy-host")
-    central_site.openapi.create_host(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
+    central_site.openapi.hosts.create(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
     central_site.openapi.activate_changes_and_wait_for_completion()
 
     try:
@@ -65,5 +65,5 @@ def test_proxy_register_import_workflow(
             interval=10,
         )
     finally:
-        central_site.openapi.delete_host(hostname=hostname)
+        central_site.openapi.hosts.delete(hostname=hostname)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

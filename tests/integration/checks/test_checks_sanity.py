@@ -52,7 +52,9 @@ def _host_services(
         pytest.skip("Active mode requires pull agent, which is not available in CSE")
     rule_id = None
     hostname = HostName(f"host-{request.node.callspec.id}")
-    site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
+    site.openapi.hosts.create(
+        hostname, attributes={"ipaddress": site.http_address, "site": site.id}
+    )
     site.activate_changes_and_wait_for_core_reload()
 
     try:
@@ -94,7 +96,7 @@ def _host_services(
     finally:
         if rule_id:
             site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 

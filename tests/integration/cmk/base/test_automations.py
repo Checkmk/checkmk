@@ -33,34 +33,34 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
     logger.info("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host",
         attributes={
             "ipaddress": "127.0.0.1",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host2",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host3",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "test",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "modes-test-host4",
         attributes={
             "ipaddress": "127.0.0.1",
             "tag_criticality": "offline",
         },
     )
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "host_with_secondary_ip",
         attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
     )
@@ -103,11 +103,11 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 
         site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-        site.openapi.delete_host("modes-test-host")
-        site.openapi.delete_host("modes-test-host2")
-        site.openapi.delete_host("modes-test-host3")
-        site.openapi.delete_host("modes-test-host4")
-        site.openapi.delete_host("host_with_secondary_ip")
+        site.openapi.hosts.delete("modes-test-host")
+        site.openapi.hosts.delete("modes-test-host2")
+        site.openapi.hosts.delete("modes-test-host3")
+        site.openapi.hosts.delete("modes-test-host4")
+        site.openapi.hosts.delete("host_with_secondary_ip")
         site.openapi.delete_rule(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 

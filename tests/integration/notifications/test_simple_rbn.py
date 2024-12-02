@@ -85,13 +85,13 @@ def fixture_test_user(site: Site) -> Iterator[None]:
 @pytest.fixture(name="host")
 def fixture_host(site: Site) -> Iterator[HostName]:
     hostname = HostName("notify-test")
-    site.openapi.create_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    site.openapi.hosts.create(hostname, attributes={"ipaddress": "127.0.0.1"})
     site.activate_changes_and_wait_for_core_reload()
 
     try:
         yield hostname
     finally:
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 

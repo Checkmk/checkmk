@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="check_http", scope="function")
 def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
     hostname = HostName("http-0")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname,
         attributes={
             "ipaddress": site.http_address,
@@ -48,7 +48,7 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         raise
     finally:
         site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 
@@ -71,7 +71,7 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
     port: int = httpss.run()
 
     hostname = HostName("https-0")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname,
         attributes={
             "ipaddress": site.http_address,
@@ -98,7 +98,7 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
         raise
     finally:
         site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
         httpss.stop()
 

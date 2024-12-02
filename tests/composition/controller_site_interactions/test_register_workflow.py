@@ -29,7 +29,7 @@ def _test_register_workflow(
     host_attributes: Mapping[str, object],
 ) -> None:
     try:
-        site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
+        site.openapi.hosts.create(hostname=hostname, attributes=dict(host_attributes))
         site.openapi.activate_changes_and_wait_for_completion()
 
         register_controller(ctl_path, site, hostname)
@@ -47,7 +47,7 @@ def _test_register_workflow(
             interval=10,
         )
     finally:
-        site.openapi.delete_host(hostname=hostname)
+        site.openapi.hosts.delete(hostname=hostname)
         site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
 

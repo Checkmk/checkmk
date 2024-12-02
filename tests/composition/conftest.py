@@ -171,7 +171,7 @@ def _connection(
     try:
         yield
     finally:
-        hostnames = {h["id"] for h in central_site.openapi.get_hosts()}
+        hostnames = {h["id"] for h in central_site.openapi.hosts.get_all()}
         logger.warning("Hosts left: %s", hostnames)
         central_site.openapi.delete_site(remote_site.id)
         central_site.openapi.activate_changes_and_wait_for_completion(

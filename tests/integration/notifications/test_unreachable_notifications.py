@@ -44,14 +44,14 @@ def unreachable_enabled_fixture(
     try:
         logger.info("Applying test config")
 
-        site.openapi.create_host(
+        site.openapi.hosts.create(
             "notify-test-parent",
             attributes={
                 "ipaddress": "127.0.0.1",
             },
         )
 
-        site.openapi.create_host(
+        site.openapi.hosts.create(
             "notify-test-child",
             attributes={
                 "ipaddress": "127.0.0.1",
@@ -83,8 +83,8 @@ def unreachable_enabled_fixture(
         if rule_id is not None:
             site.openapi.delete_rule(rule_id)
 
-        site.openapi.delete_host("notify-test-child")
-        site.openapi.delete_host("notify-test-parent")
+        site.openapi.hosts.delete("notify-test-child")
+        site.openapi.hosts.delete("notify-test-parent")
 
         site.activate_changes_and_wait_for_core_reload()
 

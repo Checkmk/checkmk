@@ -369,9 +369,9 @@ def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
         yield
     finally:
         deleted = False
-        if site.openapi.get_host(hostname):
+        if site.openapi.hosts.get(hostname):
             logger.info("Delete created host %s", hostname)
-            site.openapi.delete_host(hostname)
+            site.openapi.hosts.delete(hostname)
             deleted = True
 
         if deleted:

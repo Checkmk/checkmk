@@ -145,7 +145,7 @@ def test_usage_counters(site: Site) -> None:
 
 @pytest.fixture(name="configure_service_tags")
 def configure_service_tags_fixture(site: Site) -> Iterator[None]:
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         (hostname := "modes-test-host"),
         attributes={
             "ipaddress": "127.0.0.1",
@@ -170,7 +170,7 @@ def configure_service_tags_fixture(site: Site) -> Iterator[None]:
         yield
     finally:
         site.openapi.delete_rule(rule_id)
-        site.openapi.delete_host(hostname)
+        site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 
 

@@ -135,7 +135,7 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
     host_names = []
     dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
-        hosts = [_ for _ in site.openapi.get_hosts() if _.get("id") not in (None, "", site.id)]
+        hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
         agent_host_names = [
             _.get("id") for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})
         ]
@@ -401,7 +401,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     }
     if "snmp" in host_name:
         host_attributes["tag_snmp_ds"] = "snmp-v2"
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname=host_name,
         folder="/snmp" if "snmp" in host_name else "/agent",
         attributes=host_attributes,
@@ -443,7 +443,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
     finally:
         if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
-            site.openapi.delete_host(host_name)
+            site.openapi.hosts.delete(host_name)
             site.activate_changes_and_wait_for_core_reload()
 
 
@@ -451,7 +451,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     logger.info('Creating source host "%s"...', source_host_name)
     host_attributes = {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"}
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         hostname=source_host_name,
         attributes=host_attributes,
         bake_agent=False,
@@ -511,7 +511,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     finally:
         if not config.skip_cleanup:
             logger.info('Deleting source host "%s"...', source_host_name)
-            site.openapi.delete_host(source_host_name)
+            site.openapi.hosts.delete(source_host_name)
 
             assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
 
@@ -548,7 +548,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
         for host_name in snmp_host_names
     ]
     logger.info("Bulk-creating %s hosts...", len(host_entries))
-    site.openapi.bulk_create_hosts(
+    site.openapi.hosts.bulk_create(
         host_entries,
         bake_agent=False,
         ignore_existing=True,
@@ -588,14 +588,14 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
 
 def cleanup_hosts(site: Site, host_names: list[str]) -> None:
     logger.info("Bulk-deleting %s hosts...", len(host_names))
-    site.openapi.bulk_delete_hosts(host_names)
+    site.openapi.hosts.bulk_delete(host_names)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
+    return [_.get("id") for _ in site.openapi.hosts.get_all() if _.get("id") != source_host]
 
 
 def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="test_cfg", scope="module", autouse=True)
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     print("Applying default config")
-    site.openapi.create_host(
+    site.openapi.hosts.create(
         "test-host",
         attributes={
             "ipaddress": "127.0.0.1",
@@ -30,7 +30,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         yield
     finally:
         print("Cleaning up test config")
-        site.openapi.delete_host("test-host")
+        site.openapi.hosts.delete("test-host")
         site.activate_changes_and_wait_for_core_reload()
 
 

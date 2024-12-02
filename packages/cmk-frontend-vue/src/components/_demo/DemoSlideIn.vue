@@ -27,6 +27,7 @@ const catalog = ref<Catalog>({
   type: 'catalog',
   title: 'title',
   help: 'some_help',
+  i18n_base: { required: 'required' },
   validators: [],
   topics: [
     {
@@ -36,6 +37,7 @@ const catalog = ref<Catalog>({
         title: 'dict title',
         validators: [],
         help: 'dict help',
+        i18n_base: { required: 'required' },
         no_elements_text: 'no_text',
         additional_static_elements: {},
         elements: [
@@ -48,6 +50,7 @@ const catalog = ref<Catalog>({
               type: 'string',
               title: 'string title',
               help: 'some string help',
+              i18n_base: { required: 'required' },
               validators: []
             }
           }

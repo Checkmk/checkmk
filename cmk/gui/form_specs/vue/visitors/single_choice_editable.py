@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     get_title_and_help,
@@ -78,6 +79,7 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
                     no_objects=_("No options available"),
                     no_selection=_("Please select an element"),
                 ),
+                i18n_base=base_i18n_form_spec(),
             ),
             None if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

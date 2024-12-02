@@ -19,6 +19,7 @@ from cmk.rulesets.v1.form_specs import Password
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validators,
     create_validation_error,
     get_title_and_help,
@@ -111,6 +112,7 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
                     ),
                     password_choice_invalid=_("Password does not exist or using not permitted."),
                 ),
+                i18n_base=base_i18n_form_spec(),
             ),
             value,
         )

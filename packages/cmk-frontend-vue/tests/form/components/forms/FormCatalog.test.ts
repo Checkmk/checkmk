@@ -23,6 +23,7 @@ function getStringFormspec(
     type: 'string',
     title: title,
     help: `ut help ${title}`,
+    i18n_base: { required: 'required' },
     validators: [],
     input_hint: `ut input hint ${title}`,
     field_size: 'SMALL',
@@ -39,6 +40,7 @@ function getDictionaryFormspec(
     type: 'dictionary',
     title: 'dictionary title',
     help: 'dictionary help',
+    i18n_base: { required: 'required' },
     groups: [],
     layout: 'one_column',
     validators: [],
@@ -64,6 +66,7 @@ function renderSimpleCatalog() {
         type: 'catalog',
         title: 'catalog title',
         help: 'catalog help',
+        i18n_base: { required: 'required' },
         validators: [],
         topics: [
           {
@@ -140,6 +143,7 @@ test('FormCatalog default value', async () => {
         type: 'catalog',
         title: 'catalog title',
         help: 'catalog help',
+        i18n_base: { required: 'required' },
         validators: [],
         topics: [
           {
@@ -188,6 +192,7 @@ test('FormCatalog backend validation', async () => {
       type: 'catalog',
       title: 'catalog title',
       help: 'catalog help',
+      i18n_base: { required: 'required' },
       validators: [],
       topics: [
         {

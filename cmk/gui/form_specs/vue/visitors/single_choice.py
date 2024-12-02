@@ -15,6 +15,7 @@ from cmk.rulesets.v1.form_specs import InvalidElementMode
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_title_input_hint,
     compute_validation_errors,
     compute_validators,
@@ -115,6 +116,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 frozen=self.form_spec.frozen and isinstance(raw_value, self.form_spec.type),
                 input_hint=input_hint or _("Please choose"),
                 no_elements_text=localize(self.form_spec.no_elements_text),
+                i18n_base=base_i18n_form_spec(),
             ),
             NO_SELECTION if isinstance(parsed_value, EmptyValue) else self.option_id(parsed_value),
         )

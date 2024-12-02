@@ -15,6 +15,7 @@ from cmk.rulesets.v1.form_specs import Float
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_input_hint,
     compute_validation_errors,
     compute_validators,
@@ -61,6 +62,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
                 input_hint=input_hint_str,
+                i18n_base=base_i18n_form_spec(),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

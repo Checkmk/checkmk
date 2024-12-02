@@ -20,6 +20,7 @@ const spec: FormSpec.ConditionChoices = {
   type: 'condition_choices',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   condition_groups: {
     group1: {

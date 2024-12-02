@@ -13,6 +13,7 @@ from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_input_hint,
     compute_validation_errors,
     compute_validators,
@@ -111,6 +112,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
+                i18n_base=base_i18n_form_spec(),
                 validators=build_vue_validators(vue_validators),
                 input_hint=input_hint,
                 displayed_magnitudes=[

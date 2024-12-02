@@ -16,6 +16,7 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -50,7 +51,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
             # Note: InputHints are not really supported for list elements
             #       We just collect data for a given template
             #       The data cannot be a mixture between values and InputHint
-            _, element_vue_value = element_visitor.to_vue(entry)
+            _spec, element_vue_value = element_visitor.to_vue(entry)
             list_values.append(element_vue_value)
 
         return (
@@ -69,6 +70,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
                     translate_to_current_language
                 ),
                 editable_order=self.form_spec.editable_order,
+                i18n_base=base_i18n_form_spec(),
             ),
             list_values,
         )

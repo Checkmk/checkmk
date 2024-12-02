@@ -16,6 +16,7 @@ from cmk.rulesets.v1 import Title
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validators,
     create_validation_error,
     get_title_and_help,
@@ -64,6 +65,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, str]):
                 title=title,
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
+                i18n_base=base_i18n_form_spec(),
             ),
             (encrypted_password, bool(encrypted_password)),
         )

@@ -15,6 +15,7 @@ from cmk.rulesets.v1.form_specs import FieldSize
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_input_hint,
     compute_validation_errors,
     create_validation_error,
@@ -52,6 +53,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
                 input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),
                 autocompleter=self.form_spec.autocompleter,
+                i18n_base=base_i18n_form_spec(),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

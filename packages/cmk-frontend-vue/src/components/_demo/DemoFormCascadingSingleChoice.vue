@@ -20,6 +20,7 @@ const spec = computed(() => {
     type: 'cascading_single_choice',
     title: 'some title',
     help: 'some help',
+    i18n_base: { required: 'required' },
     validators: [],
     label: 'some label',
     layout: layout.value,
@@ -33,6 +34,7 @@ const spec = computed(() => {
           type: 'integer',
           title: 'nestedIntegerTitle',
           label: 'nestedIntegerLabel',
+          i18n_base: { required: 'required' },
           help: 'nestedIntegerHelp',
           validators: [],
           input_hint: null,
@@ -47,6 +49,7 @@ const spec = computed(() => {
           type: 'string',
           title: 'nestedStringTitle',
           help: 'nestedStringHelp',
+          i18n_base: { required: 'required' },
           validators: [],
           input_hint: 'nestedStringInputHint',
           field_size: 'SMALL',
@@ -54,7 +57,7 @@ const spec = computed(() => {
         } as vue_formspec_components.String
       }
     ]
-  }
+  } as vue_formspec_components.CascadingSingleChoice
 })
 const data = ref<[string, unknown]>(['stringChoice', 'some string'])
 </script>

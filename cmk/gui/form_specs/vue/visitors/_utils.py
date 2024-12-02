@@ -9,7 +9,7 @@ from typing import Any, Protocol, TypeVar
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
 from cmk.gui.htmllib import html
-from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
 
 from cmk.rulesets.v1 import Label, Message, Title
@@ -32,6 +32,10 @@ class SupportsLocalize(Protocol):
 
 def localize(localizable: SupportsLocalize | None) -> str:
     return "" if localizable is None else localizable.localize(translate_to_current_language)
+
+
+def base_i18n_form_spec() -> shared_type_defs.I18nFormSpecBase:
+    return shared_type_defs.I18nFormSpecBase(required=_("required"))
 
 
 def optional_validation(

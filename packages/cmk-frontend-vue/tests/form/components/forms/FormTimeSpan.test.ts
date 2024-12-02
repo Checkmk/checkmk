@@ -16,6 +16,7 @@ function getSpec(
     type: 'time_span',
     title: 'utTitle',
     help: 'ut Help',
+    i18n_base: { required: 'required' },
     displayed_magnitudes: displayedMagnitudes,
     validators: validators,
     label: 'utLabel',

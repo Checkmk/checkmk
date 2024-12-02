@@ -15,6 +15,7 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.visitors._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -97,6 +98,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                         autocompleter_loading=_("Loading"),
                     ),
                     show_toggle_all=self.form_spec.show_toggle_all,
+                    i18n_base=base_i18n_form_spec(),
                 ),
                 [] if isinstance(parsed_value, EmptyValue) else parsed_value,
             )
@@ -107,6 +109,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                 help=help_text,
                 elements=elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
+                i18n_base=base_i18n_form_spec(),
             ),
             [] if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

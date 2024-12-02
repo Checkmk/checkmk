@@ -20,6 +20,7 @@ const spec: FormSpec.Password = {
   type: 'password',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   password_store_choices: [
     {

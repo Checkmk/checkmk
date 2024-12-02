@@ -5,10 +5,9 @@
 import ast
 from collections.abc import Mapping
 
-from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1.form_specs._composed import NoGroup
 
@@ -16,6 +15,7 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -118,6 +118,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 additional_static_elements=self._compute_static_elements(parsed_value),
                 layout=self.form_spec.layout,
+                i18n_base=base_i18n_form_spec(),
             ),
             vue_values,
         )

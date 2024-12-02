@@ -24,6 +24,7 @@ const spec: FormSpec.MultilineText = {
   validators: validators,
   input_hint: 'fooInputHint',
   label: 'fooLabel',
+  i18n_base: { required: 'required' },
   macro_support: false,
   monospaced: false
 }

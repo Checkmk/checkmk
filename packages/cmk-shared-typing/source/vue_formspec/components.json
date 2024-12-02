@@ -21,9 +21,19 @@
                         "$ref": "validators.json#/$defs/validator"
                     },
                     "default": []
+                },
+                "i18n_base": {
+                    "type": "object",
+                    "title": "i18nFormSpecBase",
+                    "properties": {
+                        "required": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["required"]
                 }
             },
-            "required": ["type", "title", "help", "validators"]
+            "required": ["type", "title", "help", "validators", "i18n_base"]
         },
         "integer": {
             "type": "object",

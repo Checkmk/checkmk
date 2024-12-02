@@ -24,6 +24,7 @@ const spec: FormSpec.Labels = {
   type: 'labels',
   title: 'Labels',
   help: 'Add some labels',
+  i18n_base: { required: 'required' },
   validators: [],
   max_labels: 10,
   autocompleter: {

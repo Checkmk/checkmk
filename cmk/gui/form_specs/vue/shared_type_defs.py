@@ -17,6 +17,11 @@ from typing import Any, Optional, Union
 
 
 @dataclass(kw_only=True)
+class I18nFormSpecBase:
+    required: str
+
+
+@dataclass(kw_only=True)
 class IsInteger:
     error_message: str
     type: str = "is_integer"
@@ -270,6 +275,7 @@ class FormSpec:
     type: str
     title: str
     help: str
+    i18n_base: I18nFormSpecBase
     validators: list[Validator] = field(default_factory=lambda: [])
 
 

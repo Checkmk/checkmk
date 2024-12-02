@@ -6,12 +6,11 @@ import dataclasses
 from collections.abc import Sequence
 from typing import Any, TypedDict
 
-from cmk.ccc.i18n import _
-
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
@@ -24,6 +23,7 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     get_title_and_help,
@@ -88,6 +88,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 parameter_form_enabled=enabled_spec,
                 parameter_form_disabled=disabled_spec,
+                i18n_base=base_i18n_form_spec(),
             ),
             self._get_current_visitor(parsed_value).to_vue(parsed_value)[1],
         )

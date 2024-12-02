@@ -15,6 +15,7 @@ const spec = ref<BooleanChoice>({
   type: 'boolean_choice',
   title: 'some title',
   help: 'some help',
+  i18n_base: { required: 'required' },
   validators: [],
   label: 'some label',
   text_off: 'some text off',

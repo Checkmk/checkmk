@@ -12,6 +12,7 @@ function getFixedValue(withLabel = false): FormSpec.FixedValue {
     type: 'fixed_value',
     title: 'fooTitle',
     help: 'fooHelp',
+    i18n_base: { required: 'required' },
     validators: [],
     value: '42',
     label: null

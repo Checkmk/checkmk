@@ -20,6 +20,7 @@ const integerSpec: FormSpec.Integer = {
   type: 'integer',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators,
   label: 'fooLabel',
   unit: 'fooUnit',
@@ -30,6 +31,7 @@ const spec: FormSpec.OptionalChoice = {
   type: 'optional_choice',
   title: 'optional choice title',
   help: 'optional choice help',
+  i18n_base: { required: 'required' },
   i18n: {
     label: 'optional choice label',
     none_label: 'optional choice none label'

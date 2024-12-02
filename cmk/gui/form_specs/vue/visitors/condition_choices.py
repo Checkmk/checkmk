@@ -19,6 +19,7 @@ from cmk.rulesets.v1 import Title
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -160,6 +161,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
             shared_type_defs.ConditionChoices(
                 title=title,
                 help=help_text,
+                i18n_base=base_i18n_form_spec(),
                 condition_groups=conditions,
                 validators=build_vue_validators(self.form_spec.custom_validate or []),
                 i18n=shared_type_defs.ConditionChoicesI18n(

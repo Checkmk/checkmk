@@ -16,6 +16,7 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
+    base_i18n_form_spec,
     compute_label,
     compute_title_input_hint,
     compute_validation_errors,
@@ -80,6 +81,7 @@ class CascadingSingleChoiceVisitor(
                 title=title,
                 label=compute_label(self.form_spec.label),
                 help=help_text,
+                i18n_base=base_i18n_form_spec(),
                 elements=vue_elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 input_hint=compute_title_input_hint(self.form_spec.prefill),

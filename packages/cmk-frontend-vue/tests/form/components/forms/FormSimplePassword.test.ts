@@ -19,6 +19,7 @@ const spec: FormSpec.SimplePassword = {
   type: 'simple_password',
   title: 'fooTitle',
   help: 'fooHelp',
+  i18n_base: { required: 'required' },
   validators: validators
 }
 

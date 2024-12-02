@@ -14,6 +14,7 @@ import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
 import type {
   Dictionary,
   FormSpec,
+  String,
   ValidationMessage
 } from '@/form/components/vue_formspec_components'
 
@@ -69,6 +70,7 @@ const api: API<ObjectId, ObjectId> = {
       title: 'dict title',
       validators: [],
       help: 'dict help',
+      i18n_base: { required: 'required' },
       layout: 'one_column',
       no_elements_text: 'no_text',
       additional_static_elements: null,
@@ -82,8 +84,12 @@ const api: API<ObjectId, ObjectId> = {
             type: 'string',
             title: 'string title',
             help: 'some string help',
-            validators: []
-          }
+            i18n_base: { required: 'required' },
+            validators: [],
+            input_hint: null,
+            autocompleter: null,
+            field_size: 'SMALL'
+          } as String
         }
       ],
       groups: []

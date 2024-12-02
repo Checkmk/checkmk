@@ -246,6 +246,7 @@ export interface FormSpec {
   title: string;
   help: string;
   validators: Validator[];
+  i18n_base: I18NFormSpecBase;
 }
 export interface IsInteger {
   type: "is_integer";
@@ -271,6 +272,9 @@ export interface MatchRegex {
   type: "match_regex";
   regex?: string;
   error_message?: string;
+}
+export interface I18NFormSpecBase {
+  required: string;
 }
 export interface Autocompleter {
   fetch_method: "ajax_vs_autocomplete";

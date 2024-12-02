@@ -15,6 +15,7 @@ const embeddedSpec: String = {
   type: 'string',
   title: 'some string title',
   help: 'some string help',
+  i18n_base: { required: 'required' },
   input_hint: 'some string input hint',
   field_size: 'SMALL',
   autocompleter: null,
@@ -25,6 +26,7 @@ const spec = ref<OptionalChoice>({
   type: 'optional_choice',
   title: 'some title',
   help: 'some help',
+  i18n_base: { required: 'required' },
   validators: [],
   i18n: {
     label: 'i18n label',

@@ -70,7 +70,7 @@ from cmk.utils.paths import (
 )
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import builtin_timeperiods, timeperiod_active, TimeperiodSpecs
 
@@ -680,20 +680,6 @@ def _execute_discovery(
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
     )
-
-
-def _make_service_description_cb(
-    matcher: RulesetMatcher,
-) -> Callable[[HostName, CheckPluginName, Item], ServiceName]:
-    """Replacement for functool.partial(config.service_description, matcher)
-
-    functools.partial is not supported by the mypy type checker.
-    """
-
-    def callback(hostname: HostName, check_plugin_name: CheckPluginName, item: Item) -> ServiceName:
-        return config.service_description(matcher, hostname, check_plugin_name, item)
-
-    return callback
 
 
 class AutomationAutodiscovery(DiscoveryAutomation):

@@ -1,5 +1,7 @@
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
+http_archive_non_free = use_repo_rule("//bazel/rules:repo_license.bzl", "http_archive_non_free")
+
 repo_license(name = "repo_license")
 
 # Hedron's Compile Commands Extractor for Bazel
@@ -130,7 +132,7 @@ OTEL_COL_VERSION = "0.113.0"
 
 OTEL_COL_FILENAME = "otelcol_" + OTEL_COL_VERSION + "_linux_amd64.tar.gz"
 
-http_archive(
+http_archive_non_free(
     name = "otel-collector",
     build_file = "//non-free/packages/otel-collector:BUILD",
     sha256 = "c327cc46b27df885d82d53ff59f096d38bca935f3431aee58b49810711b2a900",

@@ -32,6 +32,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
+    MonitoredHostExtended,
     MultipleChoiceExtended,
     OptionalChoice,
     SingleChoiceEditable,
@@ -49,6 +50,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_levels,
     recompose_list,
     recompose_monitored_host,
+    recompose_monitored_host_extended,
     recompose_monitored_service,
     recompose_multiple_choice,
     recompose_percentage,
@@ -185,6 +187,7 @@ def register_form_specs():
     register_recomposer_function(RegularExpression, recompose_regular_expression)
     register_recomposer_function(MultipleChoice, recompose_multiple_choice)
     register_recomposer_function(MonitoredHost, recompose_monitored_host)
+    register_recomposer_function(MonitoredHostExtended, recompose_monitored_host_extended)
     register_recomposer_function(MonitoredService, recompose_monitored_service)
     register_recomposer_function(String, recompose_string)
     register_recomposer_function(HostState, recompose_host_state)

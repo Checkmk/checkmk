@@ -1513,27 +1513,6 @@ class ActivateChangesManager(ActivateChanges):
     def activate_until(self):
         return self._activate_until
 
-    def wait_for_completion(self, timeout: float | None = None) -> bool:
-        """Wait for activation to be complete.
-
-        Optionally a soft timeout can be given and waiting will stop. The return value will then
-        be True if everything is completed and False if it isn't.
-
-        Args:
-            timeout: Optional timeout in seconds. If omitted the call will wait until completion.
-
-        Returns:
-            True if completed, False if still running.
-        """
-        start = time.time()
-        while self.is_running():
-            time.sleep(0.5)
-            if timeout and start + timeout >= time.time():
-                break
-
-        completed = not self.is_running()
-        return completed
-
     def is_running(self) -> bool:
         return bool(self.running_sites())
 
@@ -3384,29 +3363,6 @@ def activate_changes_start(
 
     manager.start(sites, comment=comment, activate_foreign=force_foreign_changes, source=source)
     return activation_attributes_for_rest_api_response(manager)
-
-
-def activate_changes_wait(
-    activation_id: ActivationId, timeout: float | int | None = None
-) -> ActivationState | None:
-    """Wait for configuration changes to complete activating.
-
-    Args:
-        activation_id:
-            The activation_id representing the activation to wait for.
-
-        timeout:
-            An optional timeout for the waiting time. If timeout is set to None, it will run
-            until finished. A timeout set to 0 will time out immediately.
-
-    Returns:
-        The activation-state when finished, if not yet finished it will return None
-    """
-    manager = ActivateChangesManager()
-    manager.load_activation(activation_id)
-    if manager.wait_for_completion(timeout=timeout):
-        return manager.get_state()
-    return None
 
 
 @dataclass(frozen=True)

@@ -201,8 +201,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
             detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
-    done = manager.wait_for_completion(timeout=request.request_timeout - 10)
-    if not done:
+    if manager.is_running():
         response = Response(status=302)
         response.location = urlparse(request.url).path
         return response

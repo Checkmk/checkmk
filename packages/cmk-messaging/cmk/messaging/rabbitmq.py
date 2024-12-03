@@ -139,6 +139,16 @@ class Connection:
     connecter: Connecter
 
 
+def make_default_remote_user_permission(user_name: str) -> Permission:
+    return Permission(
+        user=user_name,
+        vhost=DEFAULT_VHOST_NAME,
+        configure="^$",
+        write=INTERSITE_EXCHANGE,
+        read="cmk.intersite..*",
+    )
+
+
 def find_shortest_paths(
     edges: Sequence[tuple[str, str]],
 ) -> Mapping[tuple[str, str], tuple[str, ...]]:
@@ -315,13 +325,7 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
 
 def add_connectee_definitions(connection: Connection, definition: Definitions) -> None:
     user = User(name=connection.connecter.site_id)
-    permission = Permission(
-        user=user.name,
-        vhost=DEFAULT_VHOST_NAME,
-        configure="^$",
-        write=INTERSITE_EXCHANGE,
-        read="cmk.intersite..*",
-    )
+    permission = make_default_remote_user_permission(user.name)
     queue = Queue(
         name=f"cmk.intersite.{connection.connecter.site_id}",
         vhost=DEFAULT_VHOST_NAME,

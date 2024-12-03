@@ -5,7 +5,8 @@
 #
 
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -22,10 +23,12 @@ from cmk.agent_based.v2 import (
 
 # These could still be enforced, but don't autodiscover them
 _ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)
+DEFAULT_VHOST_NAME: Final = "/"
 
 
 @dataclass(frozen=True)
 class Queue:
+    vhost: str
     name: str
     messages: int
 
@@ -33,35 +36,21 @@ class Queue:
 Section = Mapping[str, Sequence[Queue]]
 
 
-def _process_line(line: str) -> Iterator[tuple[str, Queue]]:
-    # Split the line into site name and JSON data
-    token: list[str] = line.split(" ", 1)
-
-    # Return early if the line does not contain both site name and data
-    if len(token) < 2:
-        return
-
-    site_name, data = token
-    json_data = json.loads(data)
-
-    for entry in json_data:
-        name = entry["name"].split(".")
-        messages = int(entry["messages"])
-        # ignoring other queues such intersite queue
-        if name[1] == "app":
-            item = f"{site_name} {name[2]}"
-            yield item, Queue(name=name[3], messages=messages)
-
-
-def _aggregate_queues(queues: Sequence[tuple[str, Queue]]) -> Section:
-    result: dict = {}
-    for key, queue in queues:
-        result.setdefault(key, []).append(queue)
-    return result
-
-
 def parse(string_table: StringTable) -> Section:
-    return _aggregate_queues([item for (word,) in string_table for item in _process_line(word)])
+    parsed: dict[str, list[Queue]] = defaultdict(list)
+    for line in string_table:
+        try:
+            site, vhost, queues_line = line[0].split(" ", 2)
+        except ValueError:
+            continue
+
+        queues_json = json.loads(queues_line)
+        parsed[site].extend(
+            Queue(vhost=vhost, name=queue["name"], messages=queue["messages"])
+            for queue in queues_json
+        )
+
+    return parsed
 
 
 agent_section_omd_broker_queues = AgentSection(
@@ -70,20 +59,37 @@ agent_section_omd_broker_queues = AgentSection(
 )
 
 
+def _site_application(section: Section) -> Mapping[tuple[str, str], Sequence[Queue]]:
+    site_application: dict = {}
+    for site, queues in section.items():
+        for queue in queues:
+            queue_name = queue.name.split(".")
+            # ignoring other queues such intersite queue
+            if queue.vhost != DEFAULT_VHOST_NAME or queue_name[1] != "app":
+                continue
+            site_application.setdefault((site, queue_name[2]), []).append(queue)
+
+    return site_application
+
+
 def discover_omd_broker_queues(section: Section) -> DiscoveryResult:
     yield from (
-        Service(item=site_application)
-        for site_application in section
-        if site_application.split(None, 1)[1] not in _ENFORCED_ONLY_APPS
+        Service(item=f"{site} {application}")
+        for site, application in _site_application(section)
+        if application not in _ENFORCED_ONLY_APPS
     )
 
 
 def check(item: str, section: Section) -> CheckResult:
-    if (queues := section.get(item)) is None:
+    site, application = item.split(maxsplit=1)
+    if (queues := _site_application(section).get((site, application))) is None:
         return
 
     for queue in queues:
-        yield Result(state=State.OK, summary=f"Messages in queue '{queue.name}': {queue.messages}")
+        yield Result(
+            state=State.OK,
+            summary=f"Messages in queue '{queue.name.split(".")[-1]}': {queue.messages}",
+        )
 
 
 check_plugin_omd_broker_queues = CheckPlugin(

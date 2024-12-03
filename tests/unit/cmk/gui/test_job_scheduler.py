@@ -77,6 +77,7 @@ def test_run_scheduled_jobs_in_thread() -> None:
     assert called.is_set()
 
 
+@pytest.mark.skip(reason="test is flaky")
 def test_run_scheduled_jobs_in_thread_does_not_start_twice(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

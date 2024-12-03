@@ -147,6 +147,7 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceType
+from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
@@ -584,6 +585,23 @@ def _active_check_preview_rows(
     ]
 
 
+def _make_compute_check_parameters_of_autocheck(
+    ruleset_matcher: RulesetMatcher,
+) -> Callable[[HostName, AutocheckEntry], TimespecificParameters]:
+    def compute_check_parameters_of_autocheck(
+        host_name: HostName, entry: AutocheckEntry
+    ) -> TimespecificParameters:
+        return config.compute_check_parameters(
+            ruleset_matcher,
+            host_name,
+            entry.check_plugin_name,
+            entry.item,
+            entry.parameters,
+        )
+
+    return compute_check_parameters_of_autocheck
+
+
 def _execute_discovery(
     host_name: HostName,
     on_error: OnError,
@@ -643,15 +661,7 @@ def _execute_discovery(
                 sections={**plugins.agent_sections, **plugins.snmp_sections},
             ),
             check_plugins=check_plugins,
-            compute_check_parameters=(
-                lambda host_name, entry: config.compute_check_parameters(
-                    ruleset_matcher,
-                    host_name,
-                    entry.check_plugin_name,
-                    entry.item,
-                    entry.parameters,
-                )
-            ),
+            compute_check_parameters=_make_compute_check_parameters_of_autocheck(ruleset_matcher),
             discovery_plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
             autochecks_config=autochecks_config,
             enforced_services=config_cache.enforced_services_table(host_name),

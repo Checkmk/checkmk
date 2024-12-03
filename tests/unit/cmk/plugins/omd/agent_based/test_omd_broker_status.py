@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.lib.omd_broker import Queue, SectionQueues
 from cmk.plugins.omd.agent_based.omd_broker_status import (
     BrokerStatus,
     check_omd_broker_status,
@@ -51,7 +52,7 @@ from cmk.plugins.omd.agent_based.omd_broker_status import (
                 ],
                 ["stable"],
             ],
-            {"heute": BrokerStatus(memory=1000000000, queues=4)},
+            {"heute": BrokerStatus(memory=1000000000)},
         ),
         ([], {}),
     ],
@@ -136,50 +137,67 @@ def test_parse_omd_broker_shovels(
 
 @pytest.mark.parametrize(
     "section_status, expected",
-    [({"heute": BrokerStatus(memory=1000000000, queues=4)}, [Service(item="heute")]), ({}, [])],
+    [({"heute": BrokerStatus(memory=1000000000)}, [Service(item="heute")]), ({}, [])],
 )
 def test_discover_omd_broker_status(
     section_status: SectionStatus, expected: DiscoveryResult
 ) -> None:
-    assert list(discover_omd_broker_status(section_status, None)) == expected
+    assert list(discover_omd_broker_status(section_status, None, None)) == expected
 
 
 @pytest.mark.parametrize(
-    "item, section_status, section_shovels, expected",
+    "item, section_status, section_shovels, section_queues, expected",
     [
         (
             "heute",
-            {"heute": BrokerStatus(memory=1000000000, queues=4)},
+            {"heute": BrokerStatus(memory=1000000000)},
             {
                 "heute": [
                     Shovel(name="cmk.shovel.heute->heute_remote_1", state="running"),
                     Shovel(name="cmk.shovel.heute->heute_remote_2", state="running"),
                 ],
             },
+            {
+                "heute": [
+                    Queue(vhost="/", name="cmk.intersite.heute_remote_1", messages=1),
+                    Queue(vhost="/", name="cmk.intersite.heute_remote_2", messages=2),
+                    Queue(vhost="/", name="cmk.app.piggyback-hub.payload", messages=3),
+                ]
+            },
             [
                 Result(state=State.OK, summary="Memory: 954 MiB"),
                 Metric("mem_used", 1000000000.0),
-                Result(state=State.OK, summary="Queues: 4"),
+                Result(state=State.OK, summary="Queues: 2"),
+                Result(state=State.OK, summary="Messages in queue: 3"),
+                Metric("messages", 3.0),
                 Result(state=State.OK, summary="Shovels running: 2"),
             ],
         ),
         (
             "heute",
-            {"heute": BrokerStatus(memory=1000000000, queues=4)},
+            {"heute": BrokerStatus(memory=1000000000)},
             {
                 "heute": [Shovel(name="cmk.shovel.heute->heute_remote_1", state="starting")],
+            },
+            {
+                "heute": [
+                    Queue(vhost="/", name="cmk.app.piggyback-hub.payload", messages=3),
+                ]
             },
             [
                 Result(state=State.OK, summary="Memory: 954 MiB"),
                 Metric("mem_used", 1000000000.0),
-                Result(state=State.OK, summary="Queues: 4"),
+                Result(state=State.OK, summary="Queues: 0"),
+                Result(state=State.OK, summary="Messages in queue: 0"),
+                Metric("messages", 0.0),
                 Result(state=State.OK, summary="Shovels running: 0"),
                 Result(state=State.OK, summary="Shovels starting: 1"),
             ],
         ),
         (
             "heute_remote",
-            {"heute": BrokerStatus(memory=1000000000, queues=4)},
+            {"heute": BrokerStatus(memory=1000000000)},
+            None,
             {
                 "heute": [
                     Shovel(name="cmk.shovel.heute->heute_remote_1", state="running"),
@@ -188,12 +206,35 @@ def test_discover_omd_broker_status(
             },
             [],
         ),
+        (
+            "heute",
+            {"heute": BrokerStatus(memory=1000000000)},
+            None,
+            {
+                "heute": [
+                    Queue(vhost="customer1", name="cmk.intersite.heute_remote_1", messages=3),
+                    Queue(vhost="/", name="cmk.intersite.heute_remote_2", messages=2),
+                    Queue(vhost="/", name="cmk.app.piggyback-hub.payload", messages=3),
+                ]
+            },
+            [
+                Result(state=State.OK, summary="Memory: 954 MiB"),
+                Metric("mem_used", 1000000000.0),
+                Result(state=State.OK, summary="Queues: 2"),
+                Result(state=State.OK, summary="Messages in queue: 5"),
+                Metric("messages", 5.0),
+            ],
+        ),
     ],
 )
 def test_check_omd_broker_status(
     item: str,
     section_status: SectionStatus,
     section_shovels: SectionShovels,
+    section_queues: SectionQueues,
     expected: CheckResult,
 ) -> None:
-    assert list(check_omd_broker_status(item, section_status, section_shovels)) == expected
+    assert (
+        list(check_omd_broker_status(item, section_status, section_shovels, section_queues))
+        == expected
+    )

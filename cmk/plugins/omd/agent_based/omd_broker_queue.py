@@ -7,7 +7,6 @@
 import json
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from typing import Final
 
 from cmk.agent_based.v2 import (
@@ -20,24 +19,16 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.lib.omd_broker import Queue, SectionQueues
 
 # These could still be enforced, but don't autodiscover them
 _ENFORCED_ONLY_APPS: Final = ("cmk-broker-test",)
 DEFAULT_VHOST_NAME: Final = "/"
 
 
-@dataclass(frozen=True)
-class Queue:
-    vhost: str
-    name: str
-    messages: int
-
-
-Section = Mapping[str, Sequence[Queue]]
-
-
-def parse(string_table: StringTable) -> Section:
+def parse(string_table: StringTable) -> SectionQueues:
     parsed: dict[str, list[Queue]] = defaultdict(list)
+
     for line in string_table:
         try:
             site, vhost, queues_line = line[0].split(" ", 2)
@@ -59,7 +50,7 @@ agent_section_omd_broker_queues = AgentSection(
 )
 
 
-def _site_application(section: Section) -> Mapping[tuple[str, str], Sequence[Queue]]:
+def _site_application(section: SectionQueues) -> Mapping[tuple[str, str], Sequence[Queue]]:
     site_application: dict = {}
     for site, queues in section.items():
         for queue in queues:
@@ -72,7 +63,7 @@ def _site_application(section: Section) -> Mapping[tuple[str, str], Sequence[Que
     return site_application
 
 
-def discover_omd_broker_queues(section: Section) -> DiscoveryResult:
+def discover_omd_broker_queues(section: SectionQueues) -> DiscoveryResult:
     yield from (
         Service(item=f"{site} {application}")
         for site, application in _site_application(section)
@@ -80,7 +71,7 @@ def discover_omd_broker_queues(section: Section) -> DiscoveryResult:
     )
 
 
-def check(item: str, section: Section) -> CheckResult:
+def check(item: str, section: SectionQueues) -> CheckResult:
     site, application = item.split(maxsplit=1)
     if (queues := _site_application(section).get((site, application))) is None:
         return

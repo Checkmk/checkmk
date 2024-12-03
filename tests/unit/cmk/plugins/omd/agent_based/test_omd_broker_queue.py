@@ -6,12 +6,11 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.lib.omd_broker import Queue, SectionQueues
 from cmk.plugins.omd.agent_based.omd_broker_queue import (
     check,
     discover_omd_broker_queues,
     parse,
-    Queue,
-    Section,
 )
 
 STRINGTABLE: StringTable = [
@@ -94,7 +93,7 @@ def test_no_output_for_missing_item() -> None:
     assert not list(check("heute non-existing-app", parse(STRINGTABLE)))
 
 
-def _parse_with_cmk_broker_queue_info() -> Section:
+def _parse_with_cmk_broker_queue_info() -> SectionQueues:
     return parse(
         [
             [

@@ -45,7 +45,6 @@ PACKAGES := \
     nagios \
     monitoring-plugins \
     check-cert \
-    check-http \
     nrpe \
     omd \
     navicli \

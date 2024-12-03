@@ -44,6 +44,7 @@ srcs = {
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/net-snmp:net-snmp_files_pkg",
         "//omd/packages/protobuf",
+        "//packages/check-http:check_http_pkg",
     ] + srcs[edition],
     extension = "tar.gz",
     deps = [

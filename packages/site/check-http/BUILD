@@ -1,5 +1,7 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 rust_library(
     name = "check-http-lib",
@@ -37,4 +39,21 @@ rust_binary(
     ),
     visibility = ["//visibility:public"],
     deps = all_crate_deps() + [":check-http-lib"],
+)
+
+pkg_files(
+    name = "check_http_pkg",
+    srcs = [
+        "check-http",
+    ],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "lib/nagios/plugins/",
+    visibility = ["//omd:__pkg__"],
+)
+
+pkg_tar(
+    name = "check_http_tar",
+    srcs = [":check_http_pkg"],
 )

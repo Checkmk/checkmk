@@ -8,6 +8,7 @@ from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
 from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
+from .monitored_host import recompose as recompose_monitored_host
 from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
 from .proxy import recompose as recompose_proxy
@@ -31,4 +32,5 @@ __all__ = [
     "recompose_service_state",
     "recompose_string",
     "recompose_multiple_choice",
+    "recompose_monitored_host",
 ]

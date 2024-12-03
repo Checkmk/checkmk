@@ -18,7 +18,6 @@ from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.generators.host_address import create_host_address
-from cmk.gui.form_specs.generators.host_autocompleters import create_config_host_autocompleter
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
 from cmk.gui.form_specs.private import (
@@ -92,6 +91,7 @@ from cmk.rulesets.v1.form_specs import (
     InvalidElementMode,
     InvalidElementValidator,
     List,
+    MonitoredHost,
     SingleChoice,
     String,
 )
@@ -504,7 +504,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
                 "setup:</b><br>Make sure that the host and all its parents are "
                 "monitored by the same site."
             ),
-            string_spec=create_config_host_autocompleter(),
+            string_spec=MonitoredHost(title=Title("Host")),
         )
 
     def openapi_field(self) -> gui_fields.Field:

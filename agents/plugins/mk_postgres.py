@@ -226,7 +226,7 @@ class PostgresBase:
         out = self.run_sql_as_db_user("SHOW server_version;")
         if out == "":
             raise PostgresPsqlError("psql connection returned with no data")
-        version_as_string = out.split()[0]
+        version_as_string = out.split("_")[0]
         # Use Major and Minor version for float casting: "12.6.4" -> 12.6
         return float(".".join(version_as_string.split(".")[0:2]))
 

@@ -297,6 +297,7 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
             self, **kwargs: Unpack[GetQueryResultsRequestRequestTypeDef]
         ) -> GetQueryResultsResponseTypeDef:
             return {
+                "queryLanguage": "CWLI",
                 "results": [[]],
                 "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
                 "status": "Running",

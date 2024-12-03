@@ -11,9 +11,9 @@ Quick setup
 """
 
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import Any, Sequence
 
 from cmk.utils.encoding import json_encode
 
@@ -28,13 +28,15 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     AllStageErrors,
     complete_quick_setup,
+    Errors,
+    get_stage_structure,
     get_stages_and_formspec_map,
+    NextStageStructure,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
-    retrieve_next_stage,
-    Stage,
+    recap_stage,
     validate_custom_validators,
     validate_stage,
     validate_stages_formspecs,
@@ -43,6 +45,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
+from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
 from cmk import fields
 
@@ -140,6 +143,13 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
             )
 
 
+@dataclass()
+class ValidationAndNextStageResponse:
+    next_stage_structure: NextStageStructure | None = None
+    errors: Errors | None = None
+    stage_recap: Sequence[Widget] = field(default_factory=list)
+
+
 @Endpoint(
     collection_href("quick_setup"),
     "cmk/quick_setup",
@@ -167,6 +177,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         stage_index=stage_index,
     )
 
+    response = ValidationAndNextStageResponse()
     if (
         errors := validate_stage(
             quick_setup=quick_setup,
@@ -177,7 +188,8 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
-        return _serve_data(Stage(errors=errors), status_code=400)
+        response.errors = errors
+        return _serve_data(response, status_code=400)
 
     prefill_data: ParsedFormData | None = None
     if object_id := params["object_id"]:
@@ -187,17 +199,24 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
                 title="Object not found",
                 detail=f"Object with id '{object_id}' does not exist.",
             )
-    return _serve_data(
-        data=retrieve_next_stage(
-            quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-            stages=stages,
-            quick_setup_formspec_map=form_spec_map,
-            stage_index=stage_index,
-            stage_action_id=stage_action_id,
-            prefill_data=prefill_data,
-        )
+
+    response.stage_recap = recap_stage(
+        quick_setup_id=quick_setup_id,
+        stage_index=stage_index,
+        stages=stages,
+        stage_action_id=stage_action_id,
+        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        quick_setup_formspec_map=form_spec_map,
     )
+    # check if last stage
+    if stage_index == StageIndex(len(quick_setup.stages) - 1):
+        return _serve_data(data=response)
+
+    response.next_stage_structure = get_stage_structure(
+        stage=quick_setup.stages[stage_index + 1](),
+        prefill_data=prefill_data,
+    )
+    return _serve_data(data=response)
 
 
 @Endpoint(
@@ -310,10 +329,10 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
 
 def _serve_data(
     data: QuickSetupOverview
-    | Stage
     | QuickSetupSaveRedirect
     | QuickSetupAllStages
-    | AllStageErrors,
+    | AllStageErrors
+    | ValidationAndNextStageResponse,
     status_code: int = 200,
 ) -> Response:
     response = Response()

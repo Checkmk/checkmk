@@ -401,54 +401,50 @@ def validate_stages_formspecs(
     return stages_errors or None
 
 
-def retrieve_next_stage(
-    quick_setup: QuickSetup,
-    stages_raw_formspecs: Sequence[RawFormData],
-    stages: Sequence[QuickSetupStage],
-    quick_setup_formspec_map: FormspecMap,
+def recap_stage(
+    quick_setup_id: QuickSetupId,
     stage_index: StageIndex,
+    stages: Sequence[QuickSetupStage],
     stage_action_id: ActionId,
-    prefill_data: ParsedFormData | None = None,
-) -> Stage:
-    current_stage_recap = [
-        r
-        for recap_callable in _matching_stage_action(stages[stage_index], stage_action_id).recap
-        for r in recap_callable(
-            quick_setup.id,
-            stage_index,
-            _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
-        )
-    ]
-
-    if stage_index == len(quick_setup.stages) - 1:
-        return Stage(next_stage_structure=None, stage_recap=current_stage_recap)
-
-    next_stage = quick_setup.stages[stage_index + 1]()
-
-    return Stage(
-        next_stage_structure=NextStageStructure(
-            components=[
-                _get_stage_components_from_widget(widget, prefill_data)
-                for widget in stage_components(next_stage)
-            ],
-            prev_button=Button(
-                label=next_stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL
+    stages_raw_formspecs: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+) -> Sequence[Widget]:
+    parsed_formspec = _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
+    recap_widgets: list[Widget] = []
+    for recap_callable in _matching_stage_action(stages[stage_index], stage_action_id).recap:
+        recap_widgets.extend(
+            recap_callable(
+                quick_setup_id,
+                stage_index,
+                parsed_formspec,
             )
-            if next_stage.prev_button_label
-            else None,
-            actions=[
-                Action(
-                    id=action.id,
-                    load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
-                    button=Button(
-                        label=action.next_button_label or NEXT_BUTTON_LABEL,
-                        aria_label=NEXT_BUTTON_ARIA_LABEL,
-                    ),
-                )
-                for action in next_stage.actions
-            ],
-        ),
-        stage_recap=current_stage_recap,
+        )
+    return recap_widgets
+
+
+def get_stage_structure(
+    stage: QuickSetupStage,
+    prefill_data: ParsedFormData | None = None,
+) -> NextStageStructure:
+    return NextStageStructure(
+        components=[
+            _get_stage_components_from_widget(widget, prefill_data)
+            for widget in stage_components(stage)
+        ],
+        prev_button=Button(label=stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL)
+        if stage.prev_button_label
+        else None,
+        actions=[
+            Action(
+                id=action.id,
+                load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
+                button=Button(
+                    label=action.next_button_label or NEXT_BUTTON_LABEL,
+                    aria_label=NEXT_BUTTON_ARIA_LABEL,
+                ),
+            )
+            for action in stage.actions
+        ],
     )
 
 

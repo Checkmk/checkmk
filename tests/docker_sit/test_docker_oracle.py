@@ -280,16 +280,32 @@ class OracleDatabase:
 
         logger.info("Waiting for controller to open TCP socket or push data")
         # like tests.testlib.agent.wait_until_host_receives_data(), but in the container
-        wait_until(
-            lambda: self.checkmk.container.exec_run(
-                [f"{self.checkmk.site_root}/bin/cmk", "-d", self.name],
-            )[0]
-            == 0,
-            timeout=120,
-            interval=20,
-        )
+        cmk_dump_cmd = [
+            "su",
+            "-l",
+            self.checkmk.site_id,
+            "-c",
+            f'"{self.checkmk.site_root}/bin/cmk" -d "{self.name}"',
+        ]
+        try:
+            wait_until(
+                lambda: self.checkmk.container.exec_run(cmk_dump_cmd)[0] == 0,
+                timeout=300,
+                interval=20,
+            )
+        except TimeoutError as excp:
+            cmk_dump_rc, cmk_dump_output = self.checkmk.container.exec_run(cmk_dump_cmd)
+            logger.error(
+                '"%s" failed with rc=%s!\nOutput: %s',
+                " ".join(cmk_dump_cmd),
+                cmk_dump_rc,
+                cmk_dump_output,
+            )
+            raise excp
 
-        self.checkmk.openapi.service_discovery.run_discovery_and_wait_for_completion(self.name)
+        self.checkmk.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            self.name, timeout=300
+        )
         self.checkmk.openapi.changes.activate_and_wait_for_completion()
 
         logger.info("Wait until host %s has services...", self.name)

@@ -308,7 +308,7 @@ CATALOG_TITLES: Final = {
     "pure_storage": "Pure Storage",
     "synthetic_monitoring": "Synthetic Monitoring",
     "bazel_cache": "Bazel Remote Cache",
-    "otel": "Opentelemetry (Experimental)",
+    "otel": "OpenTelemetry (Experimental)",
 }
 
 # TODO: Do we need a more generic place for this?

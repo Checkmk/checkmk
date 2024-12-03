@@ -69,7 +69,7 @@ def main() {
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
-    def build_image = edition != "managed";
+    def build_image = true;
 
     def run_int_tests = true;
     def run_fips_tests = edition == "enterprise";

@@ -43,7 +43,7 @@ def main() {
         def edition = item;
         def stepName = "Trigger ${edition}";
 
-        build_for_parallel[stepName] ) { ->
+        build_for_parallel[stepName] = { ->
             def run_condition = edition in editions_to_test;
             println("Should ${edition} be triggered? ${run_condition}");
 

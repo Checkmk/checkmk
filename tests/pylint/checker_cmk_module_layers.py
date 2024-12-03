@@ -86,7 +86,6 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.graphing")),
             _in_component(imported=imported, component=Component("cmk.trace")),
             _in_component(imported=imported, component=Component("cmk.events")),
-            _in_component(imported=imported, component=Component("cmk.otel")),
         )
     )
 

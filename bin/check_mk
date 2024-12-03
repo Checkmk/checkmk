@@ -84,8 +84,8 @@ class CrashReport(ABCCrashReport):
         cls,
         crashdir: Path,
         version_info: dict[str, object],
-        details: object = None,
-        type_specific_attributes: object = None,
+        _details: object = None,
+        _type_specific_attributes: object = None,
     ) -> Self:
         return super().from_exception(
             crashdir,
@@ -163,7 +163,7 @@ except MKTerminate:
     sys.exit(1)
 
 except (MKGeneralException, MKBailOut) as e:
-    sys.stderr.write("%s\n" % e)
+    sys.stderr.write(f"{e}\n")
     if cmk.ccc.debug.enabled():
         raise
     sys.exit(3)

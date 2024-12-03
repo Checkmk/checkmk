@@ -12,12 +12,11 @@ shutdown proces.
 
 import logging
 import sys
-from collections.abc import Sequence
 
 from cmk.gui.background_job import wait_for_background_jobs
 
 
-def main(args: Sequence[str]) -> int:
+def main() -> int:
     logger = logging.getLogger("cmk-wait-for-background-jobs")
     logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
     handler.setFormatter(logging.Formatter("%(message)s"))
@@ -33,4 +32,4 @@ def main(args: Sequence[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

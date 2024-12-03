@@ -105,7 +105,7 @@ def _write(message: str) -> None:
 
 
 def _command_track(
-    args: argparse.Namespace,
+    _args: argparse.Namespace,
 ) -> int:
     """Track incoming piggyback messages.
 

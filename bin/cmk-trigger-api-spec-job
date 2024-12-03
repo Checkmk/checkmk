@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Sequence
 from logging import getLogger
 
 from cmk.gui.openapi.spec.spec_generator_job import trigger_spec_generation_in_background
 
 
-def main(args: Sequence[str]) -> int:
+def main() -> int:
     logger = getLogger("api-spec")
     try:
         trigger_spec_generation_in_background(user_id=None)
@@ -21,4 +20,4 @@ def main(args: Sequence[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

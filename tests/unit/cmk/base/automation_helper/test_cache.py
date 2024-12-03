@@ -27,3 +27,13 @@ def test_set_and_get_last_automation_reload(cache: Cache) -> None:
 
 def test_last_automation_reload_unset(cache: Cache) -> None:
     assert cache.last_automation_helper_reload == 0.0
+
+
+def test_set_and_get_last_change_detected(cache: Cache) -> None:
+    now = time.time()
+    cache.store_last_detected_change(now)
+    assert cache.last_detected_change == now
+
+
+def test_last_change_detected_unset(cache: Cache) -> None:
+    assert cache.last_detected_change == 0.0

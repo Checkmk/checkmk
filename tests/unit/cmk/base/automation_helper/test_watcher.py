@@ -6,10 +6,12 @@
 import logging
 import shutil
 import time
+from collections.abc import Generator
 from pathlib import Path
 from typing import ContextManager, Final
 
 import pytest
+from fakeredis import FakeRedis
 from watchdog.events import (
     DirCreatedEvent,
     DirDeletedEvent,
@@ -22,6 +24,7 @@ from watchdog.events import (
     FileSystemEvent,
 )
 
+from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._watcher import (
     AutomationWatcherHandler,
     Schedule,
@@ -34,14 +37,21 @@ TXT_FILE: Final = "foo.txt"
 DIRECTORY: Final = "local"
 
 
+@pytest.fixture(name="cache")
+def get_cache() -> Generator[Cache]:
+    cache = Cache.setup(client=FakeRedis())
+    yield cache
+    cache.clear()
+
+
 @pytest.fixture(scope="function", name="file_watcher_handler")
-def get_file_watcher_handler() -> AutomationWatcherHandler:
-    return AutomationWatcherHandler(patterns=[MK_PATTERN], ignore_directories=True)
+def get_file_watcher_handler(cache: Cache) -> AutomationWatcherHandler:
+    return AutomationWatcherHandler(cache=cache, patterns=[MK_PATTERN], ignore_directories=True)
 
 
 @pytest.fixture(scope="function", name="directory_watcher_handler")
-def get_directory_watcher_handler() -> AutomationWatcherHandler:
-    return AutomationWatcherHandler(patterns=[DIRECTORY], ignore_directories=False)
+def get_directory_watcher_handler(cache: Cache) -> AutomationWatcherHandler:
+    return AutomationWatcherHandler(cache=cache, patterns=[DIRECTORY], ignore_directories=False)
 
 
 @pytest.fixture(scope="function", name="target_directory")
@@ -57,12 +67,12 @@ def get_target_file(target_directory: Path) -> Path:
 
 
 @pytest.fixture(scope="function", name="observer")
-def get_observer(target_directory: Path) -> ContextManager:
+def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
     schedules: list[Schedule] = [
         Schedule(ignore_directories=True, recursive=True, patterns=[MK_PATTERN]),
         Schedule(ignore_directories=True, recursive=True, patterns=[TXT_FILE]),
     ]
-    return start_automation_watcher_observer(target_directory, schedules)
+    return start_automation_watcher_observer(target_directory, schedules, cache)
 
 
 def wait_for_observer_log_output(

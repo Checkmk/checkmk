@@ -8,6 +8,7 @@ from typing import Final, Self
 
 import redis
 
+LAST_DETECTED_CHANGE_TOPIC: Final = "last_change_detected"
 LAST_AUTOMATION_HELPER_RELOAD_TOPIC: Final = "last_automation_helper_reload"
 
 
@@ -25,8 +26,17 @@ class Cache:
     def store_last_automation_helper_reload(self, time: float) -> None:
         self._client.set(LAST_AUTOMATION_HELPER_RELOAD_TOPIC, time)
 
+    def store_last_detected_change(self, time: float) -> None:
+        self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
+
     @property
     def last_automation_helper_reload(self) -> float:
         if fetched_value := self._client.get(LAST_AUTOMATION_HELPER_RELOAD_TOPIC):
+            return float(fetched_value)
+        return 0.0
+
+    @property
+    def last_detected_change(self) -> float:
+        if fetched_value := self._client.get(LAST_DETECTED_CHANGE_TOPIC):
             return float(fetched_value)
         return 0.0

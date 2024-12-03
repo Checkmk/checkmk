@@ -47,7 +47,7 @@ def main() -> int:
         cache = Cache.setup(client=redis_client)
 
         watcher_config = WatcherConfig.load(root=omd_root)
-        watcher = Watcher(watcher_config)
+        watcher = Watcher(watcher_config, cache)
 
         app = get_application(
             engine=automations,

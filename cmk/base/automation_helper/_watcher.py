@@ -14,26 +14,38 @@ from typing import Final, Self
 from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
+from ._cache import Cache
 from ._log import watcher_logger
 
 WATCHER_SLEEP_INTERVAL: Final = 1
 
 
 class AutomationWatcherHandler(PatternMatchingEventHandler):
-    def __init__(self, *, patterns: Sequence[str] | None, ignore_directories: bool) -> None:
+    def __init__(
+        self,
+        *,
+        cache: Cache,
+        patterns: Sequence[str] | None,
+        ignore_directories: bool,
+    ) -> None:
+        self._cache = cache
         patterns_ = list(patterns) if patterns else None
         super().__init__(patterns=patterns_, ignore_directories=ignore_directories)
 
     def on_moved(self, event: FileSystemEvent) -> None:
+        self._cache.store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_created(self, event: FileSystemEvent) -> None:
+        self._cache.store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_modified(self, event: FileSystemEvent) -> None:
+        self._cache.store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_deleted(self, event: FileSystemEvent) -> None:
+        self._cache.store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     @classmethod
@@ -64,11 +76,14 @@ class WatcherConfig:
 
 
 @contextlib.contextmanager
-def start_automation_watcher_observer(root: Path, schedules: Sequence[Schedule]) -> Generator[None]:
+def start_automation_watcher_observer(
+    root: Path, schedules: Sequence[Schedule], cache: Cache
+) -> Generator[None]:
     observer = Observer()
 
     for schedule in schedules:
         handler = AutomationWatcherHandler(
+            cache=cache,
             patterns=schedule.patterns,
             ignore_directories=schedule.ignore_directories,
         )
@@ -88,16 +103,16 @@ def start_automation_watcher_observer(root: Path, schedules: Sequence[Schedule])
         observer.join()
 
 
-def run_watcher(root: Path, schedules: Sequence[Schedule]) -> None:
-    with start_automation_watcher_observer(root, schedules):
+def run_watcher(root: Path, schedules: Sequence[Schedule], cache: Cache) -> None:
+    with start_automation_watcher_observer(root, schedules, cache):
         while True:
             time.sleep(WATCHER_SLEEP_INTERVAL)
 
 
 class Watcher(Thread):
-    def __init__(self, cfg: WatcherConfig) -> None:
+    def __init__(self, cfg: WatcherConfig, cache: Cache) -> None:
         watcher_logger.info("Initializing watcher thread...")
-        kwargs = {"root": cfg.root, "schedules": cfg.schedules}
+        kwargs = {"root": cfg.root, "schedules": cfg.schedules, "cache": cache}
         super().__init__(target=run_watcher, name="watcher", kwargs=kwargs, daemon=True)
 
 

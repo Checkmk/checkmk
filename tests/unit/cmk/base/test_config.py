@@ -1759,18 +1759,15 @@ def test_config_cache_snmp_credentials_of_version(
     assert config_cache.snmp_credentials_of_version(hostname, version) == result
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
-    "hostname, section_name, result",
+    "hostname, result",
     [
-        (HostName("testhost1"), "uptime", None),
-        (HostName("testhost2"), "uptime", None),
-        (HostName("testhost1"), "snmp_uptime", None),
-        (HostName("testhost2"), "snmp_uptime", 4),
+        (HostName("testhost1"), {}),
+        (HostName("testhost2"), {SectionName("snmp_uptime"): 240}),
     ],
 )
 def test_snmp_check_interval(
-    monkeypatch: MonkeyPatch, hostname: HostName, section_name: str, result: int | None
+    monkeypatch: MonkeyPatch, hostname: HostName, result: Mapping[SectionName, int | None]
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
@@ -1784,9 +1781,7 @@ def test_snmp_check_interval(
             },
         ],
     )
-    assert ts.apply(monkeypatch).snmp_fetch_interval(hostname, SectionName(section_name)) == (
-        60 * result if result else None
-    )
+    assert ts.apply(monkeypatch).snmp_fetch_intervals(hostname) == result
 
 
 def test_http_proxies() -> None:

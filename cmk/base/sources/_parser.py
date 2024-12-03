@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawDataElem
 
@@ -25,7 +24,6 @@ class ParserFactory(Protocol):
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataElem],
         *,
-        checking_sections: Iterable[SectionName],
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> Parser: ...
@@ -45,8 +43,6 @@ def make_parser(
     hostname: HostName,
     fetcher_type: FetcherType,
     *,
-    # Always from NO_SELECTION.
-    checking_sections: Iterable[SectionName],
     persisted_section_dir: Path,
     keep_outdated: bool,
     logger: logging.Logger,
@@ -58,7 +54,6 @@ def make_parser(
                 persisted_section_dir,
                 logger=logger,
             ),
-            checking_sections=checking_sections,
             keep_outdated=keep_outdated,
             logger=logger,
         )

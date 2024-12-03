@@ -293,9 +293,6 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         parser = CMKParser(
             config_cache.parser_factory(),
-            checking_sections=lambda hostname: config_cache.make_checking_sections(
-                plugins, hostname, selected_sections=NO_SELECTION
-            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
@@ -602,9 +599,6 @@ def _execute_discovery(
     autochecks_config = config.AutochecksConfigurer(config_cache)
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -729,9 +723,6 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            ab_plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2796,9 +2787,6 @@ class AutomationGetAgentOutput(Automation):
                             config_cache.parser_factory(),
                             source_info.hostname,
                             source_info.fetcher_type,
-                            checking_sections=config_cache.make_checking_sections(
-                                plugins, hostname, selected_sections=NO_SELECTION
-                            ),
                             persisted_section_dir=make_persisted_section_dir(
                                 source_info.hostname,
                                 fetcher_type=source_info.fetcher_type,

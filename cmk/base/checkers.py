@@ -164,14 +164,12 @@ class CMKParser:
         self,
         factory: ParserFactory,
         *,
-        checking_sections: Callable[[HostName], Iterable[SectionName]],
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         self.factory: Final = factory
         self.selected_sections: Final = selected_sections
-        self.checking_sections: Final = checking_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
 
@@ -196,7 +194,6 @@ class CMKParser:
                     self.factory,
                     source.hostname,
                     source.fetcher_type,
-                    checking_sections=self.checking_sections(source.hostname),
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         fetcher_type=source.fetcher_type,

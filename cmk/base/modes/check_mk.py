@@ -696,9 +696,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     config_cache.parser_factory(),
                     source_info.hostname,
                     source_info.fetcher_type,
-                    checking_sections=config_cache.make_checking_sections(
-                        plugins, hostname, selected_sections=NO_SELECTION
-                    ),
                     persisted_section_dir=make_persisted_section_dir(
                         source_info.hostname,
                         fetcher_type=source_info.fetcher_type,
@@ -1872,9 +1869,6 @@ def mode_check_discovery(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2175,9 +2169,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2384,9 +2375,6 @@ def mode_check(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
@@ -2625,9 +2613,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2885,9 +2870,6 @@ def mode_inventory_as_check(
     )
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -3046,9 +3028,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     plugins = agent_based_register.get_previously_loaded_plugins()
     parser = CMKParser(
         config_cache.parser_factory(),
-        checking_sections=lambda hostname: config_cache.make_checking_sections(
-            plugins, hostname, selected_sections=NO_SELECTION
-        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

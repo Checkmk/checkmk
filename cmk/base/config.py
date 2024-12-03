@@ -1746,7 +1746,7 @@ class ConfigCache:
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
-        self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
+        self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
@@ -2736,29 +2736,26 @@ class ConfigCache:
     def missing_sys_description(self, host_name: HostName) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, snmp_without_sys_descr)
 
-    def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
-        """Return the fetch interval of SNMP sections in seconds
+    def snmp_fetch_intervals(self, host_name: HostName) -> Mapping[SectionName, int | None]:
+        """Return the configured fetch intervals of SNMP sections in seconds
 
         This has been added to reduce the fetch interval of single SNMP sections
         to be executed less frequently than the "Check_MK" service is executed.
         """
 
-        def snmp_fetch_interval_impl() -> int | None:
-            for sections, (_option_id, seconds) in self.ruleset_matcher.get_host_values(
-                host_name,
-                snmp_check_interval,
-            ):
-                if str(section_name) in sections:
-                    return None if seconds is None else round(seconds)  # use first match
-
-            return None
+        def snmp_fetch_interval_impl() -> Mapping[SectionName, int | None]:
+            return {
+                SectionName(section_name): None if seconds is None else round(seconds)
+                for sections, (_option_id, seconds) in reversed(  # use first match
+                    self.ruleset_matcher.get_host_values(host_name, snmp_check_interval)
+                )
+                for section_name in sections
+            }
 
         with contextlib.suppress(KeyError):
-            return self.__snmp_fetch_interval[(host_name, section_name)]
+            return self.__snmp_fetch_interval[host_name]
 
-        return self.__snmp_fetch_interval.setdefault(
-            (host_name, section_name), snmp_fetch_interval_impl()
-        )
+        return self.__snmp_fetch_interval.setdefault(host_name, snmp_fetch_interval_impl())
 
     def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TagGroupID]) -> None:
         """Calculate the effective tags for all configured hosts
@@ -4023,15 +4020,11 @@ class ParserFactory:
         *,
         keep_outdated: bool,
         logger: logging.Logger,
-        checking_sections: Iterable[SectionName],
     ) -> SNMPParser:
         return SNMPParser(
             host_name,
             section_store,
-            persist_periods={
-                section_name: self._config_cache.snmp_fetch_interval(host_name, section_name)
-                for section_name in checking_sections
-            },
+            persist_periods=self._config_cache.snmp_fetch_intervals(host_name),
             host_check_interval=self._config_cache.check_mk_check_interval(host_name),
             keep_outdated=keep_outdated,
             logger=logger,

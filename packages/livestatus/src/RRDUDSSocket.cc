@@ -14,8 +14,9 @@
 #include "livestatus/POSIXUtils.h"
 #include "livestatus/StringUtils.h"
 
-RRDUDSSocket::RRDUDSSocket(std::filesystem::path path, Logger *logger)
-    : path_{std::move(path)}, logger_{logger} {}
+RRDUDSSocket::RRDUDSSocket(std::filesystem::path path, Logger *logger,
+                           verbosity v)
+    : path_{std::move(path)}, logger_{logger}, verbosity_{v} {}
 
 RRDUDSSocket::~RRDUDSSocket() { close(); }
 
@@ -34,7 +35,9 @@ void RRDUDSSocket::connect() {
         throw generic_error{"cannot connect"};
     }
 
-    Notice(logger()) << "successfully connected";
+    if (verbosity_ == verbosity::full) {
+        Notice(logger()) << "successfully connected";
+    }
     socket_ = sock;
     file_ = fdopen(sock, "r");
 }
@@ -62,7 +65,9 @@ void RRDUDSSocket::close() {
     if (!isConnected()) {
         return;
     }
-    Notice(logger()) << "closing connection";
+    if (verbosity_ == verbosity::full) {
+        Notice(logger()) << "closing connection";
+    }
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     (void)::fclose(file_);
     socket_ = -1;

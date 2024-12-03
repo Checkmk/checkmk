@@ -18,7 +18,8 @@ class Logger;
 
 class RRDUDSSocket {
 public:
-    RRDUDSSocket(std::filesystem::path path, Logger *logger);
+    enum class verbosity { none, full };
+    RRDUDSSocket(std::filesystem::path path, Logger *logger, verbosity v);
     ~RRDUDSSocket();
     void connect();
     [[nodiscard]] Logger *logger() const { return logger_; }
@@ -33,6 +34,7 @@ private:
     mutable Logger *logger_;
     int socket_{-1};
     FILE *file_{nullptr};
+    verbosity verbosity_;
 };
 
 #endif

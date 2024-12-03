@@ -47,6 +47,9 @@ SYSTEM_TESTS := \
     test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
+# HINT: the "layering_violation" checker is not production ready and left out on purpose
+PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checkerr,localization-literal-string-checker
+
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
 # agents/plugins/Makefile)
@@ -370,7 +373,8 @@ test-packaging:
 	$(PYTEST) -T packaging packaging
 
 test-pylint: prepare-protobuf-files
-	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+	cd ..; $(PIPENV) run pylint --disable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+	cd ..; $(PIPENV) run pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST) \
 	    -T unit \
 	    --config-file=pyproject.toml \

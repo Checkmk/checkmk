@@ -70,7 +70,7 @@ from cmk.utils.paths import (
 )
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionName
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import builtin_timeperiods, timeperiod_active, TimeperiodSpecs
 
@@ -894,6 +894,22 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     return discovery_results, True
 
 
+def _make_get_effective_host_of_autocheck_callback(
+    config_cache: ConfigCache,
+    precomputed_service_descriptions: Mapping[tuple[HostName, CheckPluginName, Item], ServiceName],
+) -> Callable[[HostName, AutocheckEntry], HostName]:
+    def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
+        return config_cache.effective_host(
+            host,
+            precomputed_service_descriptions.get((host, entry.check_plugin_name, entry.item))
+            or config.service_description(
+                config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
+            ),
+        )
+
+    return get_effective_host_of_autocheck
+
+
 class AutomationSetAutochecksV2(DiscoveryAutomation):
     cmd = "set-autochecks-v2"
     needs_config = True
@@ -912,18 +928,13 @@ class AutomationSetAutochecksV2(DiscoveryAutomation):
             for service_name, autocheck_entry in services.items()
         }
 
-        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
-            # This function is used to get the effective host for a service description.
-            # Some of the service_descriptions are actually already passed down in which case they
-            # are used directly. In case all service_descriptions are passed down, needs_checks can
-            # be set to False.
-            return config_cache.effective_host(
-                host,
-                service_descriptions.get((host, entry.check_plugin_name, entry.item))
-                or config.service_description(
-                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
-                ),
-            )
+        # This function is used to get the effective host for a service description.
+        # Some of the service_descriptions are actually already passed down in which case they
+        # are used directly. In case all service_descriptions are passed down, needs_checks can
+        # be set to False.
+        get_effective_host_of_autocheck = _make_get_effective_host_of_autocheck_callback(
+            config_cache, service_descriptions
+        )
 
         if set_autochecks_input.discovered_host not in config_cache.hosts_config.clusters:
             set_autochecks_for_effective_host(
@@ -978,14 +989,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 checks_dir=checks_dir,
             )
 
-        def get_effective_host_of_autocheck(host: HostName, entry: AutocheckEntry) -> HostName:
-            return config_cache.effective_host(
-                host,
-                config.service_description(
-                    config_cache.ruleset_matcher, host, entry.check_plugin_name, entry.item
-                ),
-            )
-
         new_services = [
             AutocheckServiceWithNodes(
                 DiscoveredItem[AutocheckEntry](
@@ -1011,7 +1014,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 # The set-autochecks automation will do nothing in clustered mode.
                 # set-autochecks-v2 implements setting autochecks in clustered mode correctly.
                 {hostname: new_services},
-                get_effective_host_of_autocheck,
+                _make_get_effective_host_of_autocheck_callback(config_cache, {}),
             )
         else:
             set_autochecks_of_real_hosts(hostname, new_services)

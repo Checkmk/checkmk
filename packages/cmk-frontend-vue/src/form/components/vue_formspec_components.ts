@@ -99,7 +99,7 @@ export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
   elements: CascadingSingleChoiceElement[];
   label: string | null;
-  input_hint: unknown;
+  input_hint: string | null;
   layout: CascadingSingleChoiceLayout;
 };
 export type CascadingSingleChoiceLayout = "vertical" | "horizontal" | "button_group";

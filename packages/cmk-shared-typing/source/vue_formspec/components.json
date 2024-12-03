@@ -619,7 +619,9 @@
                         "label": {
                             "type": ["string", "null"]
                         },
-                        "input_hint": {},
+                        "input_hint": {
+                            "type": ["string", "null"]
+                        },
                         "layout": {
                             "title": "CascadingSingleChoiceLayout",
                             "enum": ["vertical", "horizontal", "button_group"],

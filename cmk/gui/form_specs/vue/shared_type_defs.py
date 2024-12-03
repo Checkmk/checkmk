@@ -383,7 +383,7 @@ class CascadingSingleChoiceElement:
 @dataclass(kw_only=True)
 class CascadingSingleChoice(FormSpec):
     label: Optional[str]
-    input_hint: Any
+    input_hint: Optional[str]
     type: str = "cascading_single_choice"
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical

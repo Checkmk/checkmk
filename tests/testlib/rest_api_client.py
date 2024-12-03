@@ -1793,6 +1793,7 @@ class HostClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    # TODO: DEPRECATED(17003) - remove in 2.5
     def get_all(
         self,
         query: dict[str, Any],
@@ -1804,6 +1805,20 @@ class HostClient(RestApiClient):
             "get",
             url="/domain-types/host/collections/all",
             query_params=params,
+            expect_ok=expect_ok,
+        )
+
+    def list_all(
+        self,
+        query: dict[str, Any],
+        columns: Sequence[str] = ("name",),
+        expect_ok: bool = True,
+    ) -> Response:
+        params = {"query": query, "columns": columns}
+        return self.request(
+            "post",
+            url="/domain-types/host/collections/all",
+            body=params,
             expect_ok=expect_ok,
         )
 

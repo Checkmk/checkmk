@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
@@ -22,6 +23,7 @@ import {
 
 import { computed, type ComputedRef } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
+import FormRequired from '@/form/private/FormRequired.vue'
 
 defineOptions({
   inheritAttrs: false
@@ -79,7 +81,14 @@ function resetInput() {
 </script>
 
 <template>
-  <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+  <template v-if="props.spec.label">
+    <label :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </label>
+    <FormRequired
+      :spec="props.spec"
+      :i18n-required="props.spec.i18n_base.required"
+      :space="'after'"
+    />
+  </template>
   <input
     v-if="!spec.autocompleter"
     :id="componentId"

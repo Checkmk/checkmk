@@ -8,6 +8,8 @@ import type { Float } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
+import CmkSpace from '@/components/CmkSpace.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
 
 const props = defineProps<{
   spec: Float
@@ -25,7 +27,14 @@ const componentId = useId()
 </script>
 
 <template>
-  <label v-if="spec.label" :for="componentId">{{ spec.label }}</label>
+  <template v-if="props.spec.label">
+    <label :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </label>
+    <FormRequired
+      :spec="props.spec"
+      :i18n-required="props.spec.i18n_base.required"
+      :space="'after'"
+    />
+  </template>
   <input
     :id="componentId"
     v-model="value"

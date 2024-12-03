@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { Integer } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
+import CmkSpace from '@/components/CmkSpace.vue'
+import FormRequired from '@/form/private/FormRequired.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
 
@@ -25,7 +27,14 @@ const componentId = useId()
 </script>
 
 <template>
-  <label v-if="spec.label" :for="componentId">{{ spec.label }}</label>
+  <template v-if="props.spec.label">
+    <label :for="componentId">{{ props.spec.label }}<CmkSpace size="small" /> </label>
+    <FormRequired
+      :spec="props.spec"
+      :i18n-required="props.spec.i18n_base.required"
+      :space="'after'"
+    />
+  </template>
   <input
     :id="componentId"
     v-model="value"

@@ -41,6 +41,18 @@ test('FormInteger renders value', () => {
   expect(element.value).toBe('42')
 })
 
+test('FormFloat renders required', () => {
+  render(FormInteger, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+
+  screen.getByText(/required/)
+})
+
 test('FormInteger updates data', async () => {
   const { getCurrentData: currentData } = renderFormWithData({
     spec,

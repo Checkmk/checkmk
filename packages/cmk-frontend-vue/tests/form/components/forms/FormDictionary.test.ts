@@ -50,7 +50,7 @@ const spec: FormSpec.Dictionary = {
     {
       name: 'bar',
       required: false,
-      default_value: 'baz',
+      default_value: 'barDefaultValue',
       parameter_form: stringFormSpec,
       group: dictElementGroupFormSpec
     }
@@ -99,7 +99,7 @@ test('FormDictionary checking non-required element fills default', async () => {
   await fireEvent.click(checkbox)
 
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'barLabel' })
-  expect(element.value).toBe('baz')
+  expect(element.value).toBe('barDefaultValue')
 })
 
 test('FormDictionary enable element, check frontend validators', async () => {
@@ -134,6 +134,89 @@ test('FormDictionary render backend validation message', async () => {
   await screen.findByDisplayValue('other_value')
 
   screen.getByText('Backend error message')
+})
+
+test('FormDictionary renders required only once depending on label presence', async () => {
+  const optionalString: FormSpec.String = {
+    type: 'string',
+    title: 'optionalTitle',
+    help: 'optionalHelp',
+    label: 'optionalLabel',
+    i18n_base: { required: 'required' },
+    validators: stringValidators,
+    input_hint: '',
+    autocompleter: null,
+    field_size: 'SMALL'
+  }
+
+  const requiredString: FormSpec.String = {
+    type: 'string',
+    title: 'reqLabeledTitle',
+    help: 'reqLabeledHelp',
+    label: 'reqLabeledLabel',
+    i18n_base: { required: 'required' },
+    validators: stringValidators,
+    input_hint: '',
+    autocompleter: null,
+    field_size: 'SMALL'
+  }
+
+  const requiredUnlabeledString: FormSpec.String = {
+    type: 'string',
+    title: 'reqTitle',
+    help: 'reqHelp',
+    label: null,
+    i18n_base: { required: 'required' },
+    validators: stringValidators,
+    input_hint: '',
+    autocompleter: null,
+    field_size: 'SMALL'
+  }
+
+  const localSpec: FormSpec.Dictionary = {
+    type: 'dictionary',
+    title: 'fooTitle',
+    help: 'fooHelp',
+    i18n_base: { required: 'required' },
+    layout: 'one_column',
+    validators: [],
+    groups: [],
+    additional_static_elements: null,
+    no_elements_text: 'no_text',
+    elements: [
+      {
+        name: 'bar',
+        required: true,
+        default_value: '',
+        parameter_form: requiredUnlabeledString,
+        group: dictElementGroupFormSpec
+      },
+      {
+        name: 'labeledBar',
+        required: true,
+        default_value: '',
+        parameter_form: requiredString,
+        group: dictElementGroupFormSpec
+      },
+      {
+        name: 'optional',
+        required: false,
+        default_value: '',
+        parameter_form: optionalString,
+        group: dictElementGroupFormSpec
+      }
+    ]
+  }
+
+  render(FormEdit, {
+    props: {
+      spec: localSpec,
+      data: { optional: 'some_value' },
+      backendValidation: []
+    }
+  })
+
+  expect(screen.getAllByText('(required)')).toHaveLength(3)
 })
 
 test.skip('FormDictionary enable element, render backend validation message', async () => {

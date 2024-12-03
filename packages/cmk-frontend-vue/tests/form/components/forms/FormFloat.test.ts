@@ -42,6 +42,18 @@ test('FormFloat renders value', () => {
   expect(element.value).toBe('42.5')
 })
 
+test('FormFloat renders required', () => {
+  render(FormFloat, {
+    props: {
+      spec,
+      data: 42.5,
+      backendValidation: []
+    }
+  })
+
+  screen.getByText(/required/)
+})
+
 test('FormFloat updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,

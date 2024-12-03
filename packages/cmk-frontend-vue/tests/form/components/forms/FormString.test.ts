@@ -90,3 +90,15 @@ test('FormString renders backend validation messages', async () => {
   const element = screen.getByRole<HTMLInputElement>('textbox', { name: 'fooLabel' })
   expect(element.value).toBe('some_invalid_value')
 })
+
+test('FormString displays required', async () => {
+  render(FormString, {
+    props: {
+      spec,
+      data: 'fooData',
+      backendValidation: []
+    }
+  })
+
+  screen.getByText('(required)')
+})

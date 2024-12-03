@@ -47,11 +47,6 @@ def optional_validation(
             validator(raw_value)
         except ValidationError as e:
             validation_errors.append(e.message.localize(translate_to_current_language))
-            # The aggregated errors are used within our old GUI which
-            # requires the MKUser error format (field_id + message)
-            # self._aggregated_validation_errors.add(e.message)
-            # TODO: add external validation errors for legacy formspecs
-            #       or handle it within the form_spec_valuespec_wrapper
     return validation_errors
 
 
@@ -76,7 +71,7 @@ def compute_validation_errors(
     ]
 
 
-def compute_validators(form_spec: FormSpec[ModelT]) -> list[Callable[[ModelT], object]]:
+def compute_validators(form_spec: FormSpec[Any]) -> list[Callable[[Any], object]]:
     return list(form_spec.custom_validate) if form_spec.custom_validate else []
 
 

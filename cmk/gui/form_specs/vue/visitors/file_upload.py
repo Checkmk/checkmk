@@ -5,6 +5,7 @@
 import base64
 import uuid
 from dataclasses import dataclass, field
+from typing import Callable, Sequence
 
 from werkzeug.datastructures import FileStorage
 
@@ -17,11 +18,13 @@ from cmk.gui.utils.encrypter import Encrypter
 
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import FileUpload
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     base_i18n_form_spec,
+    compute_validation_errors,
     compute_validators,
     create_validation_error,
     get_title_and_help,
@@ -45,6 +48,41 @@ class FileUploadModel:
 def read_content_of_uploaded_file(file_storage: FileStorage) -> FileContent:
     # We have to memoize the file content extraction, since the data can only be read once
     return file_storage.read()
+
+
+class _MimeTypeValidator:
+    def __init__(
+        self,
+        mime_types: frozenset[str],
+    ) -> None:
+        self._mime_types = mime_types
+
+    def __call__(self, value: FileUploadModel) -> None:
+        if value.file_type in self._mime_types:
+            return
+
+        raise ValidationError(
+            Message("Invalid mime type, supported types are: %s") % ", ".join(self._mime_types),
+        )
+
+
+class _FileExtensionValidator:
+    def __init__(
+        self,
+        extension_types: frozenset[str],
+    ) -> None:
+        self._extension_types = extension_types
+
+    def __call__(self, value: FileUploadModel) -> None:
+        if value.file_name is not None and any(
+            value.file_name.endswith(ext) for ext in self._extension_types
+        ):
+            return
+
+        raise ValidationError(
+            Message("Invalid extension type, supported types are: %s")
+            % ", ".join(self._extension_types),
+        )
 
 
 class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
@@ -114,7 +152,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
                 title=title,
                 help=help_text,
                 i18n_base=base_i18n_form_spec(),
-                validators=build_vue_validators(compute_validators(self.form_spec)),
+                validators=build_vue_validators(self._validators()),
                 i18n=VueComponents.FileUploadI18n(
                     replace_file=_("Replace file"),
                 ),
@@ -122,29 +160,21 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
             parsed_value,
         )
 
+    def _validators(self) -> Sequence[Callable[[FileUploadModel], object]]:
+        validators: list[Callable[[FileUploadModel], object]] = []
+        if self.form_spec.mime_types:
+            validators.append(_MimeTypeValidator(frozenset(self.form_spec.mime_types)))
+        if self.form_spec.extensions:
+            validators.append(_FileExtensionValidator(frozenset(self.form_spec.extensions)))
+
+        return validators + compute_validators(self.form_spec)
+
     def _validate(
         self, raw_value: object, parsed_value: FileUploadModel | EmptyValue
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error("", Title("Invalid file"))
-
-        if self.form_spec.mime_types and parsed_value.file_type not in self.form_spec.mime_types:
-            return create_validation_error(
-                "",
-                Message("Invalid mime type, supported types are: %s")
-                % ", ".join(self.form_spec.mime_types),
-            )
-        if (
-            self.form_spec.extensions
-            and parsed_value.file_name
-            and not any(parsed_value.file_name.endswith(ext) for ext in self.form_spec.extensions)
-        ):
-            return create_validation_error(
-                "",
-                Message("Invalid file extension, supported extensions are: %s")
-                % ", ".join(self.form_spec.extensions),
-            )
-        return []
+        return compute_validation_errors(self._validators(), parsed_value)
 
     def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> object:
         assert parsed_value.file_name is not None

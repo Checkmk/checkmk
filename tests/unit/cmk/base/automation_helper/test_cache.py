@@ -37,3 +37,8 @@ def test_set_and_get_last_change_detected(cache: Cache) -> None:
 
 def test_last_change_detected_unset(cache: Cache) -> None:
     assert cache.last_detected_change == 0.0
+
+
+def test_reload_required(cache: Cache) -> None:
+    cache.store_last_detected_change(time.time())
+    assert cache.reload_required

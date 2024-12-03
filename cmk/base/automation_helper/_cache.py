@@ -40,3 +40,7 @@ class Cache:
         if fetched_value := self._client.get(LAST_DETECTED_CHANGE_TOPIC):
             return float(fetched_value)
         return 0.0
+
+    @property
+    def reload_required(self) -> bool:
+        return self.last_automation_helper_reload < self.last_detected_change

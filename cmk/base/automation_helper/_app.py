@@ -93,10 +93,9 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: AutomationRequest) -> AutomationResponse:
-        # TODO: when the watcher service is implemented, we will want to conditionally reload the
-        # configuration when we are out-of-sync, not everytime.
-        cache.store_last_automation_helper_reload(time.time())
-        reload_config()
+        if cache.reload_required:
+            cache.store_last_automation_helper_reload(time.time())
+            reload_config()
 
         app_logger.setLevel(request.log_level)
 

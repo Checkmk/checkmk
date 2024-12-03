@@ -2,8 +2,11 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+def _is_non_free_repo(repository_ctx):
+    return repository_ctx.path(Label("//:non-free")).exists
+
 def _repo_license_impl(repository_ctx):
-    if repository_ctx.path(Label("//:non-free")).exists:
+    if _is_non_free_repo(repository_ctx):
         license = "gpl+enterprise"
     else:
         license = "gpl"
@@ -20,7 +23,7 @@ detect_repo_license = repository_rule(
 )
 
 def _http_archive_non_free_impl(repository_ctx):
-    if not repository_ctx.path(Label("//:non-free")).exists:
+    if not _is_non_free_repo(repository_ctx):
         return
     http_archive(
         name = repository_ctx.attr.name,

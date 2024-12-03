@@ -3,9 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from pprint import pprint
+
+from cmk.utils.redis import disable_redis
+
+from cmk.gui.main_modules import load_plugins
+from cmk.gui.session import SuperUserContext
+from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
+
+
+def _migratable(rule_value: Mapping[str, object]) -> bool:
+    return False
+
 
 def main() -> None:
-    pass
+    load_plugins()
+    with disable_redis(), gui_context(), SuperUserContext():
+        set_global_vars()
+        all_rulesets = AllRulesets.load_all_rulesets()
+    for folder, rule_index, rule in all_rulesets.get_rulesets()["active_checks:http"].get_rules():
+        if _migratable(rule.value):
+            print(f"MIGRATABLE: {folder}, {rule_index}")
+        else:
+            print(f"IMPOSSIBLE: {folder}, {rule_index}")
+        pprint(rule.value)
+        print("")
 
 
 if __name__ == "__main__":

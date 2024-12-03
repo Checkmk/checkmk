@@ -83,10 +83,11 @@ def main() {
             }
         }
 
+        // TODO: here it would be nice to iterate through all known distros
+        //       and use a conditional_stage(distro in distros) approach
         def stages = all_distros.collectEntries { distro ->
-            [
-                ("${distro}") : {
-                    smart_stage(name: "Build ${distro}", condition: distro in distros) {
+            [("${distro}") : {
+                    conditional_stage("Build\n${distro}", distro in distros) {
                         def image_name = "${distro}:${vers_tag}";
                         def distro_mk_file_name = "${real_distro_name[distro].toUpperCase().replaceAll('-', '_')}.mk";
                         def docker_build_args = (""
@@ -122,7 +123,7 @@ def main() {
         }
         def images = parallel(stages);
 
-        smart_stage(name: 'upload images', condition: publish_images) {
+        conditional_stage('upload images', publish_images) {
             docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                 images.each { distro, image ->
                     if (image) {

@@ -76,7 +76,7 @@ def handle_graylog_messages(messages, params):
     )
 
 
-def _get_value_diff(diff_name, svc_value, timespan):
+def _get_value_diff(diff_name: str, svc_value: float, timespan: float) -> float:
     this_time = time.time()
     value_store = get_value_store()
 

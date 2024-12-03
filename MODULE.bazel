@@ -125,3 +125,17 @@ http_archive(
         UPSTREAM_MIRROR_URL + PATCH_FILENAME,
     ],
 )
+
+OTEL_COL_VERSION = "0.113.0"
+
+OTEL_COL_FILENAME = "otelcol_" + OTEL_COL_VERSION + "_linux_amd64.tar.gz"
+
+http_archive(
+    name = "otel-collector",
+    build_file = "//non-free/packages/otel-collector:BUILD",
+    sha256 = "c327cc46b27df885d82d53ff59f096d38bca935f3431aee58b49810711b2a900",
+    urls = [
+        "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v" + OTEL_COL_VERSION + "/" + OTEL_COL_FILENAME,
+        UPSTREAM_MIRROR_URL + OTEL_COL_FILENAME,
+    ],
+)

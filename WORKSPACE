@@ -285,7 +285,3 @@ http_archive(
 load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
 rabbitmq_workspace()
-
-load("//non-free/packages/otel-collector:otelcol_http.bzl", "otelcol_workspace")
-
-otelcol_workspace()

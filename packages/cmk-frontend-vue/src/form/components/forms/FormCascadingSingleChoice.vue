@@ -5,19 +5,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, ref, watch, toRaw } from 'vue'
-import { immediateWatch } from '@/lib/watch'
+
+import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkSpace from '@/components/CmkSpace.vue'
+import HelpText from '@/components/HelpText.vue'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import FormValidation from '@/form/components/FormValidation.vue'
+import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
 } from '@/form/components/vue_formspec_components'
-import { useId } from '@/form/utils'
-import FormValidation from '@/form/components/FormValidation.vue'
-import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
-import HelpText from '@/components/HelpText.vue'
-import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
 import { useFormEditDispatcher } from '@/form/private'
+import { useId } from '@/form/utils'
+import { immediateWatch } from '@/lib/watch'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -145,10 +147,13 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     <template v-else>
       <ToggleButtonGroup v-model="selectedOption" :options="buttonGroupButtons" />
     </template>
+    <template v-if="activeElement !== null">
+      <CmkSpace size="small" />
+      <HelpText :help="activeElement.spec.help" />
+    </template>
   </span>
   <span class="form-cascading-single-choice__cascade">
     <template v-if="activeElement !== null">
-      <HelpText :help="activeElement.spec.help" />
       <FormEditDispatcher
         :key="data[0]"
         v-model:data="data[1]"

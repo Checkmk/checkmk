@@ -39,6 +39,7 @@ const componentId = useId()
       :component-id="componentId"
       :show-filter="props.spec.elements.length > 5"
       :no-elements-text="props.spec.no_elements_text || ''"
+      :required-text="props.spec.i18n_base.required"
     />
   </div>
   <FormValidation :validation="validation"></FormValidation>

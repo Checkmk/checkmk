@@ -9,7 +9,7 @@ import { ref } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
-import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
+import type * as FormSpec from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
   type ValidationMessages
@@ -20,6 +20,7 @@ import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
+import { staticAssertNever } from '@/lib/typeUtils'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -37,7 +38,7 @@ const dictionaryVariants = cva('', {
 type DictionaryVariants = VariantProps<typeof dictionaryVariants>
 
 interface ElementFromProps {
-  dict_config: DictionaryElement
+  dict_config: FormSpec.DictionaryElement
   is_active: boolean
 }
 
@@ -49,7 +50,7 @@ interface ElementsGroup {
 }
 
 const props = defineProps<{
-  spec: Dictionary
+  spec: FormSpec.Dictionary
   backendValidation: ValidationMessages
 }>()
 
@@ -69,7 +70,7 @@ function getDefaultValue(key: string): unknown {
 
 immediateWatch(
   () => props.spec.additional_static_elements,
-  (newAdditionalStaticElements: Dictionary['additional_static_elements'] | undefined) => {
+  (newAdditionalStaticElements: FormSpec.Dictionary['additional_static_elements'] | undefined) => {
     if (newAdditionalStaticElements) {
       for (const [key, value] of Object.entries(newAdditionalStaticElements)) {
         data.value[key] = value
@@ -86,16 +87,16 @@ immediateWatch(
   }
 )
 
-const getGroupKey = (element: DictionaryElement, index: number): string => {
+const getGroupKey = (element: FormSpec.DictionaryElement, index: number): string => {
   if (variant === 'two_columns') {
     return `${DICT_ELEMENT_NO_GROUP}${index}`
   }
   return element.group?.key ?? `${DICT_ELEMENT_NO_GROUP}${index}`
 }
 
-const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
+const extractGroups = (elements: FormSpec.DictionaryElement[]): ElementsGroup[] => {
   const groups: ElementsGroup[] = []
-  elements.forEach((element: DictionaryElement, index: number) => {
+  elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
     const groupKey = getGroupKey(element, index)
     if (!groups.some((group) => group.groupKey === groupKey)) {
       groups.push({
@@ -113,7 +114,7 @@ const extractGroups = (elements: DictionaryElement[]): ElementsGroup[] => {
 function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
-  props.spec.elements.forEach((element: DictionaryElement, index: number) => {
+  props.spec.elements.forEach((element: FormSpec.DictionaryElement, index: number) => {
     const isActive = element.name in data.value ? true : element.required
     if (isActive && data.value[element.name] === undefined) {
       data.value[element.name] = structuredClone(getDefaultValue(element.name))
@@ -141,15 +142,46 @@ function toggleElement(key: string) {
   }
 }
 
-function indentRequired(element: DictionaryElement): boolean {
+function indentRequired(element: FormSpec.DictionaryElement): boolean {
   return labelRequired(element) && !(element.group && variant === 'one_column')
 }
 
-function labelRequired(element: DictionaryElement): boolean {
+function labelRequired(element: FormSpec.DictionaryElement): boolean {
   return !(
     element.required &&
     element.parameter_form.title === '' &&
     element.parameter_form.type === 'boolean_choice'
+  )
+}
+
+type RendersRequiredLabels =
+  | FormSpec.Password
+  | FormSpec.ConditionChoices
+  | FormSpec.CascadingSingleChoice
+  | FormSpec.SingleChoice
+  | FormSpec.SingleChoiceEditable
+
+function isTypeRenderingRequiredLabel(
+  parameterForm: FormSpec.FormSpec
+): parameterForm is RendersRequiredLabels {
+  const type = parameterForm.type as RendersRequiredLabels['type']
+  switch (type) {
+    case 'password':
+    case 'condition_choices':
+    case 'cascading_single_choice':
+    case 'single_choice':
+    case 'single_choice_editable':
+      return true
+    default:
+      staticAssertNever(type)
+      return false
+  }
+}
+
+function rendersRequiredLabelItself(parameterForm: FormSpec.FormSpec): boolean {
+  return (
+    ('label' in parameterForm && !!parameterForm.label) ||
+    isTypeRenderingRequiredLabel(parameterForm)
   )
 }
 
@@ -194,12 +226,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                     @update:model-value="toggleElement(dict_element.dict_config.name)"
                   />
                   <FormRequired
-                    v-if="
-                      !(
-                        'label' in dict_element.dict_config.parameter_form &&
-                        !!dict_element.dict_config.parameter_form.label
-                      )
-                    "
+                    v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
                     :spec="dict_element.dict_config.parameter_form"
                     :i18n-required="spec.i18n_base.required"
                     :space="'before'"

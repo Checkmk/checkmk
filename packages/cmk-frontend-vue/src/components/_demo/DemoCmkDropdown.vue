@@ -27,6 +27,7 @@ const defaultEmpty3 = ref<string | null>(null)
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
+    required-text="required"
   />
   <CmkSpace />
   <CmkDropdown
@@ -48,6 +49,7 @@ const defaultEmpty3 = ref<string | null>(null)
     input-hint="some input hint"
     no-results-hint="no results hint"
     component-id="some component id"
+    required-text="required"
   />
   <CmkSpace />
   <CmkDropdown
@@ -61,5 +63,6 @@ const defaultEmpty3 = ref<string | null>(null)
     input-hint="long dropdown"
     no-results-hint="no results hint"
     component-id="some component id"
+    required-text="required"
   />
 </template>

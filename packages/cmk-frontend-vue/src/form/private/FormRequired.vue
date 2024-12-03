@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkSpace from '@/components/CmkSpace.vue'
-import type { FormSpec, Validator } from '@/form/components/vue_formspec_components'
+import type { FormSpec } from '@/form/components/vue_formspec_components'
+import required from './requiredValidator'
 
 const props = defineProps<{
   i18nRequired: string
@@ -13,17 +14,6 @@ const props = defineProps<{
   spec?: FormSpec
   show?: boolean
 }>()
-
-function required(validator: Validator): boolean {
-  return (
-    (validator.type === 'length_in_range' &&
-      validator.min_value !== null &&
-      validator.min_value > 0) ||
-    (validator.type === 'number_in_range' &&
-      validator.min_value !== null &&
-      validator.min_value > 0)
-  )
-}
 </script>
 
 <template>

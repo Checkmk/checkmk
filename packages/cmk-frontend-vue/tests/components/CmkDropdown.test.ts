@@ -156,6 +156,41 @@ test('dropdown option immediate focus and filtering', async () => {
   expect(selectedOption).toBe('option1')
 })
 
+test('dropdown shows required if requiredText is passed', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' }
+      ],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option',
+      requiredText: 'required'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  expect(dropdown.textContent).toBe('Select an option (required)')
+})
+
+test('dropdown does not show required if requiredText is not passed', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: [
+        { title: 'Option 1', name: 'option1' },
+        { title: 'Option 2', name: 'option2' }
+      ],
+      showFilter: true,
+      selectedOption: null,
+      inputHint: 'Select an option'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'Select an option' })
+  expect(dropdown.textContent).toBe('Select an option')
+})
+
 test('dropdown doesnt interfere with tab order', async () => {
   const testComponent = defineComponent({
     components: { CmkDropdown },

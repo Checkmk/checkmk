@@ -12,6 +12,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'
+import required from '@/form/private/requiredValidator'
 
 const props = defineProps<{
   spec: typing.ConditionChoices
@@ -65,6 +66,10 @@ const remainingGroups = computed(() =>
     ([name, _]) => data.value.find((v) => v.group_name === name) === undefined
   )
 )
+
+const elementRequired = computed(() => {
+  return props.spec.validators.some(required) && data.value.length === 0
+})
 </script>
 
 <template>
@@ -102,6 +107,7 @@ const remainingGroups = computed(() =>
     "
     :disabled="remainingGroups.length === 0"
     :show-filter="remainingGroups.length > FILTER_SHOW_THRESHOLD"
+    :required-text="elementRequired ? spec.i18n_base.required : ''"
     @update:selected-option="addElement"
   />
   <FormValidation :validation="validation"></FormValidation>

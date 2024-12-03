@@ -138,6 +138,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         :component-id="componentId"
         :options="spec.elements"
         :show-filter="spec.elements.length > FILTER_SHOW_THRESHOLD"
+        :required-text="props.spec.i18n_base.required"
         :input-hint="props.spec.input_hint as string"
       />
     </template>

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import CmkButton from './CmkButton.vue'
 import useClickOutside from '@/lib/useClickOutside'
+import FormRequired from '@/form/private/FormRequired.vue'
 
 export interface DropdownOption {
   name: string
@@ -19,6 +20,7 @@ const {
   disabled = false,
   componentId = null,
   noElementsText = '',
+  requiredText = '',
   options,
   showFilter
 } = defineProps<{
@@ -29,6 +31,7 @@ const {
   disabled?: boolean
   componentId?: string | null
   noElementsText?: string
+  requiredText?: string
 }>()
 
 const vClickOutside = useClickOutside()
@@ -146,7 +149,10 @@ function wrap(index: number, length: number): number {
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
-      <div>{{ selectedOptionTitle }}</div>
+      {{ selectedOptionTitle
+      }}<template v-if="requiredText !== '' && !selectedOption!!">
+        {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
+      /></template>
     </CmkButton>
     <span v-else>{{ noElementsText }}</span>
     <ul

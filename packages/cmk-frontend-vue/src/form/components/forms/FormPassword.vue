@@ -112,6 +112,7 @@ const passwordStoreOptions = computed(() => {
       v-model:selected-option="passwordStoreChoice"
       :options="passwordStoreOptions"
       :show-filter="false"
+      :required-text="props.spec.i18n_base.required"
     />
   </template>
   <FormValidation :validation="validation"></FormValidation>

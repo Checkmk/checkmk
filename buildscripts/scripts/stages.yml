@@ -41,9 +41,6 @@ VARIABLES:
     - NAME: CHANGED_SHELL_FILES
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-shell-files --filter"
 
-    - NAME: CHANGED_PYLINT_RC_FILE
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' || true"
-
     - NAME: CHANGED_GROOVY_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '\\.groovy$' || true"
 
@@ -296,15 +293,15 @@ STAGES:
       TEXT_ON_SKIP: "No Werk code files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 
-    - NAME: "Python Pylint"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYLINT_RC_FILE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
+    - NAME: "Python ruff"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: "tests"
       ENV_VARS:
-          PYLINT_ARGS: "--jobs=10 --output-format=parseable"
-      COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
-      TEXT_ON_SKIP: "Neither .pylintrc nor Python files changed"
+          RUFF_ARGS: "--output-format=pylint"
+      COMMAND: "make test-ruff-docker &> ${RESULTS}/ruff.txt"
+      TEXT_ON_SKIP: "Neither pyproject.toml nor Python files changed"
       RESULT_CHECK_TYPE: "PYLINT"
-      RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/ruff.txt"
 
     - NAME: "Python Bandit"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT

@@ -55,6 +55,7 @@ ignore = [
 "cmk/*" = ["A", "ARG", "RUF100", "UP", "SLF"]
 "tests/*" = ["A", "ARG", "RUF100", "SLF"]
 "agents/*" = ["ARG", "SLF"]
+"bin/*" = ["ARG", "PLR"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

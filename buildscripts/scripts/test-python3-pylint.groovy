@@ -9,12 +9,12 @@ def main() {
         inside_container() {
             lock(label: "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}", quantity: 1, resource : null) {
                 test_jenkins_helper.execute_test([
-                    name: "test-pylint",
-                    cmd: "PYLINT_ARGS=--output-format=parseable make -C tests test-pylint",
+                    name       : "test-ruff",
+                    cmd        : "PYLINT_ARGS=--output-format=parseable make -C tests test-ruff",
                     output_file: "pylint.txt",
                 ]);
             }
-            test_jenkins_helper.analyse_issues("PYLINT", "pylint.txt");
+            test_jenkins_helper.analyse_issues("PYLINT", "ruff.txt");
         }
     }
 }

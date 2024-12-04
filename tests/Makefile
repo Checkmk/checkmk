@@ -65,7 +65,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
-	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pylint test-pylint-docker \
+	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-ruff test-ruff-docker \
 	test-unit test-unit-all test-unit-docker \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
@@ -114,8 +114,8 @@ help:
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-pipfile                        - Run Pipfile test"
 	@echo "test-pipfile-docker                 - Run Pipfile test in docker"
-	@echo "test-pylint                         - Run pylint based tests"
-	@echo "test-pylint-docker                  - Run pylint based tests in docker"
+	@echo "test-ruff                           - Run ruff based tests"
+	@echo "test-ruff-docker                    - Run ruff based tests in docker"
 	@echo "test-shellcheck                     - Run shellcheck tests"
 	@echo "test-shellcheck-docker              - Run shellcheck tests in docker"
 	@echo "test-typescript-types               - Run TypeScript types check"
@@ -372,8 +372,8 @@ test-mypy-docker:
 test-packaging:
 	$(PYTEST) -T packaging packaging
 
-test-pylint: prepare-protobuf-files
-	cd ..; $(PIPENV) run pylint --disable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+test-ruff: prepare-protobuf-files
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(PIPENV) run ruff check $(RUFF_ARGS)
 	cd ..; $(PIPENV) run pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 	cd .. && $(PYTEST) \
 	    -T unit \
@@ -386,8 +386,8 @@ test-pylint: prepare-protobuf-files
 	    tests/unit/test_pylint_checker_cmk_module_layers.py \
 	    tests/unit/test_pylint_checker_localization.py
 
-test-pylint-docker:
-	../scripts/run-in-docker.sh make --quiet test-pylint
+test-ruff-docker:
+	../scripts/run-in-docker.sh make --quiet test-ruff
 
 test-shellcheck:
 	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))

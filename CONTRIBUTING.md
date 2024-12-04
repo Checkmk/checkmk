@@ -206,14 +206,14 @@ It is recommended to run all tests locally before submitting a PR.
 If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
 
 ```console
-$ make -C tests test-pylint
+$ make -C tests test-ruff
 $ make -C tests test-bandit
 $ make -C tests test-unit
 $ make -C tests test-format-python
 $ make -C tests test-mypy-raw
 ```
 
-> We highly recommend integrating ruff, pylint and mypy into the editor you work with.
+> We highly recommend integrating ruff and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
 You could also push your changes to your forked repository and wait for Github Actions to execute the tests for you, but that takes several minutes for each try.

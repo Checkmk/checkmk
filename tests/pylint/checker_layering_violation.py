@@ -11,8 +11,6 @@
 # real separate packages with their own setup.py files etc.
 
 # Test with:
-#     PYLINT_ARGS="--load-plugins=tests.testlib.pylint_checker_layering_violation --disable=all --enable=layering-violation" time make -C tests test-pylint
-# or
 #     PYTHONPATH=. pipenv run python3 -m pylint --load-plugins=tests.testlib.pylint_checker_layering_violation --disable=all --enable=layering-violation cmk/{bi,ec,checkers,fields,notification_plugins,snmplib,utils} livestatus.py
 
 from __future__ import annotations

@@ -133,9 +133,9 @@ class TestNetCheckType:
     def test_check_drbd(self) -> None:
         value = list(drbd.check_drbd_net("drbd0", SECTION))
         expected = [
-            Result(state=State.OK, summary="in/sec: 0.0kb"),
+            Result(state=State.OK, summary="In: 0.00 Bit/s"),
             Metric("in", 0.0),
-            Result(state=State.OK, summary="out/sec: 0.0kb"),
+            Result(state=State.OK, summary="Out: 0.00 Bit/s"),
             Metric("out", 0.0),
         ]
         assert value == expected
@@ -162,9 +162,9 @@ class TestDiskCheckType:
     def test_check_drbd(self) -> None:
         value = list(drbd.check_drbd_disk("drbd0", SECTION))
         expected = [
-            Result(state=State.OK, summary="write/sec: 0.0kb"),
+            Result(state=State.OK, summary="Write: 0.00 B/s"),
             Metric("write", 0.0),
-            Result(state=State.OK, summary="read/sec: 0.0kb"),
+            Result(state=State.OK, summary="Read: 0.00 B/s"),
             Metric("read", 0.0),
         ]
         assert value == expected

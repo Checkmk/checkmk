@@ -138,6 +138,7 @@ from cmk.agent_based.v2 import (
     get_rate,
     get_value_store,
     Metric,
+    render,
     Result,
     Service,
     State,
@@ -275,10 +276,6 @@ def drbd_get_block(item, info, checktype):
     return None
 
 
-def as_kilobytes_per_second(value: float) -> str:
-    return f"{value}kb"
-
-
 def get_roles_result(roles: tuple[str, str], params: Mapping[str, Any]) -> Result:
     output = "Roles: %s/%s" % roles
     current_roles = "_".join(str(role).lower() for role in roles)
@@ -393,8 +390,8 @@ def drbd_net_levels(name: str, value: int) -> Generator[Result | Metric]:
     return check_levels(
         get_rate(get_value_store(), name, now, value, raise_overflow=True),
         metric_name=name,
-        label=f"{name}/sec",
-        render_func=as_kilobytes_per_second,
+        label=name.title(),
+        render_func=render.networkbandwidth,
     )
 
 
@@ -432,8 +429,8 @@ def drbd_disk_levels(name: str, value: int) -> Generator[Result | Metric]:
     return check_levels(
         get_rate(get_value_store(), name, now, value, raise_overflow=True),
         metric_name=name,
-        label=f"{name}/sec",
-        render_func=as_kilobytes_per_second,
+        label=name.title(),
+        render_func=render.iobandwidth,
     )
 
 

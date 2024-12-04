@@ -19,6 +19,10 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 
 class V1Host(BaseModel):
+    # "ipv4_enforced", "ipv6_enforced", "primary_enforced" don't have a counter part in V2.
+    # "primary_enforced" has the additional issue, that the ssc would also need to support it.
+    address_family: Literal["any", None] = None
+
     class Config:
         extra = Extra.forbid
 

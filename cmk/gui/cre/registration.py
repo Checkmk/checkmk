@@ -52,6 +52,7 @@ from cmk.gui.wato import (
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.watolib import network_scan
 from cmk.gui.watolib.activate_changes import (
     activation_features_registry,
     ActivationFeatures,
@@ -109,6 +110,7 @@ def register_painters() -> None:
 
 def register(edition: Edition) -> None:
     autocomplete.register(endpoint_registry)
+    network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     common_registration(
         mega_menu_registry,
         job_registry,

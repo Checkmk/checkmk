@@ -76,7 +76,6 @@ from .hosts_and_folders import (
     MatchItemGeneratorHosts,
     rebuild_folder_lookup_cache,
 )
-from .network_scan import AutomationNetworkScan, execute_network_scan_job
 from .notifications import (
     find_timeperiod_usage_in_notification_rules,
     find_usages_of_contact_group_in_notification_rules,
@@ -153,7 +152,6 @@ def register(
     automation_command_registry.register(AutomationRemoveTLSRegistration)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
-    automation_command_registry.register(AutomationNetworkScan)
     automation_command_registry.register(AutomationCheckmkAutomationStart)
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
@@ -226,8 +224,6 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeAdditionalIPv6Addresses,
         builtin_attributes.HostAttributeSNMPCommunity,
         builtin_attributes.HostAttributeParents,
-        builtin_attributes.HostAttributeNetworkScan,
-        builtin_attributes.HostAttributeNetworkScanResult,
         builtin_attributes.HostAttributeManagementAddress,
         builtin_attributes.HostAttributeManagementProtocol,
         builtin_attributes.HostAttributeManagementSNMPCommunity,
@@ -265,13 +261,6 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
             callable=execute_activation_cleanup_job,
             interval=timedelta(minutes=1),
             run_in_thread=True,
-        )
-    )
-    cron_job_registry.register(
-        CronJob(
-            name="execute_network_scan_job",
-            callable=execute_network_scan_job,
-            interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(

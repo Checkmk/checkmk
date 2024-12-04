@@ -124,7 +124,6 @@ REQUIRED_EXTERNAL_DEPS = [
     "redis",
     "reportlab",
     "requests",
-    "requests-kerberos",  # krb5: missing wheel
     "requests-oauthlib",
     "robotframework",
     "roman",

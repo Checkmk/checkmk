@@ -346,7 +346,6 @@ CEE_UNUSED_PACKAGES = [
     "pymssql",
     "pymysql",
     "redfish",  # used by optional MKP
-    "requests-kerberos",
     "setuptools-scm",
     "snmpsim-lextudio",
 ]

@@ -71,8 +71,7 @@ from cmk import trace
 from . import automation_helper, automation_subprocess
 from .automation_executor import AutomationExecutor
 
-# INFO: flag for activating automation helper, which is necessary for testing helper locally.
-USE_AUTOMATION_HELPER_EXECUTOR: Final = False
+USE_AUTOMATION_HELPER_EXECUTOR: Final = True
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()

@@ -109,7 +109,8 @@ def _run_scheduler(crash_report_callback: Callable[[Exception], str]) -> None:
             crash_msg = crash_report_callback(exc)
             logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
 
-        time.sleep(60 - (time.time() - cycle_start))
+        if (sleep_time := 60 - (time.time() - cycle_start)) > 0:
+            time.sleep(sleep_time)
     _wait_for_job_threads(job_threads)
 
 

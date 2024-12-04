@@ -24,7 +24,6 @@ _MAP_NODE_STATES: Final = {
     False: "no",
 }
 
-
 Section = Mapping[str, Sequence[Mapping]]
 
 
@@ -112,6 +111,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 exec_data,
                 metric_name="jenkins_num_executors",
                 levels_lower=params.get(exec_name),
+                levels_upper=params.get(exec_name + "_upper"),
                 render_func=lambda x: str(int(x)),
                 label="Total number of executors",
             )
@@ -139,6 +139,7 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                     value,
                     metric_name=f"jenkins_{key}_executors",
                     levels_upper=params.get(f"jenkins_{key}executors"),
+                    levels_lower=params.get(f"jenkins_{key}executors_lower"),
                     render_func=render_integer,
                     label=f"Number of {key} executors",
                 )

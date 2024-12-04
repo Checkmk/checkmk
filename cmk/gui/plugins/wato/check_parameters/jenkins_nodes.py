@@ -55,9 +55,39 @@ def _parameter_valuespec_jenkins_nodes():
                 ),
             ),
             (
+                "jenkins_numexecutors_upper",
+                Tuple(
+                    title=_("Upper level for number of executors of this node"),
+                    elements=[
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
+                    ],
+                ),
+            ),
+            (
+                "jenkins_busyexecutors_lower",
+                Tuple(
+                    title=_("Lower level for number of busy executors of this node"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
                 "jenkins_busyexecutors",
                 Tuple(
                     title=_("Upper level for number of busy executors of this node"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "jenkins_idleexecutors_lower",
+                Tuple(
+                    title=_("Lower level for number of idle executors of this node"),
                     elements=[
                         Integer(title=_("Warning at")),
                         Integer(title=_("Critical at")),

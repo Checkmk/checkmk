@@ -395,6 +395,7 @@ class WebTestAppForCMK(FlaskClient):
         query_string: dict | None = None,
         expect_errors: bool = False,
         extra_environ: dict | None = None,
+        follow_redirects: bool = False,
         **kw: Any,
     ) -> CmkTestResponse:
         """Call a method using the Flask (test) client.
@@ -432,7 +433,9 @@ class WebTestAppForCMK(FlaskClient):
         kw["query_string"] = kw.pop("json_data", query_string)
 
         with _update_environ_base(extra_environ) if extra_environ else nullcontext():
-            resp = getattr(super(), method.lower())(url, headers=headers, **kw)
+            resp = getattr(super(), method.lower())(
+                url, headers=headers, follow_redirects=follow_redirects, **kw
+            )
 
         if status:
             assert (
@@ -760,6 +763,7 @@ class WebTestAppRequestHandler(RequestHandler):
         query_params: Mapping[str, str | typing.Sequence[str]] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
+        follow_redirects: bool = False,
     ) -> Response:
         """Perform a request to the server.
 
@@ -779,6 +783,7 @@ class WebTestAppRequestHandler(RequestHandler):
             params=body,
             headers=dict(headers or {}),
             expect_errors=True,
+            follow_redirects=follow_redirects,
         )
         return Response(status_code=resp.status_code, body=resp.body, headers=dict(resp.headers))
 

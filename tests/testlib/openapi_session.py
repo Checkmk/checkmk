@@ -35,6 +35,7 @@ class RequestSessionRequestHandler(RequestHandler):
         query_params: Mapping[str, str] | None = None,
         body: AnyStr | None = None,
         headers: Mapping[str, str] | None = None,
+        follow_redirects: bool = False,
     ) -> Response:
         resp = self.session.request(
             method=method,
@@ -42,7 +43,7 @@ class RequestSessionRequestHandler(RequestHandler):
             params=query_params,
             data=body,
             headers=headers,
-            allow_redirects=True,
+            allow_redirects=follow_redirects,
         )
         return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
 

@@ -8,9 +8,8 @@ import abc
 import dataclasses
 import datetime
 import json
-import multiprocessing
 import pprint
-import queue
+import time
 import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
@@ -224,6 +223,7 @@ class RequestHandler(abc.ABC):
         query_params: Mapping[str, Any] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
+        follow_redirects: bool = False,
     ) -> Response: ...
 
 
@@ -326,6 +326,7 @@ class RestApiClient:
         follow_redirects: bool = True,
         url_is_complete: bool = False,
         use_default_headers: bool = True,
+        redirect_timeout_seconds: int = 60,
     ) -> Response:
         default_headers: Mapping[str, str] = {
             **(JSON_HEADERS if use_default_headers else {}),
@@ -335,26 +336,38 @@ class RestApiClient:
         if not url_is_complete:
             url = self._url_prefix + url
 
+        req_body = None if body is None else json.dumps(body)
         resp = self.request_handler.request(
             method=method,
             url=url,
             query_params=query_params,
-            body="" if body is None else json.dumps(body),
+            body=req_body,
             headers=default_headers,
+            follow_redirects=False,  # we handle redirects ourselves
         )
+        if follow_redirects:
+            end = time.time() + redirect_timeout_seconds
+            while 300 <= resp.status_code < 400 and time.time() < end:
+                if resp.status_code == 303:
+                    # 303 See Other: we should explicitly use GET for the redirect
+                    # other redirect codes should reuse the method of the original request
+                    method = "get"
+                    req_body = None
+                url = resp.headers["Location"]
+                if not url.startswith(self._url_prefix):
+                    url = self._url_prefix + url
+                resp = self.request_handler.request(
+                    method=method,
+                    url=url,
+                    query_params=query_params,
+                    body=req_body,
+                    headers=default_headers,
+                    follow_redirects=False,
+                )
 
         if expect_ok and resp.status_code >= 400:
             raise RestApiException(
                 url, method, body, default_headers, resp, query_params=query_params
-            )
-        if follow_redirects and 300 <= resp.status_code < 400:
-            return self.request(
-                method="get" if resp.status_code == 303 else method,
-                url=resp.headers["Location"],
-                query_params=query_params,
-                body=body,
-                headers=default_headers,
-                url_is_complete=True,
             )
         return resp
 
@@ -499,7 +512,7 @@ class ActivateChangesClient(RestApiClient):
     ) -> Response | NoReturn:
         if sites is None:
             sites = []
-        response = self.request(
+        return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/activate-changes/invoke",
             body={
@@ -509,37 +522,9 @@ class ActivateChangesClient(RestApiClient):
             },
             expect_ok=False,
             headers=self._set_etag_header(etag),
-            follow_redirects=False,
+            follow_redirects=True,
+            redirect_timeout_seconds=timeout_seconds,
         )
-
-        if not 300 <= response.status_code < 400:
-            return response
-
-        que: multiprocessing.Queue[Response] = multiprocessing.Queue()
-
-        def waiter(result_que: multiprocessing.Queue, initial_response: Response) -> None:
-            wait_response = initial_response
-            while 300 <= wait_response.status_code < 400:
-                wait_response = self.request(
-                    "get",
-                    url=wait_response.headers["Location"],
-                    expect_ok=False,
-                    url_is_complete=True,
-                    follow_redirects=False,
-                )
-            result_que.put(wait_response)
-
-        p = multiprocessing.Process(target=waiter, args=(que, response))
-        p.start()
-        try:
-            result = que.get(timeout=timeout_seconds)
-        except queue.Empty:
-            raise TimeoutError
-        finally:
-            p.kill()
-            p.join()
-
-        return result
 
     def list_pending_changes(self, expect_ok: bool = True) -> Response:
         return self.request(

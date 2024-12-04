@@ -82,7 +82,7 @@ class BaseNotificationPage(CmkPage):
 
     @property
     def services_checkbox(self) -> Locator:
-        return self.main_area.locator().get_by_label("Services", exact=True)
+        return self.main_area.locator().get_by_role("checkbox", name="Services", exact=True)
 
     def _match_services_text_field(self, index: int = 0) -> Locator:
         return self._get_row("Services").locator("input").nth(index)
@@ -110,7 +110,7 @@ class BaseNotificationPage(CmkPage):
 
     @property
     def _recipients_rows(self) -> Locator:
-        return self._stage_four_locator.locator("div[aria-label='Select recipient'] > table > tr")
+        return self._stage_four_locator.get_by_label("Select recipient").locator("table > tr")
 
     def _delete_recipient_button(self, index: int = 0) -> Locator:
         return self._recipients_rows.nth(index).get_by_role("button").nth(0)
@@ -138,7 +138,7 @@ class BaseNotificationPage(CmkPage):
     # stage 6
     @property
     def description_text_field(self) -> Locator:
-        return self.main_area.locator().get_by_label("Description")
+        return self.main_area.locator().get_by_label("Description").get_by_role("textbox")
 
     def add_service_event(
         self,

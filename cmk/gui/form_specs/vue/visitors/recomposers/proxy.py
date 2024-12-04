@@ -157,7 +157,7 @@ def recompose(
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=CascadingSingleChoice(
-            title=form_spec.title,
+            title=form_spec.title or Title("Proxy"),
             help_text=form_spec.help_text,
             elements=elements,
             prefill=DefaultValue("environment"),

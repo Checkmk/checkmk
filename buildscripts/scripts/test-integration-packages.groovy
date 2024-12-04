@@ -62,7 +62,6 @@ def main() {
         """.stripMargin());
 
     def build_for_parallel = [:];
-    def parallel_stages_states = [];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
     def relative_job_name = "${base_folder}/builders/test-integration-single-f12less";
 
@@ -82,12 +81,11 @@ def main() {
             smart_stage(
                 name: stepName,
                 condition: run_condition,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
-                def this_exit_successfully = false;
-                def job = build(
+                build(
                     job: relative_job_name,
-                    propagate: false,   // do not raise here, continue, get status via result property later
+                    propagate: true,  // Raise any errors
                     parameters: [
                         string(name: "DISTRO", value: item),
                         string(name: "EDITION", value: EDITION),
@@ -98,26 +96,13 @@ def main() {
                         string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                     ],
                 );
-                println("job result is: ${job.result}");
-                // be really really sure if it is a success
-                if (job.result == "SUCCESS") {
-                    this_exit_successfully = true;
-                } else {
-                    error("${item.NAME} failed");
-                }
-                parallel_stages_states.add(this_exit_successfully);
             }
-
         }
     }
 
     stage('Run integration tests') {
         parallel build_for_parallel;
     }
-
-    println("All stages results: ${parallel_stages_states}");
-    all_true = parallel_stages_states.every { it == true } == true;
-    currentBuild.result = all_true ? "SUCCESS" : "FAILED";
 }
 
 return this;

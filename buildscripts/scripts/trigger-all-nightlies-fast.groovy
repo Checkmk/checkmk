@@ -38,8 +38,6 @@ def main() {
         """.stripMargin());
 
     def build_for_parallel = [:];
-    def parallel_stages_states = [];
-
     all_editions.each { item ->
         def edition = item;
         def stepName = "Trigger ${edition}";
@@ -56,29 +54,19 @@ def main() {
             smart_stage(
                 name: stepName,
                 condition: run_condition,
-                raiseOnError: false,
+                raiseOnError: true,
             ) {
-                def this_exit_successfully = false;
-                def this_job_parameters = job_parameters + [$class: 'StringParameterValue', name: 'EDITION', value: edition];
                 print(
                     """
                     |===== CONFIGURATION ===============================
                     |this_job_parameters:... │${this_job_parameters}│
                     |===================================================
                     """.stripMargin());
-                def job = build(
+                build(
                     job: "${base_folder}/trigger-cmk-build-chain-${edition}",
-                    propagate: false,   // do not raise here, continue, get status via result property later
+                    propagate: true,  // Raise any errors
                     parameters: this_job_parameters,
                 );
-                println("job result is: ${job.result}");
-                // be really really sure if it is a success
-                if (job.result == "SUCCESS") {
-                    this_exit_successfully = true;
-                } else {
-                    error("${edition} failed");
-                }
-                parallel_stages_states.add(this_exit_successfully);
             }
         }
     }
@@ -86,10 +74,6 @@ def main() {
     stage('Run trigger all nightlies') {
         parallel build_for_parallel;
     }
-
-    println("All stages results: ${parallel_stages_states}");
-    all_true = parallel_stages_states.every { it == true } == true;
-    currentBuild.result = all_true ? "SUCCESS" : "FAILED";
 }
 
 return this;

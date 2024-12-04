@@ -103,11 +103,19 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
-def configured_or_overridden_distros(edition, distros, use_case="daily") {
-    def distro_list = (distros ?: "").replaceAll(',', ' ').split(' ').grep();
-    if(distro_list) {
-        return distro_list;
+def get_distros(Map args) {
+    def override_distros = args.override.trim() ?: "";
+
+    /// retrieve all available distros if provided distro-list is 'all',
+    /// respect provided arguments otherwise
+    def edition = override_distros == "all" ? "all" : args.edition.trim() ?: "all";
+    def use_case = override_distros == "all" ? "all" : args.use_case.trim() ?: "daily";
+
+    /// return requested list if provided
+    if(override_distros && override_distros != "all") {
+        return override_distros.replaceAll(',', ' ').split(' ').grep();
     }
+
     /// read distros from edition.yml otherwise.
     dir("${checkout_dir}") {
         return cmd_output("""python3 \

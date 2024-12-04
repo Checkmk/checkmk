@@ -20,7 +20,8 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_tests", override: OVERRIDE_DISTROS);
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
@@ -44,6 +45,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |all_distros:.............. │${all_distros}│
         |distros:.................  │${distros}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:........  │${safe_branch_name}│

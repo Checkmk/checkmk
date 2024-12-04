@@ -38,7 +38,8 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def edition = params.EDITION;
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_update_tests");
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: edition, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
@@ -49,6 +50,7 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |all_distros:.............. │${all_distros}│
         |distros:.................. │${distros}│
         |edition:.................. │${edition}│
         |branch_name:.............. │${branch_name}│

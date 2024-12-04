@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import contextlib
 import logging
 import re
 import signal
@@ -88,13 +88,25 @@ def check_broker_ping(site: Site, destination: str) -> None:
         while line := stream.readline():
             output.append(line)
 
+    ping = site.execute(
+        ["cmk-broker-test", destination],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    assert ping.stdout
+    pid = _get_broker_test_pid(ping.stdout.readline())
     try:
         # timeout of 5 seconds should be plenty, we're observing oom ~10ms
         with timeout(5, Timeout(f"`cmk-broker-test {destination}` timed out after 5s")):
-            ping = site.execute(["cmk-broker-test", destination], stdout=subprocess.PIPE, text=True)
-            assert ping.stdout
             _collect_output_while_waiting(ping.stdout)
+        if ping.stderr is not None and (error_output := ping.stderr.read()):
+            logger.error("stderr: %s", error_output)
+            raise RuntimeError(f"cmk-broker-test communication with {destination} failed")
     finally:
+        # if no response was received, we need to ensure the process is terminated
+        with contextlib.suppress(subprocess.CalledProcessError):
+            site.run(["kill", "-s", "SIGINT", str(pid)])
         logger.info("".join(output))
 
 

@@ -150,14 +150,18 @@ $RUSTFLAGS \
     export RUSTFLAGS
 }
 
+run_cargo_cmd_with_explicit_package() {
+    cargo "${1}" --package check_http "${@:2}"
+}
+
 run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff Cargo.toml
-    cargo fmt -- --check
+    run_cargo_cmd_with_explicit_package fmt -- --check
 }
 
 run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format Cargo.toml
-    cargo fmt
+    run_cargo_cmd_with_explicit_package fmt
 }
 
 main() {
@@ -166,14 +170,14 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    test ${RUN_CLEAN} = yes && cargo clean
+    test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && bazel build //packages/site/check-http
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
+    test ${RUN_CLIPPY} = yes && run_cargo_cmd_with_explicit_package clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
     true
 }
 

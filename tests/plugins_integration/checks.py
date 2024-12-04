@@ -413,7 +413,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         site.activate_changes_and_wait_for_core_reload()
 
         logger.info("Running service discovery...")
-        site.openapi.discover_services_and_wait_for_completion(host_name)
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
         logger.info("Activating changes & reloading core...")
         site.activate_changes_and_wait_for_core_reload()
@@ -475,7 +475,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
     logger.info("Running service discovery...")
-    site.openapi.discover_services_and_wait_for_completion(source_host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(source_host_name)
 
     try:
         _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
@@ -558,7 +558,9 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.bulk_discover_services_and_wait_for_completion(host_names, bulk_size=10)
+    site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+        host_names, bulk_size=10
+    )
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()

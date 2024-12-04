@@ -61,7 +61,7 @@ check_plugin_test_check_1 = CheckPlugin(
 
     site.activate_changes_and_wait_for_core_reload()
 
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = _AutochecksSerializer().deserialize(
@@ -82,7 +82,7 @@ check_plugin_test_check_1 = CheckPlugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
     entries = _AutochecksSerializer().deserialize(
         site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
     )
@@ -145,7 +145,7 @@ check_plugin_test_check_2 = CheckPlugin(
 
     site.activate_changes_and_wait_for_core_reload()
 
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
     entries = _AutochecksSerializer().deserialize(
@@ -167,7 +167,7 @@ check_plugin_test_check_2 = CheckPlugin(
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    site.openapi.discover_services_and_wait_for_completion(host_name)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
     entries = _AutochecksSerializer().deserialize(
         site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
     )

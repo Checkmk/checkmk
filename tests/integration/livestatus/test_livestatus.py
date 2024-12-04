@@ -24,7 +24,7 @@ def default_cfg_fixture(request: pytest.FixtureRequest, site: Site) -> None:
     print("Applying default config")
     create_linux_test_host(request, site, "livestatus-test-host")
     create_linux_test_host(request, site, "livestatus-test-host.domain")
-    site.openapi.discover_services_and_wait_for_completion("livestatus-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("livestatus-test-host")
     site.activate_changes_and_wait_for_core_reload()
 
 

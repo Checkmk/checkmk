@@ -61,7 +61,7 @@ def _host_services(
         register_controller(agent_ctl, site, hostname, site_address="127.0.0.1")
         wait_until_host_receives_data(site, hostname)
         wait_for_agent_cache_omd_status(site)
-        site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
+        site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([str(hostname)])
         site.openapi.activate_changes_and_wait_for_completion()
         if active_mode:
             site.reschedule_services(hostname)

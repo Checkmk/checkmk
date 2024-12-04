@@ -242,7 +242,9 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     test_site.openapi.hosts.bulk_create(hosts_dict)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services_and_wait_for_completion(created_hosts_list)
+    test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+        created_hosts_list
+    )
     test_site.openapi.activate_changes_and_wait_for_completion()
 
     logger.info("Schedule the 'Check_MK' service")

@@ -68,7 +68,9 @@ def get_piggybacked_service_time(
 def piggybacked_service_discovered(
     central_site: Site, source_hostname: str, piggybacked_hostname: str
 ) -> bool:
-    services = central_site.openapi.service_discovery_result(piggybacked_hostname)["extensions"]
+    services = central_site.openapi.service_discovery.get_discovery_result(piggybacked_hostname)[
+        "extensions"
+    ]
     if isinstance(services, dict) and isinstance((check_table := services["check_table"]), dict):
         return f"local-Local service piggybacked from {source_hostname}" in check_table
     raise TypeError("Expected 'extensions' and its nested fields to be a dictionary")

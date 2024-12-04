@@ -64,9 +64,9 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
 
     try:
         site.activate_changes_and_wait_for_core_reload()

@@ -81,10 +81,10 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         "var/check_mk/agent_output/modes-test-host3", get_standard_linux_agent_output()
     )
 
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host2")
-    site.openapi.discover_services_and_wait_for_completion("modes-test-host3")
-    site.openapi.discover_services_and_wait_for_completion("host_with_secondary_ip")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion("host_with_secondary_ip")
     icmp_rule_id = site.openapi.create_rule(
         ruleset_name=RuleGroup.ActiveChecks("icmp"),
         value={"address": "all_ipv4addresses"},

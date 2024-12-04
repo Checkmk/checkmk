@@ -37,7 +37,7 @@ def _test_register_workflow(
         logger.info("Waiting for controller to open TCP socket or push data")
         wait_until_host_receives_data(site, hostname)
 
-        site.openapi.discover_services_and_wait_for_completion(hostname)
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
         site.openapi.activate_changes_and_wait_for_completion()
 
         wait_until_host_has_services(

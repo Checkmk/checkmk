@@ -112,6 +112,7 @@ class CMKOpenApiSession(requests.Session):
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
+        self.service_discovery = ServiceDiscoveryAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -217,121 +218,6 @@ class CMKOpenApiSession(requests.Session):
         ), f"There are pending changes that were not activated: {pending_changes}"
 
         return True
-
-    def discover_services(
-        self,
-        hostname: str,
-        mode: str = "tabula_rasa",
-    ) -> None:
-        response = self.post(
-            "/domain-types/service_discovery_run/actions/start/invoke",
-            json={
-                "host_name": hostname,
-                "mode": mode,
-            },
-            # We want to get the redirect response and handle that below. So don't let requests
-            # handle that for us.
-            allow_redirects=False,
-        )
-        if 300 <= response.status_code < 400:
-            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    @tracer.start_as_current_span("bulk_discover_services_and_wait_for_completion")
-    def bulk_discover_services_and_wait_for_completion(
-        self,
-        hostnames: list[str],
-        monitor_undecided_services: bool = True,
-        remove_vanished_services: bool = False,
-        update_service_labels: bool = False,
-        update_host_labels: bool = True,
-        do_full_scan: bool = True,
-        bulk_size: int = 10,
-        ignore_errors: bool = True,
-    ) -> str:
-        body = {
-            "hostnames": hostnames,
-            "do_full_scan": do_full_scan,
-            "bulk_size": bulk_size,
-            "ignore_errors": ignore_errors,
-        }
-
-        if self.site_version >= CMKVersion("2.3.0", self.site_version.edition):
-            body["options"] = {
-                "monitor_undecided_services": monitor_undecided_services,
-                "remove_vanished_services": remove_vanished_services,
-                "update_service_labels": update_service_labels,
-                "update_host_labels": update_host_labels,
-            }
-        else:
-            body["mode"] = "new"
-
-        response = self.post(
-            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_id: str = response.json()["id"]
-        while self.get_bulk_discovery_status(job_id) in (
-            "initialized",
-            "running",
-        ):
-            time.sleep(0.5)
-
-        status = self.get_bulk_discovery_job_status(job_id)
-
-        if status["extensions"]["state"] != "finished":
-            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
-
-        output = "\n".join(status["extensions"]["logs"]["progress"])
-        if "Traceback (most recent call last)" in output:
-            raise RuntimeError(f"Found traceback in job output: {output}")
-        if "0 failed" not in output:
-            raise RuntimeError(f"Found a failure in job output: {output}")
-
-        return job_id
-
-    def get_bulk_discovery_status(self, job_id: str) -> str:
-        job_status_response = self.get_bulk_discovery_job_status(job_id)
-        status: str = job_status_response["extensions"]["state"]
-        return status
-
-    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
-        response = self.get(f"/objects/discovery_run/{job_id}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
-
-    def get_discovery_status(self, hostname: str) -> str:
-        job_status_response = self.get_discovery_job_status(hostname)
-        status: str = job_status_response["extensions"]["state"]
-        return status
-
-    def get_discovery_job_status(self, hostname: str) -> dict:
-        response = self.get(f"/objects/service_discovery_run/{hostname}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        job_status_response: dict = response.json()
-        return job_status_response
-
-    @tracer.start_as_current_span("discover_services_and_wait_for_completion")
-    def discover_services_and_wait_for_completion(
-        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
-    ) -> None:
-        with self.wait_for_completion(timeout, "get", "discover_services"):
-            self.discover_services(hostname, mode)
-            discovery_status = self.get_discovery_status(hostname)
-            assert (
-                discovery_status == "finished"
-            ), f"Unexpected service discovery status: {discovery_status}"
-
-    def service_discovery_result(self, hostname: str) -> Mapping[str, object]:
-        response = self.get(f"/objects/service_discovery/{hostname}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return {str(k): v for k, v in response.json().items()}
 
     @contextmanager
     def wait_for_completion(
@@ -1077,3 +963,120 @@ class HostGroupsAPI(BaseAPI):
         response = self.session.delete(f"/objects/host_group_config/{name}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class ServiceDiscoveryAPI(BaseAPI):
+    def run_discovery(
+        self,
+        hostname: str,
+        mode: str = "tabula_rasa",
+    ) -> None:
+        response = self.session.post(
+            "/domain-types/service_discovery_run/actions/start/invoke",
+            json={
+                "host_name": hostname,
+                "mode": mode,
+            },
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if 300 <= response.status_code < 400:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    @tracer.start_as_current_span("run_bulk_discovery_and_wait_for_completion")
+    def run_bulk_discovery_and_wait_for_completion(
+        self,
+        hostnames: list[str],
+        monitor_undecided_services: bool = True,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = True,
+        do_full_scan: bool = True,
+        bulk_size: int = 10,
+        ignore_errors: bool = True,
+    ) -> str:
+        body = {
+            "hostnames": hostnames,
+            "do_full_scan": do_full_scan,
+            "bulk_size": bulk_size,
+            "ignore_errors": ignore_errors,
+        }
+
+        if self.session.site_version >= CMKVersion("2.3.0", self.session.site_version.edition):
+            body["options"] = {
+                "monitor_undecided_services": monitor_undecided_services,
+                "remove_vanished_services": remove_vanished_services,
+                "update_service_labels": update_service_labels,
+                "update_host_labels": update_host_labels,
+            }
+        else:
+            body["mode"] = "new"
+
+        response = self.session.post(
+            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke", json=body
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_id: str = response.json()["id"]
+        while self.get_bulk_discovery_status(job_id) in (
+            "initialized",
+            "running",
+        ):
+            time.sleep(0.5)
+
+        status = self.get_bulk_discovery_job_status(job_id)
+
+        if status["extensions"]["state"] != "finished":
+            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+
+        output = "\n".join(status["extensions"]["logs"]["progress"])
+        if "Traceback (most recent call last)" in output:
+            raise RuntimeError(f"Found traceback in job output: {output}")
+        if "0 failed" not in output:
+            raise RuntimeError(f"Found a failure in job output: {output}")
+
+        return job_id
+
+    def get_bulk_discovery_status(self, job_id: str) -> str:
+        job_status_response = self.get_bulk_discovery_job_status(job_id)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
+        response = self.session.get(f"/objects/discovery_run/{job_id}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_status_response: dict = response.json()
+        return job_status_response
+
+    def get_discovery_status(self, hostname: str) -> str:
+        job_status_response = self.get_discovery_job_status(hostname)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_discovery_job_status(self, hostname: str) -> dict:
+        response = self.session.get(f"/objects/service_discovery_run/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_status_response: dict = response.json()
+        return job_status_response
+
+    @tracer.start_as_current_span("run_discovery_and_wait_for_completion")
+    def run_discovery_and_wait_for_completion(
+        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
+    ) -> None:
+        with self.session.wait_for_completion(timeout, "get", "discover_services"):
+            self.run_discovery(hostname, mode)
+            discovery_status = self.get_discovery_status(hostname)
+            assert (
+                discovery_status == "finished"
+            ), f"Unexpected service discovery status: {discovery_status}"
+
+    def get_discovery_result(self, hostname: str) -> Mapping[str, object]:
+        response = self.session.get(f"/objects/service_discovery/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}

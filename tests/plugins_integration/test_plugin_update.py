@@ -87,7 +87,7 @@ def test_plugin_update(
             f"in target-version: {not_found_status_0_services}"
         )
 
-    test_site_update.openapi.bulk_discover_services_and_wait_for_completion(
+    test_site_update.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
         get_host_names(test_site_update)
     )
 

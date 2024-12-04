@@ -91,7 +91,7 @@ def _prepare_piggyback_environment(central_site: Site, remote_site: Site) -> Ite
 
 def _schedule_check_and_discover(site: Site, hostname_source: str, hostname_piggyback: str) -> None:
     site.schedule_check(hostname_source, "Check_MK")
-    site.openapi.discover_services_and_wait_for_completion(hostname_piggyback)
+    site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname_piggyback)
 
 
 def test_piggyback_services_source_remote(
@@ -122,7 +122,9 @@ def test_piggyback_services_remote_remote(
     """
     with _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED_B):
         remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
-        central_site.openapi.discover_services_and_wait_for_completion(_HOSTNAME_PIGGYBACKED_B)
+        central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            _HOSTNAME_PIGGYBACKED_B
+        )
 
         assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED_B

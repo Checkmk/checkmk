@@ -9,6 +9,8 @@ from typing import Callable, Sequence
 
 from werkzeug.datastructures import FileStorage
 
+from cmk.utils.render import filesize
+
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.hooks import request_memoize
@@ -47,6 +49,21 @@ class FileUploadModel:
 def read_content_of_uploaded_file(file_storage: FileStorage) -> FileContent:
     # We have to memoize the file content extraction, since the data can only be read once
     return file_storage.read()
+
+
+class _FileSizeValidator:
+    def __init__(self, max_size: int) -> None:
+        self._max_size = max_size
+
+    def __call__(self, value: FileUploadModel) -> None:
+        if not value.file_content_encrypted:
+            return
+        file_content = FileUploadVisitor.decrypt_content(value.file_content_encrypted)
+        if len(file_content) > self._max_size:
+            raise ValidationError(
+                Message("File size exceeds the maximum allowed size of %s bytes")
+                % filesize(self._max_size)
+            )
 
 
 class _MimeTypeValidator:
@@ -160,10 +177,14 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
 
     def _validators(self) -> Sequence[Callable[[FileUploadModel], object]]:
         validators: list[Callable[[FileUploadModel], object]] = []
+
         if self.form_spec.mime_types:
             validators.append(_MimeTypeValidator(frozenset(self.form_spec.mime_types)))
         if self.form_spec.extensions:
             validators.append(_FileExtensionValidator(frozenset(self.form_spec.extensions)))
+
+        # Hardcoded file size limit of 10MB
+        validators.append(_FileSizeValidator(10 * 1024 * 1024))
 
         return validators + compute_validators(self.form_spec)
 

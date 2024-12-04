@@ -94,6 +94,7 @@ const inputReset = () => {
 }
 
 const setBlur = (isSet: boolean) => {
+  autocompleteFocus.value = isSet
   setTimeout(() => {
     showSuggestions.value = isSet
   }, 200)
@@ -101,9 +102,11 @@ const setBlur = (isSet: boolean) => {
 
 const inputValue = ref('')
 type AutocompleterResponse = Record<'choices', [string, string][]>
-const [autocompleterInput, autocompleterOutput] = setupAutocompleter<AutocompleterResponse>(
-  props.autocompleter || null
-)
+const {
+  input: autocompleterInput,
+  focus: autocompleteFocus,
+  output: autocompleterOutput
+} = setupAutocompleter<AutocompleterResponse>(props.autocompleter || null)
 
 const filteredSuggestions = ref<string[]>([])
 const inputField = useTemplateRef<HTMLInputElement>('inputField')
@@ -153,7 +156,7 @@ watch(autocompleterOutput, (newValue) => {
 
     <Transition name="fade">
       <ul
-        v-if="props.show && filteredSuggestions.length > 0 && !!inputValue && !!showSuggestions"
+        v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
         class="suggestions"
         :style="{ minWidth: inputSizes[props.size].width }"
         @blur="handleListBlur"
@@ -238,7 +241,6 @@ table.nform input {
   width: 10px;
   height: 10px;
   border: none;
-
   transition: background-color 0.3s;
 
   &:hover {

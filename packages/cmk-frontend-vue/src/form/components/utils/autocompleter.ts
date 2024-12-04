@@ -38,20 +38,34 @@ export async function fetchData<OutputType>(
   return ajaxResponse.result as OutputType
 }
 
-export function setupAutocompleter<OutputType>(
-  autocompleter: Autocompleter | null
-): [Ref<string>, Ref<OutputType | undefined>] {
+export function setupAutocompleter<OutputType>(autocompleter: Autocompleter | null): {
+  input: Ref<string>
+  focus: Ref<boolean>
+  output: Ref<OutputType | undefined>
+} {
   const input = ref<string>('')
   const output = ref<OutputType>()
+  const focus = ref(false)
   if (autocompleter === null) {
-    return [input, output]
+    return { input, focus, output }
   }
   watch(input, () => {
+    updateOutput()
+  })
+
+  watch(focus, () => {
+    if (focus.value) {
+      updateOutput()
+    }
+  })
+
+  const updateOutput = () => {
     if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
       fetchData<OutputType>(input.value, autocompleter.data).then((result: OutputType) => {
         output.value = result
       })
     }
-  })
-  return [input, output]
+  }
+
+  return { input, focus, output }
 }

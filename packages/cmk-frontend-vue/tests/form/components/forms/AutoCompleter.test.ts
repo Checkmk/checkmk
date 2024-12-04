@@ -10,13 +10,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 
 vi.mock('@/form/components/utils/autocompleter', () => ({
   setupAutocompleter: vi.fn(() => {
-    const autocompleterInput = ref('')
-    const autocompleterOutput = ref()
+    const input = ref('')
+    const focus = ref(false)
+    const output = ref()
 
-    watch(autocompleterInput, async (newVal) => {
+    watch(input, async (newVal) => {
       if (newVal) {
         await new Promise((resolve) => setTimeout(resolve, 100))
-        autocompleterOutput.value = {
+        output.value = {
           choices: [
             ['os:windows', 'os:windows'],
             ['os:linux', 'os:linux']
@@ -25,7 +26,7 @@ vi.mock('@/form/components/utils/autocompleter', () => ({
       }
     })
 
-    return [autocompleterInput, autocompleterOutput]
+    return { input, focus, output }
   })
 }))
 

@@ -10,7 +10,11 @@ import { renderFormWithData } from '../cmk-form-helper'
 import { ref, watch } from 'vue'
 
 vitest.mock('@/form/components/utils/autocompleter', () => ({
-  setupAutocompleter: () => [ref(''), ref({ choices: [['os:windows'], ['os:linux']] })]
+  setupAutocompleter: () => ({
+    input: ref(''),
+    focus: ref(false),
+    output: ref({ choices: [['os:windows'], ['os:linux']] })
+  })
 }))
 
 vitest.mock('@/form/components/utils/watch', () => ({

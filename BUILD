@@ -103,7 +103,7 @@ pip_compile(
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
-            "//non-free/packages/cmk-otel:requirements.txt",
+            "//non-free/packages/cmk-otel-collector:requirements.txt",
         ],
     }),
     requirements_in = ":requirements_cmk.txt",

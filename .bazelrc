@@ -17,6 +17,7 @@ common --@//:filesystem_layout=lsb
 common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
 common --remote_upload_local_results=false
+common --lockfile_mode=error
 
 ## For specific commands
 # Always require debug info.
@@ -45,7 +46,6 @@ common:ci --memory_profile=bazel-memory.profile
 common:ci --extra_toolchains="//bazel/toolchains/cc:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
-common:ci --lockfile_mode=error
 # the later flags will override the previous flags
 # upload artifacts only from CI, CMK-18656
 common:ci --remote_upload_local_results=true

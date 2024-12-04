@@ -252,7 +252,11 @@ def print_internal_distros(arguments: argparse.Namespace, loaded_yaml: dict) -> 
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
     if arguments.as_rsync_exclude_pattern:
-        print("{" + ",".join([f"'*{d}*'" for d in distros]) + "}")
+        patterns = ",".join([f"'*{d}*'" for d in distros])
+        if len(distros) > 1:
+            print("{" + patterns + "}")  # this expands in bash
+        else:
+            print(patterns)
         return
 
     print(" ".join(distros))

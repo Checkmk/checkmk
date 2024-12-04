@@ -57,7 +57,7 @@ crates_repository(
     lockfile = "//:Cargo.site.lock.bazel",
     manifests = [
         "//:Cargo.site.toml",
-        "//packages/check-cert:Cargo.toml",
+        "//packages/site/check-cert:Cargo.toml",
         "//packages/check-http:Cargo.toml",
     ],
 )

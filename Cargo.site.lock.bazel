@@ -1,5 +1,5 @@
 {
-  "checksum": "a51acf3a9686f85034af9c55a7986ae73b7c505542917820b63785749b0346fe",
+  "checksum": "c1cd91dbc7acb7c3302b3d500ebfdbe472e3f7f433c126f1e969b3fea34a24dc",
   "crates": {
     "addr2line 0.24.1": {
       "name": "addr2line",
@@ -18486,7 +18486,7 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "check_cert 0.1.0": "packages/check-cert",
+    "check_cert 0.1.0": "packages/site/check-cert",
     "check_http 0.1.0": "packages/check-http"
   },
   "conditions": {

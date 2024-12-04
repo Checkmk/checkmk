@@ -105,7 +105,7 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
@@ -391,8 +391,8 @@ STAGES:
 
     - NAME: "Package check-cert"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_CERT_FILES
-      DIR: "packages/check-cert"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=vendored &> ${RESULTS}/check-cert.txt"
+      DIR: "packages/site/check-cert"
+      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all --features=vendored &> ${RESULTS}/check-cert.txt"
       TEXT_ON_SKIP: "No check-cert files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 

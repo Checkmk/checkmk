@@ -217,19 +217,19 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   class="checkbox"
                 >
                   <span v-if="dict_element.dict_config.required">
-                    {{ dict_element.dict_config.parameter_form.title }}
+                    {{ dict_element.dict_config.parameter_form.title
+                    }}<FormRequired
+                      v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
+                      :spec="dict_element.dict_config.parameter_form"
+                      :i18n-required="spec.i18n_base.required"
+                      :space="'before'"
+                    />
                   </span>
                   <CmkCheckbox
                     v-else
                     v-model="dict_element.is_active"
                     :label="dict_element.dict_config.parameter_form.title"
                     @update:model-value="toggleElement(dict_element.dict_config.name)"
-                  />
-                  <FormRequired
-                    v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
-                    :spec="dict_element.dict_config.parameter_form"
-                    :i18n-required="spec.i18n_base.required"
-                    :space="'before'"
                   />
                   <CmkSpace size="small" />
                   <HelpText :help="dict_element.dict_config.parameter_form.help" />

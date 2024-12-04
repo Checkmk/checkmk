@@ -149,6 +149,18 @@ test('FormDictionary renders required only once depending on label presence', as
     field_size: 'SMALL'
   }
 
+  const optionalUnlabeledString: FormSpec.String = {
+    type: 'string',
+    title: 'optionalUnlabeledTitle',
+    help: 'optionalUnlabeledHelp',
+    label: null,
+    i18n_base: { required: 'required' },
+    validators: stringValidators,
+    input_hint: '',
+    autocompleter: null,
+    field_size: 'SMALL'
+  }
+
   const requiredString: FormSpec.String = {
     type: 'string',
     title: 'reqLabeledTitle',
@@ -202,6 +214,13 @@ test('FormDictionary renders required only once depending on label presence', as
         name: 'optional',
         required: false,
         default_value: '',
+        parameter_form: optionalUnlabeledString,
+        group: dictElementGroupFormSpec
+      },
+      {
+        name: 'labeledOptional',
+        required: false,
+        default_value: '',
         parameter_form: optionalString,
         group: dictElementGroupFormSpec
       }
@@ -211,7 +230,7 @@ test('FormDictionary renders required only once depending on label presence', as
   render(FormEdit, {
     props: {
       spec: localSpec,
-      data: { optional: 'some_value' },
+      data: { optional: 'some_value', labeledOptional: 'other_value' },
       backendValidation: []
     }
   })

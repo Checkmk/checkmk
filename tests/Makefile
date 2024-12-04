@@ -194,7 +194,7 @@ test-semgrep:
 	    $(realpath ..)
 
 test-semgrep-docker:
-	../scripts/run-in-docker.sh TERM=xterm make test-semgrep
+	../scripts/run-in-docker.sh make test-semgrep
 
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
@@ -406,7 +406,7 @@ test-cycles:
 		--verbose
 
 test-cycles-docker:
-	../scripts/run-in-docker.sh TERM=xterm make --quiet test-cycles
+	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit-omdlib:
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \

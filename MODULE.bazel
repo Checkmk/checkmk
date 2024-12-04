@@ -16,6 +16,13 @@ bazel_dep(name = "rules_cc", version = "0.0.9")
 bazel_dep(name = "rules_rust", version = "0.49.3")
 bazel_dep(name = "rules_python", version = "0.37.0")
 bazel_dep(name = "rules_uv", version = "0.42.0")
+# TODO: Check if term issue is fixed:
+# https://github.com/theoremlp/rules_uv/pull/167
+single_version_override(
+    module_name = "rules_uv",
+    patch_strip = 1,
+    patches = ["//bazel/patches:rules_uv_term.patch"],
+)
 
 # TODO: how to sync this with the PYTHON_VERSION in package_versions.bzl?
 PYTHON_VERSION = "3.12.3"

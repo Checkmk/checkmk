@@ -113,6 +113,7 @@ class CMKOpenApiSession(requests.Session):
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
+        self.services = ServicesAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -280,27 +281,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def get_host_services(
-        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
-    ) -> list[dict[str, Any]]:
-        if pending is not None:
-            if columns is None:
-                columns = ["has_been_checked"]
-            elif "has_been_checked" not in columns:
-                columns.append("has_been_checked")
-        query_string = "?columns=" + "&columns=".join(columns) if columns else ""
-        response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        if pending is not None:
-            value = [
-                _
-                for _ in value
-                if _.get("extensions", {}).get("has_been_checked") == int(not pending)
-            ]
-        return value
 
     def get_baking_status(self) -> BakingStatus:
         response = self.get("/domain-types/agent/actions/baking_status/invoke")
@@ -1080,3 +1060,26 @@ class ServiceDiscoveryAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
+
+
+class ServicesAPI(BaseAPI):
+    def get_host_services(
+        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
+    ) -> list[dict[str, Any]]:
+        if pending is not None:
+            if columns is None:
+                columns = ["has_been_checked"]
+            elif "has_been_checked" not in columns:
+                columns.append("has_been_checked")
+        query_string = "?columns=" + "&columns=".join(columns) if columns else ""
+        response = self.session.get(f"/objects/host/{hostname}/collections/services{query_string}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        if pending is not None:
+            value = [
+                _
+                for _ in value
+                if _.get("extensions", {}).get("has_been_checked") == int(not pending)
+            ]
+        return value

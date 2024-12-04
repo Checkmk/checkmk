@@ -113,7 +113,7 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     try:
         return {
             check["id"]: check
-            for check in site.openapi.get_host_services(
+            for check in site.openapi.services.get_host_services(
                 host_name,
                 columns=(config.api_services_cols or []) + ["plugin_output"],
                 pending=False,
@@ -426,7 +426,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
             # => a second time to calculate differences
             # => a third time since some checks require it
             site.schedule_check(host_name, "Check_MK", 0, 60)
-            pending_checks = site.openapi.get_host_services(host_name, pending=True)
+            pending_checks = site.openapi.services.get_host_services(host_name, pending=True)
             if idx > 0 and len(pending_checks) == 0:
                 break
 
@@ -491,7 +491,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
                 # => a second time to calculate differences
                 # => a third time since some checks require it
                 site.schedule_check(hostname, "Check_MK", 0, 60)
-                pending_checks = site.openapi.get_host_services(hostname, pending=True)
+                pending_checks = site.openapi.services.get_host_services(hostname, pending=True)
                 if idx > 0 and len(pending_checks) == 0:
                     break
 
@@ -566,7 +566,9 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Checking for pending services...")
-    pending_checks = {_: site.openapi.get_host_services(_, pending=True) for _ in host_names}
+    pending_checks = {
+        _: site.openapi.services.get_host_services(_, pending=True) for _ in host_names
+    }
     for idx in range(3):
         # we have to schedule the checks multiple times (twice at least):
         # => once to get baseline data
@@ -574,7 +576,9 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
         # => a third time since some checks require it
         for host_name in list(pending_checks.keys())[:]:
             site.schedule_check(host_name, "Check_MK", 0, 60)
-            pending_checks[host_name] = site.openapi.get_host_services(host_name, pending=True)
+            pending_checks[host_name] = site.openapi.services.get_host_services(
+                host_name, pending=True
+            )
             if idx > 0 and len(pending_checks[host_name]) == 0:
                 pending_checks.pop(host_name, None)
                 continue

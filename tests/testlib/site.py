@@ -373,7 +373,7 @@ class Site:
         If pending=True, return the pending services only.
         """
         services = {}
-        for service in self.openapi.get_host_services(
+        for service in self.openapi.services.get_host_services(
             hostname, columns=["state", "plugin_output"], pending=pending
         ):
             services[service["extensions"]["description"]] = ServiceInfo(

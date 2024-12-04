@@ -3092,12 +3092,18 @@ class ConfigCache:
         return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
     def check_mk_check_interval(self, hostname: HostName) -> float:
-        if hostname not in self._check_mk_check_interval:
-            self._check_mk_check_interval[hostname] = (
-                self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"] * 60
-            )
+        if (interval := self._check_mk_check_interval.get(hostname)) is not None:
+            return interval
 
-        return self._check_mk_check_interval[hostname]
+        description = "Check_MK"
+        return self._check_mk_check_interval.setdefault(
+            hostname,
+            self.extra_attributes_of_service(
+                hostname,
+                description,
+            )["check_interval"]
+            * 60,
+        )
 
     @staticmethod
     def ip_stack_config(host_name: HostName | HostAddress) -> IPStackConfig:

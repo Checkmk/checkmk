@@ -994,118 +994,96 @@ int broker_process(int callback_type, void *data) {
     return 0;
 }
 
-int verify_event_broker_options() {
-    int errors = 0;
-    if ((event_broker_options & BROKER_PROGRAM_STATE) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_PROGRAM_STATE (" << BROKER_PROGRAM_STATE
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_TIMED_EVENTS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_TIMED_EVENTS (" << BROKER_TIMED_EVENTS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_SERVICE_CHECKS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_SERVICE_CHECKS (" << BROKER_SERVICE_CHECKS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_HOST_CHECKS) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_HOST_CHECKS (" << BROKER_HOST_CHECKS
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_LOGGED_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_LOGGED_DATA (" << BROKER_LOGGED_DATA
-            << ") event_broker_option enabled to work.",
-            errors++;
-    }
-    if ((event_broker_options & BROKER_COMMENT_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_COMMENT_DATA (" << BROKER_COMMENT_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_DOWNTIME_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_DOWNTIME_DATA (" << BROKER_DOWNTIME_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_STATUS_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_STATUS_DATA (" << BROKER_STATUS_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_ADAPTIVE_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_ADAPTIVE_DATA (" << BROKER_ADAPTIVE_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_EXTERNALCOMMAND_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_EXTERNALCOMMAND_DATA ("
-                                   << BROKER_EXTERNALCOMMAND_DATA
-                                   << ") event_broker_option enabled to work.";
-        errors++;
-    }
-    if ((event_broker_options & BROKER_STATECHANGE_DATA) == 0) {
-        Critical(fl_logger_nagios)
-            << "need BROKER_STATECHANGE_DATA (" << BROKER_STATECHANGE_DATA
-            << ") event_broker_option enabled to work.";
-        errors++;
-    }
+namespace {
+struct nagios_callback {
+    int callback_type;
+    int (*callback_func)(int, void *);
+    std::string_view event_broker_option_name;
+    int event_broker_option_flag;
+};
 
-    return static_cast<int>(errors == 0);
-}
+const std::array<nagios_callback, 10> nagios_callbacks{{
+    {
+        NEBCALLBACK_COMMENT_DATA,
+        broker_comment,
+        "BROKER_COMMENT_DATA"sv,
+        BROKER_COMMENT_DATA,
+    },
+    {
+        NEBCALLBACK_DOWNTIME_DATA,
+        broker_downtime,
+        "BROKER_DOWNTIME_DATA"sv,
+        BROKER_DOWNTIME_DATA,
+    },
+    {
+        NEBCALLBACK_SERVICE_CHECK_DATA,
+        broker_service_check,
+        "BROKER_SERVICE_CHECKS"sv,
+        BROKER_SERVICE_CHECKS,
+    },
+    {
+        NEBCALLBACK_HOST_CHECK_DATA,
+        broker_host_check,
+        "BROKER_HOST_CHECKS"sv,
+        BROKER_HOST_CHECKS,
+    },
+    {
+        NEBCALLBACK_LOG_DATA,
+        broker_log,
+        "BROKER_LOGGED_DATA"sv,
+        BROKER_LOGGED_DATA,
+    },
+    {
+        NEBCALLBACK_EXTERNAL_COMMAND_DATA,
+        broker_external_command,
+        "BROKER_EXTERNALCOMMAND_DATA"sv,
+        BROKER_EXTERNALCOMMAND_DATA,
+    },
+    {
+        NEBCALLBACK_STATE_CHANGE_DATA,
+        broker_state_change,
+        "BROKER_STATECHANGE_DATA"sv,
+        BROKER_STATECHANGE_DATA,
+    },
+    {
+        NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
+        broker_adaptive_program,
+        "BROKER_ADAPTIVE_DATA"sv,
+        BROKER_ADAPTIVE_DATA,
+    },
+    {
+        NEBCALLBACK_PROCESS_DATA,
+        broker_process,
+        "BROKER_PROGRAM_STATE"sv,
+        BROKER_PROGRAM_STATE,
+    },
+    {
+        NEBCALLBACK_TIMED_EVENT_DATA,
+        broker_timed_event,
+        "BROKER_TIMED_EVENTS"sv,
+        BROKER_TIMED_EVENTS,
+    },
+}};
 
 void register_callbacks() {
-    neb_register_callback(NEBCALLBACK_COMMENT_DATA, fl_nagios_handle, 0,
-                          broker_comment);  // dynamic data
-    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA, fl_nagios_handle, 0,
-                          broker_downtime);  // dynamic data
-    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_service_check);  // only for statistics
-    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, fl_nagios_handle, 0,
-                          broker_host_check);  // only for statistics
-    neb_register_callback(NEBCALLBACK_LOG_DATA, fl_nagios_handle, 0,
-                          broker_log);  // only for trigger 'log'
-    neb_register_callback(
-        NEBCALLBACK_EXTERNAL_COMMAND_DATA, fl_nagios_handle, 0,
-        broker_external_command);  // only for trigger 'command'
-    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA, fl_nagios_handle, 0,
-                          broker_state_change);  // only for trigger 'state'
-    neb_register_callback(
-        NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, fl_nagios_handle, 0,
-        broker_adaptive_program);  // only for trigger 'program'
-    neb_register_callback(NEBCALLBACK_PROCESS_DATA, fl_nagios_handle, 0,
-                          broker_process);  // used for starting threads
-    neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA, fl_nagios_handle, 0,
-                          broker_timed_event);  // used for timeperiods cache
+    for (const auto &cb : nagios_callbacks) {
+        if ((event_broker_options & cb.event_broker_option_flag) == 0) {
+            throw generic_error{
+                EINVAL, "need " + std::string{cb.event_broker_option_name} +
+                            " (" + std::to_string(cb.event_broker_option_flag) +
+                            ") event_broker_option enabled to work"};
+        }
+        neb_register_callback(cb.callback_type, fl_nagios_handle, 0,
+                              cb.callback_func);
+    }
 }
 
 void deregister_callbacks() {
-    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA, broker_comment);
-    neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA, broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,
-                            broker_service_check);
-    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA, broker_host_check);
-    neb_deregister_callback(NEBCALLBACK_LOG_DATA, broker_log);
-    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA,
-                            broker_external_command);
-    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA, broker_state_change);
-    neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
-                            broker_adaptive_program);
-    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, broker_adaptive_program);
-    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_timed_event);
+    for (const auto &cb : nagios_callbacks) {
+        neb_deregister_callback(cb.callback_type, cb.callback_func);
+    }
 }
+}  // namespace
 
 std::filesystem::path check_path(const std::string &name,
                                  std::string_view path) {
@@ -1364,24 +1342,14 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     try {
         open_unix_socket();
-
-        if (verify_event_broker_options() == 0) {
-            throw generic_error{
-                EINVAL,
-                "bailing out, please fix event_broker_options. Hint : Your event_broker_options are set to " +
-                    std::to_string(event_broker_options) +
-                    ", try setting it to -1."};
-        }
-        Informational(fl_logger_nagios)
-            << "your event_broker_options are sufficient for livestatus.";
-
         if (enable_environment_macros == 1) {
             Notice(fl_logger_nagios)
                 << "environment_macros are enabled, this might decrease the "
                    "overall nagios performance";
         }
-
         register_callbacks();
+        Informational(fl_logger_nagios)
+            << "your event_broker_options are sufficient for livestatus.";
     } catch (const std::exception &e) {
         std::cerr << e.what() << "\n";
         ::exit(EXIT_FAILURE);  // NOLINT(concurrency-mt-unsafe)

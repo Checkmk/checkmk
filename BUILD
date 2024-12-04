@@ -121,7 +121,14 @@ write_file(
         'relative_packages_path = "../../../../packages"',
         "for p in os.listdir(os.path.join(dirname, relative_packages_path)):",
         "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path, p)))",
-    ],
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            'relative_packages_path_non_free = "../../../../non-free/packages"',
+            "for p in os.listdir(os.path.join(dirname, relative_packages_path_non_free)):",
+            "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path_non_free, p)))",
+        ],
+    }),
 )
 
 create_venv(

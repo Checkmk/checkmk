@@ -6,5 +6,5 @@
 [workspace]
 members = [
     "packages/site/check-cert",
-    "packages/check-http",
+    "packages/site/check-http",
 ]

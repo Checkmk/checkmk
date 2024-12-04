@@ -108,7 +108,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo.*' || true"
@@ -398,8 +398,8 @@ STAGES:
 
     - NAME: "Package check-http"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CHECK_HTTP_FILES
-      DIR: "packages/check-http"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=reqwest/native-tls-vendored &> ${RESULTS}/check-http.txt"
+      DIR: "packages/site/check-http"
+      COMMAND: "../../../scripts/run-in-docker.sh ./run --setup-environment --all --features=reqwest/native-tls-vendored &> ${RESULTS}/check-http.txt"
       TEXT_ON_SKIP: "No check-http files changed"
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 

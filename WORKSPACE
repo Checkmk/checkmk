@@ -58,7 +58,7 @@ crates_repository(
     manifests = [
         "//:Cargo.site.toml",
         "//packages/site/check-cert:Cargo.toml",
-        "//packages/check-http:Cargo.toml",
+        "//packages/site/check-http:Cargo.toml",
     ],
 )
 

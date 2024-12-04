@@ -1,6 +1,6 @@
 CHECK_HTTP := check-http
 CHECK_HTTP_DEPLOYED := check_httpv2
-CHECK_HTTP_PACKAGE := $(REPO_PATH)/packages/$(CHECK_HTTP)
+CHECK_HTTP_PACKAGE := $(REPO_PATH)/packages/site/$(CHECK_HTTP)
 CHECK_HTTP_RELEASE := $(CHECK_HTTP_PACKAGE)/target/release/check_http
 
 CHECK_HTTP_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_HTTP)-build

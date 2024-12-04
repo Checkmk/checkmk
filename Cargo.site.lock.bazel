@@ -1,5 +1,5 @@
 {
-  "checksum": "c1cd91dbc7acb7c3302b3d500ebfdbe472e3f7f433c126f1e969b3fea34a24dc",
+  "checksum": "93674a19141d2b1b08643b4907e9eddcd22209ac3b3aaaf9c1144ae8fa96dcad",
   "crates": {
     "addr2line 0.24.1": {
       "name": "addr2line",
@@ -18487,7 +18487,7 @@
   "binary_crates": [],
   "workspace_members": {
     "check_cert 0.1.0": "packages/site/check-cert",
-    "check_http 0.1.0": "packages/check-http"
+    "check_http 0.1.0": "packages/site/check-http"
   },
   "conditions": {
     "aarch64-apple-darwin": [

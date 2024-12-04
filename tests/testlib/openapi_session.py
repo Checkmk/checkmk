@@ -114,6 +114,7 @@ class CMKOpenApiSession(requests.Session):
         self.host_groups = HostGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
+        self.agents = AgentsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -281,25 +282,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def get_baking_status(self) -> BakingStatus:
-        response = self.get("/domain-types/agent/actions/baking_status/invoke")
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-        result = response.json()["result"]["value"]
-        return BakingStatus(
-            state=result["state"],
-            started=result["started"],
-        )
-
-    def sign_agents(self, key_id: int, passphrase: str) -> None:
-        response = self.post(
-            "/domain-types/agent/actions/sign/invoke",
-            json={"key_id": key_id, "passphrase": passphrase},
-        )
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
     def create_rule(
         self,
@@ -1083,3 +1065,24 @@ class ServicesAPI(BaseAPI):
                 if _.get("extensions", {}).get("has_been_checked") == int(not pending)
             ]
         return value
+
+
+class AgentsAPI(BaseAPI):
+    def get_baking_status(self) -> BakingStatus:
+        response = self.session.get("/domain-types/agent/actions/baking_status/invoke")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        result = response.json()["result"]["value"]
+        return BakingStatus(
+            state=result["state"],
+            started=result["started"],
+        )
+
+    def sign(self, key_id: int, passphrase: str) -> None:
+        response = self.session.post(
+            "/domain-types/agent/actions/sign/invoke",
+            json={"key_id": key_id, "passphrase": passphrase},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)

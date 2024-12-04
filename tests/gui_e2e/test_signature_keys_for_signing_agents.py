@@ -92,7 +92,7 @@ def send_pem_file(page: Dashboard, description: str, password: str, content: str
 def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
     """Continously check the baking status and return once the agent baking is finished."""
     for attempt in range(max_attempts):
-        if test_site.openapi.get_baking_status().state == "finished":
+        if test_site.openapi.agents.get_baking_status().state == "finished":
             logger.info("Agent baking completed!")
             return
         assert attempt < max_attempts - 1, "Agent baking timed out!"

@@ -298,7 +298,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
     waiting_cycles = 30
     for _ in range(waiting_cycles):
         time.sleep(waiting_time)
-        baking_status = central_site.openapi.get_baking_status()
+        baking_status = central_site.openapi.agents.get_baking_status()
         assert baking_status.state in (
             "initialized",
             "running",

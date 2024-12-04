@@ -147,7 +147,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
 
     - NAME: CHANGED_CMK_OTEL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-otel-collector/' || true"
 
     - NAME: CHANGED_RULESETS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
@@ -494,12 +494,12 @@ STAGES:
       TEXT_ON_SKIP: "No cmk-mkp-tool files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
-    - NAME: "Package cmk-otel"
+    - NAME: "Package cmk-otel-collector"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_OTEL_FILES
-      DIR: "non-free/packages/cmk-otel"
-      COMMAND: "../../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-otel.txt"
-      TEXT_ON_SKIP: "No cmk-otel files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-otel.txt"
+      DIR: "non-free/packages/cmk-otel-collector"
+      COMMAND: "../../../scripts/run-in-docker.sh TERM=xterm ./run --all &> ${RESULTS}/cmk-otel-collector.txt"
+      TEXT_ON_SKIP: "No cmk-otel-collector files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-otel-collector.txt"
 
     - NAME: "Package cmk-rulesets"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_RULESETS_FILES

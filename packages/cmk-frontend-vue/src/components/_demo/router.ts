@@ -19,6 +19,7 @@ import DemoCmkIcon from './DemoCmkIcon.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
 import DemoCmkCheckbox from './DemoCmkCheckbox.vue'
 import DemoFormList from './DemoFormList.vue'
+import DemoFormMetric from './DemoFormMetric.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
@@ -133,6 +134,11 @@ const routes: Route[] = [
         component: DemoFormList
       },
       {
+        path: 'formmetric',
+        name: 'FormMetric',
+        component: DemoFormMetric
+      },
+      {
         path: 'formbooleanchoice',
         name: 'FormBoleanChoice',
         component: DemoFormBooleanChoice
@@ -143,7 +149,7 @@ const routes: Route[] = [
         component: DemoFormOptionalChoice
       },
       {
-        path: 'formodictionary',
+        path: 'formdictionary',
         name: 'FormDictionary',
         component: DemoFormDictionary
       },

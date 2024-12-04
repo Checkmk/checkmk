@@ -57,6 +57,7 @@ function renderForm(
     case 'string':
     case 'integer':
     case 'float':
+    case 'metric':
       return renderSimpleValue(formSpec, value as string, backendValidation)
     case 'single_choice_editable':
     case 'single_choice':

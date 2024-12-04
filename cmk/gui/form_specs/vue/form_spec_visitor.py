@@ -32,6 +32,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     ListUniqueSelection,
+    MetricExtended,
     MonitoredHostExtended,
     MultipleChoiceExtended,
     OptionalChoice,
@@ -43,12 +44,14 @@ from cmk.gui.form_specs.private import (
 )
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
+from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
     recompose_levels,
     recompose_list,
+    recompose_metric,
     recompose_monitored_host,
     recompose_monitored_host_extended,
     recompose_monitored_service,
@@ -80,6 +83,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     Levels,
     List,
+    Metric,
     MonitoredHost,
     MonitoredService,
     MultilineText,
@@ -165,6 +169,7 @@ def register_form_specs():
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
+    register_visitor_class(MetricExtended, MetricVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
     register_visitor_class(DataSize, DataSizeVisitor)
@@ -188,6 +193,7 @@ def register_form_specs():
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)
     register_recomposer_function(MultipleChoice, recompose_multiple_choice)
+    register_recomposer_function(Metric, recompose_metric)
     register_recomposer_function(MonitoredHost, recompose_monitored_host)
     register_recomposer_function(MonitoredHostExtended, recompose_monitored_host_extended)
     register_recomposer_function(MonitoredService, recompose_monitored_service)

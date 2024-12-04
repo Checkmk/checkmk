@@ -18,6 +18,7 @@ from .labels import Labels, Source, World
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .list_unique_selection import ListUniqueSelection
+from .metric import MetricExtended
 from .monitored_host_extended import MonitoredHostExtended
 from .multiple_choice import (
     MultipleChoiceExtended,
@@ -50,6 +51,7 @@ __all__ = [
     "OptionalChoice",
     "UnknownFormSpec",
     "not_empty",
+    "MetricExtended",
     "MultipleChoiceExtended",
     "MultipleChoiceExtendedLayout",
     "MonitoredHostExtended",

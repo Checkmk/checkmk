@@ -129,6 +129,12 @@
         },
         "string": {
             "type": "object",
+            "properties": {
+                "type": {
+                    "const": "string",
+                    "default": "string"
+                }
+            },
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -136,10 +142,6 @@
                 {
                     "type": "object",
                     "properties": {
-                        "type": {
-                            "const": "string",
-                            "default": "string"
-                        },
                         "label": {
                             "type": ["string", "null"]
                         },
@@ -165,7 +167,6 @@
                         }
                     },
                     "required": [
-                        "type",
                         "label",
                         "placeholder",
                         "input_hint",
@@ -174,7 +175,8 @@
                         "i18n_base"
                     ]
                 }
-            ]
+            ],
+            "required": ["type"]
         },
         "password": {
             "type": "object",
@@ -823,6 +825,62 @@
                         }
                     },
                     "required": ["user_name", "i18n"]
+                }
+            ],
+            "required": ["type"]
+        },
+        "metric": {
+            "id": "metric",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "metric",
+                    "default": "metric"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/string"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "service_filter_autocompleter": {
+                            "$ref": "#/$defs/autocompleter"
+                        },
+                        "host_filter_autocompleter": {
+                            "$ref": "#/$defs/autocompleter"
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "metric_i18n",
+                            "properties": {
+                                "host_input_hint": {
+                                    "type": "string"
+                                },
+                                "host_filter": {
+                                    "type": "string"
+                                },
+                                "service_input_hint": {
+                                    "type": "string"
+                                },
+                                "service_filter": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "host_input_hint",
+                                "host_filter",
+                                "service_input_hint",
+                                "service_filter"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "service_filter_autocompleter",
+                        "host_filter_autocompleter",
+                        "i18n"
+                    ]
                 }
             ],
             "required": ["type"]
@@ -1511,6 +1569,9 @@
                 },
                 {
                     "$ref": "#/$defs/time_span"
+                },
+                {
+                    "$ref": "#/$defs/metric"
                 },
                 {
                     "$ref": "#/$defs/single_choice_editable"

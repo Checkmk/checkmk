@@ -13,6 +13,7 @@ import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import FormConditionChoices from '@/form/components/forms/form_condition_choices'
 import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
+import FormMetric from '../components/forms/FormMetric.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
@@ -58,6 +59,7 @@ const components: Record<Components['type'], Component> = {
   list: FormList,
   list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
+  metric: FormMetric,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,
   password: FormPassword,

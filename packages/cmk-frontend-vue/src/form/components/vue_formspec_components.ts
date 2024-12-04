@@ -29,6 +29,7 @@ export type Components =
   | DualListChoice
   | CheckboxListChoice
   | TimeSpan
+  | Metric
   | SingleChoiceEditable
   | Tuple
   | OptionalChoice
@@ -54,13 +55,14 @@ export type Float = FormSpec & {
   input_hint: string | null;
   i18n_base: I18NFormSpecBase;
 };
-export type String = FormSpec & {
-  type: "string";
+export type String = (FormSpec & {
   label: string | null;
   input_hint: string | null;
   field_size: StringFieldSize;
   autocompleter: null | Autocompleter;
   i18n_base: I18NFormSpecBase;
+}) & {
+  type: "string";
 };
 export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
@@ -182,6 +184,19 @@ export type TimeSpan = FormSpec & {
   input_hint: number | null;
 };
 export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
+export type Metric = ((FormSpec & {
+  label: string | null;
+  input_hint: string | null;
+  field_size: StringFieldSize;
+  autocompleter: null | Autocompleter;
+  i18n_base: I18NFormSpecBase;
+}) & {
+  service_filter_autocompleter: Autocompleter;
+  host_filter_autocompleter: Autocompleter;
+  i18n: MetricI18N;
+}) & {
+  type: "metric";
+};
 export type SingleChoiceEditable = FormSpec & {
   type: "single_choice_editable";
   config_entity_type: string;
@@ -346,6 +361,12 @@ export interface TimeSpanI18N {
   minute: string;
   hour: string;
   day: string;
+}
+export interface MetricI18N {
+  host_input_hint: string;
+  host_filter: string;
+  service_input_hint: string;
+  service_filter: string;
 }
 export interface SingleChoiceEditableI18N {
   slidein_save_button: string;

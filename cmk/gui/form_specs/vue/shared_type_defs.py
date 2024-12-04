@@ -134,6 +134,14 @@ class CommentTextAreaI18n:
 
 
 @dataclass(kw_only=True)
+class MetricI18n:
+    host_input_hint: str
+    host_filter: str
+    service_input_hint: str
+    service_filter: str
+
+
+@dataclass(kw_only=True)
 class TimeSpanI18n:
     millisecond: str
     second: str
@@ -433,6 +441,14 @@ class CommentTextArea(MultilineText):
 
 
 @dataclass(kw_only=True)
+class Metric(String):
+    service_filter_autocompleter: Autocompleter
+    host_filter_autocompleter: Autocompleter
+    i18n: MetricI18n
+    type: str = "metric"
+
+
+@dataclass(kw_only=True)
 class DataSize(FormSpec):
     label: Optional[str]
     displayed_magnitudes: list[str]
@@ -564,6 +580,7 @@ Components = Union[
     DualListChoice,
     CheckboxListChoice,
     TimeSpan,
+    Metric,
     SingleChoiceEditable,
     Tuple,
     OptionalChoice,

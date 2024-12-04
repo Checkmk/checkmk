@@ -126,11 +126,23 @@ import re
 
 # Default thresholds for drbd checks
 import time
+from collections.abc import Generator, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, STATE_MARKERS
-from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
-
-check_info = {}
+from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 _drbd_block_start_match = re.compile("^[0-9]+:")
 
@@ -263,32 +275,22 @@ def drbd_get_block(item, info, checktype):
     return None
 
 
-def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
-    if (parsed := drbd_get_block(item, info, "drbd")) is None:
-        return (3, "Undefined state")
-    if parsed["cs"] == "Unconfigured":
-        return (2, 'The device is "Unconfigured"')
-    if parsed["cs"] not in drbd_cs_map:
-        return (3, 'Undefined "connection state" in drbd output')
+def as_kilobytes_per_second(value: float) -> str:
+    return f"{value}kb"
 
-    # Weight of connection state is calculated by the drbd_cs_map.
-    # The roles and disk states are calculated using the expected values
-    state = drbd_cs_map[parsed["cs"]]
-    output = "Connection State: %s" % parsed["cs"]
 
-    # Roles
-    output += ", Roles: %s/%s" % tuple(parsed["ro"])
-    current_roles = "_".join(str(a).lower() for a in parsed["ro"])
-
+def get_roles_result(roles: tuple[str, str], params: Mapping[str, Any]) -> Result:
+    output = "Roles: %s/%s" % roles
+    current_roles = "_".join(str(role).lower() for role in roles)
+    state = 0
     found_role_match = False
+
     if "roles" in params:
-        roles = params.get("roles")
-        if roles:
-            for roles_entry, roles_state in roles:
+        if roles_params := params.get("roles"):
+            for roles_entry, roles_state in roles_params:
                 if roles_entry == current_roles:
                     found_role_match = True
                     state = max(state, roles_state)
-                    output += " %s" % STATE_MARKERS[roles_state]
                     break
         else:  # Ignore roles if set to None
             found_role_match = True
@@ -296,14 +298,22 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     if not found_role_match:
         if "roles_inventory" in params:
             roles_inventory = params.get("roles_inventory")
-            if roles_inventory and parsed["ro"] != roles_inventory:
+            if roles_inventory and roles != roles_inventory:
                 state = max(2, state)
-                output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))
+                output += " (Expected: %s/%s)" % tuple(params.get("roles_inventory"))  # type: ignore[arg-type]
         else:
             state = max(3, state)
             output += " (Check requires a new service discovery)"
 
-    output += ", Diskstates: %s/%s" % tuple(parsed["ds"])
+    return Result(state=State(state), summary=output)
+
+
+def get_diskstates_result(
+    roles: tuple[str, str], diskstates: tuple[str, str], params: Mapping[str, Any]
+) -> Result:
+    output = "Diskstates: %s/%s" % tuple(diskstates)
+    state = 0
+
     # Do not evaluate diskstates. Either set by rule or through the
     # legacy configuration option None in the check parameters tuple
     if (
@@ -312,127 +322,162 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
         or "diskstates_inventory" in params
         and params["diskstates_inventory"] is None
     ):
-        return (state, output)
+        return Result(state=State(state), summary=output)
 
+    # params_diskstates_dict = dict(params.get("diskstates", []))
     params_diskstates_dict = dict(params.get("diskstates", []))
     diskstates_info = set()
-    for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
-        diskstate = f"{ro.lower()}_{ds}"
-        params_diskstate = params_diskstates_dict.get(diskstate)
 
-        if params_diskstate is not None:
+    for ro, ds in zip(roles, diskstates):
+        diskstate = f"{ro.lower()}_{ds}"
+        if (params_diskstate := params_diskstates_dict.get(diskstate)) is not None:
             state = max(state, params_diskstate)
-            diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[params_diskstate]}")
+            diskstates_info.add(f"{ro}/{ds}")
         else:
             default_state = drbd_ds_map.get(diskstate, 3)
             if default_state > 0:
-                diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[default_state]}")
+                diskstates_info.add(f"{ro}/{ds}")
             state = max(state, drbd_ds_map.get(diskstate, 3))
+
     if diskstates_info:
         output += " (%s)" % ", ".join(diskstates_info)
 
-    return (state, output)
+    return Result(state=State(state), summary=output)
+
+
+def check_drbd_general(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if (parsed := drbd_get_block(item, section, "drbd")) is None:
+        yield Result(state=State.UNKNOWN, summary="Undefined state")
+        return
+    if (cs := parsed["cs"]) == "Unconfigured":
+        yield Result(state=State.CRIT, summary='The device is "Unconfigured"')
+        return
+    if cs not in drbd_cs_map:
+        yield Result(state=State.UNKNOWN, summary='Undefined "connection state" in drbd output')
+        return
+
+    # Weight of connection state is calculated by the drbd_cs_map.
+    # The roles and disk states are calculated using the expected values
+    yield Result(state=State(drbd_cs_map[cs]), summary=f"Connection State: {cs}")
+
+    roles = tuple(parsed["ro"])
+    diskstates = tuple(parsed["ds"])
+
+    yield get_roles_result(roles, params)
+    yield get_diskstates_result(roles, diskstates, params)
 
 
 def parse_drbd(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_drbd(info):
-    return inventory_drbd(info, "drbd")
+def discover_drbd(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_drbd(section, "drbd")
+    ]
 
 
-check_info["drbd"] = LegacyCheckDefinition(
+agent_section_drbd = AgentSection(name="drbd", parse_function=parse_drbd)
+check_plugin_drbd = CheckPlugin(
     name="drbd",
-    parse_function=parse_drbd,
     service_name="DRBD %s status",
     discovery_function=discover_drbd,
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
+    check_default_parameters={},
 )
 
 
-def drbd_get_rates(list_):
+def drbd_net_levels(name: str, value: int) -> Generator[Result | Metric]:
     now = time.time()
-    output = ""
-    perfdata = []
-    for type_, name, item, value, uom in list_:
-        rate = get_rate(
-            get_value_store(), f"{type_}.{name}.{item}", now, value, raise_overflow=True
-        )
-        perfdata.append((name, rate))
-        output += f" {name}/sec: {rate}{uom}"
-    return (output, perfdata)
-
-
-def check_drbd_net(item, _no_params, info):
-    if (parsed := drbd_get_block(item, info, "drbd.net")) is None:
-        return (3, "Undefined state")
-    if parsed["cs"] == "Unconfigured":
-        return (2, 'The device is "Unconfigured"')
-
-    output, perfdata = drbd_get_rates(
-        [
-            ("drbd.net", "in", item, int(parsed["nr"]), "kb"),
-            ("drbd.net", "out", item, int(parsed["ns"]), "kb"),
-        ]
+    return check_levels(
+        get_rate(get_value_store(), name, now, value, raise_overflow=True),
+        metric_name=name,
+        label=f"{name}/sec",
+        render_func=as_kilobytes_per_second,
     )
 
-    # FIXME: Maybe handle thresholds in the future
-    return (0, output, perfdata)
+
+def check_drbd_net(item: str, section: StringTable) -> CheckResult:
+    if (parsed := drbd_get_block(item, section, "drbd.net")) is None:
+        yield Result(state=State.UNKNOWN, summary="Undefined state")
+        return
+    if parsed["cs"] == "Unconfigured":
+        yield Result(state=State.CRIT, summary='The device is "Unconfigured"')
+        return
+
+    yield from drbd_net_levels("in", int(parsed["nr"]))
+    yield from drbd_net_levels("out", int(parsed["ns"]))
 
 
-def discover_drbd_net(info):
-    return inventory_drbd(info, "drbd.net")
+def discover_drbd_net(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_drbd(section, "drbd.net")
+    ]
 
 
-check_info["drbd.net"] = LegacyCheckDefinition(
+check_plugin_drbd_net = CheckPlugin(
     name="drbd_net",
     service_name="DRBD %s net",
     sections=["drbd"],
     discovery_function=discover_drbd_net,
     check_function=check_drbd_net,
+    check_default_parameters=None,
 )
 
 
-def check_drbd_disk(item, _no_params, info):
-    if (parsed := drbd_get_block(item, info, "drbd.disk")) is None:
-        return (3, "Undefined state")
-    if parsed["cs"] == "Unconfigured":
-        return (2, 'The device is "Unconfigured"')
-
-    output, perfdata = drbd_get_rates(
-        [
-            ("drbd.disk", "write", item, int(parsed["dw"]), "kb"),
-            ("drbd.disk", "read", item, int(parsed["dr"]), "kb"),
-        ]
+def drbd_disk_levels(name: str, value: int) -> Generator[Result | Metric]:
+    now = time.time()
+    return check_levels(
+        get_rate(get_value_store(), name, now, value, raise_overflow=True),
+        metric_name=name,
+        label=f"{name}/sec",
+        render_func=as_kilobytes_per_second,
     )
 
-    # FIXME: Maybe handle thresholds in the future
-    return (0, output, perfdata)
+
+def check_drbd_disk(item: str, section: StringTable) -> CheckResult:
+    if (parsed := drbd_get_block(item, section, "drbd.disk")) is None:
+        yield Result(state=State.UNKNOWN, summary="Undefined state")
+        return
+    if parsed["cs"] == "Unconfigured":
+        yield Result(state=State.CRIT, summary='The device is "Unconfigured"')
+        return
+
+    yield from drbd_disk_levels("write", int(parsed["dw"]))
+    yield from drbd_disk_levels("read", int(parsed["dr"]))
 
 
-def discover_drbd_disk(info):
-    return inventory_drbd(info, "drbd.disk")
+def discover_drbd_disk(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_drbd(section, "drbd.disk")
+    ]
 
 
-check_info["drbd.disk"] = LegacyCheckDefinition(
+check_plugin_drbd_disk = CheckPlugin(
     name="drbd_disk",
     service_name="DRBD %s disk",
     sections=["drbd"],
     discovery_function=discover_drbd_disk,
     check_function=check_drbd_disk,
+    check_default_parameters=None,
 )
 
 
-def check_drbd_stats(item, _no_params, info):
-    if (parsed := drbd_get_block(item, info, "drbd.stats")) is None:
-        return (3, "Undefined state")
+def check_drbd_stats(item: str, section: StringTable) -> Generator[Result | Metric]:
+    if (parsed := drbd_get_block(item, section, "drbd.stats")) is None:
+        yield Result(state=State.UNKNOWN, summary="Undefined state")
+        return
     if parsed["cs"] == "Unconfigured":
-        return (2, 'The device is "Unconfigured"')
+        yield Result(state=State.CRIT, summary='The device is "Unconfigured"')
+        return
 
-    output = ""
-    perfdata = []
+    def as_int(value: float) -> str:
+        return f"{value:.0f}"
+
     for key, label in [
         ("al", "activity log updates"),
         ("bm", "bit map updates"),
@@ -444,24 +489,28 @@ def check_drbd_stats(item, _no_params, info):
         ("wo", "write order"),
         ("oos", "kb out of sync"),
     ]:
-        if key in parsed:
-            output += f"{label}: {parsed[key]}, "
-        else:
-            parsed[key] = "0"  # perfdata must always have same number of entries
-        if parsed[key].isdigit():
-            perfdata.append(("%s" % label.replace(" ", "_"), int(parsed[key])))
+        try:
+            value = int(parsed[key])
+        except (KeyError, ValueError):
+            value = 0
 
-    return (0, output.rstrip(", "), perfdata)
+        metric_name = label.replace(" ", "_")
 
-
-def discover_drbd_stats(info):
-    return inventory_drbd(info, "drbd.stats")
+        yield from check_levels(value, metric_name=metric_name, label=label, render_func=as_int)
 
 
-check_info["drbd.stats"] = LegacyCheckDefinition(
+def discover_drbd_stats(section: StringTable) -> DiscoveryResult:
+    yield from [
+        Service(item=item, parameters=parameters)
+        for (item, parameters) in inventory_drbd(section, "drbd.stats")
+    ]
+
+
+check_plugin_drbd_stats = CheckPlugin(
     name="drbd_stats",
     service_name="DRBD %s stats",
     sections=["drbd"],
     discovery_function=discover_drbd_stats,
     check_function=check_drbd_stats,
+    check_default_parameters=None,
 )

@@ -5,7 +5,8 @@
 
 import pytest
 
-from cmk.base.legacy_checks import drbd
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.drbd.agent_based import drbd
 
 # <<<drbd>>>
 # version: 8.3.8 (api:88/proto:86-94)
@@ -51,10 +52,10 @@ UNCONFIGURED_SECTION = [*SECTION[:2], ["0:", "cs:Unconfigured", *SECTION[2][2:]]
 @pytest.fixture(scope="function")
 def patch_get_value_store_zero_change(monkeypatch: pytest.MonkeyPatch) -> None:
     zero_change_value_store = {
-        "drbd.net.in.drbd0": (0, 0),
-        "drbd.net.out.drbd0": (0, 12031428),
-        "drbd.disk.read.drbd0": (0, 1175992347),
-        "drbd.disk.write.drbd0": (0, 12031364),
+        "in": (0, 0),
+        "out": (0, 12031428),
+        "read": (0, 1175992347),
+        "write": (0, 12031364),
     }
     monkeypatch.setattr(drbd, "get_value_store", lambda: zero_change_value_store)
 
@@ -84,33 +85,40 @@ class TestGeneralCheckType:
 
     def test_check_drbd_with_params(self) -> None:
         params = {"diskstates_inventory": None, "roles_inventory": None}
-        value = drbd.check_drbd_general("drbd0", params, SECTION)
-        expected = (
-            1,
-            "Connection State: SyncSource, "
-            "Roles: Primary/Secondary, "
-            "Diskstates: UpToDate/Inconsistent",
-        )
+        value = list(drbd.check_drbd_general("drbd0", params, SECTION))
+        expected = [
+            Result(state=State.WARN, summary="Connection State: SyncSource"),
+            Result(state=State.OK, summary="Roles: Primary/Secondary"),
+            Result(state=State.OK, summary="Diskstates: UpToDate/Inconsistent"),
+        ]
         assert value == expected
 
     def test_check_drbd_without_params(self) -> None:
-        value = drbd.check_drbd_general("drbd0", {}, SECTION)
-        expected = (
-            3,
-            "Connection State: SyncSource, Roles: Primary/Secondary (Check requires a "
-            "new service discovery), Diskstates: UpToDate/Inconsistent "
-            "(Secondary/Inconsistent is (!))",
-        )
+        value = list(drbd.check_drbd_general("drbd0", {}, SECTION))
+        expected = [
+            Result(
+                state=State.WARN,
+                summary="Connection State: SyncSource",
+            ),
+            Result(
+                state=State.UNKNOWN,
+                summary="Roles: Primary/Secondary (Check requires a new service discovery)",
+            ),
+            Result(
+                state=State.WARN,
+                summary="Diskstates: UpToDate/Inconsistent (Secondary/Inconsistent)",
+            ),
+        ]
         assert value == expected
 
     def test_check_drbd_missing_input_data(self) -> None:
-        value = drbd.check_drbd_general("drbd0", {}, [[]])
-        expected = (3, "Undefined state")
+        value = list(drbd.check_drbd_general("drbd0", {}, [[]]))
+        expected = [Result(state=State.UNKNOWN, summary="Undefined state")]
         assert value == expected
 
     def test_check_drbd_unconfigured(self) -> None:
-        value = drbd.check_drbd_general("drbd0", {}, UNCONFIGURED_SECTION)
-        expected = (2, 'The device is "Unconfigured"')
+        value = list(drbd.check_drbd_general("drbd0", {}, UNCONFIGURED_SECTION))
+        expected = [Result(state=State.CRIT, summary='The device is "Unconfigured"')]
         assert value == expected
 
 
@@ -123,18 +131,23 @@ class TestNetCheckType:
 
     @pytest.mark.usefixtures("patch_get_value_store_zero_change")
     def test_check_drbd(self) -> None:
-        value = drbd.check_drbd_net("drbd0", {}, SECTION)
-        expected = (0, " in/sec: 0.0kb out/sec: 0.0kb", [("in", 0.0), ("out", 0.0)])
+        value = list(drbd.check_drbd_net("drbd0", SECTION))
+        expected = [
+            Result(state=State.OK, summary="in/sec: 0.0kb"),
+            Metric("in", 0.0),
+            Result(state=State.OK, summary="out/sec: 0.0kb"),
+            Metric("out", 0.0),
+        ]
         assert value == expected
 
     def test_check_drbd_missing_input_data(self) -> None:
-        value = drbd.check_drbd_net("drbd0", {}, [[]])
-        expected = (3, "Undefined state")
+        value = list(drbd.check_drbd_net("drbd0", [[]]))
+        expected = [Result(state=State.UNKNOWN, summary="Undefined state")]
         assert value == expected
 
     def test_check_drbd_unconfigured(self) -> None:
-        value = drbd.check_drbd_net("drbd0", {}, UNCONFIGURED_SECTION)
-        expected = (2, 'The device is "Unconfigured"')
+        value = list(drbd.check_drbd_net("drbd0", UNCONFIGURED_SECTION))
+        expected = [Result(state=State.CRIT, summary='The device is "Unconfigured"')]
         assert value == expected
 
 
@@ -147,18 +160,23 @@ class TestDiskCheckType:
 
     @pytest.mark.usefixtures("patch_get_value_store_zero_change")
     def test_check_drbd(self) -> None:
-        value = drbd.check_drbd_disk("drbd0", {}, SECTION)
-        expected = (0, " write/sec: 0.0kb read/sec: 0.0kb", [("write", 0.0), ("read", 0.0)])
+        value = list(drbd.check_drbd_disk("drbd0", SECTION))
+        expected = [
+            Result(state=State.OK, summary="write/sec: 0.0kb"),
+            Metric("write", 0.0),
+            Result(state=State.OK, summary="read/sec: 0.0kb"),
+            Metric("read", 0.0),
+        ]
         assert value == expected
 
     def test_check_drbd_missing_input_data(self) -> None:
-        value = drbd.check_drbd_disk("drbd0", {}, [[]])
-        expected = (3, "Undefined state")
+        value = list(drbd.check_drbd_disk("drbd0", [[]]))
+        expected = [Result(state=State.UNKNOWN, summary="Undefined state")]
         assert value == expected
 
     def test_check_drbd_unconfigured(self) -> None:
-        value = drbd.check_drbd_disk("drbd0", {}, UNCONFIGURED_SECTION)
-        expected = (2, 'The device is "Unconfigured"')
+        value = list(drbd.check_drbd_disk("drbd0", UNCONFIGURED_SECTION))
+        expected = [Result(state=State.CRIT, summary='The device is "Unconfigured"')]
         assert value == expected
 
 
@@ -170,32 +188,36 @@ class TestStatsCheckType:
         assert not list(drbd.inventory_drbd(UNCONFIGURED_SECTION, "drbd.stats"))
 
     def test_check_drbd(self) -> None:
-        value = drbd.check_drbd_stats("drbd0", {}, SECTION)
-        expected = (
-            0,
-            "activity log updates: 2179, bit map updates: 71877, local count requests: "
-            "37, pending requests: 0, unacknowledged requests: 37, application pending "
-            "requests: 0, epoch objects: 1, write order: b, kb out of sync: 301729988",
-            [
-                ("activity_log_updates", 2179),
-                ("bit_map_updates", 71877),
-                ("local_count_requests", 37),
-                ("pending_requests", 0),
-                ("unacknowledged_requests", 37),
-                ("application_pending_requests", 0),
-                ("epoch_objects", 1),
-                ("kb_out_of_sync", 301729988),
-            ],
-        )
+        value = list(drbd.check_drbd_stats("drbd0", SECTION))
+        expected = [
+            Result(state=State.OK, summary="activity log updates: 2179"),
+            Metric("activity_log_updates", 2179.0),
+            Result(state=State.OK, summary="bit map updates: 71877"),
+            Metric("bit_map_updates", 71877.0),
+            Result(state=State.OK, summary="local count requests: 37"),
+            Metric("local_count_requests", 37.0),
+            Result(state=State.OK, summary="pending requests: 0"),
+            Metric("pending_requests", 0.0),
+            Result(state=State.OK, summary="unacknowledged requests: 37"),
+            Metric("unacknowledged_requests", 37.0),
+            Result(state=State.OK, summary="application pending requests: 0"),
+            Metric("application_pending_requests", 0.0),
+            Result(state=State.OK, summary="epoch objects: 1"),
+            Metric("epoch_objects", 1.0),
+            Result(state=State.OK, summary="write order: 0"),
+            Metric("write_order", 0.0),
+            Result(state=State.OK, summary="kb out of sync: 301729988"),
+            Metric("kb_out_of_sync", 301729988.0),
+        ]
 
         assert value == expected
 
     def test_check_drbd_missing_input_data(self) -> None:
-        value = drbd.check_drbd_stats("drbd0", {}, [[]])
-        expected = (3, "Undefined state")
+        value = list(drbd.check_drbd_stats("drbd0", [[]]))
+        expected = [Result(state=State.UNKNOWN, summary="Undefined state")]
         assert value == expected
 
     def test_check_drbd_unconfigured(self) -> None:
-        value = drbd.check_drbd_stats("drbd0", {}, UNCONFIGURED_SECTION)
-        expected = (2, 'The device is "Unconfigured"')
+        value = list(drbd.check_drbd_stats("drbd0", UNCONFIGURED_SECTION))
+        expected = [Result(state=State.CRIT, summary='The device is "Unconfigured"')]
         assert value == expected

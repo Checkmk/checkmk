@@ -53,10 +53,10 @@ crates_repository(
             ),
         ],
     },
-    cargo_lockfile = "//:Cargo.site.lock",
-    lockfile = "//:Cargo.site.lock.bazel",
+    cargo_lockfile = "//packages/site:Cargo.lock",
+    lockfile = "//packages/site:Cargo.lock.bazel",
     manifests = [
-        "//:Cargo.site.toml",
+        "//packages/site:Cargo.toml",
         "//packages/site/check-cert:Cargo.toml",
         "//packages/site/check-http:Cargo.toml",
     ],

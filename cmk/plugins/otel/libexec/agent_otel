@@ -29,17 +29,20 @@ def main() -> int:
     file_paths = list(folder.iterdir())
     time.sleep(1)  # let the control
 
-    content = []
+    by_timestamp: dict[int, str] = {}
     for file_path in file_paths:
         try:
-            content.append(file_path.read_text())
+            by_timestamp.setdefault(int(file_path.stem), file_path.read_text())
+        except ValueError:
+            sys.stderr.write(f"Cannot extract timestamp of file {file_path}\n")
         except FileNotFoundError:
             sys.stderr.write(f"No such file {file_path}\n")
         except IsADirectoryError:
             sys.stderr.write(f"Skip folder {file_path}\n")
 
     sys.stdout.write("<<<otel_metrics:sep(0)>>>\n")
-    sys.stdout.write("\n".join(content) + "\n")
+    for timestamp, content in by_timestamp.items():
+        sys.stdout.write(f"{timestamp} {content}" + "\n")
     return 0
 
 

@@ -596,7 +596,7 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = "cmk.otel.*"
+module = "cmk.otel_collector.*"
 strict = true
 enable_error_code = [
   "explicit-override",

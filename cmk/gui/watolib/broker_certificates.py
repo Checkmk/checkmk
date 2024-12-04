@@ -250,6 +250,7 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
     def _add_central_site_user(self, central_site: SiteId) -> None:
         def _handle_errors(command: tuple[str, ...]) -> IO[str] | None:
             popen = rabbitmq.rabbitmqctl_process(command)
+            popen.wait()
             if popen.stderr and (lines := popen.stderr.readlines()):
                 logger.error(
                     "Failed to execute command: %s, with error: %s",
@@ -259,7 +260,7 @@ class AutomationStoreBrokerCertificates(AutomationCommand[StoreBrokerCertificate
                 raise MKGeneralException(f"Failed to execute command: {command}")
             return popen.stdout
 
-        rabbitmq.rabbitmqctl_process(("add_user", central_site, "password"))
+        rabbitmq.rabbitmqctl_process(("add_user", central_site, "password")).wait()
         # the password here is used to avoid the process waiting for input
         # it is removed in the next command
         _handle_errors(("clear_password", central_site))

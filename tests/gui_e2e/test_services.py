@@ -10,7 +10,8 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
+from tests.gui_e2e.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
+
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.monitor.combined_graph import CombinedGraphsServiceSearch
 from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage

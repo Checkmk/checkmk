@@ -77,12 +77,19 @@ EXAMPLE_8: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_9: Mapping[str, object] = {
+    "name": "tcp_port",
+    "host": {"port": 443},
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
     [
         EXAMPLE_3,
         EXAMPLE_5,
+        EXAMPLE_9,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:

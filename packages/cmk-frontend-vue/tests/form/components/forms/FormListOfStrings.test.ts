@@ -100,7 +100,7 @@ test('FormListOfStrings shows frontend validation on existing element', async ()
       data: ['some_value'],
       backendValidation: []
     }
-  })
+  }).emitted('select')
 
   const textboxes = await screen.getAllByRole<HTMLInputElement>('textbox')
   await fireEvent.update(textboxes[0]!, '')

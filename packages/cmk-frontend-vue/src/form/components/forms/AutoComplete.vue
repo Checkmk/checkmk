@@ -7,27 +7,36 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, useTemplateRef, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 import type { Autocompleter } from '../vue_formspec_components'
+import { inputSizes } from '../utils/sizes'
+import { X } from 'lucide-vue-next'
 
 const props = defineProps<{
+  id?: string
   placeholder: string
   show: boolean
-  autocompleter: Autocompleter | undefined
+  autocompleter?: Autocompleter | null
   filterOn: string[]
+  size: keyof typeof inputSizes
+  resestInputOnAdd: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'itemSelected', value: string): void
+  (e: 'select', value: string): void
 }>()
 
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    if (selectedSuggestionIndex.value < filteredSuggestions.value.length - 1) {
+    if (selectedSuggestionIndex.value === filteredSuggestions.value.length - 1) {
+      selectedSuggestionIndex.value = 0
+    } else if (selectedSuggestionIndex.value < filteredSuggestions.value.length - 1) {
       selectedSuggestionIndex.value++
     }
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
-    if (selectedSuggestionIndex.value > 0) {
+    if (selectedSuggestionIndex.value === 0) {
+      selectedSuggestionIndex.value = filteredSuggestions.value.length - 1
+    } else if (selectedSuggestionIndex.value > 0) {
       selectedSuggestionIndex.value--
     }
   } else if (e.key === 'ArrowRight') {
@@ -50,14 +59,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 }
 
-const handleFocus = () => {
-  setBlur(true)
-}
-
-const handleBlur = () => {
-  setBlur(false)
-}
-
 const handleAddItem = (e: KeyboardEvent) => {
   if (selectedSuggestionIndex.value >= 0) {
     inputReset()
@@ -65,17 +66,21 @@ const handleAddItem = (e: KeyboardEvent) => {
   }
   const value = (e.target as HTMLInputElement).value
   if (value) {
-    emit('itemSelected', value)
+    emit('select', value)
   }
   inputReset()
+
+  if (!props.resestInputOnAdd) {
+    setBlur(false)
+  }
 }
 
 const handleCloseList = (item: string) => {
   selectedSuggestionIndex.value = -1
   inputValue.value = item
   inputReset()
-  inputFocus()
-  emit('itemSelected', item)
+  setBlur(false)
+  emit('select', item)
 }
 
 const handleListBlur = () => {
@@ -83,12 +88,8 @@ const handleListBlur = () => {
 }
 
 const inputReset = () => {
-  inputValue.value = ''
-}
-
-const inputFocus = () => {
-  if (inputField.value) {
-    inputField.value.focus()
+  if (props.resestInputOnAdd) {
+    inputValue.value = ''
   }
 }
 
@@ -128,28 +129,33 @@ watch(autocompleterOutput, (newValue) => {
 
 <template>
   <div class="autocomplete">
-    <input
-      ref="inputField"
-      v-model="inputValue"
-      class="item new-item"
-      type="text"
-      autocomplete="on"
-      :placeholder="props.placeholder"
-      @keydown.enter="handleAddItem"
-      @focus="handleFocus"
-      @blur="handleBlur"
-      @keydown="handleKeyDown"
-    />
+    <span style="display: flex; align-items: center">
+      <input
+        :id="props.id ?? 'autocomplete'"
+        ref="inputField"
+        v-model="inputValue"
+        class="item new-item"
+        type="text"
+        autocomplete="on"
+        :style="{ width: inputSizes[props.size].width, height: inputSizes[props.size].height }"
+        :placeholder="props.placeholder"
+        @keydown.enter="handleAddItem"
+        @focus="() => setBlur(true)"
+        @blur="() => setBlur(false)"
+        @keydown="handleKeyDown"
+      />
+      <X
+        :style="{ opacity: !!inputValue ? 1 : 0, cursor: !!inputValue ? 'pointer' : 'unset' }"
+        class="item-delete-btn"
+        @click="() => (inputValue = '')"
+      />
+    </span>
+
     <Transition name="fade">
       <ul
-        v-if="
-          props.show &&
-          filteredSuggestions.length > 0 &&
-          !filteredSuggestions.includes(inputValue) &&
-          !!inputValue &&
-          !!showSuggestions
-        "
+        v-if="props.show && filteredSuggestions.length > 0 && !!inputValue && !!showSuggestions"
         class="suggestions"
+        :style="{ minWidth: inputSizes[props.size].width }"
         @blur="handleListBlur"
       >
         <li
@@ -166,11 +172,16 @@ watch(autocompleterOutput, (newValue) => {
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active {
   transition:
     opacity 0.2s ease-out,
     transform 0.2s ease-out;
+}
+
+.fade-leave-active {
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.05s ease-out;
 }
 
 .fade-enter-from,
@@ -199,8 +210,12 @@ table.nform input {
 }
 
 .item {
-  height: 8px;
   background-color: var(--default-form-element-bg-color);
+
+  &:focus,
+  &:active {
+    background-color: var(--default-form-element-border-color);
+  }
 }
 
 .new-item {
@@ -223,6 +238,7 @@ table.nform input {
   width: 10px;
   height: 10px;
   border: none;
+
   transition: background-color 0.3s;
 
   &:hover {
@@ -230,19 +246,18 @@ table.nform input {
   }
 }
 
-.close-btn {
-  width: 10px;
-  height: 10px;
-  margin: 0;
-  padding: 1px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-}
-
 .autocomplete {
   position: relative;
+  width: fit-content;
+  border-radius: 5px;
+
+  background-color: var(--default-form-element-bg-color);
+  margin: 0;
+  padding: 0;
+
+  &:focus-within {
+    background-color: var(--default-form-element-border-color);
+  }
 }
 
 .suggestions {
@@ -252,10 +267,11 @@ table.nform input {
   background-color: var(--default-form-element-bg-color);
   border-radius: 4px;
   max-height: 200px;
-  overflow-y: auto;
+  width: fit-content;
   max-width: fit-content;
+  overflow-y: auto;
   margin: 0;
-  padding: 0 16px 0 0;
+  padding: 0;
   list-style-type: none;
 
   li {

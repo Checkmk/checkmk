@@ -134,11 +134,13 @@ const deleteItem = (item: string) => {
     "
   >
     <AutoComplete
-      :autocompleter="props.spec.autocompleter!"
+      size="SMALL"
+      :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"
       :show="!error"
       :filter-on="keyValuePairs"
-      @item-selected="addItem"
+      :resest-input-on-add="true"
+      @select="addItem"
     />
   </div>
   <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>
@@ -174,6 +176,10 @@ const deleteItem = (item: string) => {
     background-color: var(--default-form-element-bg-color);
     margin: 5px 0;
     padding: 2px;
+
+    &:focus-within {
+      background-color: var(--default-form-element-border-color);
+    }
   }
 }
 
@@ -185,6 +191,10 @@ table.nform input {
 .item {
   height: 8px;
   background-color: var(--default-form-element-bg-color);
+
+  &:focus {
+    background-color: var(--default-form-element-border-color);
+  }
 }
 
 .new-item {
@@ -223,33 +233,5 @@ table.nform input {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-}
-
-.autocomplete {
-  position: relative;
-}
-
-.suggestions {
-  position: absolute;
-  z-index: 1;
-  color: var(--font-color);
-  background-color: var(--default-form-element-bg-color);
-  border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
-  max-width: fit-content;
-  margin: 0;
-  padding: 0 16px 0 0;
-  list-style-type: none;
-
-  li {
-    padding: 4px 8px;
-    cursor: pointer;
-
-    &:hover,
-    &.selected {
-      color: var(--default-select-hover-color);
-    }
-  }
 }
 </style>

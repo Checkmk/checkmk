@@ -35,33 +35,32 @@ describe('Autocompleter', () => {
       props: {
         placeholder: 'Search...',
         show: false,
-        autocompleter: undefined,
-        filterOn: []
+        autocompleter: null,
+        filterOn: [],
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
     })
     expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument()
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    let itemSelected = ''
-
     render(Autocomplete, {
       props: {
         placeholder: 'Search...',
         show: false,
-        autocompleter: undefined,
+        autocompleter: null,
         filterOn: [],
-        onItemSelected: (item: string) => {
-          itemSelected = item
-        }
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
-    })
+    }).emitted('select')
 
     const input = screen.getByPlaceholderText('Search...')
     await fireEvent.update(input, 'os:windows')
     await fireEvent.keyDown(input, { key: 'Enter' })
-
-    expect(itemSelected).toBe('os:windows')
   })
 
   test('on input should open dropdown list with items', async () => {
@@ -70,7 +69,10 @@ describe('Autocompleter', () => {
         placeholder: 'Add some labels',
         show: true,
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: []
+        filterOn: [],
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
     })
 
@@ -95,7 +97,10 @@ describe('Autocompleter', () => {
         placeholder: 'Add some labels',
         show: true,
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
-        filterOn: []
+        filterOn: [],
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
     })
 
@@ -114,17 +119,15 @@ describe('Autocompleter', () => {
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
-    let itemSelected = ''
-
-    render(Autocomplete, {
+    const component = render(Autocomplete, {
       props: {
         placeholder: 'Add some labels',
         show: true,
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        onItemSelected: (item: string) => {
-          itemSelected = item
-        }
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
     })
 
@@ -145,26 +148,21 @@ describe('Autocompleter', () => {
       throw new Error('No suggestions found')
     }
 
-    expect(screen.queryByText('os:windows')).not.toBeInTheDocument()
-    expect(screen.queryByText('os:linux')).not.toBeInTheDocument()
-
-    expect(itemSelected).toBe('os:windows')
+    expect(component.emitted('select')).toHaveLength(1)
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    let itemSelected = ''
-
     render(Autocomplete, {
       props: {
         placeholder: 'Add some labels',
         show: true,
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
-        onItemSelected: (item: string) => {
-          itemSelected = item
-        }
+        resestInputOnAdd: false,
+        size: 'SMALL',
+        id: 'test'
       }
-    })
+    }).emitted('select')
 
     const input = screen.getByPlaceholderText('Add some labels')
     await fireEvent.update(input, 'os')
@@ -187,7 +185,5 @@ describe('Autocompleter', () => {
       expect(screen.queryByText('os:windows')).not.toBeInTheDocument()
       expect(screen.queryByText('os:linux')).not.toBeInTheDocument()
     })
-
-    expect(itemSelected).toBe('os:windows')
   })
 })

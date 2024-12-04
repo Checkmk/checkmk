@@ -12,7 +12,8 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.host_details import HostDetails
+from tests.gui_e2e.testlib.host_details import HostDetails
+
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.setup.add_rule_periodic_discovery import (
     AddRulePeriodicServiceDiscovery,

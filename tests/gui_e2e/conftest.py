@@ -17,8 +17,9 @@ from faker import Faker
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.gui_e2e.testlib.host_details import HostDetails
+
 from tests.testlib.emails import EmailManager
-from tests.testlib.host_details import HostDetails
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.plugin import (
     manage_new_browser_context,

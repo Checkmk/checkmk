@@ -11,7 +11,12 @@ import pytest
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
+from tests.gui_e2e.testlib.host_details import (
+    AddressFamily,
+    AgentAndApiIntegration,
+    HostDetails,
+)
+
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.testlib.playwright.pom.monitor.host_status import HostStatus

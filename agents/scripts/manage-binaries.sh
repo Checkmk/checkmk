@@ -43,8 +43,10 @@ _install_symlinks() {
         name=$(basename "${binary}")
         [ -n "${ALTERNATIVES}" ] && {
             # We don't make use of the priority, but it's mandatory, so we only choose an arbitrarily chosen 50.
-            # By that, the last call to '--install' will win.
             "${ALTERNATIVES}" --install "${SYMLINK_DIR}/${name}" "${name}" "${binary}" 50
+            # If the alternative is already existing, we have to activate our binary path in place explicitly.
+            # Otherwise this call will just pass silently.
+            "${ALTERNATIVES}" --set "${name}" "${binary}"
             continue
         }
         [ -e "${SYMLINK_DIR}/${name}" ] && [ ! -L "${SYMLINK_DIR}/${name}" ] && {

@@ -1,5 +1,5 @@
 {
-  "checksum": "c208d20219cd828e6f1f1c68762819dff373fd9f091d320a6fa4a7629cb66c7a",
+  "checksum": "1469ac4788a6e700f97f44acb2cb1a6d79cbc64f28f646517e98276583c1c5d1",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4421,44 +4421,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "convert_case 0.4.0": {
-      "name": "convert_case",
-      "version": "0.4.0",
-      "package_url": "https://github.com/rutrum/convert-case",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/convert_case/0.4.0/download",
-          "sha256": "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "convert_case",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "convert_case",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.4.0"
-      },
-      "license": "MIT",
-      "license_ids": [
-        "MIT"
-      ],
-      "license_file": null
-    },
     "core-foundation 0.9.4": {
       "name": "core-foundation",
       "version": "0.9.4",
@@ -5235,19 +5197,19 @@
       ],
       "license_file": "LICENSE-Apache"
     },
-    "derive_more 0.99.18": {
+    "derive_more 1.0.0": {
       "name": "derive_more",
-      "version": "0.99.18",
+      "version": "1.0.0",
       "package_url": "https://github.com/JelteF/derive_more",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/derive_more/0.99.18/download",
-          "sha256": "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
+          "url": "https://static.crates.io/crates/derive_more/1.0.0/download",
+          "sha256": "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
         }
       },
       "targets": [
         {
-          "ProcMacro": {
+          "Library": {
             "crate_name": "derive_more",
             "crate_root": "src/lib.rs",
             "srcs": {
@@ -5266,41 +5228,72 @@
         ],
         "crate_features": {
           "common": [
-            "add",
-            "add_assign",
-            "as_mut",
-            "as_ref",
-            "constructor",
-            "convert_case",
             "default",
-            "deref",
-            "deref_mut",
             "display",
-            "error",
             "from",
-            "from_str",
-            "index",
-            "index_mut",
             "into",
-            "into_iterator",
-            "is_variant",
-            "iterator",
-            "mul",
-            "mul_assign",
-            "not",
-            "rustc_version",
-            "sum",
-            "try_into",
-            "unwrap"
+            "std"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "derive_more-impl 1.0.0",
+              "target": "derive_more_impl"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "1.0.0"
+      },
+      "license": "MIT",
+      "license_ids": [
+        "MIT"
+      ],
+      "license_file": "LICENSE"
+    },
+    "derive_more-impl 1.0.0": {
+      "name": "derive_more-impl",
+      "version": "1.0.0",
+      "package_url": "https://github.com/JelteF/derive_more",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/derive_more-impl/1.0.0/download",
+          "sha256": "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "derive_more_impl",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "derive_more_impl",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "display",
+            "from",
+            "into"
           ],
           "selects": {}
         },
         "deps": {
           "common": [
-            {
-              "id": "convert_case 0.4.0",
-              "target": "convert_case"
-            },
             {
               "id": "proc-macro2 1.0.92",
               "target": "proc_macro2"
@@ -5312,12 +5305,16 @@
             {
               "id": "syn 2.0.90",
               "target": "syn"
+            },
+            {
+              "id": "unicode-xid 0.2.6",
+              "target": "unicode_xid"
             }
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.99.18"
+        "edition": "2021",
+        "version": "1.0.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -6472,70 +6469,6 @@
         },
         "edition": "2018",
         "version": "1.0.33"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "flexi_logger 0.27.4": {
-      "name": "flexi_logger",
-      "version": "0.27.4",
-      "package_url": "https://github.com/emabee/flexi_logger",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/flexi_logger/0.27.4/download",
-          "sha256": "469e584c031833564840fb0cdbce99bdfe946fd45480a188545e73a76f45461c"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "flexi_logger",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "flexi_logger",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "chrono 0.4.38",
-              "target": "chrono"
-            },
-            {
-              "id": "glob 0.3.1",
-              "target": "glob"
-            },
-            {
-              "id": "lazy_static 1.5.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "log 0.4.22",
-              "target": "log"
-            },
-            {
-              "id": "thiserror 1.0.69",
-              "target": "thiserror"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.27.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -7877,45 +7810,6 @@
         },
         "edition": "2018",
         "version": "0.31.1"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "glob 0.3.1": {
-      "name": "glob",
-      "version": "0.3.1",
-      "package_url": "https://github.com/rust-lang/glob",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/glob/0.3.1/download",
-          "sha256": "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "glob",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "glob",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2015",
-        "version": "0.3.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -9981,7 +9875,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.52.6",
+                "id": "windows-targets 0.48.5",
                 "target": "windows_targets"
               }
             ]
@@ -10742,7 +10636,11 @@
               "target": "clap"
             },
             {
-              "id": "flexi_logger 0.27.4",
+              "id": "derive_more 1.0.0",
+              "target": "derive_more"
+            },
+            {
+              "id": "flexi_logger 0.29.6",
               "target": "flexi_logger"
             },
             {
@@ -10774,14 +10672,14 @@
               "target": "tokio_util"
             },
             {
-              "id": "yaml-rust2 0.8.1",
+              "id": "yaml-rust2 0.9.0",
               "target": "yaml_rust2"
             }
           ],
           "selects": {
             "cfg(windows)": [
               {
-                "id": "odbc-api 7.2.4",
+                "id": "odbc-api 10.0.0",
                 "target": "odbc_api"
               },
               {
@@ -10805,15 +10703,6 @@
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "derive_more 0.99.18",
-              "target": "derive_more"
-            }
-          ],
-          "selects": {}
-        },
         "version": "0.1.0"
       },
       "license": null,
@@ -12553,14 +12442,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "odbc-api 7.2.4": {
+    "odbc-api 10.0.0": {
       "name": "odbc-api",
-      "version": "7.2.4",
+      "version": "10.0.0",
       "package_url": "https://github.com/pacman82/odbc-api",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/odbc-api/7.2.4/download",
-          "sha256": "f13064f9d099c4036c8e32229e1fa4dafdd4900ea6833471e089ae23a47707ce"
+          "url": "https://static.crates.io/crates/odbc-api/10.0.0/download",
+          "sha256": "c57647953779ff8caf2ab01a8e35ea3086f28cc3d7381bdf0974afbba2c3ea3d"
         }
       },
       "targets": [
@@ -12604,7 +12493,7 @@
               "target": "odbc_sys"
             },
             {
-              "id": "thiserror 1.0.69",
+              "id": "thiserror 2.0.4",
               "target": "thiserror"
             },
             {
@@ -12622,7 +12511,7 @@
           }
         },
         "edition": "2021",
-        "version": "7.2.4"
+        "version": "10.0.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -17638,54 +17527,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustc_version 0.4.1": {
-      "name": "rustc_version",
-      "version": "0.4.1",
-      "package_url": "https://github.com/djc/rustc-version-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/rustc_version/0.4.1/download",
-          "sha256": "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rustc_version",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "rustc_version",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "semver 1.0.23",
-              "target": "semver"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.4.1"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
     "rusticata-macros 4.1.0": {
       "name": "rusticata-macros",
       "version": "4.1.0",
@@ -19123,78 +18964,6 @@
         },
         "edition": "2021",
         "version": "2.11.1"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "semver 1.0.23": {
-      "name": "semver",
-      "version": "1.0.23",
-      "package_url": "https://github.com/dtolnay/semver",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/semver/1.0.23/download",
-          "sha256": "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "semver",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "semver",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "semver 1.0.23",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.0.23"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ]
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -21002,6 +20771,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -23162,6 +22938,51 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "unicode-xid 0.2.6": {
+      "name": "unicode-xid",
+      "version": "0.2.6",
+      "package_url": "https://github.com/unicode-rs/unicode-xid",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/unicode-xid/0.2.6/download",
+          "sha256": "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "unicode_xid",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "unicode_xid",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.2.6"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
     "untrusted 0.9.0": {
       "name": "untrusted",
       "version": "0.9.0",
@@ -24533,7 +24354,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.48.0",
                 "target": "windows_sys"
               }
             ]
@@ -27431,14 +27252,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "yaml-rust2 0.8.1": {
+    "yaml-rust2 0.9.0": {
       "name": "yaml-rust2",
-      "version": "0.8.1",
+      "version": "0.9.0",
       "package_url": "https://github.com/Ethiraric/yaml-rust2",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/yaml-rust2/0.8.1/download",
-          "sha256": "8902160c4e6f2fb145dbe9d6760a75e3c9522d8bf796ed7047c85919ac7115f8"
+          "url": "https://static.crates.io/crates/yaml-rust2/0.9.0/download",
+          "sha256": "2a1a1c0bc9823338a3bdf8c61f994f23ac004c6fa32c08cd152984499b445e8d"
         }
       },
       "targets": [
@@ -27485,7 +27306,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.8.1"
+        "version": "0.9.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -28302,10 +28123,9 @@
     "async-trait 0.1.83",
     "bincode 1.3.3",
     "clap 4.5.22",
-    "derive_more 0.99.18",
+    "derive_more 1.0.0",
     "faccess 0.2.4",
     "flate2 1.0.33",
-    "flexi_logger 0.27.4",
     "flexi_logger 0.29.6",
     "futures 0.3.31",
     "gethostname 0.5.0",
@@ -28316,7 +28136,7 @@
     "log 0.4.22",
     "mail_slot 0.1.3",
     "nix 0.29.0",
-    "odbc-api 7.2.4",
+    "odbc-api 10.0.0",
     "openssl 0.10.68",
     "os_info 3.9.0",
     "rand 0.8.5",
@@ -28338,7 +28158,7 @@
     "winapi 0.3.9",
     "winreg 0.52.0",
     "x509-parser 0.16.0",
-    "yaml-rust2 0.8.1"
+    "yaml-rust2 0.9.0"
   ],
   "direct_dev_deps": [
     "assert_cmd 2.0.16",

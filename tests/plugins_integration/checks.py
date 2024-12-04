@@ -384,7 +384,7 @@ def setup_site(site: Site, dump_path: str) -> None:
             site.openapi.folders.create(host_folder)
         ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
         logger.info('Creating rule "%s"...', ruleset_name)
-        site.openapi.create_rule(
+        site.openapi.rules.create(
             ruleset_name=ruleset_name,
             value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
             folder=host_folder,

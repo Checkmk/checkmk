@@ -68,7 +68,7 @@ def _host_services(
         else:
             if not version_from_env().is_saas_edition():
                 # Reduce check interval to 3 seconds
-                rule_id = site.openapi.create_rule(
+                rule_id = site.openapi.rules.create(
                     ruleset_name=RuleGroup.ExtraServiceConf("check_interval"),
                     value=0.05,
                     conditions={
@@ -95,7 +95,7 @@ def _host_services(
         raise e
     finally:
         if rule_id:
-            site.openapi.delete_rule(rule_id)
+            site.openapi.rules.delete(rule_id)
         site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 

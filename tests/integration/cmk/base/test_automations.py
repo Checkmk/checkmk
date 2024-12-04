@@ -85,7 +85,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host2")
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("modes-test-host3")
     site.openapi.service_discovery.run_discovery_and_wait_for_completion("host_with_secondary_ip")
-    icmp_rule_id = site.openapi.create_rule(
+    icmp_rule_id = site.openapi.rules.create(
         ruleset_name=RuleGroup.ActiveChecks("icmp"),
         value={"address": "all_ipv4addresses"},
     )
@@ -108,7 +108,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         site.openapi.hosts.delete("modes-test-host3")
         site.openapi.hosts.delete("modes-test-host4")
         site.openapi.hosts.delete("host_with_secondary_ip")
-        site.openapi.delete_rule(icmp_rule_id)
+        site.openapi.rules.delete(icmp_rule_id)
         site.activate_changes_and_wait_for_core_reload()
 
 

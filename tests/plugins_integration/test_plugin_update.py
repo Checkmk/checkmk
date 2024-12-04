@@ -47,7 +47,7 @@ def test_plugin_update(
     * Re-discover services and compare services found before and after such discovery;
     * Check the number of rules in the ruleset 'periodic_discovery' and compare with the expected.
     """
-    psd_rules_base = test_site_update.openapi.get_rules("periodic_discovery")
+    psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
     for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
@@ -119,7 +119,7 @@ def test_plugin_update(
             f"service-discovery but not after: {not_found_status_0_services_sd}"
         )
 
-    psd_rules_update = test_site_update.openapi.get_rules("periodic_discovery")
+    psd_rules_update = test_site_update.openapi.rules.get_all("periodic_discovery")
     err_msg = (
         "The number of rules in the ruleset 'periodic_discovery' differs between before and after "
         "the update."

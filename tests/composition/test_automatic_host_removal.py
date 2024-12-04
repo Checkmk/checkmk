@@ -27,7 +27,7 @@ def test_automatic_host_removal(
     unresolvable_host_central = "not-dns-resolvable-central"
     unresolvable_host_remote = "not-dns-resolvable-remote"
 
-    rule_id = central_site.openapi.create_rule(
+    rule_id = central_site.openapi.rules.create(
         ruleset_name="automatic_host_removal",
         value=("enabled", {"checkmk_service_crit": 1}),
         conditions={
@@ -72,5 +72,5 @@ def test_automatic_host_removal(
             raise RuntimeError("Host removal background job was not even started") from exc
         raise
     finally:
-        central_site.openapi.delete_rule(rule_id=rule_id)
+        central_site.openapi.rules.delete(rule_id=rule_id)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

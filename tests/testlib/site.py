@@ -1154,7 +1154,7 @@ class Site:
         # load the config without loading the checks in advance, this leads into an
         # exception.
         # We set this config option here trying to catch this kind of issue.
-        self.openapi.create_rule(
+        self.openapi.rules.create(
             ruleset_name="fileinfo_groups",
             value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
             folder="/",

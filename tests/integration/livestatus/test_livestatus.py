@@ -151,7 +151,7 @@ def configure_service_tags_fixture(site: Site) -> Iterator[None]:
             "ipaddress": "127.0.0.1",
         },
     )
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="service_tag_rules",
         value=[("criticality", "prod")],
         conditions={
@@ -169,7 +169,7 @@ def configure_service_tags_fixture(site: Site) -> Iterator[None]:
     try:
         yield
     finally:
-        site.openapi.delete_rule(rule_id)
+        site.openapi.rules.delete(rule_id)
         site.openapi.hosts.delete(hostname)
         site.activate_changes_and_wait_for_core_reload()
 

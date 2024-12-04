@@ -36,7 +36,7 @@ def _goto_setup_page(pw: Dashboard, setup_page: str) -> None:
 def _write_rules_to_disk(site: Site) -> Iterator[None]:
     """Dump the rules for the rules migration part of the update test"""
     created_rules = {
-        str(ruleset.get("id", "")): site.openapi.get_rules(ruleset.get("id", ""))
+        str(ruleset.get("id", "")): site.openapi.rules.get_all(ruleset.get("id", ""))
         for ruleset in site.openapi.get_rulesets()
     }
     try:
@@ -148,7 +148,7 @@ def test_create_rules(
         )
 
         existing_rules = {
-            ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
+            ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))
             for ruleset in test_site.openapi.get_rulesets()
             if (ruleset_title := ruleset.get("title"))
         }
@@ -165,7 +165,7 @@ def test_create_rules(
 
         logger.info("Verify all rules...")
         total_rules = {
-            ruleset_title: len(test_site.openapi.get_rules(ruleset.get("id", "")))
+            ruleset_title: len(test_site.openapi.rules.get_all(ruleset.get("id", "")))
             for ruleset in test_site.openapi.get_rulesets()
             if (ruleset_title := ruleset.get("title")) and ruleset_title in created_rules
         }

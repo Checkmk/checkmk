@@ -194,7 +194,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
         test_site.makedirs(test_site_dump_path)
 
     logger.info("Create a rule to read agent-output data from file")
-    rule_id = test_site.openapi.create_rule(
+    rule_id = test_site.openapi.rules.create(
         ruleset_name="datasource_programs",
         value=f"cat {test_site_dump_path}/<HOST>",
     )
@@ -257,7 +257,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     if os.getenv("CLEANUP", "1") == "1":
         logger.info("Clean up: delete the host(s) and the rule")
         test_site.openapi.hosts.bulk_delete(created_hosts_list)
-        test_site.openapi.delete_rule(rule_id)
+        test_site.openapi.rules.delete(rule_id)
         test_site.openapi.activate_changes_and_wait_for_completion()
         test_site.delete_dir(test_site_dump_path)
 

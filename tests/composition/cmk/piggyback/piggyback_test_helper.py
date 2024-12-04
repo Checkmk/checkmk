@@ -34,7 +34,7 @@ def create_local_check(
     """
 
     bash_command = f"cmk-piggyback create-sections 'Local service piggybacked from $HOSTNAME$' {" ".join(hostnames_piggybacked)}"
-    rule_id = site.openapi.create_rule(
+    rule_id = site.openapi.rules.create(
         ruleset_name="datasource_programs",
         value=bash_command,
         conditions={
@@ -47,7 +47,7 @@ def create_local_check(
     try:
         yield
     finally:
-        site.openapi.delete_rule(rule_id)
+        site.openapi.rules.delete(rule_id)
 
 
 def _get_piggybacked_service(

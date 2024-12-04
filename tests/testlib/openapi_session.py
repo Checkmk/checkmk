@@ -115,6 +115,7 @@ class CMKOpenApiSession(requests.Session):
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
         self.agents = AgentsAPI(self)
+        self.rules = RulesAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -282,65 +283,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def create_rule(
-        self,
-        value: object,
-        ruleset_name: str | None = None,
-        folder: str = "/",
-        conditions: dict[str, Any] | None = None,
-    ) -> str:
-        response = self.post(
-            "/domain-types/rule/collections/all",
-            json=(
-                {
-                    "ruleset": ruleset_name,
-                    "folder": folder,
-                    "properties": {
-                        "disabled": False,
-                    },
-                    "value_raw": repr(value),
-                    "conditions": conditions or {},
-                }
-                if ruleset_name
-                else value
-            ),
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        the_id: str = response.json()["id"]
-        return the_id
-
-    def get_rule(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
-        """
-        Returns
-            a tuple with the rule details and the Etag header if the rule_id was found
-            None if the rule_id was not found
-        """
-        response = self.get(f"/objects/rule/{rule_id}")
-        if response.status_code not in (200, 404):
-            raise UnexpectedResponse.from_response(response)
-        if response.status_code == 404:
-            return None
-        return (
-            response.json()["extensions"],
-            response.headers["Etag"],
-        )
-
-    def delete_rule(self, rule_id: str) -> None:
-        response = self.delete(f"/objects/rule/{rule_id}")
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def get_rules(self, ruleset_name: str) -> list[dict[str, Any]]:
-        response = self.get(
-            "/domain-types/rule/collections/all",
-            params={"ruleset_name": ruleset_name},
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
 
     def get_rulesets(self) -> list[dict[str, Any]]:
         response = self.get(
@@ -1086,3 +1028,64 @@ class AgentsAPI(BaseAPI):
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class RulesAPI(BaseAPI):
+    def create(
+        self,
+        value: object,
+        ruleset_name: str | None = None,
+        folder: str = "/",
+        conditions: dict[str, Any] | None = None,
+    ) -> str:
+        response = self.session.post(
+            "/domain-types/rule/collections/all",
+            json=(
+                {
+                    "ruleset": ruleset_name,
+                    "folder": folder,
+                    "properties": {
+                        "disabled": False,
+                    },
+                    "value_raw": repr(value),
+                    "conditions": conditions or {},
+                }
+                if ruleset_name
+                else value
+            ),
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        the_id: str = response.json()["id"]
+        return the_id
+
+    def get(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the rule details and the Etag header if the rule_id was found
+            None if the rule_id was not found
+        """
+        response = self.session.get(f"/objects/rule/{rule_id}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
+    def delete(self, rule_id: str) -> None:
+        response = self.session.delete(f"/objects/rule/{rule_id}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self, ruleset_name: str) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/rule/collections/all",
+            params={"ruleset_name": ruleset_name},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value

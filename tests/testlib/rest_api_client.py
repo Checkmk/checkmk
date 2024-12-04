@@ -525,6 +525,7 @@ class ActivateChangesClient(RestApiClient):
                     url=wait_response.headers["Location"],
                     expect_ok=False,
                     url_is_complete=True,
+                    follow_redirects=False,
                 )
             result_que.put(wait_response)
 

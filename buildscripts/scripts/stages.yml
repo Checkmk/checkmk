@@ -102,10 +102,10 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/\\|^packages/site/Cargo.*' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/\\|^packages/site/Cargo.*' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo.*' || true"

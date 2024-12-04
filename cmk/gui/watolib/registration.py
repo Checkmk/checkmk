@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.utils.version import edition_supports_nagvis
+from cmk.utils.version import Edition, edition, edition_supports_nagvis
 
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -123,7 +123,6 @@ def register(
     automation_command_registry.register(AutomationRemoveTLSRegistration)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
-    automation_command_registry.register(AutomationNetworkScan)
     automation_command_registry.register(AutomationCheckmkAutomationStart)
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
@@ -139,6 +138,18 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
+    if edition() is not Edition.CSE:
+        _register_networkscan(automation_command_registry, host_attribute_registry)
+
+
+def _register_networkscan(
+    automation_command_registry: AutomationCommandRegistry,
+    host_attribute_registry: HostAttributeRegistry,
+) -> None:
+    automation_command_registry.register(AutomationNetworkScan)
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScan)
+    host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScanResult)
+    register_job(execute_network_scan_job)
 
 
 def _register_automation_commands(
@@ -189,8 +200,6 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeAdditionalIPv6Addresses,
         builtin_attributes.HostAttributeSNMPCommunity,
         builtin_attributes.HostAttributeParents,
-        builtin_attributes.HostAttributeNetworkScan,
-        builtin_attributes.HostAttributeNetworkScanResult,
         builtin_attributes.HostAttributeManagementAddress,
         builtin_attributes.HostAttributeManagementProtocol,
         builtin_attributes.HostAttributeManagementSNMPCommunity,
@@ -203,6 +212,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeLabels,
         groups.HostAttributeContactGroups,
     ]
+
     for cls in clss:
         host_attribute_registry.register(cls)
 
@@ -225,7 +235,6 @@ def _register_nagvis_hooks() -> None:
 
 def _register_cronjobs() -> None:
     register_job(execute_activation_cleanup_background_job)
-    register_job(execute_network_scan_job)
     register_job(rebuild_folder_lookup_cache)
     register_job(automatic_host_removal.execute_host_removal_background_job)
     register_job(autodiscovery.execute_autodiscovery)

@@ -100,7 +100,12 @@ pip_compile(
         "//packages/cmk-shared-typing:requirements.txt",
         "//packages/cmk-trace:requirements.txt",
         "//packages/cmk-werks:requirements.txt",
-    ],
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "//non-free/packages/cmk-otel:requirements.txt",
+        ],
+    }),
     requirements_in = ":requirements_cmk.txt",
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],

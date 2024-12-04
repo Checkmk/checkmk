@@ -99,7 +99,8 @@ class AutomationSyncRemoteSites(AutomationCommand[int]):
         # We could filter out the changes within the 600 seconds if clear-site-changes would only
         # delete the synced changes. To deal with that we don't sync any change if there is a
         # change within the last 600 seconds.
-        if max(c["time"] for c in site_changes) > time.time() - 600:
+        threshold = time.time() - 600
+        if any(c["time"] > threshold for c in site_changes):
             site_changes = []
 
         return SyncRemoteSitesResult(audit_logs, site_changes).to_json()

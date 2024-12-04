@@ -80,7 +80,7 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
                 Edition.from_long_edition(edition), version=args.version
             )
             internal_only = (
-                distro in loaded_yaml["internal_distros"]
+                distro in loaded_yaml.get("internal_distros", [])
                 or edition in loaded_yaml["internal_editions"]
             )
             yield package_name, internal_only

@@ -16,12 +16,9 @@ const props = defineProps<{
 
 const data = defineModel<string>('data', { required: true })
 
-const stringSpec = computed<FormSpec.String>(() => ({
-  ...props.spec,
-  type: 'string'
-}))
-
 const filterHostContext = ref<string>('')
+
+const filterServiceContext = ref<string>('')
 
 const filterHostSpec: FormSpec.String = {
   ...props.spec,
@@ -34,9 +31,33 @@ const filterHostSpec: FormSpec.String = {
   autocompleter: props.spec.host_filter_autocompleter
 }
 
-const filterServiceContext = ref<string>('')
+const hostContext = computed(() => {
+  return filterHostContext.value === '' ? {} : { host: { host: filterHostContext.value } }
+})
 
-const filterServiceSpec: FormSpec.String = {
+const serviceContext = computed(() => {
+  return filterServiceContext.value === ''
+    ? {}
+    : { service: { service: filterServiceContext.value } }
+})
+
+function appendParamsToAutocompleter(
+  autocompleter: FormSpec.Autocompleter,
+  params: object
+): FormSpec.Autocompleter {
+  return {
+    ...autocompleter,
+    data: {
+      ...autocompleter.data,
+      params: {
+        ...autocompleter.data.params,
+        ...params
+      }
+    }
+  }
+}
+
+const filterServiceSpec = computed<FormSpec.String>(() => ({
   ...props.spec,
   type: 'string',
   title: '',
@@ -44,11 +65,37 @@ const filterServiceSpec: FormSpec.String = {
   label: props.spec.i18n.service_filter,
   validators: [],
   input_hint: props.spec.i18n.service_input_hint,
-  autocompleter: props.spec.service_filter_autocompleter
-}
+  autocompleter: appendParamsToAutocompleter(
+    props.spec.service_filter_autocompleter,
+    filterHostContext.value === ''
+      ? {}
+      : {
+          context: { ...hostContext.value }
+        }
+  )
+}))
+
+const metricSpec = computed<FormSpec.String>(() => ({
+  ...props.spec,
+  type: 'string',
+  autocompleter: props.spec.autocompleter
+    ? appendParamsToAutocompleter(
+        props.spec.autocompleter,
+        filterHostContext.value === '' && filterServiceContext.value === ''
+          ? {}
+          : {
+              context: {
+                ...hostContext.value,
+                ...serviceContext.value
+              }
+            }
+      )
+    : null
+}))
 </script>
+
 <template>
-  <FormString v-model:data="data" :backend-validation="backendValidation" :spec="stringSpec" />
+  <FormString v-model:data="data" :backend-validation="backendValidation" :spec="metricSpec" />
   <div class="dictelement indent">
     <FormString v-model:data="filterHostContext" :backend-validation="[]" :spec="filterHostSpec" />
     <FormString

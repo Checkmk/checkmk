@@ -22,25 +22,20 @@ class MetricVisitor(StringVisitor):
             shared_type_defs.Metric(
                 **string_autocompleter_args,
                 host_filter_autocompleter=shared_type_defs.Autocompleter(
-                    fetch_method="ajax_vs_autocomplete",
-                    data={
-                        "ident": "config_hostname",
-                        "params": {
-                            "strict": True,
-                            "escape_regex": False,
-                        },
-                    },
+                    data=shared_type_defs.AutocompleterData(
+                        ident="config_hostname",
+                        params=shared_type_defs.AutocompleterParams(
+                            strict=True, escape_regex=False
+                        ),
+                    ),
                 ),
                 service_filter_autocompleter=shared_type_defs.Autocompleter(
-                    fetch_method="ajax_vs_autocomplete",
-                    data={
-                        "ident": "monitored_service_description",
-                        "params": {
-                            "show_independent_of_context": True,
-                            "strict": True,
-                            "escape_regex": False,
-                        },
-                    },
+                    data=shared_type_defs.AutocompleterData(
+                        ident="config_service_description",
+                        params=shared_type_defs.AutocompleterParams(
+                            show_independent_of_context=True, strict=True, escape_regex=False
+                        ),
+                    ),
                 ),
                 i18n=shared_type_defs.MetricI18n(
                     host_input_hint=_("(Select host)"),

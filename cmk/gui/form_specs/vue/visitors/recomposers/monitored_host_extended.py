@@ -7,7 +7,11 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import MonitoredHostExtended, StringAutocompleter
-from cmk.gui.form_specs.vue.shared_type_defs import Autocompleter
+from cmk.gui.form_specs.vue.shared_type_defs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+)
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -27,15 +31,12 @@ def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:
         migrate=form_spec.migrate,
         # StringAutocompleter
         autocompleter=Autocompleter(
-            fetch_method="ajax_vs_autocomplete",
-            data={
-                "ident": "config_hostname",
-                "params": {
-                    "show_independent_of_context": True,
-                    "strict": True,
-                    "escape_regex": False,
-                },
-            },
+            data=AutocompleterData(
+                ident="config_hostname",
+                params=AutocompleterParams(
+                    show_independent_of_context=True, strict=True, escape_regex=False
+                ),
+            ),
         ),
         prefill=form_spec.prefill,
     )

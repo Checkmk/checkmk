@@ -7,7 +7,11 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private import StringAutocompleter
-from cmk.gui.form_specs.vue.shared_type_defs import Autocompleter
+from cmk.gui.form_specs.vue.shared_type_defs import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+)
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec, InputHint, MonitoredService
@@ -27,15 +31,12 @@ def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:
         migrate=form_spec.migrate,
         # StringAutocompleter
         autocompleter=Autocompleter(
-            fetch_method="ajax_vs_autocomplete",
-            data={
-                "ident": "monitored_service_description",
-                "params": {
-                    "show_independent_of_context": True,
-                    "strict": True,
-                    "escape_regex": False,
-                },
-            },
+            data=AutocompleterData(
+                ident="monitored_service_description",
+                params=AutocompleterParams(
+                    show_independent_of_context=True, strict=True, escape_regex=False
+                ),
+            ),
         ),
         prefill=InputHint("(Select service)"),
     )

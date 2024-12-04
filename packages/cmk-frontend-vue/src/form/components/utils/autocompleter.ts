@@ -5,7 +5,7 @@
  */
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
-import type { Autocompleter } from '@/form/components/vue_formspec_components'
+import type { Autocompleter, AutocompleterData } from '@/form/components/vue_formspec_components'
 import { cmkFetch } from '@/lib/cmkFetch'
 
 interface AjaxResponse {
@@ -16,7 +16,7 @@ interface AjaxResponse {
 
 export async function fetchData<OutputType>(
   value: unknown,
-  data: Record<string, unknown>
+  data: AutocompleterData
 ): Promise<OutputType> {
   const body = JSON.parse(JSON.stringify(data)) as Record<string, unknown>
   body['value'] = value
@@ -37,7 +37,7 @@ export async function fetchData<OutputType>(
   return ajaxResponse.result as OutputType
 }
 
-export function setupAutocompleter<OutputType>(autocompleter: Autocompleter | null): {
+export function setupAutocompleter<OutputType>(getAutocompleter: () => Autocompleter | null): {
   input: Ref<string>
   focus: Ref<boolean>
   output: Ref<OutputType | undefined>
@@ -45,26 +45,17 @@ export function setupAutocompleter<OutputType>(autocompleter: Autocompleter | nu
   const input = ref<string>('')
   const output = ref<OutputType>()
   const focus = ref(false)
-  if (autocompleter === null) {
-    return { input, focus, output }
-  }
-  watch(input, async () => {
-    await updateOutput()
-  })
 
-  watch(focus, async () => {
-    if (focus.value) {
-      await updateOutput()
+  watch([input, focus, getAutocompleter], async ([_, focusValue, autocompleter]) => {
+    if (autocompleter === null || !focusValue) {
+      return
     }
-  })
-
-  const updateOutput = async () => {
     if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
       await fetchData<OutputType>(input.value, autocompleter.data).then((result: OutputType) => {
         output.value = result
       })
     }
-  }
+  })
 
   return { input, focus, output }
 }

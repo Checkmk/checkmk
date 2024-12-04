@@ -105,7 +105,7 @@ const {
   input: autocompleterInput,
   focus: autocompleteFocus,
   output: autocompleterOutput
-} = setupAutocompleter<AutocompleterResponse>(props.autocompleter || null)
+} = setupAutocompleter<AutocompleterResponse>(() => props.autocompleter || null)
 
 const filteredSuggestions = ref<string[]>([])
 const inputField = useTemplateRef<HTMLInputElement>('inputField')

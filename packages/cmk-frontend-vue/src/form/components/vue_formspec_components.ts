@@ -302,7 +302,18 @@ export interface I18NFormSpecBase {
 }
 export interface Autocompleter {
   fetch_method: "ajax_vs_autocomplete";
-  data: {};
+  data: AutocompleterData;
+}
+export interface AutocompleterData {
+  ident: string;
+  params: AutocompleterParams;
+}
+export interface AutocompleterParams {
+  show_independent_of_context?: boolean;
+  strict?: boolean;
+  escape_regex?: boolean;
+  world?: string;
+  context?: {};
 }
 export interface DictionaryElement {
   name: string;

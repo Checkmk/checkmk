@@ -69,7 +69,7 @@ describe('Autocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         show: true,
-        autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
@@ -97,7 +97,7 @@ describe('Autocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         show: true,
-        autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
@@ -124,7 +124,7 @@ describe('Autocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         show: true,
-        autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,
@@ -157,7 +157,7 @@ describe('Autocompleter', () => {
       props: {
         placeholder: 'Add some labels',
         show: true,
-        autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
+        autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
         size: 7,

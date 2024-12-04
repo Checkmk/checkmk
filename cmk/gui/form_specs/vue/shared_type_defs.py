@@ -189,8 +189,23 @@ class SingleChoiceEditableI18n:
 
 
 @dataclass(kw_only=True)
+class AutocompleterParams:
+    show_independent_of_context: Optional[bool] = None
+    strict: Optional[bool] = None
+    escape_regex: Optional[bool] = None
+    world: Optional[str] = None
+    context: Optional[dict[str, Any]] = None
+
+
+@dataclass(kw_only=True)
+class AutocompleterData:
+    ident: str
+    params: AutocompleterParams
+
+
+@dataclass(kw_only=True)
 class Autocompleter:
-    data: dict[str, Any]
+    data: AutocompleterData
     fetch_method: str = "ajax_vs_autocomplete"
 
 

@@ -316,7 +316,10 @@ const labelsFormSpec: FormSpec.Labels = {
     uniqueness_error: 'Uniqueness error'
   },
   max_labels: 3,
-  autocompleter: { data: [], fetch_method: 'ajax_vs_autocomplete' } as FormSpec.Autocompleter,
+  autocompleter: {
+    data: { ident: '', params: {} },
+    fetch_method: 'ajax_vs_autocomplete'
+  } as FormSpec.Autocompleter,
   label_source: 'discovered',
   validators: []
 }

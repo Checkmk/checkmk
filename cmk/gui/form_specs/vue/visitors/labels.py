@@ -69,8 +69,12 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                 ),
                 validators=build_vue_validators(self._validators()),
                 autocompleter=shared_type_defs.Autocompleter(
-                    fetch_method="ajax_vs_autocomplete",
-                    data={"ident": "label", "params": {"world": self.form_spec.world.value}},
+                    data=shared_type_defs.AutocompleterData(
+                        ident="label",
+                        params=shared_type_defs.AutocompleterParams(
+                            world=self.form_spec.world.value
+                        ),
+                    ),
                 ),
                 max_labels=self.form_spec.max_labels,
                 label_source=self.form_spec.label_source.value

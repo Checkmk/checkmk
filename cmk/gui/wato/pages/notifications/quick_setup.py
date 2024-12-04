@@ -36,6 +36,8 @@ from cmk.gui.form_specs.private.list_unique_selection import (
 )
 from cmk.gui.form_specs.vue.shared_type_defs import (
     Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
     CascadingSingleChoiceLayout,
     Condition,
     ConditionGroup,
@@ -551,8 +553,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         title=Title("Hosts"),
                                         string_spec=StringAutocompleter(
                                             autocompleter=Autocompleter(
-                                                fetch_method="ajax_vs_autocomplete",
-                                                data={"ident": "config_hostname", "params": {}},
+                                                data=AutocompleterData(
+                                                    ident="config_hostname",
+                                                    params=AutocompleterParams(),
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -562,8 +566,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         title=Title("Exclude hosts"),
                                         string_spec=StringAutocompleter(
                                             autocompleter=Autocompleter(
-                                                fetch_method="ajax_vs_autocomplete",
-                                                data={"ident": "config_hostname", "params": {}},
+                                                data=AutocompleterData(
+                                                    ident="config_hostname",
+                                                    params=AutocompleterParams(),
+                                                ),
                                             ),
                                         ),
                                     ),
@@ -778,8 +784,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Check types"),
                                         elements=Autocompleter(
-                                            fetch_method="check_types_autocompleter",
-                                            data={"ident": "check_types", "params": {}},
+                                            data=AutocompleterData(
+                                                ident="check_types",
+                                                params=AutocompleterParams(),
+                                            ),
                                         ),
                                         show_toggle_all=True,
                                         layout=MultipleChoiceExtendedLayout.dual_list,

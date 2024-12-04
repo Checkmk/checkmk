@@ -29,10 +29,12 @@ class GatewayData(TypedDict):
     storage_pools: dict[str, Any]
     vms: dict[str, Any]
     hosts: dict[str, Any]
-    protection_domains: dict[str, Any]
-    remote_support: dict[str, Any]
-    ha: dict[str, Any]
-    hosts_networks: dict[str, Any]
+    # The following data is not query-able on prism central
+    # The corresponding endpoints would return: 412 Client Error: PRECONDITION FAILE
+    protection_domains: None | dict[str, Any]
+    remote_support: None | dict[str, Any]
+    ha: None | dict[str, Any]
+    hosts_networks: None | dict[str, Any]
 
 
 class SessionManager:
@@ -117,19 +119,26 @@ def fetch_from_gateway(
         hosts_networks[element["uuid"]] = networks
 
     LOGGING.info("fetching data from gateway..")
+
+    cluster = session_manager.get(f"{base_url_v2}/cluster")
+    is_prism_central = cluster["multicluster"]
     prism_objects: GatewayData = {
         "containers": session_manager.get(f"{base_url_v1}/containers"),
+        "cluster": cluster,
         "alerts": session_manager.get(
             f"{base_url_v2}/alerts", params={"resolved": "false", "acknowledged": "false"}
         ),
-        "cluster": session_manager.get(f"{base_url_v2}/cluster"),
         "storage_pools": session_manager.get(f"{base_url_v1}/storage_pools"),
         "vms": session_manager.get(f"{base_url_v1}/vms"),
         "hosts": hosts_obj,
-        "protection_domains": session_manager.get(f"{base_url_v2}/protection_domains"),
-        "remote_support": session_manager.get(f"{base_url_v2}/cluster/remote_support"),
-        "ha": session_manager.get(f"{base_url_v2}/ha"),
-        "hosts_networks": hosts_networks,
+        "protection_domains": None
+        if is_prism_central
+        else session_manager.get(f"{base_url_v2}/protection_domains"),
+        "remote_support": None
+        if is_prism_central
+        else session_manager.get(f"{base_url_v2}/cluster/remote_support"),
+        "ha": None if is_prism_central else session_manager.get(f"{base_url_v2}/ha"),
+        "hosts_networks": None if is_prism_central else hosts_networks,
     }
 
     LOGGING.debug("got %d containers", len(prism_objects["containers"]["entities"]))
@@ -148,16 +157,18 @@ def output_vms(vms: dict[str, Any]) -> None:
             output_entities(element, "vm")
 
 
-def output_hosts(hosts: dict[str, Any], hosts_networks: dict[str, Any]) -> None:
+def output_hosts(hosts: dict[str, Any], hosts_networks: None | dict[str, Any]) -> None:
     output_entities(hosts, "hosts")
     for element in hosts.get("entities", []):
         with ConditionalPiggybackSection(element["name"]):
             output_entities(element, "host")
-            if networks := hosts_networks.get(element["uuid"]):
+            if hosts_networks and (networks := hosts_networks.get(element["uuid"])):
                 output_entities(networks, "host_networks")
 
 
-def output_entities(entities: dict[str, Any], target_name: str) -> None:
+def output_entities(entities: None | dict[str, Any], target_name: str) -> None:
+    if entities is None:
+        return
     with SectionWriter(f"prism_{target_name}") as w:
         w.append_json(entities)
 

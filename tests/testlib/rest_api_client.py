@@ -436,7 +436,10 @@ class RestApiClient:
             body["site"] = site
 
         return self.request(
-            "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
+            "post",
+            url="/domain-types/metric/actions/get/invoke",
+            body=body,
+            expect_ok=expect_ok,
         )
 
 
@@ -611,7 +614,10 @@ class UserClient(RestApiClient):
         )
 
     def get(
-        self, username: str | None = None, url: str | None = None, expect_ok: bool = True
+        self,
+        username: str | None = None,
+        url: str | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         url_is_complete = False
         actual_url = ""
@@ -765,7 +771,11 @@ class HostConfigClient(RestApiClient):
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             query_params=query_params,
-            body={"host_name": host_name, "folder": folder, "attributes": attributes or {}},
+            body={
+                "host_name": host_name,
+                "folder": folder,
+                "attributes": attributes or {},
+            },
             expect_ok=expect_ok,
         )
 
@@ -1183,7 +1193,10 @@ class TimePeriodClient(RestApiClient):
         )
 
     def edit(
-        self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
+        self,
+        time_period_id: str,
+        time_period_data: dict[str, object],
+        expect_ok: bool = True,
     ) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
         return self.request(
@@ -1589,7 +1602,7 @@ class DowntimeClient(RestApiClient):
     ) -> Response:
         body = {
             "downtime_type": downtime_type,
-            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "start_time": (start_time if isinstance(start_time, str) else start_time.isoformat()),
             "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "comment": comment,
@@ -1628,7 +1641,7 @@ class DowntimeClient(RestApiClient):
     ) -> Response:
         body: dict[str, Any] = {
             "downtime_type": downtime_type,
-            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "start_time": (start_time if isinstance(start_time, str) else start_time.isoformat()),
             "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "duration": duration,
@@ -2093,7 +2106,12 @@ class EventConsoleClient(RestApiClient):
         if filter_type == "query":
             body.update({"query": query})
         else:
-            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            filters = {
+                "state": state,
+                "host": host,
+                "application": application,
+                "phase": phase,
+            }
             body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
 
         return self.request(
@@ -2127,7 +2145,12 @@ class EventConsoleClient(RestApiClient):
             body.update({"query": query})
 
         else:
-            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            filters = {
+                "state": state,
+                "host": host,
+                "application": application,
+                "phase": phase,
+            }
             body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
 
         return self.request(
@@ -2260,7 +2283,10 @@ class CommentClient(RestApiClient):
         return self._get("service", None, expect_ok)
 
     def _get(
-        self, collection: str, query: Mapping[str, Any] | None = None, expect_ok: bool = True
+        self,
+        collection: str,
+        query: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",

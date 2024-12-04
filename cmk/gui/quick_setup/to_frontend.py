@@ -448,6 +448,63 @@ def get_stage_structure(
     )
 
 
+@dataclass()
+class ValidationAndNextStage:
+    next_stage_structure: NextStageStructure | None = None
+    errors: Errors | None = None
+    stage_recap: Sequence[Widget] = field(default_factory=list)
+
+
+def validate_stage_and_retrieve_next_stage_structure(
+    quick_setup: QuickSetup,
+    stage_index: StageIndex,
+    stage_action_id: ActionId,
+    input_stages: Sequence[dict],
+    object_id: str | None,
+) -> ValidationAndNextStage:
+    stages, form_spec_map = get_stages_and_formspec_map(
+        quick_setup=quick_setup,
+        stage_index=stage_index,
+    )
+
+    response = ValidationAndNextStage()
+    if (
+        errors := validate_stage(
+            quick_setup=quick_setup,
+            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+            stage_index=stage_index,
+            stage_action_id=stage_action_id,
+            stages=stages,
+            quick_setup_formspec_map=form_spec_map,
+        )
+    ) is not None:
+        response.errors = errors
+        return response
+
+    prefill_data: ParsedFormData | None = None
+    if object_id := object_id:
+        prefill_data = quick_setup.load_data(object_id)
+        if not prefill_data:
+            raise MKGeneralException(f"Object with id '{object_id}' does not exist.")
+
+    response.stage_recap = recap_stage(
+        quick_setup_id=quick_setup.id,
+        stage_index=stage_index,
+        stages=stages,
+        stage_action_id=stage_action_id,
+        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+        quick_setup_formspec_map=form_spec_map,
+    )
+    if stage_index == StageIndex(len(quick_setup.stages) - 1):
+        return response
+
+    response.next_stage_structure = get_stage_structure(
+        stage=quick_setup.stages[stage_index + 1](),
+        prefill_data=prefill_data,
+    )
+    return response
+
+
 def complete_quick_setup(
     action: QuickSetupAction,
     mode: QuickSetupActionMode,

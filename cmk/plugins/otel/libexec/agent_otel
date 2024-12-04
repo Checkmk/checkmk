@@ -6,6 +6,7 @@
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 
@@ -20,19 +21,25 @@ def parse_arguments() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_arguments()
-    file_path = Path(
+    folder = Path(
         os.environ["OMD_ROOT"],
-        f"tmp/check_mk/otel_collector/{args.host_name}.json",
+        f"tmp/check_mk/otel_collector/{args.host_name}",
     )
 
-    try:
-        content = file_path.read_text()
-    except FileNotFoundError:
-        sys.stderr.write(f"No such file or directory {file_path}\n")
-        return 1
+    file_paths = list(folder.iterdir())
+    time.sleep(1)  # let the control
+
+    content = []
+    for file_path in file_paths:
+        try:
+            content.append(file_path.read_text())
+        except FileNotFoundError:
+            sys.stderr.write(f"No such file {file_path}\n")
+        except IsADirectoryError:
+            sys.stderr.write(f"Skip folder {file_path}\n")
 
     sys.stdout.write("<<<otel_metrics:sep(0)>>>\n")
-    sys.stdout.write(content + "\n")
+    sys.stdout.write("\n".join(content) + "\n")
     return 0
 
 

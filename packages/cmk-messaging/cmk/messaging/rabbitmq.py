@@ -371,41 +371,44 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
 
     # run in parallel
     for process in [
-        *_cleanup_unused_definitions(old_definitions, new_definitions),
-        _import_new_definitions(definitions_file),
+        *_start_cleanup_unused_definitions(old_definitions, new_definitions),
+        _start_import_new_definitions(definitions_file),
     ]:
         (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
 
 
-def _cleanup_unused_definitions(
+def _start_cleanup_unused_definitions(
     old_definitions: Definitions, new_definitions: Definitions
 ) -> Iterator[subprocess.Popen[str]]:
     for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
-        yield rabbitmqctl_process(("delete_user", user))
+        yield rabbitmqctl_process(("delete_user", user), wait=False)
 
     for vhost in {v.name for v in old_definitions.vhosts} - {
         v.name for v in new_definitions.vhosts
     }:
-        yield rabbitmqctl_process(("delete_vhost", vhost))
+        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
 
     # currently only shovels, but we don't have to care here
     for param in set(old_definitions.parameters) - set(new_definitions.parameters):
         yield rabbitmqctl_process(
-            ("clear_parameter", "-p", param.vhost, param.component, param.name)
+            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
         )
 
 
-def _import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
-    return rabbitmqctl_process(("import_definitions", str(definitions_file)))
+def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
+    return rabbitmqctl_process(("import_definitions", str(definitions_file)), wait=False)
 
 
-def rabbitmqctl_process(cmd: tuple[str, ...]) -> subprocess.Popen[str]:
-    return subprocess.Popen(
+def rabbitmqctl_process(cmd: tuple[str, ...], /, *, wait: bool) -> subprocess.Popen[str]:
+    proc = subprocess.Popen(  # pylint: disable=consider-using-with
         ["rabbitmqctl", *cmd],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
+    if wait:
+        proc.wait()
+    return proc
 
 
 def _format_process(p: subprocess.Popen[str]) -> str:

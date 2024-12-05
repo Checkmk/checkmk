@@ -8,6 +8,8 @@ set -e
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=mypy,ruff,bandit
+REPO_PATH="$(git rev-parse --show-toplevel)"
+readonly REPO_PATH
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -116,7 +118,7 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$("$BAZEL_CMD" info workspace)"/.venv_uv/bin/activate
+    source "${REPO_PATH}"/.venv_uv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
@@ -160,7 +162,7 @@ run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config="${REPO_PATH}"/.aspect/cli/config_isort.yaml \
         --fix \
         :all
     "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"

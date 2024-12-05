@@ -14,11 +14,12 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import Any, Sequence
+from urllib.parse import urlparse
 
 from cmk.utils.encoding import json_encode
 
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import Endpoint
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
     collection_href,
     object_action_href,
@@ -29,10 +30,12 @@ from cmk.gui.quick_setup.to_frontend import (
     AllStageErrors,
     complete_quick_setup,
     get_stages_and_formspec_map,
+    matching_stage_action,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
+    start_quick_setup_stage_job,
     validate_custom_validators,
     validate_stage_and_retrieve_next_stage_structure,
     validate_stages_formspecs,
@@ -45,6 +48,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormDat
 
 from cmk import fields
 
+from .. import background_job
 from .request_schemas import QuickSetupFinalSaveRequest, QuickSetupRequest
 from .response_schemas import (
     QuickSetupCompleteResponse,
@@ -144,6 +148,11 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
     "cmk/quick_setup",
     tag_group="Checkmk Internal",
     method="post",
+    status_descriptions={
+        303: "The stage validation and retrieval action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
+    additional_status_codes=[303],
     query_params=[QUICKSETUP_OBJECT_ID],
     request_schema=QuickSetupRequest,
     response_schema=QuickSetupStageResponse,
@@ -161,6 +170,24 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         )
 
     stage_index = StageIndex(len(body["stages"]) - 1)
+    stage_action = matching_stage_action(quick_setup.stages[stage_index](), stage_action_id)
+    if stage_action.run_in_background:
+        background_job_id = start_quick_setup_stage_job(
+            quick_setup=quick_setup,
+            action_id=stage_action_id,
+            stage_index=stage_index,
+            user_input_stages=body["stages"],
+            object_id=params["object_id"],
+        )
+        background_job_status_link = constructors.link_endpoint(
+            module_name="cmk.gui.openapi.endpoints.background_job",
+            rel="cmk/show",
+            parameters={background_job.JobID.field_name: background_job_id},
+        )
+        response = Response(status=303)
+        response.location = urlparse(background_job_status_link["href"]).path
+        return response
+
     result = validate_stage_and_retrieve_next_stage_structure(
         quick_setup=quick_setup,
         stage_index=stage_index,

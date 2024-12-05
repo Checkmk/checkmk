@@ -2929,6 +2929,7 @@ class QuickSetupClient(RestApiClient):
         stage_action_id: str,
         stages: list[dict[str, Any]],
         object_id: str | None = None,
+        follow_redirects: bool = True,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -2940,6 +2941,7 @@ class QuickSetupClient(RestApiClient):
                 "stage_action_id": stage_action_id,
             },
             query_params=_only_set_keys({"object_id": object_id}),
+            follow_redirects=follow_redirects,
             expect_ok=expect_ok,
         )
 

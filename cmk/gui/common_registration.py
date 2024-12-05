@@ -260,7 +260,9 @@ def register(
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)
+    quick_setup_registration.register(
+        main_module_registry, mode_registry, quick_setup_registry, job_registry
+    )
     background_job_registration.register(
         page_registry,
         mode_registry,

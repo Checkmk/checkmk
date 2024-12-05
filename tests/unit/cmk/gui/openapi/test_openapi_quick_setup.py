@@ -617,3 +617,48 @@ def test_validation_on_save_all(
     )
     resp.assert_status_code(400)
     assert resp.json["all_stage_errors"] == expected_errors
+
+
+class TestValidateAndRetrieveNext:
+    @pytest.mark.usefixtures("inline_background_jobs")
+    def test_openapi_background_job_action(self, clients: ClientRegistry) -> None:
+        register_quick_setup(
+            setup_stages=[
+                lambda: QuickSetupStage(
+                    title="stage1",
+                    configure_components=[
+                        widgets.unique_id_formspec_wrapper(Title("account name")),
+                    ],
+                    actions=[
+                        QuickSetupStageAction(
+                            id=ActionId("action"),
+                            custom_validators=[],
+                            recap=[recaps.recaps_form_spec],
+                            next_button_label="Next",
+                            run_in_background=True,
+                        )
+                    ],
+                ),
+                lambda: QuickSetupStage(
+                    title="stage2",
+                    configure_components=[],
+                    actions=[
+                        QuickSetupStageAction(
+                            id=ActionId("action"),
+                            custom_validators=[],
+                            recap=[],
+                            next_button_label="Next",
+                        )
+                    ],
+                ),
+            ],
+        )
+        # the underlying background actually fails as it doesn't have access to the registered
+        # quick setup defined in this scope
+        resp = clients.QuickSetup.send_stage_retrieve_next(
+            quick_setup_id="quick_setup_test",
+            stage_action_id="action",
+            stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
+            follow_redirects=False,
+        )
+        assert "objects/background_job" in resp.headers["Location"]

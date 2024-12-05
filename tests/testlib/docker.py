@@ -11,7 +11,7 @@ import subprocess
 import tarfile
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -383,10 +383,11 @@ class CheckmkApp:
 
         return api_secret
 
-    def install_agent(self, app: docker.models.containers.Container) -> None:
+    def install_agent(
+        self, app: docker.models.containers.Container, agent_type: Literal["rpm", "deb"] = "deb"
+    ) -> None:
         """Download an agent from Checkmk container and install it into an application container."""
         agent_os = "linux"
-        agent_type = "rpm"
         os_type = f"{agent_os}_{agent_type}"
         agent_path = f"/tmp/check_mk_agent.{agent_type}"
 
@@ -403,7 +404,7 @@ class CheckmkApp:
         logger.info('Installing Checkmk agent "%s"...', agent_path)
         assert copy_to_container(app, agent_path, "/")
         install_agent_rc, install_agent_output = app.exec_run(
-            f"dnf install '/{os.path.basename(agent_path)}'",
+            f"{'rpm' if agent_type == "rpm" else 'dpkg'} --install '/{os.path.basename(agent_path)}'",
             user="root",
             privileged=True,
         )

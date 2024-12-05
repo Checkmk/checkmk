@@ -259,7 +259,7 @@ class OracleDatabase:
         site_ip = self.checkmk.ip
         assert site_ip and site_ip != "127.0.0.1", "Failed to detect IP of checkmk container!"
 
-        self.checkmk.install_agent(app=self.container)
+        self.checkmk.install_agent(app=self.container, agent_type="rpm")
 
         self.checkmk.install_agent_controller_daemon(app=self.container)
 

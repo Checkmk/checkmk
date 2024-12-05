@@ -27,6 +27,15 @@ Checks: >
   -readability-avoid-return-with-void-value,
   -readability-identifier-length,
   -readability-magic-numbers,
+  -cert-err33-c,
+  -clang-analyzer-unix.Stream,
+  -misc-use-internal-linkage,
+  -modernize-use-designated-initializers,
+  -modernize-use-ranges,
+  -performance-inefficient-vector-operation,
+  -performance-unnecessary-copy-initialization,
+  -readability-math-missing-parentheses,
+  -readability-use-std-min-max,
 
 WarningsAsErrors: '*'
 

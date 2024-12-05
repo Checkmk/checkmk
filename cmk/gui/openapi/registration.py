@@ -60,7 +60,6 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     host_group_config.register(endpoint_registry)
     host_internal.register(endpoint_registry)
     host_tag_group.register(endpoint_registry)
-    metric.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
     password.register(endpoint_registry)
     parent_scan.register(endpoint_registry)
@@ -76,4 +75,5 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     version.register(endpoint_registry)
     spec_generator_job.register(job_registry)
     if edition() is not Edition.CSE:
+        metric.register(endpoint_registry)
         autocomplete.register(endpoint_registry)

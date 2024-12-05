@@ -12,8 +12,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 PIPENV             := scripts/run-pipenv
 
-OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
-
 LOCK_FD := 200
 LOCK_PATH := .venv.lock
 PY_PATH := .venv/bin/python
@@ -153,18 +151,6 @@ ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' non-free/cmk-update-agent/cmk_update_agent.py
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 endif
-
-$(OPENAPI_SPEC): $(shell find cmk/gui/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
-	@export PYTHONPATH=${REPO_PATH} ; \
-	export TMPFILE=$$(mktemp);  \
-	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
-	mv $$TMPFILE $@
-
-
-openapi-clean:
-	rm -f $(OPENAPI_SPEC)
-openapi: $(OPENAPI_SPEC)
-
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In

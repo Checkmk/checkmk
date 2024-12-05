@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk_addons.plugins.redfish.lib import (
+    parse_redfish_multiple,
+    redfish_health_state,
+    redfish_item_hpe,
+    RedfishAPIData,
+)
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -11,12 +18,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-)
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    parse_redfish_multiple,
-    redfish_health_state,
-    redfish_item_hpe,
 )
 
 agent_section_redfish_logicaldrives = AgentSection(
@@ -27,7 +28,7 @@ agent_section_redfish_logicaldrives = AgentSection(
 
 
 def discovery_redfish_logicaldrives(section: RedfishAPIData) -> DiscoveryResult:
-    '''One service per logical drive is discovered'''
+    """One service per logical drive is discovered"""
     for key in section.keys():
         if "SmartStorageLogicalDrive" in section[key].get("@odata.type"):
             item = redfish_item_hpe(section[key])
@@ -37,7 +38,7 @@ def discovery_redfish_logicaldrives(section: RedfishAPIData) -> DiscoveryResult:
 
 
 def check_redfish_logicaldrives(item: str, section: RedfishAPIData) -> CheckResult:
-    '''Check the state of a logical drive'''
+    """Check the state of a logical drive"""
     data = section.get(item, None)
     if data is None:
         return

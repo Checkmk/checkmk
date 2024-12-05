@@ -2,24 +2,24 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-'''Redfish temperature checks'''
+"""Redfish temperature checks"""
 
+from cmk_addons.plugins.redfish.lib import (
+    process_redfish_perfdata,
+    redfish_health_state,
+    RedfishAPIData,
+)
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     Result,
     Service,
     State,
-    get_value_store,
 )
-from cmk.plugins.lib.temperature import TempParamDict, check_temperature
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    process_redfish_perfdata,
-    redfish_health_state,
-)
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 
 def discovery_redfish_temperatures(section: RedfishAPIData) -> DiscoveryResult:

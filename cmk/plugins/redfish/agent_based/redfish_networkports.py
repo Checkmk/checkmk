@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk_addons.plugins.redfish.lib import (
+    parse_redfish_multiple,
+    redfish_health_state,
+    RedfishAPIData,
+)
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -11,11 +17,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-)
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    parse_redfish_multiple,
-    redfish_health_state,
 )
 
 agent_section_redfish_networkports = AgentSection(

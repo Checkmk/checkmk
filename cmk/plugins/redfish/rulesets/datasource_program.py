@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """rule for assinging the special agent to host objects"""
 
-from cmk.rulesets.v1 import Title, Help, Label
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -14,14 +14,14 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
+    migrate_to_password,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
     String,
-    migrate_to_password,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import Topic, SpecialAgent
+from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
 def _valuespec_special_agents_redfish() -> Dictionary:
@@ -45,27 +45,17 @@ def _valuespec_special_agents_redfish() -> Dictionary:
             "sections": DictElement(
                 parameter_form=MultipleChoice(
                     title=Title("Enabled Sections... (only use in case of problems)"),
-                    help_text=Help(
-                        "If there are problems please use disabled sections."
-                    ),
+                    help_text=Help("If there are problems please use disabled sections."),
                     elements=[
-                        MultipleChoiceElement(
-                            name="Memory", title=Title("Memory Modules")
-                        ),
-                        MultipleChoiceElement(
-                            name="Power", title=Title("Powers Supply")
-                        ),
+                        MultipleChoiceElement(name="Memory", title=Title("Memory Modules")),
+                        MultipleChoiceElement(name="Power", title=Title("Powers Supply")),
                         MultipleChoiceElement(name="Processors", title=Title("CPUs")),
-                        MultipleChoiceElement(
-                            name="Thermal", title=Title("Fan and Temperatures")
-                        ),
+                        MultipleChoiceElement(name="Thermal", title=Title("Fan and Temperatures")),
                         MultipleChoiceElement(
                             name="FirmwareInventory",
                             title=Title("Firmware Versions"),
                         ),
-                        MultipleChoiceElement(
-                            name="NetworkAdapters", title=Title("Network Cards")
-                        ),
+                        MultipleChoiceElement(name="NetworkAdapters", title=Title("Network Cards")),
                         MultipleChoiceElement(
                             name="NetworkInterfaces",
                             title=Title("Network Interfaces 1"),
@@ -129,23 +119,15 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                     title=Title("Disabled Sections..."),
                     help_text=Help("Please only define sections or disabled sections."),
                     elements=[
-                        MultipleChoiceElement(
-                            name="Memory", title=Title("Memory Modules")
-                        ),
-                        MultipleChoiceElement(
-                            name="Power", title=Title("Powers Supply")
-                        ),
+                        MultipleChoiceElement(name="Memory", title=Title("Memory Modules")),
+                        MultipleChoiceElement(name="Power", title=Title("Powers Supply")),
                         MultipleChoiceElement(name="Processors", title=Title("CPUs")),
-                        MultipleChoiceElement(
-                            name="Thermal", title=Title("Fan and Temperatures")
-                        ),
+                        MultipleChoiceElement(name="Thermal", title=Title("Fan and Temperatures")),
                         MultipleChoiceElement(
                             name="FirmwareInventory",
                             title=Title("Firmware Versions"),
                         ),
-                        MultipleChoiceElement(
-                            name="NetworkAdapters", title=Title("Network Cards")
-                        ),
+                        MultipleChoiceElement(name="NetworkAdapters", title=Title("Network Cards")),
                         MultipleChoiceElement(
                             name="NetworkInterfaces",
                             title=Title("Network Interfaces 1"),
@@ -192,9 +174,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Memory"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -202,9 +182,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Power"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -212,9 +190,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Processors"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -222,9 +198,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Thermal"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -232,9 +206,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section FirmwareInventory"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -242,9 +214,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section NetworkAdapters"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -252,9 +222,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section NetworkInterfaces"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -262,9 +230,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section EthernetInterfaces"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -272,9 +238,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Storage"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -282,9 +246,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section ArrayControllers"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -292,9 +254,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section SmartStorage"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -302,9 +262,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section HostBusAdapters"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -312,9 +270,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section PhysicalDrives"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -322,9 +278,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section LogicalDrives"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -332,9 +286,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Drives"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -342,9 +294,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section Volumes"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -352,9 +302,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                             parameter_form=Integer(
                                 title=Title("Section SimpleStorage"),
                                 prefill=DefaultValue(60),
-                                custom_validate=(
-                                    validators.NumberInRange(min_value=1),
-                                ),
+                                custom_validate=(validators.NumberInRange(min_value=1),),
                                 unit_symbol="s",
                             ),
                         ),
@@ -368,9 +316,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                         "Port number for connection to the Rest API. Usually 8443 (TLS)"
                     ),
                     prefill=DefaultValue(443),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=65535),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=65535),),
                 ),
             ),
             "proto": DictElement(
@@ -398,13 +344,9 @@ def _valuespec_special_agents_redfish() -> Dictionary:
             "retries": DictElement(
                 parameter_form=Integer(
                     title=Title("Advanced - Number of retries"),
-                    help_text=Help(
-                        "Number of retry attempts made by the special agent."
-                    ),
+                    help_text=Help("Number of retry attempts made by the special agent."),
                     prefill=DefaultValue(10),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=20),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
                 ),
             ),
             "timeout": DictElement(
@@ -414,9 +356,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
                         "Number of seconds for a single connection attempt before timeout occurs."
                     ),
                     prefill=DefaultValue(10),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=20),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
                 ),
             ),
             "debug": DictElement(
@@ -452,9 +392,7 @@ def _valuespec_special_agents_redfish_power() -> Dictionary:
                         "Port number for connection to the Rest API. Usually 8443 (TLS)"
                     ),
                     prefill=DefaultValue(443),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=65535),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=65535),),
                 ),
             ),
             "proto": DictElement(
@@ -482,13 +420,9 @@ def _valuespec_special_agents_redfish_power() -> Dictionary:
             "retries": DictElement(
                 parameter_form=Integer(
                     title=Title("Advanced - Number of retries"),
-                    help_text=Help(
-                        "Number of retry attempts made by the special agent."
-                    ),
+                    help_text=Help("Number of retry attempts made by the special agent."),
                     prefill=DefaultValue(10),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=20),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
                 ),
             ),
             "timeout": DictElement(
@@ -498,9 +432,7 @@ def _valuespec_special_agents_redfish_power() -> Dictionary:
                         "Number of seconds for a single connection attempt before timeout occurs."
                     ),
                     prefill=DefaultValue(10),
-                    custom_validate=(
-                        validators.NumberInRange(min_value=1, max_value=20),
-                    ),
+                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
                 ),
             ),
         },

@@ -2,7 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-'''Redfish firmware inventory for HPE devices'''
+"""Redfish firmware inventory for HPE devices"""
+
+from cmk_addons.plugins.redfish.lib import (
+    parse_redfish_multiple,
+    redfish_health_state,
+    RedfishAPIData,
+)
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -16,11 +22,6 @@ from cmk.agent_based.v2 import (
     State,
     TableRow,
 )
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    parse_redfish_multiple,
-    redfish_health_state,
-)
 
 agent_section_redfish_firmware = AgentSection(
     name="redfish_firmwareinventory",
@@ -31,17 +32,17 @@ agent_section_redfish_firmware = AgentSection(
 
 def _item_name(item_data, padding):
     """build item name for inventory entry"""
-    if not item_data.get('Id'):
-        if item_data.get('Name'):
-            item_name = item_data.get('Name')
+    if not item_data.get("Id"):
+        if item_data.get("Name"):
+            item_name = item_data.get("Name")
         else:
             return None
-    elif item_data.get('Id').isdigit():
+    elif item_data.get("Id").isdigit():
         item_name = f"{item_data.get('Id').zfill(padding)}-{item_data.get('Name')}"
-    elif item_data.get('Id') == item_data.get('Name'):
-        item_name = item_data.get('Name')
-    elif item_data.get('Description') == "Represents Firmware Inventory":
-        prefix = item_data.get('Id').split("-")[0]
+    elif item_data.get("Id") == item_data.get("Name"):
+        item_name = item_data.get("Name")
+    elif item_data.get("Description") == "Represents Firmware Inventory":
+        prefix = item_data.get("Id").split("-")[0]
         item_name = f"{prefix}-{item_data.get('Name')}"
     else:
         item_name = f"{item_data.get('Id')}-{item_data.get('Name')}"
@@ -73,10 +74,10 @@ def inventory_redfish_firmware(section: RedfishAPIData) -> InventoryResult:
             item_name = _item_name(entry, padding)
             if not item_name:
                 continue
-            if entry.get('Description') == "Represents Firmware Inventory":
-                description = entry.get('Id')
+            if entry.get("Description") == "Represents Firmware Inventory":
+                description = entry.get("Id")
             else:
-                description = entry.get('Description')
+                description = entry.get("Description")
             yield TableRow(
                 path=path,
                 key_columns={
@@ -120,9 +121,7 @@ def check_redfish_firmware(section: RedfishAPIData) -> CheckResult:
         overall_state = max(overall_state, comp_state)
         if comp_state != 0:
             msg_text += f"{component_name} - {comp_msg} - "
-        info_list.append(
-            [component_name, comp_msg, entry.get("Version"), entry.get("Updateable")]
-        )
+        info_list.append([component_name, comp_msg, entry.get("Version"), entry.get("Updateable")])
 
     if not msg_text:
         msg_text = "All firmware in optimal state"

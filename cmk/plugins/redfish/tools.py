@@ -5,11 +5,11 @@
 """Tools used by all Redfish special agents"""
 
 from redfish.messages import (
-    get_messages_detail,
     get_error_messages,
-    search_message,
-    RedfishPasswordChangeRequiredError,
+    get_messages_detail,
     RedfishOperationFailedError,
+    RedfishPasswordChangeRequiredError,
+    search_message,
 )
 
 
@@ -50,8 +50,6 @@ def verify_response(response):
             raise RedfishOperationFailedError(
                 f"Operation failed: HTTP {response.status}\n{exception_string}"
             )
-
-    return
 
 
 def get_object_ids(context, object_dict, object_name):

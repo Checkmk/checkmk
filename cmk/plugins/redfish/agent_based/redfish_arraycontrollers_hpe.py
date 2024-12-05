@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk_addons.plugins.redfish.lib import (
+    redfish_health_state,
+    RedfishAPIData,
+)
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -10,10 +15,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-)
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    redfish_health_state,
 )
 
 
@@ -23,9 +24,7 @@ def discovery_redfish_arraycontrollers_hpe(section: RedfishAPIData) -> Discovery
             yield Service(item=section[key]["Id"])
 
 
-def check_redfish_arraycontrollers_hpe(
-    item: str, section: RedfishAPIData
-) -> CheckResult:
+def check_redfish_arraycontrollers_hpe(item: str, section: RedfishAPIData) -> CheckResult:
     data = section.get(item, None)
     if data is None:
         return

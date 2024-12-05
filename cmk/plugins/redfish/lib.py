@@ -6,8 +6,8 @@
 
 import json
 from typing import Any, Dict, NamedTuple, Optional, Tuple
-from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 Levels = Optional[Tuple[float, float]]
 RedfishAPIData = Dict[str, object]
@@ -159,9 +159,7 @@ capturing information for debugging.",
         elif key == "State":
             if state[key] is None:
                 continue
-            temp_state, state_msg = state_map.get(
-                state[key], (3, f"Unknown state: {state[key]}")
-            )
+            temp_state, state_msg = state_map.get(state[key], (3, f"Unknown state: {state[key]}"))
         dev_state = max(dev_state, temp_state)
         if state_msg:
             dev_msg.append(state_msg)

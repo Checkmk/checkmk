@@ -5,6 +5,7 @@
 """server side component to create the special agent call"""
 
 from collections.abc import Iterator
+
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
@@ -17,6 +18,7 @@ from cmk.server_side_calls.v1 import (
 
 class Params(BaseModel):
     """params validator"""
+
     user: str | None = None
     password: Secret | None = None
     port: int | None = None

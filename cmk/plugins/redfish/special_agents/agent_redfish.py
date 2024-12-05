@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special Agent to fetch Redfish data from management interfaces"""
 
-import time
-import pickle
 import logging
 import os
+import pickle
 import sys
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,6 +16,14 @@ from typing import Mapping
 
 import redfish
 import urllib3
+from redfish.rest.v1 import (
+    JsonDecodingError,
+    RetriesExhaustedError,
+    ServerDownOrUnreachableError,
+)
+
+from cmk.utils import password_store, paths
+
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionManager,
     SectionWriter,
@@ -24,12 +32,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
 from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
-)
-from cmk.utils import password_store, paths
-from redfish.rest.v1 import (
-    RetriesExhaustedError,
-    ServerDownOrUnreachableError,
-    JsonDecodingError,
 )
 
 
@@ -218,16 +220,15 @@ def fetch_entry(redfishobj, entry, section):
             redfishobj.section_data[section].extend(result)
         else:
             redfishobj.section_data.setdefault(section, result)
+    elif section in redfishobj.section_data.keys():
+        redfishobj.section_data[section].append(result)
     else:
-        if section in redfishobj.section_data.keys():
-            redfishobj.section_data[section].append(result)
-        else:
-            redfishobj.section_data.setdefault(
-                section,
-                [
-                    result,
-                ],
-            )
+        redfishobj.section_data.setdefault(
+            section,
+            [
+                result,
+            ],
+        )
     return redfishobj
 
 
@@ -257,9 +258,7 @@ def fetch_sections(redfishobj, fetching_sections, sections, data):
             continue
         if section not in data.keys():
             continue
-        section_data = fetch_data(
-            redfishobj, data.get(section).get("@odata.id"), section
-        )
+        section_data = fetch_data(redfishobj, data.get(section).get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
         if "Collection" in section_data.get("@odata.type", {}):
@@ -269,16 +268,15 @@ def fetch_sections(redfishobj, fetching_sections, sections, data):
                     redfishobj.section_data[section].extend(result)
                 else:
                     redfishobj.section_data.setdefault(section, result)
+        elif section in redfishobj.section_data.keys():
+            redfishobj.section_data[section].append(section_data)
         else:
-            if section in redfishobj.section_data.keys():
-                redfishobj.section_data[section].append(section_data)
-            else:
-                redfishobj.section_data.setdefault(
-                    section,
-                    [
-                        section_data,
-                    ],
-                )
+            redfishobj.section_data.setdefault(
+                section,
+                [
+                    section_data,
+                ],
+            )
     return redfishobj
 
 
@@ -297,15 +295,11 @@ def fetch_hpe_smartstorage(redfishobj, link_list, sections):
             "PhysicalDrives",
         ]
         resulting_sections = list(set(storage_sections).intersection(sections))
-        fetch_sections(
-            redfishobj, resulting_sections, sections, storage_links
-        )
+        fetch_sections(redfishobj, resulting_sections, sections, storage_links)
         for element in redfishobj.section_data.get("ArrayControllers", []):
             contrl_links = element.get("Links", {})
             resulting_sections = list(set(controller_sections).intersection(sections))
-            fetch_sections(
-                redfishobj, resulting_sections, sections, contrl_links
-            )
+            fetch_sections(redfishobj, resulting_sections, sections, contrl_links)
     return redfishobj
 
 
@@ -421,9 +415,7 @@ class RedfishData:
     chassis_data: Mapping[str, object] | None = None
     base_data: Mapping[str, object] | None = None
     vendor_data: VendorData | None = None
-    section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(
-        default_factory=dict
-    )
+    section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(default_factory=dict)
 
 
 def detect_vendor(redfishobj):
@@ -440,9 +432,7 @@ def detect_vendor(redfishobj):
         vendor_data = VendorData(name="HPE", expand_string="?$expand=.")
         if vendor_string in ["Hp"]:
             vendor_data.expand_string = ""
-        manager_data = (
-            root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
-        )
+        manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
         if manager_data:
             vendor_data.version = manager_data.get("ManagerType")
             if vendor_data.version is None:
@@ -454,13 +444,9 @@ def detect_vendor(redfishobj):
                 )
             vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
             if vendor_data.firmware_version is None:
-                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
-                    "Version"
-                )
+                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get("Version")
     elif vendor_string in ["Lenovo"]:
-        vendor_data = VendorData(
-            name="Lenovo", version="xClarity", expand_string="?$expand=*"
-        )
+        vendor_data = VendorData(name="Lenovo", version="xClarity", expand_string="?$expand=*")
     elif vendor_string in ["Dell"]:
         vendor_data = VendorData(
             name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)"
@@ -470,9 +456,7 @@ def detect_vendor(redfishobj):
             name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29"
         )
     elif vendor_string in ["ts_fujitsu"]:
-        vendor_data = VendorData(
-            name="Fujitsu", version="iRMC", expand_string="?$expand=Members"
-        )
+        vendor_data = VendorData(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
     elif vendor_string in ["Ami"]:
         vendor_data = VendorData(name="Ami")
     elif vendor_string in ["Supermicro"]:
@@ -516,13 +500,9 @@ def get_information(redfishobj):
             manager_data = fetch_collection(redfishobj, manager_col, "Manager")
 
         for element in manager_data:
-            data_model = list(element.get("Oem", {"Unknown": "Unknown model"}).keys())[
-                0
-            ]
+            data_model = list(element.get("Oem", {"Unknown": "Unknown model"}).keys())[0]
             if not redfishobj.vendor_data.firmware_version:
-                redfishobj.vendor_data.firmware_version = element.get(
-                    "FirmwareVersion", ""
-                )
+                redfishobj.vendor_data.firmware_version = element.get("FirmwareVersion", "")
 
     with SectionWriter("check_mk", " ") as w:
         w.append("Version: 2.3.0")
@@ -605,11 +585,7 @@ def get_information(redfishobj):
         firmware_url = (
             redfishobj.base_data.get("UpdateService").get("@odata.id"),
             "/FirmwareInventory",
-            (
-                redfishobj.vendor_data.expand_string
-                if redfishobj.vendor_data.expand_string
-                else ""
-            ),
+            (redfishobj.vendor_data.expand_string if redfishobj.vendor_data.expand_string else ""),
         )
         if redfishobj.vendor_data.expand_string:
             firmwares = fetch_data(
@@ -645,10 +621,7 @@ def get_information(redfishobj):
                 for entry in storage_data:
                     if entry.get("error"):
                         continue
-                    if (
-                        entry.get("Drives@odata.count", 0) != 0
-                        or len(entry.get("Drives", [])) >= 1
-                    ):
+                    if entry.get("Drives@odata.count", 0) != 0 or len(entry.get("Drives", [])) >= 1:
                         fetch_list_of_elements(
                             redfishobj, systems_sub_sections, redfishobj.sections, entry
                         )
@@ -658,9 +631,7 @@ def get_information(redfishobj):
                 )
 
         if extra_links:
-            fetch_extra_data(
-                redfishobj, data_model, extra_links, redfishobj.sections, system
-            )
+            fetch_extra_data(redfishobj, data_model, extra_links, redfishobj.sections, system)
 
     # fetch chassis
     chassis_col = fetch_data(redfishobj, chassis_url, "Chassis")
@@ -692,12 +663,8 @@ def store_session_key(redfishobj):
     store_data = {}
     if not os.path.exists(paths.tmp_dir / "agents" / "agent_redfish"):
         os.makedirs(paths.tmp_dir / "agents" / "agent_redfish")
-    store_path = (
-        paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
-    )
-    store_data.setdefault(
-        "location", redfishobj.redfish_connection.get_session_location()
-    )
+    store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
+    store_data.setdefault("location", redfishobj.redfish_connection.get_session_location())
     store_data.setdefault("session", redfishobj.redfish_connection.get_session_key())
     with open(store_path, "wb") as file:
         pickle.dump(store_data, file)
@@ -710,10 +677,7 @@ def store_section_data(redfishobj):
             continue
         store_data = {}
         store_path = (
-            paths.tmp_dir
-            / "agents"
-            / "agent_redfish"
-            / f"{redfishobj.hostname}_{section}.pkl"
+            paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}_{section}.pkl"
         )
         if getattr(redfishobj.cache_timestamp_per_section, section):
             continue
@@ -730,12 +694,7 @@ def load_section_data(redfishobj):
     for key, value in redfishobj.cache_per_section.__dict__.items():
         if not value:
             continue
-        store_path = (
-            paths.tmp_dir
-            / "agents"
-            / "agent_redfish"
-            / f"{redfishobj.hostname}_{key}.pkl"
-        )
+        store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}_{key}.pkl"
         if os.path.exists(store_path):
             with open(store_path, "rb") as file:
                 store_data = pickle.load(file)
@@ -751,9 +710,7 @@ def load_section_data(redfishobj):
 
 def load_session_key(redfishobj):
     """load existing redfish session data"""
-    store_path = (
-        paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
-    )
+    store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
     try:
         with open(store_path, "rb") as file:
             # Deserialize and retrieve the variable from the file
@@ -797,20 +754,14 @@ def get_session(args: Args):
         existing_session = load_session_key(redfishobj)
         # existing session with key found reuse this session instead of login
         if existing_session:
-            redfishobj.redfish_connection.set_session_location(
-                existing_session.get("location")
-            )
-            redfishobj.redfish_connection.set_session_key(
-                existing_session.get("session")
-            )
+            redfishobj.redfish_connection.set_session_location(existing_session.get("location"))
+            redfishobj.redfish_connection.set_session_key(existing_session.get("session"))
             response_url = redfishobj.redfish_connection.get(
                 "/redfish/v1/SessionService/Sessions", None
             )
             if response_url.status == 200:
                 return redfishobj
-            response_url = redfishobj.redfish_connection.get(
-                "/redfish/v1/Sessions", None
-            )
+            response_url = redfishobj.redfish_connection.get("/redfish/v1/Sessions", None)
             if response_url.status == 200:
                 return redfishobj
 

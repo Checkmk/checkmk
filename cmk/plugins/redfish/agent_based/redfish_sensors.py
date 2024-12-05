@@ -4,32 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """check single redfish sensor state"""
 
-from cmk.agent_based.v2 import AgentSection
 from cmk_addons.plugins.redfish.lib import (
     parse_redfish_multiple,
+    process_redfish_perfdata,
+    redfish_health_state,
+    RedfishAPIData,
 )
+
 from cmk.agent_based.v2 import (
+    AgentSection,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    get_value_store,
     Result,
     Service,
     State,
-    get_value_store,
 )
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    process_redfish_perfdata,
-    redfish_health_state,
+from cmk.plugins.lib.humidity import (
+    check_humidity,
 )
 from cmk.plugins.lib.temperature import (
     check_temperature,
     TempParamDict,
 )
-from cmk.plugins.lib.humidity import (
-    check_humidity,
-)
-
 
 agent_section_redfish_sensors = AgentSection(
     name="redfish_sensors",
@@ -46,9 +44,7 @@ def discovery_redfish_sensors(section: RedfishAPIData) -> DiscoveryResult:
         yield Service(item=section[key]["Id"])
 
 
-def check_redfish_sensors(
-    item: str, params: TempParamDict, section: RedfishAPIData
-) -> CheckResult:
+def check_redfish_sensors(item: str, params: TempParamDict, section: RedfishAPIData) -> CheckResult:
     """Check single sensor state"""
     data = section.get(item, None)
     if data is None:
@@ -76,15 +72,18 @@ def check_redfish_sensors(
         elif data.get("ReadingType") == "Humidity":
             yield from check_humidity(
                 humidity=perfdata.value,
-                params={"levels": (
-                    perfdata.levels_upper[1]
-                    if perfdata.levels_upper and len(perfdata.levels_upper) > 1
-                    else None
-                ), "levels_lower": (
-                    perfdata.levels_lower[1]
-                    if perfdata.levels_lower and len(perfdata.levels_lower) > 1
-                    else None
-                )},
+                params={
+                    "levels": (
+                        perfdata.levels_upper[1]
+                        if perfdata.levels_upper and len(perfdata.levels_upper) > 1
+                        else None
+                    ),
+                    "levels_lower": (
+                        perfdata.levels_lower[1]
+                        if perfdata.levels_lower and len(perfdata.levels_lower) > 1
+                        else None
+                    ),
+                },
             )
     else:
         yield Result(state=State(0), summary="No temperature data found")

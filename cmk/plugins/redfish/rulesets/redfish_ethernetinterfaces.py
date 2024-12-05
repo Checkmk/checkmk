@@ -14,19 +14,11 @@ def _form_discovery_redfish_ethernetinterfaces() -> form_specs.Dictionary:
             "state": form_specs.DictElement(
                 parameter_form=form_specs.SingleChoice(
                     title=Title("Discovery settings for physical ports"),
-                    help_text=Help(
-                        "Specify if port state UP, DOWN or booth should be discovered"
-                    ),
+                    help_text=Help("Specify if port state UP, DOWN or booth should be discovered"),
                     elements=[
-                        form_specs.SingleChoiceElement(
-                            name="up", title=Title("Up only")
-                        ),
-                        form_specs.SingleChoiceElement(
-                            name="down", title=Title("Down only")
-                        ),
-                        form_specs.SingleChoiceElement(
-                            name="updown", title=Title("Up & Down")
-                        ),
+                        form_specs.SingleChoiceElement(name="up", title=Title("Up only")),
+                        form_specs.SingleChoiceElement(name="down", title=Title("Down only")),
+                        form_specs.SingleChoiceElement(name="updown", title=Title("Up & Down")),
                     ],
                 ),
             ),

@@ -16,12 +16,8 @@ def _form_discovery_redfish_outlets() -> form_specs.Dictionary:
                     title=Title("Naming for outlets at discovery"),
                     help_text=Help("Specify how to name the outlets at discovered"),
                     elements=[
-                        form_specs.SingleChoiceElement(
-                            name="index", title=Title("Port Index")
-                        ),
-                        form_specs.SingleChoiceElement(
-                            name="label", title=Title("User Label")
-                        ),
+                        form_specs.SingleChoiceElement(name="index", title=Title("Port Index")),
+                        form_specs.SingleChoiceElement(name="label", title=Title("User Label")),
                         form_specs.SingleChoiceElement(
                             name="fill", title=Title("Port Index with fill")
                         ),

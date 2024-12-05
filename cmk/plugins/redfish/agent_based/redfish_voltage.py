@@ -3,19 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk_addons.plugins.redfish.lib import (
+    process_redfish_perfdata,
+    redfish_health_state,
+    RedfishAPIData,
+)
+
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     Result,
     Service,
     State,
-    check_levels,
-)
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    process_redfish_perfdata,
-    redfish_health_state,
 )
 
 
@@ -33,7 +34,7 @@ def discovery_redfish_voltage(section: RedfishAPIData) -> DiscoveryResult:
 
 
 def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
-    '''Check single Voltage'''
+    """Check single Voltage"""
     voltage = None
     for key in section.keys():
         voltages = section[key].get("Voltages", None)
@@ -53,8 +54,7 @@ def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
     perfdata = process_redfish_perfdata(voltage)
 
     volt_msg = (
-        f"Location: {voltage.get('PhysicalContext')}, "
-        f"SensorNr: {voltage.get('SensorNumber')}"
+        f"Location: {voltage.get('PhysicalContext')}, " f"SensorNr: {voltage.get('SensorNumber')}"
     )
     yield Result(state=State(0), summary=volt_msg)
 

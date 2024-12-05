@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Mapping
+
+from cmk_addons.plugins.redfish.lib import parse_redfish, redfish_health_state, RedfishAPIData
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -13,7 +16,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk_addons.plugins.redfish.lib import RedfishAPIData, parse_redfish, redfish_health_state
 
 Section = Dict[str, Mapping[str, Any]]
 
@@ -53,9 +55,7 @@ def check_redfish_system(item: str, section: RedfishAPIData) -> CheckResult:
 
     state = data.get("Status", {"Health": "Unknown"})
     result_state, state_text = redfish_health_state(state)
-    message = (
-        f"System with SerialNr: {data.get('SerialNumber')}, has State: {state_text}"
-    )
+    message = f"System with SerialNr: {data.get('SerialNumber')}, has State: {state_text}"
 
     yield Result(state=State(result_state), summary=message)
 

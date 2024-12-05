@@ -11,6 +11,11 @@ from pathlib import Path
 
 import redfish
 import urllib3
+from cmk_addons.plugins.redfish.tools import verify_response
+from redfish.rest.v1 import JsonDecodingError, RetriesExhaustedError, ServerDownOrUnreachableError
+
+from cmk.utils import password_store
+
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
@@ -18,11 +23,6 @@ from cmk.special_agents.v0_unstable.agent_common import (
 from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
-)
-from cmk.utils import password_store
-from redfish.rest.v1 import RetriesExhaustedError, ServerDownOrUnreachableError, JsonDecodingError
-from cmk_addons.plugins.redfish.tools import (
-    verify_response
 )
 
 
@@ -163,9 +163,7 @@ def fetch_sections(redfishobj, fetching_sections, sections, data):
             continue
         if section not in data.keys():
             continue
-        section_data = fetch_data(
-            redfishobj, data.get(section).get("@odata.id"), section
-        )
+        section_data = fetch_data(redfishobj, data.get(section).get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
         if "Collection" in section_data.get("@odata.type"):
@@ -330,9 +328,7 @@ def detect_vendor(root_data):
 
     if vendor_string in ["Hpe", "Hp"]:
         vendor_data = VendorHPEData()
-        manager_data = (
-            root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
-        )
+        manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
         if manager_data:
             vendor_data.version = manager_data.get("ManagerType")
             if vendor_data.version is None:
@@ -344,9 +340,7 @@ def detect_vendor(root_data):
                 )
             vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
             if vendor_data.firmware_version is None:
-                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
-                    "Version"
-                )
+                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get("Version")
             if vendor_data.version.lower() == "ilo 5":
                 vendor_data.view_supported = True
     elif vendor_string in ["Lenovo"]:

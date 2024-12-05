@@ -3,18 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk_addons.plugins.redfish.lib import (
+    redfish_health_state,
+    RedfishAPIData,
+)
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    Metric,
     Result,
     Service,
     State,
-    Metric,
-)
-from cmk_addons.plugins.redfish.lib import (
-    RedfishAPIData,
-    redfish_health_state,
 )
 
 
@@ -50,16 +51,10 @@ def check_redfish_psu(item: str, section: RedfishAPIData) -> CheckResult:
         if psu.get("PowerOutputWatts", psu.get("LastPowerOutputWatts")) is None
         else psu.get("PowerOutputWatts", psu.get("LastPowerOutputWatts"))
     )
-    input_power = float(
-        0 if psu.get("PowerInputWatts") is None else psu.get("PowerInputWatts")
-    )
-    input_voltage = float(
-        0 if psu.get("LineInputVoltage") is None else psu.get("LineInputVoltage")
-    )
+    input_power = float(0 if psu.get("PowerInputWatts") is None else psu.get("PowerInputWatts"))
+    input_voltage = float(0 if psu.get("LineInputVoltage") is None else psu.get("LineInputVoltage"))
     dev_model = psu.get("Model")
-    capacity = float(
-        0 if psu.get("PowerCapacityWatts") is None else psu.get("PowerCapacityWatts")
-    )
+    capacity = float(0 if psu.get("PowerCapacityWatts") is None else psu.get("PowerCapacityWatts"))
 
     yield Metric("input_power", input_power)
     yield Metric("output_power", output_power)

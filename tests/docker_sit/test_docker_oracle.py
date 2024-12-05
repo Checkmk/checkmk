@@ -79,7 +79,6 @@ class OracleDatabase:
         self.ORADATA: Final[Path | None] = (
             Path(os.environ["CMK_ORADATA"]) if "CMK_ORADATA" in os.environ else None
         )
-        self.reuse_db = self.ORADATA and os.path.exists(self.ORADATA / self.SID)
 
         self.cmk_conf_dir = Path("/etc/check_mk")
         self.cmk_var_dir = Path("/var/lib/check_mk_agent")
@@ -200,20 +199,14 @@ class OracleDatabase:
                 raise docker.errors.NotFound(self.name)
         except docker.errors.NotFound:
             logger.info("Starting container %s from image %s", self.name, self.image.short_id)
-            run_cmds = [
-                "$(ls -1 /etc/init.d/oracle-* | grep -v firstboot) stop",
-                f"rm -rf '{self.DATA}/'**",
-                f"sed -i -e 's/memory_target=.*/memory_target=2G/g' '{self.INIT_ORA}'",
-                "/opt/oracle/runOracle.sh",
-            ]
             assert self.image.id, "Image ID not defined!"
             self.container = self.client.containers.run(
-                command=(None if self.reuse_db else ["/bin/bash", "-c", ";".join(run_cmds)]),
                 image=self.image.id,
                 name=self.name,
                 volumes=self.volumes,
                 environment=self.environment,
                 detach=True,
+                user="oracle",
             )
 
             success_msg = "DATABASE IS READY TO USE!"
@@ -250,13 +243,15 @@ class OracleDatabase:
 
         logger.info("Forcing listener registration...")
         rc, output = self.container.exec_run(
-            f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/register_listener.sql"'"""
+            f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/register_listener.sql"'""",
+            user="oracle",
         )
         assert rc == 0, f"Error during listener registration: {output.decode('UTF-8')}"
 
         logger.info('Creating Checkmk user "%s"...', self.cmk_username)
         rc, output = self.container.exec_run(
-            f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/create_user.sql"'"""
+            f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/create_user.sql"'""",
+            user="oracle",
         )
         assert rc == 0, f"Error during user creation: {output.decode('UTF-8')}"
 

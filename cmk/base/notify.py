@@ -1014,9 +1014,7 @@ def _process_notifications(
                 log_to_history(
                     notification_result_message(
                         plugin=NotificationPluginName(plugin_name),
-                        contact=plugin_context["CONTACTNAME"],
-                        hostname=plugin_context["HOSTNAME"],
-                        service=plugin_context.get("SERVICEDESC"),
+                        context=plugin_context,
                         exit_code=NotificationResultCode(2),
                         output=[str(e)],
                     )
@@ -1838,9 +1836,7 @@ def call_notification_script(
         log_to_history(
             notification_result_message(
                 plugin=NotificationPluginName(plugin_name),
-                contact=plugin_context["CONTACTNAME"],
-                hostname=plugin_context["HOSTNAME"],
-                service=plugin_context.get("SERVICEDESC"),
+                context=plugin_context,
                 exit_code=NotificationResultCode(exitcode),
                 output=output_lines,
             )
@@ -2358,9 +2354,7 @@ def notify_bulk(
             log_to_history(
                 notification_result_message(
                     plugin=plugin_text,
-                    contact=context["CONTACTNAME"],
-                    hostname=context["HOSTNAME"],
-                    service=context.get("SERVICEDESC"),
+                    context=context,
                     exit_code=exitcode,
                     output=output_lines,
                 )

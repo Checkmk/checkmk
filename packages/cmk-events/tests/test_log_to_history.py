@@ -15,7 +15,11 @@ from cmk.events.log_to_history import (
     notification_result_message,
     SanitizedLivestatusLogStr,
 )
-from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.events.notification_result import (
+    NotificationContext,
+    NotificationPluginName,
+    NotificationResultCode,
+)
 
 
 class FakeLocalConnection:
@@ -47,14 +51,18 @@ def test_notification_result_message() -> None:
     plugin = NotificationPluginName("bulk asciimail")
     exit_code = NotificationResultCode(0)
     output: list[str] = []
-    actual = notification_result_message(plugin, "harri", "test", None, exit_code, output)
-    expected = "{}: {};{};{};{};{};{}".format(
-        "HOST NOTIFICATION RESULT",
-        "harri",
-        "test",
-        "OK",
-        "bulk asciimail",
-        "",
-        "",
+    actual = notification_result_message(
+        plugin, NotificationContext({"CONTACTNAME": "harri", "HOSTNAME": "test"}), exit_code, output
     )
+    fields = ";".join(
+        (
+            "harri",
+            "test",
+            "OK",
+            "bulk asciimail",
+            "",
+            "",
+        )
+    )
+    expected = f"HOST NOTIFICATION RESULT: {fields}"
     assert actual == expected

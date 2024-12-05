@@ -5,7 +5,7 @@
 
 """Helper to write notification related updates to the monitoring history
 
-We wan to inform users about the processing of notifications so that they
+We want to inform users about the processing of notifications so that they
 understand better which part of the system did what with a notification
 initially created by the monitoring core.
 
@@ -50,95 +50,94 @@ def _livestatus_cmd(command: str) -> None:
     try:
         connection = livestatus.LocalConnection()
         connection.set_timeout(timeout)
-        connection.command("[%d] %s" % (time.time(), command))
-    except Exception:
+        connection.command(f"[{time.time():.0f}] {command}")
+    except livestatus.MKLivestatusException:
         logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
         logger.info("Command was: %s", command)
 
 
-def notification_message(
-    plugin: NotificationPluginName, context: NotificationContext
+def _format_notification_message(
+    plugin: NotificationPluginName,
+    context: NotificationContext,
+    type_suffix: str | None = None,
+    exit_code: NotificationResultCode | None = None,
+    output: str | list[str] | None = None,
 ) -> SanitizedLivestatusLogStr:
+    """
+    Format a notification message for the monitoring history.
+
+    Args:
+        plugin: Name of the notification plugin
+        context: Context with at least the keys "CONTACTNAME" and "HOSTNAME"
+        type_suffix: Optional suffix to append to the message type
+        exit_code: Optional exit code of the notification,
+                   will be used instead of "SERVICESTATE" or "HOSTSTATE"
+        output: Optional output override of the notification,
+                will be used instead of "SERVICEOUTPUT" or "HOSTOUTPUT".
+                If a list is given, the last entry will be used as the output.
+                If the first entry is empty, the output will be empty.
+                The entire list will also be joined with " -- " and used as a comment.
+    """
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
+    state = _notification_result_code_to_state_name(exit_code) if exit_code is not None else None
+    if isinstance(output, list):
+        output_str: str = output[-1] if output else ""
+        comment: str | None = " -- ".join(output)
+    else:
+        output_str = output or ""
+        comment = None
     if service := context.get("SERVICEDESC"):
         what = "SERVICE NOTIFICATION"
         spec = f"{hostname};{service}"
-        state = context["SERVICESTATE"]
-        output = context["SERVICEOUTPUT"]
+        state = state or context.get("SERVICESTATE", "UNKNOWN")
+        output_str = output_str or context.get("SERVICEOUTPUT", "")
     else:
         what = "HOST NOTIFICATION"
         spec = hostname
-        state = context["HOSTSTATE"]
-        output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{}".format(
-            what,
+        state = state or context.get("HOSTSTATE", "UNKNOWN")
+        output_str = output_str or context.get("HOSTOUTPUT", "")
+    if type_suffix:
+        what += f" {type_suffix}"
+    # NOTE: There are actually 2 more additional fields, which we don't use:
+    # author and long plug-in output.
+    fields = ";".join(
+        (
             livestatus.lqencode(contact),
             livestatus.lqencode(spec),
             livestatus.lqencode(state),
             livestatus.lqencode(plugin),
-            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
+            livestatus.lqencode(output_str[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
         )
     )
+    if comment is not None:
+        fields += f";{livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON))}"
+    return SanitizedLivestatusLogStr(f"{what}: {fields}")
+
+
+def notification_message(
+    plugin: NotificationPluginName,
+    context: NotificationContext,
+) -> SanitizedLivestatusLogStr:
+    return _format_notification_message(plugin, context)
 
 
 def notification_progress_message(
     plugin: NotificationPluginName,
-    contact: str,
-    hostname: str,
-    service: str | None,
+    context: NotificationContext,
     exit_code: NotificationResultCode,
     output: str,
 ) -> SanitizedLivestatusLogStr:
-    if service:
-        what = "SERVICE NOTIFICATION PROGRESS"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION PROGRESS"
-        spec = hostname
-    state = _notification_result_code_to_state_name(exit_code)
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{}".format(
-            what,
-            livestatus.lqencode(contact),
-            livestatus.lqencode(spec),
-            state,
-            livestatus.lqencode(plugin),
-            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
-        )
-    )
+    return _format_notification_message(plugin, context, "PROGRESS", exit_code, output)
 
 
 def notification_result_message(
     plugin: NotificationPluginName,
-    contact: str,
-    hostname: str,
-    service: str | None,
+    context: NotificationContext,
     exit_code: NotificationResultCode,
     output: list[str],
 ) -> SanitizedLivestatusLogStr:
-    if service:
-        what = "SERVICE NOTIFICATION RESULT"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION RESULT"
-        spec = hostname
-    state = _notification_result_code_to_state_name(exit_code)
-    comment = " -- ".join(output)
-    short_output = output[-1] if output else ""
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{};{}".format(
-            what,
-            livestatus.lqencode(contact),
-            livestatus.lqencode(spec),
-            state,
-            livestatus.lqencode(plugin),
-            livestatus.lqencode(short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
-            livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON)),
-        )
-    )
+    return _format_notification_message(plugin, context, "RESULT", exit_code, output)
 
 
 def _notification_result_code_to_state_name(exit_code: NotificationResultCode) -> str:

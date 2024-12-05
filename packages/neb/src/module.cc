@@ -692,10 +692,12 @@ int broker_comment(int callback_type, void *data) {
     const unsigned long id = info->comment_id;
     switch (info->type) {
         case NEBTYPE_COMMENT_ADD:
+            // We get a NEBTYPE_COMMENT_LOAD *and* a NEBTYPE_COMMENT_ADD for a
+            // single ADD_*_COMMENT command. The LOAD/DELETE events correspond
+            // to the actual changes in the Nagios data structures, so we use
+            // those and ignore the ADD.
+            break;
         case NEBTYPE_COMMENT_LOAD: {
-            // TODO(sp): We get a NEBTYPE_COMMENT_LOAD *and* a
-            // NEBTYPE_COMMENT_ADD for a single ADD_*_COMMENT command, can we
-            // remove one of those cases above?
             auto *hst = ::find_host(info->host_name);
             auto *svc = info->service_description == nullptr
                             ? nullptr
@@ -742,11 +744,13 @@ int broker_downtime(int callback_type, void *data) {
     const unsigned long id = info->downtime_id;
     switch (info->type) {
         case NEBTYPE_DOWNTIME_ADD:
+            // We get a NEBTYPE_DOWNTIME_LOAD *and* a NEBTYPE_DOWNTIME_ADD for a
+            // single ADD_*_DOWNTIME command. The LOAD/DELETE events correspond
+            // to the actual changes in the Nagios data structures, so we use
+            // those and ignore the ADD. Note that Nagios adds a comment to the
+            // host/service after the ADD, too, so we get additional callbacks.
+            break;
         case NEBTYPE_DOWNTIME_LOAD: {
-            // TODO(sp): We get a NEBTYPE_DOWNTIME_LOAD *and* a
-            // NEBTYPE_DOWNTIME_ADD for a single SCHEDULE_*_DOWNTIME command,
-            // can we remove one of those cases above? After that, we get a
-            // NEBTYPE_COMMENT_LOAD and NEBTYPE_COMMENT_ADD, too.
             auto *hst = ::find_host(info->host_name);
             auto *svc = info->service_description == nullptr
                             ? nullptr

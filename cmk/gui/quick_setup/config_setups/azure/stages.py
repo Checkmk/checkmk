@@ -87,7 +87,9 @@ def _collect_params_for_connection_test(
     The agent option "--connection-test" is added, running only a connection via the Management API
     client (none via the Graph API client)."""
     return {
-        **collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form),
+        **azure_transform_to_disk(
+            collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
+        ),
         "connection_test": True,
     }
 
@@ -291,13 +293,16 @@ def action(
 
 def azure_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     # "Unwrap" config dicts where we introduced duplicate first level keys before
-    transformed: dict[str, object] = {}
+    transformed = dict(params)
     for key in FIRST_LEVEL_DICT_TITLES:
-        tmp_dict = params[key]
-        assert isinstance(tmp_dict, dict)
-        if key in tmp_dict:
-            transformed[key] = tmp_dict[key]
-    return {**params, **transformed}
+        if key in transformed:
+            tmp_dict = transformed[key]
+            assert isinstance(tmp_dict, dict)
+            if key in tmp_dict:
+                transformed[key] = tmp_dict[key]
+            else:
+                del transformed[key]
+    return transformed
 
 
 def azure_collect_params(

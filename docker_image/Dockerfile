@@ -35,12 +35,6 @@ COPY docker-entrypoint.sh /
 # Starts the entrypoint script and hands over CMD by default
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-# Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.5.0b1"
-ARG CMK_EDITION
-# Distro codename is used to find the corresponding .deb package
-ARG DISTRO_CODENAME="jammy"
-
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 
@@ -75,6 +69,12 @@ RUN set -e \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
     && rm needed-packages
+
+# Pure build time variable declarations (docker build --build-arg KEY=val)
+ARG CMK_VERSION="2.5.0b1"
+ARG CMK_EDITION
+# Distro codename is used to find the corresponding .deb package
+ARG DISTRO_CODENAME="jammy"
 
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.

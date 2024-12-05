@@ -28,6 +28,7 @@ from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.endpoints import autocomplete
+from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
@@ -111,6 +112,7 @@ def register_painters() -> None:
 def register(edition: Edition) -> None:
     autocomplete.register(endpoint_registry)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
+    metric_endpoint.register(endpoint_registry)
     common_registration(
         mega_menu_registry,
         job_registry,

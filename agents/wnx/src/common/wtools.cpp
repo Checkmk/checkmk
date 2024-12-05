@@ -2822,7 +2822,7 @@ public:
     enum class Type { admin, everyone };
     Sid(const Sid &) = delete;
 
-    Sid(Sid &&rhs) {
+    Sid(Sid &&rhs) noexcept {
         sid_ = rhs.sid_;
         type_ = rhs.type_;
         rhs.sid_ = nullptr;
@@ -2831,7 +2831,6 @@ public:
     Sid &operator=(const Sid &) = delete;
     Sid &operator=(Sid &&) = delete;
     explicit Sid(Type type) : type_{type} {
-        XLOG::l.i("sid");
         switch (type_) {
             case Type::admin: {
                 SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
@@ -2908,6 +2907,8 @@ public:
     }
     Acl(const Acl &) = delete;
     Acl &operator=(const Acl &) = delete;
+    Acl(Acl &&) = delete;
+    Acl &operator=(Acl &&) = delete;
 
     PACL acl() const { return acl_; }
 
@@ -2945,6 +2946,8 @@ public:
     }
     Sd(const Sd &) = delete;
     Sd &operator=(const Sd &) = delete;
+    Sd(Sd &&) = delete;
+    Sd &operator=(Sd &&) = delete;
 
     PSECURITY_DESCRIPTOR sd() const { return sd_; }
     ~Sd() {

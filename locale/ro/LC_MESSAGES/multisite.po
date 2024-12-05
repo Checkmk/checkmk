@@ -981,6 +981,9 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ", prima potrivire sare peste acest pachet de reguli"
 
+msgid "-"
+msgstr ""
+
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -2260,6 +2263,11 @@ msgid "A list of specific users"
 msgstr "O listă cu utilizatori specifici"
 
 msgid ""
+"A list of text values that represent the 'AuthnContextClassRef' elements "
+"used to specify acceptable authentication context classes."
+msgstr ""
+
+msgid ""
 "A macro must begin and end with '$' and is allowed to contain only ASCII "
 "upper letters, digits and underscores."
 msgstr ""
@@ -3524,6 +3532,18 @@ msgstr "Activ (anonim)"
 msgid "Active (files)"
 msgstr "Activ (fișiere)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "Trasee active"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "Trasee active"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "Unitate activă"
+
 msgid "Active Connections"
 msgstr "Conexiuni Active"
 
@@ -3762,6 +3782,10 @@ msgstr "Adăugați instanța NGINX"
 
 msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector configuration"
+msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "Add Prefix"
 msgstr "Adăugați prefixul"
@@ -4380,6 +4404,10 @@ msgid "Add user attribute"
 msgstr "Adăugați atributul de utilizator"
 
 msgid "Add, edit and delete InfluxDB connections."
+msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
+
+#, fuzzy
+msgid "Add, edit and delete OpenTelemetry configurations."
 msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 
 msgid "Add. addresses"
@@ -5747,6 +5775,9 @@ msgstr "Toate protocoalele"
 
 msgid "All queues listed here will be skipped."
 msgstr "Toate cozile de așteptare enumerate aici vor fi ignorate."
+
+msgid "All related configuration of the integrated OpenTelemetry collector."
+msgstr ""
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr ""
@@ -7332,6 +7363,9 @@ msgstr "Atributele care trebuie eliminate din gazde"
 msgid "AudioCodes Alarms"
 msgstr ""
 
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "Jurnal de audit"
 
@@ -7366,6 +7400,10 @@ msgstr "Expirarea autentificării"
 
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Codul de autentificare (OTP / TOTP)"
+
+#, fuzzy
+msgid "Authentication context class reference"
+msgstr "Sursa de autentificare"
 
 msgid ""
 "Authentication details for communicating with ServiceNow. If you want to "
@@ -7781,8 +7819,16 @@ msgstr "Disponibil până la"
 msgid "Average"
 msgstr "Media"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "Latență medie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Întârziere medie a cozii de așteptare de ieșire"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Rata de succes a backend-ului Varnish"
 
 msgid "Average active check latency"
 msgstr "Latența medie de verificare activă"
@@ -10954,6 +11000,21 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Apelarea cârligelor finale"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "Identificarea apelantului"
+
+msgid "Calls In/Out"
+msgstr ""
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "Apelarea unei reguli"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "Pagini pe secundă"
+
 msgid "Can be used until version:"
 msgstr "Poate fi utilizat până la versiunea:"
 
@@ -13720,6 +13781,10 @@ msgstr ""
 "face ca verificarea să ridice stări de avertizare/critice dacă timpul este "
 "egal sau mai mare decât nivelurile configurate."
 
+#, fuzzy
+msgid "Comparison"
+msgstr "Compresie"
+
 msgid "Compatibility"
 msgstr "Compatibilitate"
 
@@ -14093,6 +14158,14 @@ msgstr "Configurați utilizarea serverului proxy"
 
 msgid "Configure restrictions manually"
 msgstr "Configurarea manuală a restricțiilor"
+
+msgid ""
+"Configure secret environment variables that will be set when executing Robot "
+"Framework. This can for example be used together with <tt>CryptoLibrary</tt> "
+"for encrypting login data on the target hosts. <b>Note</b>: The configured "
+"values will be written in plain text to the configuration deployed to the "
+"target hosts."
+msgstr ""
 
 #, fuzzy
 msgid "Configure services to monitor"
@@ -15665,6 +15738,10 @@ msgstr ""
 
 msgid "Create regular time-schedule for this report"
 msgstr "Creați un orar regulat pentru acest raport"
+
+#, fuzzy
+msgid "Create remote broker certificates"
+msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 #, fuzzy
 msgid "Create robot"
@@ -23660,6 +23737,10 @@ msgstr "Setat în mod explicit în dosare"
 msgid "Explicitly set on hosts"
 msgstr "Setat în mod explicit pe gazde"
 
+#, fuzzy
+msgid "Explicitly specified groups"
+msgstr "grupuri specificate în mod explicit"
+
 msgid "Explicitly specify resources"
 msgstr "Specificarea explicită a resurselor"
 
@@ -24343,6 +24424,14 @@ msgstr "Obținerea certificatului de pe server"
 msgid "Fetch chunked"
 msgstr "Preluarea de chunked"
 
+#, fuzzy
+msgid "Fetch data every"
+msgstr "Aduceți fiecare"
+
+#, fuzzy
+msgid "Fetch data every time"
+msgstr "Aduceți fiecare"
+
 msgid "Fetch events"
 msgstr "Preluarea evenimentelor"
 
@@ -24354,9 +24443,6 @@ msgstr ""
 "Preia evenimente din fluxul de evenimente al instanței Datadog. Evenimentele "
 "preluate vor fi transmise în Consola de evenimente a site-ului în care este "
 "executat agentul special."
-
-msgid "Fetch every"
-msgstr "Aduceți fiecare"
 
 msgid "Fetch failed"
 msgstr "Fetch a eșuat"
@@ -26202,6 +26288,10 @@ msgstr "Prezentare generală a gazdei"
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Mergeți la pagina principală"
+
 msgid "Go to extension packages"
 msgstr "Mergeți la pachetele de extensii"
 
@@ -26220,9 +26310,6 @@ msgid ""
 "Go to the Monitor > All Hosts page or click the Go to All hosts button to "
 "start monitoring your %s services."
 msgstr ""
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Mergeți la panoul de administrare Saas"
 
 #, fuzzy
 msgid "Go to the next stage"
@@ -34295,6 +34382,10 @@ msgstr "Ora de încheiere invalidă dată"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 
+#, fuzzy, python-format
+msgid "Invalid extension type, supported types are: %s"
+msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
+
 #, fuzzy
 msgid "Invalid file"
 msgstr "Nume de fișier invalid"
@@ -34386,6 +34477,10 @@ msgstr "Pagină de manual invalidă: Nu a reușit să obțină titlul"
 msgid "Invalid messaging method selected."
 msgstr "Metoda de mesagerie nevalabilă selectată."
 
+#, fuzzy, python-format
+msgid "Invalid mime type, supported types are: %s"
+msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
+
 #, fuzzy
 msgid "Invalid multiple choice value"
 msgstr "Subiect nevalabil"
@@ -34418,6 +34513,23 @@ msgstr "Tip de perfometru nevalabil: %s"
 
 msgid "Invalid private key"
 msgstr "Cheie privată invalidă"
+
+msgid ""
+"Invalid proxy given: missing network_location in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+
+msgid ""
+"Invalid proxy given: missing scheme in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+
+msgid "Invalid proxy given: not an allowed url"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Invalid proxy scheme given. Must be one of: %s"
+msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 
 #, fuzzy
 msgid "Invalid receipt"
@@ -37383,6 +37495,10 @@ msgstr "Încărcare în fereastra / fila curentă"
 msgid "Load of Citrix Server"
 msgstr "Încărcarea serverului Citrix"
 
+#, fuzzy
+msgid "Loading"
+msgstr "Încărcare..."
+
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Încărcarea \"%s/%s\" a eșuat: %s."
@@ -38026,7 +38142,15 @@ msgstr ""
 msgid "Lower level for message rate"
 msgstr "Nivelul inferior pentru rata mesajelor"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "Nivelul inferior pentru numărul de executanți ai acestui nod"
+
 msgid "Lower level for number of executors of this node"
+msgstr "Nivelul inferior pentru numărul de executanți ai acestui nod"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "Nivelul inferior pentru numărul de executanți ai acestui nod"
 
 msgid "Lower level for published message rate"
@@ -38102,6 +38226,10 @@ msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 #, fuzzy
 msgid "Lower levels for active connections"
 msgstr "Niveluri pentru conexiuni active"
+
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "Niveluri mai mici pentru rata de succes a SMS-urilor"
 
 msgid "Lower levels for burst balance"
 msgstr "Niveluri inferioare pentru echilibru în explozie"
@@ -38719,6 +38847,9 @@ msgstr "Gestionați seturile de reguli legate de inventarul hard și software"
 msgid "Manage InfluxDB connections"
 msgstr "Gestionați conexiunile InfluxDB"
 
+msgid "Manage OpenTelemetry configurations (Experimental)"
+msgstr ""
+
 msgid "Manage Own Scheduled Reports"
 msgstr "Gestionați propriile rapoarte programate"
 
@@ -38940,6 +39071,10 @@ msgstr ""
 "i> admin down să fie considerată OK. O astfel de setare se va aplica numai "
 "interfețelor care corespund stării operaționale <i>și</i> admin. De exemplu, "
 "o interfață care este down, dar admin up nu va fi afectată."
+
+#, fuzzy
+msgid "Map data"
+msgstr "Date cartografiate"
 
 msgid "Map data relating to VMs"
 msgstr "Date cartografice referitoare la mașinile virtuale"
@@ -45364,14 +45499,21 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
+msgid "OpenTelemetry (Experimental)"
+msgstr ""
+
+msgid "OpenTelemetry collector (Experimental)"
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry collector configurations"
+msgstr "Configurația stilului selectat"
+
 msgid "OpenVMS processes"
 msgstr "Procesele OpenVMS"
 
 msgid "OpenVPN clients"
 msgstr "Clienți OpenVPN"
-
-msgid "Opentelemetry (Experimental)"
-msgstr ""
 
 msgid "Operating CPU"
 msgstr "Operare CPU"
@@ -45478,6 +45620,13 @@ msgstr "Notificări eșuate"
 
 msgid "Optimize rule execution"
 msgstr "Optimizarea executării regulilor"
+
+msgid ""
+"Option defines the value of the Comparison XML attribute within the "
+"'RequestedAuthnContext' element. The Comparison attribute specifies how the "
+"identity provider should evaluate the requested authentication context "
+"against its supported methods."
+msgstr ""
 
 msgid "Option groups"
 msgstr "Grupuri de opțiuni"
@@ -49062,8 +49211,13 @@ msgid "Please provide a path that is absolute on either Linux or Windows."
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
 
 #, fuzzy
-msgid "Please provide a path that is relative both on Linux and Windows."
+msgid "Please provide a path that is relative on both Linux and Windows."
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
+
+msgid ""
+"Please provide a path that is resolved in the same way on Linux and Windows. "
+"In particular, avoid backslashes. You can use slashes on both platforms."
+msgstr ""
 
 msgid "Please provide a relative Windows path"
 msgstr "Vă rugăm să furnizați o cale relativă Windows"
@@ -51927,6 +52081,10 @@ msgstr ""
 "Automatizarea la distanță a încercat să sincronizeze modificările în "
 "așteptare, dar nu a reușit: %s."
 
+#, fuzzy, python-format
+msgid "Remote broker certificates created for site %s."
+msgstr "A fost creată o nouă conexiune la site %s"
+
 msgid "Remote configuration"
 msgstr "Configurație la distanță"
 
@@ -52630,6 +52788,10 @@ msgstr "Rata de transfer solicitată"
 msgid "Request wait time"
 msgstr "Timp de așteptare a cererii"
 
+#, fuzzy
+msgid "Requested authentication context"
+msgstr "Introduceți codul de autentificare"
+
 msgid "Requests"
 msgstr "Cereri"
 
@@ -52869,6 +53031,10 @@ msgstr "Consumul de resurse al proceselor Windows"
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
 "Fixarea resurselor: Asigurați-vă că resursele monitorizate sunt neschimbate"
+
+#, fuzzy
+msgid "Resources matching tag based criteria"
+msgstr "resurse care corespund criteriilor bazate pe etichete"
 
 msgid "Response Time"
 msgstr "Timp de răspuns"
@@ -53149,6 +53315,10 @@ msgstr ""
 msgid "Retention period"
 msgstr "Perioada de păstrare"
 
+#, fuzzy
+msgid "Retrieve information"
+msgstr "Obțineți informații despre..."
+
 msgid "Retrieve information about the following partitions"
 msgstr "Obțineți informații despre următoarele partiții"
 
@@ -53303,6 +53473,10 @@ msgstr "Cadrul robotului: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "Cadrul robotului: Ultimul jurnal"
+
+#, fuzzy
+msgid "Robot Package"
+msgstr "Îndepărtați pachetul"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -54873,6 +55047,10 @@ msgstr "Cheia secretă"
 
 msgid "Secret access key is required but not specified."
 msgstr ""
+
+#, fuzzy
+msgid "Secret environment variables"
+msgstr "Variabile de mediu"
 
 msgid "Secret key"
 msgstr "Cheia secretă"
@@ -57656,8 +57834,9 @@ msgstr ""
 "Semnați pachete de agenți copți pentru Linux, Windows și alte sisteme de "
 "operare"
 
-msgid "Sign up here"
-msgstr ""
+#, fuzzy
+msgid "Sign up"
+msgstr "Semnează"
 
 msgid "Signal quality of Wireless device"
 msgstr "Calitatea semnalului dispozitivului fără fir"
@@ -59095,6 +59274,12 @@ msgstr ""
 msgid "Specify roles of a control plane node"
 msgstr "Specificarea rolurilor unui nod de plan de control"
 
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Precizați unul, mai multe sau toate site-urile pe care trebuie să "
+"funcționeze această conexiune."
+
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Specificați numele conturilor de stocare cărora trebuie să li se aplice "
@@ -60418,6 +60603,10 @@ msgstr "Stare atunci când starea de echilibrare a încărcăturii este limitat�
 
 msgid "State when missing"
 msgstr "Statul în care lipsește"
+
+#, fuzzy
+msgid "State when networking changes are detected"
+msgstr "Starea în care sunt detectate modificările software"
 
 msgid "State when no backup can be found"
 msgstr "Stare atunci când nu se poate găsi nicio copie de rezervă"
@@ -62847,6 +63036,12 @@ msgstr "Fișierul jurnal"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Numele obiectului MBean's, de exemplu java.lang:type=Memory"
 
+#, python-format
+msgid ""
+"The MIME type of the uploaded file is not supported: %s. Supported file "
+"extensions: .tar.gz, .zip."
+msgstr ""
+
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Numele instanței MSSQL și numele tablespace-ului, separate prin câte un "
@@ -63322,6 +63517,11 @@ msgstr ""
 "<br><br>Vă rugăm să revizuiți și să remediați conținutul fișierului sau să "
 "eliminați fișierul înainte de a vizita din nou această pagină."
 "<br><br><br>Intrarea problematică este:<br>%s"
+
+msgid ""
+"The authentication context class reference (for example urn:oasis:names:tc:"
+"SAML:2.0:ac:classes:PasswordProtectedTransport)"
+msgstr ""
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -64230,6 +64430,10 @@ msgstr "Grupurile de contacte permise de dosar's sunt <b>%s</b>."
 
 #, python-format
 msgid "The following %s could not be found: %s"
+msgstr "Următorul %s nu a putut fi găsit: %s."
+
+#, fuzzy, python-format
+msgid "The following files are missing in the archive: %s"
 msgstr "Următorul %s nu a putut fi găsit: %s."
 
 msgid ""
@@ -66818,6 +67022,26 @@ msgstr "Tipul de informații care urmează să fie stocate în acest atribut."
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr "Tipul timestamp-ului trebuie să fie int sau float, dar este %s."
 
+#, python-format
+msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
+#, fuzzy
+msgid "The uploaded file is not a valid ZIP file."
+msgstr "Fișierul nu pare a fi un fișier cheie valid."
+
+#, fuzzy
+msgid "The uploaded file is not a valid tar.gz file."
+msgstr "Fișierul nu pare a fi un fișier cheie valid."
+
+msgid "The uploaded file must be either a tar.gz or a zip file."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
@@ -69120,6 +69344,13 @@ msgstr ""
 "și datele. Presupunând o distribuție normală a erorii, utilizăm valoarea "
 "standard calculată\n"
 "deviația calculată pentru a cuantifica intervalul de încredere."
+
+msgid ""
+"This option specifies the 'RequestedAuthnContext' element included in an "
+"AuthRequest sent by a client. The requested authentication context specifies "
+"the desired level or type of authentication that the service provider "
+"requires from the identity provider. "
+msgstr ""
 
 msgid "This option turns on a faster algorithm for matching events to rules. "
 msgstr ""
@@ -76706,6 +76937,10 @@ msgstr "Nivelul superior pentru rata mesajelor"
 msgid "Upper level for number of busy executors of this node"
 msgstr "Nivelul superior pentru numărul de executori ocupați ai acestui nod"
 
+#, fuzzy
+msgid "Upper level for number of executors of this node"
+msgstr "Nivelul superior pentru numărul de executori ocupați ai acestui nod"
+
 msgid "Upper level for number of idle executors of this node"
 msgstr "Nivelul superior pentru numărul de executori inactivi ai acestui nod"
 
@@ -77953,6 +78188,13 @@ msgid ""
 msgstr ""
 "Utilizați această condiție pentru a selecta gazdele pe baza etichetelor de "
 "serviciu configurate."
+
+#, fuzzy
+msgid ""
+"Use this condition to select services based on the configured service labels."
+msgstr ""
+"Utilizați această condiție pentru a selecta serviciile pe baza etichetelor "
+"de servicii configurate."
 
 #, fuzzy
 msgid ""
@@ -80249,10 +80491,6 @@ msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 
 msgid "Waiting for replication to start"
 msgstr "Așteptare pentru începerea replicării"
-
-#, fuzzy
-msgid "Waiting on team Engelbart"
-msgstr "Containere în așteptare"
 
 #, fuzzy
 msgid "Waiting..."
@@ -85348,9 +85586,6 @@ msgstr "se așteaptă ca toți"
 msgid "explicit host labels"
 msgstr "etichete gazdă explicite"
 
-msgid "explicitly specified groups"
-msgstr "grupuri specificate în mod explicit"
-
 msgid "failures"
 msgstr "eșecuri"
 
@@ -86358,11 +86593,12 @@ msgstr ""
 msgid "require primary interface to be active"
 msgstr "necesită ca interfața principală să fie activă"
 
+#, fuzzy
+msgid "required"
+msgstr "Port necesar"
+
 msgid "reset"
 msgstr "resetare"
-
-msgid "resources matching tag based criteria"
-msgstr "resurse care corespund criteriilor bazate pe etichete"
 
 msgid "restart"
 msgstr "restart"
@@ -86895,6 +87131,13 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Mergeți la panoul de administrare Saas"
+
+#, fuzzy
+#~ msgid "Waiting on team Engelbart"
+#~ msgstr "Containere în așteptare"
+
 #, fuzzy, python-format
 #~ msgid "%s: Services: %s, Host labels: %s"
 #~ msgstr "%s: Servicii: %s, Etichete gazdă: %s"
@@ -87215,10 +87458,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr ""
 #~ "Nu se poate analiza potrivirea, deoarece parametrul \"service\" lipsește"
 
-#, fuzzy, python-format
-#~ msgid "Updated broker connection for site %s"
-#~ msgstr "A fost creată o nouă conexiune la site %s"
-
 #, fuzzy
 #~ msgid "Dynamic configuration site update interval"
 #~ msgstr "Înregistrarea configurației dinamice"
@@ -87321,10 +87560,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgstr "VM-uri de tip Placeholder"
 
 #, fuzzy
-#~ msgid "Robot package"
-#~ msgstr "Îndepărtați pachetul"
-
-#, fuzzy
 #~ msgid "Managed Robots"
 #~ msgstr "Obiecte gestionate"
 
@@ -87345,10 +87580,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Host Path"
 #~ msgstr "Alertă gazdă"
-
-#, fuzzy, python-format
-#~ msgid "Failed to save broker certificates: %s"
-#~ msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 #, fuzzy
 #~ msgid ""
@@ -87681,9 +87912,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ msgid "File Size Levels"
 #~ msgstr "Niveluri de mărime a fișierelor"
 
-#~ msgid "The file does not look like a valid key file."
-#~ msgstr "Fișierul nu pare a fi un fișier cheie valid."
-
 #~ msgid "Applied Filters:"
 #~ msgstr "Filtre aplicate:"
 
@@ -87698,10 +87926,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "Metric aggregation"
 #~ msgstr "Agregarea metrică"
-
-#, fuzzy, python-format
-#~ msgid "The following characters are forbidden: %s"
-#~ msgstr "Următorul %s nu a putut fi găsit: %s."
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Timeout de conectare"

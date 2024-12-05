@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-11-29 06:00+0000\n"
+"PO-Revision-Date: 2024-12-04 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -234,9 +234,9 @@ msgstr ""
 msgid "\"not\" is the abbreviation for \"and not\","
 msgstr "\"not\" ist die Abkürzung für \"and not\","
 
-#, fuzzy, python-format
+#, python-format
 msgid "# %s - Cycle details"
-msgstr "BI Servicedetails"
+msgstr "# %s - Zyklusdetails"
 
 msgid "# Containers"
 msgstr "# Container"
@@ -978,6 +978,9 @@ msgstr ", innerhalb der letzten %.1f Checkperioden wurde keine Daten empfangen"
 # vermutlich weniger tragisch als andere Fälle.
 msgid ", the first match skips this rule pack"
 msgstr ", der erste Treffer überspringt das Regelpaket"
+
+msgid "-"
+msgstr "-"
 
 msgid "-.-- %"
 msgstr "-.-- %"
@@ -2246,6 +2249,11 @@ msgid "A list of specific users"
 msgstr "Eine Liste von spezifischen Benutzern"
 
 msgid ""
+"A list of text values that represent the 'AuthnContextClassRef' elements "
+"used to specify acceptable authentication context classes."
+msgstr ""
+
+msgid ""
 "A macro must begin and end with '$' and is allowed to contain only ASCII "
 "upper letters, digits and underscores."
 msgstr ""
@@ -2829,9 +2837,8 @@ msgstr "Breche Änderung ab."
 msgid "About Checkmk"
 msgstr "Über Checkmk"
 
-#, fuzzy
 msgid "About the processing cycle"
-msgstr "Neueste Verarbeitungszyklen"
+msgstr "Über den Verarbeitungszyklus"
 
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Absolutes Level der Gesamtanzahl von benutzten Datei-Deskriptoren"
@@ -3409,9 +3416,8 @@ msgstr "Änderungen durch %s aktiviert."
 msgid "Activating"
 msgstr "Aktiviere"
 
-#, fuzzy
 msgid "Activating changes: "
-msgstr "Änderungen aktivieren"
+msgstr "Änderungen aktivieren: "
 
 msgid "Activation"
 msgstr "Aktivierung"
@@ -3456,6 +3462,18 @@ msgstr "Aktiv (anonym)"
 
 msgid "Active (files)"
 msgstr "Aktiv (Dateien)"
+
+#, fuzzy
+msgid "Active Calls"
+msgstr "Aktive Pfade"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "Aktive Pfade"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "Aktive Einheit"
 
 msgid "Active Connections"
 msgstr "Aktive Verbindungen"
@@ -3685,6 +3703,10 @@ msgstr "NGNIX-Instanz hinzufügen"
 
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector configuration"
+msgstr "Neue Benutzerkonfiguration hinzufügen"
 
 msgid "Add Prefix"
 msgstr "Präfix hinzufügen"
@@ -4288,6 +4310,10 @@ msgid "Add user attribute"
 msgstr "Benutzerattribut hinzufügen"
 
 msgid "Add, edit and delete InfluxDB connections."
+msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
+
+#, fuzzy
+msgid "Add, edit and delete OpenTelemetry configurations."
 msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
 
 msgid "Add. addresses"
@@ -5611,6 +5637,10 @@ msgstr "Alle Protokolle"
 
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
+
+#, fuzzy
+msgid "All related configuration of the integrated OpenTelemetry collector."
+msgstr "Traces an einen anderen OpenTelemetry-Kollektor senden"
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr ""
@@ -7155,6 +7185,10 @@ msgstr "Von Hosts zu entfernende Attribute"
 msgid "AudioCodes Alarms"
 msgstr "AudioCodes Alarme"
 
+#, fuzzy
+msgid "AudioCodes SBC Calls"
+msgstr "AudioCodes Alarme"
+
 msgid "Audit log"
 msgstr "Auditlog"
 
@@ -7189,6 +7223,10 @@ msgstr "Ablauf der Authentifizierung"
 
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Authentifizierungscode (OTP / TOTP)"
+
+#, fuzzy
+msgid "Authentication context class reference"
+msgstr "Authentifizierungsquelle"
 
 msgid ""
 "Authentication details for communicating with ServiceNow. If you want to "
@@ -7603,8 +7641,16 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "Durchschnittliche Latenz"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Varnish Backend Erfolgsverhältniss"
 
 msgid "Average active check latency"
 msgstr "Durchschnittliche Latenz aktiver Checks"
@@ -10543,6 +10589,21 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "Anrufer ID"
+
+msgid "Calls In/Out"
+msgstr ""
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "Regel aufrufen"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "Seiten pro Sekunde"
+
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
 
@@ -13245,6 +13306,10 @@ msgstr ""
 "sein kann. Diese Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich "
 "oder über den eingestellten Leveln liegt."
 
+#, fuzzy
+msgid "Comparison"
+msgstr "Komprimierung"
+
 msgid "Compatibility"
 msgstr "Kompatibilität"
 
@@ -13604,6 +13669,20 @@ msgstr "Proxy-Server Gebrauch konfigurieren"
 
 msgid "Configure restrictions manually"
 msgstr "Einschränkungen manuell konfigurieren"
+
+msgid ""
+"Configure secret environment variables that will be set when executing Robot "
+"Framework. This can for example be used together with <tt>CryptoLibrary</tt> "
+"for encrypting login data on the target hosts. <b>Note</b>: The configured "
+"values will be written in plain text to the configuration deployed to the "
+"target hosts."
+msgstr ""
+"Konfigurieren Sie geheime Umgebungsvariablen, die bei der Ausführung von "
+"Robot Framework gesetzt werden. Diese können beispielsweise zusammen mit "
+"<tt>CryptoLibrary</tt> zum Verschlüsseln von Anmeldedaten auf den Zielhosts "
+"verwendet werden. <b>Hinweis</b>: Die konfigurierten Werte werden im "
+"Klartext in die Konfiguration geschrieben, die auf den Zielhosts "
+"bereitgestellt wird."
 
 msgid "Configure services to monitor"
 msgstr "Zu überwachende Dienste konfigurieren"
@@ -14655,9 +14734,9 @@ msgstr ""
 "Lizenzserver erreichen kann. Bitte prüfen Sie Ihre Firewall- und Proxy-"
 "Einstellungen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Could not connect to the remote site (%s)"
-msgstr "Kann sich nicht mit Remote-Instanz %s verbinden"
+msgstr "Konnte sich nicht mit Remote-Instanz (%s) verbinden"
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -15149,6 +15228,10 @@ msgstr ""
 
 msgid "Create regular time-schedule for this report"
 msgstr "Für diesen Bericht einen Eintrag im Berichtsplaner erstellen"
+
+#, fuzzy
+msgid "Create remote broker certificates"
+msgstr "Broker-Zertifikate konnten nicht gespeichert werden: %s"
 
 msgid "Create robot"
 msgstr "Roboter erstellen"
@@ -15998,26 +16081,27 @@ msgid ""
 "Cycle %d not found, the information is expired, please return back to select "
 "a cycle"
 msgstr ""
+"Zyklus %d nicht gefunden, die Informationen sind abgelaufen, bitte kehren "
+"Sie zurück, um einen Zyklus auszuwählen"
 
 msgid "Cycle id"
 msgstr "Zyklus-ID"
 
-#, fuzzy
 msgid "Cycle not found"
-msgstr "Seite nicht gefunden"
+msgstr "Zyklus nicht gefunden"
 
 msgid ""
 "Cycle not found, the information is expired, please return back to select a "
 "cycle"
 msgstr ""
+"Zyklus nicht gefunden, die Informationen sind abgelaufen, bitte kehren Sie "
+"zurück, um einen Zyklus auszuwählen"
 
-#, fuzzy
 msgid "Cycle steps"
-msgstr "Zyklus-ID"
+msgstr "Zyklusschritte"
 
-#, fuzzy
 msgid "Cycles"
-msgstr "Zyklus-ID"
+msgstr "Zyklen"
 
 msgid "DATAPROXY - Throttled server connections"
 msgstr "DATAPROXY - gedrosselte Serververbindungen"
@@ -22840,6 +22924,9 @@ msgstr "Explizit bei Ordnern eingestellt"
 msgid "Explicitly set on hosts"
 msgstr "Explizit auf Hosts eingestellt"
 
+msgid "Explicitly specified groups"
+msgstr "Explizit spezifizierte Gruppen"
+
 msgid "Explicitly specify resources"
 msgstr "Ressourcen explizit auflisten"
 
@@ -23485,6 +23572,14 @@ msgstr "Zertifikat vom Server abrufen"
 msgid "Fetch chunked"
 msgstr "Anfrage chunked"
 
+#, fuzzy
+msgid "Fetch data every"
+msgstr "Hole alle"
+
+#, fuzzy
+msgid "Fetch data every time"
+msgstr "Hole alle"
+
 msgid "Fetch events"
 msgstr "Ereignisse abrufen"
 
@@ -23496,9 +23591,6 @@ msgstr ""
 "Holen Sie Ereignisse aus dem Ereignisstrom Ihrer Datadog-Instanz. Die "
 "abgerufenen Ereignisse werden an die Event Console der Instanz "
 "weitergeleitet, an welcher der Spezialagent ausgeführt wird."
-
-msgid "Fetch every"
-msgstr "Hole alle"
 
 msgid "Fetch failed"
 msgstr "Anfrage fehlgeschlagen"
@@ -25310,6 +25402,10 @@ msgstr "Gehe zu %s Übersicht"
 msgid "Go to AWS root account > Services > IAM."
 msgstr "Gehe zu AWS-Stammkonto > Services > IAM."
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Zur Hauptübersicht"
+
 msgid "Go to extension packages"
 msgstr "Gehe zu Erweiterungspakete"
 
@@ -25330,9 +25426,6 @@ msgstr ""
 "Gehen Sie auf die Seite Monitor > Alle Hosts oder klicken Sie auf die "
 "Schaltfläche Zu allen Hosts gehen, um das Monitoring Ihrer %s Services zu "
 "starten."
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Gehe zum SaaS-Administrationsbereich"
 
 msgid "Go to the next stage"
 msgstr "Zum nächsten Schritt"
@@ -25793,7 +25886,7 @@ msgid "HPE StoreOnce"
 msgstr "HPE StoreOnce"
 
 msgid "HPE StoreOnce via REST API 4.x"
-msgstr "HPE StoreOnce via REST API 4.x"
+msgstr "HPE StoreOnce via REST-API 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Belegter Speicher über SNMP"
@@ -28600,9 +28693,8 @@ msgstr "Hostprobleme für NagStaMon"
 msgid "Host processing"
 msgstr "Host-Verarbeitung"
 
-#, fuzzy
 msgid "Host processing: "
-msgstr "Host-Verarbeitung"
+msgstr "Host-Verarbeitung: "
 
 msgid "Host properties"
 msgstr "Hosteigenschaften"
@@ -32940,9 +33032,12 @@ msgstr "Ungülitge Endzeit"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 
-#, fuzzy
+#, fuzzy, python-format
+msgid "Invalid extension type, supported types are: %s"
+msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
+
 msgid "Invalid file"
-msgstr "Ungültiger Dateiname"
+msgstr "Ungültige Datei"
 
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
@@ -33029,6 +33124,10 @@ msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
 msgid "Invalid messaging method selected."
 msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 
+#, python-format
+msgid "Invalid mime type, supported types are: %s"
+msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
+
 msgid "Invalid multiple choice value"
 msgstr "Ungültiger Wert für Mehrfachauswahl"
 
@@ -33058,6 +33157,27 @@ msgstr "Ungültiger Perf-O-Meter Typ %s"
 
 msgid "Invalid private key"
 msgstr "Ungültiger Privater Schlüssel (private key)"
+
+msgid ""
+"Invalid proxy given: missing network_location in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+"Ungültiger Proxy angegeben: fehlende network_location im Proxy-Format "
+"'scheme://network_location'"
+
+msgid ""
+"Invalid proxy given: missing scheme in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+"Ungültiger Proxy angegeben: fehlendes Schema im Proxy-Format 'scheme://"
+"network_location'"
+
+msgid "Invalid proxy given: not an allowed url"
+msgstr "Ungültiger Proxy angegeben: keine zulässige URL"
+
+#, python-format
+msgid "Invalid proxy scheme given. Must be one of: %s"
+msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
 
 msgid "Invalid receipt"
 msgstr "Ungültiger Beleg"
@@ -34218,17 +34338,17 @@ msgstr "Beschriftungsoptionen"
 msgid "Labels"
 msgstr "Labels"
 
-#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
 "b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
 "does not perform any other validation on the labels you use."
 msgstr ""
-"Mit Hilfe von Labels können Sie Ihre Hosts flexibel gruppieren, um später an "
-"anderer Stelle in Checkmk auf sie zu verweisen, z.B. in Regelketten. "
-"<br><b>Label-Format:</b>  key:value<br><br>Checkmk führt keine Überprüfung "
-"der von Ihnen verwendeten Labels durch."
+"Mit Labels können Sie Ihre Hosts flexibel gruppieren, um später an anderen "
+"Stellen in Checkmk, z.B. in Regelketten, auf sie zu verweisen. <br><b>Label-"
+"Format:</b>  Schlüssel:Wert<br><br>Weder der Schlüssel noch der Wert dürfen "
+"':' enthalten. Checkmk führt keine weitere Validierung für die von Ihnen "
+"verwendeten Labels durch."
 
 msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
@@ -35908,6 +36028,10 @@ msgstr "Im aktuellen Fenster/Tab laden"
 msgid "Load of Citrix Server"
 msgstr "Citrix Serverlast"
 
+#, fuzzy
+msgid "Loading"
+msgstr "Laden..."
+
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Laden von \"%s/%s\" fehlgeschlagen: %s"
@@ -36548,7 +36672,15 @@ msgstr "Untergrenze für die Rate der Dateideskriptor-Öffnungsversuche"
 msgid "Lower level for message rate"
 msgstr "Untergrenze für Nachrichtenrate"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
+
 msgid "Lower level for number of executors of this node"
+msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
 
 msgid "Lower level for published message rate"
@@ -36623,6 +36755,10 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 
 msgid "Lower levels for active connections"
 msgstr "Untergrenzen für aktive Verbindungen"
+
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "Untergrenzen für SMS-Erfolgsrate"
 
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
@@ -37209,6 +37345,9 @@ msgstr "Verwalten von Hard- und Softwareinventar-bezogenen Regelsätzen"
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB-Verbindungen verwalten"
 
+msgid "Manage OpenTelemetry configurations (Experimental)"
+msgstr ""
+
 msgid "Manage Own Scheduled Reports"
 msgstr "Eigene geplante Berichte verwalten"
 
@@ -37428,6 +37567,9 @@ msgstr ""
 "Einstellung gilt nur für Schnittstellen, die dem operativen <i>und</i> dem "
 "Admin-Zustand entsprechen. Zum Beispiel wäre eine Schnittstelle, die DOWN, "
 "aber Admin UP ist, nicht betroffen."
+
+msgid "Map data"
+msgstr "Daten zuordnen"
 
 msgid "Map data relating to VMs"
 msgstr "Daten von VMs zuordnen"
@@ -40823,9 +40965,8 @@ msgstr "Nächster Lauf"
 msgid "Next check"
 msgstr "Nächster Check"
 
-#, fuzzy
 msgid "Next cycle"
-msgstr "Nächster Check"
+msgstr "Nächster Zyklus"
 
 msgid "Next notification"
 msgstr "Nächste Benachrichtigung"
@@ -41158,9 +41299,8 @@ msgstr "Keine Merkmale zum Hinzufügen"
 msgid "No names defined"
 msgstr "Keine Namen definiert"
 
-#, fuzzy
 msgid "No next cycle available"
-msgstr "Keine Elemente verfügbar"
+msgstr "Kein nächster Zyklus verfügbar"
 
 #, python-format
 msgid "No notification parameters for method '%s' found"
@@ -41191,9 +41331,8 @@ msgstr "Keine ausstehenden Änderungen."
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
 
-#, fuzzy
 msgid "No previous cycle available"
-msgstr "Keine Optionen vorhanden"
+msgstr "Kein vorheriger Zyklus verfügbar"
 
 msgid "No proxy"
 msgstr "Kein Proxy"
@@ -43603,14 +43742,21 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
+msgid "OpenTelemetry (Experimental)"
+msgstr ""
+
+msgid "OpenTelemetry collector (Experimental)"
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry collector configurations"
+msgstr "Gewählte Stilkonfiguration"
+
 msgid "OpenVMS processes"
 msgstr "OpenVMS-Prozesse"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPN-Klienten"
-
-msgid "Opentelemetry (Experimental)"
-msgstr ""
 
 msgid "Operating CPU"
 msgstr "Betriebs-CPU"
@@ -43704,6 +43850,13 @@ msgstr "Benachrichtigungen optimieren"
 
 msgid "Optimize rule execution"
 msgstr "Regelausführung optimieren"
+
+msgid ""
+"Option defines the value of the Comparison XML attribute within the "
+"'RequestedAuthnContext' element. The Comparison attribute specifies how the "
+"identity provider should evaluate the requested authentication context "
+"against its supported methods."
+msgstr ""
 
 msgid "Option groups"
 msgstr "Optionsgruppen"
@@ -47009,10 +47162,16 @@ msgstr ""
 "Bitte geben Sie einen Pfad an, der entweder unter Linux oder unter Windows "
 "absolut ist."
 
-msgid "Please provide a path that is relative both on Linux and Windows."
+#, fuzzy
+msgid "Please provide a path that is relative on both Linux and Windows."
 msgstr ""
 "Bitte geben Sie einen Pfad an, der sowohl unter Linux als auch unter Windows "
 "relativ ist."
+
+msgid ""
+"Please provide a path that is resolved in the same way on Linux and Windows. "
+"In particular, avoid backslashes. You can use slashes on both platforms."
+msgstr ""
 
 msgid "Please provide a relative Windows path"
 msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
@@ -47792,9 +47951,8 @@ msgstr ""
 msgid "Preview this report"
 msgstr "Vorschau dieses Berichts"
 
-#, fuzzy
 msgid "Previous cycle"
-msgstr "Kürzlich entdeckt"
+msgstr "Vorheriger Zyklus"
 
 msgid "Previously discovered"
 msgstr "Kürzlich entdeckt"
@@ -49755,6 +49913,10 @@ msgstr ""
 "Die Remote-Automatisierung hat versucht, ausstehende Änderungen zu "
 "synchronisieren, ist aber fehlgeschlagen: 1%s"
 
+#, fuzzy, python-format
+msgid "Remote broker certificates created for site %s."
+msgstr "Broker-Verbindung zu Instanz %s aktualisiert"
+
 msgid "Remote configuration"
 msgstr "Remote-Konfiguration"
 
@@ -50130,9 +50292,8 @@ msgstr "Diese Wartungszeit wiederholen"
 msgid "Repeats every %s"
 msgstr "Wird alle %s wiederholt"
 
-#, fuzzy
 msgid "Replace file"
-msgstr "Ersetzen durch"
+msgstr "Datei ersetzen"
 
 msgid "Replace hierarchical root with this node"
 msgstr "Hierarchische Wurzel durch diesen Knoten ersetzen"
@@ -50436,6 +50597,10 @@ msgstr "Übertragungsrate abfragen"
 msgid "Request wait time"
 msgstr "Request-Wartezeite"
 
+#, fuzzy
+msgid "Requested authentication context"
+msgstr "Authentifizierungscode eingeben"
+
 msgid "Requests"
 msgstr "Anfragen"
 
@@ -50675,6 +50840,9 @@ msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr ""
 "Ressourcen-Pinning: Sicherstellen, dass überwachte Ressourcen sich nicht "
 "ändern"
+
+msgid "Resources matching tag based criteria"
+msgstr "Ressourcen, die den merkmalbasierten Kriterien entsprechen"
 
 msgid "Response Time"
 msgstr "Antwortzeit"
@@ -50948,6 +51116,9 @@ msgstr "Aufbewahrungsintervalle für Objekte der HW-/SW-Inventur"
 msgid "Retention period"
 msgstr "Aufbewahrungsdauer"
 
+msgid "Retrieve information"
+msgstr "Informationen abrufen"
+
 msgid "Retrieve information about the following partitions"
 msgstr "Informationen über die folgenden Partitionen einholen"
 
@@ -51111,6 +51282,9 @@ msgstr "Robot-Framework: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "Robot-Framework: Letztes Protokoll"
+
+msgid "Robot Package"
+msgstr "Roboterpaket"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -52608,6 +52782,9 @@ msgstr "Geheimer Zugangsschlüssel darf nicht leer sein"
 msgid "Secret access key is required but not specified."
 msgstr "Ein geheimer Zugangsschlüssel ist erforderlich, aber nicht angegeben."
 
+msgid "Secret environment variables"
+msgstr "Geheime Umgebungsvariablen"
+
 msgid "Secret key"
 msgstr "Geheimer Schlüssel"
 
@@ -53507,9 +53684,8 @@ msgstr "Servicedetails"
 msgid "Service discovery"
 msgstr "Service-Erkennung"
 
-#, fuzzy
 msgid "Service discovery and activation: "
-msgstr "Service-Erkennung lief am"
+msgstr "Service-Erkennung und -Aktivierung: "
 
 msgid "Service discovery details"
 msgstr "Details der Service-Erkennung"
@@ -54804,9 +54980,8 @@ msgstr "Bedienelemente anzeigen"
 msgid "Show current / last state of this backup job"
 msgstr "Den aktuellen / letzten Zustand des Backup-Jobs einsehen"
 
-#, fuzzy
 msgid "Show cycle details"
-msgstr "Details anzeigen"
+msgstr "Zyklusdetails anzeigen"
 
 msgid "Show data only on search"
 msgstr "Daten nur bei Suche zeigen"
@@ -55262,7 +55437,8 @@ msgstr ""
 "Angepasste Pakete von Monitoring-Agenten für Linux, Windows und andere "
 "Betriebssysteme signieren"
 
-msgid "Sign up here"
+#, fuzzy
+msgid "Sign up"
 msgstr "Melden Sie sich hier an"
 
 msgid "Signal quality of Wireless device"
@@ -56674,6 +56850,12 @@ msgstr ""
 msgid "Specify roles of a control plane node"
 msgstr "Festlegen der Rollen eines Steuerebenen-Knotens"
 
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Geben Sie einen, mehrere oder alle Instanzen an, über die diese Verbindung "
+"laufen soll."
+
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Geben Sie die Namen der Speicherkonten an, für die diese Regel gelten soll"
@@ -57945,6 +58127,10 @@ msgstr "Zustand, wenn der Load-Balancer-Zustand throttled ist"
 
 msgid "State when missing"
 msgstr "Zustand wenn fehlend"
+
+#, fuzzy
+msgid "State when networking changes are detected"
+msgstr "Zustand, wenn Softwareänderungen gefunden wurden"
 
 msgid "State when no backup can be found"
 msgstr "Zustand wenn kein Backup gefunden wird"
@@ -60296,6 +60482,12 @@ msgstr "Die Log-Datei"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
 
+#, python-format
+msgid ""
+"The MIME type of the uploaded file is not supported: %s. Supported file "
+"extensions: .tar.gz, .zip."
+msgstr ""
+
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
 "Der MSSQL Instanzname und der Tablespacename getrennt durch ein Leerzeichen."
@@ -60772,6 +60964,11 @@ msgstr ""
 "<br><br>Bitte überprüfen und korrigieren Sie den Inhalt der Datei oder "
 "entfernen Sie die Datei, bevor Sie diese Seite erneut besuchen.<br><br>Der "
 "problematische Eintrag lautet:<br>%s"
+
+msgid ""
+"The authentication context class reference (for example urn:oasis:names:tc:"
+"SAML:2.0:ac:classes:PasswordProtectedTransport)"
+msgstr ""
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -61688,6 +61885,10 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 #, python-format
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
+
+#, fuzzy, python-format
+msgid "The following files are missing in the archive: %s"
+msgstr "Die folgenden Zeichen sind verboten: %s"
 
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
@@ -64309,6 +64510,28 @@ msgstr "Welche Art von Information in diesem Attribut gespeichert wird."
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr "Zeitstempel muss entweder int oder float sein - ist aber %s"
 
+#, python-format
+msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
+#, fuzzy
+msgid "The uploaded file is not a valid ZIP file."
+msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
+
+#, fuzzy
+msgid "The uploaded file is not a valid tar.gz file."
+msgstr ""
+"Die hochgeladene Datei muss entweder eine tar.gz- oder eine zip-Datei sein."
+
+msgid "The uploaded file must be either a tar.gz or a zip file."
+msgstr ""
+"Die hochgeladene Datei muss entweder eine tar.gz- oder eine zip-Datei sein."
+
 #, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
@@ -66604,6 +66827,13 @@ msgstr ""
 "Modell und den Daten. Unter der Annahme einer Normalverteilung des Fehlers\n"
 "verwenden wir die berechnete Standardabweichung zur Quantifizierung des "
 "Konfidenzintervalls."
+
+msgid ""
+"This option specifies the 'RequestedAuthnContext' element included in an "
+"AuthRequest sent by a client. The requested authentication context specifies "
+"the desired level or type of authentication that the service provider "
+"requires from the identity provider. "
+msgstr ""
 
 msgid "This option turns on a faster algorithm for matching events to rules. "
 msgstr ""
@@ -70389,9 +70619,8 @@ msgstr "Dokumente insgesamt"
 msgid "Total duration"
 msgstr "Gesamtdauer"
 
-#, fuzzy
 msgid "Total duration: "
-msgstr "Gesamtdauer"
+msgstr "Gesamtdauer: "
 
 msgid "Total error rate"
 msgstr "Gesamt-Fehlerrate"
@@ -70417,9 +70646,8 @@ msgstr "Gesamtes Trefferverhältnis"
 msgid "Total host problems"
 msgstr "Gesamtanzahl Host-Probleme"
 
-#, fuzzy
 msgid "Total hosts: "
-msgstr "Veraltete Hosts"
+msgstr "Gesamte Hosts: "
 
 msgid "Total index failure count upper levels"
 msgstr "Obergrenzen für Gesamtfehler Index Anzahl"
@@ -73627,6 +73855,10 @@ msgstr "Obergrenze für die Nachrichtenrate"
 msgid "Upper level for number of busy executors of this node"
 msgstr "Obergrenze für Anzahl der beschäftigten Executors dieses Knotens"
 
+#, fuzzy
+msgid "Upper level for number of executors of this node"
+msgstr "Obergrenze für Anzahl der beschäftigten Executors dieses Knotens"
+
 msgid "Upper level for number of idle executors of this node"
 msgstr "Obergrenze für die Anzahl der ungenutzten Executors dieses Knotens"
 
@@ -74827,6 +75059,12 @@ msgid ""
 msgstr ""
 "Diese Bedingung verwenden, um Hosts basierend auf den konfigurierten Service-"
 "Labels auszuwählen."
+
+msgid ""
+"Use this condition to select services based on the configured service labels."
+msgstr ""
+"Verwenden Sie diese Bedingung, um Services auf der Grundlage der "
+"konfigurierten Service-Labels auszuwählen."
 
 msgid ""
 "Use this condition to select services based on the configured service "
@@ -76937,9 +77175,6 @@ msgstr "Warte auf andere Switche online zu gehen"
 
 msgid "Waiting for replication to start"
 msgstr "Warte auf den Beginn der Replikation"
-
-msgid "Waiting on team Engelbart"
-msgstr "Auf Team Engelbart wartend"
 
 msgid "Waiting..."
 msgstr "Wartet..."
@@ -82039,9 +82274,6 @@ msgstr "erwarte alles"
 msgid "explicit host labels"
 msgstr "explizite Host-Labels"
 
-msgid "explicitly specified groups"
-msgstr "Explizit aufgelistete Gruppen"
-
 msgid "failures"
 msgstr "Ausfällen"
 
@@ -83043,11 +83275,12 @@ msgstr ""
 msgid "require primary interface to be active"
 msgstr "primäre Schnittstelle muss aktiv sein"
 
+#, fuzzy
+msgid "required"
+msgstr "Erforderlich"
+
 msgid "reset"
 msgstr "zurücksetzen"
-
-msgid "resources matching tag based criteria"
-msgstr "Ressourcen basierend auf Merkmalen auswählen"
 
 msgid "restart"
 msgstr "Neustart"
@@ -83571,6 +83804,16 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #, python-format
+#~ msgid "Invalid file extension, supported extensions are: %s"
+#~ msgstr "Ungültige Dateierweiterung, unterstützte Erweiterungen sind: %s"
+
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Gehe zum SaaS-Administrationsbereich"
+
+#~ msgid "Waiting on team Engelbart"
+#~ msgstr "Auf Team Engelbart wartend"
+
+#, python-format
 #~ msgid "%s: Services: %s, Host labels: %s"
 #~ msgstr "%s: Services: %s, Host-Labels: %s"
 
@@ -83706,9 +83949,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #, fuzzy
 #~ msgid "Show all batches"
 #~ msgstr "Alle Themen anzeigen"
-
-#~ msgid "-"
-#~ msgstr "-"
 
 #~ msgid ""
 #~ "After setting up a new service in PagerDuty you will receive an "
@@ -83999,10 +84239,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgstr ""
 #~ "Analyse des Abgleichs nicht möglich, da der Parameter \"host\" fehlt"
 
-#, python-format
-#~ msgid "Updated broker connection for site %s"
-#~ msgstr "Broker-Verbindung zu Instanz %s aktualisiert"
-
 #~ msgid "Dynamic configuration site update interval"
 #~ msgstr "Dynamische Konfiguration des Intervals für Instanz-Updates"
 
@@ -84109,9 +84345,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "Placeholder"
 #~ msgstr "Platzhalter"
 
-#~ msgid "Robot package"
-#~ msgstr "Roboter-Paket"
-
 #~ msgid "Managed Robots"
 #~ msgstr "Verwaltete Roboter"
 
@@ -84138,10 +84371,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgstr ""
 #~ "Diese Seite ist derzeit nicht implementiert, sie benötigt eine FormSpec-"
 #~ "Migration von NotificationParameter."
-
-#, python-format
-#~ msgid "Failed to save broker certificates: %s"
-#~ msgstr "Broker-Zertifikate konnten nicht gespeichert werden: %s"
 
 #~ msgid ""
 #~ "If your monitoring produces a notification that is not matched by any of "
@@ -84477,9 +84706,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ msgid "File Size Levels"
 #~ msgstr "Level für Dateigrößen"
 
-#~ msgid "The file does not look like a valid key file."
-#~ msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
-
 #~ msgid "Applied Filters:"
 #~ msgstr "Angewandte Filter:"
 
@@ -84494,10 +84720,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Metric aggregation"
 #~ msgstr "Metrik-Aggregation"
-
-#, python-format
-#~ msgid "The following characters are forbidden: %s"
-#~ msgstr "Die folgenden Zeichen sind verboten: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "Verbindungstimeout"

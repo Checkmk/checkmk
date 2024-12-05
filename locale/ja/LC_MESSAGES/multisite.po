@@ -970,6 +970,9 @@ msgstr "、最後の %.1f チェック期間内にデータが受信されてい
 msgid ", the first match skips this rule pack"
 msgstr ",最初の一致はこのルールパックをスキップします"
 
+msgid "-"
+msgstr ""
+
 msgid "-.-- %"
 msgstr "-.--%"
 
@@ -2172,6 +2175,11 @@ msgstr "アラートマネージャで設定されたルール名のリスト。
 
 msgid "A list of specific users"
 msgstr "特定のユーザーのリスト"
+
+msgid ""
+"A list of text values that represent the 'AuthnContextClassRef' elements "
+"used to specify acceptable authentication context classes."
+msgstr ""
 
 msgid ""
 "A macro must begin and end with '$' and is allowed to contain only ASCII "
@@ -3380,6 +3388,18 @@ msgstr "アクティブ(匿名)"
 msgid "Active (files)"
 msgstr "アクティブ(ファイル)"
 
+#, fuzzy
+msgid "Active Calls"
+msgstr "アクティブパス"
+
+#, fuzzy
+msgid "Active Calls In"
+msgstr "アクティブパス"
+
+#, fuzzy
+msgid "Active Calls Out"
+msgstr "アクティブユニット"
+
 msgid "Active Connections"
 msgstr "アクティブな接続"
 
@@ -3611,6 +3631,10 @@ msgstr "NGINXインスタンスを追加します"
 
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector configuration"
+msgstr "新しいユーザー構成を追加する"
 
 msgid "Add Prefix"
 msgstr "プレフィックスを追加"
@@ -4221,6 +4245,10 @@ msgid "Add user attribute"
 msgstr "ユーザー属性を追加する"
 
 msgid "Add, edit and delete InfluxDB connections."
+msgstr "InfluxDB接続の追加、編集、削除。"
+
+#, fuzzy
+msgid "Add, edit and delete OpenTelemetry configurations."
 msgstr "InfluxDB接続の追加、編集、削除。"
 
 msgid "Add. addresses"
@@ -5503,6 +5531,9 @@ msgstr "すべてのプロトコル"
 
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
+
+msgid "All related configuration of the integrated OpenTelemetry collector."
+msgstr ""
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr "Checkmkサイトのライセンスに関する全ての関連情報または設定。"
@@ -7007,6 +7038,9 @@ msgstr "ホストから削除する属性"
 msgid "AudioCodes Alarms"
 msgstr ""
 
+msgid "AudioCodes SBC Calls"
+msgstr ""
+
 msgid "Audit log"
 msgstr "監査ログ"
 
@@ -7041,6 +7075,10 @@ msgstr "認証の有効期限"
 
 msgid "Authentication code (OTP / TOTP)"
 msgstr "認証コード(OTP / TOTP)"
+
+#, fuzzy
+msgid "Authentication context class reference"
+msgstr "認証ソース"
 
 msgid ""
 "Authentication details for communicating with ServiceNow. If you want to "
@@ -7443,8 +7481,16 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
+#, fuzzy
+msgid "Average Call Duration"
+msgstr "平均待ち時間"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
+
+#, fuzzy
+msgid "Average Success Ratio"
+msgstr "Varnishバックエンド成功率"
 
 msgid "Average active check latency"
 msgstr "平均アクティブチェック待ち時間"
@@ -10487,6 +10533,21 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "最終フックの呼び出し"
 
+#, fuzzy
+msgid "Calls In"
+msgstr "発信者ID"
+
+msgid "Calls In/Out"
+msgstr ""
+
+#, fuzzy
+msgid "Calls Out"
+msgstr "ルールを呼び出す"
+
+#, fuzzy
+msgid "Calls per Second"
+msgstr "1秒あたりのページ数"
+
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
 
@@ -13126,6 +13187,10 @@ msgstr ""
 "り、時間が設定されたレベル以上の場合、チェックで警告/クリティカル状態が発生し"
 "ます。"
 
+#, fuzzy
+msgid "Comparison"
+msgstr "圧縮"
+
 msgid "Compatibility"
 msgstr "互換性"
 
@@ -13487,6 +13552,14 @@ msgstr "プロキシサーバーの使用設定"
 
 msgid "Configure restrictions manually"
 msgstr "制限を手動で設定する"
+
+msgid ""
+"Configure secret environment variables that will be set when executing Robot "
+"Framework. This can for example be used together with <tt>CryptoLibrary</tt> "
+"for encrypting login data on the target hosts. <b>Note</b>: The configured "
+"values will be written in plain text to the configuration deployed to the "
+"target hosts."
+msgstr ""
 
 #, fuzzy
 msgid "Configure services to monitor"
@@ -14988,6 +15061,10 @@ msgstr ""
 
 msgid "Create regular time-schedule for this report"
 msgstr "このレポートの定期的なタイムスケジュールを作成します"
+
+#, fuzzy
+msgid "Create remote broker certificates"
+msgstr "ピア証明書のフェッチに失敗しました(%s)"
 
 #, fuzzy
 msgid "Create robot"
@@ -22633,6 +22710,10 @@ msgstr "フォルダに明示的に設定"
 msgid "Explicitly set on hosts"
 msgstr "ホストに明示的に設定"
 
+#, fuzzy
+msgid "Explicitly specified groups"
+msgstr "明示的に指定されたグループ"
+
 msgid "Explicitly specify resources"
 msgstr "リソースを明示的に指定する"
 
@@ -23308,6 +23389,14 @@ msgstr "サーバーから証明書を取得する"
 msgid "Fetch chunked"
 msgstr "チャンクをフェッチ"
 
+#, fuzzy
+msgid "Fetch data every"
+msgstr "すべてをフェッチ"
+
+#, fuzzy
+msgid "Fetch data every time"
+msgstr "すべてをフェッチ"
+
 msgid "Fetch events"
 msgstr "イベントをフェッチ"
 
@@ -23319,9 +23408,6 @@ msgstr ""
 "datadogインスタンスのイベントストリームからイベントをフェッチします。フェッチ"
 "されたイベントは、特殊エージェントが実行されるサイトのイベントコンソールに転"
 "送されます。"
-
-msgid "Fetch every"
-msgstr "すべてをフェッチ"
 
 msgid "Fetch failed"
 msgstr "フェッチに失敗しました"
@@ -25144,6 +25230,10 @@ msgstr "ホストの概要"
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "メインページに移動"
+
 msgid "Go to extension packages"
 msgstr "拡張パッケージへ"
 
@@ -25162,9 +25252,6 @@ msgid ""
 "Go to the Monitor > All Hosts page or click the Go to All hosts button to "
 "start monitoring your %s services."
 msgstr ""
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Saasの管理パネルに移動する"
 
 #, fuzzy
 msgid "Go to the next stage"
@@ -33055,6 +33142,10 @@ msgstr "無効な終了時刻が指定されました"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 
+#, fuzzy, python-format
+msgid "Invalid extension type, supported types are: %s"
+msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
+
 #, fuzzy
 msgid "Invalid file"
 msgstr "無効なファイル名"
@@ -33144,6 +33235,10 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
 
+#, fuzzy, python-format
+msgid "Invalid mime type, supported types are: %s"
+msgstr "無効なファイルタイプが予想される '%s'が'%s'を受信"
+
 #, fuzzy
 msgid "Invalid multiple choice value"
 msgstr "無効なトピック"
@@ -33176,6 +33271,23 @@ msgstr "無効な性能計タイプ: %s"
 
 msgid "Invalid private key"
 msgstr "無効なプライベートキー"
+
+msgid ""
+"Invalid proxy given: missing network_location in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+
+msgid ""
+"Invalid proxy given: missing scheme in proxy format 'scheme://"
+"network_location'"
+msgstr ""
+
+msgid "Invalid proxy given: not an allowed url"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Invalid proxy scheme given. Must be one of: %s"
+msgstr "無効なURLスキーム。次のいずれかである必要があります:%s"
 
 #, fuzzy
 msgid "Invalid receipt"
@@ -36100,6 +36212,10 @@ msgstr "現在のウィンドウ/タブにロード"
 msgid "Load of Citrix Server"
 msgstr "Citrixサーバーの負荷"
 
+#, fuzzy
+msgid "Loading"
+msgstr "読み込んでいます..."
+
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "\"%s/%s\" の読み込みに失敗しました: %s"
@@ -36742,7 +36858,15 @@ msgstr "ファイル記述子のオープン試行率の下位レベル"
 msgid "Lower level for message rate"
 msgstr "メッセージレートの下位レベル"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "このノードのエグゼキュータの数の下位レベル"
+
 msgid "Lower level for number of executors of this node"
+msgstr "このノードのエグゼキュータの数の下位レベル"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "このノードのエグゼキュータの数の下位レベル"
 
 msgid "Lower level for published message rate"
@@ -36820,6 +36944,10 @@ msgstr "SMS成功率の下位レベル"
 #, fuzzy
 msgid "Lower levels for active connections"
 msgstr "アクティブな接続のレベル"
+
+#, fuzzy
+msgid "Lower levels for average success ratio"
+msgstr "SMS成功率の下位レベル"
 
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの下位レベル"
@@ -37418,6 +37546,9 @@ msgstr "ハードおよびソフトウェアインベントリ関連のルール
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDBコネクションの管理"
 
+msgid "Manage OpenTelemetry configurations (Experimental)"
+msgstr ""
+
 msgid "Manage Own Scheduled Reports"
 msgstr "スケジュールされたレポートの管理"
 
@@ -37640,6 +37771,10 @@ msgstr ""
 "ことができます。このような設定は、運用状態<i>と</i>管理状態に合致するインタ"
 "フェースにのみ適用されます。例えば、ダウンしているが管理状態がアップのイン"
 "ターフェースは影響を受けません。"
+
+#, fuzzy
+msgid "Map data"
+msgstr "マップされたデータ"
 
 msgid "Map data relating to VMs"
 msgstr "VMsに関連するマップデータ"
@@ -43979,14 +44114,21 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
+msgid "OpenTelemetry (Experimental)"
+msgstr ""
+
+msgid "OpenTelemetry collector (Experimental)"
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry collector configurations"
+msgstr "状態構成を追加する"
+
 msgid "OpenVMS processes"
 msgstr "OpenVMSのプロセス"
 
 msgid "OpenVPN clients"
 msgstr "OpenVPNクライアント"
-
-msgid "Opentelemetry (Experimental)"
-msgstr ""
 
 msgid "Operating CPU"
 msgstr "動作中のCPU"
@@ -44093,6 +44235,13 @@ msgstr "失敗した通知"
 
 msgid "Optimize rule execution"
 msgstr "ルールの実行を最適化する"
+
+msgid ""
+"Option defines the value of the Comparison XML attribute within the "
+"'RequestedAuthnContext' element. The Comparison attribute specifies how the "
+"identity provider should evaluate the requested authentication context "
+"against its supported methods."
+msgstr ""
 
 msgid "Option groups"
 msgstr "オプショングループ"
@@ -47631,8 +47780,13 @@ msgid "Please provide a path that is absolute on either Linux or Windows."
 msgstr "有効な名前を入力してください"
 
 #, fuzzy
-msgid "Please provide a path that is relative both on Linux and Windows."
+msgid "Please provide a path that is relative on both Linux and Windows."
 msgstr "有効な名前を入力してください"
+
+msgid ""
+"Please provide a path that is resolved in the same way on Linux and Windows. "
+"In particular, avoid backslashes. You can use slashes on both platforms."
+msgstr ""
 
 #, fuzzy
 msgid "Please provide a relative Windows path"
@@ -50468,6 +50622,10 @@ msgstr ""
 "リモートオートメーションは保留中の変更を同期しようとしましたが失敗しました: "
 "%s"
 
+#, fuzzy, python-format
+msgid "Remote broker certificates created for site %s."
+msgstr "サイト%sへの新しい接続を作成しました"
+
 msgid "Remote configuration"
 msgstr "リモート設定"
 
@@ -51178,6 +51336,10 @@ msgstr "リクエストレート"
 msgid "Request wait time"
 msgstr "待ち時間をリクエストする"
 
+#, fuzzy
+msgid "Requested authentication context"
+msgstr "VCenter認証"
+
 msgid "Requests"
 msgstr "リクエスト"
 
@@ -51418,6 +51580,10 @@ msgstr "Windowsプロセスのリソース消費"
 
 msgid "Resource pinning: Ensure monitored resources are unchanged"
 msgstr "リソースの固定: 監視対象のリソースが変更されていないことを確認します"
+
+#, fuzzy
+msgid "Resources matching tag based criteria"
+msgstr "タグベースの基準に一致するリソース"
 
 msgid "Response Time"
 msgstr "反応時間"
@@ -51690,6 +51856,10 @@ msgstr "HW/SWインベントリーエンティティの保存期間"
 msgid "Retention period"
 msgstr "保存期間"
 
+#, fuzzy
+msgid "Retrieve information"
+msgstr "関する情報を取得する..."
+
 msgid "Retrieve information about the following partitions"
 msgstr "次のパーティションに関する情報を取得する"
 
@@ -51844,6 +52014,10 @@ msgstr "ロボット・フレーム: %s"
 
 msgid "Robot Framework: Last log"
 msgstr "ロボットフレームワーク:最終ログ"
+
+#, fuzzy
+msgid "Robot Package"
+msgstr "パッケージの取り外し"
 
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
@@ -53398,6 +53572,10 @@ msgstr "秘密鍵"
 
 msgid "Secret access key is required but not specified."
 msgstr ""
+
+#, fuzzy
+msgid "Secret environment variables"
+msgstr "環境変数"
 
 msgid "Secret key"
 msgstr "秘密鍵"
@@ -56088,7 +56266,8 @@ msgstr ""
 "Linux、Windows、およびその他のオペレーティング・システム用のベイクエージェン"
 "ト・パッケージに署名します"
 
-msgid "Sign up here"
+#, fuzzy
+msgid "Sign up"
 msgstr "登録はこちら"
 
 msgid "Signal quality of Wireless device"
@@ -57487,6 +57666,11 @@ msgstr "ルールを適用するキュー名を指定します"
 msgid "Specify roles of a control plane node"
 msgstr "コントロールプレーンノードの役割の指定"
 
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"この接続が実行されるべき 1 つ、複数、またはすべてのサイトを指定します。"
+
 msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
 
@@ -58753,6 +58937,10 @@ msgstr "ロードバランサーの状態が調整されたときの状態"
 
 msgid "State when missing"
 msgstr "行方不明の場合の状態"
+
+#, fuzzy
+msgid "State when networking changes are detected"
+msgstr "ソフトウェアの変更が検出されたときの状態"
 
 msgid "State when no backup can be found"
 msgstr "バックアップが見つからない場合の状態"
@@ -61123,6 +61311,12 @@ msgstr "ログファイル"
 msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "MBeanのオブジェクト名 例 java.lang:type=Memory"
 
+#, python-format
+msgid ""
+"The MIME type of the uploaded file is not supported: %s. Supported file "
+"extensions: .tar.gz, .zip."
+msgstr ""
+
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr "スペースで区切られたMSSQLインスタンス名とテーブルスペース名。"
 
@@ -61573,6 +61767,11 @@ msgstr ""
 "%sの構文エラーにより、監査ログを表示できません。<br><br>このページに再度アク"
 "セスする前に、ファイルの内容を確認して修正するか、ファイルを削除してくださ"
 "い。<br><br>問題のエントリー: <br>%s"
+
+msgid ""
+"The authentication context class reference (for example urn:oasis:names:tc:"
+"SAML:2.0:ac:classes:PasswordProtectedTransport)"
+msgstr ""
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -62429,6 +62628,10 @@ msgstr "フォルダで許可されている連絡先グループは<b>%s </b>�
 
 #, python-format
 msgid "The following %s could not be found: %s"
+msgstr "次の%sが見つかりませんでした: %s"
+
+#, fuzzy, python-format
+msgid "The following files are missing in the archive: %s"
 msgstr "次の%sが見つかりませんでした: %s"
 
 msgid ""
@@ -64946,6 +65149,26 @@ msgstr "この属性に格納される情報のタイプ。"
 msgid "The type of the timestamp must be int or float, but is %s"
 msgstr "タイムスタンプのタイプはintまたはfloatである必要がありますが、%sです"
 
+#, python-format
+msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
+msgstr ""
+
+#, fuzzy
+msgid "The uploaded file is not a valid ZIP file."
+msgstr "ファイルは有効なキーファイルのようには見えません。"
+
+#, fuzzy
+msgid "The uploaded file is not a valid tar.gz file."
+msgstr "ファイルは有効なキーファイルのようには見えません。"
+
+msgid "The uploaded file must be either a tar.gz or a zip file."
+msgstr ""
+
 #, no-python-format
 msgid ""
 "The used and free levels for the memory on UNIX systems take into account "
@@ -67131,6 +67354,13 @@ msgid ""
 msgstr ""
 "このオプションは、モデルとデータ間のエラーの広がりを定量化します。誤差の正規"
 "分布を仮定して、計算された標準偏差を使用して信頼区間を定量化します。"
+
+msgid ""
+"This option specifies the 'RequestedAuthnContext' element included in an "
+"AuthRequest sent by a client. The requested authentication context specifies "
+"the desired level or type of authentication that the service provider "
+"requires from the identity provider. "
+msgstr ""
 
 msgid "This option turns on a faster algorithm for matching events to rules. "
 msgstr ""
@@ -74604,6 +74834,10 @@ msgstr "メッセージレートの上位レベル"
 msgid "Upper level for number of busy executors of this node"
 msgstr "このノードのビジーなエグゼキュータの数の上位レベル"
 
+#, fuzzy
+msgid "Upper level for number of executors of this node"
+msgstr "このノードのビジーなエグゼキュータの数の上位レベル"
+
 msgid "Upper level for number of idle executors of this node"
 msgstr "ノードのアイドルエグゼキュータ数の上位レベル"
 
@@ -75809,6 +76043,13 @@ msgid ""
 "Use this condition to select hosts based on the configured service labels."
 msgstr ""
 "この条件を使用して、構成されたサービスラベルに基づいてホストを選択します。"
+
+#, fuzzy
+msgid ""
+"Use this condition to select services based on the configured service labels."
+msgstr ""
+"設定されたサービスラベルに基づいてサービスを選択するには、この条件を使用しま"
+"す。 "
 
 msgid ""
 "Use this condition to select services based on the configured service "
@@ -78059,10 +78300,6 @@ msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
-
-#, fuzzy
-msgid "Waiting on team Engelbart"
-msgstr "待機中コンテナ"
 
 #, fuzzy
 msgid "Waiting..."
@@ -82978,9 +83215,6 @@ msgstr "すべてを期待する"
 msgid "explicit host labels"
 msgstr "明示的なホストラベル"
 
-msgid "explicitly specified groups"
-msgstr "明示的に指定されたグループ"
-
 msgid "failures"
 msgstr "失敗"
 
@@ -83993,11 +84227,12 @@ msgstr "アルファベット順に最も低くソートするインターフェ
 msgid "require primary interface to be active"
 msgstr "プライマリインターフェイスがアクティブである必要があります"
 
+#, fuzzy
+msgid "required"
+msgstr "必要なポート"
+
 msgid "reset"
 msgstr "リセット"
-
-msgid "resources matching tag based criteria"
-msgstr "タグベースの基準に一致するリソース"
 
 msgid "restart"
 msgstr "再起動"
@@ -84528,6 +84763,13 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Saasの管理パネルに移動する"
+
+#, fuzzy
+#~ msgid "Waiting on team Engelbart"
+#~ msgstr "待機中コンテナ"
+
 #, python-format
 #~ msgid "%s: Services: %s, Host labels: %s"
 #~ msgstr "%s: サービス:%s、ホストラベル:%s"
@@ -84839,10 +85081,6 @@ msgstr ""
 #~ msgid "Unable to analyze matching, because \"host\" parameter is missing"
 #~ msgstr "\"サービス\"パラメータがないため、一致を分析できません"
 
-#, fuzzy, python-format
-#~ msgid "Updated broker connection for site %s"
-#~ msgstr "サイト%sへの新しい接続を作成しました"
-
 #, fuzzy
 #~ msgid "Dynamic configuration site update interval"
 #~ msgstr "動的構成ロギング"
@@ -84941,10 +85179,6 @@ msgstr ""
 #~ msgstr "プレースホルダーVM"
 
 #, fuzzy
-#~ msgid "Robot package"
-#~ msgstr "パッケージの取り外し"
-
-#, fuzzy
 #~ msgid "Managed Robots"
 #~ msgstr "管理対象オブジェクト"
 
@@ -84966,10 +85200,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Host Path"
 #~ msgstr "ホストアラート"
-
-#, fuzzy, python-format
-#~ msgid "Failed to save broker certificates: %s"
-#~ msgstr "ピア証明書のフェッチに失敗しました(%s)"
 
 #, fuzzy
 #~ msgid ""
@@ -85304,9 +85534,6 @@ msgstr ""
 #~ msgid "File Size Levels"
 #~ msgstr "ファイルサイズレベル"
 
-#~ msgid "The file does not look like a valid key file."
-#~ msgstr "ファイルは有効なキーファイルのようには見えません。"
-
 #~ msgid "Applied Filters:"
 #~ msgstr "適用されたフィルター:"
 
@@ -85322,10 +85549,6 @@ msgstr ""
 
 #~ msgid "Metric aggregation"
 #~ msgstr "メトリック集計"
-
-#, fuzzy, python-format
-#~ msgid "The following characters are forbidden: %s"
-#~ msgstr "次の%sが見つかりませんでした: %s"
 
 #~ msgid "Connect Timeout"
 #~ msgstr "接続タイムアウト"

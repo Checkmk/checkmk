@@ -85,7 +85,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.firmware.": {"title": _l("Firmware")},
         ".hardware.firmware.redfish:": {
             "title": _l("Redfish"),
-            "keyorder": ["component", "version", "location", "description"],
+            "keyorder": ["component", "version", "location", "description", "updateable"],
             "view": "invfirmwareredfish",
         },
         ".hardware.firmware.redfish:*.component": {"title": _l("Component")},

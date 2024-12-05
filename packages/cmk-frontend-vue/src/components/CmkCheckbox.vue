@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 const value = defineModel<boolean>({ required: false, default: false })
 
 interface CmkCheckboxProps {
@@ -26,7 +27,7 @@ const props = defineProps<CmkCheckboxProps>()
         </svg>
       </CheckboxIndicator>
     </CheckboxRoot>
-    <span v-if="props.label"><CmkSpace size="small" />{{ label }}</span>
+    <span v-if="props.label"><CmkSpace size="small" /><CmkHtml :html="label" /></span>
   </label>
 </template>
 

@@ -19,6 +19,7 @@ import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
+import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { staticAssertNever } from '@/lib/typeUtils'
 
@@ -225,8 +226,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   class="checkbox"
                 >
                   <span v-if="dict_element.dict_config.required">
-                    {{ dict_element.dict_config.parameter_form.title
-                    }}<FormRequired
+                    <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
                       v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
                       :spec="dict_element.dict_config.parameter_form"
                       :i18n-required="spec.i18n_base.required"

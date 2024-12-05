@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, useTemplateRef } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import CmkIcon from './CmkIcon.vue'
+import CmkHtml from './CmkHtml.vue'
 
 const props = defineProps<{
   help: string
@@ -57,8 +58,7 @@ const closeHelp = () => {
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div v-html="props.help"></div>
+        <div><CmkHtml :html="props.help" /></div>
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>

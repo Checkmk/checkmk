@@ -4,10 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkHtml from '@/components/CmkHtml.vue'
+
 defineProps<{
   help: string
 }>()
-// TODO: do not use v-html. parse string, keep certain tags
 </script>
 
 <template>
@@ -15,7 +16,6 @@ defineProps<{
     <div class="info_icon">
       <img class="icon" />
     </div>
-    <!-- eslint-disable vue/no-v-html -->
-    <div class="help_text" v-html="help" />
+    <div class="help_text"><CmkHtml :html="help" /></div>
   </div>
 </template>

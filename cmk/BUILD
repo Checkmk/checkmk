@@ -177,7 +177,12 @@ CMK_PACKAGES = [
     "//packages/cmk-server-side-calls",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
-]
+] + select({
+    "@//:gpl_repo": [],
+    "@//:gpl+enterprise_repo": [
+        "//non-free/packages/cmk-otel-collector",
+    ],
+})
 
 py_library(
     name = "lib_cmk",

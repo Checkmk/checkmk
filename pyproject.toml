@@ -127,6 +127,7 @@ mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
     $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
     $MYPY_CONFIG_FILE_DIR/tests/typeshed:\

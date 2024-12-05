@@ -347,7 +347,10 @@ class RestApiClient:
         )
         if follow_redirects:
             end = time.time() + redirect_timeout_seconds
-            while 300 <= resp.status_code < 400 and time.time() < end:
+            while 300 <= resp.status_code < 400:
+                if time.time() > end:
+                    raise TimeoutError("Redirect timeout reached")
+
                 if resp.status_code == 303:
                     # 303 See Other: we should explicitly use GET for the redirect
                     # other redirect codes should reuse the method of the original request

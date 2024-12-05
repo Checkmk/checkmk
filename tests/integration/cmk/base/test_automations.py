@@ -514,7 +514,7 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
     finally:
         clients.HostConfig.delete("localhost")
         clients.HostConfig.delete(unknown_host)
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+        clients.ActivateChanges.call_activate_changes_and_wait_for_completion(timeout_seconds=120)
 
 
 # TODO: Test with the different cores

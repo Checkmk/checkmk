@@ -203,6 +203,7 @@ def test_dashlet_filters(dashboard_page: Dashboard, linux_hosts: list[str]) -> N
     edit_element_top_list_page.save_button.click()
 
 
+@pytest.mark.skip(reason="Due to ongoing investigation in CMK-20662")
 def test_add_top_list_dashlet(dashboard_page: Dashboard, linux_hosts: list[str]) -> None:
     """Test 'Top list' dashlet for 'Total execution time' metric can be added to the dashboard.
 

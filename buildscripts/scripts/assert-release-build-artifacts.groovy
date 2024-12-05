@@ -4,14 +4,14 @@
 
 def main() {
     check_job_parameters([
-        "VERSION_TO_CHECK",
+        "VERSION",
     ])
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION_TO_CHECK);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     print(
@@ -41,7 +41,7 @@ def main() {
                         buildscripts/scripts/assert_build_artifacts.py \
                         --editions_file "${checkout_dir}/editions.yml" \
                         assert_build_artifacts \
-                        --version "${VERSION_TO_CHECK}" \
+                        --version "${cmk_version_rc_aware}" \
                         """);
                     }
                 }

@@ -1,3 +1,5 @@
+# Specify the image to use as a base.
+# Make sure to adjust `DISTRO_CODENAME` if you change this.
 ARG IMAGE_CMK_BASE
 # hadolint ignore=DL3006
 FROM ${IMAGE_CMK_BASE}
@@ -36,6 +38,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="2.5.0b1"
 ARG CMK_EDITION
+# Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"
 
 # Make the list of required packages available to the following command

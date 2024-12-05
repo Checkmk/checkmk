@@ -48,7 +48,7 @@ SYSTEM_TESTS := \
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
-PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checkerr,localization-literal-string-checker
+PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see

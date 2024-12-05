@@ -154,19 +154,14 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   </span>
   <span class="form-cascading-single-choice__cascade">
     <template v-if="activeElement !== null">
-      <div class="container">
-        <div class="help-container">
-          <HelpText :help="activeElement.spec.help" />
-          <FormEditDispatcher
-            :key="data[0]"
-            v-model:data="data[1]"
-            :spec="activeElement.spec"
-            :backend-validation="elementValidation"
-          />
-        </div>
+      <FormEditDispatcher
+        :key="data[0]"
+        v-model:data="data[1]"
+        :spec="activeElement.spec"
+        :backend-validation="elementValidation"
+      />
 
-        <FormValidation :validation="validation"></FormValidation>
-      </div>
+      <FormValidation :validation="validation"></FormValidation>
     </template>
   </span>
 </template>
@@ -184,17 +179,5 @@ span.form-cascading-single-choice__choice {
 span.form-cascading-single-choice__cascade {
   display: v-bind('layoutSettings.cascade_display_style');
   margin-top: v-bind('layoutSettings.cascade_margin_top');
-
-  .container {
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-    align-items: start;
-
-    .help-container {
-      display: flex;
-      align-items: start;
-    }
-  }
 }
 </style>

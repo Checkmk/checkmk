@@ -126,7 +126,6 @@ watch(autocompleterOutput, (newValue) => {
     .map((element: [string, string]) => element[0])
     .filter((element: string) => element.length > 0)
     .filter((element: string) => !props.filterOn.includes(element))
-    .splice(0, 15)
 })
 </script>
 
@@ -154,45 +153,24 @@ watch(autocompleterOutput, (newValue) => {
       />
     </span>
 
-    <Transition name="fade">
-      <ul
-        v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
-        class="suggestions"
-        :style="{ minWidth: inputSizes[props.size].width }"
-        @blur="handleListBlur"
+    <ul
+      v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
+      class="suggestions"
+      @blur="handleListBlur"
+    >
+      <li
+        v-for="(option, index) in filteredSuggestions"
+        :key="option"
+        :class="{ selected: index === selectedSuggestionIndex }"
+        @click="() => handleCloseList(option)"
       >
-        <li
-          v-for="(option, index) in filteredSuggestions"
-          :key="option"
-          :class="{ selected: index === selectedSuggestionIndex }"
-          @click="() => handleCloseList(option)"
-        >
-          {{ option }}
-        </li>
-      </ul>
-    </Transition>
+        {{ option }}
+      </li>
+    </ul>
   </div>
 </template>
 
 <style scoped>
-.fade-enter-active {
-  transition:
-    opacity 0.2s ease-out,
-    transform 0.2s ease-out;
-}
-
-.fade-leave-active {
-  transition:
-    opacity 0.2s ease-out,
-    transform 0.05s ease-out;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
-}
-
 .label-list {
   list-style-type: none;
   padding: 0;
@@ -208,7 +186,7 @@ watch(autocompleterOutput, (newValue) => {
 }
 
 table.nform input {
-  margin: 0;
+  margin: 0 5px;
   padding: 2px;
 }
 
@@ -241,7 +219,6 @@ table.nform input {
   width: 10px;
   height: 10px;
   border: none;
-  transition: background-color 0.3s;
 
   &:hover {
     background-color: #c77777;
@@ -269,8 +246,7 @@ table.nform input {
   background-color: var(--default-form-element-bg-color);
   border-radius: 4px;
   max-height: 200px;
-  width: fit-content;
-  max-width: fit-content;
+  width: 100%;
   overflow-y: auto;
   margin: 0;
   padding: 0;
@@ -285,5 +261,21 @@ table.nform input {
       color: var(--default-select-hover-color);
     }
   }
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #303946;
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #e0e0e4;
+  border-radius: 1rem;
+  border: 3px solid #303946;
 }
 </style>

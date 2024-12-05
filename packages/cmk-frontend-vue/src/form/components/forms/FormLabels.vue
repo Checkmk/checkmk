@@ -145,26 +145,10 @@ const deleteItem = (item: string) => {
   </div>
   <div v-else class="error">{{ props.spec.i18n.max_labels_reached }}</div>
   <FormValidation :validation="validation"></FormValidation>
-
-  <Transition name="fade">
-    <div v-if="error" class="error">{{ error }}</div>
-  </Transition>
+  <div v-if="error" class="error">{{ error }}</div>
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.2s ease-out,
-    transform 0.2s ease-out;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
-}
-
 .label-list {
   list-style-type: none;
   padding: 0;
@@ -217,7 +201,6 @@ table.nform input {
   width: 10px;
   height: 10px;
   border: none;
-  transition: background-color 0.3s;
 
   &:hover {
     background-color: #c77777;

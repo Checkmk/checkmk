@@ -79,7 +79,7 @@ export class LayoutAggregations {
             .join(enter =>
                 enter
                     .insert("table", "div.radio_group")
-                    .attr("id", "layout_settings")
+                    .attr("id", "layout_settings"),
             );
 
         table
@@ -90,7 +90,7 @@ export class LayoutAggregations {
                     [["Layout origin"], [origin_info]],
                 ],
                 // @ts-ignore
-                d => d[0]
+                d => d[0],
             )
             .join("tr")
             .classed("info", true)

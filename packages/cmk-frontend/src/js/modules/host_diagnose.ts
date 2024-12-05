@@ -23,14 +23,14 @@ export function start_test(ident: string, hostname: string, transid: string) {
     vars +=
         "&ipaddress=" +
         encodeURIComponent(
-            getFirstElementByNameAsInput("vs_host_p_ipaddress").value
+            getFirstElementByNameAsInput("vs_host_p_ipaddress").value,
         );
 
     if (getFirstElementByNameAsInput("vs_host_p_snmp_community_USE").checked)
         vars +=
             "&snmp_community=" +
             encodeURIComponent(
-                getFirstElementByNameAsInput("vs_host_p_snmp_community").value
+                getFirstElementByNameAsInput("vs_host_p_snmp_community").value,
             );
 
     let v3_use;
@@ -40,7 +40,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
     ) {
         v3_use = encodeURIComponent(
             getFirstElementByNameAsInput("vs_host_p_snmp_v3_credentials_use")
-                .value
+                .value,
         );
         vars += "&snmpv3_use=" + v3_use;
         if (v3_use == "0") {
@@ -48,66 +48,66 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_security_name=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_0_1"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_0_1",
+                    ).value,
                 );
         } else if (v3_use == "1") {
             vars +=
                 "&snmpv3_auth_proto=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_1_1"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_1_1",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_security_name=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_1_2"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_1_2",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_security_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_1_3_orig"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_1_3_orig",
+                    ).value,
                 );
         } else if (v3_use == "2") {
             vars +=
                 "&snmpv3_auth_proto=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_1"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_2_1",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_security_name=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_2"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_2_2",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_security_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_3_orig"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_2_3_orig",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_privacy_proto=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_4"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_2_4",
+                    ).value,
                 );
             vars +=
                 "&snmpv3_privacy_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_5_orig"
-                    ).value
+                        "vs_host_p_snmp_v3_credentials_2_5_orig",
+                    ).value,
                 );
         }
     }
@@ -115,22 +115,23 @@ export function start_test(ident: string, hostname: string, transid: string) {
     vars +=
         "&agent_port=" +
         encodeURIComponent(
-            getFirstElementByNameAsInput("vs_rules_p_agent_port").value
+            getFirstElementByNameAsInput("vs_rules_p_agent_port").value,
         );
     vars +=
         "&tcp_connect_timeout=" +
         encodeURIComponent(
-            getFirstElementByNameAsInput("vs_rules_p_tcp_connect_timeout").value
+            getFirstElementByNameAsInput("vs_rules_p_tcp_connect_timeout")
+                .value,
         );
     vars +=
         "&snmp_timeout=" +
         encodeURIComponent(
-            getFirstElementByNameAsInput("vs_rules_p_snmp_timeout").value
+            getFirstElementByNameAsInput("vs_rules_p_snmp_timeout").value,
         );
     vars +=
         "&snmp_retries=" +
         encodeURIComponent(
-            getFirstElementByNameAsInput("vs_rules_p_snmp_retries").value
+            getFirstElementByNameAsInput("vs_rules_p_snmp_retries").value,
         );
 
     img.src = img.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
@@ -155,18 +156,18 @@ export function start_test(ident: string, hostname: string, transid: string) {
 
 function handle_host_diag_result(
     data: {hostname: string; ident: string},
-    response_json: string
+    response_json: string,
 ) {
     const response = JSON.parse(response_json);
 
     const img = document.getElementById(
-        data.ident + "_img"
+        data.ident + "_img",
     ) as HTMLImageElement;
     const log = document.getElementById(
-        data.ident + "_log"
+        data.ident + "_log",
     ) as HTMLImageElement;
     const retry = document.getElementById(
-        data.ident + "_retry"
+        data.ident + "_retry",
     ) as HTMLImageElement;
     remove_class(img, "reloading");
 
@@ -192,7 +193,6 @@ function handle_host_diag_result(
 
     retry.src = retry.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
     retry.style.display = "inline";
-    (
-        retry.parentNode as HTMLAnchorElement
-    ).href = `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`;
+    (retry.parentNode as HTMLAnchorElement).href =
+        `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`;
 }

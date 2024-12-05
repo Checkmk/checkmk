@@ -12,7 +12,7 @@ export function toggle_grouped_rows(
     tree: string,
     id: string,
     cell: HTMLTableCellElement,
-    num_rows: number
+    num_rows: number,
 ) {
     const group_title_row = cell.parentNode as HTMLElement;
 
@@ -32,7 +32,7 @@ export function toggle_grouped_rows(
 
     toggle_folding(
         cell.getElementsByTagName("IMG")[0] as HTMLImageElement,
-        toggle_img_open
+        toggle_img_open,
     );
     persist_tree_state(tree, id, state);
 
@@ -48,7 +48,7 @@ export function reschedule_check(
     site: any,
     host: any,
     service: string,
-    wait_svc: string
+    wait_svc: string,
 ) {
     const img = oLink.getElementsByTagName("IMG")[0] as HTMLImageElement;
     remove_class(img, "reload_failed");
@@ -62,7 +62,7 @@ export function reschedule_check(
                 host: host,
                 service: service,
                 wait_svc: wait_svc,
-            })
+            }),
         );
 
     call_ajax("ajax_reschedule.py", {
@@ -77,7 +77,7 @@ export function reschedule_check(
 
 function reschedule_check_response_handler(
     handler_data: {img: HTMLImageElement},
-    ajax_response: string
+    ajax_response: string,
 ) {
     const img = handler_data.img;
     remove_class(img, "reloading");
@@ -105,10 +105,10 @@ export function add_to_visual(
     visual_type: string,
     visual_name: string,
     source_type: string,
-    context: Record<string, any>
+    context: Record<string, any>,
 ) {
     const target_visual = document.getElementById(
-        "select2-_add_to_" + visual_type + "-container"
+        "select2-_add_to_" + visual_type + "-container",
     );
 
     if (!target_visual) {

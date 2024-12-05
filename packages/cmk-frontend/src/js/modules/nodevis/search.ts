@@ -24,7 +24,7 @@ export class SearchNodes {
         this._setup_search_panel();
         this._search_result_panel = new SearchResultPanel(
             world,
-            search_result_selection
+            search_result_selection,
         );
     }
 
@@ -38,7 +38,7 @@ export class SearchNodes {
         const input = search_nodes_cell
             .append("input")
             .on("input", event =>
-                this.updated_search_node_text(event.target!.value)
+                this.updated_search_node_text(event.target!.value),
             )
             .attr("type", "text")
             .attr("placeholder", "Find on this page...")
@@ -122,7 +122,7 @@ export class SearchResultPanel {
         if (this._search_result_selection.style("display") == "none") {
             this._search_result_selection.style("display", null);
             DefaultTransition.add_transition(
-                this._search_result_selection.style("opacity", "0")
+                this._search_result_selection.style("opacity", "0"),
             ).style("opacity", "1");
         }
 
@@ -136,7 +136,7 @@ export class SearchResultPanel {
             formatter.render_into_selection(this._content_selection, data);
             const new_height = this._content_selection.style("height");
             DefaultTransition.add_transition(
-                this._content_selection.style("height", old_height)
+                this._content_selection.style("height", old_height),
             ).style("height", new_height);
         }
     }
@@ -163,7 +163,7 @@ class InfoboxNodeFormatter {
 
     render_into_selection(
         selection: d3SelectionDiv,
-        data: SearchResults
+        data: SearchResults,
     ): void {
         let entries = data.entries;
 
@@ -172,7 +172,7 @@ class InfoboxNodeFormatter {
 
         const current_height = this._world.viewport.get_size().height;
         const max_entries: number = Math.floor(
-            Math.max((current_height / 24 / 10) * 10, 10)
+            Math.max((current_height / 24 / 10) * 10, 10),
         );
         if (entries.length > max_entries) {
             selection.append("br");
@@ -183,7 +183,7 @@ class InfoboxNodeFormatter {
                         max_entries +
                         " of " +
                         entries.length +
-                        " matches shown)"
+                        " matches shown)",
                 );
         }
 
@@ -203,10 +203,10 @@ class InfoboxNodeFormatter {
             })
             .on("click", (_event: Event, d) => this._zoom_node(d.name))
             .on("mouseover", (_event: Event, d) =>
-                this._highlight_node(d.name, true)
+                this._highlight_node(d.name, true),
             )
             .on("mouseout", (_event: Event, d) =>
-                this._highlight_node(d.name, false)
+                this._highlight_node(d.name, false),
             );
     }
 

@@ -103,14 +103,14 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         this._setup_time_based_filters(
             this._div_selection
                 .append("div")
-                .classed("time_filters " + this.page_id(), true)
+                .classed("time_filters " + this.page_id(), true),
         );
 
         // Fetch filters
         this._setup_fetch_filters(
             this._div_selection
                 .append("div")
-                .classed("fetch_filters " + this.page_id(), true)
+                .classed("fetch_filters " + this.page_id(), true),
         );
 
         const div_description = this._div_selection
@@ -124,7 +124,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .classed("warning " + this.page_id(), true)
             .style("display", "none")
             .html(
-                "<b>Note: </b> When using both day and hour filters, only the selected hours of the last day will be evaluated."
+                "<b>Note: </b> When using both day and hour filters, only the selected hours of the last day will be evaluated.",
             );
         this._div_selection
             .append("div")
@@ -133,10 +133,10 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         // Table with details
         this._table_details = new DCTableFigure(
             "div.details." + this.page_id(),
-            null
+            null,
         );
         this._table_details.subscribe_data_pre_processor_hook(data =>
-            this._convert_alert_details_to_dc_table_format(data)
+            this._convert_alert_details_to_dc_table_format(data),
         );
 
         this._table_details.subscribe_post_render_hook(() => {
@@ -215,7 +215,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             this._get_time_filter_params(),
             this.current_ntophost == undefined
                 ? {}
-                : {host: this.current_ntophost}
+                : {host: this.current_ntophost},
         );
         Object.keys(params).forEach(key => {
             parameters.append(key, params[key]);
@@ -231,7 +231,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_time_based_filters(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         // These parameters -may- include activated filters
         this._filtered_date = null;
@@ -254,12 +254,12 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _update_filter_choices(filter_choices: FlowDashletDataChoice[]) {
         this._filter_choices = filter_choices;
         this._setup_fetch_filters(
-            this._div_selection.select("div.fetch_filters." + this.page_id())
+            this._div_selection.select("div.fetch_filters." + this.page_id()),
         );
     }
 
     _setup_fetch_filters(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         const dropdowns = selection
             .selectAll("div.dropdown")
@@ -285,7 +285,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
                 enter
                     .append("option")
                     .property("value", d => "" + d.id)
-                    .text(d => d.name)
+                    .text(d => d.name),
             );
 
         const elements = $("div.dropdown").find(".select2-enable");
@@ -320,7 +320,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_date_filter(
-        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>,
     ) {
         const div_id = this.page_id() + "_date_filter";
         selection
@@ -378,7 +378,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
                 parameters.append("offset", "0");
                 this._table_details.set_post_url_and_body(
                     this._post_url,
-                    parameters.toString()
+                    parameters.toString(),
                 );
                 this._table_details.scheduler.force_update();
             });
@@ -409,7 +409,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
         function _format_date(
             timestamp: number,
             skip_date = false,
-            skip_hours = false
+            skip_hours = false,
         ) {
             const date = new Date(timestamp * 1000);
             let response = "";
@@ -478,17 +478,17 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
 
         if (Array.isArray(date_filter) && date_filter.length === 1) {
             filter_params["date_start"] = Math.trunc(
-                date_filter[0][0].getTime() / 1000
+                date_filter[0][0].getTime() / 1000,
             );
             filter_params["date_end"] = Math.trunc(
-                date_filter[0][1].getTime() / 1000
+                date_filter[0][1].getTime() / 1000,
             );
         }
         return filter_params;
     }
 
     _setup_hour_filter(
-        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLTableCellElement, unknown, BaseType, unknown>,
     ) {
         const div_id = this.page_id() + "_time_filter";
         selection
@@ -511,7 +511,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
             .x(
                 scaleLinear()
                     .domain([0, 24])
-                    .rangeRound([0, 10 * 24])
+                    .rangeRound([0, 10 * 24]),
             )
             // @ts-ignore
             .colors(() => {
@@ -534,7 +534,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     _setup_details_table(_selector: string) {}
 
     _setup_description_filter(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         selection.append("label").text("Filter details by description");
         const msg_dimension = this._table_details
@@ -557,7 +557,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
     }
 
     _setup_status_text(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         selection.classed("status", true).append("label");
     }
@@ -623,7 +623,7 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
 
 // Base class for all alert tabs
 export abstract class ABCAlertsTab<
-    Page extends ABCAlertsPage = ABCAlertsPage
+    Page extends ABCAlertsPage = ABCAlertsPage,
 > extends Tab {
     _page_class: null | (new (div_selector: string) => Page);
     _alerts_page!: Page;

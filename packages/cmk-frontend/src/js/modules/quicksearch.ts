@@ -62,7 +62,7 @@ function mkSearchKeyUp(e: KeyboardEvent, oField: HTMLInputElement) {
 // On key press down event handler
 export function on_search_click() {
     const oField = document.getElementById(
-        "mk_side_search_field"
+        "mk_side_search_field",
     ) as HTMLInputElement;
     const ev = {which: 0, keyCode: 13} as KeyboardEvent;
     return mkSearchKeyDown(ev, oField);
@@ -75,7 +75,7 @@ function search_dropdown_value() {
 
 function mkSearchKeyDown(
     e: KeyboardEvent,
-    oField: HTMLInputElement
+    oField: HTMLInputElement,
 ): false | void {
     const keyCode = e.which || e.keyCode;
     switch (keyCode) {
@@ -225,7 +225,7 @@ function mkSearch(oField: HTMLInputElement | null) {
         {
             response_handler: handle_search_response,
             handler_data: oField,
-        }
+        },
     );
 }
 

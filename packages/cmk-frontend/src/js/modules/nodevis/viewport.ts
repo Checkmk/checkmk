@@ -78,7 +78,7 @@ export class Viewport {
         into_selection: d3SelectionDiv,
         datasource: string,
         force_config: typeof ForceConfig,
-        update_browser_url: () => void
+        update_browser_url: () => void,
     ) {
         this._update_browser_url = update_browser_url;
         this._force_simulation = new ForceSimulation(this, force_config);
@@ -121,7 +121,7 @@ export class Viewport {
             .on("click.remove_context", event =>
                 this._layers[
                     LayeredNodesLayer.prototype.id()
-                ].hide_context_menu(event)
+                ].hide_context_menu(event),
             );
 
         this._svg_layers_selection = this._svg_content_selection.append("g");
@@ -131,7 +131,7 @@ export class Viewport {
             .scaleExtent([0.2, 10])
             .on("zoom", event => this.zoomed(event))
             .on("end", () =>
-                this._svg_content_selection.style("cursor", "grab")
+                this._svg_content_selection.style("cursor", "grab"),
             )
             .filter(event => {
                 // Disable left click zoom
@@ -221,7 +221,7 @@ export class Viewport {
                     this._world_for_layers!,
                     this._create_selections(layer_id),
                     dynamic_id,
-                    dynamic_id
+                    dynamic_id,
                 );
             }
         });
@@ -233,7 +233,7 @@ export class Viewport {
             if (this._layers[layer_id]) return;
             this._layers[layer_id] = new layer_class(
                 this._world_for_layers!,
-                this._create_selections(layer_id)
+                this._create_selections(layer_id),
             );
         }
 
@@ -260,7 +260,7 @@ export class Viewport {
 
     set_overlay_layer_config(
         overlay_id: string,
-        new_config: OverlayConfig
+        new_config: OverlayConfig,
     ): void {
         this._overlays_configs.overlays[overlay_id] = new_config;
         this.update_active_overlays();
@@ -331,7 +331,7 @@ export class Viewport {
 
         this.update_data_of_layers();
         this.get_layout_manager().apply_current_layout(
-            nodes_changed || this.always_update_layout
+            nodes_changed || this.always_update_layout,
         );
         this.get_layout_manager().compute_node_positions();
         this.update_gui_of_layers(true);
@@ -487,7 +487,7 @@ export class Viewport {
 
     // Applies scale
     scale_to_zoom(
-        coords: RectangleWithCoords | Coords
+        coords: RectangleWithCoords | Coords,
     ): RectangleWithCoords | Coords {
         // TODO: be more specific, create distinct functions
         const translated: RectangleWithCoords = {
@@ -545,7 +545,7 @@ export class Viewport {
                     .translate(this.width / 2, this.height / 2)
                     .scale(use_scale)
                     .translate(x, y);
-            }
+            },
         );
     }
 
@@ -570,13 +570,13 @@ export class Viewport {
         size.width -= 200;
         let new_scale = Math.min(
             size.width / rect.width,
-            size.height / rect.height
+            size.height / rect.height,
         );
         new_scale *= 0.8;
         this.zoom_to_coords(
             -(rect.x_min + rect.width / 2),
             -(rect.y_min + rect.height / 2),
-            new_scale
+            new_scale,
         );
     }
 
@@ -585,12 +585,12 @@ export class Viewport {
         const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
-                (-this.height / 2) * new_scale + this.height / 2
+                (-this.height / 2) * new_scale + this.height / 2,
             )
             .scale(new_scale);
         DefaultTransition.add_transition(this._svg_content_selection).call(
             this._zoom_behaviour.transform,
-            () => new_zoom
+            () => new_zoom,
         );
     }
 
@@ -600,7 +600,7 @@ export class Viewport {
         const new_zoom = zoomIdentity
             .translate(
                 (-this.width / 2) * new_scale + this.width / 2,
-                (-this.height / 2) * new_scale + this.height / 2
+                (-this.height / 2) * new_scale + this.height / 2,
             )
             .scale(new_scale);
         this._svg_content_selection
@@ -640,7 +640,7 @@ export class Viewport {
         row.select("td.timedelta").text(
             (now.getTime() - parseInt(row.attr("update_time")))
                 .toFixed(2)
-                .toString() + "ms"
+                .toString() + "ms",
         );
         row.datum(null);
         row.transition()
@@ -685,7 +685,7 @@ export class Viewport {
 }
 function build_node_config(
     data: BackendResponse,
-    old_node_config: NodeConfig
+    old_node_config: NodeConfig,
 ): NodeConfig {
     const new_node_config = new NodeConfig(data.node_config);
 
@@ -708,7 +708,7 @@ function _migrate_node_content(old_node: NodevisNode, new_node: NodevisNode) {
 
 function linked_nodes_with_coords(
     node: NodevisNode,
-    node_config: NodeConfig
+    node_config: NodeConfig,
 ): NodevisNode[] {
     const linked_nodes: NodevisNode[] = [];
     node_config.link_info.forEach(link => {
@@ -723,7 +723,7 @@ function linked_nodes_with_coords(
 function compute_spawn_coords(
     node: NodevisNode,
     node_config: NodeConfig,
-    fallback_coords: Coords
+    fallback_coords: Coords,
 ) {
     const linked_nodes = linked_nodes_with_coords(node, node_config);
     if (linked_nodes.length > 0)
@@ -733,7 +733,7 @@ function compute_spawn_coords(
 
 function compute_missing_spawn_coords(
     node_config: NodeConfig,
-    fallback_coords: Coords
+    fallback_coords: Coords,
 ) {
     let rad = 0;
     const rad_delta = Math.PI / 8;
@@ -744,7 +744,7 @@ function compute_missing_spawn_coords(
         const spawn_coords = compute_spawn_coords(
             node,
             node_config,
-            fallback_coords
+            fallback_coords,
         );
         // Do not spawn all nodes at the same location.
         // This will create a singularity which causes the force simulation to explode

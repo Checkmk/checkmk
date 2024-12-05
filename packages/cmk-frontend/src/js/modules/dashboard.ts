@@ -92,12 +92,12 @@ export function set_start_url(dashboard_name: string) {
                             confirmButtonText: "OK",
                             showCancelButton: false,
                         },
-                        null
+                        null,
                     );
                 }
             },
             method: "POST",
-        }
+        },
     );
 }
 
@@ -222,7 +222,7 @@ function size_dashlets() {
                         (
                             (g_resizing as HTMLElement).parentNode!
                                 .parentNode as HTMLElement
-                        ).id.replace("dashlet_", "")
+                        ).id.replace("dashlet_", ""),
                     ) != d_number
                 ) {
                     dashlet_resized(d_number, oDashInner);
@@ -239,7 +239,7 @@ function size_dashlets() {
 }
 
 export function adjust_single_metric_font_size(
-    oTdMetricValue: HTMLTableCellElement
+    oTdMetricValue: HTMLTableCellElement,
 ) {
     const originalFontSize = parseFloat(oTdMetricValue.style.fontSize);
     const oAMetricValue = oTdMetricValue.childNodes[0] as HTMLAnchorElement;
@@ -256,7 +256,7 @@ export function adjust_single_metric_font_size(
 function set_control_size(
     dash_controls: HTMLElement,
     width: number,
-    height: number
+    height: number,
 ) {
     dash_controls.style.width =
         width -
@@ -302,7 +302,7 @@ class Vec {
     make_absolute(size_v: Vec) {
         return new Vec(
             this.x < 0 ? this.x + size_v.x + 1 : this.x - 1,
-            this.y < 0 ? this.y + size_v.y + 1 : this.y - 1
+            this.y < 0 ? this.y + size_v.y + 1 : this.y - 1,
         );
     }
 
@@ -314,13 +314,13 @@ class Vec {
             this.x == dashboard_properties.MAX
                 ? grid_v.x - Math.abs(pos_v.x) + 1
                 : this.x == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[0]
-                : this.x,
+                  ? dashboard_properties.dashlet_min_size[0]
+                  : this.x,
             this.y == dashboard_properties.MAX
                 ? grid_v.y - Math.abs(pos_v.y) + 1
                 : this.y == dashboard_properties.GROW
-                ? dashboard_properties.dashlet_min_size[1]
-                : this.y
+                  ? dashboard_properties.dashlet_min_size[1]
+                  : this.y,
         );
     }
 
@@ -331,7 +331,7 @@ class Vec {
     compute_grow_by(size_v: Vec) {
         return new Vec(
             size_v.x != dashboard_properties.GROW ? 0 : this.x < 0 ? -1 : 1,
-            size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1
+            size_v.y != dashboard_properties.GROW ? 0 : this.y < 0 ? -1 : 1,
         );
     }
 
@@ -405,7 +405,7 @@ function calculate_dashlets() {
         left: number,
         top: number,
         right: number,
-        bottom: number
+        bottom: number,
     ) {
         let x, y;
         // Try if all needed squares are free
@@ -572,16 +572,16 @@ let g_editing = false;
 
 export function toggle_dashboard_edit(
     edit_text?: string,
-    display_text?: string
+    display_text?: string,
 ) {
     g_editing = !g_editing;
 
     // Toggle the page menu elements
     const toggle_suggestion = document.getElementById(
-        "menu_suggestion_toggle_edit"
+        "menu_suggestion_toggle_edit",
     );
     const toggle_shortcut = document.getElementById(
-        "menu_shortcut_toggle_edit"
+        "menu_shortcut_toggle_edit",
     );
     const toggle_entry = document.getElementById("menu_entry_toggle_edit");
 
@@ -598,7 +598,7 @@ export function toggle_dashboard_edit(
         if (toggle_suggestion)
             (
                 toggle_suggestion.querySelector(
-                    "img.emblem"
+                    "img.emblem",
                 ) as HTMLImageElement
             ).src = icon_disable;
         (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
@@ -610,7 +610,7 @@ export function toggle_dashboard_edit(
         if (toggle_suggestion)
             (
                 toggle_suggestion.querySelector(
-                    "img.emblem"
+                    "img.emblem",
                 ) as HTMLImageElement
             ).src = icon_trans;
         (toggle_shortcut!.querySelector("img.emblem") as HTMLImageElement).src =
@@ -620,7 +620,7 @@ export function toggle_dashboard_edit(
     }
 
     const dashlet_divs = document.getElementsByClassName(
-        "dashlet"
+        "dashlet",
     ) as HTMLCollectionOf<HTMLElement>;
     for (let i = 0; i < dashlet_divs.length; i++)
         dashlet_toggle_edit(dashlet_divs[i]);
@@ -664,7 +664,7 @@ function render_sizer(
     nr: number,
     i: number,
     anchor_id: number,
-    size: number
+    size: number,
 ) {
     // 0 ~ X, 1 ~ Y
     const orientation = i ? "height" : "width";
@@ -721,7 +721,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         set_control_size(
             controls,
             dashlet_obj.clientWidth,
-            dashlet_obj.clientHeight
+            dashlet_obj.clientHeight,
         );
 
         const d_width = Math.trunc(dashlet_obj.clientWidth);
@@ -752,7 +752,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
         const create_a_button = function (
             className: string,
             title: string,
-            onclick: () => void
+            onclick: () => void,
         ) {
             const element = document.createElement("a");
             element.className = className;
@@ -766,7 +766,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             const anchor = create_a_button(
                 "anchor anchor" + i,
                 "Click to start growing from here",
-                () => toggle_anchor(nr, i)
+                () => toggle_anchor(nr, i),
             );
             if (anchor_id == i) {
                 anchor.className += " on";
@@ -786,7 +786,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
                 const back_url = makeuri(
                     {},
                     window.location.href,
-                    "dashboard.py"
+                    "dashboard.py",
                 );
                 location.href = makeuri_contextless(
                     {
@@ -794,7 +794,7 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
                         id: nr,
                         back: back_url,
                     },
-                    target
+                    target,
                 );
             };
         };
@@ -806,8 +806,8 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             create_a_button(
                 "edit",
                 "Edit properties of this element",
-                click_actions("edit_dashlet.py")
-            )
+                click_actions("edit_dashlet.py"),
+            ),
         );
 
         // Add clone dashlet button
@@ -815,8 +815,8 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             create_a_button(
                 "clone",
                 "Clone this element",
-                click_actions("clone_dashlet.py")
-            )
+                click_actions("clone_dashlet.py"),
+            ),
         );
 
         // Add delete dashlet button
@@ -824,9 +824,9 @@ function dashlet_toggle_edit(dashlet_obj: HTMLElement, edit?: boolean) {
             create_a_button("del", "Delete this element", () =>
                 confirm_dialog(
                     {text: "Do you really want to delete this element?"},
-                    click_actions("delete_dashlet.py")
-                )
-            )
+                    click_actions("delete_dashlet.py"),
+                ),
+            ),
         );
 
         const first_control = centered_controls.firstChild;
@@ -927,7 +927,7 @@ function toggle_anchor(nr: number, anchor_id: number) {
 // use the current effective size
 function calculate_relative_dashlet_coords(
     nr: number,
-    anchor_id: number | string | undefined = undefined
+    anchor_id: number | string | undefined = undefined,
 ) {
     const dashlet = dashboard_properties.dashlets[nr];
 
@@ -1141,7 +1141,7 @@ function persist_dashlet_pos(nr: number) {
             "Error: Invalid element coordinates found. Please report " +
                 "this issue (" +
                 JSON.stringify(dashlet) +
-                ")."
+                ").",
         );
         return;
     }
@@ -1164,7 +1164,7 @@ function persist_dashlet_pos(nr: number) {
             handler_data: null,
             error_handler: undefined,
             add_ajax_id: false,
-        }
+        },
     );
 }
 
@@ -1227,7 +1227,7 @@ function resize_dashlet_start(event: MouseEvent) {
 }
 
 function get_horizontal_direction(
-    resizer: HTMLElement
+    resizer: HTMLElement,
 ): "left" | "right" | void {
     if (
         has_class(resizer, "resize0_0") ||
@@ -1345,7 +1345,7 @@ function resize_dashlet(event: MouseEvent): true | void {
     toggle_slim_controls(
         document.getElementById("dashlet_controls_" + nr)!,
         new_width,
-        new_height
+        new_height,
     );
 
     // Calculates new data for the internal coord structure
@@ -1372,7 +1372,7 @@ function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
     if (typeof reload_on_resize[nr] != "undefined") {
         const base_url = reload_on_resize[nr];
         const iframe = document.getElementById(
-            "dashlet_iframe_" + nr
+            "dashlet_iframe_" + nr,
         ) as HTMLFrameElement;
         iframe.src =
             base_url +
@@ -1423,7 +1423,7 @@ export function register_event_handlers() {
         function (e) {
             return drag_dashlet_stop(e) && resize_dashlet_stop(e);
         },
-        document
+        document,
     );
 }
 
@@ -1433,7 +1433,7 @@ export function chart_pie(
     radius: number,
     color: string | CanvasGradient | CanvasPattern,
     right_side: boolean,
-    pie_diameter: number
+    pie_diameter: number,
 ) {
     let context = (
         document.getElementById(pie_id + "_stats") as HTMLCanvasElement
@@ -1454,7 +1454,7 @@ export function chart_pie(
             (pie_d / 2) * radius,
             1.5 * Math.PI,
             0.5 * Math.PI,
-            false
+            false,
         );
     else
         context.arc(
@@ -1463,7 +1463,7 @@ export function chart_pie(
             (pie_d / 2) * radius,
             0.5 * Math.PI,
             1.5 * Math.PI,
-            false
+            false,
         );
     context.closePath();
     context.fill();
@@ -1474,7 +1474,7 @@ export function chart_pie(
 function toggle_slim_controls(
     controls_obj: HTMLElement,
     width: number,
-    height: number
+    height: number,
 ) {
     const thresholds = {} as Thresholds;
     for (const key in dashboard_properties.slim_editor_thresholds) {

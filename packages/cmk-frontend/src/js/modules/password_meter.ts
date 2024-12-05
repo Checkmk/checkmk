@@ -46,25 +46,25 @@ export async function initPasswordStrength() {
             ) {
                 console.error(
                     "Found meter without a parentElement, skipping: ",
-                    meter
+                    meter,
                 );
                 continue;
             }
             const passwordFieldList =
                 meter.parentElement.parentElement.querySelectorAll(
-                    "input[type=password]"
+                    "input[type=password]",
                 ) as NodeListOf<HTMLInputElement>;
             if (passwordFieldList.length == 0) {
                 console.error(
                     "Could not find the password field for the password meter!",
-                    meter
+                    meter,
                 );
                 continue;
             }
             if (passwordFieldList.length > 1) {
                 console.error(
                     "Found multiple password fields for the password meter!",
-                    meter
+                    meter,
                 );
                 continue;
             }
@@ -91,7 +91,7 @@ export async function initPasswordStrength() {
                 // The strings are stored in the data attributes, since we currently have the
                 // translations only on the backend...
                 const score_string = meter.attributes.getNamedItem(
-                    "data-password_strength_" + score.toString()
+                    "data-password_strength_" + score.toString(),
                 )!.value;
                 /* eslint-disable no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 passwordText.innerHTML = score_string;

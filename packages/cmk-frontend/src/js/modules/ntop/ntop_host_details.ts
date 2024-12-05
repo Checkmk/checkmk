@@ -82,7 +82,7 @@ export class HostTabs extends TabsBar {
             tab_id =>
                 ((
                     this.get_tab_by_id(tab_id) as ABCAlertsTab
-                )._alerts_page.current_ntophost = this.current_ntophost)
+                )._alerts_page.current_ntophost = this.current_ntophost),
         );
         selectAll("." + ifid_dep)
             .data()
@@ -128,12 +128,12 @@ abstract class NtopTab extends Tab<HostTabs> {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             this.get_post_body(),
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
             this.get_post_body(),
-            data => this._update_data(data)
+            data => this._update_data(data),
         );
     }
 
@@ -149,8 +149,8 @@ abstract class NtopTab extends Tab<HostTabs> {
                 {},
                 this._tabs_bar.get_current_ntophost_uri_dict(),
                 this.get_current_ifid_uri_dict(),
-                this.get_current_vlanid_uri_dict()
-            )
+                this.get_current_vlanid_uri_dict(),
+            ),
         );
         return url_params.toString();
     }
@@ -205,7 +205,7 @@ export class HostTab extends NtopTab {
         table_figure.set_post_url_and_body(this.post_url, this.get_post_body());
         table_figure.scheduler.set_update_interval(60);
         table_figure.subscribe_post_render_hook(data =>
-            this._update_next_post_url(data)
+            this._update_next_post_url(data),
         );
         table_figure.initialize(false);
 
@@ -215,7 +215,7 @@ export class HostTab extends NtopTab {
     override update_post_body() {
         this._figures["host_data"].set_post_url_and_body(
             this.post_url,
-            this.get_post_body()
+            this.get_post_body(),
         );
     }
 
@@ -225,7 +225,7 @@ export class HostTab extends NtopTab {
             this.post_url,
             this.get_post_body() +
                 "&_previous_data=" +
-                JSON.stringify(data["meta"]["data"])
+                JSON.stringify(data["meta"]["data"]),
         );
     }
 }
@@ -248,12 +248,12 @@ class TrafficTab extends NtopTab {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             post_body,
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
             post_body,
-            data => this._update_data(data)
+            data => this._update_data(data),
         );
 
         // One table for the figures
@@ -301,12 +301,12 @@ class PacketsTab extends NtopTab {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             post_body,
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
             post_body,
-            data => this._update_data(data)
+            data => this._update_data(data),
         );
     }
 
@@ -341,12 +341,12 @@ class PortsTab extends NtopTab {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             post_body,
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
             post_body,
-            data => this._update_data(data)
+            data => this._update_data(data),
         );
     }
 
@@ -435,12 +435,12 @@ class PeersTab extends NtopTab {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             post_body,
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
             post_body,
-            data => this._update_data(data)
+            data => this._update_data(data),
         );
 
         // crossfilter is globally defined
@@ -636,7 +636,7 @@ class ApplicationsTab extends NtopTab {
         this._multi_data_fetcher.add_fetch_operation(
             this.post_url,
             post_body,
-            120
+            120,
         );
         this._multi_data_fetcher.subscribe_hook(
             this.post_url,
@@ -644,7 +644,7 @@ class ApplicationsTab extends NtopTab {
             data => {
                 this._update_data(data);
                 this._update_gui();
-            }
+            },
         );
     }
 
@@ -741,11 +741,11 @@ class NtophostEngagedAlertsTab extends EngagedAlertsTab {
 
     _filter_entity(
         entity_val: string,
-        this_reference: NtophostEngagedAlertsTab
+        this_reference: NtophostEngagedAlertsTab,
     ) {
         return (
             entity_val.indexOf(
-                (<HostTabs>this_reference._tabs_bar).current_ntophost
+                (<HostTabs>this_reference._tabs_bar).current_ntophost,
             ) == -1
         );
     }
@@ -774,12 +774,12 @@ function _initialize_alerts_tab(instance: ABCAlertsTab) {
     dimension.filter(d => {
         return (
             (d as unknown as Alert).msg.indexOf(
-                (<HostTabs>instance._tabs_bar).current_ntophost
+                (<HostTabs>instance._tabs_bar).current_ntophost,
             ) != -1
         );
     });
     _add_item_link(instance);
     instance._alerts_page.subscribe_post_render_hook(data =>
-        update_item_link(instance, data["ntop_link"])
+        update_item_link(instance, data["ntop_link"]),
     );
 }

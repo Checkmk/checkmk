@@ -83,7 +83,7 @@ function table_init_rowselect(oTable: HTMLElement) {
 // Container is an DOM element to search below or a list of DOM elements
 // to search below
 function get_all_checkboxes(
-    container: HTMLElement | HTMLElement[] | HTMLDocument
+    container: HTMLElement | HTMLElement[] | HTMLDocument,
 ) {
     const checkboxes: HTMLInputElement[] = [];
     let childs;
@@ -128,7 +128,7 @@ function toggle_box(_e: Event, elem: HTMLInputElement) {
 // function for each cell
 function iter_cells(
     checkbox: HTMLInputElement,
-    func: (elem: HTMLElement) => void
+    func: (elem: HTMLElement) => void,
 ) {
     let num_columns = parseInt(checkbox.value);
     // Now loop the next N cells to call the func for each cell
@@ -246,7 +246,7 @@ function toggle_row(e: Event, elem: HTMLElement) {
 function set_rowselection(
     action: string,
     rows: string[],
-    post_selection_functions: FunctionSpec[] = []
+    post_selection_functions: FunctionSpec[] = [],
 ) {
     call_ajax("ajax_set_rowselection.py", {
         method: "POST",
@@ -261,7 +261,7 @@ function set_rowselection(
             rows.join(","),
         response_handler: function (_data: unknown, _response: unknown) {
             post_selection_functions.forEach(f_spec =>
-                f_spec.function(...f_spec.arguments)
+                f_spec.function(...f_spec.arguments),
             );
         },
     });
@@ -309,7 +309,7 @@ export function toggle_all_rows(obj?: HTMLElement | HTMLElement[]) {
     }
 
     const entry = document.getElementById(
-        "menu_entry_checkbox_selection"
+        "menu_entry_checkbox_selection",
     ) as HTMLDivElement;
     const img: HTMLImageElement | null = entry
         ? entry.getElementsByTagName("img")[0]
@@ -330,7 +330,7 @@ function remove_selected_rows(elems: HTMLInputElement[]) {
     for (let i = 0; i < elems.length; i++) {
         elems[i].checked = false;
         const row_pos = selection_properties.selected_rows.indexOf(
-            elems[i].name
+            elems[i].name,
         );
         if (row_pos > -1) selection_properties.selected_rows.splice(row_pos, 1);
     }
@@ -403,7 +403,7 @@ export function toggle_group_rows(checkbox: HTMLInputElement) {
 
 export function update_bulk_moveto(val: string) {
     const fields = document.getElementsByClassName(
-        "bulk_moveto"
+        "bulk_moveto",
     ) as HTMLCollectionOf<HTMLSelectElement>;
     for (let i = 0; i < fields.length; i++)
         for (let a = 0; a < fields[i].options.length; a++)
@@ -414,7 +414,7 @@ export function update_bulk_moveto(val: string) {
 export function execute_bulk_action_for_single_host(
     elem: HTMLElement,
     action_fct: () => void,
-    action_args: any[]
+    action_args: any[],
 ) {
     const td =
         elem.tagName === "TD"

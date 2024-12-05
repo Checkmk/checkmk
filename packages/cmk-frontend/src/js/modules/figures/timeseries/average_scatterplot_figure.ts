@@ -79,7 +79,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         //          result_dimension -> date_dimension
         const filter_dimension = this._crossfilter.dimension(d => d);
         const timestamp_dimension = this._crossfilter.dimension<number>(
-            d => d.timestamp
+            d => d.timestamp,
         );
 
         // Find focused scatter point and highlight it
@@ -89,7 +89,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
             event.layerX - this.margin.left,
             //@ts-ignore
             event.layerX - this.margin.top,
-            10
+            10,
         );
         this._selected_scatterpoint = scatter_point;
 
@@ -100,7 +100,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
             // Highlight all incidents, based on this scatterpoint's label
             const ctx = scatter_plot.canvas!.node()!.getContext("2d")!;
             const points = scatter_plot.transformed_data.filter(
-                d => d.label == scatter_point.label
+                d => d.label == scatter_point.label,
             );
             const line = d3_line<TransformedData>()
                 .x(d => d.scaled_x)
@@ -122,7 +122,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
                 3,
                 0,
                 Math.PI * 2,
-                false
+                false,
             );
             ctx.fillStyle = this._get_css("fill", "circle", [
                 "scatterdot",
@@ -159,12 +159,12 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         // Get scatter points for this date
         filter_dimension.filter(
             //@ts-ignore
-            d => d.timestamp == mean_point.timestamp && d.tag == "scatter"
+            d => d.timestamp == mean_point.timestamp && d.tag == "scatter",
         );
         const scatter_matches: TransformedData[] =
             timestamp_dimension.top(Infinity);
         scatter_matches.sort((first, second) =>
-            Number(first.value > second.value)
+            Number(first.value > second.value),
         );
         const top_matches = scatter_matches.slice(-5, -1).reverse();
         const bottom_matches = scatter_matches.slice(0, 4).reverse();
@@ -178,7 +178,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
             bottom_matches,
             mean_point,
             median_point,
-            scatter_point
+            scatter_point,
         );
 
         filter_dimension.dispose();
@@ -202,7 +202,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
                     d3_line()([
                         [x, 0],
                         [x, this.plot_size.height],
-                    ])
+                    ]),
                 )
                 .attr("pointer-events", "none");
         }
@@ -214,7 +214,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         bottom_matches: TransformedData[],
         mean_point: TransformedData,
         median_point: TransformedData,
-        scatterpoint: TransformedData | undefined
+        scatterpoint: TransformedData | undefined,
     ) {
         this._tooltip.selectAll("table").remove();
 
@@ -223,7 +223,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         const date_row = table.append("tr").classed("date", true);
         date_row.append("td").text(String(mean_point.date)).attr("colspan", 2);
         const formatter = plot_render_function(
-            getIn(this, "_subplots", 0, "definition")
+            getIn(this, "_subplots", 0, "definition"),
         );
 
         const mean_row = table.append("tr").classed("mean", true);

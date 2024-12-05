@@ -9,10 +9,10 @@ import {add_class, remove_class} from "./utils";
 export function timeline_hover(
     timeline_nr: number,
     row_nr: number,
-    onoff: number
+    onoff: number,
 ) {
     const row = document.getElementById(
-        "timetable_" + timeline_nr + "_entry_" + row_nr
+        "timetable_" + timeline_nr + "_entry_" + row_nr,
     );
     if (!row) return;
 
@@ -26,10 +26,10 @@ export function timeline_hover(
 export function timetable_hover(
     timeline_nr: number,
     row_nr: number,
-    onoff: number
+    onoff: number,
 ) {
     const slice = document.getElementById(
-        "timeline_" + timeline_nr + "_entry_" + row_nr
+        "timeline_" + timeline_nr + "_entry_" + row_nr,
     );
     if (!slice) return;
 

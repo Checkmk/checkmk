@@ -41,7 +41,7 @@ export class NodevisWorld {
         callback_update_data: () => void,
         callback_update_browser_url: () => void,
         callback_save_layout: () => void,
-        callback_delete_layout: () => void
+        callback_delete_layout: () => void,
     ) {
         this.root_div = root_div;
         this.viewport = viewport;
@@ -77,7 +77,7 @@ export class InputRangeOptions {
         step: number,
         min: number,
         max: number,
-        default_value: number
+        default_value: number,
     ) {
         this.id = id;
         this.title = title;
@@ -130,7 +130,7 @@ export class ComputationOptions {
         merge_nodes = false,
         show_services: "all" | "none" | "only_problems" = "all",
         hierarchy: "flat" | "full" = "full",
-        enforce_hierarchy_update = false
+        enforce_hierarchy_update = false,
     ) {
         this.merge_nodes = merge_nodes;
         this.show_services = show_services;
@@ -146,7 +146,7 @@ export class OverlaysConfig {
     constructor(
         available_layers: string[] = [],
         overlays: Record<string, OverlayConfig> = {},
-        computation_options: ComputationOptions = new ComputationOptions()
+        computation_options: ComputationOptions = new ComputationOptions(),
     ) {
         this.available_layers = available_layers;
         this.overlays = overlays;
@@ -164,12 +164,12 @@ export class OverlaysConfig {
             options.merge_nodes,
             options.show_services,
             options.hierarchy as "flat" | "full",
-            options.enforce_hierarchy_update
+            options.enforce_hierarchy_update,
         );
         return new OverlaysConfig(
             fake_object.available_layers,
             overlays,
-            computation_options
+            computation_options,
         );
     }
 }
@@ -350,7 +350,7 @@ export class NodeConfig {
         this.hierarchy = this._create_hierarchy(serialized_node_config);
         this.nodes_by_id = this._create_nodes_by_id_lookup(this.hierarchy);
         this.link_info = this._create_link_references(
-            serialized_node_config.links
+            serialized_node_config.links,
         );
     }
 
@@ -363,10 +363,10 @@ export class NodeConfig {
     }
 
     _create_hierarchy(
-        serialized_node_config: SerializedNodeConfig
+        serialized_node_config: SerializedNodeConfig,
     ): NodeVisHierarchyNode<NodeData> {
         const hierarchy = d3hierarchy<NodeData>(
-            serialized_node_config.hierarchy
+            serialized_node_config.hierarchy,
         ) as NodeVisHierarchyNode<NodeData>;
         // Initialize default info of each node
         hierarchy.descendants().forEach(node => {
@@ -388,7 +388,7 @@ export class NodeConfig {
     }
 
     _create_link_references(
-        link_info: SerializedNodevisLink[] | null
+        link_info: SerializedNodevisLink[] | null,
     ): NodevisLink[] {
         const links: NodevisLink[] = [];
         if (link_info != null) {

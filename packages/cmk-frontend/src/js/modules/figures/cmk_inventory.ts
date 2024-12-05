@@ -57,7 +57,7 @@ export class InventoryFigure extends TextFigure<
 
         const font_size = clamp(
             Math.min(this.plot_size.width / 5, (this.plot_size.height * 2) / 3),
-            [12, 50]
+            [12, 50],
         );
 
         const link = this.plot

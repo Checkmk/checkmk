@@ -6,7 +6,7 @@
 
 export async function insert_before(
     elementToMove: HTMLElement,
-    options: {[key: string]: string}
+    options: {[key: string]: string},
 ) {
     if (!("targetElementId" in options)) {
         throw new Error("Missing required option 'targetElementId'");

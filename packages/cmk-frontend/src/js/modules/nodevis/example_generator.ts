@@ -127,7 +127,7 @@ export class LayoutStyleExampleGenerator {
 
         this._style_hierarchy = this._create_example_hierarchy(
             this._example_options_spec,
-            this._example_options
+            this._example_options,
         );
         this._fake_world = this._create_fake_world();
     }
@@ -194,7 +194,7 @@ export class LayoutStyleExampleGenerator {
         this._update_viewport_visibility();
         this._style_hierarchy = this._create_example_hierarchy(
             this._example_options_spec,
-            this._example_options
+            this._example_options,
         );
 
         let style_class: typeof AbstractLayoutStyle | null;
@@ -226,7 +226,7 @@ export class LayoutStyleExampleGenerator {
             this._style_config,
             this._style_hierarchy,
             //@ts-ignore
-            this._viewport_selection
+            this._viewport_selection,
         );
         this._style_instance.show_style_configuration = () => null;
         this._update_example();
@@ -250,7 +250,7 @@ export class LayoutStyleExampleGenerator {
                 () => {
                     if (this._style_instance)
                         this._style_instance.reset_default_options();
-                }
+                },
             );
     }
 
@@ -346,7 +346,7 @@ export class LayoutStyleExampleGenerator {
                 this._example_options[d.id] = parseInt(event.target.value);
                 this._style_hierarchy = this._create_example_hierarchy(
                     this._example_options_spec,
-                    this._example_options
+                    this._example_options,
                 );
                 this.style_instance().style_root_node =
                     this._style_hierarchy.descendants()[0];
@@ -405,7 +405,7 @@ export class LayoutStyleExampleGenerator {
                     rect_x +
                     "," +
                     rect_y +
-                    ")"
+                    ")",
             );
             let default_scale = this._viewport_selection
                 .selectAll<SVGTextElement, null>("text")
@@ -429,7 +429,7 @@ export class LayoutStyleExampleGenerator {
         _example_settings: {
             [name: string]: StyleOptionSpec;
         },
-        example_options: StyleOptionValues
+        example_options: StyleOptionValues,
     ): NodevisNode {
         let id_counter = 0;
 
@@ -439,11 +439,14 @@ export class LayoutStyleExampleGenerator {
         function _add_hierarchy_children(
             parent_node: NodeData,
             cancel_delta: number,
-            cancel_chance: number
+            cancel_chance: number,
         ) {
             parent_node.children = [];
             for (;;) {
                 if (
+                    // 2365: Operator '>=' cannot be applied to types 'number'
+                    // and 'number | boolean'.
+                    // @ts-ignore
                     generated_nodes >= maximum_nodes ||
                     (cancel_chance < 1 && cancel_chance - Math.random() <= 0)
                 ) {
@@ -456,7 +459,7 @@ export class LayoutStyleExampleGenerator {
                 _add_hierarchy_children(
                     new_child,
                     cancel_delta,
-                    cancel_chance - cancel_delta
+                    cancel_chance - cancel_delta,
                 );
                 parent_node.children.push(new_child);
             }
@@ -524,7 +527,7 @@ export class LayoutStyleExampleGenerator {
             .data<NodevisNode>(
                 hierarchy.descendants().filter(d => {
                     return !d.data.current_positioning.hide_node_link;
-                })
+                }),
             );
         links
             .exit()

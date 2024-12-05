@@ -18,7 +18,7 @@ export class TabsBar {
     constructor(div_selector: string) {
         this._div_selector = div_selector;
         this._div_selection = select<HTMLDivElement, unknown>(
-            this._div_selector
+            this._div_selector,
         );
         this._div_selection.classed("cmk_tab", true);
         this._tabs_by_id = {};

@@ -146,7 +146,7 @@ export function fix_visibility() {
                     if (
                         hide_topics.indexOf(
                             myFormTableRow.childNodes[0].childNodes[0]
-                                .textContent!
+                                .textContent!,
                         ) > -1
                     )
                         myFormTableRow.style.display = "none";
@@ -161,7 +161,7 @@ export function fix_visibility() {
 /* Make attributes visible or not when clicked on a checkbox */
 export function toggle_attribute(
     oCheckbox: HTMLInputElement,
-    attrname: string
+    attrname: string,
 ) {
     const oEntry = document.getElementById("attr_entry_" + attrname);
     const oDefault = document.getElementById("attr_default_" + attrname);
@@ -185,7 +185,7 @@ function get_containers() {
     return document
         .getElementById("form_edit_host")
         ?.querySelectorAll(
-            "table.nform"
+            "table.nform",
         ) as NodeListOf<HTMLTableSectionElement>;
 }
 
@@ -255,7 +255,7 @@ function get_effective_tags() {
             current_tags.push(add_tag_id);
             if (dialog_properties.aux_tags_by_tag[add_tag_id]) {
                 current_tags = current_tags.concat(
-                    dialog_properties.aux_tags_by_tag[add_tag_id]
+                    dialog_properties.aux_tags_by_tag[add_tag_id],
                 );
             }
         }
@@ -282,7 +282,7 @@ export function toggle_container(id: string) {
 
 export function open_folder(
     event: Event | undefined,
-    link: string
+    link: string,
 ): false | void {
     const target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
@@ -296,7 +296,7 @@ export function open_folder(
 export function toggle_folder(
     _event: Event | undefined,
     oDiv: HTMLElement,
-    on: boolean
+    on: boolean,
 ) {
     const obj = oDiv.parentNode as HTMLElement;
     const id = obj.id.substr(7);
@@ -336,13 +336,13 @@ export function toggle_rule_condition_type(select_id: string) {
 export function toggle_test_notification_visibility(
     source: string,
     target: string,
-    hide_options: boolean
+    hide_options: boolean,
 ) {
     const source_element = document.getElementsByClassName(
-        source
+        source,
     )[0] as HTMLInputElement;
     const target_element = document.getElementsByClassName(
-        target
+        target,
     )[0] as HTMLInputElement;
     if (source_element && target_element) {
         if (has_class(target_element, "active")) {
@@ -356,13 +356,13 @@ export function toggle_test_notification_visibility(
 
 function toggle_test_notification_options(hide_options: boolean) {
     const service_choice = document.getElementById(
-        "general_opts_d_on_service_hint"
+        "general_opts_d_on_service_hint",
     ) as HTMLDivElement;
     const service_states = document.getElementById(
-        "general_opts_p_simulation_mode_1_d_svc_states"
+        "general_opts_p_simulation_mode_1_d_svc_states",
     ) as HTMLDivElement;
     const host_states = document.getElementById(
-        "general_opts_p_simulation_mode_1_d_host_states"
+        "general_opts_p_simulation_mode_1_d_host_states",
     ) as HTMLDivElement;
     if (service_choice && service_states && host_states) {
         const service_choice_tr = service_choice.parentNode!
@@ -389,7 +389,7 @@ function toggle_test_notification_options(hide_options: boolean) {
 
 function toggle_test_notification_submit(hide_options: boolean) {
     const submit_button = document.getElementById(
-        "_test_host_notifications"
+        "_test_host_notifications",
     ) as HTMLDivElement;
     if (submit_button) {
         if (hide_options) {
@@ -405,7 +405,7 @@ type MessageType = "crit" | "warn" | "info" | "success";
 export function message(
     message_text: string,
     message_type: MessageType,
-    del_var: string
+    del_var: string,
 ) {
     const iconFilenames = {
         crit: "icon_alert.crit.svg",
@@ -432,7 +432,7 @@ export function message(
         didOpen: () => {
             // Remove focus on CloseButton
             const closeButton = document.querySelector(
-                ".swal2-close"
+                ".swal2-close",
             ) as HTMLButtonElement;
             if (closeButton) {
                 closeButton.blur();
@@ -456,6 +456,6 @@ export function message(
     window.history.replaceState(
         null,
         "",
-        window.location.pathname + "?" + params.toString()
+        window.location.pathname + "?" + params.toString(),
     );
 }

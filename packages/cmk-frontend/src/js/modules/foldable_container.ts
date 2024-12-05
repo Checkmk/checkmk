@@ -12,7 +12,7 @@ export function toggle(
     treename: string,
     id: string,
     fetch_url: string,
-    save_state: boolean
+    save_state: boolean,
 ) {
     const img = document.getElementById("treeimg." + treename + "." + id);
     const box = document.getElementById("tree." + treename + "." + id);
@@ -26,7 +26,7 @@ function toggle_tree_state(
     name: string,
     oContainer: HTMLElement | null,
     fetch_url: string,
-    save_state: boolean
+    save_state: boolean,
 ) {
     const outer_container = oContainer!.parentNode as HTMLElement | null;
     let state: "on" | "off";
@@ -40,7 +40,7 @@ function toggle_tree_state(
                 method: "GET",
                 response_handler: function (
                     handler_data: {container: HTMLElement},
-                    response_body: string
+                    response_body: string,
                 ) {
                     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                     handler_data.container.innerHTML = response_body;
@@ -64,7 +64,7 @@ function toggle_tree_state(
 export function persist_tree_state(
     tree: string,
     name: string,
-    state: "on" | "off"
+    state: "on" | "off",
 ) {
     call_ajax(
         "tree_openclose.py?tree=" +
@@ -72,6 +72,6 @@ export function persist_tree_state(
             "&name=" +
             encodeURIComponent(name) +
             "&state=" +
-            state
+            state,
     );
 }

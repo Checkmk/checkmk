@@ -16,7 +16,7 @@ interface JsonEncodedCredential {
 }
 
 function parseCreationOptionsFromJSON(
-    credentialcreationoptions: any
+    credentialcreationoptions: any,
 ): CredentialCreationOptions {
     /* The data comes from the server now as JSON, but the browser API likes
      * native types like Uint8Arrays... There is a draft for the 3rd spec to
@@ -27,13 +27,13 @@ function parseCreationOptionsFromJSON(
         publicKey: {
             challenge: Uint8Array.from(
                 urlsafe_base64_decode(options["challenge"]),
-                c => c.charCodeAt(0)
+                c => c.charCodeAt(0),
             ),
             rp: options["rp"],
             user: {
                 id: Uint8Array.from(
                     urlsafe_base64_decode(options["user"]["id"]),
-                    c => c.charCodeAt(0)
+                    c => c.charCodeAt(0),
                 ),
                 name: options["user"]["name"],
                 displayName: options["user"]["displayName"],
@@ -44,9 +44,9 @@ function parseCreationOptionsFromJSON(
                 (e: JsonEncodedCredential) => ({
                     type: e["type"],
                     id: Uint8Array.from(urlsafe_base64_decode(e["id"]), c =>
-                        c.charCodeAt(0)
+                        c.charCodeAt(0),
                     ),
-                })
+                }),
             ),
         },
     };
@@ -58,15 +58,15 @@ function parseRequestOptionsFromJSON(data: any): CredentialRequestOptions {
         publicKey: {
             challenge: Uint8Array.from(
                 urlsafe_base64_decode(options["challenge"]),
-                c => c.charCodeAt(0)
+                c => c.charCodeAt(0),
             ),
             allowCredentials: options["allowCredentials"].map(
                 (e: JsonEncodedCredential) => ({
                     type: e["type"],
                     id: Uint8Array.from(urlsafe_base64_decode(e["id"]), c =>
-                        c.charCodeAt(0)
+                        c.charCodeAt(0),
                     ),
-                })
+                }),
             ),
         },
     };
@@ -87,11 +87,11 @@ export function register() {
             if (!("credentials" in navigator)) {
                 throw new DOMException(
                     "navigator does not have credentials property, probably no https?",
-                    "SecurityError"
+                    "SecurityError",
                 );
             }
             return navigator.credentials.create(
-                parseCreationOptionsFromJSON(options)
+                parseCreationOptionsFromJSON(options),
             );
         })
         .then(function (attestation) {
@@ -105,16 +105,16 @@ export function register() {
                     attestationObject: btoa(
                         String.fromCharCode(
                             ...new Uint8Array(
-                                attestationPkcResponse.attestationObject
-                            )
-                        )
+                                attestationPkcResponse.attestationObject,
+                            ),
+                        ),
                     ),
                     clientDataJSON: btoa(
                         String.fromCharCode(
                             ...new Uint8Array(
-                                attestationPkcResponse.clientDataJSON
-                            )
-                        )
+                                attestationPkcResponse.clientDataJSON,
+                            ),
+                        ),
                     ),
                 }),
             });
@@ -136,7 +136,7 @@ export function register() {
                         "Registration failed (" +
                             text +
                             "). A Checkmk administrator may have a look at " +
-                            "<tt>var/log/web.log</tt> to get additional information."
+                            "<tt>var/log/web.log</tt> to get additional information.",
                     );
                 });
             }
@@ -146,19 +146,19 @@ export function register() {
             if (e.name == "SecurityError") {
                 show_error(
                     "Can not enable two-factor authentication. You have to use HTTPS and access " +
-                        "the GUI through a valid domain name (See #13325 for further information)."
+                        "the GUI through a valid domain name (See #13325 for further information).",
                 );
             } else if (e.name == "AbortError") {
                 show_error(
                     "Registration failed - possible reasons are: <ul>" +
                         "<li>You have aborted the registration</li>" +
                         "<li>Your browser does not support the WebAuthn standard</li>" +
-                        "<li>The browser configuration has disabled WebAuthn</li></ul>"
+                        "<li>The browser configuration has disabled WebAuthn</li></ul>",
                 );
             } else if (e.name == "InvalidStateError") {
                 show_error(
                     "Registration failed: The given authenticator is not usable. This may " +
-                        "be due to the repeated use of an already registered authenticator."
+                        "be due to the repeated use of an already registered authenticator.",
                 );
             } else {
                 show_error("Registration failed: " + e.message);
@@ -199,11 +199,11 @@ export function login() {
             if (!("credentials" in navigator)) {
                 throw new DOMException(
                     "navigator does not have credentials property, probably no https?",
-                    "SecurityError"
+                    "SecurityError",
                 );
             }
             return navigator.credentials.get(
-                parseRequestOptionsFromJSON(options)
+                parseRequestOptionsFromJSON(options),
             );
         })
         .then(function (assertion) {
@@ -215,25 +215,25 @@ export function login() {
                 body: JSON.stringify({
                     credentialId: btoa(
                         String.fromCharCode(
-                            ...new Uint8Array(assertionPkc.rawId)
-                        )
+                            ...new Uint8Array(assertionPkc.rawId),
+                        ),
                     ),
                     authenticatorData: btoa(
                         String.fromCharCode(
                             ...new Uint8Array(
-                                assertionResponse.authenticatorData
-                            )
-                        )
+                                assertionResponse.authenticatorData,
+                            ),
+                        ),
                     ),
                     clientDataJSON: btoa(
                         String.fromCharCode(
-                            ...new Uint8Array(assertionResponse.clientDataJSON)
-                        )
+                            ...new Uint8Array(assertionResponse.clientDataJSON),
+                        ),
                     ),
                     signature: btoa(
                         String.fromCharCode(
-                            ...new Uint8Array(assertionResponse.signature)
-                        )
+                            ...new Uint8Array(assertionResponse.signature),
+                        ),
                     ),
                 }),
             });

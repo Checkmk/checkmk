@@ -81,7 +81,7 @@ const default_lookup = {
 export type TranslationKey = keyof typeof default_lookup;
 
 export function set_translations(
-    new_translations: Record<TranslationKey, string>
+    new_translations: Record<TranslationKey, string>,
 ) {
     translations = new_translations;
 }

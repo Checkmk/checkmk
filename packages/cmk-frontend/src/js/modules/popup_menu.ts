@@ -195,7 +195,7 @@ export function toggle_popup(
     data: any,
     onclose: string | null,
     onopen: string | null,
-    resizable: boolean
+    resizable: boolean,
 ) {
     if (active_popup.id) {
         if (active_popup.id === ident) {
@@ -215,13 +215,13 @@ export function toggle_popup(
         }
         const content = generate_menu(
             trigger_obj.parentNode as HTMLElement,
-            resizable
+            resizable,
         );
         generate_colorpicker_body(content, method.varprefix!, method.value!);
     } else if (method.type === "ajax") {
         const content = generate_menu(
             trigger_obj.parentNode as HTMLElement,
-            resizable
+            resizable,
         );
         content.innerHTML =
             '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
@@ -255,7 +255,7 @@ let switch_popup_timeout: null | number = null;
 export function switch_popup_menu_group(
     trigger: HTMLElement,
     group_cls: string,
-    delay: number | null
+    delay: number | null,
 ) {
     const popup = trigger.nextSibling;
 
@@ -268,7 +268,7 @@ export function switch_popup_menu_group(
 
     // Do not open the menu when no other dropdown is open at the moment
     const popups = Array.prototype.slice.call(
-        document.getElementsByClassName(group_cls)
+        document.getElementsByClassName(group_cls),
     );
     if (!popups.some(elem => has_class(elem.parentNode, "active"))) {
         return;
@@ -284,7 +284,7 @@ export function switch_popup_menu_group(
     add_class(popup!.parentNode as HTMLElement, "delayed");
     switch_popup_timeout = window.setTimeout(
         () => switch_popup_menu_group(trigger, group_cls, null),
-        delay
+        delay,
     );
 }
 
@@ -324,7 +324,7 @@ function generate_menu(container: HTMLElement, resizable: boolean) {
 function generate_colorpicker_body(
     content: HTMLElement,
     varprefix: string,
-    value: string
+    value: string,
 ) {
     const picker = document.createElement("div");
     picker.className = "cp-small";
@@ -362,7 +362,7 @@ function handle_render_popup_contents(
         content: HTMLElement;
         event: Event;
     },
-    response_text: string
+    response_text: string,
 ) {
     if (data.content) {
         /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
@@ -451,7 +451,7 @@ export function add_to_visual(visual_type: string, visual_name: string) {
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 export function pagetype_add_to_container(
     page_type: string,
-    page_name: string
+    page_name: string,
 ) {
     const element_type = active_popup.data![0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
@@ -526,7 +526,7 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
      */
     if (!menu_popup) throw new Error("menu_popup shouldn't be null!");
     const topics = menu_popup.getElementsByClassName(
-        "topic"
+        "topic",
     ) as HTMLCollectionOf<HTMLElement>;
     if (topics.length === 0) {
         return;
@@ -552,12 +552,12 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
         // the more button needs to have enough space
         if (ncol === 1) {
             Array.from(topics).forEach(topic =>
-                add_class(topic, "single_column")
+                add_class(topic, "single_column"),
             );
             add_class(menu_popup, "single_column");
         } else if (has_class(menu_popup, "single_column")) {
             Array.from(topics).forEach(topic =>
-                remove_class(topic, "single_column")
+                remove_class(topic, "single_column"),
             );
             remove_class(menu_popup, "single_column");
             resize_mega_menu_popup(menu_popup);
@@ -577,7 +577,7 @@ export function resize_mega_menu_popup(menu_popup: Nullable<HTMLElement>) {
         /* account for the padding of 20px on both sides  */
         const items_width = Math.min(
             maximum_popup_width(),
-            last_item.offsetLeft + last_item.offsetWidth - 20
+            last_item.offsetLeft + last_item.offsetWidth - 20,
         );
         items.style.width = items_width + "px";
         menu_popup.style.width = items_width + 40 + "px";
@@ -642,7 +642,7 @@ export function mega_menu_hide_entries(menu_id: string) {
     const menu = document.getElementById(menu_id);
     const more_is_active = menu?.classList.contains("more");
     const topics = menu?.getElementsByClassName(
-        "topic"
+        "topic",
     ) as HTMLCollectionOf<HTMLElement>;
     Array.from(topics!).forEach(topic => {
         if (topic.classList.contains("extended")) return;

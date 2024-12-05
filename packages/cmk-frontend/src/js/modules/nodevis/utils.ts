@@ -34,7 +34,7 @@ export class DefaultTransition {
     }
 
     static add_transition<GType extends BaseType, Data>(
-        selection: Selection<GType, Data, BaseType, unknown>
+        selection: Selection<GType, Data, BaseType, unknown>,
     ) {
         return selection.transition().duration(DefaultTransition.duration());
     }
@@ -96,7 +96,7 @@ export class NodeMatcher {
 
     _match_by_bi_rule(
         matcher: StyleMatcherConditions,
-        node: NodevisNode
+        node: NodevisNode,
     ): boolean {
         // List matches
         const list_elements = ["aggr_path_name", "aggr_path_id"] as const;
@@ -128,7 +128,7 @@ export class NodeMatcher {
 
     _match_by_generic_attr(
         matcher: StyleMatcherConditions,
-        node: NodevisNode
+        node: NodevisNode,
     ): boolean {
         const match_type = "id";
         if (matcher[match_type] && !matcher[match_type]!.disabled) {
@@ -177,7 +177,7 @@ export function get_bounding_rect(list_of_coords: Coords[]): BoundingRect {
 
 export function get_bounding_rect_of_rotated_vertices(
     vertices: Coords[],
-    rotation_in_rad: number
+    rotation_in_rad: number,
 ): BoundingRect {
     // TODO: check this
     // Vertices with less than 3 elements will fail
@@ -276,7 +276,7 @@ export class SearchFilters {
     }
     get_filter_params() {
         const inputs = this._root_node.selectAll<HTMLInputElement, null>(
-            "input,select"
+            "input,select",
         );
         const params: Record<string, string> = {};
         inputs.each((_d, idx, nodes) => {
@@ -325,7 +325,7 @@ export class LiveSearch {
         // @ts-ignore
         this._interval_id = setInterval(
             () => this._check_update(),
-            this._check_interval
+            this._check_interval,
         );
         this._root_node.attr("onsubmit", "return false");
     }
@@ -419,7 +419,7 @@ export function render_input_range(
     parent: d3Selection,
     range_options: InputRangeOptions,
     value: number,
-    option_changed_callback: (option_id: string, new_value: number) => void
+    option_changed_callback: (option_id: string, new_value: number) => void,
 ) {
     parent
         .selectAll("td.text." + range_options.id)
@@ -436,7 +436,7 @@ export function render_input_range(
             : parseFloat(new_value);
         new_value = Math.min(
             Math.max(new_value, range_options.min),
-            range_options.max
+            range_options.max,
         );
         return new_value;
     }
@@ -459,13 +459,13 @@ export function render_input_range(
                 .on("input", event => {
                     option_changed_callback(
                         range_options.id,
-                        parseFloat(event.target.value)
+                        parseFloat(event.target.value),
                     );
                     render_input_range(
                         parent,
                         range_options,
                         event.target.value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
                 })
                 .on("wheel", event => {
@@ -479,9 +479,9 @@ export function render_input_range(
                         parent,
                         range_options,
                         new_value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
-                })
+                }),
         )
         .property("value", value);
 
@@ -495,7 +495,7 @@ export function render_input_range(
                 .classed(
                     "range_input manual_input ignored_in_livesearch " +
                         range_options.id,
-                    true
+                    true,
                 )
                 .on("change", event => {
                     event.stopPropagation();
@@ -506,9 +506,9 @@ export function render_input_range(
                         parent,
                         range_options,
                         new_value,
-                        option_changed_callback
+                        option_changed_callback,
                     );
-                })
+                }),
         )
         .property("value", value);
 }
@@ -528,7 +528,7 @@ export function render_radio_group(
     group_ident: string,
     options: RadioGroupOption[],
     active_option: string,
-    option_changed_callback: (new_option: string) => void
+    option_changed_callback: (new_option: string) => void,
 ): void {
     const div = selection
         .selectAll("div.radio_group")
@@ -547,7 +547,7 @@ export function render_radio_group(
         .selectAll<HTMLTableElement, string>("table.radio_group tr")
         .data([group_ident], d => d)
         .join(enter =>
-            enter.append("table").classed("radio_group", true).append("tr")
+            enter.append("table").classed("radio_group", true).append("tr"),
         );
 
     const option_cells = row
@@ -568,7 +568,7 @@ export function render_radio_group(
             return option.ident == active_option ? true : null;
         })
         .on("change", (_event, option) =>
-            option_changed_callback(option.ident)
+            option_changed_callback(option.ident),
         );
 
     option_cells
@@ -582,7 +582,7 @@ export function render_radio_group(
 
 export function render_save_delete(
     selection: d3SelectionDiv,
-    buttons: [string, string, string, () => void][]
+    buttons: [string, string, string, () => void][],
 ) {
     const div_save_delete = selection
         .selectAll<HTMLDivElement, null>("div#save_delete")
@@ -590,7 +590,7 @@ export function render_save_delete(
         .join(enter => enter.append("div").attr("id", "save_delete"));
     div_save_delete
         .selectAll<HTMLInputElement, [string, string, () => void]>(
-            "input.save_delete"
+            "input.save_delete",
         )
         .data(buttons)
         .enter()
@@ -615,7 +615,7 @@ export function bound_monitoring_host(node: NodevisNode): string | null {
 
 export function add_basic_quickinfo(
     into_selection: d3SelectionDiv,
-    quickinfo: Quickinfo
+    quickinfo: Quickinfo,
 ): void {
     const table = into_selection
         .selectAll<HTMLTableSectionElement, string>("body table tbody")
@@ -626,7 +626,7 @@ export function add_basic_quickinfo(
                 .append("table")
                 .classed("data", true)
                 .classed("single", true)
-                .append("tbody")
+                .append("tbody"),
         );
 
     let even = "even";
@@ -652,7 +652,7 @@ export function add_basic_quickinfo(
 export function show_tooltip(
     event: {layerX: number; layerY: number},
     tooltip: Tooltip,
-    viewport: Viewport
+    viewport: Viewport,
 ) {
     const viewport_size = viewport.get_size();
 
@@ -674,7 +674,7 @@ export function show_tooltip(
                 .append("label")
                 .classed("link_info", true)
                 .html(d => d)
-                .style("position", "absolute")
+                .style("position", "absolute"),
         )
         .style("left", event.layerX + 10 + "px")
         .style("bottom", viewport_size.height - event.layerY + 30 + "px");

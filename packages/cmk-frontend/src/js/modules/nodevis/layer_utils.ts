@@ -155,5 +155,5 @@ export type AbstractNodeVisConstructor<Type extends TypeWithName> = new (
     a?: any,
     b?: any,
     c?: any,
-    d?: any
+    d?: any,
 ) => Type;

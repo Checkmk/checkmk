@@ -82,7 +82,7 @@ interface SiteData extends FigureData<ABCElement> {
 
 type HexagonContent<
     Geometry = HostGeometry | SiteGeometry,
-    Element = HostElement | SiteElement
+    Element = HostElement | SiteElement,
 > = {geometry: Geometry; elements: Element[]};
 
 export class SiteOverview extends FigureBase<SiteData> {
@@ -228,7 +228,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         FigureBase.prototype.resize.call(this);
         this.svg!.attr("width", this.figure_size.width).attr(
             "height",
-            this.figure_size.height
+            this.figure_size.height,
         );
         this.plot
             .attr("width", this.plot_size.width)
@@ -265,7 +265,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     this._render_hexagon_content(this._hexagon_content!);
                     //@ts-ignore
                     this.tooltip_generator.update_position(event);
-                })
+                }),
         );
     }
 
@@ -292,7 +292,7 @@ export class SiteOverview extends FigureBase<SiteData> {
 
     _compute_host_geometry(
         num_elements: number,
-        box_area: BoxArea
+        box_area: BoxArea,
     ): HostGeometry {
         let box_width = this._max_box_width[this._data.box_scale];
         let num_columns = Math.max(Math.floor(box_area.width / box_width), 1);
@@ -351,7 +351,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         const data = this._crossfilter.allFiltered();
         const geometry = this._compute_host_geometry(
             data.length,
-            this._compute_box_area(this.plot_size)
+            this._compute_box_area(this.plot_size),
         );
 
         return {
@@ -363,13 +363,13 @@ export class SiteOverview extends FigureBase<SiteData> {
     _render_hexagon_content(hexagon_content: HexagonContent) {
         if (this._data.render_mode == SiteOverviewRenderMode.Hosts) {
             this._render_host_hexagons_as_canvas(
-                hexagon_content as HexagonContent<HostGeometry, HostElement>
+                hexagon_content as HexagonContent<HostGeometry, HostElement>,
             );
         } else if (this._data.render_mode == SiteOverviewRenderMode.Alerts) {
             this._render_host_hexagons_as_svg(hexagon_content);
         } else {
             this._render_sites(
-                hexagon_content as HexagonContent<SiteGeometry, SiteElement>
+                hexagon_content as HexagonContent<SiteGeometry, SiteElement>,
             );
         }
     }
@@ -426,7 +426,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     const goodness = 1.0 - badness;
                     const radius_factor = Math.pow(
                         (1.0 - mid_radius) * goodness + mid_radius,
-                        2
+                        2,
                     );
                     d.hexagon_config.push({
                         id: "inner_hexagon",
@@ -460,7 +460,7 @@ export class SiteOverview extends FigureBase<SiteData> {
 
     _render_host_hexagons_as_svg(
         hexagon_content: HexagonContent,
-        transition_duration = 250
+        transition_duration = 250,
     ) {
         const elements = hexagon_content.elements;
         // Prepare Box
@@ -480,7 +480,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                 })
                 .each((_d, idx, nodes) => {
                     this.tooltip_generator.add_support(nodes[idx]);
-                })
+                }),
         );
 
         // render all hexagons
@@ -490,7 +490,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                 // @ts-ignore
                 d => d.hexagon_config,
                 // @ts-ignore
-                d => d.id
+                d => d.id,
             )
             .join(enter => enter.append("path"))
             // @ts-ignore
@@ -520,16 +520,16 @@ export class SiteOverview extends FigureBase<SiteData> {
     }
 
     _render_host_hexagons_as_canvas(
-        hexagon_content: HexagonContent<HostGeometry, HostElement>
+        hexagon_content: HexagonContent<HostGeometry, HostElement>,
     ) {
         const elements = hexagon_content.elements;
         const host_classes_iterable = group(
             elements,
-            (d: HostElement) => d.host_css_class
+            (d: HostElement) => d.host_css_class,
         ).keys();
         const service_classes_iterable = group(
             elements,
-            (d: HostElement) => d.service_css_class
+            (d: HostElement) => d.service_css_class,
         ).keys();
 
         // Obtain all needed fill colors (per state) by creating a respectively classed DOM element
@@ -541,7 +541,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             for (const css_class of iterable) {
                 const tmp_elem = this.svg!.append("path").attr(
                     "class",
-                    "hexagon host_element " + css_class
+                    "hexagon host_element " + css_class,
                 );
                 fill_map[css_class] = tmp_elem.style("fill");
                 tmp_elem.remove();
@@ -583,12 +583,12 @@ export class SiteOverview extends FigureBase<SiteData> {
         if (this._quadtree.size() == 0) return;
         const [x, y] = pointer(
             event,
-            (event.target as HTMLElement).closest("svg")
+            (event.target as HTMLElement).closest("svg"),
         );
         const host = this._quadtree.find(
             (x - this._last_zoom.x) / this._last_zoom.k,
             (y - this._last_zoom.y) / this._last_zoom.k,
-            (this._hexagon_content!.geometry as HostGeometry).radius
+            (this._hexagon_content!.geometry as HostGeometry).radius,
         );
 
         // Only fetch host tooltip if a new host is hovered or if the given tooltip is older than 5s
@@ -606,7 +606,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                             "<h3>" +
                             host.title +
                             "</h3>" +
-                            this._loading_img_html)
+                            this._loading_img_html),
                 );
             }
 
@@ -665,7 +665,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             SVGGElement,
             unknown
         >,
-        geometry: SiteGeometry
+        geometry: SiteGeometry,
     ) {
         const handle_click = function (_event: Event, element: ABCSubElement) {
             if (element.type == "host_element") {
@@ -685,7 +685,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     geometry.hexagon_center_left +
                     "," +
                     geometry.hexagon_center_top +
-                    ")"
+                    ")",
             )
             .style("cursor", "pointer")
             .on("click", handle_click);
@@ -710,7 +710,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     .selectAll("path.hexagon_0")
                     .data([element])
                     .join(enter =>
-                        enter.append("path").classed("hexagon_0", true)
+                        enter.append("path").classed("hexagon_0", true),
                     )
                     .attr("d", hexbin.hexagon(geometry.hexagon_radius * 0.5))
                     .attr("title", element.title)
@@ -721,13 +721,13 @@ export class SiteOverview extends FigureBase<SiteData> {
                     .selectAll("path.hexagon_icon")
                     .data([element])
                     .join(enter =>
-                        enter.append("image").classed("hexagon_icon", true)
+                        enter.append("image").classed("hexagon_icon", true),
                     )
                     .attr(
                         "xlink:href",
                         "themes/modern-dark/images/icon_" +
                             element.css_class +
-                            ".svg"
+                            ".svg",
                     )
                     .attr("width", 24)
                     .attr("height", 24)
@@ -738,7 +738,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                 // element
                 const scale = Math.max(
                     0.5,
-                    Math.pow(element.total.count / largest_element_count, 0.3)
+                    Math.pow(element.total.count / largest_element_count, 0.3),
                 );
 
                 // Now render the parts of an element (cubical sizing)
@@ -757,7 +757,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                         .selectAll<SVGPathElement, unknown>("path.hexagon_" + i)
                         .data([element])
                         .join(enter =>
-                            enter.append("path").classed("hexagon_" + i, true)
+                            enter.append("path").classed("hexagon_" + i, true),
                         )
                         .attr("d", hexbin.hexagon(radius * scale))
                         .attr("title", part.title)
@@ -822,7 +822,7 @@ export class SiteOverview extends FigureBase<SiteData> {
         // Calculate number of columns and rows we need to render all elements
         let num_columns = Math.max(
             Math.floor(box_area.width / max_box_width),
-            1
+            1,
         );
 
         // Rough idea of this algorithm: Increase the number of columns, then calculate the number
@@ -838,7 +838,7 @@ export class SiteOverview extends FigureBase<SiteData> {
             let hexagon_radius = Math.min(box_width / 2, hexagon_max_radius);
             hexagon_radius -= hexagon_radius * box_h_rel_padding;
             const label_height = Math.floor(
-                Math.max(hexagon_radius / 5, min_label_height)
+                Math.max(hexagon_radius / 5, min_label_height),
             );
 
             let necessary_box_height =
@@ -917,7 +917,7 @@ export class SiteOverview extends FigureBase<SiteData> {
                     // @ts-ignore
                     const host_tooltip: string = json_data.result.host_tooltip;
                     host.hexagon_config.forEach(
-                        (d: {tooltip: string}) => (d.tooltip = host_tooltip)
+                        (d: {tooltip: string}) => (d.tooltip = host_tooltip),
                     );
                     this._tooltip.html(host_tooltip);
                     this._fetching_host_tooltip = false;

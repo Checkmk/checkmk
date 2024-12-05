@@ -35,19 +35,19 @@ export function fetch_site_status() {
 
             for (const [site_id, site_status] of Object.entries(site_states)) {
                 const livestatus_container = document.getElementById(
-                    "livestatus_status_" + site_id
+                    "livestatus_status_" + site_id,
                 )!;
                 /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 livestatus_container.innerHTML = site_status.livestatus;
 
                 const replication_container = document.getElementById(
-                    "replication_status_" + site_id
+                    "replication_status_" + site_id,
                 )!;
                 /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 replication_container.innerHTML = site_status.replication;
 
                 const message_broker_container = document.getElementById(
-                    "message_broker_status_" + site_id
+                    "message_broker_status_" + site_id,
                 )!;
                 /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
                 message_broker_container.innerHTML = site_status.message_broker;
@@ -56,14 +56,14 @@ export function fetch_site_status() {
         error_handler: function (
             _handler_data: any,
             status_code: number,
-            error_msg: string
+            error_msg: string,
         ) {
             if (status_code != 0) {
                 show_error(
                     "Site status update failed [" +
                         status_code +
                         "]: " +
-                        error_msg
+                        error_msg,
                 );
             }
         },

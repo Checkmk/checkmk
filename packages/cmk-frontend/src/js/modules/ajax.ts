@@ -29,7 +29,7 @@ interface Args<HandlerData = any> {
         handler_data: HandlerData,
         status: number,
         status_text: string,
-        response_text?: string
+        response_text?: string,
     ) => void;
     add_ajax_id: boolean;
     plain_error: boolean;
@@ -39,7 +39,7 @@ interface Args<HandlerData = any> {
 
 export function call_ajax<HandlerData = any>(
     url: string,
-    optional_args?: OptionalArgs<HandlerData>
+    optional_args?: OptionalArgs<HandlerData>,
 ) {
     const default_args: Args<HandlerData> = {
         add_ajax_id: true,
@@ -94,7 +94,7 @@ export function call_ajax<HandlerData = any>(
     if (args.method == "POST") {
         AJAX.setRequestHeader(
             "Content-type",
-            "application/x-www-form-urlencoded"
+            "application/x-www-form-urlencoded",
         );
     }
 
@@ -105,7 +105,7 @@ export function call_ajax<HandlerData = any>(
                     if (args.response_handler)
                         args.response_handler(
                             args.handler_data!,
-                            AJAX.responseText
+                            AJAX.responseText,
                         );
                 } else if (AJAX.status == 401) {
                     // This is reached when someone is not authenticated anymore
@@ -122,7 +122,7 @@ export function call_ajax<HandlerData = any>(
                             args.handler_data!,
                             AJAX.status,
                             AJAX.statusText,
-                            AJAX.responseText
+                            AJAX.responseText,
                         );
                 }
             }

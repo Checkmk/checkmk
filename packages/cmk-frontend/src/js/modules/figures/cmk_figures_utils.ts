@@ -45,7 +45,7 @@ interface BackgroundStatueOptions {
  */
 export function background_status_component<GType extends BaseType, Data>(
     selection: Selection<GType, Data, BaseType, unknown>,
-    options: BackgroundStatueOptions
+    options: BackgroundStatueOptions,
 ) {
     const data = options.visible ? [null] : [];
 
@@ -98,7 +98,7 @@ export function clamp(value: number, domain: Domain) {
 
 export function make_levels(
     domain: Domain,
-    bounds: Bounds
+    bounds: Bounds,
 ): [Levels, Levels, Levels] | [] {
     let dmin = domain[0];
     const dmax = domain[1];
@@ -135,7 +135,7 @@ export function make_levels(
  */
 export function metric_value_component<GType extends BaseType, Data>(
     selection: Selection<GType, Data, BaseType, unknown>,
-    options: MetricValueComponentOptions
+    options: MetricValueComponentOptions,
 ) {
     const font_size = clamp(options.font_size!, [12, 50]);
     const data = options.visible ? [options.value] : [];
@@ -194,7 +194,7 @@ interface BigCenteredTextOptions {
  */
 export function metric_value_component_options_big_centered_text(
     size: ElementSize,
-    options: BigCenteredTextOptions
+    options: BigCenteredTextOptions,
 ) {
     if (options == undefined) {
         options = {};
@@ -246,7 +246,7 @@ interface StateComponentOptions {
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(
     figurebase: FigureBase<FigureData>,
-    options: StateComponentOptions
+    options: StateComponentOptions,
 ) {
     // TODO: use figurebase.svg as first parameter and move size to options
     if (!options.visible) {
@@ -266,7 +266,7 @@ export function state_component(
                 (figurebase.figure_size.width - font_size * 8) / 2 +
                 ", " +
                 (figurebase.figure_size.height - font_size * 2) +
-                ")"
+                ")",
         );
     state_component
         .selectAll("rect.status_label")
@@ -305,7 +305,7 @@ export function plot_render_function(plot: any) {
     if (js_render) return get_function(js_render);
     //TODO: replace this function from string with a better solution
     return get_function(
-        "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }"
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }",
     );
 }
 
@@ -354,7 +354,7 @@ export function getEmptyBasicFigureData(): FigureData {
 export function svg_text_overflow_ellipsis(
     node: SVGTextElement | SVGTSpanElement,
     width: number,
-    padding: number
+    padding: number,
 ) {
     let length = node.getComputedTextLength();
     if (length <= width - padding) return;
@@ -378,7 +378,7 @@ export function svg_text_overflow_ellipsis(
 
 export function add_scheduler_debugging<GType extends BaseType, Data>(
     selection: Selection<GType, Data, BaseType, unknown>,
-    scheduler: Scheduler
+    scheduler: Scheduler,
 ) {
     const debugging = selection.append("div");
     // Stop button

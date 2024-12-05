@@ -23,7 +23,7 @@ export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
         oImg = oImg.previousElementSibling as HTMLElement;
     }
     const oSubtree = (oImg.parentNode as HTMLElement).getElementsByTagName(
-        "ul"
+        "ul",
     )[0];
     let url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
     let do_open;
@@ -119,7 +119,7 @@ export function toggle_assumption(
     link: HTMLElement,
     site: string,
     host: string,
-    service: string
+    service: string,
 ) {
     const img = link.getElementsByTagName("img")[0];
 
@@ -155,7 +155,7 @@ export function toggle_assumption(
 
 export function update_argument_hints() {
     selectAll<HTMLSelectElement, unknown>(
-        "select[onchange='cmk.bi.update_argument_hints();']"
+        "select[onchange='cmk.bi.update_argument_hints();']",
     ).each((_d, idx, nodes) => {
         const node = select(nodes[idx]);
         const rule_arguments =
@@ -255,7 +255,7 @@ export abstract class BIPreview {
             Record<string, any>[],
             BaseType,
             Record<string, any>[]
-        >
+        >,
     ) {
         return selection.append("div").classed("node_preview", true);
     }
@@ -268,7 +268,7 @@ export abstract class BIPreview {
             unknown,
             HTMLElement | null,
             any
-        >
+        >,
     ) {
         const headers = Object.keys(data_rows[0]);
         node_preview_div.selectAll("*").remove();
@@ -305,7 +305,7 @@ export abstract class BIPreview {
                 enter
                     .append("td")
                     .style("padding", "5px")
-                    .style("text-align", "left")
+                    .style("text-align", "left"),
             )
             .text(d => d);
     }
@@ -327,7 +327,7 @@ export abstract class BIPreview {
         const url_tokens: string[] = [];
         for (const p in dict) {
             url_tokens.push(
-                encodeURIComponent(p) + "=" + encodeURIComponent(dict[p])
+                encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]),
             );
         }
         return url_tokens.join("&");
@@ -364,7 +364,7 @@ export class BIRulePreview extends BIPreview {
 
         const params = this._determine_params();
         params["example_arguments"] = JSON.stringify(
-            this._get_example_arguments()
+            this._get_example_arguments(),
         );
         this._trigger_update_if_required(params);
     }
@@ -385,11 +385,11 @@ export class BIRulePreview extends BIPreview {
     }
 
     override _update_previews(
-        json_data: CMKAjaxReponse<BIRulePreviewJsonData>
+        json_data: CMKAjaxReponse<BIRulePreviewJsonData>,
     ) {
         this._update_simulated_parameters(json_data.result.params);
         const nodes = selectAll("#rule_p_nodes_container > tr").data(
-            json_data.result.data
+            json_data.result.data,
         );
 
         nodes
@@ -405,7 +405,7 @@ export class BIRulePreview extends BIPreview {
                 this._update_preview_of_node(
                     d,
                     json_data.result.title,
-                    select(nodes[idx])
+                    select(nodes[idx]),
                 );
             });
         BIPreview.prototype._update_previews.call(this, json_data);
@@ -445,7 +445,7 @@ export class BIRulePreview extends BIPreview {
                 this._preview_active = !this._preview_active;
                 selectAll("div.node_preview").style(
                     "display",
-                    this._preview_active ? "block" : "none"
+                    this._preview_active ? "block" : "none",
                 );
                 this._check_update();
             });
@@ -472,7 +472,7 @@ export class BIAggregationPreview extends BIPreview {
     }
 
     _get_preview_div(
-        selection: Selection<BaseType, unknown, HTMLElement, any>
+        selection: Selection<BaseType, unknown, HTMLElement, any>,
     ) {
         let node_preview_div =
             selection.select<HTMLDivElement>("div.node_preview");
@@ -485,15 +485,15 @@ export class BIAggregationPreview extends BIPreview {
     }
 
     override _update_previews(
-        json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>
+        json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>,
     ) {
         const node_preview_div = this._get_preview_div(
-            select("div#aggr_d_node")
+            select("div#aggr_d_node"),
         );
         this._update_preview_of_node(
             json_data.result.data[0],
             json_data.result.title,
-            node_preview_div
+            node_preview_div,
         );
         BIPreview.prototype._update_previews.call(this, json_data);
     }
@@ -511,7 +511,7 @@ export class BIAggregationPreview extends BIPreview {
                 this._preview_active = !this._preview_active;
                 selectAll("div.node_preview").style(
                     "display",
-                    this._preview_active ? "block" : "none"
+                    this._preview_active ? "block" : "none",
                 );
                 this._check_update();
             });

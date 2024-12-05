@@ -12,7 +12,7 @@ type BackupHandlerData = {url: string; ident: string; is_site: boolean};
 export function refresh_job_details(
     url: string,
     ident: string,
-    is_site: boolean
+    is_site: boolean,
 ) {
     setTimeout(function () {
         do_job_detail_refresh(url, ident, is_site);
@@ -35,7 +35,7 @@ function do_job_detail_refresh(url: string, ident: string, is_site: boolean) {
 
 function handle_job_detail_response(
     handler_data: BackupHandlerData,
-    response_body: string
+    response_body: string,
 ) {
     // when a message was shown and now not anymore, assume the job has finished
     const had_message = document.getElementById("job_detail_msg")
@@ -50,7 +50,7 @@ function handle_job_detail_response(
         refresh_job_details(
             handler_data["url"],
             handler_data["ident"],
-            handler_data["is_site"]
+            handler_data["is_site"],
         );
     } else {
         reload_whole_page();
@@ -60,7 +60,7 @@ function handle_job_detail_response(
 function handle_job_detail_error(
     handler_data: BackupHandlerData,
     status_code: number,
-    error_msg: string
+    error_msg: string,
 ) {
     hide_job_detail_msg();
 
@@ -95,7 +95,7 @@ function handle_job_detail_error(
     refresh_job_details(
         handler_data["url"],
         handler_data["ident"],
-        handler_data["is_site"]
+        handler_data["is_site"],
     );
 }
 

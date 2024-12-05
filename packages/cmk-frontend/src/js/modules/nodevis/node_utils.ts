@@ -187,7 +187,7 @@ export class AbstractGUINode implements TypeWithName {
                         (this.radius + 3) +
                         "," +
                         (this.radius + 3) +
-                        ")"
+                        ")",
                 )
                 .attr("text-anchor", "start")
                 .text(d => {
@@ -204,7 +204,7 @@ export class AbstractGUINode implements TypeWithName {
         if (text_positioning) {
             this.add_optional_transition(this.text_selection()).call(
                 text_positioning,
-                this.radius
+                this.radius,
             );
         } else {
             this.add_optional_transition(this.text_selection()).call(
@@ -215,19 +215,19 @@ export class AbstractGUINode implements TypeWithName {
                         string,
                         SVGGElement,
                         any
-                    >
-                ) => this._default_text_positioning(selection, this.radius)
+                    >,
+                ) => this._default_text_positioning(selection, this.radius),
             );
         }
     }
 
     _default_text_positioning(
         selection: Selection<SVGTextElement, string, SVGGElement, any>,
-        radius: number
+        radius: number,
     ) {
         selection.attr(
             "transform",
-            "translate(" + (radius + 3) + "," + (radius + 3) + ")"
+            "translate(" + (radius + 3) + "," + (radius + 3) + ")",
         );
         selection.attr("text-anchor", "start");
     }
@@ -247,7 +247,7 @@ export class AbstractGUINode implements TypeWithName {
         selection
             .attr(
                 "transform",
-                "translate(" + spawn_point_x + "," + spawn_point_y + ")"
+                "translate(" + spawn_point_x + "," + spawn_point_y + ")",
             )
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
@@ -343,7 +343,7 @@ export class AbstractGUINode implements TypeWithName {
         if (node._children) {
             node.children = node._children;
             node.children.forEach(child_node =>
-                this.expand_node_including_children(child_node)
+                this.expand_node_including_children(child_node),
             );
         }
         delete node.data.user_interactions.bi;
@@ -430,7 +430,7 @@ export class AbstractGUINode implements TypeWithName {
             if (node)
                 // make typescript happy
                 node.append(
-                    this._external_quickinfo_data.data.cloneNode(true).body
+                    this._external_quickinfo_data.data.cloneNode(true).body,
                 );
         } else if (!this._quickinfo_fetch_in_progress)
             this._fetch_external_quickinfo();
@@ -492,7 +492,7 @@ export class AbstractGUINode implements TypeWithName {
                     })
                     .append("circle")
                     .attr("r", this.radius)
-                    .classed("state_circle", true)
+                    .classed("state_circle", true),
             );
 
         const icon_url = this._get_icon_url();
@@ -543,7 +543,7 @@ export class AbstractGUINode implements TypeWithName {
 
         const transition = this.add_optional_transition(
             this.selection(),
-            enforce_transition
+            enforce_transition,
         );
         transition.attr(
             "transform",
@@ -551,7 +551,7 @@ export class AbstractGUINode implements TypeWithName {
                 this.node.data.target_coords.x +
                 "," +
                 this.node.data.target_coords.y +
-                ")"
+                ")",
         );
 
         this.update_quickinfo_position();
@@ -577,7 +577,7 @@ export class AbstractGUINode implements TypeWithName {
 
     add_optional_transition<GType extends BaseType, Data>(
         selection: Selection<GType, Data, SVGGElement, any>,
-        enforce_transition = false
+        enforce_transition = false,
     ) {
         // TODO: remove
         if (this._world.viewport.get_layout_manager().skip_optional_transitions)
@@ -591,7 +591,7 @@ export class AbstractGUINode implements TypeWithName {
             return selection;
 
         return DefaultTransition.add_transition(
-            selection.attr("in_transit", 100)
+            selection.attr("in_transit", 100),
         )
             .on("end", () => {
                 const node = this.selection().node();
@@ -620,14 +620,14 @@ export class AbstractGUINode implements TypeWithName {
 
     get_force(
         force_name: SimulationForce,
-        force_options: ForceOptions
+        force_options: ForceOptions,
     ): number {
         return this._get_node_type_specific_force(force_name, force_options);
     }
 
     _get_node_type_specific_force(
         force_name: SimulationForce,
-        force_options: ForceOptions
+        force_options: ForceOptions,
     ): number {
         return force_options[force_name];
     }

@@ -20,7 +20,12 @@ export class FigureTooltip {
     plot_size: FigureTooltipElementSize;
 
     constructor(
-        tooltip_selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        tooltip_selection: Selection<
+            HTMLDivElement,
+            unknown,
+            BaseType,
+            unknown
+        >,
     ) {
         this._tooltip = tooltip_selection;
         this._tooltip
@@ -33,7 +38,7 @@ export class FigureTooltip {
 
     update_sizes(
         figure_size: FigureTooltipElementSize,
-        plot_size: FigureTooltipElementSize
+        plot_size: FigureTooltipElementSize,
     ) {
         this.figure_size = figure_size;
         this.plot_size = plot_size;
@@ -49,7 +54,7 @@ export class FigureTooltip {
 
         const [x, y] = pointer(
             event,
-            (event.target as HTMLDivElement).closest("svg")
+            (event.target as HTMLDivElement).closest("svg"),
         );
 
         const is_at_right_border =
@@ -83,7 +88,7 @@ export class FigureTooltip {
     activate() {
         select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
-            "99"
+            "99",
         );
         this._tooltip.style("display", null);
     }
@@ -91,7 +96,7 @@ export class FigureTooltip {
     deactivate() {
         select(this._tooltip.node()!.closest("div.dashlet")).style(
             "z-index",
-            ""
+            "",
         );
         this._tooltip.style("display", "none");
     }

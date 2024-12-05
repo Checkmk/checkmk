@@ -106,7 +106,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
     }
 
     _setup_dc_table(
-        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>
+        selection: Selection<HTMLDivElement, unknown, BaseType, unknown>,
     ) {
         const div_id = "flows_dashlet";
         selection.append("div").attr("id", div_id);
@@ -176,7 +176,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
                 enter
                     .append("div")
                     .attr("class", d => d.group.toLowerCase())
-                    .classed("filter", true)
+                    .classed("filter", true),
             );
 
         filter_div
@@ -196,10 +196,10 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
             .data(
                 d => d.choices,
                 // @ts-ignore
-                d => d.id
+                d => d.id,
             )
             .join(enter =>
-                enter.append("option").property("value", d => "" + d.id)
+                enter.append("option").property("value", d => "" + d.id),
             )
             .text(d => d.name);
 
@@ -279,7 +279,7 @@ export class FlowsDashlet extends FigureBase<FlowDashletData> {
             .selectAll<HTMLSelectElement, FlowsDashlet>("select.filter")
             .each((_d, idx, nodes) => {
                 const select = d3select<HTMLSelectElement, FlowsDashlet>(
-                    nodes[idx]
+                    nodes[idx],
                 );
                 const key = select.datum().url_param;
                 const value = select.property("value");

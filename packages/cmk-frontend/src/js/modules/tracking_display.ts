@@ -67,7 +67,7 @@ function timeSince(timestamp: number): string {
         const unitCount = Math.floor(elapsed / unit.seconds);
         if (unitCount > 0) {
             parts.push(
-                `${unitCount} ${unitCount > 1 ? unit.name + "s" : unit.name}`
+                `${unitCount} ${unitCount > 1 ? unit.name + "s" : unit.name}`,
             );
             elapsed -= unitCount * unit.seconds;
         }
@@ -99,7 +99,7 @@ export async function render_stats_table(dom_element: HTMLElement) {
                 section.url
             }</a> - last updated ${timeSince(section.updated)}. ${
                 section.records.length
-            } records.`
+            } records.`,
         );
         const table = node.append("table").attr("class", "data table");
 
@@ -111,9 +111,9 @@ export async function render_stats_table(dom_element: HTMLElement) {
                 ...calculateStats(
                     section.records
                         .filter(
-                            (entry: metricsEntry) => entry.metricName == metric
+                            (entry: metricsEntry) => entry.metricName == metric,
                         )
-                        .map((entry: metricsEntry) => entry.loadTime)
+                        .map((entry: metricsEntry) => entry.loadTime),
                 ),
             });
         }
@@ -124,9 +124,9 @@ export async function render_stats_table(dom_element: HTMLElement) {
                 ...calculateStats(
                     section.records
                         .filter(
-                            (entry: metricsEntry) => entry.metricName == metric
+                            (entry: metricsEntry) => entry.metricName == metric,
                         )
-                        .map((entry: metricsEntry) => entry.loadTime)
+                        .map((entry: metricsEntry) => entry.loadTime),
                 ),
             });
         }
@@ -163,12 +163,15 @@ export async function render_stats_table(dom_element: HTMLElement) {
  * The sequence has to be pre-sorted by the grouping keys.
  */
 const groupBy = <T, K extends keyof any>(list: T[], getKey: (item: T) => K) =>
-    list.reduce((previous, currentItem) => {
-        const group = getKey(currentItem);
-        if (!previous[group]) previous[group] = [];
-        previous[group].push(currentItem);
-        return previous;
-    }, {} as Record<K, T[]>);
+    list.reduce(
+        (previous, currentItem) => {
+            const group = getKey(currentItem);
+            if (!previous[group]) previous[group] = [];
+            previous[group].push(currentItem);
+            return previous;
+        },
+        {} as Record<K, T[]>,
+    );
 
 /**
  * Take the grouped result (grouped by URL), order them by last update and emit them as a list of objects.
@@ -177,7 +180,7 @@ const sortKeysByLastUpdated = (data: GroupedResult): Section[] => {
     const timings = Object.entries(data).map(([key, records]) => {
         const highestTimestamp = records.reduce(
             (max, record) => Math.max(max, record.recordCreated),
-            0
+            0,
         );
         return {key, highestTimestamp};
     });
@@ -201,7 +204,7 @@ function groupedResults(db: IDBDatabase): Promise<GroupedResult> {
             const request = event.target as IDBRequest<metricsEntry[]>;
             const grouped = groupBy(
                 request.result,
-                (entry: metricsEntry) => entry.url
+                (entry: metricsEntry) => entry.url,
             );
             resolve(grouped);
         };
@@ -253,8 +256,8 @@ function stddev(numbers: number[]): number {
     return Math.sqrt(
         numbers.reduce(
             (sum, value) => sum + Math.pow(value - meanValue, 2),
-            0
-        ) / numbers.length
+            0,
+        ) / numbers.length,
     );
 }
 

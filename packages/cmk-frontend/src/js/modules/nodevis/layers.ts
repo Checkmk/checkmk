@@ -181,13 +181,13 @@ export class LayeredNodesLayer extends FixLayer {
                         this._add_node_vanish_animation(
                             select(node_list[idx]),
                             node_id,
-                            old_node_instances
+                            old_node_instances,
                         );
-                    })
+                    }),
             )
             .each((node_id, idx, node_list) => {
                 this.node_instances[node_id].render_into(
-                    select(node_list[idx])
+                    select(node_list[idx]),
                 );
             });
     }
@@ -195,7 +195,7 @@ export class LayeredNodesLayer extends FixLayer {
     _add_node_vanish_animation(
         node: Selection<SVGGElement, unknown, null, undefined>,
         node_id: string,
-        old_node_instances: Record<string, AbstractGUINode>
+        old_node_instances: Record<string, AbstractGUINode>,
     ) {
         const old_instance = old_node_instances[node_id];
         if (!old_instance) {
@@ -204,7 +204,7 @@ export class LayeredNodesLayer extends FixLayer {
         }
 
         const vanish_coords = this._world.viewport.scale_to_zoom(
-            this._world.viewport.compute_spawn_coords(old_instance.node)
+            this._world.viewport.compute_spawn_coords(old_instance.node),
         );
 
         // Move vanishing nodes, back to their parent nodes
@@ -212,7 +212,7 @@ export class LayeredNodesLayer extends FixLayer {
             .duration(DefaultTransition.duration())
             .attr(
                 "transform",
-                "translate(" + vanish_coords.x + "," + vanish_coords.y + ")"
+                "translate(" + vanish_coords.x + "," + vanish_coords.y + ")",
             )
             .style("opacity", 0)
             .remove();
@@ -259,14 +259,14 @@ export class LayeredNodesLayer extends FixLayer {
 
     _create_node(node_data: NodevisNode): AbstractGUINode {
         const node_class = node_type_class_registry.get_class(
-            node_data.data.node_type
+            node_data.data.node_type,
         );
         return new node_class(this._world, node_data);
     }
 
     _create_link(link_data: NodevisLink): AbstractLink {
         let link_class = link_type_class_registry.get_class(
-            link_data.config.type
+            link_data.config.type,
         );
         // TODO: remove
         if (!link_class)
@@ -299,12 +299,12 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _add_toggle_options_to_context_menu(
-        content_ul: Selection<HTMLUListElement, null, any, unknown>
+        content_ul: Selection<HTMLUListElement, null, any, unknown>,
     ) {
         const nodes_class_list = this._svg_selection.node()!.classList;
         const hide_host_labels = nodes_class_list.contains("hide_host_labels");
         const hide_service_labels = nodes_class_list.contains(
-            "hide_service_labels"
+            "hide_service_labels",
         );
         const hide_other_labels =
             nodes_class_list.contains("hide_other_labels");
@@ -333,7 +333,7 @@ export class LayeredNodesLayer extends FixLayer {
     }
     override render_context_menu(
         event: MouseEvent,
-        node_id: string | null
+        node_id: string | null,
     ): void {
         event.preventDefault();
         event.stopPropagation();
@@ -357,7 +357,7 @@ export class LayeredNodesLayer extends FixLayer {
                 "layouting",
                 this._world.viewport
                     .get_layout_manager()
-                    .get_context_menu_elements(gui_node ? gui_node.node : null)
+                    .get_context_menu_elements(gui_node ? gui_node.node : null),
             );
         }
 
@@ -367,7 +367,7 @@ export class LayeredNodesLayer extends FixLayer {
             this._add_elements_to_context_menu(
                 content_ul,
                 "node",
-                gui_node.get_context_menu_elements()
+                gui_node.get_context_menu_elements(),
             );
         } else {
             this.popup_menu_selection
@@ -386,13 +386,14 @@ export class LayeredNodesLayer extends FixLayer {
         content: Selection<HTMLUListElement, any, any, undefined>,
         element_source: string,
         elements: ContextMenuElement[],
-        level = 0
+        level = 0,
     ): void {
         // Renders links and html elements
         let links = content
-            .selectAll<HTMLAnchorElement, ContextMenuElement>(
-                "li" + "." + element_source + " a"
-            )
+            .selectAll<
+                HTMLAnchorElement,
+                ContextMenuElement
+            >("li" + "." + element_source + " a")
             .data(elements.filter(element => !element.dom));
 
         links = links
@@ -471,7 +472,7 @@ export class LayeredNodesLayer extends FixLayer {
                                 next_level +
                                 ":not(." +
                                 scoped_element_source +
-                                ")"
+                                ")",
                         )
                         .remove();
                     const child_node = node
@@ -490,16 +491,15 @@ export class LayeredNodesLayer extends FixLayer {
                         child_node,
                         scoped_element_source,
                         d.children!,
-                        next_level
+                        next_level,
                     );
                 });
             }
         });
 
-        // @ts-ignore
         content
             .selectAll<HTMLDivElement, ContextMenuElement>(
-                "li" + "." + element_source + " div.dom"
+                "li" + "." + element_source + " div.dom",
             )
             .data(elements.filter(element => element.dom))
             .enter()
@@ -507,6 +507,8 @@ export class LayeredNodesLayer extends FixLayer {
             .classed(element_source, true)
             .append("div")
             .classed("dom", true)
+            // 2769: No overload matches this call
+            // @ts-ignore
             .append(d => d.dom);
     }
 

@@ -179,7 +179,7 @@ export class AbstractDatasource extends Object {
 
     _inform_subscribers(): void {
         this._new_data_subscribers.forEach(subscriber =>
-            subscriber(this._data)
+            subscriber(this._data),
         );
     }
 }
@@ -196,7 +196,7 @@ export class AggregationsDatasource extends AbstractDatasource {
 
     fetch_aggregations(
         list_of_aggregations: string[],
-        use_layout_id: string
+        use_layout_id: string,
     ): void {
         const fetch_params: Record<string, string> = {
             aggregations: JSON.stringify(list_of_aggregations),
@@ -204,7 +204,7 @@ export class AggregationsDatasource extends AbstractDatasource {
         if (use_layout_id) fetch_params["layout_id"] = use_layout_id;
         this.fetch(
             "ajax_fetch_aggregation_data.py",
-            new URLSearchParams(fetch_params).toString()
+            new URLSearchParams(fetch_params).toString(),
         );
     }
 }
@@ -225,7 +225,7 @@ export class TopologyDatasource extends AbstractDatasource {
         fetch_params["query_hash"] = this._waiting_for_hash;
         this.fetch(
             "ajax_fetch_topology.py",
-            new URLSearchParams(fetch_params).toString()
+            new URLSearchParams(fetch_params).toString(),
         );
     }
 }

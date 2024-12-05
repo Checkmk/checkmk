@@ -30,7 +30,7 @@ export function initialize() {
     else if ((hidden_attr_name = "webkitHidden") in document)
         document.addEventListener(
             "webkitvisibilitychange",
-            on_visibility_change
+            on_visibility_change,
         );
     else if ((hidden_attr_name = "msHidden") in document)
         document.addEventListener("msvisibilitychange", on_visibility_change);

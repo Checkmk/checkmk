@@ -28,10 +28,10 @@ export function close_active_dropdown() {
 
 export function set_checkbox_entry(id_stem: string, checked: boolean) {
     const oEntryChecked = document.getElementById(
-        "menu_entry_" + id_stem + "_checked"
+        "menu_entry_" + id_stem + "_checked",
     );
     const oEntryUnhecked = document.getElementById(
-        "menu_entry_" + id_stem + "_unchecked"
+        "menu_entry_" + id_stem + "_unchecked",
     );
 
     if (checked) {
@@ -63,10 +63,10 @@ function toggle_dropdown_enabled(id: string, enabled: boolean) {
 }
 
 export function update_down_duration_button(
-    new_selection_id: string | null = null
+    new_selection_id: string | null = null,
 ) {
     const active_elements = document.getElementsByClassName(
-        "button duration active"
+        "button duration active",
     ) as HTMLCollectionOf<HTMLElement>;
     if (active_elements) {
         for (const element of active_elements) {
@@ -80,20 +80,20 @@ export function update_down_duration_button(
 }
 
 export function ack_problems_update_expiration_active_state(
-    changed_input: HTMLInputElement
+    changed_input: HTMLInputElement,
 ) {
     if (changed_input.type == "checkbox") {
         // Toggle the date and time picker input fields' "active" class
         for (const what of ["date", "time"]) {
             const input_field = document.getElementById(
-                what + "__ack_expire_" + what
+                what + "__ack_expire_" + what,
             ) as HTMLInputElement;
             if (input_field) toggle_class(input_field, "active", "");
         }
     } else {
         // Activate, i.e. check, the expiration checkbox
         const checkbox_input = document.getElementById(
-            "cb__ack_expire"
+            "cb__ack_expire",
         ) as HTMLInputElement;
         if ($(checkbox_input).prop("checked") == false) checkbox_input.click();
     }
@@ -101,7 +101,7 @@ export function ack_problems_update_expiration_active_state(
 
 export function check_menu_entry_by_checkboxes(id: string) {
     const checkboxes = document.getElementsByClassName(
-        "page_checkbox"
+        "page_checkbox",
     ) as HTMLCollectionOf<HTMLInputElement>;
     for (let i = 0; i < checkboxes.length; i++) {
         if (checkboxes[i].checked) {
@@ -151,7 +151,7 @@ export function enable_menu_entries(css_class: string, enabled: boolean) {
     }
 
     for (const element of page_menu.querySelectorAll<HTMLElement>(
-        ".entry." + css_class
+        ".entry." + css_class,
     )) {
         change_class(element, from, to);
     }
@@ -231,14 +231,14 @@ const on_close: Record<string, () => void> = {} as any;
 
 export function register_on_open_handler(
     popup_id: string,
-    handler: () => void
+    handler: () => void,
 ) {
     on_open[popup_id] = handler;
 }
 
 export function register_on_close_handler(
     popup_id: string,
-    handler: () => void
+    handler: () => void,
 ) {
     on_close[popup_id] = handler;
 }
@@ -294,7 +294,7 @@ interface ConfirmedFromSubmitOptions {
 export function confirmed_form_submit(
     form_name: string,
     button_name: string,
-    options: ConfirmedFromSubmitOptions
+    options: ConfirmedFromSubmitOptions,
 ) {
     confirm_dialog(options, () => {
         form_submit(form_name, button_name);
@@ -304,7 +304,7 @@ export function confirmed_form_submit(
 // Show / hide all entries of this group
 export function toggle_popup_filter_list(
     trigger: HTMLAnchorElement,
-    filter_list_id: string
+    filter_list_id: string,
 ) {
     toggle_class(trigger, "active", "inactive");
     toggle_class(document.getElementById(filter_list_id), "active", "inactive");
@@ -326,7 +326,7 @@ export function on_filter_popup_close() {
 export function update_filter_list_scroll(filter_list_id: string) {
     const filter_list = document.getElementById(filter_list_id);
     const scrollable = filter_list!.getElementsByClassName(
-        "simplebar-content-wrapper"
+        "simplebar-content-wrapper",
     )[0];
     try {
         // scrollTo() is not supported in IE
@@ -341,17 +341,17 @@ export function update_filter_list_scroll(filter_list_id: string) {
 export function side_popup_add_simplebar_scrollbar(popup_id: string) {
     const popup = document.getElementById(popup_id);
     const content = popup!.getElementsByClassName(
-        "side_popup_content"
+        "side_popup_content",
     )[0] as HTMLElement;
     add_simplebar_scrollbar_to_object(content);
 }
 
 export function inpage_search_init(
     reset_button_id: string,
-    was_submitted: boolean
+    was_submitted: boolean,
 ) {
     const reset_button = document.getElementById(
-        reset_button_id
+        reset_button_id,
     ) as HTMLButtonElement;
     if (!reset_button) return;
 
@@ -363,10 +363,10 @@ export function inpage_search_init(
 export function toggle_navigation_page_menu_entry() {
     const iframe = window.frameElement;
     const hide_navigation = document.getElementById(
-        "menu_entry_hide_navigation"
+        "menu_entry_hide_navigation",
     )!;
     const show_navigation = document.getElementById(
-        "menu_entry_show_navigation"
+        "menu_entry_show_navigation",
     )!;
 
     if (iframe !== null) {

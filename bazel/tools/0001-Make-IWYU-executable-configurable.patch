@@ -63,7 +63,7 @@ index 8a27f21..ec9b3fd 100644
 +
 +    # this is consumed by the wrapper script
 +    if len(exe.files.to_list()) == 0:
-+        args.add("include-whatyou-use")
++        args.add("include-what-you-use")
 +    else:
 +        args.add(exe.files_to_run.executable)
 +

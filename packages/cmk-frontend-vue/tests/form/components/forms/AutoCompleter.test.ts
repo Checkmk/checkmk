@@ -39,7 +39,7 @@ describe('Autocompleter', () => {
         autocompleter: null,
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     })
@@ -54,7 +54,7 @@ describe('Autocompleter', () => {
         autocompleter: null,
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     }).emitted('select')
@@ -72,7 +72,7 @@ describe('Autocompleter', () => {
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     })
@@ -100,7 +100,7 @@ describe('Autocompleter', () => {
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     })
@@ -127,7 +127,7 @@ describe('Autocompleter', () => {
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     })
@@ -160,7 +160,7 @@ describe('Autocompleter', () => {
         autocompleter: { data: {}, fetch_method: 'ajax_vs_autocomplete' },
         filterOn: [],
         resestInputOnAdd: false,
-        size: 'SMALL',
+        size: 7,
         id: 'test'
       }
     }).emitted('select')

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export const inputSizes = {
-  SMALL: { width: '100', height: '12' },
-  MEDIUM: { width: '182', height: '18' },
-  LARGE: { width: '722', height: '35' }
+  SMALL: { width: 7, height: 12 },
+  MEDIUM: { width: 20, height: 18 },
+  LARGE: { width: 60, height: 35 }
 }

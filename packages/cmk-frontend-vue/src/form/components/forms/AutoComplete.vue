@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, useTemplateRef, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 import type { Autocompleter } from '../vue_formspec_components'
-import { inputSizes } from '../utils/sizes'
 import { X } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -16,7 +15,7 @@ const props = defineProps<{
   show: boolean
   autocompleter?: Autocompleter | null
   filterOn: string[]
-  size: keyof typeof inputSizes
+  size: number
   resestInputOnAdd: boolean
 }>()
 
@@ -139,7 +138,7 @@ watch(autocompleterOutput, (newValue) => {
         class="item new-item"
         type="text"
         autocomplete="on"
-        :style="{ width: inputSizes[props.size].width, height: inputSizes[props.size].height }"
+        :size="props.size"
         :placeholder="props.placeholder"
         @keydown.enter="handleAddItem"
         @focus="() => setBlur(true)"

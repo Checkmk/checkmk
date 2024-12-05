@@ -34,6 +34,7 @@ const props = defineProps<CmkCheckboxProps>()
 .cmk-checkbox {
   cursor: pointer;
   display: inline-block;
+  padding: 2px 0;
 }
 .cmk-checkbox :deep(.cmk-checkbox__button) {
   background-color: var(--default-form-element-bg-color);

@@ -48,12 +48,12 @@ const componentId = useId()
     v-model="value"
     :placeholder="spec.input_hint || ''"
     type="text"
-    :size="inputSizes[spec.field_size].width"
+    :size="inputSizes[props.spec.field_size].width"
   />
   <AutoComplete
     v-if="spec.autocompleter"
     :id="componentId"
-    size="MEDIUM"
+    :size="inputSizes[props.spec.field_size].width"
     :resest-input-on-add="false"
     :autocompleter="spec.autocompleter"
     :placeholder="spec.input_hint ?? ''"

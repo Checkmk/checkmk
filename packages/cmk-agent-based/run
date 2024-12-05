@@ -133,7 +133,7 @@ run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config=../../.aspect/cli/config_isort.yaml \
         --diff \
         --machine \
         :all

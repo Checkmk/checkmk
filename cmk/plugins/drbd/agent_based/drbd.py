@@ -324,7 +324,6 @@ def get_diskstates_result(
     ):
         return Result(state=State(state), summary=output)
 
-    # params_diskstates_dict = dict(params.get("diskstates", []))
     params_diskstates_dict = dict(params.get("diskstates", []))
     diskstates_info = set()
 

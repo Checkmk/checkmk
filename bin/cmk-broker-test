@@ -117,9 +117,9 @@ def _make_callback_ping(
 
         if not received.uuid == sent.uuid:
             write(
-                "The received message was not sent in response to my message (the UUIDs don't match).\n"
+                "Ignoring message that was not sent in response to my message (the UUIDs don't match).\n"
             )
-            sys.exit(1)
+            return
         write("UUIDs match.\n")
         sys.exit(0)
 

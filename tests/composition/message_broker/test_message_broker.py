@@ -115,12 +115,12 @@ class TestMessageBroker:
         remote_site_2: Site,
     ) -> None:
         with broker_pong(remote_site):
-            check_broker_ping(remote_site_2, remote_site.id)
-
             # test complement: should not work without the central site running:
             with _broker_stopped(central_site):
                 with pytest.raises(Timeout):
                     check_broker_ping(remote_site_2, remote_site.id)
+
+            check_broker_ping(remote_site_2, remote_site.id)
 
     def test_message_broker_remote_remote_p2p(
         self, central_site: Site, remote_site: Site, remote_site_2: Site

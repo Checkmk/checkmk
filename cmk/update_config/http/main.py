@@ -38,6 +38,7 @@ def _classify(host: str) -> HostType:
 
 
 class V1Host(BaseModel, extra="forbid"):
+    address: tuple[Literal["direct"], str]
     # "ipv4_enforced", "ipv6_enforced", "primary_enforced" don't have a counter part in V2.
     # "primary_enforced" has the additional issue, that the ssc would also need to support it.
     address_family: Literal["any", None] = None
@@ -62,8 +63,13 @@ class V1Value(BaseModel, extra="forbid"):
 
 def _migratable(rule_value: Mapping[str, object]) -> bool:
     try:
-        V1Value.model_validate(rule_value)
-        return True
+        value = V1Value.model_validate(rule_value)
+        type_ = _classify(value.host.address[1])
+        if type_ is HostType.EMBEDDABLE:
+            # This might have some issues, since customers can put a port, uri, and really mess with
+            # us in a multitude of ways.
+            return True
+        return False
     except ValidationError:
         return False
 
@@ -79,7 +85,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
-                "url": f"http://$HOSTADDRESS${port}",
+                "url": f"http://{rule_value.host.address[1]}{port}",
             }
         ],
     }

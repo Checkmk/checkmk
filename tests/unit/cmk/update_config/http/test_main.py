@@ -7,7 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.update_config.http.main import _classify, _migratable, HostType
+from cmk.plugins.collection.server_side_calls.httpv2 import parse_http_params
+from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
+from cmk.update_config.http.main import _classify, _migratable, _migrate, HostType, V1Value
 
 EXAMPLE_1 = {
     "name": "My web page",
@@ -116,13 +118,51 @@ EXAMPLE_14: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_15: Mapping[str, object] = {
+    "name": "hostname_only",
+    "host": {"address": ("direct", "google.com")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_16: Mapping[str, object] = {
+    "name": "ipv4_only",
+    "host": {"address": ("direct", "127.0.0.1")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_17: Mapping[str, object] = {
+    "name": "localhost",
+    "host": {"address": ("direct", "localhost")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_18: Mapping[str, object] = {
+    "name": "ipv6_embedded",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_19: Mapping[str, object] = {
+    "name": "port_specified_twice",
+    "host": {"address": ("direct", "[::1]:80"), "port": 80},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_20: Mapping[str, object] = {
+    "name": "ipv6",
+    "host": {"address": ("direct", "::1")},
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
     [
-        EXAMPLE_3,
-        EXAMPLE_5,
-        EXAMPLE_9,
+        EXAMPLE_15,
+        EXAMPLE_16,
+        EXAMPLE_17,
+        EXAMPLE_18,
+        EXAMPLE_19,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -130,19 +170,44 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
 
 
 @pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_15, "http://google.com"),
+        (EXAMPLE_16, "http://127.0.0.1"),
+        (EXAMPLE_17, "http://localhost"),
+        (EXAMPLE_18, "http://[::1]"),
+        (EXAMPLE_19, "http://[::1]:80:80"),  # TODO: This may or may not be acceptable.
+    ],
+)
+def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].url == expected
+
+
+@pytest.mark.parametrize(
     "rule_value",
     [
         EXAMPLE_1,
         EXAMPLE_2,
+        EXAMPLE_3,
         EXAMPLE_4,
+        EXAMPLE_5,
         EXAMPLE_6,
         EXAMPLE_7,
         EXAMPLE_8,
+        EXAMPLE_9,
         EXAMPLE_10,
         EXAMPLE_11,
         EXAMPLE_12,
         EXAMPLE_13,
         EXAMPLE_14,
+        EXAMPLE_20,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

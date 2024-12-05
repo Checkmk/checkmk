@@ -49,7 +49,7 @@ def _migrate_ssl_choices(value: object) -> str:
             return "ssl_1_2"
         case "1" | "2" | "3":
             return f"ssl_{value}"
-        case "auto" | "ssl_1" | "ssl_2" | "ssl_3":
+        case "auto" | "ssl_1" | "ssl_2" | "ssl_3" | "ssl_1_1" | "ssl_1_2":
             return str(value)
     raise ValueError(value)
 

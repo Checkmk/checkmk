@@ -44,6 +44,8 @@ HACK_AGENTS = {
     "three_par": True,
     "emcvnx": True,
     "rabbitmq": True,
+    "redfish": False,
+    "redfish_power": False,
     "tinkerforge": False,  # needs no secret
     "couchbase": True,
     "zerto": True,

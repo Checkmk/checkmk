@@ -1337,6 +1337,9 @@ class Site:
             if re.search("Cannot render negative timespan", crash_detail):
                 logger.warning("Ignored crash report due to CMK-18635!")
                 continue
+            if re.search("systime", crash_detail):
+                logger.warning("Ignored crash report. See CMK-20674")
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

@@ -7,8 +7,9 @@ SCRIPTS := $(realpath ../scripts)
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
+UVENV := $(SCRIPTS)/run-uvenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
-CYCLES := $(PIPENV) run py_import_cycles
+CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(PIPENV) run 3to2
@@ -398,27 +399,14 @@ test-shellcheck-docker:
 test-cycles:
 	$(CYCLES) \
 		--packages \
-			$$(realpath -L ..)/cmk \
-			$$(realpath -L ..)/packages/cmk-agent-based/cmk \
-			$$(realpath -L ..)/packages/cmk-agent-receiver/cmk \
-			$$(realpath -L ..)/packages/cmk-ccc/cmk \
-			$$(realpath -L ..)/packages/cmk-crypto/cmk \
-			$$(realpath -L ..)/packages/cmk-events/cmk \
-			$$(realpath -L ..)/packages/cmk-graphing/cmk \
-			$$(realpath -L ..)/packages/cmk-livestatus-client/cmk \
-			$$(realpath -L ..)/packages/cmk-messaging/cmk \
-			$$(realpath -L ..)/packages/cmk-mkp-tool/cmk \
-			$$(realpath -L ..)/packages/cmk-rulesets/cmk \
-			$$(realpath -L ..)/packages/cmk-server-side-calls/cmk \
-			$$(realpath -L ..)/packages/cmk-werks/cmk \
-			$$(realpath -L ..)/packages/cmk-trace/cmk \
-			$$(realpath -L ..)/omd/packages/omd/omdlib \
+		    $$($(UVENV) scripts/find_cmk_namespace_package_paths.py) \
+		    $$(realpath -L ..)/omd/packages/omd/omdlib \
 		--strategy johnson \
 		--threshold 114 \
 		--verbose
 
 test-cycles-docker:
-	../scripts/run-in-docker.sh make --quiet test-cycles
+	../scripts/run-in-docker.sh TERM=xterm make --quiet test-cycles
 
 test-unit-omdlib:
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \

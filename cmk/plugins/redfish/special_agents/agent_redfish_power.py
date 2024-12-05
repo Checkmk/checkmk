@@ -11,7 +11,6 @@ from pathlib import Path
 
 import redfish
 import urllib3
-from cmk_addons.plugins.redfish.tools import verify_response
 from redfish.rest.v1 import JsonDecodingError, RetriesExhaustedError, ServerDownOrUnreachableError
 
 from cmk.utils import password_store
@@ -317,7 +316,7 @@ class VendorRaritanData(VendorGeneric):
     expand_string = ""
 
 
-def detect_vendor(root_data):
+def detect_vendor(root_data):  # pylint: disable=too-many-branches
     """Extract Vendor information from base data"""
     vendor_string = ""
     if root_data.get("Oem"):

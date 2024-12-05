@@ -4,16 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Redfish firmware inventory for HPE devices"""
 
-from cmk_addons.plugins.redfish.lib import (
-    parse_redfish,
-    RedfishAPIData,
-)
-
 from cmk.agent_based.v2 import (
     AgentSection,
     InventoryPlugin,
     InventoryResult,
     TableRow,
+)
+from cmk.plugins.redfish.lib import (
+    parse_redfish,
+    RedfishAPIData,
 )
 
 agent_section_redfish_firmware_hpe_ilo4 = AgentSection(

@@ -6,7 +6,7 @@
 
 import sys
 
-from cmk_addons.plugins.redfish.special_agents.agent_redfish import main
+from cmk.plugins.redfish.special_agents.agent_redfish import main
 
 if __name__ == "__main__":
     sys.exit(main())

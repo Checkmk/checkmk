@@ -18,15 +18,11 @@ class RedfishCollectionNotFoundError(Exception):
     Raised when the specified collection is not found (HTTP Status = 404)
     """
 
-    pass
-
 
 class RedfishCollectionMemberNotFoundError(Exception):
     """
     Raised when the specified member is not found (HTTP Status = 404)
     """
-
-    pass
 
 
 def verify_response(response):
@@ -46,10 +42,9 @@ def verify_response(response):
                 f"Operation failed: HTTP {response.status}\n{exception_string}",
                 message_item["MessageArgs"][0],
             )
-        else:
-            raise RedfishOperationFailedError(
-                f"Operation failed: HTTP {response.status}\n{exception_string}"
-            )
+        raise RedfishOperationFailedError(
+            f"Operation failed: HTTP {response.status}\n{exception_string}"
+        )
 
 
 def get_object_ids(context, object_dict, object_name):

@@ -4,12 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Redfish temperature checks"""
 
-from cmk_addons.plugins.redfish.lib import (
-    process_redfish_perfdata,
-    redfish_health_state,
-    RedfishAPIData,
-)
-
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -20,6 +14,11 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+from cmk.plugins.redfish.lib import (
+    process_redfish_perfdata,
+    redfish_health_state,
+    RedfishAPIData,
+)
 
 
 def discovery_redfish_temperatures(section: RedfishAPIData) -> DiscoveryResult:

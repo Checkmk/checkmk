@@ -418,7 +418,7 @@ class RedfishData:
     section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(default_factory=dict)
 
 
-def detect_vendor(redfishobj):
+def detect_vendor(redfishobj):  # pylint: disable=too-many-branches
     """Extract Vendor information from base data"""
     root_data = redfishobj.base_data
     vendor_string = ""
@@ -472,7 +472,7 @@ def detect_vendor(redfishobj):
     return redfishobj
 
 
-def get_information(redfishobj):
+def get_information(redfishobj):  # pylint: disable=too-many-branches
     """get a the information from the Redfish management interface"""
     load_section_data(redfishobj)
     redfishobj.base_data = fetch_data(redfishobj, "/redfish/v1", "Base")

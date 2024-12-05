@@ -7,12 +7,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk_addons.plugins.redfish.lib import (
-    parse_redfish_multiple,
-    redfish_health_state,
-    RedfishAPIData,
-)
-
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -24,6 +18,11 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.elphase import (
     check_elphase,
+)
+from cmk.plugins.redfish.lib import (
+    parse_redfish_multiple,
+    redfish_health_state,
+    RedfishAPIData,
 )
 
 agent_section_redfish_mains = AgentSection(

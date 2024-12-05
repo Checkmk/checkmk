@@ -4,13 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """check single redfish sensor state"""
 
-from cmk_addons.plugins.redfish.lib import (
-    parse_redfish_multiple,
-    process_redfish_perfdata,
-    redfish_health_state,
-    RedfishAPIData,
-)
-
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -27,6 +20,12 @@ from cmk.plugins.lib.humidity import (
 from cmk.plugins.lib.temperature import (
     check_temperature,
     TempParamDict,
+)
+from cmk.plugins.redfish.lib import (
+    parse_redfish_multiple,
+    process_redfish_perfdata,
+    redfish_health_state,
+    RedfishAPIData,
 )
 
 agent_section_redfish_sensors = AgentSection(

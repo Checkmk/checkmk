@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Mapping
+from contextlib import suppress
+from ipaddress import AddressValueError, IPv6Address, NetmaskValueError
 from pprint import pprint
 from typing import Literal
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, HttpUrl, ValidationError
 
 from cmk.utils.redis import disable_redis
 
@@ -16,6 +19,22 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
+
+
+class HostType(enum.Enum):
+    IPV6 = enum.auto()
+    EMBEDDABLE = enum.auto()
+    INVALID = enum.auto()
+
+
+def _classify(host: str) -> HostType:
+    with suppress(ValidationError):
+        HttpUrl(url=f"http://{host}")
+        return HostType.EMBEDDABLE
+    with suppress(AddressValueError, NetmaskValueError):
+        IPv6Address(host)
+        return HostType.IPV6
+    return HostType.INVALID
 
 
 class V1Host(BaseModel, extra="forbid"):

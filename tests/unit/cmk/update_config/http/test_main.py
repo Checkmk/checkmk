@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.update_config.http.main import _migratable
+from cmk.update_config.http.main import _classify, _migratable, HostType
 
 EXAMPLE_1 = {
     "name": "My web page",
@@ -147,3 +147,18 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:
     assert not _migratable(rule_value)
+
+
+@pytest.mark.parametrize(
+    "host,type_",
+    [
+        ("google.com", HostType.EMBEDDABLE),
+        ("localhost", HostType.EMBEDDABLE),
+        ("127.0.0.1", HostType.EMBEDDABLE),
+        ("::1", HostType.IPV6),
+        ("[::1]", HostType.EMBEDDABLE),
+        ("::1127.0.0.1", HostType.INVALID),
+    ],
+)
+def test_classify(host: str, type_: HostType) -> None:
+    assert _classify(host) == type_

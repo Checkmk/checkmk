@@ -3,6 +3,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+@use "_mixins" as *;
+
 /* Global style used by all HTML pages, even by sidebar and
    mobile interface */
 
@@ -479,33 +481,6 @@ div.error {
   }
 }
 
-// TODO Render flashed messages in Sweetalert style, maybe we can implement
-// this one day in VUE including a button to make it disappear.
-@mixin flashed-mixin($color, $icon) {
-  padding: 16px 16px 16px 34px;
-  background-color: $ux-theme-4;
-  box-shadow: 0 2px rgba(0, 0, 0, 0.4);
-  position: relative;
-  box-sizing: border-box;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 22px;
-    height: 100%;
-    background-color: $color;
-    border-radius: 4px 0 0 4px;
-
-    background-image: $icon;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: auto;
-    z-index: 1;
-  }
-}
-
 .success.flashed {
   @include flashed-mixin($success, url("images/icon_checkmark.svg"));
 }
@@ -658,15 +633,6 @@ table.vs_dict_text {
     margin: 0;
     vertical-align: top;
   }
-}
-
-@mixin floating-text-mixin {
-  display: inline-block;
-  height: $input-field-height;
-  margin: $input-field-margin;
-  line-height: $input-field-height;
-  vertical-align: bottom;
-  box-sizing: border-box;
 }
 
 table.valuespec_tuple {
@@ -1129,13 +1095,6 @@ table.modifydowntimes > tbody > tr {
   border: none;
 }
 
-@mixin ellipsis-text-overflow {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .select2-container--default {
   .select2-results {
     color: $font-color-black;
@@ -1379,172 +1338,6 @@ input.hidden_submit {
 
 .italic {
   font-style: italic;
-}
-
-@mixin label-groups-mixin {
-  td.vlof_buttons,
-  td.vlof_content {
-    border: none;
-  }
-
-  td.vlof_content {
-    display: flex;
-    left: unset;
-    padding: 0 0 4px;
-
-    & > div {
-      display: inline-block;
-    }
-  }
-
-  tr {
-    position: relative;
-
-    td.vlof_buttons {
-      width: 0;
-      min-width: 0;
-      padding: 0;
-
-      a.delete_button img {
-        width: 5px;
-        height: 5px;
-        right: 3px;
-      }
-    }
-  }
-
-  tr[id*="label_groups_entry"],
-  tr[id*="labels_entry"] {
-    > td.vlof_buttons a.delete_button img {
-      opacity: 0.5;
-
-      &:hover {
-        opacity: 0.3;
-      }
-    }
-
-    > td.vlof_content > div.bool {
-      display: flex;
-      width: 6 * $spacing;
-      margin-top: 8px;
-
-      span.vs_label {
-        margin-right: 4px;
-        margin: 4px 7px 0;
-      }
-
-      span.select2-container--default {
-        width: 5 * $spacing !important;
-        height: max-content;
-      }
-
-      div.line {
-        width: 100%;
-        margin-top: $spacing;
-        border-top: 1px solid $line-color;
-      }
-    }
-  }
-
-  div.label_group {
-    flex-grow: 1;
-    padding: 8px;
-    background-color: $navbar-color;
-    border: 1px solid $line-color;
-    border-radius: $theme-border-radius;
-
-    td.vlof_content {
-      margin-right: $spacing;
-    }
-
-    tr:last-child {
-      td.vlof_buttons a.delete_button {
-        display: none;
-      }
-
-      td.vlof_content {
-        padding-bottom: 0;
-      }
-
-      span.select2-container--default {
-        opacity: $inactive-opacity;
-      }
-
-      &.active,
-      &:hover {
-        span.select2-container--default {
-          opacity: 1;
-        }
-      }
-    }
-
-    td.vlof_buttons a.delete_button img {
-      right: 0;
-      top: 0.5 * $spacing;
-      padding: 3px;
-      padding-right: 2px;
-    }
-
-    div.line {
-      display: none;
-    }
-
-    span.select2-container {
-      margin: 0;
-    }
-
-    // Boolean operator dropdowns
-    select[id$="_bool"] {
-      & + span.select2-container--default {
-        width: 6 * $spacing !important;
-      }
-    }
-
-    // Valuespec (label) dropdowns
-    select[id$="_vs"] {
-      + span.select2-container--default {
-        flex-grow: 1;
-        margin-left: 4px;
-
-        span.select2-selection__rendered {
-          padding: 0 5px;
-
-          span.select2-selection__clear {
-            display: none;
-          }
-        }
-
-        span.select2-selection__arrow {
-          display: none;
-        }
-      }
-    }
-
-    a.vlof_add_button,
-    br {
-      display: none;
-    }
-
-    a.delete_button img {
-      position: absolute;
-    }
-  }
-
-  a.vlof_add_button {
-    display: inline-block;
-    margin: $spacing 2px;
-    background: transparent;
-    text-decoration: none;
-    font-weight: $font-weight-bold;
-
-    img {
-      margin: 0 4px 2px 0;
-    }
-  }
-
-  br {
-    display: none;
-  }
 }
 
 // Sweetalert2

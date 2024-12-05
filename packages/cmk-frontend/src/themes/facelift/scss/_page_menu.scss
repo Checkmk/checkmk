@@ -1,7 +1,9 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
+
 body.main {
   td.shortcuts {
     a.suggested {
@@ -482,16 +484,16 @@ div#page_menu_popups {
           border-color: $color-state-1-background;
         }
         &:hover {
-          background-color: darken($color-state-1-background, 5%);
-          border-color: darken($color-state-1-background, 5%);
+          background-color: color.adjust($color-state-1-background, $lightness: -5%);
+          border-color: color.adjust($color-state-1-background, $lightness: -5%);
         }
       }
       button.confirm_warning {
         &,
         &:active {
           color: $white;
-          background-color: darken($color-state-2-background, 5%);
-          border-color: darken($color-state-2-background, 5%);
+          background-color: color.adjust($color-state-2-background, $lightness: -5%);
+          border-color: color.adjust($color-state-2-background, $lightness: -5%);
         }
         &:hover {
           background-color: $color-state-2-background;
@@ -664,7 +666,7 @@ div.page_menu_popup {
       &.active,
       &:hover,
       &:focus {
-        background-color: darken($input-button-hover-bg-color, 7%);
+        background-color: color.adjust($input-button-hover-bg-color, $lightness: -7%);
       }
     }
     span.vs_age_footer {
@@ -992,7 +994,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
         &.active,
         &:hover,
         &:focus {
-          background-color: darken($input-button-hover-bg-color, 7%);
+          background-color: color.adjust($input-button-hover-bg-color, $lightness: -7%);
         }
       }
 

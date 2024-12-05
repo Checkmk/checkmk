@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -75,7 +76,7 @@ div#detailed_timeline {
   }
 
   .legend-highest-usage {
-    fill: darken($flapping, 20%);
+    fill: color.adjust($flapping, $lightness: -20%);
   }
 
   .line-subscription-start-end {

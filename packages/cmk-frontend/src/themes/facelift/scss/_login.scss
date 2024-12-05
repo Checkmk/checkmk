@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -58,7 +59,7 @@ body.login {
 
       span.remaining_time {
         font-weight: $font-weight-bold;
-        color: darken($new-success, 5%);
+        color: color.adjust($new-success, $lightness: -5%);
       }
 
       div.time_bar {
@@ -71,7 +72,7 @@ body.login {
           }
 
           &.remaining {
-            background-color: darken($new-success, 5%);
+            background-color: color.adjust($new-success, $lightness: -5%);
           }
         }
       }
@@ -148,12 +149,12 @@ body.login {
     margin: 0;
     font-weight: $font-weight-bold;
     border: 1px solid $default-submit-button-border-color;
-    background-color: darken($new-success, 5%);
+    background-color: color.adjust($new-success, $lightness: -5%);
   }
 
   #_login:not(.hot),
   #_saml2_login_button:not(.hot) {
-    background-color: darken($input-button-hover-bg-color, 5%);
+    background-color: color.adjust($input-button-hover-bg-color, $lightness: -5%);
     &:hover {
       background-color: $input-button-hover-bg-color;
     }

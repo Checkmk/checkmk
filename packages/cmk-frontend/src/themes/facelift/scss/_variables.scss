@@ -1,3 +1,4 @@
+@use "sass:color";
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -155,7 +156,7 @@ $help-icon-bg-color: rgb(12, 129, 238);
 $help-tt-font-color: $font-color-blue-2;
 
 $timeline-hilite-border: null;
-$timetable-hilite-bg-color: darken($ux-theme-0, 15%);
+$timetable-hilite-bg-color: color.adjust($ux-theme-0, $lightness: -15%);
 
 $graph-hover-popup-bg-color: $ux-theme-0;
 $graph-hover-popup-border: 1px solid rgb(204, 207, 219);

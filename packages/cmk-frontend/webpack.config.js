@@ -115,6 +115,10 @@ module.exports = {
                                 // https://github.com/sass/dart-sass#javascript-api
                                 outputStyle: "expanded",
                                 precision: 10,
+                                // https://sass-lang.com/blog/import-is-deprecated/
+                                // we have to adjust our themes implementation first
+                                // CMK-20712
+                                silenceDeprecations: ["import"],
                             },
                         },
                     },

@@ -21,7 +21,6 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -64,7 +63,6 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
             shared_type_defs.Catalog(
                 title=title,
                 help=help_text,
-                i18n_base=base_i18n_form_spec(),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 topics=topics,
             ),

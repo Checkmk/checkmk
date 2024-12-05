@@ -16,7 +16,6 @@ from cmk.rulesets.v1 import Title
 from ._base import FormSpecVisitor
 from ._type_defs import EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     create_validation_error,
     get_title_and_help,
@@ -77,7 +76,6 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                 label_source=self.form_spec.label_source.value
                 if self.form_spec.label_source
                 else None,
-                i18n_base=base_i18n_form_spec(),
             ),
             {} if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

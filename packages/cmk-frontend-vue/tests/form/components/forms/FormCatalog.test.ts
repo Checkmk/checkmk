@@ -67,7 +67,6 @@ function renderSimpleCatalog() {
         type: 'catalog',
         title: 'catalog title',
         help: 'catalog help',
-        i18n_base: { required: 'required' },
         validators: [],
         topics: [
           {

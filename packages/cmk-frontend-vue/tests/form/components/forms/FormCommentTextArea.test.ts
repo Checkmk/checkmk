@@ -20,7 +20,6 @@ const validators: FormSpec.Validator[] = [
 const spec: FormSpec.CommentTextArea = {
   type: 'comment_text_area',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: validators,
   input_hint: 'fooInputHint',
   title: 'fooTitle',

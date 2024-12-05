@@ -11,7 +11,6 @@ const spec: FormSpec.DataSize = {
   type: 'data_size',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   displayed_magnitudes: ['mag_foo', 'mag_bar'],
   validators: [],
   label: 'fooLabel',

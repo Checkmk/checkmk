@@ -27,7 +27,6 @@ const catalog = ref<Catalog>({
   type: 'catalog',
   title: 'title',
   help: 'some_help',
-  i18n_base: { required: 'required' },
   validators: [],
   topics: [
     {
@@ -50,7 +49,6 @@ const catalog = ref<Catalog>({
               type: 'string',
               title: 'string title',
               help: 'some string help',
-              i18n_base: { required: 'required' },
               validators: []
             }
           }

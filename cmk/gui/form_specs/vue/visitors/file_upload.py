@@ -23,7 +23,6 @@ from cmk.rulesets.v1.form_specs.validators import ValidationError
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -151,7 +150,6 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
             VueComponents.FileUpload(
                 title=title,
                 help=help_text,
-                i18n_base=base_i18n_form_spec(),
                 validators=build_vue_validators(self._validators()),
                 i18n=VueComponents.FileUploadI18n(
                     replace_file=_("Replace file"),

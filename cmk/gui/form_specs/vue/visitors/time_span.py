@@ -19,7 +19,6 @@ from cmk.rulesets.v1.form_specs.validators import NumberInRange
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_input_hint,
     compute_validation_errors,
     compute_validators,
@@ -124,7 +123,6 @@ class TimeSpanVisitor(FormSpecVisitor[TimeSpan, float]):
                     day=localize(Label("days")),
                 ),
                 input_hint=compute_input_hint(self.form_spec.prefill),
-                i18n_base=base_i18n_form_spec(),
             ),
             None if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

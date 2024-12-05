@@ -70,7 +70,6 @@ function getTupleSpec(
     type: 'tuple',
     title: 'some title',
     help: 'some help',
-    i18n_base: { required: 'required' },
     validators: [],
     layout: layout,
     show_titles: showTitles,

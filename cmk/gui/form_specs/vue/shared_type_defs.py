@@ -17,11 +17,6 @@ from typing import Any, Optional, Union
 
 
 @dataclass(kw_only=True)
-class I18nFormSpecBase:
-    required: str
-
-
-@dataclass(kw_only=True)
 class IsInteger:
     error_message: str
     type: str = "is_integer"
@@ -57,6 +52,11 @@ class MatchRegex:
 
 
 Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange, MatchRegex]
+
+
+@dataclass(kw_only=True)
+class I18nFormSpecBase:
+    required: str
 
 
 class StringFieldSize(str, Enum):
@@ -276,7 +276,6 @@ class FormSpec:
     title: str
     help: str
     validators: list[Validator]
-    i18n_base: I18nFormSpecBase
 
 
 @dataclass(kw_only=True)
@@ -284,6 +283,7 @@ class Integer(FormSpec):
     label: Optional[str]
     unit: Optional[str]
     input_hint: Optional[str]
+    i18n_base: I18nFormSpecBase
     type: str = "integer"
 
 
@@ -292,6 +292,7 @@ class Float(FormSpec):
     label: Optional[str]
     unit: Optional[str]
     input_hint: Optional[str]
+    i18n_base: I18nFormSpecBase
     type: str = "float"
 
 
@@ -307,6 +308,7 @@ class String(FormSpec):
     input_hint: Optional[str]
     field_size: StringFieldSize
     autocompleter: Optional[Autocompleter]
+    i18n_base: I18nFormSpecBase
     type: str = "string"
 
 
@@ -314,6 +316,7 @@ class String(FormSpec):
 class Password(FormSpec):
     password_store_choices: list[PasswordStoreChoice]
     i18n: I18nPassword
+    i18n_base: I18nFormSpecBase
     type: str = "password"
 
 
@@ -342,6 +345,7 @@ class Dictionary(FormSpec):
     groups: list[DictionaryGroup]
     no_elements_text: str
     additional_static_elements: Optional[dict[str, Any]]
+    i18n_base: I18nFormSpecBase
     type: str = "dictionary"
     elements: list[DictionaryElement] = field(default_factory=lambda: [])
     layout: DictionaryLayout = DictionaryLayout.one_column
@@ -353,6 +357,7 @@ class SingleChoice(FormSpec):
     frozen: bool
     label: Optional[str]
     input_hint: Optional[str]
+    i18n_base: I18nFormSpecBase
     type: str = "single_choice"
     elements: list[SingleChoiceElement] = field(default_factory=lambda: [])
 
@@ -384,6 +389,7 @@ class CascadingSingleChoiceElement:
 class CascadingSingleChoice(FormSpec):
     label: Optional[str]
     input_hint: Optional[str]
+    i18n_base: I18nFormSpecBase
     type: str = "cascading_single_choice"
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical
@@ -482,6 +488,7 @@ class SingleChoiceEditable(FormSpec):
     config_entity_type_specifier: str
     elements: list[SingleChoiceElement]
     i18n: SingleChoiceEditableI18n
+    i18n_base: I18nFormSpecBase
     type: str = "single_choice_editable"
 
 
@@ -503,6 +510,7 @@ class Folder(FormSpec):
 class ConditionChoices(FormSpec):
     condition_groups: dict[str, ConditionGroup]
     i18n: ConditionChoicesI18n
+    i18n_base: I18nFormSpecBase
     type: str = "condition_choices"
 
 

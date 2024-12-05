@@ -17,7 +17,6 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -72,7 +71,6 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
                     translate_to_current_language
                 ),
                 editable_order=self.form_spec.editable_order,
-                i18n_base=base_i18n_form_spec(),
             ),
             list_values,
         )

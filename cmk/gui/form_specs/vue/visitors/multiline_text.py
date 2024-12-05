@@ -13,7 +13,6 @@ from cmk.rulesets.v1.form_specs import MultilineText
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_input_hint,
     compute_label,
     compute_validation_errors,
@@ -52,7 +51,6 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
                 monospaced=self.form_spec.monospaced,
                 macro_support=self.form_spec.macro_support,
                 label=compute_label(self.form_spec.label),
-                i18n_base=base_i18n_form_spec(),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

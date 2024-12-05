@@ -156,7 +156,6 @@ const listFormSpec: FormSpec.List = {
   type: 'list',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: [],
   element_template: stringFormSpec,
   element_default_value: '',
@@ -240,7 +239,6 @@ const booleanChoiceFormSpec: FormSpec.BooleanChoice = {
   title: 'fooTitle',
   label: 'fooLabel',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   text_on: 'on',
   text_off: 'off',
   validators: []
@@ -289,7 +287,6 @@ const multilineTextFormSpec: FormSpec.MultilineText = {
   type: 'multiline_text',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: [],
   label: 'fooLabel',
   macro_support: false,
@@ -312,7 +309,6 @@ const labelsFormSpec: FormSpec.Labels = {
   type: 'labels',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   i18n: {
     add_some_labels: 'Add some labels',
     key_value_format_error: 'Key value format error',

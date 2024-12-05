@@ -27,7 +27,6 @@ const spec = ref<OptionalChoice>({
   type: 'optional_choice',
   title: 'some title',
   help: 'some help',
-  i18n_base: { required: 'required' },
   validators: [],
   i18n: {
     label: 'i18n label',

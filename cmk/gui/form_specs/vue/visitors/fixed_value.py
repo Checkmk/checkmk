@@ -16,7 +16,6 @@ from cmk.rulesets.v1.form_specs import FixedValue
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -45,7 +44,6 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
                 label=localize(self.form_spec.label) if self.form_spec.label is not None else None,
                 value=parsed_value,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                i18n_base=base_i18n_form_spec(),
             ),
             parsed_value,
         )

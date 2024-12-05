@@ -15,7 +15,6 @@ const spec: CheckboxListChoice = {
   type: 'checkbox_list_choice',
   title: 'some title',
   help: 'some help',
-  i18n_base: { required: 'required' },
   validators: [],
   elements: [
     {

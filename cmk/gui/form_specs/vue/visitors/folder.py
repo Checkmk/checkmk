@@ -14,7 +14,6 @@ from cmk.rulesets.v1.form_specs import validators
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     create_validation_error,
     get_title_and_help,
@@ -60,7 +59,6 @@ class FolderVisitor(FormSpecVisitor[Folder, str]):
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
                 input_hint=self.form_spec.input_hint,
-                i18n_base=base_i18n_form_spec(),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

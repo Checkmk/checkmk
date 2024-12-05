@@ -15,7 +15,6 @@ const spec = ref<List>({
   type: 'list',
   title: 'some title',
   help: 'some help',
-  i18n_base: { required: 'required' },
   validators: [],
   element_default_value: '',
   editable_order: true,

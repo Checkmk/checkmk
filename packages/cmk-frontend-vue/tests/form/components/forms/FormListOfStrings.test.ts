@@ -32,7 +32,6 @@ const spec: FormSpec.ListOfStrings = {
   type: 'list_of_strings',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   layout: 'horizontal',
   validators: stringValidators,
   string_spec: stringFormSpec,

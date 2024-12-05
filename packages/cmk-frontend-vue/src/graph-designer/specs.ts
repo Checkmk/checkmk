@@ -42,7 +42,6 @@ export function makeFixedValue(): FormSpec.FixedValue {
     type: 'fixed_value',
     title: '',
     help: '',
-    i18n_base: { required: 'required' },
     validators: [],
     label: null,
     value: null
@@ -54,7 +53,6 @@ export function makeBooleanChoice(): FormSpec.BooleanChoice {
     type: 'boolean_choice',
     title: '',
     help: '',
-    i18n_base: { required: 'required' },
     validators: [],
     label: null,
     text_on: '',

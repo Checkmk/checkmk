@@ -44,6 +44,7 @@ export type Integer = FormSpec & {
   label: string | null;
   unit: string | null;
   input_hint: string | null;
+  i18n_base: I18NFormSpecBase;
 };
 export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange | MatchRegex;
 export type Float = FormSpec & {
@@ -51,6 +52,7 @@ export type Float = FormSpec & {
   label: string | null;
   unit: string | null;
   input_hint: string | null;
+  i18n_base: I18NFormSpecBase;
 };
 export type String = FormSpec & {
   type: "string";
@@ -58,6 +60,7 @@ export type String = FormSpec & {
   input_hint: string | null;
   field_size: StringFieldSize;
   autocompleter: null | Autocompleter;
+  i18n_base: I18NFormSpecBase;
 };
 export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
@@ -67,6 +70,7 @@ export type Dictionary = FormSpec & {
   no_elements_text: string;
   additional_static_elements: {} | null;
   layout: DictionaryLayout;
+  i18n_base: I18NFormSpecBase;
 };
 export type DictionaryLayout = "one_column" | "two_columns";
 export type List = FormSpec & {
@@ -94,6 +98,7 @@ export type SingleChoice = FormSpec & {
   frozen: boolean;
   label: string | null;
   input_hint: string | null;
+  i18n_base: I18NFormSpecBase;
 };
 export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
@@ -101,6 +106,7 @@ export type CascadingSingleChoice = FormSpec & {
   label: string | null;
   input_hint: string | null;
   layout: CascadingSingleChoiceLayout;
+  i18n_base: I18NFormSpecBase;
 };
 export type CascadingSingleChoiceLayout = "vertical" | "horizontal" | "button_group";
 export type LegacyValuespec = FormSpec & {
@@ -144,6 +150,7 @@ export type Password = FormSpec & {
     name: string;
   }[];
   i18n: I18NPassword;
+  i18n_base: I18NFormSpecBase;
 };
 export type DataSize = FormSpec & {
   type: "data_size";
@@ -181,6 +188,7 @@ export type SingleChoiceEditable = FormSpec & {
   config_entity_type_specifier: string;
   elements: SingleChoiceElement[];
   i18n: SingleChoiceEditableI18N;
+  i18n_base: I18NFormSpecBase;
 };
 export type Tuple = FormSpec & {
   type: "tuple";
@@ -215,6 +223,7 @@ export type ConditionChoices = FormSpec & {
     [k: string]: ConditionGroup;
   };
   i18n: ConditionChoicesI18N;
+  i18n_base: I18NFormSpecBase;
 };
 export type Labels = FormSpec & {
   type: "labels";
@@ -247,7 +256,6 @@ export interface FormSpec {
   title: string;
   help: string;
   validators: Validator[];
-  i18n_base: I18NFormSpecBase;
 }
 export interface IsInteger {
   type: "is_integer";

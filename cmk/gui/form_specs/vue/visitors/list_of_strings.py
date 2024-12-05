@@ -15,7 +15,6 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -58,7 +57,6 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, Sequence[str]]):
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 string_spec=string_spec,
                 string_default_value=string_default_value,
-                i18n_base=base_i18n_form_spec(),
             ),
             parsed_value or [""],
         )

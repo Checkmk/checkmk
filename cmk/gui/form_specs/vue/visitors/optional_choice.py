@@ -14,7 +14,6 @@ from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -65,7 +64,6 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 parameter_form=embedded_schema,
                 parameter_form_default_value=embedded_value,
-                i18n_base=base_i18n_form_spec(),
             ),
             None if parsed_value is None else embedded_value,
         )

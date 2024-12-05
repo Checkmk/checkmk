@@ -35,7 +35,6 @@ const spec: FormSpec.Tuple = {
   type: 'tuple',
   title: 'barTitle',
   help: 'barHelp',
-  i18n_base: { required: 'required' },
   layout: 'horizontal',
   show_titles: true,
   validators: [],

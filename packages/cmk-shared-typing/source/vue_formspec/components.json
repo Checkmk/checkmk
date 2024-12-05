@@ -20,19 +20,19 @@
                         "type": "object",
                         "$ref": "validators.json#/$defs/validator"
                     }
-                },
-                "i18n_base": {
-                    "type": "object",
-                    "title": "i18nFormSpecBase",
-                    "properties": {
-                        "required": {
-                            "type": "string"
-                        }
-                    },
-                    "required": ["required"]
                 }
             },
-            "required": ["type", "title", "help", "validators", "i18n_base"]
+            "required": ["type", "title", "help", "validators"]
+        },
+        "i18n_base": {
+            "type": "object",
+            "title": "i18nFormSpecBase",
+            "properties": {
+                "required": {
+                    "type": "string"
+                }
+            },
+            "required": ["required"]
         },
         "integer": {
             "type": "object",
@@ -55,9 +55,18 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "label", "unit", "input_hint"]
+                    "required": [
+                        "type",
+                        "label",
+                        "unit",
+                        "input_hint",
+                        "i18n_base"
+                    ]
                 }
             ]
         },
@@ -82,9 +91,18 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "label", "unit", "input_hint"]
+                    "required": [
+                        "type",
+                        "label",
+                        "unit",
+                        "input_hint",
+                        "i18n_base"
+                    ]
                 }
             ]
         },
@@ -141,6 +159,9 @@
                                     "$ref": "#/$defs/autocompleter"
                                 }
                             ]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -149,7 +170,8 @@
                         "placeholder",
                         "input_hint",
                         "field_size",
-                        "autocompleter"
+                        "autocompleter",
+                        "i18n_base"
                     ]
                 }
             ]
@@ -205,9 +227,17 @@
                                 "no_password_store_choices",
                                 "password_choice_invalid"
                             ]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "password_store_choices", "i18n"]
+                    "required": [
+                        "type",
+                        "password_store_choices",
+                        "i18n",
+                        "i18n_base"
+                    ]
                 }
             ]
         },
@@ -388,6 +418,9 @@
                             "title": "DictionaryLayout",
                             "enum": ["one_column", "two_columns"],
                             "default": "one_column"
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -397,7 +430,8 @@
                         "additional_static_elements",
                         "no_elements_text",
                         "groups",
-                        "layout"
+                        "layout",
+                        "i18n_base"
                     ]
                 }
             ]
@@ -445,6 +479,9 @@
                         },
                         "input_hint": {
                             "type": ["string", "null"]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -453,7 +490,8 @@
                         "label",
                         "input_hint",
                         "frozen",
-                        "elements"
+                        "elements",
+                        "i18n_base"
                     ]
                 }
             ]
@@ -626,6 +664,9 @@
                             "title": "CascadingSingleChoiceLayout",
                             "enum": ["vertical", "horizontal", "button_group"],
                             "default": "vertical"
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -633,7 +674,8 @@
                         "elements",
                         "label",
                         "input_hint",
-                        "layout"
+                        "layout",
+                        "i18n_base"
                     ]
                 }
             ]
@@ -1107,6 +1149,9 @@
                                 "fatal_error",
                                 "fatal_error_reload"
                             ]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
                     "required": [
@@ -1114,7 +1159,8 @@
                         "i18n",
                         "config_entity_type",
                         "config_entity_type_specifier",
-                        "elements"
+                        "elements",
+                        "i18n_base"
                     ]
                 }
             ]
@@ -1265,9 +1311,17 @@
                                 "or_operator",
                                 "nor_operator"
                             ]
+                        },
+                        "i18n_base": {
+                            "$ref": "#/$defs/i18n_base"
                         }
                     },
-                    "required": ["type", "condition_groups", "i18n"]
+                    "required": [
+                        "type",
+                        "condition_groups",
+                        "i18n",
+                        "i18n_base"
+                    ]
                 }
             ]
         },

@@ -19,7 +19,6 @@ const spec: FormSpec.Folder = {
   type: 'folder',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   validators: validators,
   input_hint: 'fooInputHint'
 }

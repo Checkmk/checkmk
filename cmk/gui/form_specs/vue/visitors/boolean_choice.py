@@ -13,7 +13,6 @@ from cmk.rulesets.v1.form_specs import BooleanChoice
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    base_i18n_form_spec,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -41,7 +40,6 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
-                i18n_base=base_i18n_form_spec(),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 text_on=localize(Label("on")),
                 text_off=localize(Label("off")),

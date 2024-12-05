@@ -11,7 +11,6 @@ const spec: FormSpec.CheckboxListChoice = {
   type: 'checkbox_list_choice',
   title: 'fooTitle',
   help: 'fooHelp',
-  i18n_base: { required: 'required' },
   elements: [
     { name: 'choice1', title: 'Choice 1' },
     { name: 'choice2', title: 'Choice 2' },

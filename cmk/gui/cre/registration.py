@@ -110,9 +110,7 @@ def register_painters() -> None:
 
 
 def register(edition: Edition) -> None:
-    autocomplete.register(endpoint_registry)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
-    metric_endpoint.register(endpoint_registry)
     common_registration(
         mega_menu_registry,
         job_registry,
@@ -273,3 +271,9 @@ def register(edition: Edition) -> None:
         main_module_registry,
         permission_registry,
     )
+    _openapi_registration()
+
+
+def _openapi_registration() -> None:
+    autocomplete.register(endpoint_registry)
+    metric_endpoint.register(endpoint_registry)

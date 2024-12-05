@@ -183,17 +183,12 @@ class DirectHost:
         return self.settings.port
 
     def virtual_host(self, mode: Mode) -> str | None:
-        return (
-            self.settings.virtual
-            if isinstance(self.settings.virtual, str)
-            # In URL mode, don't return the address in this case, because check_http would
-            # automatically set the HTTP Host header and use HTTP/1.1 instead of
-            # HTTP/1.0. This can lead to request timeouts on hosts which are
-            # not compliant with HTTP/1.1.
-            else None
-            if mode is Mode.URL
-            else self.address
-        )
+        if isinstance(self.settings.virtual, str):
+            return self.settings.virtual
+        # In URL mode, don't return the address, because check_http would automatically set the HTTP
+        # Host header and use HTTP/1.1 instead of HTTP/1.0. This can lead to request timeouts on
+        # hosts which are not compliant with HTTP/1.1.
+        return None if mode is Mode.URL else self.address
 
 
 @dataclass(frozen=True)

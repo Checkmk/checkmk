@@ -356,12 +356,10 @@ class RestApiClient:
                     # other redirect codes should reuse the method of the original request
                     method = "get"
                     req_body = None
-                url = resp.headers["Location"]
-                if not url.startswith(self._url_prefix):
-                    url = self._url_prefix + url
+
                 resp = self.request_handler.request(
                     method=method,
-                    url=url,
+                    url=self._get_redirect_url(resp.headers["Location"]),
                     query_params=query_params,
                     body=req_body,
                     headers=default_headers,
@@ -373,6 +371,20 @@ class RestApiClient:
                 url, method, body, default_headers, resp, query_params=query_params
             )
         return resp
+
+    def _get_redirect_url(self, location_header: str) -> str:
+        prefix = urllib.parse.urlparse(self._url_prefix)
+        location = urllib.parse.urlparse(location_header)
+        return urllib.parse.urlunparse(
+            (
+                location.scheme or prefix.scheme,
+                location.netloc or prefix.netloc,
+                location.path,
+                location.params,
+                location.query,
+                location.fragment,
+            )
+        )
 
     def follow_link(
         self,
@@ -523,7 +535,7 @@ class ActivateChangesClient(RestApiClient):
                 "sites": sites,
                 "force_foreign_changes": force_foreign_changes,
             },
-            expect_ok=False,
+            expect_ok=True,
             headers=self._set_etag_header(etag),
             follow_redirects=True,
             redirect_timeout_seconds=timeout_seconds,

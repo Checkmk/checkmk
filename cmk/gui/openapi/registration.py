@@ -11,6 +11,7 @@ from cmk.gui.openapi.endpoints import (
     agent,
     audit_log,
     aux_tags,
+    background_job,
     broker_connection,
     cert,
     comment,
@@ -50,6 +51,7 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
+    background_job.register(endpoint_registry)
     cert.register(endpoint_registry)
     comment.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)

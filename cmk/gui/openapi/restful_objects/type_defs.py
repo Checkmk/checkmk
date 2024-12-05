@@ -17,6 +17,7 @@ DomainType = Literal[
     "agent",
     "agent_binary",
     "audit_log",
+    "background_job",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",

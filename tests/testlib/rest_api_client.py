@@ -72,6 +72,7 @@ API_DOMAIN = Literal[
     "managed_robots",
     "notification_parameter",
     "broker_connection",
+    "background_job",
 ]
 
 
@@ -3128,6 +3129,17 @@ class BrokerConnectionClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class BackgroundJobClient(RestApiClient):
+    domain: API_DOMAIN = "background_job"
+
+    def get(self, job_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{job_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3177,6 +3189,7 @@ class ClientRegistry:
     QuickSetup: QuickSetupClient
     ManagedRobots: ManagedRobotsClient
     BrokerConnection: BrokerConnectionClient
+    BackgroundJob: BackgroundJobClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3218,4 +3231,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
         ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
+        BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
     )

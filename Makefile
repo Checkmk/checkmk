@@ -290,7 +290,4 @@ Pipfile.lock:
 
 # .venv_uv is PHONY because the dependencies are resolved by bazel
 .venv_uv: Pipfile.lock
-	@( \
-		flock $(LOCK_FD); \
-		$(REPO_PATH)/scripts/run-bazel.sh run //:create_venv \
-	) $(LOCK_FD)>$(LOCK_PATH)
+	$(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

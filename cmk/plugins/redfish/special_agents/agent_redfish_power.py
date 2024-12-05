@@ -316,7 +316,7 @@ class VendorRaritanData(VendorGeneric):
     expand_string = ""
 
 
-def detect_vendor(root_data):  # pylint: disable=too-many-branches
+def detect_vendor(root_data):
     """Extract Vendor information from base data"""
     vendor_string = ""
     if root_data.get("Oem"):
@@ -325,47 +325,61 @@ def detect_vendor(root_data):  # pylint: disable=too-many-branches
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
-    if vendor_string in ["Hpe", "Hp"]:
-        vendor_data = VendorHPEData()
-        manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
-        if manager_data:
-            vendor_data.version = manager_data.get("ManagerType")
-            if vendor_data.version is None:
-                vendor_data.version = (
-                    root_data.get("Oem", {})
-                    .get(vendor_string, {})
-                    .get("Moniker", {})
-                    .get("PRODGEN")
-                )
-            vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
-            if vendor_data.firmware_version is None:
-                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get("Version")
-            if vendor_data.version.lower() == "ilo 5":
-                vendor_data.view_supported = True
-    elif vendor_string in ["Lenovo"]:
-        vendor_data = VendorLenovoData()
-    elif vendor_string in ["Dell"]:
-        vendor_data = VendorDellData()
-        vendor_data.version = "iDRAC"
-    elif vendor_string in ["Huawei"]:
-        vendor_data = VendorHuaweiData()
-    elif vendor_string in ["ts_fujitsu"]:
-        vendor_data = VendorFujitsuData()
-        vendor_data.version = "iRMC"
-    elif vendor_string in ["Ami"]:
-        vendor_data = VendorAmiData()
-    elif vendor_string in ["Supermicro"]:
-        vendor_data = VendorSupermicroData()
-    elif vendor_string in ["Cisco", "Cisco Systems Inc."]:
-        vendor_data = VendorCiscoData()
-        vendor_data.version = "CIMC"
-    elif vendor_string in ["Raritan"]:
-        vendor_data = VendorRaritanData()
-        vendor_data.version = "BMC"
-    else:
-        vendor_data = VendorGeneric()
+    match vendor_string:
+        case "Hpe" | "Hp":
+            vendor_data = VendorHPEData()
+            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
+            if manager_data:
+                vendor_data.version = manager_data.get("ManagerType")
+                if vendor_data.version is None:
+                    vendor_data.version = (
+                        root_data.get("Oem", {})
+                        .get(vendor_string, {})
+                        .get("Moniker", {})
+                        .get("PRODGEN")
+                    )
+                vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
+                if vendor_data.firmware_version is None:
+                    vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
+                        "Version"
+                    )
+                if vendor_data.version.lower() == "ilo 5":
+                    vendor_data.view_supported = True
+            return vendor_data
 
-    return vendor_data
+        case "Lenovo":
+            return VendorLenovoData()
+
+        case "Dell":
+            vendor_data = VendorDellData()
+            vendor_data.version = "iDRAC"
+            return vendor_data
+
+        case "Huawei":
+            return VendorHuaweiData()
+
+        case "ts_fujitsu":
+            vendor_data = VendorFujitsuData()
+            vendor_data.version = "iRMC"
+            return vendor_data
+
+        case "Ami":
+            return VendorAmiData()
+
+        case "Supermicro":
+            return VendorSupermicroData()
+
+        case "Cisco" | "Cisco Systems Inc.":
+            vendor_data = VendorCiscoData()
+            vendor_data.version = "CIMC"
+            return vendor_data
+
+        case "Raritan":
+            vendor_data = VendorRaritanData()
+            vendor_data.version = "BMC"
+            return vendor_data
+
+    return VendorGeneric()
 
 
 def get_information(redfishobj):

@@ -25,7 +25,7 @@ class RedfishCollectionMemberNotFoundError(Exception):
     """
 
 
-def verify_response(response):
+def _verify_response(response):
     """
     Verifies a response and raises an exception if there was a failure
 
@@ -66,13 +66,13 @@ def get_object_ids(context, object_dict, object_name):
         raise RedfishCollectionNotFoundError(
             f"Service does not contain a collection at URI {collection_uri}"
         )
-    verify_response(collection)
+    _verify_response(collection)
     while True:
         for member in collection.dict["Members"]:
             avail_members.append(member["@odata.id"].strip("/").split("/")[-1])
         if "Members@odata.nextLink" not in collection.dict:
             break
         collection = context.get(collection.dict["Members@odata.nextLink"])
-        verify_response(collection)
+        _verify_response(collection)
 
     return avail_members

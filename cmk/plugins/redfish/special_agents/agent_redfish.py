@@ -418,9 +418,8 @@ class RedfishData:
     section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(default_factory=dict)
 
 
-def detect_vendor(redfishobj):  # pylint: disable=too-many-branches
+def detect_vendor(root_data):
     """Extract Vendor information from base data"""
-    root_data = redfishobj.base_data
     vendor_string = ""
     if root_data.get("Oem"):
         if len(root_data.get("Oem")) > 0:
@@ -428,48 +427,49 @@ def detect_vendor(redfishobj):  # pylint: disable=too-many-branches
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
-    if vendor_string in ["Hpe", "Hp"]:
-        vendor_data = VendorData(name="HPE", expand_string="?$expand=.")
-        if vendor_string in ["Hp"]:
-            vendor_data.expand_string = ""
-        manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
-        if manager_data:
-            vendor_data.version = manager_data.get("ManagerType")
-            if vendor_data.version is None:
-                vendor_data.version = (
-                    root_data.get("Oem", {})
-                    .get(vendor_string, {})
-                    .get("Moniker", {})
-                    .get("PRODGEN")
-                )
-            vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
-            if vendor_data.firmware_version is None:
-                vendor_data.firmware_version = manager_data.get("Languages", {})[0].get("Version")
-    elif vendor_string in ["Lenovo"]:
-        vendor_data = VendorData(name="Lenovo", version="xClarity", expand_string="?$expand=*")
-    elif vendor_string in ["Dell"]:
-        vendor_data = VendorData(
-            name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)"
-        )
-    elif vendor_string in ["Huawei"]:
-        vendor_data = VendorData(
-            name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29"
-        )
-    elif vendor_string in ["ts_fujitsu"]:
-        vendor_data = VendorData(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
-    elif vendor_string in ["Ami"]:
-        vendor_data = VendorData(name="Ami")
-    elif vendor_string in ["Supermicro"]:
-        vendor_data = VendorData(name="Supermicro")
-    elif vendor_string in ["Cisco", "Cisco Systems Inc."]:
-        vendor_data = VendorData(name="Cisco", version="CIMC")
-    elif vendor_string in ["Seagate"]:
-        vendor_data = VendorData(name="Seagate")
-    else:
-        vendor_data = VendorData(name="Generic")
+    match vendor_string:
+        case "Hpe" | "Hp":
+            vendor_data = VendorData(name="HPE", expand_string="?$expand=.")
+            if vendor_string in ["Hp"]:
+                vendor_data.expand_string = ""
+            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
+            if manager_data:
+                vendor_data.version = manager_data.get("ManagerType")
+                if vendor_data.version is None:
+                    vendor_data.version = (
+                        root_data.get("Oem", {})
+                        .get(vendor_string, {})
+                        .get("Moniker", {})
+                        .get("PRODGEN")
+                    )
+                vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
+                if vendor_data.firmware_version is None:
+                    vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
+                        "Version"
+                    )
+            return vendor_data
 
-    redfishobj.vendor_data = vendor_data
-    return redfishobj
+        case "Lenovo":
+            return VendorData(name="Lenovo", version="xClarity", expand_string="?$expand=*")
+
+        case "Dell":
+            return VendorData(name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)")
+
+        case "Huawei":
+            return VendorData(
+                name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29"
+            )
+
+        case "ts_fujitsu":
+            return VendorData(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
+
+        case "Cisco" | "Cisco Systems Inc.":
+            return VendorData(name="Cisco", version="CIMC")
+
+        case "Ami" | "Supermicro" | "Seagate" as name:
+            return VendorData(name=name)
+
+    return VendorData(name="Generic")
 
 
 def get_information(redfishobj):  # pylint: disable=too-many-branches
@@ -477,7 +477,7 @@ def get_information(redfishobj):  # pylint: disable=too-many-branches
     load_section_data(redfishobj)
     redfishobj.base_data = fetch_data(redfishobj, "/redfish/v1", "Base")
 
-    detect_vendor(redfishobj)
+    redfishobj.vendor_data = detect_vendor(redfishobj.base_data)
 
     manager_url = redfishobj.base_data.get("Managers", {}).get("@odata.id")
     chassis_url = redfishobj.base_data.get("Chassis", {}).get("@odata.id")

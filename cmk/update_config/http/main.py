@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from pprint import pprint
 from typing import Literal
 
-from pydantic import BaseModel, Extra, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from cmk.utils.redis import disable_redis
 
@@ -18,7 +18,7 @@ from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 
-class V1Host(BaseModel):
+class V1Host(BaseModel, extra="forbid"):
     # "ipv4_enforced", "ipv6_enforced", "primary_enforced" don't have a counter part in V2.
     # "primary_enforced" has the additional issue, that the ssc would also need to support it.
     address_family: Literal["any", None] = None
@@ -30,22 +30,15 @@ class V1Host(BaseModel):
     # physical host.
     virthost: None = None
 
-    class Config:
-        extra = Extra.forbid
+
+class V1Url(BaseModel, extra="forbid"):
+    pass
 
 
-class V1Url(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-
-class V1Value(BaseModel):
+class V1Value(BaseModel, extra="forbid"):
     name: str
     host: V1Host
     mode: tuple[Literal["url"], V1Url]
-
-    class Config:
-        extra = Extra.forbid
 
 
 def _migratable(rule_value: Mapping[str, object]) -> bool:

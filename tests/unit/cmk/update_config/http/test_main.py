@@ -95,6 +95,27 @@ EXAMPLE_11: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_12: Mapping[str, object] = {
+    # cert mode will ignore the address field
+    "name": "cert_mode",
+    "host": {"address": ("direct", "google.com")},
+    "mode": ("cert", {"cert_days": ("fixed", (0.0, 0.0))}),
+}
+
+EXAMPLE_13: Mapping[str, object] = {
+    # proxy will always set a virtual host, even if none is specified
+    "name": "proxy_sets_virt",
+    "host": {"address": ("proxy", {"address": "duckduckgo.com"})},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_14: Mapping[str, object] = {
+    # proxy settings will pass the port multiple times to check_http
+    "name": "proxy_specifies_port",
+    "host": {"address": ("proxy", {"address": "duckduckgo.com"}), "port": 600},
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -119,6 +140,9 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         EXAMPLE_8,
         EXAMPLE_10,
         EXAMPLE_11,
+        EXAMPLE_12,
+        EXAMPLE_13,
+        EXAMPLE_14,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

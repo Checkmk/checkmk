@@ -60,11 +60,9 @@ define __spec_install_pre %{___build_pre} &&\
 
 %pre
 
-# In case of an upgrade, we must cleanup here.
-# 'preun' runs after the new scripts have been deployed
-# (too late cleanup files only deployed by the old package).
-if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
-    /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+if [ -r /var/lib/cmk-agent/cmk-agent/scripts/super-server/setup ]; then
+    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup cleanup
+    /bin/sh /var/lib/cmk-agent/var/lib/cmk-agent/scripts/super-server/setup trigger
 fi
 
 %posttrans
@@ -90,11 +88,6 @@ fi
 
 %preun
 
-case "$1" in
-    0 | remove | purge)
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
-        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
-        ;;
-esac
-
 /bin/sh /var/lib/cmk-agent/scripts/manage-binaries.sh remove
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger

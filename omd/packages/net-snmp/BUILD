@@ -1,4 +1,4 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
 load("//bazel/rules:make_deployable.bzl", "make_deployable_file")
@@ -56,11 +56,17 @@ pkg_files(
     strip_prefix = "rest",
 )
 
+pkg_mkdirs(
+    name = "net-snmp_skel",
+    dirs = ["skel/local/share/snmp/mibs/"],
+)
+
 pkg_filegroup(
     name = "net-snmp_files_pkg",
     srcs = [
         ":net-snmp_bin_pkg",
         ":net-snmp_rest_pkg",
+        ":net-snmp_skel",
     ],
     visibility = ["//visibility:public"],
 )

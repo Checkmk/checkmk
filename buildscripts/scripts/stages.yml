@@ -102,13 +102,13 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/\\|^packages/site/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/site/check-cert/' --regexp '^packages/site/Cargo' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/\\|^packages/site/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/site/check-http/' --regexp '^packages/site/Cargo' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/host/mk-sql/' --regexp '^packages/host/Cargo' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
@@ -117,7 +117,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/\\|^packages/host/Cargo.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/host/cmk-agent-ctl/' --regexp '^packages/host/Cargo' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"

@@ -102,6 +102,11 @@ def check_broker_ping(site: Site, destination: str, time_out_: int = 5) -> None:
             time_out_, Timeout(f"`cmk-broker-test {destination}` timed out after {time_out_}s")
         ):
             _collect_output_while_waiting(ping.stdout)
+
+        if "UUIDs match" not in output[-1]:
+            raise RuntimeError(
+                f"cmk-broker-test received another message from {destination} than sent"
+            )
         if ping.stderr is not None and (error_output := ping.stderr.read()):
             logger.error("stderr: %s", error_output)
             raise RuntimeError(f"cmk-broker-test communication with {destination} failed")

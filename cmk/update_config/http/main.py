@@ -26,6 +26,9 @@ class V1Host(BaseModel):
     # true, if client_cert is true, client private key or -S is enabled. On redirect new ports might
     # be defined. This behaviour will not transfer to the new check, most likely.
     port: int | None = None
+    # disallow any virtual host. This option is cannot be migrated, since we can't specify a
+    # physical host.
+    virthost: None = None
 
     class Config:
         extra = Extra.forbid

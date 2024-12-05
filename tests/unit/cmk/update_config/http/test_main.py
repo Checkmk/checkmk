@@ -83,6 +83,18 @@ EXAMPLE_9: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_10: Mapping[str, object] = {
+    "name": "two_addresses",
+    "host": {"address": ("direct", "google.com"), "virthost": "facebook.de"},
+    "mode": ("url", {}),
+}
+
+EXAMPLE_11: Mapping[str, object] = {
+    "name": "virthost_only",
+    "host": {"virthost": "facebook.de"},
+    "mode": ("url", {}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -105,6 +117,8 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         EXAMPLE_6,
         EXAMPLE_7,
         EXAMPLE_8,
+        EXAMPLE_10,
+        EXAMPLE_11,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

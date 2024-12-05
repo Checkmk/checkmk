@@ -41,8 +41,8 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_fallback_email"
@@ -67,8 +67,8 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_fallback_format"
@@ -95,8 +95,8 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_backlog"
@@ -120,8 +120,8 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_bulk_interval"
@@ -146,8 +146,8 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_plugin_timeout"
@@ -164,8 +164,8 @@ class ConfigVariableNotificationLogging(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainCore()
 
     def ident(self) -> str:
         return "notification_logging"
@@ -191,8 +191,8 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "failed_notification_horizon"

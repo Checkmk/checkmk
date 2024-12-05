@@ -151,7 +151,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v().domain() == self.__class__
+            if v().domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -284,9 +284,9 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         raise NotImplementedError()
 
-    def domain(self) -> type[ABCConfigDomain]:
-        """Returns the class of the config domain this configuration variable belongs to"""
-        return config_domain_registry["check_mk"].__class__
+    def domain(self) -> ABCConfigDomain:
+        """Returns the config domain this configuration variable belongs to"""
+        return config_domain_registry["check_mk"]
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.

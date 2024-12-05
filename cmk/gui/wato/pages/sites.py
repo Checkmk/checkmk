@@ -1564,7 +1564,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             "edit-configvar",
             msg,
             sites=[self._site_id],
-            domains=[config_variable.domain()()],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
 
@@ -1741,7 +1741,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         _changes.add_change(
             "edit-configvar",
             _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
-            domains=[config_variable.domain()()],
+            domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
         save_global_settings(

@@ -21,8 +21,8 @@ class ConfigVariableEnable(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupDistributedPiggyback
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainDistributedPiggyback
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainDistributedPiggyback()
 
     def ident(self) -> str:
         return "piggyback_hub_enabled"

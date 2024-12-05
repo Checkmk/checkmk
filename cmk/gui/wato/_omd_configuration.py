@@ -90,8 +90,8 @@ class ConfigVariableSiteAutostart(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_autostart"
@@ -110,8 +110,8 @@ class ConfigVariableSiteCore(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_core"
@@ -200,8 +200,8 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_livestatus_tcp"
@@ -258,8 +258,8 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainDiskspace
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainDiskspace()
 
     def ident(self) -> str:
         return "diskspace_cleanup"
@@ -443,8 +443,8 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainApache
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainApache()
 
     def ident(self) -> str:
         return "apache_process_tuning"
@@ -566,8 +566,8 @@ class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainRRDCached
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainRRDCached()
 
     def ident(self) -> str:
         return "rrdcached_tuning"

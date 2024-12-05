@@ -306,7 +306,7 @@ def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
-        assert issubclass(var.domain(), ABCConfigDomain)
+        assert isinstance(var.domain(), ABCConfigDomain)
         assert isinstance(var.ident(), str)
         assert isinstance(var.valuespec(), ValueSpec)
 

@@ -15,8 +15,8 @@ class ConfigVariableCrashReportURL(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "crash_report_url"
@@ -33,8 +33,8 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "crash_report_target"

@@ -34,8 +34,8 @@ class ConfigVariableSiteTraceSend(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_trace_send"
@@ -81,8 +81,8 @@ class ConfigVariableSiteTraceReceive(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainOMD()
 
     def ident(self) -> str:
         return "site_trace_receive"

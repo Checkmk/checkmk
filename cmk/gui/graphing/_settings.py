@@ -16,8 +16,8 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
+    def domain(self) -> ABCConfigDomain:
+        return ConfigDomainGUI()
 
     def ident(self) -> str:
         return "graph_timeranges"

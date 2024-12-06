@@ -52,7 +52,7 @@ class V1Host(BaseModel, extra="forbid"):
 
 
 class V1Url(BaseModel, extra="forbid"):
-    pass
+    uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -76,6 +76,8 @@ def _migratable(rule_value: Mapping[str, object]) -> bool:
 
 def _migrate(rule_value: V1Value) -> Mapping[str, object]:
     port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
+    url_params = rule_value.mode[1]
+    path = url_params.uri or ""
     return {
         "endpoints": [
             {
@@ -85,7 +87,7 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
-                "url": f"http://{rule_value.host.address[1]}{port}",
+                "url": f"http://{rule_value.host.address[1]}{port}{path}",
             }
         ],
     }

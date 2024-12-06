@@ -154,6 +154,17 @@ EXAMPLE_20: Mapping[str, object] = {
     "mode": ("url", {}),
 }
 
+EXAMPLE_21: Mapping[str, object] = {
+    "name": "ipv6",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": (
+        "url",
+        {
+            "uri": "/werks",
+        },
+    ),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -163,6 +174,7 @@ EXAMPLE_20: Mapping[str, object] = {
         EXAMPLE_17,
         EXAMPLE_18,
         EXAMPLE_19,
+        EXAMPLE_21,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -177,6 +189,7 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         (EXAMPLE_17, "http://localhost"),
         (EXAMPLE_18, "http://[::1]"),
         (EXAMPLE_19, "http://[::1]:80:80"),  # TODO: This may or may not be acceptable.
+        (EXAMPLE_21, "http://[::1]/werks"),
     ],
 )
 def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:

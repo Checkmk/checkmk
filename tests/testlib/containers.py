@@ -68,9 +68,9 @@ def execute_tests_in_container(
         host_config=client.api.create_host_config(
             # Create some init process that manages signals and processes
             init=True,
-            # needed to make the overlay mounts work on the /git directory
-            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-            privileged=True,
+            cap_add=["SYS_ADMIN"],
+            # Why unconfined? see https://github.com/moby/moby/issues/16429
+            security_opt=["apparmor:unconfined"],
             # Important to workaround really high default of docker which results
             # in problems when trying to close all FDs in Python 2.
             ulimits=[
@@ -317,9 +317,9 @@ def _create_cmk_image(
         },
         command=["tail", "-f", "/dev/null"],  # keep running
         host_config=client.api.create_host_config(
-            # needed to make the overlay mounts work on the /git directory
-            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-            privileged=True,
+            cap_add=["SYS_ADMIN"],
+            # Why unconfined? see https://github.com/moby/moby/issues/16429
+            security_opt=["apparmor:unconfined"],
             binds=_image_build_binds(),
         ),
     ) as container:

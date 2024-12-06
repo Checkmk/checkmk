@@ -434,9 +434,6 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         # Note: We may skip the CatalogConverter and build the Catalog ourselves
         return self._get_catalog_converter().catalog
 
-    def _validate_vs(self, entry: dict[str, Any], varprefix: str) -> None:
-        pass
-
     def valuespec(self) -> Dictionary:
         general_elements = self._vs_mandatory_elements()
         general_keys = [k for k, _v in general_elements]
@@ -454,7 +451,6 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 (_("%s properties") % self._mode_type.name_singular().title(), individual_keys),
             ],
             render="form",
-            validate=self._validate_vs,
         )
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:

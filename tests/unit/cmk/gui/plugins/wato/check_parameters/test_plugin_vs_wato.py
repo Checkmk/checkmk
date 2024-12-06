@@ -15,11 +15,14 @@ from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
+from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
+from cmk.gui.wato import RulespecGroupDiscoveryCheckParameters
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     Rulespec,
     rulespec_registry,
+    RulespecSubGroup,
 )
 
 T = t.TypeVar("T")
@@ -204,7 +207,11 @@ def load_plugin(agent_based_plugins: AgentBasedPlugins) -> t.Iterator[PluginProt
 
 def load_wato() -> t.Iterator[WatoProtocol]:
     for element in rulespec_registry.values():
-        if element.group == RulespecGroupCheckParametersDiscovery:
+        if isinstance(group := element.group(), RulespecGroupCheckParametersDiscovery) or (
+            isinstance(group, RulespecSubGroup)
+            and GENERATED_GROUP_PREFIX in group.__class__.__name__
+            and issubclass(group.main_group, RulespecGroupDiscoveryCheckParameters)
+        ):
             yield WatoDiscovery(element)
         elif element.group == RulespecGroupInventory:
             yield WatoInventory(element)

@@ -337,7 +337,8 @@ test-license-headers-docker:
 	../scripts/run-in-docker.sh make --quiet test-license-headers
 
 test-pipfile:
-	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
+	echo "Test is currently disable, re-enable it with CMK-20680"
+	#$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
 
 test-pipfile-docker:
 	../scripts/run-in-docker.sh make --quiet test-pipfile

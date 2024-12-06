@@ -265,6 +265,8 @@ def test_registered_painters() -> None:
         "inv_hardware_cpu_threads_per_cpu",
         "inv_hardware_cpu_type",
         "inv_hardware_cpu_voltage",
+        "inv_hardware_firmware",
+        "inv_hardware_firmware_redfish",
         "inv_hardware_memory",
         "inv_hardware_memory_arrays",
         "inv_hardware_memory_total_ram_usable",
@@ -541,6 +543,11 @@ def test_registered_painters() -> None:
         "invfan_name",
         "invfan_serial",
         "invfan_software",
+        "invfirmwareredfish_component",
+        "invfirmwareredfish_description",
+        "invfirmwareredfish_location",
+        "invfirmwareredfish_updateable",
+        "invfirmwareredfish_version",
         "invhist_changed",
         "invhist_delta",
         "invhist_new",
@@ -860,7 +867,7 @@ def test_registered_painters() -> None:
             "customer_num_services_warn",
         ]
 
-    assert sorted(painters) == sorted(expected_painters)
+    assert set(painters) == set(expected_painters)
 
 
 @pytest.fixture(name="service_painter_idents")

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.httpv2 import parse_http_params
+from cmk.plugins.collection.server_side_calls.httpv2 import parse_http_params, TlsVersion
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.update_config.http.main import _classify, _migratable, _migrate, HostType, V1Value
 
@@ -165,6 +165,43 @@ EXAMPLE_21: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_22: Mapping[str, object] = {
+    "name": "tls1",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_1"}),
+}
+
+EXAMPLE_23: Mapping[str, object] = {
+    "name": "ssl2",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_2"}),
+}
+
+EXAMPLE_24: Mapping[str, object] = {
+    "name": "ssl3",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_3"}),
+}
+
+EXAMPLE_25: Mapping[str, object] = {
+    "name": "tls_1_2",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "ssl_1_2"}),
+}
+
+EXAMPLE_26: Mapping[str, object] = {
+    "name": "tls_1_3",
+    "host": {"address": ("direct", "google.com")},
+    "mode": ("url", {"ssl": "ssl_1_3"}),
+}
+
+
+EXAMPLE_27: Mapping[str, object] = {
+    "name": "tls_auto_negotiation",
+    "host": {"address": ("direct", "[::1]")},
+    "mode": ("url", {"ssl": "auto"}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value",
@@ -175,6 +212,9 @@ EXAMPLE_21: Mapping[str, object] = {
         EXAMPLE_18,
         EXAMPLE_19,
         EXAMPLE_21,
+        EXAMPLE_25,
+        EXAMPLE_26,
+        EXAMPLE_27,
     ],
 )
 def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
@@ -190,6 +230,8 @@ def test_migrateable_rules(rule_value: Mapping[str, object]) -> None:
         (EXAMPLE_18, "http://[::1]"),
         (EXAMPLE_19, "http://[::1]:80:80"),  # TODO: This may or may not be acceptable.
         (EXAMPLE_21, "http://[::1]/werks"),
+        (EXAMPLE_25, "https://[::1]"),
+        (EXAMPLE_26, "https://google.com"),
     ],
 )
 def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
@@ -201,6 +243,27 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
     ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
     # Assert
     assert ssc_value[0].url == expected
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected",
+    [
+        (EXAMPLE_17, None),
+        (EXAMPLE_25, {"min_version": TlsVersion.TLS_1_2, "allow_higher": False}),
+        (EXAMPLE_26, {"min_version": TlsVersion.TLS_1_3, "allow_higher": False}),
+        (EXAMPLE_27, {"min_version": TlsVersion.AUTO, "allow_higher": True}),
+    ],
+)
+def test_migrate_ssl(rule_value: Mapping[str, object], expected: str) -> None:
+    # Assemble
+    value = V1Value.model_validate(rule_value)
+    # Act
+    migrated = _migrate(value)
+    # Assemble
+    ssc_value = parse_http_params(process_configuration_to_parameters(migrated).value)
+    # Assert
+    assert ssc_value[0].settings.connection is not None
+    assert ssc_value[0].settings.connection.model_dump().get("tls_versions") == expected
 
 
 @pytest.mark.parametrize(
@@ -221,6 +284,9 @@ def test_migrate_url(rule_value: Mapping[str, object], expected: str) -> None:
         EXAMPLE_13,
         EXAMPLE_14,
         EXAMPLE_20,
+        EXAMPLE_22,
+        EXAMPLE_23,
+        EXAMPLE_24,
     ],
 )
 def test_non_migrateable_rules(rule_value: Mapping[str, object]) -> None:

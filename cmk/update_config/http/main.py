@@ -53,6 +53,17 @@ class V1Host(BaseModel, extra="forbid"):
 
 class V1Url(BaseModel, extra="forbid"):
     uri: str | None = None  # TODO: passed via -u in V1, unclear whether this is the same as V2.
+    ssl: (
+        Literal[
+            "auto",  # use with auto-negotiation
+            "ssl_1_2",  # enforce TLS 1.2
+            "ssl_1_3",  # enforce TLS 1.3
+            # "ssl_1",  # enforce TLS 1.0, not supported in V2
+            # "ssl_2",  # enforce SSL 2.0, not supported in V2
+            # "ssl_3",  # enforce SSL 3.0, not supported in V2
+        ]
+        | None
+    ) = None
 
 
 class V1Value(BaseModel, extra="forbid"):
@@ -78,6 +89,21 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
     port = f":{rule_value.host.port}" if rule_value.host.port is not None else ""
     url_params = rule_value.mode[1]
     path = url_params.uri or ""
+    match url_params.ssl:
+        # In check_http.c (v1), this also determines the port.
+        case None:
+            scheme = "http"
+            tls_versions = {}
+        case "auto":
+            scheme = "https"
+            # TODO: PMs specified allow_higher False, revisit this, once we have their reasoning.
+            tls_versions = {"tls_versions": {"min_version": "auto", "allow_higher": True}}
+        case "ssl_1_2":
+            scheme = "https"
+            tls_versions = {"tls_versions": {"min_version": "tls_1_2", "allow_higher": False}}
+        case "ssl_1_3":
+            scheme = "https"
+            tls_versions = {"tls_versions": {"min_version": "tls_1_3", "allow_higher": False}}
     return {
         "endpoints": [
             {
@@ -87,7 +113,14 @@ def _migrate(rule_value: V1Value) -> Mapping[str, object]:
                 # `primary_ip_config.address` (see `get_ssc_host_config` is slightly differently
                 # implemented than `HOSTADDRESS` (see `attrs["address"]` in
                 # `cmk/base/config.py:3454`).
-                "url": f"http://{rule_value.host.address[1]}{port}{path}",
+                "url": f"{scheme}://{rule_value.host.address[1]}{port}{path}",
+                "individual_settings": {
+                    "connection": {
+                        # TODO: revisit this, it might be inconsistent with V1
+                        "method": ("get", None),
+                        **tls_versions,
+                    }
+                },
             }
         ],
     }

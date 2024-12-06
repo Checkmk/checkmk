@@ -28,7 +28,9 @@ SKIPPED_DUMPS = [
 #   Related: CMK-13774
 # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
 #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-SKIPPED_CHECKS = ["Postfix status", "Postfix Queue"]
+# * The 'Power x' (x=1,2,...) services have been renamed into 'Power supply'
+#   See Werk 16905.
+SKIPPED_CHECKS = ["Postfix status", "Postfix Queue", "Power 1"]
 
 
 def test_plugin_update(

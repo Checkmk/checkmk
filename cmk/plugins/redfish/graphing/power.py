@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Metric definition for PSUs"""
 
-from cmk.graphing.v1 import metrics, Title
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 metric_input_power = metrics.Metric(
     name="input_power",
@@ -20,9 +20,16 @@ metric_output_power = metrics.Metric(
     color=metrics.Color.BLUE,
 )
 
-metric_input_voltage = metrics.Metric(
-    name="input_voltage",
-    title=Title("Electrical input voltage"),
-    unit=metrics.Unit(metrics.DecimalNotation("Volt")),
-    color=metrics.Color.GREEN,
+perfometer_input_output_power = perfometers.Stacked(
+    name="power_summary",
+    lower=perfometers.Perfometer(
+        name=metric_input_power.name,
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(500.0)),
+        segments=[metric_input_power.name],
+    ),
+    upper=perfometers.Perfometer(
+        name=metric_output_power.name,
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(500.0)),
+        segments=[metric_output_power.name],
+    ),
 )

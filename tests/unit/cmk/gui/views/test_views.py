@@ -591,6 +591,13 @@ def test_registered_display_hints() -> None:
         ".hardware.cpu.threads_per_cpu",
         ".hardware.cpu.type",
         ".hardware.cpu.voltage",
+        ".hardware.firmware.",
+        ".hardware.firmware.redfish:",
+        ".hardware.firmware.redfish:*.component",
+        ".hardware.firmware.redfish:*.description",
+        ".hardware.firmware.redfish:*.location",
+        ".hardware.firmware.redfish:*.updateable",
+        ".hardware.firmware.redfish:*.version",
         ".hardware.memory.",
         ".hardware.memory.arrays:",
         ".hardware.memory.arrays:*.",
@@ -1135,7 +1142,7 @@ def test_registered_display_hints() -> None:
         ".software.packages:*.version",
     ]
 
-    assert sorted(inventory_displayhints.keys()) == sorted(expected)
+    assert set(inventory_displayhints) == set(expected)
 
 
 def test_get_inventory_display_hint() -> None:

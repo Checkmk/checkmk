@@ -211,7 +211,7 @@ def _allowed_for_base_cee(
         (
             _allowed_for_base(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
-            _in_component(imported=imported, component=Component("cmk.cee.robotmk.html_logs")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.html_log_dir")),
             _in_component(
                 imported=imported, component=Component("cmk.cee.robotmk.bakery.core_bakelets")
             ),

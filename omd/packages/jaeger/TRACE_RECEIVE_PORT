@@ -29,7 +29,15 @@ case "$1" in
             echo "$PORT"
         fi
 
-        sed -ri 's/endpoint: .*/endpoint: "'"$CONFIG_TRACE_RECEIVE_ADDRESS:$PORT"'"/' "$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-grpc.yaml
+# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
+---
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: "$CONFIG_TRACE_RECEIVE_ADDRESS:$PORT"
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

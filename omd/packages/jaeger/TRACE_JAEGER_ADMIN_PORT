@@ -21,7 +21,15 @@ case "$1" in
             echo "$PORT"
         fi
 
-        sed -ri 's/address: .*/address: "[::1]:'"$PORT"'"/' "$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml
+        cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-admin-port.yaml
+# Written by TRACE_JAEGER_ADMIN_PORT hook
+---
+service:
+    telemetry:
+        metrics:
+            level: detailed
+            address: "[::1]:$PORT"
+EOF
         ;;
     depends)
         [ "$CONFIG_TRACE_RECEIVE" = on ]

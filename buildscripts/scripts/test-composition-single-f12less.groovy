@@ -70,6 +70,14 @@ def main() {
         |===================================================
         """.stripMargin());
 
+    // this is a quick fix for FIPS based tests, see CMK-20851
+    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
+    if (build_node == "fips") {
+        // Do not start builds on FIPS node
+        println("Detected build node 'fips', switching this to 'fra'.");
+        build_node = "fra"
+    }
+
     stage("Prepare workspace") {
         inside_container(
             args: [
@@ -102,7 +110,7 @@ def main() {
                             DISTRO: distro,
                         ],
                         build_params_no_check: [
-                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                            CIPARAM_OVERRIDE_BUILD_NODE: build_node,
                         ],
                         dest: download_dir,
                     );

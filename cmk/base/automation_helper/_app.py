@@ -24,6 +24,7 @@ from cmk.base.automations import AutomationExitCode
 
 from ._cache import Cache
 from ._log import app_logger
+from ._tracer import tracer
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
@@ -103,6 +104,13 @@ def get_application(
         app_logger.setLevel(request.log_level)
 
         with (
+            tracer.start_as_current_span(
+                f"automation[{request.name}]",
+                attributes={
+                    "cmk.automation.name": request.name,
+                    "cmk.automation.args": request.args,
+                },
+            ),
             redirect_stdout(output_buffer := io.StringIO()),
             redirect_stderr(output_buffer),
             redirect_stdin(io.StringIO(request.stdin)),

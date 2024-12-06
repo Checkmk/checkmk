@@ -19,6 +19,7 @@ from ._app import get_application, reload_automation_config
 from ._cache import Cache
 from ._log import configure_app_logger, configure_watcher_logger
 from ._server import ApplicationServer, ApplicationServerConfig
+from ._tracer import configure_tracer
 from ._watcher import Watcher, WatcherConfig
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
@@ -34,6 +35,9 @@ def main() -> int:
         os.unsetenv("LANG")
 
         omd_root = Path(os.environ.get("OMD_ROOT", ""))
+
+        configure_tracer(omd_root)
+
         run_directory = omd_root / "tmp" / "run"
         log_directory = omd_root / "var" / "log" / APPLICATION_LOG_DIRECTORY
 

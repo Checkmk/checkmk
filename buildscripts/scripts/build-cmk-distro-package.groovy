@@ -71,6 +71,12 @@ def main() {
         |===================================================
         """.stripMargin());
 
+    // this is a quick fix for FIPS based tests, see CMK-20851
+    if (params.CIPARAM_OVERRIDE_BUILD_NODE == "fips") {
+        // Builds can not be done on FIPS node
+        error("Package builds can not be done on FIPS node");
+    }
+
     stage("Prepare workspace") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {

@@ -27,13 +27,9 @@ Checks: >
   -readability-avoid-return-with-void-value,
   -readability-identifier-length,
   -readability-magic-numbers,
-  -bugprone-suspicious-stringview-data-usage,
-  -cert-err33-c,
   -clang-analyzer-unix.StdCLibraryFunctions,
   -clang-analyzer-unix.Stream,
-  -misc-use-internal-linkage,
-  -performance-inefficient-vector-operation,
-  -performance-unnecessary-copy-initialization,
+  -misc-use-anonymous-namespace,
 
 WarningsAsErrors: '*'
 

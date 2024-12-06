@@ -30,10 +30,10 @@ struct thread_info {
     bool terminate_on_read_eof;
 };
 
-void printErrno(const std::string &msg) { ::perror(msg.c_str()); }
+static void printErrno(const std::string &msg) { ::perror(msg.c_str()); }
 
-ssize_t read_with_timeout(int from, std::vector<char> &buffer,
-                          std::chrono::microseconds timeout) {
+static ssize_t read_with_timeout(int from, std::vector<char> &buffer,
+                                 std::chrono::microseconds timeout) {
     Poller poller;
     poller.addFileDescriptor(from, PollEvents::in);
     // Do not handle FD errors.
@@ -42,7 +42,7 @@ ssize_t read_with_timeout(int from, std::vector<char> &buffer,
                : -2;
 }
 
-void *copy_thread(void *info) {
+static void *copy_thread(void *info) {
     (void)signal(SIGWINCH, SIG_IGN);
     const auto *tinfo = static_cast<thread_info *>(info);
     std::vector<char> read_buffer(buffer_size);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_un sockaddr {
         .sun_family = AF_UNIX, .sun_path = ""
     };
-    auto unixpath = arguments[1];
+    const auto &unixpath = arguments[1];
     unixpath.copy(&sockaddr.sun_path[0], sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)

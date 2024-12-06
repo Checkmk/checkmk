@@ -16,7 +16,8 @@
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
 
-bool operator<(const Metric::MangledName &x, const Metric::MangledName &y) {
+static bool operator<(const Metric::MangledName &x,
+                      const Metric::MangledName &y) {
     return x.string() < y.string();
 }
 
@@ -70,7 +71,7 @@ public:
 };
 
 /// Return sorted string vectors to make the diff readable.
-std::vector<std::string> human_readable(const Metric::Names &in) {
+static std::vector<std::string> human_readable(const Metric::Names &in) {
     std::vector<std::string> out(in.size());
     std::ranges::transform(in, std::begin(out),
                            [](auto &&elem) { return elem.string(); });

@@ -27,7 +27,7 @@ struct Blob {
     std::string contents;
 };
 
-std::ostream &operator<<(std::ostream &os, const Blob &blob) {
+static std::ostream &operator<<(std::ostream &os, const Blob &blob) {
     const OStreamStateSaver s(os);
     for (auto ch : blob.contents) {
         if (std::isprint(ch) != 0) {
@@ -40,11 +40,13 @@ std::ostream &operator<<(std::ostream &os, const Blob &blob) {
     return os;
 }
 
-bool operator==(const Blob &lhs, const Blob &rhs) {
+static bool operator==(const Blob &lhs, const Blob &rhs) {
     return lhs.contents == rhs.contents;
 }
 
-bool operator!=(const Blob &lhs, const Blob &rhs) { return !(lhs == rhs); }
+static bool operator!=(const Blob &lhs, const Blob &rhs) {
+    return !(lhs == rhs);
+}
 
 struct Param {
     OutputFormat format;
@@ -59,7 +61,7 @@ struct Param {
     std::string string;
 };
 
-std::ostream &operator<<(std::ostream &os, const Param &p) {
+static std::ostream &operator<<(std::ostream &os, const Param &p) {
     return os << "Param{" << static_cast<int>(p.format) << ", " << p.query
               << ", " << p.row << ", " << p.list << ", " << p.sublist << ", "
               << p.dict << ", " << p.null << ", " << p.blob << ", " << p.string

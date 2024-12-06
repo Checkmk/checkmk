@@ -897,7 +897,7 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
 }
 
 namespace {}  // namespace
-ColumnDefinitions labels_columns() {
+static ColumnDefinitions labels_columns() {
     return {
         {"name", ColumnType::string},
         {"value", ColumnType::string},

@@ -8,7 +8,7 @@
 #include "re2/re2.h"
 #include "re2/stringpiece.h"
 
-bool check_livestatus_available() {
+static bool check_livestatus_available() {
     setThreadName("main");
     Logger *logger_cmk = Logger::getLogger("cmk");
     logger_cmk->setUseParentHandlers(false);

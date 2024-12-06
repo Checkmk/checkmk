@@ -24,6 +24,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
@@ -105,85 +106,7 @@ def main() {
             }
 
             stage("Fetch agent binaries") {
-
-                upstream_build(
-                    relative_job_name: "builders/build-linux-agent-updater",
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: ["agents", "non-free/cmk-update-agent"],
-                    dest: "artifacts/build-linux-agent-updater",
-                );
-                dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
-                    sh("find .");
-                    sh("""
-                        cp *.deb *.rpm ${checkout_dir}/agents/
-                        mkdir -p ${checkout_dir}/agents/linux
-                        # artifact file flags are not being kept - building a tar would be better..
-                        install -m 755 cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/
-                    """);
-                    if (edition != "raw") {
-                        sh("install -m 755 cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
-                    }
-                }
-
-                upstream_build(
-                    relative_job_name: "winagt-build",  // TODO: move to builders
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: [
-                        "agents/wnx",
-                        "agents/windows",
-                        "packages/host/cmk-agent-ctl",
-                        "packages/host/mk-sql"
-                    ],
-                    dest: "artifacts/winagt-build",
-                );
-                dir("${checkout_dir}/artifacts/winagt-build") {
-                    sh("find .");
-                    // TODO: SPoT!!
-                    sh("""
-                       mkdir -p ${checkout_dir}/agents/windows
-                       cp \
-                        check_mk_agent-64.exe \
-                        check_mk_agent.exe \
-                        check_mk_agent.msi \
-                        check_mk_agent_unsigned.msi \
-                        check_mk.user.yml \
-                        OpenHardwareMonitorLib.dll \
-                        OpenHardwareMonitorCLI.exe \
-                        mk-sql.exe \
-                        robotmk_ext.exe \
-                        windows_files_hashes.txt \
-                        ${checkout_dir}/agents/windows/
-                    """);
-                }
-                dir("${checkout_dir}/agents/windows") {
-                    sh("""
-                        ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
-                        check_mk_agent.msi check_mk_agent_unsigned.msi unsign-msi.patch
-                    """);
-                }
-
-                upstream_build(
-                    relative_job_name: "winagt-build-modules",  // TODO: move to builders
-                    build_params: [
-                        DISABLE_CACHE: DISABLE_CACHE,
-                        VERSION: VERSION,
-                    ],
-                    // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                    dependency_paths: ["agents/modules/windows"],
-                    dest: "artifacts/winagt-build-modules",
-                );
-                dir("${checkout_dir}/agents/windows") {
-                    sh("find ${checkout_dir}/artifacts/winagt-build-modules");
-                    sh("cp ${checkout_dir}/artifacts/winagt-build-modules/*.cab .");
-                }
+                package_helper.provide_agent_updaters(VERSION, EDITION, DISABLE_CACHE);
             }
         }
     }

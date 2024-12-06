@@ -92,14 +92,14 @@ def inventory_cisco_power(info):
 
 
 def check_cisco_power(item, _no_params, info):
-    for sid, textinfo, state, source in info:
+    for sid, textinfo, state_str, source_str in info:
         item_name_base = item_name_from(textinfo)
         if item in (item_name_base, f"{item_name_base} {sid}", f"{item_name_base}/{sid}"):
-            state_str = cisco_power_states[int(state)]
-            source_str = cisco_power_sources[int(source)]
+            state = int(state_str)
+            source = int(source_str)
             return (
                 0 if state == 1 else 1 if state == 2 else 2,
-                f"Status: {state_str}, Source: {source_str}",
+                f"Status: {cisco_power_states[int(state)]}, Source: {cisco_power_sources[int(source)]}",
             )
     return None
 

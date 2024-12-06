@@ -21,12 +21,12 @@ def get_cache() -> Generator[Cache]:
 
 def test_set_and_get_last_automation_reload(cache: Cache) -> None:
     now = time.time()
-    cache.store_last_automation_helper_reload(now)
-    assert cache.last_automation_helper_reload == now
+    cache.store_last_automation_helper_reload("id", now)
+    assert cache.last_automation_helper_reload("id") == now
 
 
 def test_last_automation_reload_unset(cache: Cache) -> None:
-    assert cache.last_automation_helper_reload == 0.0
+    assert cache.last_automation_helper_reload("id") == 0.0
 
 
 def test_set_and_get_last_change_detected(cache: Cache) -> None:
@@ -41,4 +41,4 @@ def test_last_change_detected_unset(cache: Cache) -> None:
 
 def test_reload_required(cache: Cache) -> None:
     cache.store_last_detected_change(time.time())
-    assert cache.reload_required
+    assert cache.reload_required("id")

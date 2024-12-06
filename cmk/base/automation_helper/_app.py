@@ -66,11 +66,16 @@ class AutomationEngine(Protocol):
 
 
 def get_application(
-    *, engine: AutomationEngine, cache: Cache, reload_config: Callable[[], None]
+    *,
+    engine: AutomationEngine,
+    cache: Cache,
+    worker_id_callback: Callable[[], str],
+    reload_config: Callable[[], None],
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-        cache.store_last_automation_helper_reload(time.time())
+        app.state.worker_id = worker_id_callback()
+        cache.store_last_automation_helper_reload(worker_id_callback(), time.time())
         reload_config()
         yield
 
@@ -96,9 +101,9 @@ def get_application(
             return JSONResponse(resp.model_dump(), status_code=status.HTTP_408_REQUEST_TIMEOUT)
 
     @app.post("/automation")
-    async def automation(payload: AutomationPayload) -> AutomationResponse:
-        if cache.reload_required:
-            cache.store_last_automation_helper_reload(time.time())
+    async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
+        if cache.reload_required(worker_id := request.app.state.worker_id):
+            cache.store_last_automation_helper_reload(worker_id, time.time())
             reload_config()
 
         app_logger.setLevel(payload.log_level)
@@ -124,7 +129,9 @@ def get_application(
             return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
 
     @app.get("/health")
-    async def check_health() -> HealthCheckResponse:
-        return HealthCheckResponse(last_reload_at=cache.last_automation_helper_reload)
+    async def check_health(request: Request) -> HealthCheckResponse:
+        return HealthCheckResponse(
+            last_reload_at=cache.last_automation_helper_reload(request.app.state.worker_id)
+        )
 
     return app

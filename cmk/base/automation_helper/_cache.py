@@ -23,24 +23,22 @@ class Cache:
     def clear(self) -> None:
         self._client.delete(LAST_AUTOMATION_HELPER_RELOAD_TOPIC)
 
-    def store_last_automation_helper_reload(self, time: float) -> None:
-        self._client.set(LAST_AUTOMATION_HELPER_RELOAD_TOPIC, time)
+    def store_last_automation_helper_reload(self, worker_id: str, time: float) -> None:
+        self._client.hset(
+            LAST_AUTOMATION_HELPER_RELOAD_TOPIC,
+            key=worker_id,
+            value=time,
+        )
 
     def store_last_detected_change(self, time: float) -> None:
         self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
 
-    @property
-    def last_automation_helper_reload(self) -> float:
-        if fetched_value := self._client.get(LAST_AUTOMATION_HELPER_RELOAD_TOPIC):
-            return float(fetched_value)
-        return 0.0
+    def last_automation_helper_reload(self, worker_id: str) -> float:
+        return float(self._client.hget(LAST_AUTOMATION_HELPER_RELOAD_TOPIC, key=worker_id) or 0.0)
 
     @property
     def last_detected_change(self) -> float:
-        if fetched_value := self._client.get(LAST_DETECTED_CHANGE_TOPIC):
-            return float(fetched_value)
-        return 0.0
+        return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
 
-    @property
-    def reload_required(self) -> bool:
-        return self.last_automation_helper_reload < self.last_detected_change
+    def reload_required(self, worker_id: str) -> bool:
+        return self.last_automation_helper_reload(worker_id) < self.last_detected_change

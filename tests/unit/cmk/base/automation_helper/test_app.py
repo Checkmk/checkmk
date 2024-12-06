@@ -38,7 +38,12 @@ EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
 def get_test_client(*, engine: AutomationEngine) -> TestClient:
     """Helper for fetching fastapi test client."""
     cache = Cache.setup(client=FakeRedis())
-    app = get_application(engine=engine, cache=cache, reload_config=lambda: None)
+    app = get_application(
+        engine=engine,
+        cache=cache,
+        worker_id_callback=lambda: "id",
+        reload_config=lambda: None,
+    )
     return TestClient(app)
 
 

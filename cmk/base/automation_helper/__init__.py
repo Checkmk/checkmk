@@ -56,6 +56,7 @@ def main() -> int:
         app = get_application(
             engine=automations,
             cache=cache,
+            worker_id_callback=lambda: str(os.getpid()),
             reload_config=reload_automation_config,
         )
 

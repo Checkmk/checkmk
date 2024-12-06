@@ -17,11 +17,6 @@ RUN apt-get update
 # msitools:  needed for `msiinfo` in test source package
 # jq: for parsing json in shell unit tests
 
-# Those are still unclear:
-#   php7.4-common
-#   upx-ucl
-#   dpatch
-#   wget
 
 RUN apt-get install -y \
     default-jdk-headless \
@@ -30,7 +25,8 @@ RUN apt-get install -y \
     libenchant-2-dev \
     lsb-release \
     msitools \
-    wget
+    wget \
+    tree
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed

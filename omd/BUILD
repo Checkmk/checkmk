@@ -32,10 +32,18 @@ pkg_tar(
 
 srcs = {
     "cre": [],
-    "cce": ["//cmk:python_proto_pkg"],
-    "cee": ["//cmk:python_proto_pkg"],
-    "cme": ["//cmk:python_proto_pkg"],
-    "cse": ["//cmk:python_proto_pkg"],
+    "cce": [
+        "//non-free/packages/cmc-protocols:python_proto_pkg",
+    ],
+    "cee": [
+        "//non-free/packages/cmc-protocols:python_proto_pkg",
+    ],
+    "cme": [
+        "//non-free/packages/cmc-protocols:python_proto_pkg",
+    ],
+    "cse": [
+        "//non-free/packages/cmc-protocols:python_proto_pkg",
+    ],
 }
 
 [pkg_tar(

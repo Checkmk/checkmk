@@ -1,20 +1,8 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
-
-# TODO: It would be way better if rules_proto would already support the mypy plugin, see:
-# https://github.com/protocolbuffers/protobuf/issues/10366
-load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("@rules_python//python:proto.bzl", "py_proto_library")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
-load("//bazel/rules:proto.bzl", "mypy_compile")
-
-# For packaging only:
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 genrule(
     name = "_generate_requirements_in",
@@ -210,61 +198,14 @@ py_library(
     ],
 )
 
-py_console_script_binary(
-    name = "protoc-gen-mypy",
-    pkg = requirement("mypy-protobuf"),
-    script = "protoc-gen-mypy",
-)
-
-proto_plugin(
-    name = "mypy",
-    outputs = ["{protopath}_pb2.pyi"],
-    tool = ":protoc-gen-mypy",
-)
-
-mypy_compile(
-    name = "mypy_proto_stubs",
-    protos = [
-        "//:config_proto",
-        "//:cycletime_proto",
-        "//:state_proto",
-    ],
-)
-
-filegroup(
-    name = "python_proto_files",
-    srcs = [
-        ":config_proto_pb2",
-        ":mypy_proto_stubs",
-        ":state_proto_pb2",
-    ],
-)
-
-py_proto_library(
-    name = "config_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:config_proto"],
-)
-
-py_proto_library(
-    name = "cycletime_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:cycletime_proto"],
-)
-
-py_proto_library(
-    name = "state_proto_pb2",
-    visibility = ["//tests:__subpackages__"],
-    deps = ["//:state_proto"],
-)
-
 [py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
     deps = [
-        "config_proto_pb2",
+        # TODO: Shouldn't we add "cycletime_" and "state_" here?
+        "//non-free/packages/cmc-protocols:config_proto_pb2",
         "lib_cmk",
     ],
 ) for edition, srcs in [
@@ -286,9 +227,9 @@ py_library(
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
-            "config_proto_pb2",
-            "cycletime_proto_pb2",
-            "state_proto_pb2",
+            "//non-free/packages/cmc-protocols:config_proto_pb2",
+            "//non-free/packages/cmc-protocols:cycletime_proto_pb2",
+            "//non-free/packages/cmc-protocols:state_proto_pb2",
         ],
     }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
@@ -316,7 +257,7 @@ py_wheel(
     deps = [
         "lib_cmk",
         "lib_cmk_" + edition,
-        "config_proto_pb2",
+        "//non-free/packages/cmc-protocols:config_proto_pb2",
     ],
 ) for edition in [
     "cce",
@@ -343,56 +284,4 @@ py_doc_test(
     env = {
         "PYTHONWARNINGS": "ignore",
     },
-)
-
-# Packaging proto bindings for deployment
-# Python __init__.py files are needed for loading proto files
-write_file(
-    name = "init_py_dummy",
-    out = "__init__.py",
-    content = [
-        "#!/usr/bin/env python3",
-        "# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2",
-        "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and",
-        "# conditions defined in the file COPYING, which is part of this source code package.",
-    ],
-)
-
-init_prefixes = [
-    "",
-    "state/",
-    "cycletime/",
-    "config/",
-    "state/v1/",
-    "cycletime/v1/",
-    "config/v1/",
-]
-
-[pkg_files(
-    name = "%sproto_init" % prefix.replace("/", "_"),
-    srcs = ["init_py_dummy"],
-    prefix = "cmc_proto/" + prefix,
-    strip_prefix = "",
-) for prefix in init_prefixes]
-
-pkg_files(
-    name = "python_proto_pkg_files",
-    srcs = [
-        ":config_proto_pb2",
-        ":state_proto_pb2",
-    ],
-    strip_prefix = "",
-)
-
-pkg_filegroup(
-    name = "python_proto_pkg",
-    srcs = [":python_proto_pkg_files"] +
-           ["%sproto_init" % prefix.replace("/", "_") for prefix in init_prefixes],
-    prefix = "lib/python3/",
-    visibility = ["//omd:__pkg__"],
-)
-
-pkg_tar(
-    name = "python_proto_tar",
-    srcs = [":python_proto_pkg"],
 )

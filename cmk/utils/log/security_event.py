@@ -40,7 +40,7 @@ class SecurityEvent:
 class SiteStartStoppedEvent(SecurityEvent):
     """Indicates a site start/stopped"""
 
-    def __init__(self, *, event: Literal["start", "stop", "restart"]) -> None:
+    def __init__(self, *, event: Literal["start", "stop", "restart"], daemon: str | None) -> None:
         if event == "start":
             summary = "site started"
         elif event == "stop":
@@ -50,7 +50,13 @@ class SiteStartStoppedEvent(SecurityEvent):
         else:
             assert_never(event)
 
-        super().__init__(summary, {}, SecurityEvent.Domain.service)
+        super().__init__(
+            summary,
+            {
+                "daemon": daemon or "all",
+            },
+            SecurityEvent.Domain.service,
+        )
 
 
 def log_security_event(event: SecurityEvent) -> None:

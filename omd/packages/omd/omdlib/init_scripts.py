@@ -30,7 +30,7 @@ def call_init_scripts(
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        log_security_event(SiteStartStoppedEvent(event="restart"))
+        log_security_event(SiteStartStoppedEvent(event="restart", daemon=daemon))
         code_stop = call_init_scripts(site_dir, "stop", daemon)
         code_start = call_init_scripts(site_dir, "start", daemon)
         return 0 if (code_stop, code_start) == (0, 0) else 2
@@ -38,10 +38,10 @@ def call_init_scripts(
     # OMD guarantees OMD_ROOT to be the current directory
     with contextlib.chdir(site_dir):
         if command == "start":
-            log_security_event(SiteStartStoppedEvent(event="start"))
+            log_security_event(SiteStartStoppedEvent(event="start", daemon=daemon))
             SiteInternalSecret().regenerate()
         elif command == "stop":
-            log_security_event(SiteStartStoppedEvent(event="stop"))
+            log_security_event(SiteStartStoppedEvent(event="stop", daemon=daemon))
 
         if daemon:
             success = _call_init_script(f"{site_dir}/etc/init.d/{daemon}", command)

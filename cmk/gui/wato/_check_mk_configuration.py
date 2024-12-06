@@ -6233,7 +6233,7 @@ def _valuespec_snmp_fetch_interval():
                 ),
                 CascadingDropdown(
                     choices=[
-                        ("uncached", _("Fetch data every time"), None),
+                        ("uncached", _("Fetch data every time"), FixedValue(None, totext="")),
                         (
                             "cached",
                             _("Fetch data every"),

@@ -116,7 +116,7 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv_uv/bin/activate
+    source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
 }
 

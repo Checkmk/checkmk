@@ -9,10 +9,10 @@ REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 &&
 
 # Avoid a loop when building the virtual environment itself.
 if [ -z "$SKIP_MAKEFILE_CALL" ]; then
-    make --silent -C "$REPO_PATH" .venv_uv 1>&2
+    make --silent -C "$REPO_PATH" .venv 1>&2
 fi
 
 # shellcheck source=/dev/null
-source "${REPO_PATH}/.venv_uv/bin/activate"
+source "${REPO_PATH}/.venv/bin/activate"
 "$@"
 exit

@@ -140,9 +140,9 @@ examples for newly added elements. In general
 * Consumers:
     - CI / Gerrit triggered Change Validation Pipeline
     - Local execution of same steps by invoking the `make-what-gerrit-makes`
-      make target or by running 
+      make target or by running
         ```sh
-        scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
+        scripts/run-uvenv buildscripts/scripts/validate_changes.py \
             -e BASE_COMMIT_ID=origin/master \
             -e WORKSPACE="$(pwd)" \
             -e RESULTS="$(pwd)/results"
@@ -150,7 +150,7 @@ examples for newly added elements. In general
       manually
 
 * Future plans
-    - File should also contain all other (non `test-gerrit`) tests and used in 
+    - File should also contain all other (non `test-gerrit`) tests and used in
       all other test pipelines
     - Test-Steps should be "container-agnostic" i.e. run all test steps natively
       enabling the CI using it's own way to run container

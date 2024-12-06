@@ -6,14 +6,14 @@ SHELL := /bin/bash -e
 SCRIPTS := $(realpath ../scripts)
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
-PIPENV := $(SCRIPTS)/run-pipenv
 UVENV := $(SCRIPTS)/run-uvenv
-PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
+PYTEST := $(UVENV) pytest $(PYTEST_ARGS)
+PYTEST_UV := $(UVENV) pytest $(PYTEST_ARGS)
 CYCLES := $(UVENV) py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
-THREE_TO_TWO := $(PIPENV) run 3to2
-BANDIT := $(PIPENV) run bandit
+THREE_TO_TWO := $(UVENV) 3to2
+BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
@@ -207,14 +207,14 @@ test-bandit-docker:
 	../scripts/run-in-docker.sh make test-bandit
 
 test-bandit-nosec-markers:
-	$(PIPENV) run python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
+	$(UVENV) python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
 prepare-playwright:
-	../scripts/run-pipenv run playwright install-deps "chromium";
-	../scripts/run-pipenv run playwright install "chromium";
+	../scripts/run-uvenv playwright install-deps "chromium";
+	../scripts/run-uvenv playwright install "chromium";
 
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
@@ -229,12 +229,12 @@ test-format-python: test-format-python-sort test-format-python-format
 
 test-format-python-sort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-pipenv run ruff check --select I --diff;\
+	xargs -n 1500 ../scripts/run-uvenv ruff check --select I --diff;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-format: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-pipenv run ruff format --check --diff;\
+	xargs -n 1500 ../scripts/run-uvenv ruff format --check --diff;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
@@ -323,14 +323,14 @@ test-plugins-piggyback:
 	plugins_integration/test_plugin_piggyback.py
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
-	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
+	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 container-debug $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
-	$(PIPENV) run scripts/run-dockerized.py debug
+	$(UVENV) scripts/run-dockerized.py debug
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
+	xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
 	--python-files;
 
 test-license-headers-docker:
@@ -338,23 +338,23 @@ test-license-headers-docker:
 
 test-pipfile:
 	echo "Test is currently disable, re-enable it with CMK-20680"
-	#$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
+	#$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_pipfile.py);
 
 test-pipfile-docker:
 	../scripts/run-in-docker.sh make --quiet test-pipfile
 
 test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
-	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	    $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-file-content-docker:
 	../scripts/run-in-docker.sh make --quiet test-file-content
 
 test-werks:
-	$(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
+	$(PYTEST_UV) -T code_quality --log-cli-level=INFO $(realpath code_quality/test_werks.py);
 
 test-werks-docker:
 	../scripts/run-in-docker.sh make --quiet test-werks
@@ -377,8 +377,8 @@ test-packaging:
 	$(PYTEST) -T packaging packaging
 
 test-pylint: prepare-protobuf-files
-	cd ..; $(PIPENV) run pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
-	cd .. && $(PYTEST) \
+	cd ..; $(UVENV) pylint --disable=all --enable=$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
+	cd .. && $(PYTEST_UV) \
 	    -T unit \
 	    --config-file=pyproject.toml \
 	    --override-ini="pythonpath=." \
@@ -393,7 +393,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-ruff: prepare-protobuf-files
-	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(PIPENV) run ruff check $(RUFF_ARGS)
+	cd ..; echo $$($(FIND_PYTHON_FILES)) | xargs -n 1500 $(UVENV) ruff check $(RUFF_ARGS)
 
 test-ruff-docker:
 	../scripts/run-in-docker.sh make --quiet test-ruff
@@ -417,7 +417,7 @@ test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit-omdlib:
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
 		-T unit \
 		--config-file=pyproject.toml \
 		--doctest-modules \
@@ -454,7 +454,7 @@ test-unit-all-docker:
 
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST_UV) \
 		-T testlib \
 		--config-file=pyproject.toml \
 		--doctest-modules \
@@ -486,7 +486,7 @@ test-find-modified-lock-files:
 	scripts/find_modified_lock_files
 
 test-flake8: ../.flake8
-	cd ..; $(PIPENV) run flake8 --jobs=6 $$($(FIND_PYTHON_FILES))
+	cd ..; $(UVENV) flake8 --jobs=6 $$($(FIND_PYTHON_FILES))
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running
@@ -495,7 +495,7 @@ what-gerrit-makes:
 	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
 	cd "$$WORKSPACE" ; \
 	mkdir -p "$$WORKSPACE/results" ; \
-	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
+	scripts/run-uvenv buildscripts/scripts/validate_changes.py \
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"

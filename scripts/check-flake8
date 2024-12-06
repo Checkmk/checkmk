@@ -12,7 +12,7 @@
 source "$(dirname "$0")/lib-precommit"
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
-PIPENV="$REPO_PATH/scripts/run-pipenv"
+UVENV="$REPO_PATH/scripts/run-uvenv"
 
 printf -v files " %s" "$@"
 PYTHON3_FILES=$(python_files 3 "$files")
@@ -25,6 +25,6 @@ IGNORE="--ignore E,W,F401,F841"
 
 if [ -n "$PYTHON3_FILES" ]; then
     # shellcheck disable=SC2086
-    $PIPENV run flake8 $IGNORE $PYTHON3_FILES
+    $UVENV flake8 $IGNORE $PYTHON3_FILES
 fi
 exit 0

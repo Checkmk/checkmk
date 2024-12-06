@@ -12,7 +12,7 @@ may require the following env variables
 - DOCKER_USERNAME=carl.lama
 - DOCKER_PASSPHRASE=eatingHands
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
 --edition=enterprise \
@@ -27,7 +27,7 @@ may require the following env variables
 - INTERNAL_DEPLOY_PORT=42
 - INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
 
-scripts/run-pipenv run python \
+scripts/run-uvenv python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=2.2.0 \
 --edition=enterprise \

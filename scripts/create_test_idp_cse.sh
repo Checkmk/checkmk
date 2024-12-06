@@ -45,4 +45,4 @@ CSE_LICENSE_SECRET=$(head -c 32 /dev/urandom | sha256sum -z | awk -F' ' '{{print
 echo "$CSE_LICENSE_SECRET" | sudo tee "$CSE_LICENSE_SECRET_PATH" >/dev/null
 
 export PYTHONPATH="${REPO_PATH}"
-"${REPO_PATH}/scripts/run-pipenv" run uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"
+"${REPO_PATH}/scripts/run-uvenv" uvicorn tests.testlib.cse.openid_oauth_provider:application --host "${HOST}" --port "${PORT}"

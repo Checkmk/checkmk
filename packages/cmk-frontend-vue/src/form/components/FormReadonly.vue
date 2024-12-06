@@ -608,7 +608,7 @@ table.form-readonly__table {
 }
 
 .form-readonly__list {
-  padding-left: var(--spacing-half);
+  padding-left: 0;
   list-style-position: inside;
 }
 
@@ -638,6 +638,8 @@ table.form-readonly__table {
 
 .form-readonly__cascading-single-choice__layout-horizontal {
   display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
 }
 .form-readonly__cascading-single-choice__layout-horizontal > div {
   margin-right: var(--spacing-half);

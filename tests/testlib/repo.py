@@ -55,12 +55,6 @@ def add_protocols_path():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))
 
 
-def add_otel_collector_path() -> None:
-    sys.path.insert(0, str(repo_path()))
-    if is_cloud_repo() or is_managed_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-otel-collector"))
-
-
 @cache
 def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")

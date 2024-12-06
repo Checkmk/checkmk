@@ -14,7 +14,7 @@ mypy_compile = rule(
         _plugins = attr.label_list(
             providers = [ProtoPluginInfo],
             default = [
-                Label("//cmk:mypy"),
+                Label("//non-free/packages/cmc-protocols:mypy"),
             ],
             cfg = "exec",
             doc = "List of protoc plugins to apply",

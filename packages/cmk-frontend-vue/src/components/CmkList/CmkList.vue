@@ -87,7 +87,7 @@ function getItemProps(dataIndex: number) {
 }
 
 function getStyle(index: number, length: number) {
-  return index === 0 ? 'first' : index === length - 1 ? 'last' : null
+  return length === 1 ? 'only' : index === 0 ? 'first' : index === length - 1 ? 'last' : null
 }
 </script>
 
@@ -99,7 +99,10 @@ function getStyle(index: number, length: number) {
       horizontal: orientation === 'horizontal'
     }"
   >
-    <table ref="tableRef" class="cmk_list__table">
+    <table
+      ref="tableRef"
+      :class="{ cmk_list__table: true, cmk_list__table_empty: localOrder.length === 0 }"
+    >
       <template v-if="orientation === 'vertical'">
         <tr v-for="(dataIndex, listIndex) in localOrder" :key="dataIndex">
           <td>
@@ -156,6 +159,9 @@ function getStyle(index: number, length: number) {
   td {
     height: 100%;
   }
+}
+.cmk_list__table.cmk_list__table_empty {
+  margin-bottom: 0;
 }
 .cmk_list__add_button {
   flex-shrink: 0;

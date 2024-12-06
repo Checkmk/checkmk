@@ -43,7 +43,7 @@ const componentId = useId()
     step="any"
     type="number"
   />
-  <span v-if="spec.unit" class="vs_floating_text">{{ spec.unit }}</span>
+  <span v-if="spec.unit" class="vs_floating_text"><CmkSpace size="small" />{{ spec.unit }}</span>
   <FormValidation :validation="validation"></FormValidation>
 </template>
 

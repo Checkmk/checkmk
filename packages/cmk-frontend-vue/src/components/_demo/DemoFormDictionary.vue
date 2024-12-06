@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
-import type { Dictionary, String } from '@/form/components/vue_formspec_components'
+import type { Dictionary, FixedValue, String } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -40,6 +40,48 @@ const dictionarySpec: Dictionary = {
       group: null,
       default_value: 'default_value',
       parameter_form: embeddedSpec
+    },
+    {
+      name: 'unlabeled_fixed_value_null',
+      required: false,
+      group: null,
+      default_value: null,
+      parameter_form: {
+        type: 'fixed_value',
+        title: 'Unlabeled fixed value null',
+        help: '',
+        value: null,
+        label: null,
+        validators: []
+      } as FixedValue
+    },
+    {
+      name: 'unlabeled_fixed_value',
+      required: false,
+      group: null,
+      default_value: null,
+      parameter_form: {
+        type: 'fixed_value',
+        title: 'Unlabeled fixed value',
+        help: '',
+        value: 'fixed_value',
+        label: null,
+        validators: []
+      } as FixedValue
+    },
+    {
+      name: 'labeled_fixed_value',
+      required: false,
+      group: null,
+      default_value: null,
+      parameter_form: {
+        type: 'fixed_value',
+        title: 'Labeled fixed value',
+        help: '',
+        value: 'fixed_value',
+        label: 'some label',
+        validators: []
+      } as FixedValue
     }
   ]
 }
@@ -49,7 +91,12 @@ const specRequired = structuredClone(dictionarySpec)
 specRequired.elements[0]!.required = true
 const data = ref<Record<string, string>>({})
 
-const dataRequired = ref<Record<string, string>>({ some_name: 'some_value' })
+const dataRequired = ref<Record<string, unknown>>({
+  some_name: 'some_value',
+  labeled_fixed_value: 'fixed_value',
+  unlabeled_fixed_value: 'fixed_value',
+  unlabeled_fixed_value_null: null
+})
 </script>
 
 <template>

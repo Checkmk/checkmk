@@ -10,7 +10,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 
 const { buttonPadding = '16px', ...props } = defineProps<{
   removeElement: () => void
-  style?: 'first' | 'last' | null
+  style?: 'first' | 'last' | 'only' | null
   buttonPadding?: '16px' | '8px'
   draggable?: {
     dragStart: (event: DragEvent) => void
@@ -25,6 +25,7 @@ const { buttonPadding = '16px', ...props } = defineProps<{
     <div
       :class="{
         cmk_list__button_container: true,
+        only: props.style === 'only',
         first: props.style === 'first',
         last: props.style === 'last'
       }"
@@ -52,6 +53,7 @@ const { buttonPadding = '16px', ...props } = defineProps<{
     <div
       :class="{
         cmk_list__content: true,
+        only: props.style === 'only',
         first: props.style === 'first',
         last: props.style === 'last'
       }"
@@ -79,6 +81,16 @@ const { buttonPadding = '16px', ...props } = defineProps<{
   .cmk_list__content {
     padding-top: calc(var(--spacing) - var(--button-padding-top));
     padding-left: v-bind(buttonPadding);
+  }
+
+  .cmk_list__content.only {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .cmk_list__button_container.only {
+    padding-top: var(--button-padding-top);
+    padding-bottom: var(--button-padding-top);
   }
 
   .cmk_list__button_container.first {

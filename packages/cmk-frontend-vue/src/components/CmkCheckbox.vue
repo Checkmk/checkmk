@@ -40,8 +40,8 @@ const props = defineProps<CmkCheckboxProps>()
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-bg-color);
   border-radius: 2px;
-  height: 12.5px;
-  width: 12.5px;
+  height: 14.5px;
+  width: 14.5px;
 
   box-shadow: none; /* disable active/focus style of button */
   padding: 0;
@@ -58,5 +58,8 @@ const props = defineProps<CmkCheckboxProps>()
 }
 .cmk-checkbox .cmk-checkbox__indicator svg {
   width: 8px;
+}
+.cmk-checkbox span {
+  vertical-align: middle;
 }
 </style>

@@ -143,7 +143,15 @@ function toggleElement(key: string) {
 }
 
 function indentRequired(element: FormSpec.DictionaryElement): boolean {
-  return labelRequired(element) && !(element.group && variant === 'one_column')
+  return (
+    labelRequired(element) &&
+    !(element.group && variant === 'one_column') &&
+    !(
+      element.parameter_form.type === 'fixed_value' &&
+      !(element.parameter_form as FormSpec.FixedValue).label &&
+      !(element.parameter_form as FormSpec.FixedValue).value
+    )
+  )
 }
 
 function labelRequired(element: FormSpec.DictionaryElement): boolean {

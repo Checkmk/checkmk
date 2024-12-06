@@ -76,6 +76,7 @@ body.show_help .help-text__icon {
   background: none;
   outline: none;
   cursor: pointer;
+  vertical-align: text-top;
 
   &:focus,
   &:active {

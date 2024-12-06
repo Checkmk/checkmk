@@ -1118,7 +1118,7 @@ class CrashdumpsIcon(Icon):
                 )
 
             # Extract the crash ID produced by cmk/base/crash_reporting.py from output
-            match = re.search(r"\(Crash-ID: ([^\)]+)\)$", row["service_plugin_output"])
+            match = re.search(r"\(Crash-ID: ([^\)]+)\)", row["service_plugin_output"])
             if not match:
                 return "crash", _(
                     "This check crashed, but no crash dump is available, please report this "

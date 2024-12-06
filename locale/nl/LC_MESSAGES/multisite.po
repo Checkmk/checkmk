@@ -11222,6 +11222,10 @@ msgstr "Parameters controleren"
 msgid "Checkmk server URL"
 msgstr "Checkmk server URL"
 
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Checkmk servers"
+
 msgid "Checkmk servers"
 msgstr "Checkmk servers"
 
@@ -32199,11 +32203,12 @@ msgstr "Etiketteringsopties"
 msgid "Labels"
 msgstr "Etiketten"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Met labels kunt u uw hosts flexibel groeperen om er later op andere plaatsen "
 "in Checkmk naar te verwijzen, bv. in regelketens.<br><b>Label formaat:</b> "
@@ -39221,9 +39226,6 @@ msgstr "Ruisvloer"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Nominale frequenties"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Niet-ASCII tekens zijn hier niet toegestaan."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -52340,6 +52342,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Grootte, leeftijd en aantal bestandsgroepen (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "SSL-certificaat verificatie"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "SSL-certificaat verificatie"
 
@@ -52366,6 +52372,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Sla dit regelpakket over, ga verder met regeluitvoering met volgend "
 "regelpakket"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Negeer certificaatfouten (onveilig)"
 
 #, python-format
 msgid "Skipped %s: %s"
@@ -52656,6 +52666,13 @@ msgid ""
 msgstr ""
 "Sommigeuns, bv. jfs geformatteerd, hebben de neiging om onjuiste waarden van "
 "gebruikte ruimte te rapporteren"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -79737,6 +79754,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Niet-ASCII tekens zijn hier niet toegestaan."
 
 #, python-format
 #~ msgid "Unknown (%s)"

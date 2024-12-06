@@ -11226,6 +11226,10 @@ msgstr "Checkmk partener sau distribuitor"
 msgid "Checkmk server URL"
 msgstr "URL-ul serverului Checkmk"
 
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Serverele Checkmk"
+
 msgid "Checkmk servers"
 msgstr "Serverele Checkmk"
 
@@ -32257,11 +32261,12 @@ msgstr "Opțiuni de etichetare"
 msgid "Labels"
 msgstr "Etichete"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Etichetele vă permit să vă grupați în mod flexibil gazdele pentru a vă "
 "referi la ele mai târziu în alte locuri din Checkmk, de exemplu, în "
@@ -39255,9 +39260,6 @@ msgstr "Nivelul de zgomot"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Frecvențe nominale"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Caracterele non-ASCII nu sunt permise aici."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -52433,6 +52435,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Mărimea, vârsta și numărul de grupuri de fișiere (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "Verificarea certificatului SSL"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "Verificarea certificatului SSL"
 
@@ -52462,6 +52468,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Săriți acest pachet de reguli, continuați executarea regulilor cu următorul "
 "pachet de reguli"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Ignoră erorile de certificat (nesigur)"
 
 #, python-format
 msgid "Skipped %s: %s"
@@ -52752,6 +52762,13 @@ msgid ""
 msgstr ""
 "Unele unități, de exemplu cele formatate jfs, tind să raporteze valori "
 "incorecte ale spațiului utilizat."
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -79869,6 +79886,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Caracterele non-ASCII nu sunt permise aici."
 
 #, python-format
 #~ msgid "Unknown (%s)"

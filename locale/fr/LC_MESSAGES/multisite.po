@@ -11305,6 +11305,10 @@ msgstr "Partenaire ou revendeur Checkmk"
 msgid "Checkmk server URL"
 msgstr "URL du serveur Checkmk"
 
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Serveurs de contrôle"
+
 msgid "Checkmk servers"
 msgstr "Serveurs de contrôle"
 
@@ -32514,11 +32518,12 @@ msgstr "Options d'étiquetage"
 msgid "Labels"
 msgstr "Étiquettes"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Les étiquettes vous permettent de regrouper vos hôtes de manière flexible "
 "afin d'y faire référence ultérieurement à d'autres endroits dans Checkmk, "
@@ -39581,9 +39586,6 @@ msgstr "Plancher de bruit"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Fréquences nominales"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "Les caractères non ASCII ne sont pas autorisés ici."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -52872,6 +52874,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Taille, âge et nombre de groupes de fichiers (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "Vérification du certificat SSL"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "Vérification du certificat SSL"
 
@@ -52900,6 +52906,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Sauter ce paquet de règles, continuer l'exécution de la règle avec le paquet "
 "de règles suivant"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Ignorer les erreurs de certificat (non sécurisé)"
 
 #, python-format
 msgid "Skipped %s: %s"
@@ -53193,6 +53203,13 @@ msgid ""
 msgstr ""
 "Certaines luns, par exemple celles formatées en jfs, ont tendance à "
 "rapporter des valeurs d'espace utilisé incorrectes"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -80589,6 +80606,9 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "Les caractères non ASCII ne sont pas autorisés ici."
 
 #, python-format
 #~ msgid "Unknown (%s)"

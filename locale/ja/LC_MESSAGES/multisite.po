@@ -10707,6 +10707,10 @@ msgstr "Checkmkパートナーまたはリセラー"
 msgid "Checkmk server URL"
 msgstr "CheckmkサーバーURL"
 
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Checkmkサーバー"
+
 msgid "Checkmk servers"
 msgstr "Checkmkサーバー"
 
@@ -30990,11 +30994,12 @@ msgstr "ラベル付けオプション"
 msgid "Labels"
 msgstr "ラベル"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "ラベルにより、ホストを柔軟にグループ化し、ルールチェーンなどCheckmkの他の場所"
 "で参照できるようにすることができます。<br><b>ラベルフォーマット:</b>  key:"
@@ -37917,9 +37922,6 @@ msgstr "ノイズフロア"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "名目周波数"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "ここでは非ASCII文字は使用できません。"
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -50869,6 +50871,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "ファイルグループのサイズ、経過時間、および数(mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "SSL証明書の検証"
 
@@ -50893,6 +50899,10 @@ msgstr "次のSIDsをスキップします(見つかった場合)"
 msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "このルールパックをスキップし、次のルールパックでルールの実行を続行します"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "証明書エラーを無視する(安全でない)"
 
 #, python-format
 msgid "Skipped %s: %s"
@@ -51176,6 +51186,13 @@ msgid ""
 "Some luns, e.g. jfs formatted, tend to report incorrect used space values"
 msgstr ""
 "一部のLUN(jfs形式など)は、誤った使用済みスペース値を報告する傾向があります"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -77500,6 +77517,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "ここでは非ASCII文字は使用できません。"
 
 #, python-format
 #~ msgid "Unknown (%s)"

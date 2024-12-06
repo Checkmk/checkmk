@@ -11098,6 +11098,10 @@ msgstr "Partner o rivenditore Checkmk"
 msgid "Checkmk server URL"
 msgstr "URL del server Checkmk"
 
+#, fuzzy
+msgid "Checkmk server host"
+msgstr "Server Checkmk"
+
 msgid "Checkmk servers"
 msgstr "Server Checkmk"
 
@@ -31900,11 +31904,12 @@ msgstr "Opzioni di etichettatura"
 msgid "Labels"
 msgstr "Etichette"
 
+#, fuzzy
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
-"you use."
+"b>  key:value<br><br>Neither the key nor the value can contain ‘:’.  CheckMK "
+"does not perform any other validation on the labels you use."
 msgstr ""
 "Le etichette consentono di raggruppare in modo flessibile gli host per "
 "potervi fare riferimento in seguito in altri punti di Checkmk, ad esempio "
@@ -38831,9 +38836,6 @@ msgstr "Rumore di fondo"
 #, fuzzy
 msgid "Nominal frequencies"
 msgstr "Frequenze nominali"
-
-msgid "Non-ASCII characters are not allowed here."
-msgstr "I caratteri non ASCII non sono ammessi qui."
 
 #, python-format
 msgid "Non-ASCII characters are not allowed in the attribute \"%s\"."
@@ -51838,6 +51840,10 @@ msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Dimensione, età e numero di gruppi di file (mk_filestats)"
 
 #, fuzzy
+msgid "Skip SSL certificate verification"
+msgstr "Verifica del certificato SSL"
+
+#, fuzzy
 msgid "Skip TLS certificate verification"
 msgstr "Verifica del certificato SSL"
 
@@ -51863,6 +51869,10 @@ msgid "Skip this rule pack, continue rule execution with next rule pack"
 msgstr ""
 "Salta questo pacchetto di regole, continua l'esecuzione della regola con il "
 "prossimo pacchetto di regole"
+
+#, fuzzy
+msgid "Skip verification (insecure)"
+msgstr "Ignorare gli errori del certificato (non sicuro)"
 
 #, python-format
 msgid "Skipped %s: %s"
@@ -52152,6 +52162,13 @@ msgid ""
 msgstr ""
 "Alcuni luns, per esempio jfs formattati, tendono a riportare valori errati "
 "di spazio usato"
+
+msgid ""
+"Some of the diagnostics data needs to be collected from the host that "
+"represents the Checkmk server of the related site. In case your Checkmk "
+"server is not monitored by itself, but from a different site (which is "
+"actually recommended), please enter the name of that host here."
+msgstr ""
 
 msgid ""
 "Some of the display columns offer options for customizing their output. For "
@@ -78949,6 +78966,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Non-ASCII characters are not allowed here."
+#~ msgstr "I caratteri non ASCII non sono ammessi qui."
 
 #, python-format
 #~ msgid "Unknown (%s)"

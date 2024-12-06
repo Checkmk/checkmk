@@ -86,6 +86,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "openapi-spec-validator",
     "opentelemetry-api",
     "opentelemetry-exporter-otlp",
+    "opentelemetry-instrumentation-fastapi",
     "opentelemetry-instrumentation-redis",
     "opentelemetry-instrumentation-requests",
     "opentelemetry-instrumentation-wsgi",

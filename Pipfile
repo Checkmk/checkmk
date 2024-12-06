@@ -183,6 +183,7 @@ opentelemetry-exporter-otlp = "*" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-wsgi = "*" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-requests = "*" # used for distributed tracing of Checkmk
 opentelemetry-instrumentation-redis = "*" # used for distributed tracing of Checkmk
+opentelemetry-instrumentation-fastapi = "*" # used for distributed tracing of Checkmk
 opentelemetry-semantic-conventions = "*" # used for distributed tracing of Checkmk
 fastapi = "*"  # automation helper and needed to run fake idp for cse tests
 gunicorn = "*"  # automation helper

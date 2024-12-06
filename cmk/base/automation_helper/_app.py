@@ -14,6 +14,7 @@ from typing import Final, Protocol
 
 from fastapi import FastAPI, Request, Response, status
 from fastapi.responses import JSONResponse
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
 from cmk.utils import paths
@@ -73,6 +74,8 @@ def get_application(
         yield
 
     app = FastAPI(lifespan=lifespan, openapi_url=None, docs_url=None, redoc_url=None)
+
+    FastAPIInstrumentor.instrument_app(app)
 
     @app.middleware("http")
     async def timeout_middleware(

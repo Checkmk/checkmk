@@ -54,7 +54,7 @@ bool NebHost::all_of_labels(
     return std::all_of(
         labels.cbegin(), labels.cend(),
         [&pred](const std::pair<std::string, std::string> &label) {
-            return pred(Attribute{label.first, label.second});
+            return pred(Attribute{.name = label.first, .value = label.second});
         });
 }
 

@@ -217,9 +217,7 @@ void *main_thread(void *data) {
             Warning(logger) << ge;
             continue;
         }
-        if (cc > fl_max_fd_ever) {
-            fl_max_fd_ever = cc;
-        }
+        fl_max_fd_ever = std::max(cc, fl_max_fd_ever);
         auto &&[ok, size] =
             fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest);
         switch (ok) {
@@ -1008,64 +1006,64 @@ struct nagios_callback {
 
 const std::array<nagios_callback, 10> nagios_callbacks{{
     {
-        NEBCALLBACK_COMMENT_DATA,
-        broker_comment,
-        "BROKER_COMMENT_DATA"sv,
-        BROKER_COMMENT_DATA,
+        .callback_type = NEBCALLBACK_COMMENT_DATA,
+        .callback_func = broker_comment,
+        .event_broker_option_name = "BROKER_COMMENT_DATA"sv,
+        .event_broker_option_flag = BROKER_COMMENT_DATA,
     },
     {
-        NEBCALLBACK_DOWNTIME_DATA,
-        broker_downtime,
-        "BROKER_DOWNTIME_DATA"sv,
-        BROKER_DOWNTIME_DATA,
+        .callback_type = NEBCALLBACK_DOWNTIME_DATA,
+        .callback_func = broker_downtime,
+        .event_broker_option_name = "BROKER_DOWNTIME_DATA"sv,
+        .event_broker_option_flag = BROKER_DOWNTIME_DATA,
     },
     {
-        NEBCALLBACK_SERVICE_CHECK_DATA,
-        broker_service_check,
-        "BROKER_SERVICE_CHECKS"sv,
-        BROKER_SERVICE_CHECKS,
+        .callback_type = NEBCALLBACK_SERVICE_CHECK_DATA,
+        .callback_func = broker_service_check,
+        .event_broker_option_name = "BROKER_SERVICE_CHECKS"sv,
+        .event_broker_option_flag = BROKER_SERVICE_CHECKS,
     },
     {
-        NEBCALLBACK_HOST_CHECK_DATA,
-        broker_host_check,
-        "BROKER_HOST_CHECKS"sv,
-        BROKER_HOST_CHECKS,
+        .callback_type = NEBCALLBACK_HOST_CHECK_DATA,
+        .callback_func = broker_host_check,
+        .event_broker_option_name = "BROKER_HOST_CHECKS"sv,
+        .event_broker_option_flag = BROKER_HOST_CHECKS,
     },
     {
-        NEBCALLBACK_LOG_DATA,
-        broker_log,
-        "BROKER_LOGGED_DATA"sv,
-        BROKER_LOGGED_DATA,
+        .callback_type = NEBCALLBACK_LOG_DATA,
+        .callback_func = broker_log,
+        .event_broker_option_name = "BROKER_LOGGED_DATA"sv,
+        .event_broker_option_flag = BROKER_LOGGED_DATA,
     },
     {
-        NEBCALLBACK_EXTERNAL_COMMAND_DATA,
-        broker_external_command,
-        "BROKER_EXTERNALCOMMAND_DATA"sv,
-        BROKER_EXTERNALCOMMAND_DATA,
+        .callback_type = NEBCALLBACK_EXTERNAL_COMMAND_DATA,
+        .callback_func = broker_external_command,
+        .event_broker_option_name = "BROKER_EXTERNALCOMMAND_DATA"sv,
+        .event_broker_option_flag = BROKER_EXTERNALCOMMAND_DATA,
     },
     {
-        NEBCALLBACK_STATE_CHANGE_DATA,
-        broker_state_change,
-        "BROKER_STATECHANGE_DATA"sv,
-        BROKER_STATECHANGE_DATA,
+        .callback_type = NEBCALLBACK_STATE_CHANGE_DATA,
+        .callback_func = broker_state_change,
+        .event_broker_option_name = "BROKER_STATECHANGE_DATA"sv,
+        .event_broker_option_flag = BROKER_STATECHANGE_DATA,
     },
     {
-        NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
-        broker_adaptive_program,
-        "BROKER_ADAPTIVE_DATA"sv,
-        BROKER_ADAPTIVE_DATA,
+        .callback_type = NEBCALLBACK_ADAPTIVE_PROGRAM_DATA,
+        .callback_func = broker_adaptive_program,
+        .event_broker_option_name = "BROKER_ADAPTIVE_DATA"sv,
+        .event_broker_option_flag = BROKER_ADAPTIVE_DATA,
     },
     {
-        NEBCALLBACK_PROCESS_DATA,
-        broker_process,
-        "BROKER_PROGRAM_STATE"sv,
-        BROKER_PROGRAM_STATE,
+        .callback_type = NEBCALLBACK_PROCESS_DATA,
+        .callback_func = broker_process,
+        .event_broker_option_name = "BROKER_PROGRAM_STATE"sv,
+        .event_broker_option_flag = BROKER_PROGRAM_STATE,
     },
     {
-        NEBCALLBACK_TIMED_EVENT_DATA,
-        broker_timed_event,
-        "BROKER_TIMED_EVENTS"sv,
-        BROKER_TIMED_EVENTS,
+        .callback_type = NEBCALLBACK_TIMED_EVENT_DATA,
+        .callback_func = broker_timed_event,
+        .event_broker_option_name = "BROKER_TIMED_EVENTS"sv,
+        .event_broker_option_flag = BROKER_TIMED_EVENTS,
     },
 }};
 

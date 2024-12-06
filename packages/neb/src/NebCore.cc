@@ -635,10 +635,10 @@ MetricLocation NebCore::metricLocation(const std::string &host_name,
                                        const std::string &service_description,
                                        const Metric::Name &var) const {
     return MetricLocation{
-        paths()->rrd_multiple_directory() / host_name /
-            pnp_cleanup(service_description + "_" +
-                        Metric::MangledName(var).string() + ".rrd"),
-        "1"};
+        .path_ = paths()->rrd_multiple_directory() / host_name /
+                 pnp_cleanup(service_description + "_" +
+                             Metric::MangledName(var).string() + ".rrd"),
+        .data_source_name_ = "1"};
 }
 
 bool NebCore::pnp4nagiosEnabled() const {

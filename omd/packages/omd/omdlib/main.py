@@ -122,7 +122,13 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
+from cmk.ccc.version import (
+    Edition,
+    edition_has_enforced_licensing,
+    Version,
+    versions_compatible,
+    VersionsIncompatible,
+)
 
 import cmk.utils.log
 from cmk.utils import tty
@@ -2937,13 +2943,16 @@ def main_update(  # pylint: disable=too-many-branches
 
     call_scripts(site, "post-update", open_pty=is_tty)
 
-    if from_edition != "cloud" and to_edition == "cloud":
+    if from_edition != to_edition and edition_has_enforced_licensing(
+        to_ed := Edition.from_long_edition(to_edition)
+    ):
         sys.stdout.write(
-            f"{tty.bold}You are now starting your trial of Checkmk Cloud Edition. If you are "
-            f"intending to use Checkmk to monitor more than 750 services after 30 days, you must "
-            f"purchase a license. In case you already have a license, please enter your license "
-            f"credentials on the product's licensing page "
-            f"(Setup > Maintenance > Licensing > Edit settings).{tty.normal}\n"
+            f"{tty.bold}You have now upgraded your product to {to_ed.title}. If you have not "
+            f"applied a valid license yet, you are now starting your trial of {to_ed.title}. If you"
+            f" are intending to use Checkmk to monitor more than 750 services after 30 days, you "
+            f"must purchase a license. In case you already have a license, please enter your "
+            f"license credentials on the product's licensing page "
+            f"(Setup > Maintenance > Licensing > Edit settings)..{tty.normal}\n"
         )
 
     sys.stdout.write("Finished update.\n\n")

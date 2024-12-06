@@ -1128,8 +1128,8 @@ class DisplayHints:
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         return self.column_hints.get(key, ColumnDisplayHint.from_raw(self.abc_path, key, {}))
 
-    def get_node_hints(self, name: SDNodeName) -> DisplayHints:
-        return self.nodes.get(name, DisplayHints.default(self.abc_path))
+    def get_node_hints(self, name: SDNodeName, path: SDPath) -> DisplayHints:
+        return self.nodes.get(name, DisplayHints.default(path))
 
     def get_tree_hints(self, path: SDPath) -> DisplayHints:
         node = self
@@ -2535,7 +2535,6 @@ class TreeRenderer:
         if tree.table:
             self._show_table(tree.table, hints)
 
-        for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
-            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
-                # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hints(name))
+        for name in sorted(tree.nodes_by_name):
+            node = tree.nodes_by_name[name]
+            self._show_node(node, hints.get_node_hints(name, node.path))

@@ -296,11 +296,46 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
     ).assert_status_code(404)
 
 
+@pytest.mark.parametrize(
+    "id,is_valid",
+    [
+        pytest.param(
+            "letters_underscores_and_digits_123", True, id="Letters, underscores, and digits"
+        ),
+        pytest.param("Letters-and-dashes", True, id="Letters and dashes"),
+        pytest.param("All-valid_characters-123", True, id="All valid characters"),
+        pytest.param("begin_with_letters", True, id="Begin with letters"),
+        pytest.param("Begin_with_capital_letters", True, id="Begin with capital letters"),
+        pytest.param("_begin_with_underscore", True, id="Begin with underscore"),
+        pytest.param("123_begin_with_digit", False, id="Begin with digit"),
+        pytest.param("-begin_with_dash", False, id="Begin with dash"),
+        pytest.param("invalid$char", False, id="Invalid character"),
+        pytest.param("Contain spaces", False, id="Contain spaces"),
+    ],
+)
+def test_id_validation(id: str, is_valid: bool) -> None:
+    """test_id_validation
+
+    The ID must accept
+        - letters
+        - digits
+        - dash
+        - underscore
+
+    The ID must start with a letter or underscore.
+    """
+    regex = widgets.ID_VALIDATION_REGEX
+    if is_valid:
+        assert regex.match(id)
+    else:
+        assert not regex.match(id)
+
+
 def test_unique_id_must_be_unique(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda _: {"I should be unique": {}})
+    monkeypatch.setattr(ConfigBundleStore, "load_for_reading", lambda _: {"I_should_be_unique": {}})
 
     register_quick_setup(
         setup_stages=[
@@ -323,7 +358,7 @@ def test_unique_id_must_be_unique(
     resp = clients.QuickSetup.send_stage_retrieve_next(
         quick_setup_id="quick_setup_test",
         stage_action_id="action",
-        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I should be unique"}}}],
+        stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I_should_be_unique"}}}],
         expect_ok=False,
     )
     resp.assert_status_code(400)

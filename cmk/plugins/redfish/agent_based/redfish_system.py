@@ -5,6 +5,8 @@
 
 from typing import Any, Dict, Mapping
 
+import json
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -13,41 +15,49 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.plugins.redfish.lib import parse_redfish, redfish_health_state, RedfishAPIData
+from cmk.plugins.redfish.lib import redfish_health_state, SectionSystem
+
+
+def parse_redfish_system(string_table: StringTable) -> SectionSystem | None:
+    if not string_table:
+        return None
+
+    raw = json.loads(string_table[0][0])
+    return [{str(k): v for k, v in entry.items()} for entry in raw]
+
 
 Section = Dict[str, Mapping[str, Any]]
 
 
 agent_section_apt = AgentSection(
     name="redfish_system",
-    parse_function=parse_redfish,
+    parse_function=parse_redfish_system,
     parsed_section_name="redfish_system",
 )
 
 
-def discover_redfish_system(section: RedfishAPIData) -> DiscoveryResult:
+def discover_redfish_system(section: SectionSystem) -> DiscoveryResult:
     if not section:
         return
     if len(section) == 1:
         yield Service(item="state")
     else:
         for element in section:
-            # FIXME: If this works, the section must look completely different
-            item = f"state {element.get('Id', '0')}"  # type: ignore[attr-defined]
+            item = f"state {element.get('Id', '0')}"
             yield Service(item=item)
 
 
-def check_redfish_system(item: str, section: RedfishAPIData) -> CheckResult:
+def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
     if not section:
         return
     data = None
     if len(section) == 1:
-        # FIXME: If this works, the section must look completely different
-        data = section[0]  # type: ignore[index]
+        data = section[0]
     else:
         for element in section:
-            if f"state {element.get('Id')}" == item:  # type: ignore[attr-defined]
+            if f"state {element.get('Id')}" == item:
                 data = element
                 break
 

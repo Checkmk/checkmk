@@ -13,32 +13,31 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.redfish.lib import (
     redfish_health_state,
-    RedfishAPIData,
+    SectionSystem,
 )
 
 
-def discover_redfish_memory_summary(section: RedfishAPIData) -> DiscoveryResult:
-    # FIXME: If this works, the section must look completely different
+def discover_redfish_memory_summary(section: SectionSystem) -> DiscoveryResult:
     if len(section) == 1:
         for element in section:
-            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
+            if "MemorySummary" in element.keys():
                 yield Service(item="Summary")
     else:
         for element in section:
-            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
-                item = f"Summary {element.get('Id', '0')}"  # type: ignore[attr-defined]
+            if "MemorySummary" in element.keys():
+                item = f"Summary {element.get('Id', '0')}"
                 yield Service(item=item)
 
 
-def check_redfish_memory_summary(item: str, section: RedfishAPIData) -> CheckResult:
+def check_redfish_memory_summary(item: str, section: SectionSystem) -> CheckResult:
     result = None
     if len(section) == 1:
-        result = section[0].get("MemorySummary")  # type: ignore[index]
+        result = section[0].get("MemorySummary")
     else:
         for element in section:
-            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
-                if item == f"Summary {element.get('Id', '0')}":  # type: ignore[attr-defined]
-                    result = element.get("MemorySummary")  # type: ignore[attr-defined]
+            if "MemorySummary" in element.keys():
+                if item == f"Summary {element.get('Id', '0')}":
+                    result = element.get("MemorySummary")
                     break
 
     if not result:

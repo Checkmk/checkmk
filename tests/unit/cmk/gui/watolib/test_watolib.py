@@ -273,6 +273,7 @@ def test_registered_configvars() -> None:
             "dcd_max_hosts_per_bulk_discovery",
             "dcd_prevent_unwanted_notification",
             "dcd_web_api_connection",
+            "dcd_use_inter_lock",
             "liveproxyd_default_connection_params",
             "liveproxyd_log_levels",
             "notification_spooler_config",

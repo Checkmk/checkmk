@@ -358,7 +358,7 @@ public:
 private:
     std::vector<ColumnDefinition> defs_;
 
-    void sort() { std::sort(defs_.begin(), defs_.end()); }
+    void sort() { std::ranges::sort(defs_); }
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const ColumnDefinitions &rhs) {

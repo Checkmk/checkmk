@@ -95,7 +95,7 @@ bool isVariableName(std::string_view token) {
     };
 
     return !(is_operator(token[0]) ||
-             std::all_of(token.begin(), token.end(), is_number_part));
+             std::ranges::all_of(token, is_number_part));
 }
 
 std::string replace_all(const std::string &str, const std::string &chars,

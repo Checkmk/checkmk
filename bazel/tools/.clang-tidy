@@ -32,7 +32,6 @@ Checks: >
   -clang-analyzer-unix.StdCLibraryFunctions,
   -clang-analyzer-unix.Stream,
   -misc-use-internal-linkage,
-  -modernize-use-ranges,
   -performance-inefficient-vector-operation,
   -performance-unnecessary-copy-initialization,
 

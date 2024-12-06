@@ -7,10 +7,10 @@
 
 #include <fcntl.h>
 
-#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <fstream>
+#include <ranges>
 #include <stdexcept>
 #include <vector>
 
@@ -123,9 +123,8 @@ void Logfile::loadRange(const LogRestrictions &restrictions, FILE *file,
         }
         _lineno++;
         // remove trailing newline (should be nuked, see above)
-        auto it =
-            std::find_if(linebuffer.begin(), linebuffer.end(),
-                         [](auto ch) { return ch == '\0' || ch == '\n'; });
+        auto it = std::ranges::find_if(
+            linebuffer, [](auto ch) { return ch == '\0' || ch == '\n'; });
         if (it != linebuffer.end()) {
             *it = '\0';
         }

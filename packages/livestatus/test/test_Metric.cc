@@ -72,9 +72,9 @@ public:
 /// Return sorted string vectors to make the diff readable.
 std::vector<std::string> human_readable(const Metric::Names &in) {
     std::vector<std::string> out(in.size());
-    std::transform(std::begin(in), std::end(in), std::begin(out),
-                   [](auto &&elem) { return elem.string(); });
-    std::sort(std::begin(out), std::end(out));
+    std::ranges::transform(in, std::begin(out),
+                           [](auto &&elem) { return elem.string(); });
+    std::ranges::sort(out);
     return out;
 }
 

@@ -5,9 +5,8 @@
 
 #include "livestatus/FileSystemHelper.h"
 
-#include <algorithm>
+#include <ranges>
 #include <system_error>
-#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -43,9 +42,8 @@ bool path_contains(const fs::path &directory, const fs::path &path) {
     if (ec) {
         return false;
     }
-    auto pair = std::mismatch(can_dir.begin(), can_dir.end(), can_path.begin(),
-                              can_path.end());
-    return pair.first == can_dir.end();
+    auto pair = std::ranges::mismatch(can_dir, can_path);
+    return pair.in1 == can_dir.end();
 }
 
 }  // namespace mk

@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -43,7 +42,7 @@ namespace {
 // First test fixture: A single host
 struct HostMacroExpanderTest : public ::testing::Test {
     void SetUp() override {
-        std::fill(std::begin(macro_user), std::end(macro_user), nullptr);
+        std::ranges::fill(macro_user, nullptr);
         macro_user[10] = cc("I drink and I know things");
     }
 

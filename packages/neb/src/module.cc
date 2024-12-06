@@ -32,6 +32,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -343,9 +344,8 @@ std::string_view callback_name(int callback_type) {
         {NEBCALLBACK_CONTACT_STATUS_DATA, "CONTACT_STATUS"sv},
         {NEBCALLBACK_ADAPTIVE_CONTACT_DATA, "ADAPTIVE_CONTACT"sv},
     }};
-    const auto *it = std::find_if(
-        begin(table), end(table),
-        [&](const auto &entry) { return entry.first == callback_type; });
+    const auto *it = std::ranges::find_if(
+        table, [&](const auto &entry) { return entry.first == callback_type; });
     return it == end(table) ? "UNKNOWN"sv : it->second;
 }
 
@@ -444,9 +444,8 @@ std::string_view data_type_name(int type) {
         {NEBTYPE_STATECHANGE_START, "STATECHANGE_START"sv},
         {NEBTYPE_STATECHANGE_END, "STATECHANGE_END"sv},
     }};
-    const auto *it =
-        std::find_if(begin(table), end(table),
-                     [&](const auto &entry) { return entry.first == type; });
+    const auto *it = std::ranges::find_if(
+        table, [&](const auto &entry) { return entry.first == type; });
     return it == end(table) ? "UNKNOWN"sv : it->second;
 }
 

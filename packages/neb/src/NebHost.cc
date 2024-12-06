@@ -51,9 +51,8 @@ bool NebHost::all_of_labels(
     // TODO(sp) Avoid construction of temporary map
     auto labels =
         CustomAttributes(host_.custom_variables, AttributeKind::labels);
-    return std::all_of(
-        labels.cbegin(), labels.cend(),
-        [&pred](const std::pair<std::string, std::string> &label) {
+    return std::ranges::all_of(
+        labels, [&pred](const std::pair<std::string, std::string> &label) {
             return pred(Attribute{.name = label.first, .value = label.second});
         });
 }

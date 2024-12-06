@@ -45,7 +45,6 @@ _activate_single_dir() {
         restart_agent_controller_daemon="yes"
     }
 
-    _migrate_from_multi_dir
     _adapt_user
     _set_user_permissions
 
@@ -72,16 +71,6 @@ _set_user_permissions() {
     [ -e "${agent_controller_config}" ] && chown :cmk-agent "${agent_controller_config}"
     pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
     [ -e "${pre_configured_connections}" ] && chown :cmk-agent "${pre_configured_connections}"
-}
-
-_migrate_from_multi_dir() {
-    old_registry="${OLD_HOMEDIR}/registered_connections.json"
-    new_registry="${HOMEDIR}/registered_connections.json"
-    [ -e "${old_registry}" ] && [ ! -e "${new_registry}" ] && {
-        printf "Found agent controller registered connections at legacy home directory %s, migrating to %s.\n" "${OLD_HOMEDIR}" "${HOMEDIR}"
-        mv "${old_registry}" "${HOMEDIR}"
-        rm -r "${OLD_HOMEDIR}"
-    }
 }
 
 main() {

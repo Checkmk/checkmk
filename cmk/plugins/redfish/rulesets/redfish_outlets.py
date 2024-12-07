@@ -14,12 +14,17 @@ def _form_discovery_redfish_outlets() -> form_specs.Dictionary:
             "naming": form_specs.DictElement(
                 parameter_form=form_specs.SingleChoice(
                     title=Title("Naming for outlets at discovery"),
-                    help_text=Help("Specify how to name the outlets at discovered"),
+                    help_text=Help(
+                        "Specify how to name the outlets during discovery:\n\n"
+                        " Port ID: Use the ID of the port as name\n\n"
+                        " User Label: Add the user label of the ports name, in addition to the ID: 'ID-UserLabel'\n\n"
+                        " Zero padded port ID: Use the zero padded port ID (to the length of the highest port ID)"
+                    ),
                     elements=[
-                        form_specs.SingleChoiceElement(name="index", title=Title("Port Index")),
+                        form_specs.SingleChoiceElement(name="index", title=Title("Port ID")),
                         form_specs.SingleChoiceElement(name="label", title=Title("User Label")),
                         form_specs.SingleChoiceElement(
-                            name="fill", title=Title("Port Index with fill")
+                            name="fill", title=Title("Zero padded port ID")
                         ),
                     ],
                 ),

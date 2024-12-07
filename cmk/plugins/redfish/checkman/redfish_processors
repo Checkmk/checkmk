@@ -1,0 +1,13 @@
+title: Redfish Processors
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the processors (CPUs) of a Redfish compatible device.
+
+discovery:
+ One service is created for each CPU of the device.
+
+item:
+ The ID of the CPU.

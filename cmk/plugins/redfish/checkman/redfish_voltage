@@ -1,0 +1,13 @@
+title: Redfish Voltage
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about the voltage sensors of a Redfish compatible device.
+
+discovery:
+ One service is created for each sensor of the device.
+
+item:
+ The name of the sensor.

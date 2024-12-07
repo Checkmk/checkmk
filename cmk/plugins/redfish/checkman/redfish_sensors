@@ -1,0 +1,13 @@
+title: Redfish sensors
+agents: agent_redfish_power
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about sensors of Redfish compatible devices.
+
+discovery:
+ One service per sensor that is not "Absent" is created.
+
+item:
+ The ID of the sensor.

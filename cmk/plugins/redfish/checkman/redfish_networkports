@@ -1,0 +1,13 @@
+title: Redfish network ports
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about network ports of Redfish compatible devices.
+
+discovery:
+ One service per port is created.
+
+item:
+ The ID of the port.

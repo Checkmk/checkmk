@@ -29,7 +29,7 @@ agent_section_redfish_physicaldrives = AgentSection(
 def discovery_redfish_physicaldrives(section: RedfishAPIData) -> DiscoveryResult:
     for key in section.keys():
         loc = section[key].get("Location")
-        if loc == []:
+        if loc == []:  # TODO: what if it's None?
             item = section[key]["Name"]
         else:
             item = section[key]["Location"]

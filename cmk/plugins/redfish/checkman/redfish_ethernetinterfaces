@@ -1,0 +1,14 @@
+title: Redfish ethernet interfaces
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about ethernet interfaces of Redfish compatible devices.
+
+discovery:
+ One service is created for each ethernet interface.
+ Services are created depending on the settings in the discovery ruleset ""Redfish Ethernet Interface discovery".
+
+item:
+ The ID of the interface.

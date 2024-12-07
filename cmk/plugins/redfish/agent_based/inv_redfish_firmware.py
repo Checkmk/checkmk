@@ -102,6 +102,8 @@ def discovery_redfish_firmware(section: RedfishAPIData) -> DiscoveryResult:
         yield Service()
 
 
+# TODO: this outputs html
+# TODO: for manpage: which agents generate this?
 def check_redfish_firmware(section: RedfishAPIData) -> CheckResult:
     """check the health state of the firmware"""
 

@@ -1,0 +1,10 @@
+title: Redfish Firmware
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This checks the health state of the firmware of a Redfish compatible device.
+
+discovery:
+ One service is created.

@@ -28,6 +28,7 @@ def discovery_redfish_psu(section: RedfishAPIData) -> DiscoveryResult:
                 yield Service(item=f"{count}-{entry['Name']}")
 
 
+# TODO: for manpage: which agents support this?
 def check_redfish_psu(item: str, section: RedfishAPIData) -> CheckResult:
     psu = None
     for key in section.keys():

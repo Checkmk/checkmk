@@ -387,6 +387,12 @@ msgstr "%d HTTP proxy servers geconfigureerd"
 msgid "%d actions"
 msgstr "%d acties"
 
+#, fuzzy, python-format
+msgid "%d changed label"
+msgid_plural "%d changed labels"
+msgstr[0] "%d aanpassingen"
+msgstr[1] "%d aanpassingen"
+
 #, python-format
 msgid "%d changes"
 msgstr "%d aanpassingen"
@@ -426,6 +432,24 @@ msgstr "%d dagen geleden"
 #, fuzzy, python-format
 msgid "%d defined parameter properties"
 msgstr "Algemene eigenschappen"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter added"
+msgid_plural "%d discovery parameters added"
+msgstr[0] "Algemene eigenschappen"
+msgstr[1] "Algemene eigenschappen"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter changed"
+msgid_plural "%d discovery parameters changed"
+msgstr[0] "Dienst ontdekking: "
+msgstr[1] "Dienst ontdekking: "
+
+#, fuzzy, python-format
+msgid "%d discovery parameter removed"
+msgid_plural "%d discovery parameters removed"
+msgstr[0] "Algemene eigenschappen"
+msgstr[1] "Algemene eigenschappen"
 
 #, python-format
 msgid "%d errors occured:"
@@ -472,6 +496,12 @@ msgid "%d locked sites"
 msgstr "%d vergrendelde sites"
 
 #, fuzzy, python-format
+msgid "%d new label"
+msgid_plural "%d new labels"
+msgstr[0] "Nieuw etiket toevoegen"
+msgstr[1] "Nieuw etiket toevoegen"
+
+#, fuzzy, python-format
 msgid "%d notification rule(s) "
 msgstr "kennisgevingsregel"
 
@@ -490,6 +520,12 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d open onverenigbare werks"
+
+#, fuzzy, python-format
+msgid "%d removed label"
+msgid_plural "%d removed labels"
+msgstr[0] "Verwijder dit etiket"
+msgstr[1] "Verwijder dit etiket"
 
 #, python-format
 msgid "%d rows"
@@ -2425,6 +2461,12 @@ msgstr ""
 "Dit wordt momenteel alleen ondersteund op Linux en Windows agents en op "
 "apparaten die worden gemonitord via de host-resource mib"
 
+#, fuzzy, python-format
+msgid ""
+"A site is allowed to be used in exactly one OpenTelemetry collector "
+"configuration: %s"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
 msgid "A stored SNMP walk"
 msgstr "Een opgeslagen SNMP wandeling"
 
@@ -3018,6 +3060,10 @@ msgstr "Accepteer elke SSH Host Sleutel"
 
 msgid "Accept incoming TCP connections"
 msgstr "Accepteer inkomende TCP verbindingen"
+
+#, fuzzy
+msgid "Accept service properties"
+msgstr "Basiseigenschappen"
 
 msgid "Acceptable OS build version age"
 msgstr "Aanvaardbare OS build versie leeftijd"
@@ -4066,6 +4112,10 @@ msgstr "Nieuwe metriek toevoegen"
 msgid "Add new entry"
 msgstr "Nieuwe metriek toevoegen"
 
+#, fuzzy
+msgid "Add new field"
+msgstr "Nieuwe tijd toevoegen"
+
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
 "contains hosts then the permission to delete hosts is also required."
@@ -4126,6 +4176,10 @@ msgid "Add new scalar"
 msgstr "Nieuwe scalair toevoegen"
 
 #, fuzzy
+msgid "Add new scrape configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
 msgid "Add new sequence"
 msgstr "Nieuwe dienst toevoegen"
 
@@ -4141,6 +4195,10 @@ msgid "Add new status"
 msgstr "Nieuwe status toevoegen"
 
 msgid "Add new tag"
+msgstr "Nieuwe tag toevoegen"
+
+#, fuzzy
+msgid "Add new target"
 msgstr "Nieuwe tag toevoegen"
 
 msgid "Add new time"
@@ -13978,6 +14036,9 @@ msgstr "Configuratie van regels voor gebeurtenissen"
 msgid "Configuration of individual Eventlogs"
 msgstr "Configuratie van individuele Eventlogs"
 
+msgid "Configuration of managed robots for Synthetic Monitoring."
+msgstr ""
+
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Configuratie van monitoring agents voor Linux, Windows en Unix"
 
@@ -16719,6 +16780,10 @@ msgstr "Fase 1.1: Afhalen van site \"%s\""
 msgid "DCD batch history"
 msgstr "Zoekgeschiedenis"
 
+#, fuzzy
+msgid "DCD global settings"
+msgstr "Globale instelling wijzigen"
+
 msgid "DCD status"
 msgstr "DCD-status"
 
@@ -19395,6 +19460,10 @@ msgstr "Ontdek diensten tijdens creatie"
 
 msgid "Discover single interfaces"
 msgstr "Ontdek enkele interfaces"
+
+#, fuzzy
+msgid "Discovered changes"
+msgstr "%d aanpassingen"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -22103,7 +22172,7 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Loggen van mislukte aanmeldingen inschakelen"
 
-msgid "Enable metrics for high-level keywords"
+msgid "Enable metrics for top-level keywords"
 msgstr ""
 
 msgid "Enable notification logging"
@@ -25646,6 +25715,10 @@ msgid "Free swap space"
 msgstr "Vrije swap ruimte"
 
 msgid "Free tapes"
+msgstr "Gratis tapes"
+
+#, fuzzy
+msgid "Free text"
 msgstr "Gratis tapes"
 
 #, fuzzy
@@ -38874,6 +38947,10 @@ msgid "Managed Robot"
 msgstr "Beheerde objecten"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Beheerde objecten"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Beheerde objecten"
 
@@ -42786,6 +42863,10 @@ msgstr "niet beschikbaar"
 msgid "No elements selected"
 msgstr "Niet geselecteerd"
 
+#, fuzzy
+msgid "No endpoint"
+msgstr "Eindpunt"
+
 msgid "No entries"
 msgstr "Geen inzendingen"
 
@@ -44971,6 +45052,10 @@ msgstr "Op geselecteerde objecten"
 
 msgid "On selected rules"
 msgstr "Op geselecteerde regels"
+
+#, fuzzy
+msgid "On selected services"
+msgstr "Op geselecteerde plaatsen"
 
 msgid "On selected sites"
 msgstr "Op geselecteerde plaatsen"
@@ -50316,6 +50401,14 @@ msgstr "Prometheus aangepaste service"
 msgid "Prometheus custom services"
 msgstr "Prometheus aangepaste diensten"
 
+#, fuzzy
+msgid "Prometheus scrape configurations"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "Prometheus targets"
+msgstr "Alertmanager"
+
 msgid "Prominent change"
 msgstr "Prominente verandering"
 
@@ -50435,6 +50528,10 @@ msgstr "Proxmox VE gebruikt geheugenpercentage"
 
 msgid "Proxmox cluster"
 msgstr "Proxmox cluster"
+
+#, fuzzy
+msgid "Proxy"
+msgstr "Proxy URL"
 
 msgid "Proxy URL"
 msgstr "Proxy URL"
@@ -51419,6 +51516,12 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Ontvangen berichten"
+
+msgid "Receiver protocol GRPC"
+msgstr ""
+
+msgid "Receiver protocol HTTP"
+msgstr ""
 
 #, fuzzy
 msgid "Receiving traces is disabled"
@@ -53704,6 +53807,10 @@ msgstr ""
 msgid "Rules for automatic execution of scripts upon alerts"
 msgstr "Regels voor automatische uitvoering van scripts bij waarschuwingen"
 
+#, fuzzy
+msgid "Rules for host names"
+msgstr "Regex voor hostnaam"
+
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr ""
 "Regels voor de kennisgeving van contacten over host- en dienstproblemen"
@@ -54694,6 +54801,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Score"
+
+#, fuzzy
+msgid "Scrape interval"
+msgstr "Scan interval"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (beperkte ondersteuning, zie inline help)"
@@ -69369,10 +69480,6 @@ msgstr ""
 "van het monitoringsysteem via de webinterface."
 
 #, fuzzy
-msgid "This permission allows users to view managed robots."
-msgstr "Met deze toestemming kan elke nieuwe host worden geregistreerd."
-
-#, fuzzy
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
 "view and download installed packages. MKPs contain extensions to Checkmk "
@@ -71216,6 +71323,12 @@ msgstr ""
 "Het heeft geen zin om de stap kleiner te maken dan het normale controle-"
 "interval voor een onderhoudsbeurt. De standaardwaarde is 60 seconden - wat "
 "overeenkomt met het standaard controle-interval."
+
+msgid ""
+"This setting decides apply changes and discovery/activate are synctronized."
+"You may need to disable interlock if your system needs to process a lot of "
+"hosts in short time"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -76545,6 +76658,10 @@ msgstr "Kern configuratie bijwerken"
 msgid "Update delay for PNP meta information"
 msgstr "Bijwerkvertraging voor PNP meta-informatie"
 
+#, fuzzy
+msgid "Update discovery parameters"
+msgstr "Voorbeeld voor parameters"
+
 msgid "Update duration"
 msgstr "Duur bijwerken"
 
@@ -77761,6 +77878,9 @@ msgstr "Gebruik in kennisgevingen"
 msgid "Use index"
 msgstr "Gebruik index"
 
+msgid "Use inter lock to syncronize host processing with discovery/activate"
+msgstr ""
+
 msgid "Use invertible C-style mangling"
 msgstr "Gebruik inverteerbare C-stijl mangling"
 
@@ -78007,6 +78127,10 @@ msgid "Use the status of the Checkmk Agent"
 msgstr "Gebruik de status van de Checkmk Agent"
 
 msgid "Use the status of the service..."
+msgstr "Gebruik de status van de dienst..."
+
+#, fuzzy
+msgid "Use the value of the key"
 msgstr "Gebruik de status van de dienst..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
@@ -79911,10 +80035,6 @@ msgstr "Toon mislukte meldingen"
 
 msgid "View layout"
 msgstr "Bekijk lay-out"
-
-#, fuzzy
-msgid "View managed robots"
-msgstr "Beheerde objecten"
 
 msgid "View name"
 msgstr "Naam bekijken"
@@ -84123,6 +84243,10 @@ msgstr "U moet ten minste één gebruiker selecteren."
 msgid "You have to specify a connector to migrate to."
 msgstr "U moet een connector opgeven waarnaar u wilt migreren."
 
+#, fuzzy, python-format
+msgid "You have to specify at least one receiver: %s"
+msgstr "U moet ten minste één gebruiker selecteren."
+
 msgid "You have used an invalid character"
 msgstr "U hebt een ongeldig teken gebruikt"
 
@@ -85794,6 +85918,10 @@ msgstr "is niet een van regex"
 msgid "is required"
 msgstr "is vereist"
 
+#, fuzzy
+msgid "is used in"
+msgstr "Deze gebruiker"
+
 msgid "isnot"
 msgstr "is niet"
 
@@ -86959,6 +87087,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy
+#~ msgid "This permission allows users to view managed robots."
+#~ msgstr "Met deze toestemming kan elke nieuwe host worden geregistreerd."
+
+#, fuzzy
+#~ msgid "View managed robots"
+#~ msgstr "Beheerde objecten"
+
+#, fuzzy
 #~ msgid "Waiting on team Engelbart"
 #~ msgstr "Wachtende containers"
 
@@ -87002,10 +87138,6 @@ msgstr "Gebruik SSL voor de verbinding."
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "Geen behoefte om sites te synchroniseren"
-
-#, fuzzy
-#~ msgid "Service discovery and activate changes"
-#~ msgstr "Dienst ontdekking: "
 
 #, fuzzy
 #~ msgid "Some value"
@@ -87369,10 +87501,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #, fuzzy
 #~ msgid "Placeholder"
 #~ msgstr "Plaatsvervangende VM's"
-
-#, fuzzy
-#~ msgid "Managed Robots"
-#~ msgstr "Beheerde objecten"
 
 #~ msgid "API key from password store"
 #~ msgstr "API sleutel van wachtwoord opslag"
@@ -88119,10 +88247,6 @@ msgstr "Gebruik SSL voor de verbinding."
 #~ "controle geen <i>Read wait</i> informatie geeft in zijn uitvoer, zal elke "
 #~ "configuratie instelling die verwijst naar <i>Read wait</i> geen effect "
 #~ "hebben."
-
-#, fuzzy
-#~ msgid "Discard changes"
-#~ msgstr "%d aanpassingen"
 
 #, fuzzy
 #~ msgid "Discard foreign changes"

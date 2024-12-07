@@ -385,6 +385,12 @@ msgstr "%d serveurs proxy HTTP configurés"
 msgid "%d actions"
 msgstr "%d actions"
 
+#, fuzzy, python-format
+msgid "%d changed label"
+msgid_plural "%d changed labels"
+msgstr[0] "%d changements"
+msgstr[1] "%d changements"
+
 #, python-format
 msgid "%d changes"
 msgstr "%d changements"
@@ -424,6 +430,24 @@ msgstr "Il y a %d jours"
 #, fuzzy, python-format
 msgid "%d defined parameter properties"
 msgstr "Propriétés générales"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter added"
+msgid_plural "%d discovery parameters added"
+msgstr[0] "Propriétés générales"
+msgstr[1] "Propriétés générales"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter changed"
+msgid_plural "%d discovery parameters changed"
+msgstr[0] "Découverte de services : "
+msgstr[1] "Découverte de services : "
+
+#, fuzzy, python-format
+msgid "%d discovery parameter removed"
+msgid_plural "%d discovery parameters removed"
+msgstr[0] "Propriétés générales"
+msgstr[1] "Propriétés générales"
 
 #, python-format
 msgid "%d errors occured:"
@@ -470,6 +494,12 @@ msgid "%d locked sites"
 msgstr "%d de sites bloqués"
 
 #, fuzzy, python-format
+msgid "%d new label"
+msgid_plural "%d new labels"
+msgstr[0] "Ajouter une nouvelle étiquette"
+msgstr[1] "Ajouter une nouvelle étiquette"
+
+#, fuzzy, python-format
 msgid "%d notification rule(s) "
 msgstr "règle de notification"
 
@@ -488,6 +518,12 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d open werks incompatible"
+
+#, fuzzy, python-format
+msgid "%d removed label"
+msgid_plural "%d removed labels"
+msgstr[0] "Retirer cette étiquette"
+msgstr[1] "Retirer cette étiquette"
 
 #, python-format
 msgid "%d rows"
@@ -2469,6 +2505,12 @@ msgstr ""
 "n'est actuellement prise en charge que par les agents Linux et Windows, "
 "ainsi que par les périphériques surveillés par le biais du mib host-resource"
 
+#, fuzzy, python-format
+msgid ""
+"A site is allowed to be used in exactly one OpenTelemetry collector "
+"configuration: %s"
+msgstr "Ajouter une nouvelle configuration utilisateur"
+
 msgid "A stored SNMP walk"
 msgstr "Une marche SNMP stockée"
 
@@ -3062,6 +3104,10 @@ msgstr "Accepter toute clé d'hôte SSH"
 
 msgid "Accept incoming TCP connections"
 msgstr "Accepter les connexions TCP entrantes"
+
+#, fuzzy
+msgid "Accept service properties"
+msgstr "Propriétés de base"
 
 msgid "Acceptable OS build version age"
 msgstr "Âge de la version du système d'exploitation acceptable"
@@ -4107,6 +4153,10 @@ msgstr "Ajouter une nouvelle métrique"
 msgid "Add new entry"
 msgstr "Ajouter une nouvelle métrique"
 
+#, fuzzy
+msgid "Add new field"
+msgstr "Ajouter une nouvelle heure"
+
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
 "contains hosts then the permission to delete hosts is also required."
@@ -4167,6 +4217,10 @@ msgid "Add new scalar"
 msgstr "Ajouter un nouveau scalaire"
 
 #, fuzzy
+msgid "Add new scrape configuration"
+msgstr "Ajouter une nouvelle configuration utilisateur"
+
+#, fuzzy
 msgid "Add new sequence"
 msgstr "Ajouter un nouveau service"
 
@@ -4182,6 +4236,10 @@ msgid "Add new status"
 msgstr "Ajouter un nouveau statut"
 
 msgid "Add new tag"
+msgstr "Ajouter un nouveau tag"
+
+#, fuzzy
+msgid "Add new target"
 msgstr "Ajouter un nouveau tag"
 
 msgid "Add new time"
@@ -14086,6 +14144,9 @@ msgstr "Configuration des règles d'événements"
 msgid "Configuration of individual Eventlogs"
 msgstr "Configuration des journaux d'événements individuels"
 
+msgid "Configuration of managed robots for Synthetic Monitoring."
+msgstr ""
+
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Configuration des agents de surveillance pour Linux, Windows et Unix"
 
@@ -16859,6 +16920,10 @@ msgstr "Phase 1.1 : Récupération du site \"%s\""
 msgid "DCD batch history"
 msgstr "Historique de la recherche"
 
+#, fuzzy
+msgid "DCD global settings"
+msgstr "Modifier le paramètre global"
+
 msgid "DCD status"
 msgstr "Statut DCD"
 
@@ -19547,6 +19612,10 @@ msgstr "Découvrir les services pendant la création"
 
 msgid "Discover single interfaces"
 msgstr "Découvrir les interfaces uniques"
+
+#, fuzzy
+msgid "Discovered changes"
+msgstr "%d changements"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -22299,7 +22368,7 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Activer la journalisation des échecs de connexion"
 
-msgid "Enable metrics for high-level keywords"
+msgid "Enable metrics for top-level keywords"
 msgstr ""
 
 msgid "Enable notification logging"
@@ -25872,6 +25941,10 @@ msgid "Free swap space"
 msgstr "Espace d'échange libre"
 
 msgid "Free tapes"
+msgstr "Cassettes gratuites"
+
+#, fuzzy
+msgid "Free text"
 msgstr "Cassettes gratuites"
 
 #, fuzzy
@@ -39213,6 +39286,10 @@ msgid "Managed Robot"
 msgstr "Objets gérés"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Objets gérés"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Objets gérés"
 
@@ -43156,6 +43233,10 @@ msgstr "non disponible"
 msgid "No elements selected"
 msgstr "Non sélectionné"
 
+#, fuzzy
+msgid "No endpoint"
+msgstr "Point d'accès"
+
 msgid "No entries"
 msgstr "Aucune entrée"
 
@@ -45354,6 +45435,10 @@ msgstr "Sur les objets sélectionnés"
 
 msgid "On selected rules"
 msgstr "Sur les règles sélectionnées"
+
+#, fuzzy
+msgid "On selected services"
+msgstr "Sur des sites sélectionnés"
 
 msgid "On selected sites"
 msgstr "Sur des sites sélectionnés"
@@ -50759,6 +50844,14 @@ msgstr "Service personnalisé Prometheus"
 msgid "Prometheus custom services"
 msgstr "Services personnalisés Prometheus"
 
+#, fuzzy
+msgid "Prometheus scrape configurations"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+msgid "Prometheus targets"
+msgstr "Alertmanager"
+
 msgid "Prominent change"
 msgstr "Un changement important"
 
@@ -50880,6 +50973,10 @@ msgstr "Pourcentage de mémoire utilisé par Proxmox VE"
 
 msgid "Proxmox cluster"
 msgstr "Amas de Proxmox"
+
+#, fuzzy
+msgid "Proxy"
+msgstr "URL du proxy"
 
 msgid "Proxy URL"
 msgstr "URL du proxy"
@@ -51865,6 +51962,12 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Messages reçus"
+
+msgid "Receiver protocol GRPC"
+msgstr ""
+
+msgid "Receiver protocol HTTP"
+msgstr ""
 
 #, fuzzy
 msgid "Receiving traces is disabled"
@@ -54193,6 +54296,10 @@ msgstr ""
 msgid "Rules for automatic execution of scripts upon alerts"
 msgstr "Règles pour l'exécution automatique de scripts en cas d'alertes"
 
+#, fuzzy
+msgid "Rules for host names"
+msgstr "Regex pour le nom d'hôte"
+
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr ""
 "Règles pour la notification aux contacts des problèmes liés aux hôtes et aux "
@@ -55190,6 +55297,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Score"
+
+#, fuzzy
+msgid "Scrape interval"
+msgstr "Intervalle de balayage"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (support limité, voir l'aide en ligne)"
@@ -70025,10 +70136,6 @@ msgstr ""
 "utilisateurs du système de surveillance à l'aide de l'interface web."
 
 #, fuzzy
-msgid "This permission allows users to view managed robots."
-msgstr "Cette autorisation permet l'enregistrement de tout nouvel hôte."
-
-#, fuzzy
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
 "view and download installed packages. MKPs contain extensions to Checkmk "
@@ -71916,6 +72023,12 @@ msgstr ""
 "n'est pas judicieux d'avoir un pas plus petit que l'intervalle de contrôle "
 "normal pour un service. La valeur par défaut est de 60 secondes, ce qui "
 "correspond à l'intervalle de contrôle par défaut."
+
+msgid ""
+"This setting decides apply changes and discovery/activate are synctronized."
+"You may need to disable interlock if your system needs to process a lot of "
+"hosts in short time"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -77267,6 +77380,10 @@ msgstr "Mise à jour de la configuration de base"
 msgid "Update delay for PNP meta information"
 msgstr "Délai de mise à jour des méta-informations du PNP"
 
+#, fuzzy
+msgid "Update discovery parameters"
+msgstr "Exemple de paramètres"
+
 msgid "Update duration"
 msgstr "Durée de la mise à jour"
 
@@ -78510,6 +78627,9 @@ msgstr "Utilisation dans les notifications"
 msgid "Use index"
 msgstr "Utiliser l'indice"
 
+msgid "Use inter lock to syncronize host processing with discovery/activate"
+msgstr ""
+
 msgid "Use invertible C-style mangling"
 msgstr "Utiliser la gestion inversible de style C"
 
@@ -78761,6 +78881,10 @@ msgid "Use the status of the Checkmk Agent"
 msgstr "Utiliser le statut de l'agent Checkmk"
 
 msgid "Use the status of the service..."
+msgstr "Utiliser le statut du service..."
+
+#, fuzzy
+msgid "Use the value of the key"
 msgstr "Utiliser le statut du service..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
@@ -80695,10 +80819,6 @@ msgstr "Afficher les notifications d'échec"
 
 msgid "View layout"
 msgstr "Voir la présentation"
-
-#, fuzzy
-msgid "View managed robots"
-msgstr "Objets gérés"
 
 msgid "View name"
 msgstr "Voir le nom"
@@ -84978,6 +85098,10 @@ msgstr "Vous devez sélectionner au moins un utilisateur."
 msgid "You have to specify a connector to migrate to."
 msgstr "Vous devez spécifier un connecteur vers lequel migrer."
 
+#, fuzzy, python-format
+msgid "You have to specify at least one receiver: %s"
+msgstr "Vous devez sélectionner au moins un utilisateur."
+
 msgid "You have used an invalid character"
 msgstr "Vous avez utilisé un caractère non valide"
 
@@ -86660,6 +86784,10 @@ msgstr "n'est pas un des regex"
 msgid "is required"
 msgstr "est nécessaire"
 
+#, fuzzy
+msgid "is used in"
+msgstr "Cet utilisateur"
+
 msgid "isnot"
 msgstr "n'est pas"
 
@@ -87825,6 +87953,14 @@ msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 #, fuzzy
+#~ msgid "This permission allows users to view managed robots."
+#~ msgstr "Cette autorisation permet l'enregistrement de tout nouvel hôte."
+
+#, fuzzy
+#~ msgid "View managed robots"
+#~ msgstr "Objets gérés"
+
+#, fuzzy
 #~ msgid "Waiting on team Engelbart"
 #~ msgstr "Conteneurs d'attente"
 
@@ -87868,10 +88004,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "Pas besoin de synchroniser les sites"
-
-#, fuzzy
-#~ msgid "Service discovery and activate changes"
-#~ msgstr "Découverte de services : "
 
 #, fuzzy
 #~ msgid "Some value"
@@ -88233,10 +88365,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #, fuzzy
 #~ msgid "Placeholder"
 #~ msgstr "VMs de remplacement"
-
-#, fuzzy
-#~ msgid "Managed Robots"
-#~ msgstr "Objets gérés"
 
 #~ msgid "API key from password store"
 #~ msgstr "Clé API du magasin de mots de passe"
@@ -88979,10 +89107,6 @@ msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 #~ "si le contrôle ne fournit pas d'informations <i>Lecture d'attente</i> "
 #~ "dans sa sortie, tout paramètre de configuration faisant référence à "
 #~ "<i>Lecture d'attente</i> n'aura aucun effet."
-
-#, fuzzy
-#~ msgid "Discard changes"
-#~ msgstr "%d changements"
 
 #, fuzzy
 #~ msgid "Discard foreign changes"

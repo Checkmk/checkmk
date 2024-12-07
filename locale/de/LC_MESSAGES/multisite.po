@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-12-04 06:00+0000\n"
+"PO-Revision-Date: 2024-12-06 06:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -386,6 +386,12 @@ msgstr "%d HTTP-Proxy-Server konfiguriert"
 msgid "%d actions"
 msgstr "%d Aktionen"
 
+#, fuzzy, python-format
+msgid "%d changed label"
+msgid_plural "%d changed labels"
+msgstr[0] "%d Änderungen"
+msgstr[1] "%d Änderungen"
+
 #, python-format
 msgid "%d changes"
 msgstr "%d Änderungen"
@@ -425,6 +431,24 @@ msgstr "vor %d Tagen"
 #, python-format
 msgid "%d defined parameter properties"
 msgstr "%d definierte Parametereigenschaften"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter added"
+msgid_plural "%d discovery parameters added"
+msgstr[0] "%d definierte Parametereigenschaften"
+msgstr[1] "%d definierte Parametereigenschaften"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter changed"
+msgid_plural "%d discovery parameters changed"
+msgstr[0] "Service-Erkennung lief am"
+msgstr[1] "Service-Erkennung lief am"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter removed"
+msgid_plural "%d discovery parameters removed"
+msgstr[0] "%d definierte Parametereigenschaften"
+msgstr[1] "%d definierte Parametereigenschaften"
 
 #, python-format
 msgid "%d errors occured:"
@@ -470,6 +494,12 @@ msgstr "%d gesperrte Instanz"
 msgid "%d locked sites"
 msgstr "%d gesperrte Instanzen"
 
+#, fuzzy, python-format
+msgid "%d new label"
+msgid_plural "%d new labels"
+msgstr[0] "Neues Label hinzufügen"
+msgstr[1] "Neues Label hinzufügen"
+
 #, python-format
 msgid "%d notification rule(s) "
 msgstr "%d Benachrichtigungsregel(n) "
@@ -489,6 +519,12 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d offene inkompatible Werks"
+
+#, fuzzy, python-format
+msgid "%d removed label"
+msgid_plural "%d removed labels"
+msgstr[0] "Dieses Label entfernen"
+msgstr[1] "Dieses Label entfernen"
 
 #, python-format
 msgid "%d rows"
@@ -2252,6 +2288,9 @@ msgid ""
 "A list of text values that represent the 'AuthnContextClassRef' elements "
 "used to specify acceptable authentication context classes."
 msgstr ""
+"Eine Liste von Textwerten, welche die 'AuthnContextClassRef'-Elemente "
+"darstellen, die zur Angabe der zulässigen Authentifizierungskontextklassen "
+"verwendet werden."
 
 msgid ""
 "A macro must begin and end with '$' and is allowed to contain only ASCII "
@@ -2419,6 +2458,12 @@ msgstr ""
 "einen Auslastungsschwellwert überschreitet. Dies wird derzeit nur von Linux- "
 "und Windows-Agenten sowie von Geräten unterstützt, die über die Host-"
 "Ressourcen-Mib überwacht werden"
+
+#, fuzzy, python-format
+msgid ""
+"A site is allowed to be used in exactly one OpenTelemetry collector "
+"configuration: %s"
+msgstr "Konfiguration des OpenTelemetry-Kollektors hinzufügen"
 
 msgid "A stored SNMP walk"
 msgstr "Gespeicherter SNMP-Walk"
@@ -2985,6 +3030,10 @@ msgstr "Jeden SSH-Host-Schlüssel akzeptieren"
 msgid "Accept incoming TCP connections"
 msgstr "Eingehende TCP-Verbindungen akzeptieren"
 
+#, fuzzy
+msgid "Accept service properties"
+msgstr "Grundlegende Eigenschaften"
+
 msgid "Acceptable OS build version age"
 msgstr "Alter der akzeptablen OS-Build-Version"
 
@@ -3463,17 +3512,14 @@ msgstr "Aktiv (anonym)"
 msgid "Active (files)"
 msgstr "Aktiv (Dateien)"
 
-#, fuzzy
 msgid "Active Calls"
-msgstr "Aktive Pfade"
+msgstr "Aktive Aufrufe"
 
-#, fuzzy
 msgid "Active Calls In"
-msgstr "Aktive Pfade"
+msgstr "Aktive eingehende Aufrufe"
 
-#, fuzzy
 msgid "Active Calls Out"
-msgstr "Aktive Einheit"
+msgstr "Aktive ausgehende Aufrufe"
 
 msgid "Active Connections"
 msgstr "Aktive Verbindungen"
@@ -3704,9 +3750,8 @@ msgstr "NGNIX-Instanz hinzufügen"
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry collector configuration"
-msgstr "Neue Benutzerkonfiguration hinzufügen"
+msgstr "Konfiguration des OpenTelemetry-Kollektors hinzufügen"
 
 msgid "Add Prefix"
 msgstr "Präfix hinzufügen"
@@ -3994,6 +4039,10 @@ msgstr "Neuen Endpunkt hinzufügen"
 msgid "Add new entry"
 msgstr "Neuen Eintrag hinzufügen"
 
+#, fuzzy
+msgid "Add new field"
+msgstr "Neue Zeit hinzufügen"
+
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
 "contains hosts then the permission to delete hosts is also required."
@@ -4050,6 +4099,10 @@ msgstr "Neue Regel hinzufügen"
 msgid "Add new scalar"
 msgstr "Neue Konstante hinzufügen"
 
+#, fuzzy
+msgid "Add new scrape configuration"
+msgstr "Neue Benutzerkonfiguration hinzufügen"
+
 msgid "Add new sequence"
 msgstr "Neue Sequenz hinzufügen"
 
@@ -4063,6 +4116,10 @@ msgid "Add new status"
 msgstr "Neuen Zustand hinzufügen"
 
 msgid "Add new tag"
+msgstr "Neues Merkmal hinzufügen"
+
+#, fuzzy
+msgid "Add new target"
 msgstr "Neues Merkmal hinzufügen"
 
 msgid "Add new time"
@@ -4312,9 +4369,8 @@ msgstr "Benutzerattribut hinzufügen"
 msgid "Add, edit and delete InfluxDB connections."
 msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
 
-#, fuzzy
 msgid "Add, edit and delete OpenTelemetry configurations."
-msgstr "InfluxDB-Verbindungen hinzufügen, bearbeiten und löschen."
+msgstr "OpenTelemetry-Konfigurationen hinzufügen, bearbeiten und löschen."
 
 msgid "Add. addresses"
 msgstr "Zusätzliche Adressen"
@@ -5638,9 +5694,10 @@ msgstr "Alle Protokolle"
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
 
-#, fuzzy
 msgid "All related configuration of the integrated OpenTelemetry collector."
-msgstr "Traces an einen anderen OpenTelemetry-Kollektor senden"
+msgstr ""
+"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry-"
+"Kollektors."
 
 msgid "All related information or settings of licensing of Checkmk sites."
 msgstr ""
@@ -7185,9 +7242,8 @@ msgstr "Von Hosts zu entfernende Attribute"
 msgid "AudioCodes Alarms"
 msgstr "AudioCodes Alarme"
 
-#, fuzzy
 msgid "AudioCodes SBC Calls"
-msgstr "AudioCodes Alarme"
+msgstr "AudioCodes SBC Aufrufe"
 
 msgid "Audit log"
 msgstr "Auditlog"
@@ -7224,9 +7280,8 @@ msgstr "Ablauf der Authentifizierung"
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Authentifizierungscode (OTP / TOTP)"
 
-#, fuzzy
 msgid "Authentication context class reference"
-msgstr "Authentifizierungsquelle"
+msgstr "Referenz der Klasse des Authentifizierungskontexts"
 
 msgid ""
 "Authentication details for communicating with ServiceNow. If you want to "
@@ -7641,16 +7696,14 @@ msgstr "Verfügbar bis"
 msgid "Average"
 msgstr "Durchschnitt"
 
-#, fuzzy
 msgid "Average Call Duration"
-msgstr "Durchschnittliche Latenz"
+msgstr "Durchschnittliche Aufrufdauer"
 
 msgid "Average Outgoing Queue Delay"
 msgstr "Durchschnittliche Verzögerung in Ausgangswarteschlange"
 
-#, fuzzy
 msgid "Average Success Ratio"
-msgstr "Varnish Backend Erfolgsverhältniss"
+msgstr "Durchschnittliche Erfolgsrate"
 
 msgid "Average active check latency"
 msgstr "Durchschnittliche Latenz aktiver Checks"
@@ -10589,20 +10642,17 @@ msgstr ""
 msgid "Calling final hooks"
 msgstr "Rufe finale Hooks auf"
 
-#, fuzzy
 msgid "Calls In"
-msgstr "Anrufer ID"
+msgstr "Eingehende Aufrufe"
 
 msgid "Calls In/Out"
-msgstr ""
+msgstr "Eingehende/ausgehende Aufrufe"
 
-#, fuzzy
 msgid "Calls Out"
-msgstr "Regel aufrufen"
+msgstr "Ausgehende Aufrufe"
 
-#, fuzzy
 msgid "Calls per Second"
-msgstr "Seiten pro Sekunde"
+msgstr "Aufrufe pro Sekunde"
 
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
@@ -13306,9 +13356,8 @@ msgstr ""
 "sein kann. Diese Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich "
 "oder über den eingestellten Leveln liegt."
 
-#, fuzzy
 msgid "Comparison"
-msgstr "Komprimierung"
+msgstr "Vergleich"
 
 msgid "Compatibility"
 msgstr "Kompatibilität"
@@ -13511,6 +13560,9 @@ msgstr "Konfiguration der Ereignisregeln"
 
 msgid "Configuration of individual Eventlogs"
 msgstr "Konfiguration von bestimmten Ereignisprotokollen"
+
+msgid "Configuration of managed robots for Synthetic Monitoring."
+msgstr ""
 
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
@@ -15229,9 +15281,8 @@ msgstr ""
 msgid "Create regular time-schedule for this report"
 msgstr "Für diesen Bericht einen Eintrag im Berichtsplaner erstellen"
 
-#, fuzzy
 msgid "Create remote broker certificates"
-msgstr "Broker-Zertifikate konnten nicht gespeichert werden: %s"
+msgstr "Remote-Broker-Zertifikate erstellen"
 
 msgid "Create robot"
 msgstr "Roboter erstellen"
@@ -16184,6 +16235,10 @@ msgstr "DCD Manager: Holen von Piggyback-Hosts von der Instanz \"%s\""
 
 msgid "DCD batch history"
 msgstr "DCD Batch Historie"
+
+#, fuzzy
+msgid "DCD global settings"
+msgstr "Globale DCD-Einstellungen wurden geändert"
 
 msgid "DCD status"
 msgstr "DCD-Zustand"
@@ -18734,6 +18789,10 @@ msgstr "Erkennen von Services während der Erstellung"
 
 msgid "Discover single interfaces"
 msgstr "Erkenne einzelne Schnittstellen"
+
+#, fuzzy
+msgid "Discovered changes"
+msgstr "Änderungen verwerfen"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -21350,7 +21409,8 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
 
-msgid "Enable metrics for high-level keywords"
+#, fuzzy
+msgid "Enable metrics for top-level keywords"
 msgstr "Aktiviere Metriken für übergeordnete Schlüsselwörter"
 
 msgid "Enable notification logging"
@@ -23572,13 +23632,11 @@ msgstr "Zertifikat vom Server abrufen"
 msgid "Fetch chunked"
 msgstr "Anfrage chunked"
 
-#, fuzzy
 msgid "Fetch data every"
-msgstr "Hole alle"
+msgstr "Hole Daten alle"
 
-#, fuzzy
 msgid "Fetch data every time"
-msgstr "Hole alle"
+msgstr "Hole jedes Mal Daten"
 
 msgid "Fetch events"
 msgstr "Ereignisse abrufen"
@@ -24818,6 +24876,10 @@ msgstr "Freier Swapspace"
 msgid "Free tapes"
 msgstr "Freie Bänder"
 
+#, fuzzy
+msgid "Free text"
+msgstr "Freie Bänder"
+
 msgid "Free virtual memory"
 msgstr "Freier virtueller Speicher"
 
@@ -25402,9 +25464,8 @@ msgstr "Gehe zu %s Übersicht"
 msgid "Go to AWS root account > Services > IAM."
 msgstr "Gehe zu AWS-Stammkonto > Services > IAM."
 
-#, fuzzy
 msgid "Go to admin panel"
-msgstr "Zur Hauptübersicht"
+msgstr "Zum Admin Panel"
 
 msgid "Go to extension packages"
 msgstr "Gehe zu Erweiterungspakete"
@@ -33032,9 +33093,9 @@ msgstr "Ungülitge Endzeit"
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid extension type, supported types are: %s"
-msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
+msgstr "Ungültiger Erweiterungstyp, unterstützte Typen sind: %s"
 
 msgid "Invalid file"
 msgstr "Ungültige Datei"
@@ -36028,9 +36089,8 @@ msgstr "Im aktuellen Fenster/Tab laden"
 msgid "Load of Citrix Server"
 msgstr "Citrix Serverlast"
 
-#, fuzzy
 msgid "Loading"
-msgstr "Laden..."
+msgstr "Lädt"
 
 #, python-format
 msgid "Loading \"%s/%s\" failed: %s"
@@ -36672,16 +36732,16 @@ msgstr "Untergrenze für die Rate der Dateideskriptor-Öffnungsversuche"
 msgid "Lower level for message rate"
 msgstr "Untergrenze für Nachrichtenrate"
 
-#, fuzzy
 msgid "Lower level for number of busy executors of this node"
-msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
+msgstr "Untergrenze für die Anzahl beschäftigter Executors dieses Knotens"
 
 msgid "Lower level for number of executors of this node"
 msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
 
-#, fuzzy
 msgid "Lower level for number of idle executors of this node"
-msgstr "Untergrenze für die Anzahl der Executors dieser Knoten"
+msgstr ""
+"Untergrenze für die Anzahl der im Leerlauf befindlichen Executors dieses "
+"Knotens"
 
 msgid "Lower level for published message rate"
 msgstr "Untergrenze für veröffentlichte Nachrichtenrate"
@@ -36756,9 +36816,8 @@ msgstr "Untergrenzen für SMS-Erfolgsrate"
 msgid "Lower levels for active connections"
 msgstr "Untergrenzen für aktive Verbindungen"
 
-#, fuzzy
 msgid "Lower levels for average success ratio"
-msgstr "Untergrenzen für SMS-Erfolgsrate"
+msgstr "Untergrenzen für durchschnittliche Erfolgsrate"
 
 msgid "Lower levels for burst balance"
 msgstr "Untergrenzen für Burst-Balance"
@@ -37346,7 +37405,7 @@ msgid "Manage InfluxDB connections"
 msgstr "InfluxDB-Verbindungen verwalten"
 
 msgid "Manage OpenTelemetry configurations (Experimental)"
-msgstr ""
+msgstr "Verwalte die OpenTelemetry-Konfigurationen (experimentell)"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Eigene geplante Berichte verwalten"
@@ -37422,6 +37481,9 @@ msgstr "Benutzer des Monitoring-Systems verwalten."
 
 msgid "Managed Robot"
 msgstr "Verwalteter Roboter"
+
+msgid "Managed Robots"
+msgstr "Verwaltete Roboter"
 
 msgid "Managed objects"
 msgstr "Verwaltete Objekte"
@@ -41174,6 +41236,10 @@ msgstr "Keine Elemente verfügbar"
 msgid "No elements selected"
 msgstr "Keine Elemente ausgewählt"
 
+#, fuzzy
+msgid "No endpoint"
+msgstr "OTLP-Endpunkt"
+
 msgid "No entries"
 msgstr "Keine Einträge"
 
@@ -43272,6 +43338,10 @@ msgstr "Bei ausgewählten Objekten"
 msgid "On selected rules"
 msgstr "Bei ausgewählten Regeln"
 
+#, fuzzy
+msgid "On selected services"
+msgstr "Bei ausgewählten Instanzen"
+
 msgid "On selected sites"
 msgstr "Bei ausgewählten Instanzen"
 
@@ -43743,14 +43813,13 @@ msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
 msgid "OpenTelemetry (Experimental)"
-msgstr ""
+msgstr "OpenTelemetry (experimentell)"
 
 msgid "OpenTelemetry collector (Experimental)"
-msgstr ""
+msgstr "OpenTelemetry-Kollektor (experimentell)"
 
-#, fuzzy
 msgid "OpenTelemetry collector configurations"
-msgstr "Gewählte Stilkonfiguration"
+msgstr "Konfigurationen des OpenTelemetry-Kollektors"
 
 msgid "OpenVMS processes"
 msgstr "OpenVMS-Prozesse"
@@ -47162,7 +47231,6 @@ msgstr ""
 "Bitte geben Sie einen Pfad an, der entweder unter Linux oder unter Windows "
 "absolut ist."
 
-#, fuzzy
 msgid "Please provide a path that is relative on both Linux and Windows."
 msgstr ""
 "Bitte geben Sie einen Pfad an, der sowohl unter Linux als auch unter Windows "
@@ -47172,6 +47240,9 @@ msgid ""
 "Please provide a path that is resolved in the same way on Linux and Windows. "
 "In particular, avoid backslashes. You can use slashes on both platforms."
 msgstr ""
+"Bitte geben Sie einen Pfad an, der unter Linux und Windows auf dieselbe "
+"Weise aufgelöst wird. Vermeiden Sie insbesondere Backslashes. Sie können auf "
+"beiden Betriebssystemen Slashes verwenden."
 
 msgid "Please provide a relative Windows path"
 msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
@@ -48287,6 +48358,14 @@ msgstr "Prometheus kundenspezifischer Service"
 msgid "Prometheus custom services"
 msgstr "Prometheus kundenspezifische Dienstleistungen"
 
+#, fuzzy
+msgid "Prometheus scrape configurations"
+msgstr "Gewählte Stilkonfiguration"
+
+#, fuzzy
+msgid "Prometheus targets"
+msgstr "Prometheus Alertmanager"
+
 msgid "Prominent change"
 msgstr "Normale Änderung"
 
@@ -48405,6 +48484,10 @@ msgstr "Proxmox VE Speicher in Prozent verwendet"
 
 msgid "Proxmox cluster"
 msgstr "Proxmox-Cluster"
+
+#, fuzzy
+msgid "Proxy"
+msgstr "Proxy-URL"
 
 msgid "Proxy URL"
 msgstr "Proxy-URL"
@@ -49339,6 +49422,12 @@ msgstr ""
 msgid "Received messages"
 msgstr "Erhaltene Nachrichten"
 
+msgid "Receiver protocol GRPC"
+msgstr ""
+
+msgid "Receiver protocol HTTP"
+msgstr ""
+
 msgid "Receiving traces is disabled"
 msgstr "Empfang von Spuren ist deaktiviert"
 
@@ -49913,9 +50002,9 @@ msgstr ""
 "Die Remote-Automatisierung hat versucht, ausstehende Änderungen zu "
 "synchronisieren, ist aber fehlgeschlagen: 1%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Remote broker certificates created for site %s."
-msgstr "Broker-Verbindung zu Instanz %s aktualisiert"
+msgstr "Remote-Broker-Zertifikate, die für die Instanz %s erstellt wurden."
 
 msgid "Remote configuration"
 msgstr "Remote-Konfiguration"
@@ -50597,9 +50686,8 @@ msgstr "Übertragungsrate abfragen"
 msgid "Request wait time"
 msgstr "Request-Wartezeite"
 
-#, fuzzy
 msgid "Requested authentication context"
-msgstr "Authentifizierungscode eingeben"
+msgstr "Angeforderter Authentifizierungskontext"
 
 msgid "Requests"
 msgstr "Anfragen"
@@ -51557,6 +51645,10 @@ msgstr ""
 msgid "Rules for automatic execution of scripts upon alerts"
 msgstr "Regeln für die automatische Ausführung von Skripten bei Alerts"
 
+#, fuzzy
+msgid "Rules for host names"
+msgstr "Regulärer Ausdruck für Host-Namen"
+
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr ""
 "Regeln für die Benachrichtigung von Kontakten über Host- und Serviceprobleme"
@@ -52505,6 +52597,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Punktzahl"
+
+#, fuzzy
+msgid "Scrape interval"
+msgstr "Scanintervall"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Skript (Eingeschränkte Unterstützung, siehe Inline-Hilfe)"
@@ -55437,9 +55533,8 @@ msgstr ""
 "Angepasste Pakete von Monitoring-Agenten für Linux, Windows und andere "
 "Betriebssysteme signieren"
 
-#, fuzzy
 msgid "Sign up"
-msgstr "Melden Sie sich hier an"
+msgstr "Melden Sie sich an"
 
 msgid "Signal quality of Wireless device"
 msgstr "Signalqualität eines Wireless-Geräts"
@@ -56850,11 +56945,9 @@ msgstr ""
 msgid "Specify roles of a control plane node"
 msgstr "Festlegen der Rollen eines Steuerebenen-Knotens"
 
-#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on."
 msgstr ""
-"Geben Sie einen, mehrere oder alle Instanzen an, über die diese Verbindung "
-"laufen soll."
+"Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
@@ -58128,9 +58221,8 @@ msgstr "Zustand, wenn der Load-Balancer-Zustand throttled ist"
 msgid "State when missing"
 msgstr "Zustand wenn fehlend"
 
-#, fuzzy
 msgid "State when networking changes are detected"
-msgstr "Zustand, wenn Softwareänderungen gefunden wurden"
+msgstr "Zustand, wenn Netzwerkänderungen gefunden wurden"
 
 msgid "State when no backup can be found"
 msgstr "Zustand wenn kein Backup gefunden wird"
@@ -60487,6 +60579,8 @@ msgid ""
 "The MIME type of the uploaded file is not supported: %s. Supported file "
 "extensions: .tar.gz, .zip."
 msgstr ""
+"Der MIME-Typ der hochgeladenen Datei wird nicht unterstützt: %s. "
+"Unterstützte Dateierweiterungen: .tar.gz, .zip."
 
 msgid "The MSSQL instance name and the tablespace name separated by a space."
 msgstr ""
@@ -60969,6 +61063,8 @@ msgid ""
 "The authentication context class reference (for example urn:oasis:names:tc:"
 "SAML:2.0:ac:classes:PasswordProtectedTransport)"
 msgstr ""
+"Die Referenz der Authentifizierungskontextklasse (zum Beispiel urn:oasis:"
+"names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport)"
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -61886,9 +61982,9 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "The following files are missing in the archive: %s"
-msgstr "Die folgenden Zeichen sind verboten: %s"
+msgstr "Die folgenden Dateien fehlen im Archiv: %s"
 
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
@@ -64513,20 +64609,21 @@ msgstr "Zeitstempel muss entweder int oder float sein - ist aber %s"
 #, python-format
 msgid "The unpacked size of the uploaded ZIP file exceeds the limit: %s > %s"
 msgstr ""
+"Die entpackte Größe der hochgeladenen ZIP-Datei überschreitet das zulässige "
+"Maximum: %s > %s"
 
 #, python-format
 msgid ""
 "The unpacked size of the uploaded tar.gz file exceeds the limit: %s > %s"
 msgstr ""
+"Die entpackte Größe der hochgeladenen tar.gz-Datei überschreitet das "
+"zulässige Maximum: %s > %s"
 
-#, fuzzy
 msgid "The uploaded file is not a valid ZIP file."
-msgstr "Diese Datei ist scheinbar keine gültige Schlüssel-Datei."
+msgstr "Die hochgeladene Datei ist keine gültige ZIP-Datei."
 
-#, fuzzy
 msgid "The uploaded file is not a valid tar.gz file."
-msgstr ""
-"Die hochgeladene Datei muss entweder eine tar.gz- oder eine zip-Datei sein."
+msgstr "Die hochgeladene Datei ist keine gültige tar.gz-Datei."
 
 msgid "The uploaded file must be either a tar.gz or a zip file."
 msgstr ""
@@ -66834,6 +66931,11 @@ msgid ""
 "the desired level or type of authentication that the service provider "
 "requires from the identity provider. "
 msgstr ""
+"Diese Option spezifiziert das Element 'RequestedAuthnContext', das in einem "
+"von einem Client gesendeten AuthRequest enthalten ist. Der angeforderte "
+"Authentifizierungskontext gibt das gewünschte Level oder den Typ der "
+"Authentifizierung an, die der Dienstanbieter vom Identitätsanbieter "
+"verlangt. "
 
 msgid "This option turns on a faster algorithm for matching events to rules. "
 msgstr ""
@@ -67056,9 +67158,6 @@ msgid ""
 msgstr ""
 "Mit dieser Berechtigung können Benutzer über die Weboberfläche Nachrichten "
 "an die Benutzer des Monitoring-Systems senden."
-
-msgid "This permission allows users to view managed robots."
-msgstr "Mit dieser Berechtigung können Benutzer verwaltete Roboter sehen."
 
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
@@ -68885,6 +68984,12 @@ msgstr ""
 "Preis einer größeren RRD. Es ist nicht sinnvoll, die Schrittweite kleiner zu "
 "wählen, als das normale Checkintervall für einen Service. Der Standardwert "
 "ist 60 Sekunden - passend zum Standard-Checkintervall."
+
+msgid ""
+"This setting decides apply changes and discovery/activate are synctronized."
+"You may need to disable interlock if your system needs to process a lot of "
+"hosts in short time"
+msgstr ""
 
 msgid ""
 "This setting decides how many hosts will be discovered in one Api call. "
@@ -73633,6 +73738,10 @@ msgstr "Konfiguration des Kerns aktualisieren"
 msgid "Update delay for PNP meta information"
 msgstr "Verzögerte Aktualisierung von PNP-Metadaten"
 
+#, fuzzy
+msgid "Update discovery parameters"
+msgstr "Beispiel für Parameter"
+
 msgid "Update duration"
 msgstr "Dauer der Aktualisierung"
 
@@ -73855,9 +73964,8 @@ msgstr "Obergrenze für die Nachrichtenrate"
 msgid "Upper level for number of busy executors of this node"
 msgstr "Obergrenze für Anzahl der beschäftigten Executors dieses Knotens"
 
-#, fuzzy
 msgid "Upper level for number of executors of this node"
-msgstr "Obergrenze für Anzahl der beschäftigten Executors dieses Knotens"
+msgstr "Obergrenze für Anzahl der Executors dieses Knotens"
 
 msgid "Upper level for number of idle executors of this node"
 msgstr "Obergrenze für die Anzahl der ungenutzten Executors dieses Knotens"
@@ -74803,6 +74911,9 @@ msgstr "In Benachrichtigungen nutzen"
 msgid "Use index"
 msgstr "Verwende den Portindex"
 
+msgid "Use inter lock to syncronize host processing with discovery/activate"
+msgstr ""
+
 msgid "Use invertible C-style mangling"
 msgstr "Invertierbare Namensumwandlung à la C benutzen"
 
@@ -75047,6 +75158,10 @@ msgid "Use the status of the Checkmk Agent"
 msgstr "Den Zustand des Checkmk-Agenten verwenden"
 
 msgid "Use the status of the service..."
+msgstr "Den Zustand verwenden von Service..."
+
+#, fuzzy
+msgid "Use the value of the key"
 msgstr "Den Zustand verwenden von Service..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
@@ -76794,9 +76909,6 @@ msgstr "Fehlgeschlagene Benachrichtigungen ansehen"
 
 msgid "View layout"
 msgstr "Ansicht Layout"
-
-msgid "View managed robots"
-msgstr "Verwaltete Roboter ansehen"
 
 msgid "View name"
 msgstr "Name anzeigen"
@@ -80966,6 +81078,10 @@ msgstr "Sie müssen mindestens einen Benutzer auswählen."
 msgid "You have to specify a connector to migrate to."
 msgstr "Sie müssen einen Konnektor angeben, zu dem migriert werden soll."
 
+#, fuzzy, python-format
+msgid "You have to specify at least one receiver: %s"
+msgstr "Sie müssen mindestens einen Benutzer auswählen."
+
 msgid "You have used an invalid character"
 msgstr "Sie haben ein ungültiges Zeichen verwendet"
 
@@ -82652,6 +82768,10 @@ msgstr "ist nicht enthalten in regulären Ausdrücken"
 msgid "is required"
 msgstr "ist erforderlich"
 
+#, fuzzy
+msgid "is used in"
+msgstr "Dieser Benutzer"
+
 msgid "isnot"
 msgstr "ist nicht"
 
@@ -83275,9 +83395,8 @@ msgstr ""
 msgid "require primary interface to be active"
 msgstr "primäre Schnittstelle muss aktiv sein"
 
-#, fuzzy
 msgid "required"
-msgstr "Erforderlich"
+msgstr "erforderlich"
 
 msgid "reset"
 msgstr "zurücksetzen"
@@ -83803,6 +83922,12 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
+#~ msgid "This permission allows users to view managed robots."
+#~ msgstr "Mit dieser Berechtigung können Benutzer verwaltete Roboter sehen."
+
+#~ msgid "View managed robots"
+#~ msgstr "Verwaltete Roboter ansehen"
+
 #, python-format
 #~ msgid "Invalid file extension, supported extensions are: %s"
 #~ msgstr "Ungültige Dateierweiterung, unterstützte Erweiterungen sind: %s"
@@ -83853,10 +83978,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "Synchronisierung von Instanzen nicht nötig"
-
-#, fuzzy
-#~ msgid "Service discovery and activate changes"
-#~ msgstr "Service-Erkennung lief am"
 
 #, fuzzy
 #~ msgid "Some value"
@@ -84344,9 +84465,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 
 #~ msgid "Placeholder"
 #~ msgstr "Platzhalter"
-
-#~ msgid "Managed Robots"
-#~ msgstr "Verwaltete Roboter"
 
 #~ msgid ""
 #~ "Specify here whether the working directory of Robotmk (`C:\\ProgramData"
@@ -85126,9 +85244,6 @@ msgstr "⚠ <b>nicht verfügbar</b> , da Robotmk-Kern-MKP installiert wurde"
 #~ "vorliegenden Check angewendet werden können. Unterstützt der Check z.B. "
 #~ "nicht <i>Read wait</i>, dann hat eine Einstellung, die sich auf <i>Read "
 #~ "wait</i> bezieht, keine Auswirkung."
-
-#~ msgid "Discard changes"
-#~ msgstr "Änderungen verwerfen"
 
 #~ msgid "Discard foreign changes"
 #~ msgstr "Fremde Änderungen verwerfen"

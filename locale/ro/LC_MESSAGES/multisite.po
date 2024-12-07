@@ -384,6 +384,13 @@ msgstr "%d Servere proxy HTTP configurate"
 msgid "%d actions"
 msgstr "%d acțiuni"
 
+#, fuzzy, python-format
+msgid "%d changed label"
+msgid_plural "%d changed labels"
+msgstr[0] "%d schimbări"
+msgstr[1] "%d schimbări"
+msgstr[2] "%d schimbări"
+
 #, python-format
 msgid "%d changes"
 msgstr "%d schimbări"
@@ -423,6 +430,27 @@ msgstr "%d zile în urmă"
 #, fuzzy, python-format
 msgid "%d defined parameter properties"
 msgstr "Proprietăți generale"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter added"
+msgid_plural "%d discovery parameters added"
+msgstr[0] "Proprietăți generale"
+msgstr[1] "Proprietăți generale"
+msgstr[2] "Proprietăți generale"
+
+#, fuzzy, python-format
+msgid "%d discovery parameter changed"
+msgid_plural "%d discovery parameters changed"
+msgstr[0] "Descoperirea serviciilor: "
+msgstr[1] "Descoperirea serviciilor: "
+msgstr[2] "Descoperirea serviciilor: "
+
+#, fuzzy, python-format
+msgid "%d discovery parameter removed"
+msgid_plural "%d discovery parameters removed"
+msgstr[0] "Proprietăți generale"
+msgstr[1] "Proprietăți generale"
+msgstr[2] "Proprietăți generale"
 
 #, python-format
 msgid "%d errors occured:"
@@ -469,6 +497,13 @@ msgid "%d locked sites"
 msgstr "%d site-uri blocate"
 
 #, fuzzy, python-format
+msgid "%d new label"
+msgid_plural "%d new labels"
+msgstr[0] "Adăugați o nouă etichetă"
+msgstr[1] "Adăugați o nouă etichetă"
+msgstr[2] "Adăugați o nouă etichetă"
+
+#, fuzzy, python-format
 msgid "%d notification rule(s) "
 msgstr "reguli de notificare"
 
@@ -487,6 +522,13 @@ msgstr ""
 #, python-format
 msgid "%d open incompatible werks"
 msgstr "%d deschide lucrări incompatibile"
+
+#, fuzzy, python-format
+msgid "%d removed label"
+msgid_plural "%d removed labels"
+msgstr[0] "Îndepărtați această etichetă"
+msgstr[1] "Îndepărtați această etichetă"
+msgstr[2] "Îndepărtați această etichetă"
 
 #, python-format
 msgid "%d rows"
@@ -2444,6 +2486,12 @@ msgstr ""
 "suportat numai de agenții Linux și Windows, precum și de dispozitivele "
 "monitorizate prin intermediul host-resource mib"
 
+#, fuzzy, python-format
+msgid ""
+"A site is allowed to be used in exactly one OpenTelemetry collector "
+"configuration: %s"
+msgstr "Adaugp o noua configurație de utilizator"
+
 msgid "A stored SNMP walk"
 msgstr "Un SNMP walk stocat"
 
@@ -3035,6 +3083,10 @@ msgstr "Accept orice cheie SSH Host Key"
 
 msgid "Accept incoming TCP connections"
 msgstr "Acceptarea conexiunilor TCP primite"
+
+#, fuzzy
+msgid "Accept service properties"
+msgstr "Proprietăți de bază"
 
 msgid "Acceptable OS build version age"
 msgstr "Vârsta acceptabilă a versiunii de construcție a sistemului de operare"
@@ -4072,6 +4124,10 @@ msgstr "Adăugați un nou punct final"
 msgid "Add new entry"
 msgstr "Adăugați o nouă intrare"
 
+#, fuzzy
+msgid "Add new field"
+msgstr "Adăugați o nouă oră"
+
 msgid ""
 "Add new folders and delete existing folders. If a folder to be deleted "
 "contains hosts then the permission to delete hosts is also required."
@@ -4131,6 +4187,10 @@ msgid "Add new scalar"
 msgstr "Adăugați un nou scalar"
 
 #, fuzzy
+msgid "Add new scrape configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
 msgid "Add new sequence"
 msgstr "Adăugați un nou serviciu"
 
@@ -4146,6 +4206,10 @@ msgid "Add new status"
 msgstr "Adăugați un nou statut"
 
 msgid "Add new tag"
+msgstr "Adăugați o nouă etichetă"
+
+#, fuzzy
+msgid "Add new target"
 msgstr "Adăugați o nouă etichetă"
 
 msgid "Add new time"
@@ -13987,6 +14051,9 @@ msgstr "Configurarea regulilor de eveniment"
 msgid "Configuration of individual Eventlogs"
 msgstr "Configurarea de Eventlogs individuale"
 
+msgid "Configuration of managed robots for Synthetic Monitoring."
+msgstr ""
+
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Configurarea agenților de monitorizare pentru Linux, Windows și Unix"
 
@@ -16726,6 +16793,10 @@ msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 msgid "DCD batch history"
 msgstr "Istoric de căutare"
 
+#, fuzzy
+msgid "DCD global settings"
+msgstr "Editarea setării globale"
+
 msgid "DCD status"
 msgstr "Starea DCD"
 
@@ -19410,6 +19481,10 @@ msgstr "Descoperiți serviciile în timpul creării"
 
 msgid "Discover single interfaces"
 msgstr "Descoperiți interfețe unice"
+
+#, fuzzy
+msgid "Discovered changes"
+msgstr "Schimbări de respingere"
 
 #, python-format
 msgid "Discovered host labels (%s)"
@@ -22140,7 +22215,8 @@ msgstr ""
 msgid "Enable logging of logon failures"
 msgstr "Activați jurnalizarea eșecurilor de logare"
 
-msgid "Enable metrics for high-level keywords"
+#, fuzzy
+msgid "Enable metrics for top-level keywords"
 msgstr "Activați indicatorii pentru cuvinte cheie de nivel înalt"
 
 msgid "Enable notification logging"
@@ -25688,6 +25764,10 @@ msgid "Free swap space"
 msgstr "Spațiu swap liber"
 
 msgid "Free tapes"
+msgstr "Casete gratuite"
+
+#, fuzzy
+msgid "Free text"
 msgstr "Casete gratuite"
 
 #, fuzzy
@@ -38928,6 +39008,10 @@ msgid "Managed Robot"
 msgstr "Obiecte gestionate"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Obiecte gestionate"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Obiecte gestionate"
 
@@ -42851,6 +42935,10 @@ msgstr "nu este disponibil"
 msgid "No elements selected"
 msgstr "Nu este selectat"
 
+#, fuzzy
+msgid "No endpoint"
+msgstr "Punct final"
+
 msgid "No entries"
 msgstr "Nu există intrări"
 
@@ -45020,6 +45108,10 @@ msgstr "Pe obiecte selectate"
 
 msgid "On selected rules"
 msgstr "La regulile selectate"
+
+#, fuzzy
+msgid "On selected services"
+msgstr "Pe site-uri selectate"
 
 msgid "On selected sites"
 msgstr "Pe site-uri selectate"
@@ -50382,6 +50474,14 @@ msgstr "Serviciul personalizat Prometheus"
 msgid "Prometheus custom services"
 msgstr "Servicii personalizate Prometheus"
 
+#, fuzzy
+msgid "Prometheus scrape configurations"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Prometheus targets"
+msgstr "Alertmanager"
+
 msgid "Prominent change"
 msgstr "Schimbare proeminentă"
 
@@ -50500,6 +50600,10 @@ msgstr "Proxmox VE Proxmox VE procentul de memorie utilizat"
 
 msgid "Proxmox cluster"
 msgstr "Clusterul Proxmox"
+
+#, fuzzy
+msgid "Proxy"
+msgstr "URL-ul Proxy"
 
 msgid "Proxy URL"
 msgstr "URL-ul Proxy"
@@ -51484,6 +51588,12 @@ msgstr ""
 
 msgid "Received messages"
 msgstr "Mesaje primite"
+
+msgid "Receiver protocol GRPC"
+msgstr ""
+
+msgid "Receiver protocol HTTP"
+msgstr ""
 
 #, fuzzy
 msgid "Receiving traces is disabled"
@@ -53769,6 +53879,10 @@ msgstr ""
 msgid "Rules for automatic execution of scripts upon alerts"
 msgstr "Reguli pentru executarea automată a scripturilor în cazul alertelor"
 
+#, fuzzy
+msgid "Rules for host names"
+msgstr "Regex pentru numele de gazdă"
+
 msgid "Rules for the notification of contacts about host and service problems"
 msgstr ""
 "Reguli de notificare a persoanelor de contact cu privire la problemele "
@@ -54759,6 +54873,10 @@ msgstr ""
 
 msgid "Score"
 msgstr "Scor"
+
+#, fuzzy
+msgid "Scrape interval"
+msgstr "Interval de scanare"
 
 msgid "Script (Limited support, see inline help)"
 msgstr "Script (suport limitat, consultați ajutorul în linie)"
@@ -69570,10 +69688,6 @@ msgstr ""
 "sistemului de monitorizare prin intermediul interfeței web."
 
 #, fuzzy
-msgid "This permission allows users to view managed robots."
-msgstr "Această permisiune permite înregistrarea oricărei gazde noi."
-
-#, fuzzy
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
 "view and download installed packages. MKPs contain extensions to Checkmk "
@@ -71458,6 +71572,12 @@ msgstr ""
 "Nu are sens ca pasul să fie mai mic decât intervalul normal de verificare "
 "pentru o revizie. Valoarea implicită este de 60 de secunde - care corespunde "
 "intervalului de verificare implicit."
+
+msgid ""
+"This setting decides apply changes and discovery/activate are synctronized."
+"You may need to disable interlock if your system needs to process a lot of "
+"hosts in short time"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -76711,6 +76831,10 @@ msgstr "Actualizarea configurației de bază"
 msgid "Update delay for PNP meta information"
 msgstr "Întârzierea de actualizare a meta-informațiilor PNP"
 
+#, fuzzy
+msgid "Update discovery parameters"
+msgstr "Exemplu pentru parametri"
+
 msgid "Update duration"
 msgstr "Durata de actualizare"
 
@@ -77925,6 +78049,9 @@ msgstr "Utilizare în notificări"
 msgid "Use index"
 msgstr "Indice de utilizare"
 
+msgid "Use inter lock to syncronize host processing with discovery/activate"
+msgstr ""
+
 msgid "Use invertible C-style mangling"
 msgstr "Folosiți mangling inversabil în stil C"
 
@@ -78176,6 +78303,10 @@ msgid "Use the status of the Checkmk Agent"
 msgstr "Utilizați starea agentului Checkmk"
 
 msgid "Use the status of the service..."
+msgstr "Utilizați starea serviciului..."
+
+#, fuzzy
+msgid "Use the value of the key"
 msgstr "Utilizați starea serviciului..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
@@ -80092,10 +80223,6 @@ msgstr "Afișați notificările eșuate"
 
 msgid "View layout"
 msgstr "Vizualizați aspectul"
-
-#, fuzzy
-msgid "View managed robots"
-msgstr "Obiecte gestionate"
 
 msgid "View name"
 msgstr "Vezi numele"
@@ -84294,6 +84421,10 @@ msgstr "Trebuie să selectați cel puțin un utilizator."
 msgid "You have to specify a connector to migrate to."
 msgstr "Trebuie să specificați un conector către care să migrați."
 
+#, fuzzy, python-format
+msgid "You have to specify at least one receiver: %s"
+msgstr "Trebuie să selectați cel puțin un utilizator."
+
 msgid "You have used an invalid character"
 msgstr "Ați folosit un caracter invalid"
 
@@ -85974,6 +86105,10 @@ msgstr "nu este unul dintre regex"
 msgid "is required"
 msgstr "este necesară"
 
+#, fuzzy
+msgid "is used in"
+msgstr "Acest utilizator"
+
 msgid "isnot"
 msgstr "nu este"
 
@@ -87131,6 +87266,14 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
 
+#, fuzzy
+#~ msgid "This permission allows users to view managed robots."
+#~ msgstr "Această permisiune permite înregistrarea oricărei gazde noi."
+
+#, fuzzy
+#~ msgid "View managed robots"
+#~ msgstr "Obiecte gestionate"
+
 #~ msgid "Go to the Saas Admin Panel"
 #~ msgstr "Mergeți la panoul de administrare Saas"
 
@@ -87178,10 +87321,6 @@ msgstr "Utilizați SSL pentru conexiune."
 
 #~ msgid "No need for syncing sites"
 #~ msgstr "Nu este nevoie de site-uri de sincronizare"
-
-#, fuzzy
-#~ msgid "Service discovery and activate changes"
-#~ msgstr "Descoperirea serviciilor: "
 
 #, fuzzy
 #~ msgid "Some value"
@@ -87558,10 +87697,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #, fuzzy
 #~ msgid "Placeholder"
 #~ msgstr "VM-uri de tip Placeholder"
-
-#, fuzzy
-#~ msgid "Managed Robots"
-#~ msgstr "Obiecte gestionate"
 
 #, fuzzy
 #~ msgid ""
@@ -88334,9 +88469,6 @@ msgstr "Utilizați SSL pentru conexiune."
 #~ "oferă o informație <i>Așteptare citire</i> în ieșirea sa, orice setare de "
 #~ "configurare care se referă la <i>Așteptare citire</i> nu va avea niciun "
 #~ "efect."
-
-#~ msgid "Discard changes"
-#~ msgstr "Schimbări de respingere"
 
 #~ msgid "Discard foreign changes"
 #~ msgstr "Eliminarea modificărilor străine"

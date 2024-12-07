@@ -22,8 +22,8 @@ import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
-from dataclasses import asdict
-from itertools import islice
+from dataclasses import asdict, dataclass
+from itertools import chain, islice
 from pathlib import Path
 from typing import Any
 
@@ -1402,6 +1402,13 @@ class AutomationGetServicesLabels(Automation):
 automations.register(AutomationGetServicesLabels())
 
 
+@dataclass
+class _FoundService:
+    service_info: ServiceInfo
+    # TODO: we'll soon need to add the discovered labels here
+    # discovered_labels: Mapping[str, str]
+
+
 class AutomationAnalyseServices(Automation):
     cmd = "analyse-service"
     needs_config = True
@@ -1414,14 +1421,14 @@ class AutomationAnalyseServices(Automation):
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return (
             AnalyseServiceResult(
-                service_info=service_info,
+                service_info=found.service_info,
                 labels=config_cache.ruleset_matcher.labels_of_service(host_name, servicedesc),
                 label_sources=config_cache.ruleset_matcher.label_sources_of_service(
                     host_name, servicedesc
                 ),
             )
             if (
-                service_info := self._get_service_info(
+                found := self._search_service(
                     config_cache=config_cache,
                     host_name=host_name,
                     servicedesc=servicedesc,
@@ -1437,85 +1444,60 @@ class AutomationAnalyseServices(Automation):
             )
         )
 
-    # Determine the type of the check, and how the parameters are being
-    # constructed
-    # TODO: Refactor this huge function
-    def _get_service_info(
+    def _search_service(
         self,
         config_cache: ConfigCache,
         host_name: HostName,
         servicedesc: str,
         ip_address_of: config.IPLookup,
-    ) -> ServiceInfo:
-        # We just consider types of checks that are managed via WATO.
-        # We have the following possible types of services:
-        # 1. enforced services (currently overriding discovered services)
-        # 2. disocvered services
-        # 3. classical checks
-        # 4. active checks
+    ) -> _FoundService | None:
+        return next(
+            chain(
+                # special case. cheap to check, so check this first:
+                self._search_checkmk_discovery_service(config_cache, host_name, servicedesc),
+                self._search_enforced_checks(config_cache, host_name, servicedesc),
+                self._search_discovered_checks(config_cache, host_name, servicedesc),
+                self._search_classical_checks(config_cache, host_name, servicedesc),
+                self._search_active_checks(config_cache, host_name, ip_address_of, servicedesc),
+            ),
+            None,
+        )
 
-        # special case. cheap to check, so check this first:
-        if servicedesc == "Check_MK Discovery":
-            return {
+    @staticmethod
+    def _search_checkmk_discovery_service(
+        config_cache: ConfigCache, host_name: HostName, servicedesc: str
+    ) -> Iterable[_FoundService]:
+        if servicedesc != "Check_MK Discovery":
+            return
+        yield _FoundService(
+            service_info={
                 "origin": "active",
                 "checktype": "check-mk-inventory",
                 "parameters": asdict(config_cache.discovery_check_parameters(host_name)),
             }
-
-        # 1. Enforced services
-        for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():
-            if service.description == servicedesc:
-                return {
-                    "origin": "static",  # TODO: (how) can we change this to "enforced"?
-                    "checkgroup": checkgroup_name,
-                    "checktype": str(service.check_plugin_name),
-                    "item": service.item,
-                    "parameters": service.parameters.preview(timeperiod_active),
-                }
-
-        # 2. Load all autochecks of the host in question and try to find
-        # our service there
-        if (
-            autocheck_service := self._get_service_info_from_autochecks(
-                config_cache, host_name, servicedesc
-            )
-        ) is not None:
-            return autocheck_service
-
-        # 3. Classical checks
-        for entry in config_cache.custom_checks(host_name):
-            desc = entry["service_description"]
-            if desc == servicedesc:
-                result: ServiceInfo = {
-                    "origin": "classic",
-                }
-                if "command_line" in entry:  # Only active checks have a command line
-                    result["command_line"] = entry["command_line"]
-                return result
-
-        # 4. Active checks
-        password_store_file = cmk.utils.password_store.pending_password_store_path()
-
-        for active_service in config_cache.active_check_services(
-            host_name,
-            config_cache.get_host_attributes(host_name, ip_address_of),
-            ip_address_of,
-            cmk.utils.password_store.load(password_store_file),
-            password_store_file,
-        ):
-            if active_service.description == servicedesc:
-                return {
-                    "origin": "active",
-                    "checktype": active_service.plugin_name,
-                    "parameters": active_service.configuration,
-                }
-
-        return {}  # not found
+        )
 
     @staticmethod
-    def _get_service_info_from_autochecks(
+    def _search_enforced_checks(
         config_cache: ConfigCache, host_name: HostName, servicedesc: str
-    ) -> ServiceInfo | None:
+    ) -> Iterable[_FoundService]:
+        for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():
+            if service.description == servicedesc:
+                yield _FoundService(
+                    service_info={
+                        "origin": "static",  # TODO: (how) can we change this to "enforced"?
+                        "checkgroup": checkgroup_name,
+                        "checktype": str(service.check_plugin_name),
+                        "item": service.item,
+                        "parameters": service.parameters.preview(timeperiod_active),
+                    }
+                )
+                return
+
+    @staticmethod
+    def _search_discovered_checks(
+        config_cache: ConfigCache, host_name: HostName, servicedesc: str
+    ) -> Iterable[_FoundService]:
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # different information.
         table = config_cache.check_table(host_name)
@@ -1543,18 +1525,62 @@ class AutomationAnalyseServices(Automation):
                 # In this case we can run into the 'not found' case below.
                 continue
 
-            return {
-                "origin": "auto",
-                "checktype": str(plugin.name),
-                "checkgroup": str(plugin.check_ruleset_name),
-                "item": service.item,
-                "inv_parameters": service.discovered_parameters,
-                "factory_settings": plugin.check_default_parameters,
-                # effective parameters:
-                "parameters": service.parameters.preview(timeperiod_active),
-            }
+            yield _FoundService(
+                service_info={
+                    "origin": "auto",
+                    "checktype": str(plugin.name),
+                    "checkgroup": str(plugin.check_ruleset_name),
+                    "item": service.item,
+                    "inv_parameters": service.discovered_parameters,
+                    "factory_settings": plugin.check_default_parameters,
+                    # effective parameters:
+                    "parameters": service.parameters.preview(timeperiod_active),
+                }
+            )
+            return
 
-        return None
+    @staticmethod
+    def _search_classical_checks(
+        config_cache: ConfigCache,
+        host_name: HostName,
+        servicedesc: str,
+    ) -> Iterable[_FoundService]:
+        for entry in config_cache.custom_checks(host_name):
+            desc = entry["service_description"]
+            if desc == servicedesc:
+                result: ServiceInfo = {
+                    "origin": "classic",
+                }
+                if "command_line" in entry:  # Only active checks have a command line
+                    result["command_line"] = entry["command_line"]
+                yield _FoundService(service_info=result)
+                return
+
+    @staticmethod
+    def _search_active_checks(
+        config_cache: ConfigCache,
+        host_name: HostName,
+        ip_address_of: config.IPLookup,
+        servicedesc: str,
+    ) -> Iterable[_FoundService]:
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
+
+        for active_service in config_cache.active_check_services(
+            host_name,
+            config_cache.get_host_attributes(host_name, ip_address_of),
+            ip_address_of,
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
+        ):
+            if active_service.description == servicedesc:
+                yield _FoundService(
+                    service_info={
+                        "origin": "active",
+                        "checktype": active_service.plugin_name,
+                        "parameters": active_service.configuration,
+                    }
+                )
+                return
 
 
 automations.register(AutomationAnalyseServices())

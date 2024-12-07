@@ -167,7 +167,8 @@ EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
-	    --exclude=".werks/.my_ids"
+	    --exclude=".werks/.my_ids" \
+	    --exclude="user.bazelrc"
 
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \

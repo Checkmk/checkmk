@@ -3,6 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("//:bazel_variables.bzl", "edition_deps")
 
 genrule(
     name = "_generate_requirements_in",
@@ -207,7 +208,7 @@ py_library(
         # TODO: Shouldn't we add "cycletime_" and "state_" here?
         "//non-free/packages/cmc-protocols:config_proto_pb2",
         "lib_cmk",
-    ],
+    ] + edition_deps[edition],
 ) for edition, srcs in [
     ("cce", CCE_PY),
     ("cee", CEE_PY),

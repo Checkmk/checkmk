@@ -1,4 +1,5 @@
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//:bazel_variables.bzl", "edition_deps")
 
 pkg_tar(
     name = "intermediate_install",
@@ -57,7 +58,7 @@ srcs = {
     extension = "tar.gz",
     deps = [
         "//omd/packages/perl-modules",
-    ],
+    ] + edition_deps[edition],
 ) for edition in [
     "cre",
     "cce",

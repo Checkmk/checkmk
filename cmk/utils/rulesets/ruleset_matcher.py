@@ -1187,7 +1187,9 @@ def matches_service_conditions(
     service_labels_condition: LabelGroups,
     match_object: RulesetMatchObject,
 ) -> bool:
-    if not matches_service_description_condition(service_description_condition, match_object):
+    if not _matches_service_description_condition(
+        service_description_condition, match_object.service_description
+    ):
         return False
 
     if service_labels_condition and not matches_labels(
@@ -1198,16 +1200,13 @@ def matches_service_conditions(
     return True
 
 
-def matches_service_description_condition(
+def _matches_service_description_condition(
     service_description_condition: tuple[bool, Pattern[str]],
-    match_object: RulesetMatchObject,
+    match_text: ServiceName | Item,
 ) -> bool:
     negate, pattern = service_description_condition
 
-    if (
-        match_object.service_description is not None
-        and pattern.match(match_object.service_description) is not None
-    ):
+    if match_text is not None and pattern.match(match_text) is not None:
         return not negate
     return negate
 

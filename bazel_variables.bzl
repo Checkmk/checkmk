@@ -5,12 +5,15 @@ edition_deps = {
     "cce": [
     ],
     "cee": [
+        "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
     ],
     "cme": [
+        "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
     ],
     "cse": [
+        "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
     ],
 }

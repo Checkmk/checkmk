@@ -31,22 +31,6 @@ pkg_tar(
     ],
 )
 
-srcs = {
-    "cre": [],
-    "cce": [
-        "//non-free/packages/cmc-protocols:python_proto_pkg",
-    ],
-    "cee": [
-        "//non-free/packages/cmc-protocols:python_proto_pkg",
-    ],
-    "cme": [
-        "//non-free/packages/cmc-protocols:python_proto_pkg",
-    ],
-    "cse": [
-        "//non-free/packages/cmc-protocols:python_proto_pkg",
-    ],
-}
-
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -54,7 +38,7 @@ srcs = {
         "//omd/packages/net-snmp:net-snmp_files_pkg",
         "//omd/packages/protobuf",
         "//packages/site/check-http:check_http_pkg",
-    ] + srcs[edition],
+    ],
     extension = "tar.gz",
     deps = [
         "//omd/packages/perl-modules",

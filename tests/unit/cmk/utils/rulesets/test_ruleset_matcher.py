@@ -32,7 +32,7 @@ from cmk.checkengine.discovery import AutocheckEntry
 
 
 def test_ruleset_match_object_host_name() -> None:
-    obj = RulesetMatchObject(host_name=HostName("abc"), service_description=None)
+    obj = RulesetMatchObject(host_name=HostName("abc"), service_description=None, service_labels={})
     assert obj.host_name == "abc"
 
 

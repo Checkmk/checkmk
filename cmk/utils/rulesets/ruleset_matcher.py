@@ -161,8 +161,8 @@ class RulesetMatchObject:
     #   * None to match hosts
     #   * ServiceName to match services
     #   * Item to match checkgroups
-    service_description: ServiceName | Item | None = None
-    service_labels: Labels | None = None
+    service_description: ServiceName | Item
+    service_labels: Labels
 
 
 def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:
@@ -1050,7 +1050,7 @@ class RulesetOptimizer:
         return merge_parameters(
             list(
                 self._ruleset_matcher.get_service_ruleset_values(
-                    RulesetMatchObject(hostname, service_desc),
+                    RulesetMatchObject(hostname, service_desc, {}),
                     self._label_manager.service_label_rules,
                 )
             ),
@@ -1141,7 +1141,7 @@ def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: Ho
     return negate
 
 
-def matches_labels(object_labels: Labels | None, required_label_groups: LabelGroups) -> bool:
+def matches_labels(object_labels: Labels, required_label_groups: LabelGroups) -> bool:
     overall_match: bool = True
 
     for group_operator, label_group in required_label_groups:
@@ -1150,7 +1150,7 @@ def matches_labels(object_labels: Labels | None, required_label_groups: LabelGro
             if not label:
                 continue
 
-            if object_labels is None:
+            if not object_labels:
                 # The first label operator in a group is always "and" or "not", it cannot be "or"
                 # -> a label group matches a host without labels only if it has no "and" operators
                 if label_operator == "and":

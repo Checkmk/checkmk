@@ -11,11 +11,11 @@ Restart=on-failure
 UMask=0077
 User=cmk-agent
 
-
-NoNewPrivileges=yes
-
 # added v184
 CapabilityBoundingSet=
+
+# added v187
+NoNewPrivileges=yes
 
 # added v211
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX

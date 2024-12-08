@@ -60,6 +60,7 @@ check_plugin_test_check_1 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
+    _restart_automation_helpers(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -144,6 +145,7 @@ check_plugin_test_check_2 = CheckPlugin(
     )
 
     site.activate_changes_and_wait_for_core_reload()
+    _restart_automation_helpers(site)
 
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
@@ -179,3 +181,7 @@ check_plugin_test_check_2 = CheckPlugin(
             break
     else:
         raise AssertionError('"test_check_2" not discovered')
+
+
+def _restart_automation_helpers(site: Site) -> None:
+    site.omd("restart", "automation-helper")

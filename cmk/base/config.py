@@ -1770,7 +1770,10 @@ class ConfigCache:
         self._discovered_labels_cache = DiscoveredLabelsCache(
             self._nodes_cache, self._autochecks_manager.get_autochecks
         )
-        self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
+        self._effective_host_cache: dict[
+            tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]],
+            HostName,
+        ] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config()
@@ -3727,7 +3730,14 @@ class ConfigCache:
         If yes, return the cluster host of the service.
         If no, return the host name of the node.
         """
-        key = (node_name, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        # FIXME: The outcome of this function actually depends on the services labels.
+        # They are currently not taken into account by this cache.
+        key: tuple[HostName, ServiceName, tuple[tuple[str, str], ...], tuple[HostName, ...]] = (
+            node_name,
+            servicedesc,
+            tuple(),  # TODO: labels
+            tuple(part_of_clusters),
+        )
         if (actual_hostname := self._effective_host_cache.get(key)) is not None:
             return actual_hostname
 

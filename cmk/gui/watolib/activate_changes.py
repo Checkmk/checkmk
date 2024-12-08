@@ -1864,8 +1864,8 @@ class ActivationCleanupJob:
                         "  Failed to load activation (%s), trying to delete...", e, exc_info=True
                     )
 
-                logger.info("  -> %s", "Delete" if delete else "Keep")
                 if not delete:
+                    logger.info("  -> Keep (is running)")
                     continue
 
                 # Because the heuristic to detect if an activation is or isn't running is not
@@ -1878,6 +1878,7 @@ class ActivationCleanupJob:
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
                     if not os.path.isdir(activation_dir):
+                        logger.info("  -> Keep (not a directory)")
                         continue
 
                     # TODO:
@@ -1885,9 +1886,13 @@ class ActivationCleanupJob:
                     #   to consider completion time.
                     dir_stat = os.stat(activation_dir)
                     if time.time() - dir_stat.st_mtime < self.maximum_age:
+                        logger.info(
+                            "  -> Keep (created %d seconds ago)", time.time() - dir_stat.st_mtime
+                        )
                         continue
 
                     try:
+                        logger.info("  -> Delete")
                         shutil.rmtree(activation_dir)
                     except Exception:
                         logger.error(

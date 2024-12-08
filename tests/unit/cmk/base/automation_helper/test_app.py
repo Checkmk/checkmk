@@ -9,7 +9,7 @@ import time
 from fakeredis import FakeRedis
 from fastapi.testclient import TestClient
 
-from cmk.base.automation_helper._app import AutomationEngine, AutomationRequest, get_application
+from cmk.base.automation_helper._app import AutomationEngine, AutomationPayload, get_application
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automations import AutomationExitCode
 
@@ -30,7 +30,7 @@ class DummyAutomationEngineTimeout:
         return AutomationExitCode.SUCCESS
 
 
-EXAMPLE_AUTOMATION_REQUEST = AutomationRequest(
+EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
 
@@ -44,7 +44,7 @@ def get_test_client(*, engine: AutomationEngine) -> TestClient:
 
 def test_automation_with_success() -> None:
     with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
@@ -52,7 +52,7 @@ def test_automation_with_success() -> None:
 
 def test_automation_with_failure() -> None:
     with get_test_client(engine=DummyAutomationEngineFailure()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST)
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SYSTEM_EXIT, "output": ""}
@@ -61,7 +61,7 @@ def test_automation_with_failure() -> None:
 def test_automation_with_timeout() -> None:
     with get_test_client(engine=DummyAutomationEngineTimeout()) as client:
         headers = {"keep-alive": "timeout=0"}
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_REQUEST, headers=headers)
+        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD, headers=headers)
 
     assert resp.status_code == 408
     assert resp.json() == {

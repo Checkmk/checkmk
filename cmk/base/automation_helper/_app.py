@@ -29,7 +29,7 @@ from ._tracer import tracer
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
 
-class AutomationRequest(BaseModel, frozen=True):
+class AutomationPayload(BaseModel, frozen=True):
     name: str
     args: Sequence[str]
     stdin: str
@@ -96,28 +96,28 @@ def get_application(
             return JSONResponse(resp.model_dump(), status_code=status.HTTP_408_REQUEST_TIMEOUT)
 
     @app.post("/automation")
-    async def automation(request: AutomationRequest) -> AutomationResponse:
+    async def automation(payload: AutomationPayload) -> AutomationResponse:
         if cache.reload_required:
             cache.store_last_automation_helper_reload(time.time())
             reload_config()
 
-        app_logger.setLevel(request.log_level)
+        app_logger.setLevel(payload.log_level)
 
         with (
             tracer.start_as_current_span(
-                f"automation[{request.name}]",
+                f"automation[{payload.name}]",
                 attributes={
-                    "cmk.automation.name": request.name,
-                    "cmk.automation.args": request.args,
+                    "cmk.automation.name": payload.name,
+                    "cmk.automation.args": payload.args,
                 },
             ),
             redirect_stdout(output_buffer := io.StringIO()),
             redirect_stderr(output_buffer),
-            redirect_stdin(io.StringIO(request.stdin)),
+            redirect_stdin(io.StringIO(payload.stdin)),
         ):
             try:
                 # TODO: remove `reload_config` when automation helper is fully integrated.
-                exit_code = engine.execute(request.name, list(request.args), reload_config=False)
+                exit_code = engine.execute(payload.name, list(payload.args), reload_config=False)
             except SystemExit:
                 exit_code = AutomationExitCode.SYSTEM_EXIT
 

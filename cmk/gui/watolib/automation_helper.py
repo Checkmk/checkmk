@@ -39,7 +39,7 @@ class HelperExecutor(AutomationExecutor):
         session.mount(AUTOMATION_HELPER_BASE_URL, _LocalAutomationAdapter())
 
         headers = {"keep-alive": f"timeout={timeout}"} if timeout else {}
-        payload = _AutomationRequest(
+        payload = _AutomationPayload(
             name=command,
             args=args,
             stdin=stdin,
@@ -62,7 +62,7 @@ class HelperExecutor(AutomationExecutor):
         return repr({"command": command, "args": args})
 
 
-class _AutomationRequest(BaseModel):
+class _AutomationPayload(BaseModel, frozen=True):
     name: str
     args: Sequence[str]
     stdin: str

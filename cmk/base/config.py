@@ -4472,19 +4472,14 @@ class CEEConfigCache(ConfigCache):
     def influxdb_metrics_of_service(
         self,
         hostname: HostName,
-        description: ServiceName | None,
-        *,
-        default: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        if description is None:
-            return default
-
+        service_name: ServiceName,
+    ) -> Mapping[str, Any] | None:
         out = self.ruleset_matcher.service_extra_conf(
             hostname,
-            description,
+            service_name,
             cmc_influxdb_service_metrics,  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
         )
-        return out[0] if out else default
+        return out[0] if out else None
 
     def matched_agent_config_entries(self, hostname: HostName) -> dict[str, Any]:
         return {

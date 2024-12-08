@@ -46,7 +46,6 @@ class HealthCheckResponse(BaseModel, frozen=True):
 
 
 def reload_automation_config() -> None:
-    config.load_all_plugins(local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir)
     config.load(validate_hosts=False)
 
 
@@ -74,6 +73,9 @@ def get_application(
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+        config.load_all_plugins(
+            local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
+        )
         app.state.worker_id = worker_id_callback()
         cache.store_last_automation_helper_reload(worker_id_callback(), time.time())
         reload_config()

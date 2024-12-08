@@ -117,7 +117,6 @@ class Watcher(Thread):
 
 
 _SCHEDULES = (
-    # Configurations
     Schedule(
         ignore_directories=True,
         recursive=False,
@@ -129,26 +128,5 @@ _SCHEDULES = (
         recursive=True,
         relative_path="etc/check_mk/conf.d",
         patterns=["*.mk"],
-    ),
-    # Plugins
-    Schedule(
-        ignore_directories=True,
-        recursive=False,
-        relative_path="share/check_mk/checks",
-    ),
-    Schedule(
-        ignore_directories=True,
-        recursive=False,
-        relative_path="local/share/check_mk/checks",
-    ),
-    Schedule(
-        ignore_directories=False,
-        recursive=True,
-        relative_path="lib/python3/cmk/plugins",
-    ),
-    Schedule(
-        ignore_directories=False,
-        recursive=True,
-        relative_path="local/lib/python3/cmk/plugins",
     ),
 )

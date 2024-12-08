@@ -2648,7 +2648,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
             )
             mkp_tool.make_post_package_change_actions(
                 on_any_change=(
-                    mkp_tool.reload_apache,
+                    mkp_tool.reload_services_affected_by_mkp_changes,
                     invalidate_visuals_cache,
                     setup_search_index.request_index_rebuild,
                 )

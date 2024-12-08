@@ -17,6 +17,7 @@ py_library(
         "cmk/mkp_tool/_installed.py",
         "cmk/mkp_tool/_mkp.py",
         "cmk/mkp_tool/_parts.py",
+        "cmk/mkp_tool/_reload.py",
         "cmk/mkp_tool/_reporter.py",
         "cmk/mkp_tool/_standalone.py",
         "cmk/mkp_tool/_type_defs.py",

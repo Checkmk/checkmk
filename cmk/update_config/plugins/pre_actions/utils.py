@@ -27,7 +27,7 @@ from cmk.mkp_tool import (
     PackageID,
     PackageStore,
     PathConfig,
-    reload_apache,
+    reload_services_affected_by_mkp_changes,
 )
 
 AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
@@ -138,7 +138,11 @@ def error_message_incomp_package(path: Path, package_id: PackageID, error: BaseE
 
 def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
-        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
+        on_any_change=(
+            reload_services_affected_by_mkp_changes,
+            invalidate_visuals_cache,
+            request_index_rebuild,
+        )
     )
 
 

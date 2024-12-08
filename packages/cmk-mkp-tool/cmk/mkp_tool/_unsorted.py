@@ -10,7 +10,6 @@ Don't add new stuff here!
 # pylint: disable=too-many-arguments
 
 import logging
-import subprocess
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
@@ -778,15 +777,3 @@ def make_post_package_change_actions(
             callback()
 
     return _execute_post_package_change_actions
-
-
-def reload_apache() -> None:
-    try:
-        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        return
-
-    try:
-        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
-    except subprocess.CalledProcessError:
-        _logger.error("Error reloading apache", exc_info=True)

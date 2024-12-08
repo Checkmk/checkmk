@@ -10,6 +10,7 @@
 from ._installed import Installer
 from ._mkp import Manifest, PackagePart
 from ._parts import CONFIG_PARTS, PackageOperationCallbacks, PathConfig, ui_title
+from ._reload import reload_services_affected_by_mkp_changes
 from ._reporter import all_rule_pack_files
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 from ._unsorted import (
@@ -26,7 +27,6 @@ from ._unsorted import (
     make_post_package_change_actions,
     PackageStore,
     release,
-    reload_apache,
     update_active_packages,
 )
 
@@ -55,7 +55,7 @@ __all__ = [
     "PackageVersion",
     "PathConfig",
     "release",
-    "reload_apache",
+    "reload_services_affected_by_mkp_changes",
     "ui_title",
     "update_active_packages",
 ]

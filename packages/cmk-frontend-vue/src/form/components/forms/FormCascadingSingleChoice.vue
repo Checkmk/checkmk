@@ -133,7 +133,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <span class="form-cascading-single-choice__choice">
-    <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+    <label v-if="$props.spec.label" :for="componentId">
+      {{ props.spec.label }}
+      <CmkSpace size="small" />
+    </label>
     <template v-if="!layoutSettings.side_by_side">
       <CmkDropdown
         v-model:selected-option="selectedOption"

@@ -6,7 +6,9 @@
 #include "livestatus/AndingFilter.h"
 
 #include <algorithm>
+#include <bitset>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <vector>
 

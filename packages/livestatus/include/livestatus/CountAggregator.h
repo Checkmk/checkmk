@@ -11,9 +11,6 @@
 
 #include "livestatus/Aggregator.h"
 class Filter;
-class Row;
-class RowRenderer;
-class User;
 
 class CountAggregator : public Aggregator {
 public:

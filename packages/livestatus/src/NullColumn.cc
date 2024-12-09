@@ -5,6 +5,7 @@
 
 #include "livestatus/NullColumn.h"
 
+#include <memory>
 #include <stdexcept>
 
 #include "livestatus/Renderer.h"

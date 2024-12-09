@@ -8,12 +8,9 @@
 
 #include <string>
 
-#include "livestatus/Row.h"
 #include "livestatus/Table.h"
 class ColumnOffsets;
 class ICore;
-class Query;
-class User;
 
 class TableServices : public Table {
 public:

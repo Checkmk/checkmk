@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicColumn.h"  // IWYU pragma: keep
 #include "livestatus/Row.h"
 
 class Column;

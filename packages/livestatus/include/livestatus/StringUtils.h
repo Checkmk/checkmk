@@ -10,6 +10,7 @@
 
 #include <bitset>
 #include <cstddef>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <string_view>

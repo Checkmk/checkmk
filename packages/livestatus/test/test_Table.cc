@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -47,20 +47,6 @@
 #include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
-
-enum class Encoding;
-class User;
-class IComment;
-class IContact;
-class IContactGroup;
-class IDowntime;
-class IGlobalFlags;
-class IHost;
-class IPaths;
-class IService;
-class ITimeperiod;
-class IHostGroup;
-class IServiceGroup;
 
 class DummyMonitoringCore : public ICore {
     [[nodiscard]] const IHost *find_host(

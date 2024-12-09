@@ -21,12 +21,10 @@ template <typename T>
 class DoubleColumn;
 class ICore;
 class IHost;
-class Query;
 template <typename T>
 class StringColumn;
 template <typename T>
 class TimeColumn;
-class User;
 
 class ECRow {
 public:

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iosfwd>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>

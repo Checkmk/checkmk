@@ -6,6 +6,7 @@
 #include "livestatus/RendererCSV.h"
 
 #include <ostream>
+#include <vector>
 
 class Logger;
 

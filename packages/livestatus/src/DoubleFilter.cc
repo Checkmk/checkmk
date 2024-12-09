@@ -6,6 +6,7 @@
 #include "livestatus/DoubleFilter.h"
 
 #include <cstdlib>
+#include <memory>
 #include <utility>
 
 #include "livestatus/Logger.h"

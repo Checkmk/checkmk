@@ -6,18 +6,14 @@
 #ifndef IntFilter_h
 #define IntFilter_h
 
-#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <functional>
-#include <memory>
-#include <optional>
 #include <string>
 #include <variant>
 
 #include "livestatus/ColumnFilter.h"
 
-class Filter;
 enum class RelationalOperator;
 class Row;
 class User;

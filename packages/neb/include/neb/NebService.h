@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>

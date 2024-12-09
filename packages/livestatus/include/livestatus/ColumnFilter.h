@@ -6,7 +6,6 @@
 #ifndef ColumnFilter_h
 #define ColumnFilter_h
 
-#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>

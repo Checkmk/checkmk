@@ -11,6 +11,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 

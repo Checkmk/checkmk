@@ -40,6 +40,7 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
+#include "livestatus/Row.h"
 #include "livestatus/ServiceListRenderer.h"
 #include "livestatus/ServiceListState.h"
 #include "livestatus/StringColumn.h"

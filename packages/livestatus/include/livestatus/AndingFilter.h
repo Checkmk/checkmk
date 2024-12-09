@@ -6,19 +6,14 @@
 #ifndef AndingFilter_h
 #define AndingFilter_h
 
-#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 
 #include "livestatus/Filter.h"
-class ColumnFilter;
-class Row;
-class User;
 
 class AndingFilter : public Filter {
     struct Secret {};

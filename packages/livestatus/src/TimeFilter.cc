@@ -5,7 +5,10 @@
 
 #include "livestatus/TimeFilter.h"
 
+#include <bitset>
 #include <cstdlib>
+#include <memory>
+#include <optional>
 #include <utility>
 
 #include "livestatus/ChronoUtils.h"

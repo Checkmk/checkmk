@@ -12,7 +12,6 @@
 
 #include "livestatus/ListColumn.h"
 enum class ServiceState;
-class ListRenderer;
 
 namespace column::service_list {
 struct Entry {

@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly CLANG_VERSION=${CLANG_VERSION:-18}
+readonly CLANG_VERSION=${CLANG_VERSION:-19}
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 readonly ALL_LINTERS=iwyu,clang-tidy
 

@@ -6,19 +6,14 @@
 #ifndef OringFilter_h
 #define OringFilter_h
 
-#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <iosfwd>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 
 #include "livestatus/Filter.h"
-class ColumnFilter;
-class Row;
-class User;
 
 class OringFilter : public Filter {
     struct Secret {};

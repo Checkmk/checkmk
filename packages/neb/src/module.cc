@@ -175,7 +175,7 @@ void livestatus_cleanup_after_fork() {
     // more trouble than it tries to avoid. It might lead to a deadlock
     // with Nagios' fork()-mechanism...
     // store_deinit();
-    struct stat st {};
+    struct stat st{};
 
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.
@@ -577,7 +577,7 @@ void terminate_threads() {
 }
 
 void open_unix_socket() {
-    struct stat st {};
+    struct stat st{};
     if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
         if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
@@ -596,9 +596,7 @@ void open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name
     // fl_paths.livestatus_socket
-    struct sockaddr_un sockaddr {
-        .sun_family = AF_UNIX, .sun_path = ""
-    };
+    struct sockaddr_un sockaddr{.sun_family = AF_UNIX, .sun_path = ""};
     fl_paths.livestatus_socket.string().copy(&sockaddr.sun_path[0],
                                              sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
@@ -1086,7 +1084,7 @@ void deregister_callbacks() {
 
 std::filesystem::path check_path(const std::string &name,
                                  std::string_view path) {
-    struct stat st {};
+    struct stat st{};
     if (stat(std::string{path}.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
         return {};  // disable

@@ -5,7 +5,10 @@
 
 #include "livestatus/IntFilter.h"
 
+#include <bitset>
 #include <cstdlib>
+#include <memory>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 

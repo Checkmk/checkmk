@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <initializer_list>
+#include <string>
 
 #include "gtest/gtest.h"
 #include "livestatus/ChronoUtils.h"

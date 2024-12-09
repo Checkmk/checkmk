@@ -38,6 +38,7 @@
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TableHosts.h"

@@ -6,6 +6,7 @@
 #include "livestatus/RendererBrokenCSV.h"
 
 #include <ostream>
+#include <vector>
 
 // --------------------------------------------------------------------------
 

@@ -11,7 +11,6 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -20,7 +19,6 @@
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/Row.h"
 
-class Filter;
 class Logger;
 class RegExp;
 enum class RelationalOperator;

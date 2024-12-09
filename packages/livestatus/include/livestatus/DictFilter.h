@@ -15,12 +15,10 @@
 #include "Interface.h"
 #include "livestatus/ColumnFilter.h"
 
-class Filter;
 class Logger;
 class RegExp;
 enum class RelationalOperator;
 class Row;
-class User;
 
 class DictStrValueFilter : public ColumnFilter {
     // Elsewhere, `function_type` is a std::variant of functions but we

@@ -6,20 +6,15 @@
 #ifndef TimeFilter_h
 #define TimeFilter_h
 
-#include <bitset>
 #include <chrono>
 #include <cstdint>
 #include <functional>
-#include <memory>
-#include <optional>
 #include <string>
 
 #include "livestatus/ColumnFilter.h"
 
-class Filter;
 enum class RelationalOperator;
 class Row;
-class User;
 
 class TimeFilter : public ColumnFilter {
 public:

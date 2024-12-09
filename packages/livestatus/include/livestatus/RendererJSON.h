@@ -8,7 +8,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <vector>
 
 #include "livestatus/Renderer.h"
 enum class Encoding;

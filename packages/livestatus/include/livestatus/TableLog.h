@@ -6,15 +6,11 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-#include <memory>
 #include <string>
 
 #include "livestatus/Table.h"
-class Column;
 class ICore;
 class LogCache;
-class Query;
-class User;
 
 class TableLog : public Table {
 public:

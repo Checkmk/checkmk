@@ -9,16 +9,13 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 
 #include "livestatus/ColumnFilter.h"
 
-class Filter;
 class RegExp;
 enum class RelationalOperator;
 class Row;
-class User;
 
 class StringFilter : public ColumnFilter {
 public:

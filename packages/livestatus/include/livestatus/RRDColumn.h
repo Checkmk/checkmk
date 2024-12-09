@@ -17,7 +17,6 @@
 
 class IHost;
 class IService;
-class ListRenderer;
 class ICore;
 
 struct RRDColumnArgs {

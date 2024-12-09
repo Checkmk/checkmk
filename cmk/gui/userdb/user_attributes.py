@@ -279,7 +279,7 @@ class UISaaSOnboardingButtonToggle(UserAttribute):
 
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
-            title=_("Toggle onboarding button"),
+            title=_("Toggle 'Getting started' button"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["Invisible"]]?
             choices=[(None, _("Visible")), ("invisible", _("Invisible"))],
         )

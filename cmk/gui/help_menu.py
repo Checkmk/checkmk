@@ -47,7 +47,7 @@ def default_learning_items() -> list[TopicMenuItem]:
         TopicMenuItem(
             name="beginners_guide",
             title=_("Beginner's guide"),
-            url=doc_reference_url(DocReference.INTRO_WELCOME),
+            url=doc_reference_url(DocReference.INTRO_SETUP),
             target="_blank",
             sort_index=20,
             icon="learning_beginner",

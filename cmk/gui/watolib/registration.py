@@ -5,13 +5,10 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import timedelta
 
 from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
 
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -23,7 +20,6 @@ from . import (
     _host_attributes,
     _sync_remote_sites,
     activate_changes,
-    auth_php,
     autodiscovery,
     automatic_host_removal,
     automation_commands,
@@ -122,8 +118,6 @@ def register(
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     activate_changes.register(replication_path_registry)
@@ -239,19 +233,6 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
     ]
     for cls in clss:
         host_attribute_registry.register(cls)
-
-
-def _register_nagvis_hooks() -> None:
-    # TODO: Should we not execute this hook also when folders are modified?
-    args: Sequence[tuple[str, Callable]] = (
-        ("userdb-job", auth_php._on_userdb_job),
-        ("users-saved", lambda users: auth_php._create_auth_file("users-saved", users)),
-        ("roles-saved", lambda x: auth_php._create_auth_file("roles-saved")),
-        ("contactgroups-saved", lambda x: auth_php._create_auth_file("contactgroups-saved")),
-        ("activate-changes", lambda x: auth_php._create_auth_file("activate-changes")),
-    )
-    for name, func in args:
-        hooks.register_builtin(name, func)
 
 
 def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:

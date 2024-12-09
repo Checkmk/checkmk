@@ -6,11 +6,6 @@
 
 from collections.abc import Callable
 
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
-
-from cmk.utils import paths
-
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
@@ -44,7 +39,6 @@ from . import (
     _check_mk_configuration,
     _main_module_topics,
     _main_modules,
-    _nagvis_auth,
     _notification_settings,
     _omd_configuration,
     _permissions,
@@ -147,8 +141,6 @@ def register(
         replication_path_registry,
     )
     _tracing.register(config_variable_registry)
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     _notification_settings.register(config_variable_registry)
     _notification_parameter_registration.register(notification_parameter_registry)

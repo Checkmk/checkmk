@@ -111,7 +111,7 @@ def register_painters() -> None:
 
 def register(edition: Edition) -> None:
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
-    nagvis.register(permission_section_registry, permission_registry)
+    nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     common_registration(
         mega_menu_registry,
         job_registry,

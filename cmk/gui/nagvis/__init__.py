@@ -9,20 +9,24 @@ from collections.abc import Callable, Sequence
 
 from cmk.gui import hooks
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.sidebar._snapin._registry import SnapinRegistry
 from cmk.gui.watolib import auth_php
 from cmk.gui.watolib.groups import (
     ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry,
 )
 
 from . import _nagvis_auth
+from ._nagvis_maps import NagVisMaps
 
 
 def register(
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
+    snapin_registry_: SnapinRegistry,
 ) -> None:
     _register_hooks()
     _nagvis_auth.register(permission_section_registry, permission_registry)
+    snapin_registry_.register(NagVisMaps)
 
 
 def _register_hooks() -> None:

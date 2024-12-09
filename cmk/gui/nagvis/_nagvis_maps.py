@@ -7,9 +7,8 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-
-from ._base import SidebarSnapin
-from ._helpers import footnotelinks
+from cmk.gui.sidebar._snapin._base import SidebarSnapin
+from cmk.gui.sidebar._snapin._helpers import footnotelinks
 
 
 class NagVisMaps(SidebarSnapin):

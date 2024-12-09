@@ -17,7 +17,7 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._log import configure_app_logger, configure_reloader_logger, configure_watcher_logger
+from ._log import configure_logger
 from ._reloader import Reloader
 from ._server import ApplicationServer, ApplicationServerConfig
 from ._tracer import configure_tracer
@@ -45,9 +45,7 @@ def main() -> int:
         run_directory.mkdir(exist_ok=True, parents=True)
         log_directory.mkdir(exist_ok=True, parents=True)
 
-        configure_app_logger(log_directory)
-        configure_reloader_logger(log_directory)
-        configure_watcher_logger(log_directory)
+        configure_logger(log_directory)
 
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)

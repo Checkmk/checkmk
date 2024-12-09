@@ -23,7 +23,7 @@ from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
 from ._cache import Cache
-from ._log import app_logger
+from ._log import logger
 from ._tracer import tracer
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
@@ -105,7 +105,7 @@ def get_application(
         if cache.reload_required(request.app.state.last_reload_at):
             reload_config()
 
-        app_logger.setLevel(payload.log_level)
+        logger.setLevel(payload.log_level)
 
         with (
             tracer.start_as_current_span(

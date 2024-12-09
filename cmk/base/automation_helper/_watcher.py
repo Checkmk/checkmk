@@ -15,7 +15,7 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from ._cache import Cache
-from ._log import watcher_logger
+from ._log import logger
 
 WATCHER_SLEEP_INTERVAL: Final = 1
 
@@ -52,9 +52,9 @@ class AutomationWatcherHandler(PatternMatchingEventHandler):
     def _log_handled_event(cls, event: FileSystemEvent) -> None:
         match event.event_type:
             case "moved":
-                watcher_logger.info("%s (overwritten)", event.dest_path)
+                logger.info("%s (overwritten)", event.dest_path)
             case _:
-                watcher_logger.info("%s (%s)", event.src_path, event.event_type)
+                logger.info("%s (%s)", event.src_path, event.event_type)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -97,7 +97,7 @@ def start_automation_watcher_observer(
         observer.start()
         yield
     except Exception as err:
-        watcher_logger.exception(err)
+        logger.exception(err)
     finally:
         observer.stop()
         observer.join()
@@ -111,7 +111,7 @@ def run_watcher(root: Path, schedules: Sequence[Schedule], cache: Cache) -> None
 
 class Watcher(Thread):
     def __init__(self, cfg: WatcherConfig, cache: Cache) -> None:
-        watcher_logger.info("Initializing watcher thread...")
+        logger.info("Initializing watcher thread...")
         kwargs = {"root": cfg.root, "schedules": cfg.schedules, "cache": cache}
         super().__init__(target=run_watcher, name="watcher", kwargs=kwargs, daemon=True)
 

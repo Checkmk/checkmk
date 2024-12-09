@@ -59,6 +59,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_service_state,
     recompose_single_choice,
     recompose_string,
+    recompose_time_period,
     recompose_unknown_form_spec,
 )
 from cmk.gui.htmllib.html import html
@@ -91,6 +92,7 @@ from cmk.rulesets.v1.form_specs import (
     SimpleLevels,
     SingleChoice,
     String,
+    TimePeriod,
     TimeSpan,
 )
 
@@ -201,6 +203,7 @@ def register_form_specs():
     register_recomposer_function(Dictionary, recompose_dictionary)
     register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
     register_recomposer_function(Proxy, recompose_proxy)
+    register_recomposer_function(TimePeriod, recompose_time_period)
 
 
 def register_validators():

@@ -18,6 +18,7 @@ from .regular_expression import recompose as recompose_regular_expression
 from .service_state import recompose as recompose_service_state
 from .single_choice import recompose as recompose_single_choice
 from .string import recompose as recompose_string
+from .time_period import recompose as recompose_time_period
 from .unknown_form_spec import recompose as recompose_unknown_form_spec
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "recompose_monitored_service",
     "recompose_monitored_host",
     "recompose_monitored_host_extended",
+    "recompose_time_period",
 ]

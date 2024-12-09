@@ -16,7 +16,7 @@ from unittest.mock import patch
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
 from tests.unit.testlib.rabbitmq import get_expected_definition
 from tests.unit.testlib.utils import reset_registries
@@ -115,6 +115,13 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
+            # CMK-20769
+            ReplicationPath(
+                ty="file",
+                ident="otel_collector",
+                site_path="etc/check_mk/otel_collector.d/wato/otel_collector.mk",
+                excludes=[],
+            ),
         ]
 
     expected += [
@@ -181,6 +188,13 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+            # CMK-20769
+            ReplicationPath(
+                ty="file",
+                ident="otel_collector",
+                site_path="etc/check_mk/otel_collector.d/wato/otel_collector.mk",
+                excludes=[],
+            ),
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:

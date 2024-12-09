@@ -98,6 +98,7 @@ def check_mk_local_automation_serialized(
     indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
+    force_cli_interface: bool = False,
 ) -> tuple[Sequence[str], SerializedResult]:
     with tracer.start_as_current_span(
         f"local_automation[{command}]",
@@ -113,9 +114,9 @@ def check_mk_local_automation_serialized(
             call_hook_pre_activate_changes()
 
         executor: AutomationExecutor = (
-            automation_helper.HelperExecutor()
-            if USE_AUTOMATION_HELPER_EXECUTOR
-            else automation_subprocess.SubprocessExecutor()
+            automation_subprocess.SubprocessExecutor()
+            if force_cli_interface or not USE_AUTOMATION_HELPER_EXECUTOR
+            else automation_helper.HelperExecutor()
         )
 
         try:

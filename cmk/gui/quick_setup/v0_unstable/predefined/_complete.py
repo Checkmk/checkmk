@@ -127,11 +127,14 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
 
-    return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path,
-        title=sanitized_folder_path.replace("/", " / "),
-        attributes={},
-    )
+    folder = tree.root_folder()
+    for path in sanitized_folder_path.split("/"):
+        folder = folder.subfolder(path) or folder.create_subfolder(
+            name=path,
+            title=path,
+            attributes={},
+        )
+    return folder
 
 
 def create_special_agent_host_from_form_data(

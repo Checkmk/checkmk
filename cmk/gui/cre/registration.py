@@ -58,6 +58,7 @@ from cmk.gui.wato import (
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.wato.pages import ldap, roles
 from cmk.gui.watolib import network_scan
 from cmk.gui.watolib.activate_changes import (
     activation_features_registry,
@@ -117,6 +118,8 @@ def register_painters() -> None:
 def register(edition: Edition) -> None:
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
+    ldap.register(mode_registry)
+    roles.register(mode_registry)
     common_registration(
         mega_menu_registry,
         job_registry,
@@ -218,8 +221,6 @@ def register(edition: Edition) -> None:
         notification_parameter_registry,
         replication_path_registry,
         default_user_menu_topics,
-        edition_supports_ldap=True,
-        edition_supports_managing_roles=True,
     )
     user_features_registry.register(
         UserFeatures(

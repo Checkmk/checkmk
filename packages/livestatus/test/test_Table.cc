@@ -896,13 +896,14 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
               ColumnDefinitions(TableHostsByGroup{&mc_}));
 }
 
-namespace {}  // namespace
-static ColumnDefinitions labels_columns() {
+namespace {
+ColumnDefinitions labels_columns() {
     return {
         {"name", ColumnType::string},
         {"value", ColumnType::string},
     };
 }
+}  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableLabels) {
     EXPECT_EQ(labels_columns(),  //

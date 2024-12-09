@@ -21,13 +21,15 @@
 
 using namespace std::chrono_literals;
 
+namespace {
 // This class is just a workaround for encoding bugs in googletest where
 // test_details.xml might end up containing invalid XML.
 struct Blob {
     std::string contents;
+    auto operator<=>(const Blob &) const = default;
 };
 
-static std::ostream &operator<<(std::ostream &os, const Blob &blob) {
+std::ostream &operator<<(std::ostream &os, const Blob &blob) {
     const OStreamStateSaver s(os);
     for (auto ch : blob.contents) {
         if (std::isprint(ch) != 0) {
@@ -38,14 +40,6 @@ static std::ostream &operator<<(std::ostream &os, const Blob &blob) {
         }
     }
     return os;
-}
-
-static bool operator==(const Blob &lhs, const Blob &rhs) {
-    return lhs.contents == rhs.contents;
-}
-
-static bool operator!=(const Blob &lhs, const Blob &rhs) {
-    return !(lhs == rhs);
 }
 
 struct Param {
@@ -61,12 +55,13 @@ struct Param {
     std::string string;
 };
 
-static std::ostream &operator<<(std::ostream &os, const Param &p) {
+std::ostream &operator<<(std::ostream &os, const Param &p) {
     return os << "Param{" << static_cast<int>(p.format) << ", " << p.query
               << ", " << p.row << ", " << p.list << ", " << p.sublist << ", "
               << p.dict << ", " << p.null << ", " << p.blob << ", " << p.string
               << "}";
 }
+};  // namespace
 
 class Fixture : public ::testing::TestWithParam<Param> {
     std::ostringstream out_;

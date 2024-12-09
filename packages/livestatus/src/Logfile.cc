@@ -77,14 +77,18 @@ void Logfile::load(const LogRestrictions &restrictions) {
         if (_logclasses_read != 0U) {
             (void)fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(restrictions, file, _logclasses_read);
-            (void)fgetpos(file, &_read_pos);
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         if (missing_types != 0U) {
             (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(restrictions, file, missing_types);
             _logclasses_read |= missing_types;
-            (void)fgetpos(file, &_read_pos);  // remember current end of file
+            if (::ferror(file) == 0) {
+                (void)fgetpos(file, &_read_pos);
+            }
         }
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         (void)fclose(file);

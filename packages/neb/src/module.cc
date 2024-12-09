@@ -167,11 +167,10 @@ void update_status() {
 
 bool shouldTerminate() { return fl_should_terminate; }
 void shouldTerminate(bool value) { fl_should_terminate = value; }
-}  // namespace
 
-static void livestatus_count_fork() { counterIncrement(Counter::forks); }
+void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
-static void livestatus_cleanup_after_fork() {
+void livestatus_cleanup_after_fork() {
     // 4.2.2010: Deactivate the cleanup function. It might cause
     // more trouble than it tries to avoid. It might lead to a deadlock
     // with Nagios' fork()-mechanism...
@@ -197,7 +196,7 @@ static void livestatus_cleanup_after_fork() {
     }
 }
 
-static void *main_thread(void *data) {
+void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
@@ -241,7 +240,7 @@ static void *main_thread(void *data) {
     return nullptr;
 }
 
-static void *client_thread(void *data) {
+void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
     while (!shouldTerminate()) {
@@ -272,7 +271,6 @@ static void *client_thread(void *data) {
     return nullptr;
 }
 
-namespace {
 class NagiosHandler : public Handler {
 public:
     NagiosHandler() { setFormatter(std::make_unique<NagiosFormatter>()); }
@@ -462,9 +460,8 @@ void log_callback(int callback_type, int type) {
             << " callback: " << data_type_name(type) << "\n";
     }
 }
-}  // namespace
 
-static void start_threads() {
+void start_threads() {
     if (fl_thread_running == 1) {
         return;
     }
@@ -548,7 +545,7 @@ static void start_threads() {
     }
 }
 
-static void terminate_threads() {
+void terminate_threads() {
     if (fl_thread_running != 0) {
         shouldTerminate(true);
         Informational(fl_logger_nagios) << "waiting for main to terminate...";
@@ -579,7 +576,7 @@ static void terminate_threads() {
     }
 }
 
-static void open_unix_socket() {
+void open_unix_socket() {
     struct stat st {};
     if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
         if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
@@ -635,7 +632,7 @@ static void open_unix_socket() {
         << "opened UNIX socket at " << fl_paths.livestatus_socket;
 }
 
-static void close_unix_socket() {
+void close_unix_socket() {
     ::unlink(fl_paths.livestatus_socket.c_str());
     if (fl_unix_socket >= 0) {
         ::close(fl_unix_socket);
@@ -643,7 +640,7 @@ static void close_unix_socket() {
     }
 }
 
-static int broker_host_check(int callback_type, void *data) {
+int broker_host_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_host_check_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -665,7 +662,7 @@ static int broker_host_check(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_service_check(int callback_type, void *data) {
+int broker_service_check(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_service_check_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -686,7 +683,7 @@ static int broker_service_check(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_comment(int callback_type, void *data) {
+int broker_comment(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_comment_data *>(data);
     log_callback(callback_type, info->type);
     const unsigned long id = info->comment_id;
@@ -738,7 +735,7 @@ static int broker_comment(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_downtime(int callback_type, void *data) {
+int broker_downtime(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_downtime_data *>(data);
     log_callback(callback_type, info->type);
     const unsigned long id = info->downtime_id;
@@ -805,7 +802,7 @@ static int broker_downtime(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_log(int callback_type, void *data) {
+int broker_log(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_log_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -827,7 +824,7 @@ static int broker_log(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_external_command(int callback_type, void *data) {
+int broker_external_command(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_external_command_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -850,7 +847,7 @@ static int broker_external_command(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_state_change(int callback_type, void *data) {
+int broker_state_change(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_statechange_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -867,7 +864,7 @@ static int broker_state_change(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_adaptive_program(int callback_type, void *data) {
+int broker_adaptive_program(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_adaptive_program_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -882,7 +879,7 @@ static int broker_adaptive_program(int callback_type, void *data) {
     return 0;
 }
 
-static void livestatus_log_initial_states() {
+void livestatus_log_initial_states() {
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
@@ -902,7 +899,7 @@ static void livestatus_log_initial_states() {
     g_timeperiods_cache->logCurrentTimeperiods();
 }
 
-static int broker_timed_event(int callback_type, void *data) {
+int broker_timed_event(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_timed_event_data *>(data);
     log_callback(callback_type, info->type);
     switch (info->type) {
@@ -931,7 +928,7 @@ static int broker_timed_event(int callback_type, void *data) {
     return 0;
 }
 
-static int broker_process(int callback_type, void *data) {
+int broker_process(int callback_type, void *data) {
     auto *info = static_cast<nebstruct_process_data *>(data);
     log_callback(callback_type, info->type);
     // The event types below are in chronological order.
@@ -998,7 +995,6 @@ static int broker_process(int callback_type, void *data) {
     return 0;
 }
 
-namespace {
 struct nagios_callback {
     int callback_type;
     int (*callback_func)(int, void *);
@@ -1087,10 +1083,9 @@ void deregister_callbacks() {
         neb_deregister_callback(cb.callback_type, cb.callback_func);
     }
 }
-}  // namespace
 
-static std::filesystem::path check_path(const std::string &name,
-                                        std::string_view path) {
+std::filesystem::path check_path(const std::string &name,
+                                 std::string_view path) {
     struct stat st {};
     if (stat(std::string{path}.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";
@@ -1105,7 +1100,7 @@ static std::filesystem::path check_path(const std::string &name,
 }
 
 template <typename T>
-static T parse_number(std::string_view str) {
+T parse_number(std::string_view str) {
     T value{};
     auto [ptr, ec] = std::from_chars(str.begin(), str.end(), value);
     // TODO(sp) Error handling
@@ -1113,9 +1108,8 @@ static T parse_number(std::string_view str) {
 }
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-static void livestatus_parse_argument(Logger *logger,
-                                      std::string_view param_name,
-                                      std::string_view param_value) {
+void livestatus_parse_argument(Logger *logger, std::string_view param_name,
+                               std::string_view param_value) {
     Warning(logger) << "name=[" << param_name << "], value=[" << param_value
                     << "]\n";
     if (param_name == "debug"sv) {
@@ -1255,7 +1249,7 @@ static void livestatus_parse_argument(Logger *logger,
     }
 }
 
-static void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
+void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
         // set default path to our logfile to be in the same path as nagios.log
         const std::string lf{log_file};
@@ -1308,7 +1302,7 @@ static void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         log_archive_path == nullptr ? "" : log_archive_path;
 }
 
-static void omd_advertize(Logger *logger) {
+void omd_advertize(Logger *logger) {
     Notice(logger) << "Livestatus by Checkmk GmbH started with PID "
                    << getpid();
 #ifndef __TIMESTAMP__
@@ -1333,6 +1327,7 @@ static void omd_advertize(Logger *logger) {
         Notice(logger) << "Hint: Please try out Checkmk (https://checkmk.com/)";
     }
 }
+}  // namespace
 
 // Called from Nagios after we have been loaded.
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,

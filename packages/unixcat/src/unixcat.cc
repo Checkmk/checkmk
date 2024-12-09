@@ -21,6 +21,7 @@
 
 using namespace std::chrono_literals;
 
+namespace {
 constexpr size_t buffer_size = 65536;
 
 struct thread_info {
@@ -30,10 +31,10 @@ struct thread_info {
     bool terminate_on_read_eof;
 };
 
-static void printErrno(const std::string &msg) { ::perror(msg.c_str()); }
+void printErrno(const std::string &msg) { ::perror(msg.c_str()); }
 
-static ssize_t read_with_timeout(int from, std::vector<char> &buffer,
-                                 std::chrono::microseconds timeout) {
+ssize_t read_with_timeout(int from, std::vector<char> &buffer,
+                          std::chrono::microseconds timeout) {
     Poller poller;
     poller.addFileDescriptor(from, PollEvents::in);
     // Do not handle FD errors.
@@ -42,7 +43,7 @@ static ssize_t read_with_timeout(int from, std::vector<char> &buffer,
                : -2;
 }
 
-static void *copy_thread(void *info) {
+void *copy_thread(void *info) {
     (void)signal(SIGWINCH, SIG_IGN);
     const auto *tinfo = static_cast<thread_info *>(info);
     std::vector<char> read_buffer(buffer_size);
@@ -83,6 +84,7 @@ static void *copy_thread(void *info) {
     }
     return nullptr;
 }
+}  // namespace
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> arguments{argv, argv + argc};

@@ -71,7 +71,7 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // circumstances, so better avoid it there. Signature:
     //    struct tm *localtime_r(const time_t *restrict timer,
     //                           struct tm *restrict result);
-    localtime_r(&t, &ret);
+    (void)localtime_r(&t, &ret);
 #endif
     return ret;
 }

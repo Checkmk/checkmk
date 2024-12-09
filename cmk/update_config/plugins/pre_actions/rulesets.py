@@ -6,6 +6,7 @@
 
 from collections.abc import Sequence
 from logging import Logger
+from typing import assert_never
 
 from cmk.utils import version
 from cmk.utils.log import VERBOSE
@@ -146,15 +147,22 @@ def _validate_rule_values(
                     addition_info = []
                 error_message = _error_message(ruleset, folder, index, e, addition_info)
                 logger.error(error_message)
-                if conflict_mode is ConflictMode.ASK:
-                    if (
-                        prompt(
-                            "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-                        ).lower()
-                        not in USER_INPUT_CONTINUE
-                    ):
+                match conflict_mode:
+                    case ConflictMode.ABORT:
                         return False
-                return False
+                    case ConflictMode.ASK:
+                        if (
+                            prompt(
+                                "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+                            ).lower()
+                            not in USER_INPUT_CONTINUE
+                        ):
+                            return False
+                    case ConflictMode.KEEP_OLD | ConflictMode.INSTALL:
+                        continue
+                    case _:
+                        assert_never(conflict_mode)
+
     return True
 
 

@@ -19,7 +19,7 @@ py_library(
     ],
     data = [":pyproject.toml"],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-ccc",
         "//packages/cmk-livestatus-client:py_livestatus",

@@ -174,6 +174,10 @@ CMK_PACKAGES = [
     ],
 })
 
+CMK_PACKAGES_NON_FREE = [
+    "//non-free/packages/cmk-mknotifyd",
+]
+
 py_library(
     name = "lib_cmk",
     srcs = glob(
@@ -264,7 +268,7 @@ py_wheel(
         "lib_cmk",
         "lib_cmk_" + edition,
         "//non-free/packages/cmc-protocols:config_proto_pb2",
-    ],
+    ] + CMK_PACKAGES_NON_FREE,
 ) for edition in [
     "cce",
     "cee",

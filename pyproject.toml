@@ -56,6 +56,12 @@ ignore = [
 "tests/*" = ["A", "ARG", "RUF100", "SLF"]
 "agents/*" = ["ARG", "SLF"]
 "bin/*" = ["ARG", "PLR"]
+"non-free/packages/cmk-mknotifyd/*" = [
+    # Allow status quo. Can be cleaned up later on.
+    "ARG002",
+    "ARG001",
+    "SLF001",
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

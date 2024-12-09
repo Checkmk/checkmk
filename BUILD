@@ -103,6 +103,7 @@ pip_compile(
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
+            "//non-free/packages/cmk-mknotifyd:requirements.txt",
             "//non-free/packages/cmk-otel-collector:requirements.txt",
         ],
     }),

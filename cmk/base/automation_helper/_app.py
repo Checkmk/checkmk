@@ -68,16 +68,14 @@ def get_application(
     *,
     engine: AutomationEngine,
     cache: Cache,
-    worker_id_callback: Callable[[], str],
     reload_config: Callable[[], None],
 ) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+        app.state.last_reload_at = time.time()
         config.load_all_plugins(
             local_checks_dir=paths.local_checks_dir, checks_dir=paths.checks_dir
         )
-        app.state.worker_id = worker_id_callback()
-        cache.store_last_automation_helper_reload(worker_id_callback(), time.time())
         reload_config()
         yield
 
@@ -104,8 +102,7 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
-        if cache.reload_required(worker_id := request.app.state.worker_id):
-            cache.store_last_automation_helper_reload(worker_id, time.time())
+        if cache.reload_required(request.app.state.last_reload_at):
             reload_config()
 
         app_logger.setLevel(payload.log_level)
@@ -132,8 +129,6 @@ def get_application(
 
     @app.get("/health")
     async def check_health(request: Request) -> HealthCheckResponse:
-        return HealthCheckResponse(
-            last_reload_at=cache.last_automation_helper_reload(request.app.state.worker_id)
-        )
+        return HealthCheckResponse(last_reload_at=request.app.state.last_reload_at)
 
     return app

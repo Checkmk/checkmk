@@ -41,7 +41,6 @@ def get_test_client(*, engine: AutomationEngine) -> TestClient:
     app = get_application(
         engine=engine,
         cache=cache,
-        worker_id_callback=lambda: "id",
         reload_config=lambda: None,
     )
     return TestClient(app)

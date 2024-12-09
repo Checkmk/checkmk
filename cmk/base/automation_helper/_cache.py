@@ -9,7 +9,6 @@ from typing import Final, Self
 import redis
 
 LAST_DETECTED_CHANGE_TOPIC: Final = "last_change_detected"
-LAST_AUTOMATION_HELPER_RELOAD_TOPIC: Final = "last_automation_helper_reload"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -20,22 +19,12 @@ class Cache:
     def setup(cls, *, client: redis.Redis) -> Self:
         return cls(_client=client)
 
-    def store_last_automation_helper_reload(self, worker_id: str, time: float) -> None:
-        self._client.hset(
-            LAST_AUTOMATION_HELPER_RELOAD_TOPIC,
-            key=worker_id,
-            value=time,
-        )
-
     def store_last_detected_change(self, time: float) -> None:
         self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
-
-    def last_automation_helper_reload(self, worker_id: str) -> float:
-        return float(self._client.hget(LAST_AUTOMATION_HELPER_RELOAD_TOPIC, key=worker_id) or 0.0)
 
     @property
     def last_detected_change(self) -> float:
         return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
 
-    def reload_required(self, worker_id: str) -> bool:
-        return self.last_automation_helper_reload(worker_id) < self.last_detected_change
+    def reload_required(self, last_reload: float) -> bool:
+        return last_reload < self.last_detected_change

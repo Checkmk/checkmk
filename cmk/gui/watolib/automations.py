@@ -398,7 +398,7 @@ def get_url_raw(
             timeout=timeout,
             headers=headers_,
         )
-    except ConnectionError as e:
+    except (ConnectionError, requests.ConnectionError) as e:
         raise MKUserError(None, _("Could not connect to the remote site (%s)") % e)
 
     response.encoding = "utf-8"  # Always decode with utf-8

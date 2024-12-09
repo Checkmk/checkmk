@@ -17,7 +17,8 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._log import configure_app_logger, configure_watcher_logger
+from ._log import configure_app_logger, configure_reloader_logger, configure_watcher_logger
+from ._reloader import Reloader
 from ._server import ApplicationServer, ApplicationServerConfig
 from ._tracer import configure_tracer
 from ._watcher import Watcher, WatcherConfig
@@ -45,10 +46,13 @@ def main() -> int:
         log_directory.mkdir(exist_ok=True, parents=True)
 
         configure_app_logger(log_directory)
+        configure_reloader_logger(log_directory)
         configure_watcher_logger(log_directory)
 
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)
+
+        reloader = Reloader(cache=cache)
 
         watcher_config = WatcherConfig.load(root=omd_root)
         watcher = Watcher(watcher_config, cache)
@@ -66,7 +70,7 @@ def main() -> int:
             error_log=log_directory / APPLICATION_ERROR_LOG,
         )
 
-        ApplicationServer(app, server_config, services=[watcher]).run()
+        ApplicationServer(app, server_config, services=[watcher, reloader]).run()
 
     except Exception:
         return 1

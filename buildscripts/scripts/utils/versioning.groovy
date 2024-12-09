@@ -226,6 +226,7 @@ def configure_checkout_folder(edition, cmk_version) {
 
 def delete_non_cre_files() {
     non_cre_paths = [
+        "non-free",
         "enterprise",
         "managed",
         "cloud",

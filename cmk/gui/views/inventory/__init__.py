@@ -516,7 +516,7 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
         return css_class, _("today")
     if age_days == 1:
         return css_class, _("yesterday")
-    return css_class, "%d %s ago" % (int(age_days), _("days"))
+    return css_class, "%d %s" % (int(age_days), _("days ago"))
 
 
 @decorate_inv_paint()

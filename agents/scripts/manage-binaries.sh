@@ -38,6 +38,7 @@ _setup_alternatives_command() {
 
 _install_symlinks() {
     _setup_alternatives_command
+    _remove_old_agent_controller
     for binary in "${MK_INSTALLDIR}"/package/bin/*; do
         [ -f "${binary}" ] || continue
         name=$(basename "${binary}")
@@ -57,6 +58,13 @@ _install_symlinks() {
         # Since we currently don't support multiple agent installations, this is OK for the moment.
         ln -s "${binary}" "${SYMLINK_DIR}/${name}"
     done
+}
+
+_remove_old_agent_controller() {
+    [ -e "${SYMLINK_DIR}/cmk-agent-ctl" ] && [ ! -L "${SYMLINK_DIR}/cmk-agent-ctl" ] && {
+        printf "Removing leftover agent controller at %s\n" "${SYMLINK_DIR}/cmk-agent-ctl"
+        rm -f "${SYMLINK_DIR}/cmk-agent-ctl"
+    }
 }
 
 _remove_symlinks() {

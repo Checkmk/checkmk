@@ -153,27 +153,8 @@ def _collect_file_infos() -> None:
 
 
 def _get_free_space():
-    # FIXME: Take possible root reserved space into account
-    for filesystem in subprocess.check_output(
-        [
-            "df",
-            "-P",
-            "-B1",
-            omd_root,
-        ],
-        encoding="utf-8",
-    ).split("\n"):
-        if filesystem[0] == "/":
-            (
-                _vol,
-                _size_bytes,
-                _used_bytes,
-                free_bytes,
-                _used_perc,
-                _mp,
-            ) = filesystem.split()
-            return int(free_bytes)
-    return None
+    statvfs_result = os.statvfs(omd_root)
+    return statvfs_result.f_bavail * statvfs_result.f_frsize
 
 
 def _above_threshold(bytes_free: int) -> bool:

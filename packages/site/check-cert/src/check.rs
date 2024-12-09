@@ -818,7 +818,10 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult, State};
+    use super::{
+        CheckResult, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Metric,
+        OutputType, Real, SimpleCheckResult, State, Uom,
+    };
 
     #[test]
     fn test_with_empty_str() {
@@ -1030,5 +1033,19 @@ mod test_writer_format {
             notice\n\
             details warn"
         );
+    }
+
+    #[test]
+    fn test_collection_levels_checker_warn_notice() {
+        let levels =
+            LevelsChecker::try_new(LevelsStrategy::Upper, Levels { warn: 10, crit: 20 }).unwrap();
+        let args = LevelsCheckerArgs {
+            label: "label".to_string(),
+            uom: Some(Uom("ms".to_string())),
+        };
+        let check = levels.check(15, OutputType::Notice("notice".to_string()), args);
+        let coll = Collection::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(coll.state, State::Warn);
+        assert_eq!(format!("{}", coll), "notice (!) | label=15ms;10;20;;");
     }
 }

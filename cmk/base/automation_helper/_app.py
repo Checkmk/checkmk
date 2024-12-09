@@ -23,7 +23,7 @@ from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
 from ._cache import Cache
-from ._log import logger
+from ._log import logger, temporary_log_level
 from ._tracer import tracer
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
@@ -105,8 +105,6 @@ def get_application(
         if cache.reload_required(request.app.state.last_reload_at):
             reload_config()
 
-        logger.setLevel(payload.log_level)
-
         with (
             tracer.start_as_current_span(
                 f"automation[{payload.name}]",
@@ -118,6 +116,7 @@ def get_application(
             redirect_stdout(output_buffer := io.StringIO()),
             redirect_stderr(output_buffer),
             redirect_stdin(io.StringIO(payload.stdin)),
+            temporary_log_level(logger, payload.log_level),
         ):
             try:
                 # TODO: remove `reload_config` when automation helper is fully integrated.

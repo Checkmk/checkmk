@@ -442,6 +442,7 @@ class DocReference(Enum):
     INTRO_FOLDERS = "intro_setup_monitor#folders"
     INTRO_LINUX = "intro_setup_monitor#linux"
     INTRO_SERVICES = "intro_setup_monitor#services"
+    INTRO_SETUP = "intro_setup"
     INTRO_WELCOME = "welcome"
     KUBERNETES = "monitoring_kubernetes"
     LICENSING = "license"

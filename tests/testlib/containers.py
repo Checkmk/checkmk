@@ -84,7 +84,7 @@ def execute_tests_in_container(
         _prepare_testuser(container, _TESTUSER)
         _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
         _cleanup_previous_virtual_environment(container, container_env)
-        _reuse_persisted_virtual_environment(container, container_env)
+        _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)
 
         if interactive:
             logger.info("+-------------------------------------------------")
@@ -548,7 +548,13 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
 
 
 # pep-0692 is not yet finished in mypy...
-def _exec_run(c: docker.Container, cmd: str | Sequence[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
+def _exec_run(  # type: ignore[no-untyped-def]
+    c: docker.Container,
+    cmd: str | Sequence[str],
+    check: bool = True,
+    user: str = "",
+    **kwargs,
+) -> int:
     cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
     cmd_str = subprocess.list2cmdline(cmd_list)
 
@@ -557,7 +563,7 @@ def _exec_run(c: docker.Container, cmd: str | Sequence[str], check: bool = True,
     else:
         logger.info("Execute in container %s: %r", c.short_id, cmd_str)
 
-    result = container_exec(c, cmd_list, **kwargs)
+    result = container_exec(c, cmd_list, user=user, **kwargs)
 
     if kwargs.get("stream"):
         return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
@@ -767,12 +773,13 @@ def _prepare_virtual_environment(
 
 
 def _setup_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str]
+    container: docker.Container, container_env: Mapping[str, str], user: str = ""
 ) -> None:
     logger.info("Prepare virtual environment")
     _exec_run(
         container,
         ["make", ".venv"],
+        user=user,
         workdir="/git",
         environment=container_env,
         stream=True,
@@ -825,7 +832,7 @@ def _persist_virtual_environment(
 
 
 def _reuse_persisted_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str]
+    container: docker.Container, container_env: Mapping[str, str], test_user: str
 ) -> None:
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
     if (
@@ -841,7 +848,7 @@ def _reuse_persisted_virtual_environment(
         logger.info("Restore previously created virtual environment")
         _exec_run(
             container,
-            ["rsync", "-a", "/.venv", "/git"],
+            ["rsync", "-a", f"--chown={test_user}:{test_user}", "/.venv", "/git"],
             workdir="/git",
             environment=container_env,
             stream=True,
@@ -850,7 +857,7 @@ def _reuse_persisted_virtual_environment(
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current
         #  state, which is good for the most of the time.
-        _setup_virtual_environment(container, container_env)
+        _setup_virtual_environment(container, container_env, test_user)
 
 
 def _mirror_reachable() -> bool:

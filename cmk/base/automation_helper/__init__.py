@@ -66,7 +66,7 @@ def main() -> int:
             error_log=log_directory / APPLICATION_ERROR_LOG,
         )
 
-        ApplicationServer(app, watcher, server_config).run()
+        ApplicationServer(app, server_config, services=[watcher]).run()
 
     except Exception:
         return 1

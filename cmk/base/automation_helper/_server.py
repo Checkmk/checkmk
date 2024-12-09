@@ -6,6 +6,7 @@
 """Launches automation helper application for processing automation commands."""
 
 import dataclasses
+from collections.abc import Sequence
 from pathlib import Path
 from threading import Thread
 from typing import Final
@@ -28,9 +29,11 @@ class ApplicationServerConfig:
 
 
 class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
-    def __init__(self, app: FastAPI, watcher: Thread, cfg: ApplicationServerConfig) -> None:
+    def __init__(
+        self, app: FastAPI, cfg: ApplicationServerConfig, *, services: Sequence[Thread]
+    ) -> None:
         self._app = app
-        self._watcher = watcher
+        self._services = services
         self._options = {
             "daemon": cfg.daemon,
             "umask": 0o077,
@@ -55,5 +58,8 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
         assert self.cfg is not None, "Gunicorn server config is required to run application."
         if self.cfg.daemon:
             gunicorn.util.daemonize()
-        self._watcher.start()
+
+        for service in self._services:
+            service.start()
+
         super().run()

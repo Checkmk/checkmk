@@ -96,43 +96,40 @@ def test_login_two_factor_has_precedence_over_password_change(
 
 
 def test_login_with_cookies(
+    wsgi_app: WebTestAppForCMK,
     with_user: tuple[UserId, str],
-    flask_app: flask.Flask,
     mock_livestatus: MockLiveStatusConnection,
     patch_theme: None,
 ) -> None:
-    with flask_app.app_context():
-        client = flask_app.test_client(use_cookies=True)
-        # We will be redirected to the login page
-        response = client.get("/NO_SITE/check_mk/")
-        login_page_url = response.location
-        assert login_page_url.startswith("/NO_SITE/check_mk/login.py")
+    # We will be redirected to the login page
+    response = wsgi_app.get("/NO_SITE/check_mk/")
+    login_page_url = response.location
+    assert login_page_url.startswith("/NO_SITE/check_mk/login.py")
 
-        # We see if we can access the login page.
-        response = client.get(login_page_url)
-        assert response.status_code == 200
+    # We see if we can access the login page.
+    response = wsgi_app.get(login_page_url)
+    assert response.status_code == 200
 
-        # We try to log in
-        response = client.post(
-            login_page_url,
-            params={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
-        )
-        index_page = response.location
-        assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
-        response = client.get("/NO_SITE/check_mk/index.py")
-        assert response.status_code == 200
+    # We try to log in
+    response = wsgi_app.post(
+        login_page_url,
+        params={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
+    )
+    index_page = response.location
+    assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
+    response = wsgi_app.get("/NO_SITE/check_mk/index.py")
+    assert response.status_code == 200
 
-        test_environ = create_environ("/NO_SITE/", method="GET")
-        client._add_cookies_to_wsgi(test_environ)
+    test_environ = create_environ("/NO_SITE/", method="GET")
+    wsgi_app._add_cookies_to_wsgi(test_environ)
 
-        # request context with cookie yields a user
-        with flask_app.request_context(test_environ):
-            assert session.user.id == with_user[0]
+    # request context with cookie yields a user
+    assert session.user.id == with_user[0]
 
-        # request context without this cookie yields nobody
-        with flask_app.test_request_context("/"):
-            assert isinstance(session.user, LoggedInNobody)
-            assert session.user.id != with_user[0]
+    # request context without this cookie yields nobody
+    with application_and_request_context(dict(create_environ())):
+        assert isinstance(session.user, LoggedInNobody)
+        assert session.user.id != with_user[0]
 
 
 # TODO: to be moved out of REST API blueprint to global in a later commit.

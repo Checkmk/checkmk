@@ -219,21 +219,18 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
 
         uid = UserId(user_dir)
 
+        if uid not in result:
+            continue
+
         # read special values from own files
-        if uid in result:
-            for attr, conv_func in attributes:
-                val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
-                if val is not None:
-                    result[uid][attr] = val
+        for attr, conv_func in attributes:
+            val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
+            if val is not None:
+                result[uid][attr] = val
 
         # read automation secrets and add them to existing users or create new users automatically
         try:
-            secret = AutomationUserSecret(uid).read()
-            if uid not in result:
-                # new guest automation user
-                result[uid] = {"roles": ["guest"]}
-
-            result[uid]["automation_secret"] = secret
+            result[uid]["automation_secret"] = AutomationUserSecret(uid).read()
         except OSError:
             # no secret; nothing to do
             pass

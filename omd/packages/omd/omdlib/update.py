@@ -144,6 +144,7 @@ HOOK_RELPATHS = [
     "etc/nagios/nagios.d/pnp4nagios.cfg",
     "etc/nagvis/conf.d/cookie_auth.ini.php",
     "etc/pnp4nagios/config.d/cookie_auth.php",
+    "etc/rabbitmq/conf.d/01-default.conf",
     "etc/xinetd.d/mk-livestatus",
     "var/check_mk/core/config",
     "var/log/livestatus.log",

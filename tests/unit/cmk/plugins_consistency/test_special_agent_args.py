@@ -20,6 +20,7 @@ from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.kube.special_agents import agent_kube
 from cmk.plugins.prometheus.special_agents import agent_prometheus
+from cmk.plugins.redfish.special_agents import agent_redfish, agent_redfish_power
 from cmk.server_side_calls_backend import load_special_agents
 from cmk.special_agents import (
     agent_activemq,
@@ -90,6 +91,8 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "pure_storage_fa": agent_pure_storage_fa,
     "rabbitmq": agent_rabbitmq,
     "random": None,
+    "redfish": agent_redfish,
+    "redfish_power": agent_redfish_power,
     "ruckus_spot": None,
     "salesforce": None,
     "siemens_plc": None,
@@ -176,6 +179,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "--hostname",
         "HOSTNAME",
     ],
+    "redfish": ["--user", "USER", "--password", "sw0rdfis4", "HOSTNAME"],
+    "redfish_power": ["--user", "USER", "--password", "sw0rdfis4", "HOSTNAME"],
     "splunk": ["HOSTNAME"],
     "vsphere": ["HOSTNAME"],
     "proxmox_ve": ["HOSTNAME"],

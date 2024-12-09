@@ -20,9 +20,6 @@ class Cache:
     def setup(cls, *, client: redis.Redis) -> Self:
         return cls(_client=client)
 
-    def clear(self) -> None:
-        self._client.delete(LAST_AUTOMATION_HELPER_RELOAD_TOPIC)
-
     def store_last_automation_helper_reload(self, worker_id: str, time: float) -> None:
         self._client.hset(
             LAST_AUTOMATION_HELPER_RELOAD_TOPIC,

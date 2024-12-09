@@ -16,7 +16,6 @@ from cmk.base.automation_helper._cache import Cache
 def get_cache() -> Generator[Cache]:
     cache = Cache.setup(client=FakeRedis())
     yield cache
-    cache.clear()
 
 
 def test_set_and_get_last_automation_reload(cache: Cache) -> None:

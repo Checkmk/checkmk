@@ -28,6 +28,7 @@ RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
     test-integration \
+    test-integration-redfish \
     test-composition \
     test-update-cee \
     test-update-cce \
@@ -286,6 +287,9 @@ test-gui-e2e-cse:
 
 test-integration:
 	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
+
+test-integration-redfish:
+	$(PYTEST) -T integration_redfish $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration_redfish)
 
 test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \

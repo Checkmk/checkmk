@@ -121,6 +121,7 @@ test_types = [
     "agent-integration",
     "agent-plugin-unit",
     "integration",
+    "integration_redfish",
     "gui_crawl",
     "gui_e2e",
     "packaging",

@@ -3,18 +3,11 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
-import { ref } from 'vue'
-
-const buttonRef = ref<HTMLButtonElement | null>(null)
-
-// Expose the focus method
-defineExpose({
-  focus: () => {
-    buttonRef.value?.focus()
-  }
-})
+<script lang="ts">
+export interface ButtonProps {
+  variant?: ButtonVariants['variant']
+  size?: ButtonVariants['size']
+}
 
 const buttonVariants = cva('', {
   variants: {
@@ -36,13 +29,22 @@ const buttonVariants = cva('', {
     size: 'medium'
   }
 })
-export type ButtonVariants = VariantProps<typeof buttonVariants>
 
-interface ButtonProps {
-  variant?: ButtonVariants['variant']
-  size?: ButtonVariants['size']
-  type?: never // This should help finding problems with changes still using type. Can be removed after 2024-12-01
-}
+export type ButtonVariants = VariantProps<typeof buttonVariants>
+</script>
+
+<script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
+import { ref } from 'vue'
+
+const buttonRef = ref<HTMLButtonElement | null>(null)
+
+// Expose the focus method
+defineExpose({
+  focus: () => {
+    buttonRef.value?.focus()
+  }
+})
 
 defineProps<ButtonProps>()
 </script>

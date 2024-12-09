@@ -372,7 +372,7 @@ def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
     # TODO: the default ConnectorType.HTPASSWD is currently a bug #CMK-12723 but not wrong
     connector = internal_attributes.get("connector", ConnectorType.HTPASSWD)
     if connector == ConnectorType.HTPASSWD:
-        if "automation_secret" in internal_attributes:
+        if internal_attributes.get("is_automation_user", False):
             result["auth_type"] = "automation"
         elif "password" in internal_attributes:
             result["auth_type"] = "password"
@@ -474,6 +474,7 @@ def _update_auth_options(
     if auth_options.get("auth_type") == "remove":
         internal_attrs.pop("automation_secret", None)
         internal_attrs.pop("password", None)
+        internal_attrs["is_automation_user"] = False
         internal_attrs["serial"] = 1
     else:
         internal_auth_attrs = _auth_options_to_internal_format(auth_options)
@@ -516,7 +517,7 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
         >>> _auth_options_to_internal_format(
         ...     {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"}
         ... )  # doctest:+ELLIPSIS
-        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'last_pw_change': ...}
+        {'password': ..., 'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'is_automation_user': True, 'last_pw_change': ...}
 
     Enforcing password change without changing the password:
 
@@ -562,9 +563,11 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
 
         if auth_type == "password":
             verify_password_policy(password)
+            internal_options["is_automation_user"] = False
 
         if auth_type == "automation":
             internal_options["automation_secret"] = password.raw
+            internal_options["is_automation_user"] = True
 
         # In contrast to enforce_pw_change, the maximum password age is enforced for automation
         # users as well. So set this for both kinds of users.

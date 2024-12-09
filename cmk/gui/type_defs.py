@@ -214,6 +214,7 @@ class UserSpec(TypedDict, total=False):
     force_authuser: NotRequired[bool]
     host_notification_options: str
     idle_timeout: Any  # TODO: Improve this
+    is_automation_user: bool
     language: NotRequired[str]
     last_pw_change: int
     last_login: LastLoginInfo | None
@@ -229,6 +230,7 @@ class UserSpec(TypedDict, total=False):
     roles: NotRequired[list[str]]
     serial: int
     service_notification_options: str
+    store_automation_secret: bool
     session_info: dict[SessionId, SessionInfo]
     show_mode: NotRequired[
         Literal["default_show_less", "default_show_more", "enforce_show_more"] | None

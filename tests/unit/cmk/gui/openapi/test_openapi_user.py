@@ -185,6 +185,8 @@ def test_openapi_user_minimal_settings(
         "last_pw_change": 1632486960,
         "num_failed_logins": 0,
         "serial": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 
@@ -344,6 +346,8 @@ def test_openapi_user_internal_with_notifications(
         "last_pw_change": 1265013000,
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 
@@ -547,6 +551,8 @@ def test_openapi_user_internal_auth_handling(
         "last_pw_change": 1265011200,  # 08:00:00 -- uses creation data, not current time
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
@@ -576,13 +582,14 @@ def test_openapi_user_internal_auth_handling(
         "user_scheme_serial": 1,
         "locked": False,
         "roles": ["user"],
-        "automation_secret": "QWXWBFUCSUOXNCPJUMS@",
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         "serial": 1,  # this is 2 internally but the function is not invoked here
         "last_pw_change": 1265014800,  # 09:00:00 -- changed as secret was changed
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",
+        "is_automation_user": True,
+        "store_automation_secret": False,
     }
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
@@ -615,6 +622,8 @@ def test_openapi_user_internal_auth_handling(
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",
+        "is_automation_user": False,
+        "store_automation_secret": False,
     }
 
 

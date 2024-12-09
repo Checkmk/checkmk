@@ -69,6 +69,7 @@ def _create_php_file(
     for user in nagvis_users.values():
         user.setdefault("language", active_config.default_language)  # Set a language for all users
         user.pop("session_info", None)  # remove the SessionInfo object
+        user.pop("automation_secret", None)
 
     content = f"""<?php
 // Created by Multisite UserDB Hook ({callee})

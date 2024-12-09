@@ -218,7 +218,6 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
             continue
 
         uid = UserId(user_dir)
-
         if uid not in result:
             continue
 
@@ -228,14 +227,8 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
             if val is not None:
                 result[uid][attr] = val
 
-        # read automation secrets and add them to existing users or create new users automatically
-        try:
-            result[uid]["automation_secret"] = AutomationUserSecret(uid).read()
-        except OSError:
-            # no secret; nothing to do
-            pass
-        # Empty secret files will raise a value error that we don't want to ignore here. Otherwise
-        # checking if a user is an automation user via existence of the file will go wrong.
+        result[uid]["store_automation_secret"] = AutomationUserSecret(uid).exists()
+        result[uid]["is_automation_user"] = AutomationUserFile(uid).load()
 
     return result
 
@@ -419,12 +412,12 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
 
         # authentication secret for local processes
         secret = AutomationUserSecret(user_id)
-        if "automation_secret" in user:
+        if user.get("store_automation_secret", False) and "automation_secret" in user:
             secret.save(user["automation_secret"])
-        else:
+        elif not user.get("store_automation_secret", False):
             secret.delete()
 
-        AutomationUserFile(user_id).save("automation_secret" in user)
+        AutomationUserFile(user_id).save(user.get("is_automation_user", False))
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
@@ -621,7 +614,6 @@ def _multisite_keys() -> list[str]:
     return [
         "roles",
         "locked",
-        "automation_secret",
         "alias",
         "language",
         "connector",
@@ -641,13 +633,17 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
-def create_cmk_automation_user(now: datetime, name: str, alias: str, role: str) -> None:
+def create_cmk_automation_user(
+    now: datetime, name: str, alias: str, role: str, store_secret: bool
+) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
     users[UserId(name)] = {
         "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
+        "store_automation_secret": store_secret,
+        "is_automation_user": True,
         "password": password_hashing.hash_password(secret),
         "roles": [role],
         "locked": False,
@@ -668,6 +664,9 @@ def _save_cached_profile(
     # infos that are stored in the custom attribute files.
     cache = UserSpec()
     for key in user.keys():
+        if key in ("automation_secret",):
+            # Stripping away sensitive information
+            continue
         if key in multisite_keys or key not in non_contact_keys:
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
             cache[key] = user[key]  # type: ignore[literal-required]

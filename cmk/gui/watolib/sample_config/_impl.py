@@ -240,7 +240,9 @@ class ConfigGeneratorAutomationUser(SampleConfigGenerator):
         return 60
 
     def generate(self) -> None:
-        create_cmk_automation_user(datetime.now(), name=self.name, role=self.role, alias=self.alias)
+        create_cmk_automation_user(
+            datetime.now(), name=self.name, role=self.role, alias=self.alias, store_secret=True
+        )
 
 
 class ConfigGeneratorRegistrationUser(ConfigGeneratorAutomationUser):

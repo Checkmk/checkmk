@@ -55,6 +55,7 @@ def _mk_user_obj(
     }
 
     if automation:
+        user[username]["attributes"]["store_automation_secret"] = True
         user[username]["attributes"]["automation_secret"] = password
 
     if custom_attrs is not None:

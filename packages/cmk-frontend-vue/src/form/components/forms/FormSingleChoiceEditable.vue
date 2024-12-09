@@ -8,7 +8,7 @@ import FormSingleChoiceEditableEditAsync from '@/form/components/forms/FormSingl
 import AlertBox from '@/components/AlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import SlideIn from '@/components/slidein/SlideIn.vue'
+import SlideIn from '@/components/SlideIn.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'

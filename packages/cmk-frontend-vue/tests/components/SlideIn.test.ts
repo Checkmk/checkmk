@@ -5,7 +5,7 @@
  */
 
 import { mount } from '@vue/test-utils'
-import SlideIn from '@/components/slidein/SlideIn.vue'
+import SlideIn from '@/components/SlideIn.vue'
 import { findByText, queryByText, waitForElementToBeRemoved } from '@testing-library/vue'
 
 test('Slidein shows and hides content', async () => {

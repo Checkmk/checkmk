@@ -328,9 +328,10 @@ def _create_cmk_image(
             container.short_id,
             base_image_name_with_tag,
         )
+        _prepare_testuser(container, _TESTUSER)
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
-        _prepare_git_overlay(container, "/git-lowerdir", "/git")
-        _prepare_virtual_environment(container, container_env)
+        _prepare_git_overlay(container, "/git-lowerdir", "/git", username=_TESTUSER)
+        _prepare_virtual_environment(container, container_env, username=_TESTUSER)
         _persist_virtual_environment(container, container_env)
 
         logger.info("Install Checkmk version")
@@ -338,7 +339,7 @@ def _create_cmk_image(
             container,
             ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
             workdir="/git",
-            environment=container_env,
+            environment={**container_env, "SKIP_MAKEFILE_CALL": "1"},
             stream=True,
         )
 
@@ -760,7 +761,9 @@ def _prepare_testuser(container: docker.Container, username: str) -> None:
 
 
 def _prepare_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str]
+    container: docker.Container,
+    container_env: Mapping[str, str],
+    username: str = "",
 ) -> None:
     """Ensure the virtual environment is ready for use
 
@@ -769,7 +772,7 @@ def _prepare_virtual_environment(
     persisted with the image. The test containers may use them.
     """
     _cleanup_previous_virtual_environment(container, container_env)
-    _setup_virtual_environment(container, container_env)
+    _setup_virtual_environment(container, container_env, username)
 
 
 def _setup_virtual_environment(

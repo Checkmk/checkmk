@@ -4,13 +4,16 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeUnmount, onBeforeMount, ref } from 'vue'
+import { provide, onBeforeUnmount, onBeforeMount, ref } from 'vue'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
 import { configEntityAPI } from '@/form/components/utils/configuration_entity'
 
 import { passthrough, bypass, http } from 'msw'
 import { setupWorker } from 'msw/browser'
+
+import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
+import { dispatcherKey } from '@/form/private'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -115,6 +118,8 @@ const reloadCount = ref<number>(0)
 const apiDelay = ref<number>(0)
 const apiError = ref<boolean>(false)
 const spec = ref<SingleChoiceEditable>()
+
+provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>

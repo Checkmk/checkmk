@@ -19,6 +19,7 @@ import type {
 } from '@/form/components/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
+import { dispatcherKey } from '@/form/private'
 
 // demo stuff
 
@@ -100,7 +101,7 @@ const api: API<ObjectId, ObjectId> = {
 }
 // this is a hack to use FormSingleChoiceEditableEditAsync outside a FormEdit context:
 // if you need this in production code, we should think about a better solution
-provide('dispatcher', FormEditDispatcher)
+provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>

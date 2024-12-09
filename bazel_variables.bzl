@@ -22,3 +22,18 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
     ],
 }
+
+edition_skel_permissions = {
+    "cce": [
+        "//non-free/packages/cmk-mknotifyd:skel.permissions",
+    ],
+    "cee": [
+        "//non-free/packages/cmk-mknotifyd:skel.permissions",
+    ],
+    "cme": [
+        "//non-free/packages/cmk-mknotifyd:skel.permissions",
+    ],
+    "cse": [
+        "//non-free/packages/cmk-mknotifyd:skel.permissions",
+    ],
+}

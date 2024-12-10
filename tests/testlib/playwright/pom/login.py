@@ -11,6 +11,9 @@ from playwright.sync_api import expect, Page, Response
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.page import CmkPage
+from tests.testlib.utils import edition_from_env
+
+from cmk.utils.version import Edition
 
 
 class LoginPage(CmkPage):
@@ -38,12 +41,14 @@ class LoginPage(CmkPage):
         `site_url` can refer to any Checkmk GUI page.
         Returns the URL of login page. Returns an empty-string when user is already logged in.
         """
+        self.page.goto(self.site_url, wait_until="load")
+        if edition_from_env(Edition.CEE) == Edition.CSE:
+            self._logged_in = True
+
         if not self._logged_in:
-            self.page.goto(self.site_url, wait_until="load")
             expect(self.page).to_have_url(re.compile(r"login.py"))
             self._validate_credential_elements_on_page()
-            return self.page.url
-        return ""
+        return self.page.url
 
     def login(self, credentials: CmkCredentials, expected_url: str | None = None) -> None:
         """Login to Checkmk GUI.

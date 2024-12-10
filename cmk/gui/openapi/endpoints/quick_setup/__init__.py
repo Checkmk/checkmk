@@ -10,11 +10,13 @@ Quick setup
 * POST complete the quick setup and save
 """
 
-from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass, field
+from collections.abc import Mapping
+from dataclasses import asdict
 from enum import StrEnum
 from typing import Any
 from urllib.parse import urlparse
+
+from pydantic import BaseModel
 
 from cmk.utils.encoding import json_encode
 
@@ -35,6 +37,7 @@ from cmk.gui.quick_setup.to_frontend import (
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
+    StageActionResult,
     start_quick_setup_stage_job,
     validate_custom_validators,
     validate_stage_and_retrieve_next_stage_structure,
@@ -94,6 +97,14 @@ QUICKSETUP_OBJECT_ID_REQUIRED = {
         required=True,
         description="Select object id to prefill data for the quick setup",
         example="8558f956-3e45-4c4f-bd02-e88da17c99dd",
+    )
+}
+
+JOB_ID = {
+    "job_id": fields.String(
+        required=True,
+        description="The id of the action job result to be fetched",
+        example="quick_setup",
     )
 }
 
@@ -196,6 +207,21 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         object_id=params["object_id"],
     )
     return _serve_data(result, status_code=200 if result.errors is None else 400)
+
+
+@Endpoint(
+    object_href("quick_setup_stage_action_result", "{job_id}"),
+    "cmk/fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[JOB_ID],
+    response_schema=QuickSetupStageResponse,
+)
+def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response:
+    """Fetch the Quick setup stage action background job result"""
+    action_background_job_id = params["job_id"]
+    action_result = StageActionResult.load_from_job_result(job_id=action_background_job_id)
+    return _serve_action_result(action_result)
 
 
 @Endpoint(
@@ -314,9 +340,17 @@ def _serve_data(
     | ValidationAndNextStage,
     status_code: int = 200,
 ) -> Response:
+    return _prepare_response(asdict(data), status_code)
+
+
+def _serve_action_result(data: BaseModel, status_code: int = 200) -> Response:
+    return _prepare_response(data.model_dump(), status_code)
+
+
+def _prepare_response(data: dict, status_code: int) -> Response:
     response = Response()
     response.set_content_type("application/json")
-    response.set_data(json_encode(asdict(data)))
+    response.set_data(json_encode(data))
     response.status_code = status_code
     return response
 
@@ -332,5 +366,6 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_guided_stages_or_overview_stages)
     endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)
+    endpoint_registry.register(fetch_quick_setup_stage_action_result)
     endpoint_registry.register(save_quick_setup_action)
     endpoint_registry.register(edit_quick_setup_action)

@@ -65,6 +65,7 @@ DomainType = Literal[
     "aux_tag",
     "autocomplete",
     "quick_setup",
+    "quick_setup_stage_action_result",
     "managed_robots",
     "onboarding",
 ]
@@ -92,6 +93,7 @@ CmkEndpointName = Literal[
     "cmk/download_by_hash",
     "cmk/download_by_host",
     "cmk/download_license_request",
+    "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",
     "cmk/move",

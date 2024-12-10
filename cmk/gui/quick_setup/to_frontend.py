@@ -7,6 +7,7 @@ import traceback
 import uuid
 from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, cast
 
 from pydantic import BaseModel
@@ -17,7 +18,12 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.encoding import json_encode
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundJobDefines,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
@@ -588,6 +594,12 @@ class StageActionResult(BaseModel):
     errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
     background_job_exception: str | None = None
+
+    @classmethod
+    def load_from_job_result(cls, job_id: str) -> "StageActionResult":
+        work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
+        result = store.load_text_from_file(cls._file_path(work_dir))
+        return cls.model_validate_json(result)
 
     def save_to_file(self, work_dir: str) -> None:
         store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())

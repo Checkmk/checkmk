@@ -12,7 +12,7 @@ from typing import Final
 
 LOGGER_NAME: Final = "automation-helper"
 
-logger = logging.getLogger(LOGGER_NAME)
+LOGGER = logging.getLogger(LOGGER_NAME)
 
 
 def configure_logger(log_directory: Path) -> None:
@@ -20,8 +20,8 @@ def configure_logger(log_directory: Path) -> None:
     log_format = f"%(asctime)s [%(levelno)s] [{LOGGER_NAME} %(process)d] %(message)s"
     formatter = logging.Formatter(log_format)
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    LOGGER.addHandler(handler)
+    LOGGER.setLevel(logging.INFO)
 
 
 @contextlib.contextmanager

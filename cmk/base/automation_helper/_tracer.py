@@ -13,7 +13,7 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 
 TRACER_SERVICE_NAME: Final = "automation_helper"
 
-tracer = trace.get_tracer()
+TRACER = trace.get_tracer()
 
 
 def configure_tracer(omd_root: Path) -> None:

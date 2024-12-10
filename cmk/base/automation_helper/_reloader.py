@@ -10,14 +10,14 @@ from threading import Thread
 from typing import Final
 
 from ._cache import Cache
-from ._log import logger
+from ._log import LOGGER
 
 RELOADER_SLEEP_INTERVAL: Final = 5
 
 
 def log_reload_info(last_change_at: float) -> None:
     when = round(time.time() - last_change_at, 2)
-    logger.info(f"[reloader] change detected {when}s ago reloading now...")
+    LOGGER.info(f"[reloader] change detected {when}s ago reloading now...")
 
 
 def reload_application() -> None:
@@ -38,5 +38,5 @@ def run_reloader(cache: Cache) -> None:
 
 class Reloader(Thread):
     def __init__(self, cache: Cache) -> None:
-        logger.info("[reloader] initializing thread...")
+        LOGGER.info("[reloader] initializing thread...")
         super().__init__(target=run_reloader, name="reloader", kwargs={"cache": cache}, daemon=True)

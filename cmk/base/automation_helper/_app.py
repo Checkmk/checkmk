@@ -23,8 +23,8 @@ from cmk.base import config
 from cmk.base.automations import AutomationExitCode
 
 from ._cache import Cache
-from ._log import logger, temporary_log_level
-from ._tracer import tracer
+from ._log import LOGGER, temporary_log_level
+from ._tracer import TRACER
 
 APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
@@ -102,13 +102,13 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
-        logger.info("[automation] %s with args: %s received.", payload.name, payload.args)
+        LOGGER.info("[automation] %s with args: %s received.", payload.name, payload.args)
         if cache.reload_required(request.app.state.last_reload_at):
             reload_config()
-            logger.warn("[automation] configurations were reloaded due to a stale state.")
+            LOGGER.warn("[automation] configurations were reloaded due to a stale state.")
 
         with (
-            tracer.start_as_current_span(
+            TRACER.start_as_current_span(
                 f"automation[{payload.name}]",
                 attributes={
                     "cmk.automation.name": payload.name,
@@ -118,16 +118,16 @@ def get_application(
             redirect_stdout(output_buffer := io.StringIO()),
             redirect_stderr(output_buffer),
             redirect_stdin(io.StringIO(payload.stdin)),
-            temporary_log_level(logger, payload.log_level),
+            temporary_log_level(LOGGER, payload.log_level),
         ):
             try:
                 # TODO: remove `reload_config` when automation helper is fully integrated.
                 exit_code = engine.execute(payload.name, list(payload.args), reload_config=False)
             except SystemExit:
-                logger.error("[automation] command raised a system exit exception.")
+                LOGGER.error("[automation] command raised a system exit exception.")
                 exit_code = AutomationExitCode.SYSTEM_EXIT
             else:
-                logger.info("[automation] %s with args: %s processed.", payload.name, payload.args)
+                LOGGER.info("[automation] %s with args: %s processed.", payload.name, payload.args)
 
             return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
 

@@ -75,4 +75,8 @@ def test_automatic_host_removal(
         raise
     finally:
         central_site.openapi.rules.delete(rule_id=rule_id)
+        if unresolvable_host_central in [_.get("id") for _ in central_site.openapi.hosts.get_all()]:
+            central_site.openapi.hosts.delete(unresolvable_host_central)
+        if unresolvable_host_remote in [_.get("id") for _ in remote_site.openapi.hosts.get_all()]:
+            remote_site.openapi.hosts.delete(unresolvable_host_remote)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

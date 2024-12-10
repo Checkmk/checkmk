@@ -417,11 +417,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
-                "Configure the community to be used when contacting this host "
-                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
-                'using the <a href="%s">SNMP Communities</a> ruleset. '
-                "Configuring a community when creating a host overrides the "
-                "community defined by the rules."
+                "Configure the community to be used when contacting this host via SNMP v1/v2 or "
+                "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
+                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
+                "is unencrypted. Consider using SNMP v3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
@@ -430,11 +430,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
         return create_snmp_credentials(
             help_text=Help(
-                "Configure the community to be used when contacting this host "
-                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
-                'using the <a href="%s">SNMP Communities</a> ruleset. '
-                "Configuring a community when creating a host overrides the "
-                "community defined by the rules."
+                "Configure the community to be used when contacting this host via SNMP v1/v2 or "
+                "v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+                "credentials of monitored host</a> ruleset. Configuring a community explicitly "
+                "here overrides the community defined by a rule. Communication via SNMP v1 and v2c "
+                "is unencrypted. Consider using SNMP v3 for a higher level of security."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value="community",

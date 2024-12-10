@@ -27,6 +27,15 @@ def test_automatic_host_removal(
     unresolvable_host_central = "not-dns-resolvable-central"
     unresolvable_host_remote = "not-dns-resolvable-remote"
 
+    central_site.openapi.hosts.create(
+        hostname=unresolvable_host_central,
+        attributes={"site": central_site.id},
+    )
+    central_site.openapi.hosts.create(
+        hostname=unresolvable_host_remote,
+        attributes={"site": remote_site.id},
+    )
+
     rule_id = central_site.openapi.rules.create(
         ruleset_name="automatic_host_removal",
         value=("enabled", {"checkmk_service_crit": 1}),
@@ -38,16 +47,9 @@ def test_automatic_host_removal(
         },
     )
 
+    central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+
     try:
-        central_site.openapi.hosts.create(
-            hostname=unresolvable_host_central,
-            attributes={"site": central_site.id},
-        )
-        central_site.openapi.hosts.create(
-            hostname=unresolvable_host_remote,
-            attributes={"site": remote_site.id},
-        )
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
 
         def _host_removal_done() -> bool:
             hostnames = {_["id"] for _ in central_site.openapi.hosts.get_all()}

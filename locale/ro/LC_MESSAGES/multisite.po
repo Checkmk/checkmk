@@ -24347,6 +24347,10 @@ msgstr "Model de globbing pentru fișierele de intrare"
 msgid "Go critical if all licenses are used"
 msgstr "Devine critic dacă sunt folosite toate licențele"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Mergeți la pagina principală"
+
 msgid "Go to extension packages"
 msgstr "Mergeți la pachetele de extensii"
 
@@ -24355,9 +24359,6 @@ msgstr "Mergeți la pagina principală"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Mergeți la regulile acestei conexiuni InfluxDB"
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Mergeți la panoul de administrare Saas"
 
 msgid "Go to the report store"
 msgstr "Mergeți la magazinul de rapoarte"
@@ -66591,6 +66592,10 @@ msgstr "Către:"
 msgid "Today"
 msgstr "Astăzi"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "Starea rezultată"
+
 msgid "Toggle elements"
 msgstr "Elemente de comutare"
 
@@ -66599,9 +66604,6 @@ msgstr "Comutarea intrărilor din jurnal"
 
 msgid "Toggle names"
 msgstr "Schimbă numele"
-
-msgid "Toggle onboarding button"
-msgstr ""
 
 msgid "Toggle result details"
 msgstr "Comutați detaliile rezultatului"
@@ -78169,6 +78171,10 @@ msgstr "Ziua săptămânii"
 msgid "days"
 msgstr "zile"
 
+#, fuzzy
+msgid "days ago"
+msgstr "%d zile în urmă"
+
 msgid "deadlocks/sec"
 msgstr "deadlocks/sec"
 
@@ -79886,6 +79892,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Mergeți la panoul de administrare Saas"
 
 #~ msgid "Non-ASCII characters are not allowed here."
 #~ msgstr "Caracterele non-ASCII nu sunt permise aici."

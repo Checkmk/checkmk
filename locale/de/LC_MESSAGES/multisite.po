@@ -23793,6 +23793,10 @@ msgstr "Globbing-Muster für Eingabedateien"
 msgid "Go critical if all licenses are used"
 msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Zur Hauptübersicht"
+
 msgid "Go to extension packages"
 msgstr "Gehe zu Erweiterungspakete"
 
@@ -23801,9 +23805,6 @@ msgstr "Zur Hauptübersicht"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Zu den Regeln dieser InfluxDB-Verbindung"
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Gehe zum SaaS-Administrationsbereich"
 
 msgid "Go to the report store"
 msgstr "Gehe zum Report-Lager"
@@ -65093,6 +65094,10 @@ msgstr "An:"
 msgid "Today"
 msgstr "Heute"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "Onboarding-Knopf umschalten"
+
 msgid "Toggle elements"
 msgstr "Elemente umschalten"
 
@@ -65101,9 +65106,6 @@ msgstr "Log-Einträge umschalten"
 
 msgid "Toggle names"
 msgstr "Namen umschalten"
-
-msgid "Toggle onboarding button"
-msgstr "Onboarding-Knopf umschalten"
 
 msgid "Toggle result details"
 msgstr "Service-Ausgabe umschalten"
@@ -76159,6 +76161,10 @@ msgstr "Wochentag"
 msgid "days"
 msgstr "Tage"
 
+#, fuzzy
+msgid "days ago"
+msgstr "vor %d Tagen"
+
 msgid "deadlocks/sec"
 msgstr "Stillstand/Sek"
 
@@ -77863,6 +77869,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Gehe zum SaaS-Administrationsbereich"
 
 #~ msgid "Non-ASCII characters are not allowed here."
 #~ msgstr "Hier sind nur ASCII-Zeichen erlaubt."

@@ -23282,6 +23282,10 @@ msgstr "入力ファイルのグロブパターン"
 msgid "Go critical if all licenses are used"
 msgstr "すべてのライセンスが使用されている場合はクリティカルに変化します"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "メインページに移動"
+
 msgid "Go to extension packages"
 msgstr "拡張パッケージへ"
 
@@ -23290,9 +23294,6 @@ msgstr "メインページに移動"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "新しいInfluxDB接続のルールに移動する"
-
-msgid "Go to the Saas Admin Panel"
-msgstr "Saasの管理パネルに移動する"
 
 msgid "Go to the report store"
 msgstr "レポートストアに移動します"
@@ -64418,6 +64419,10 @@ msgstr "に:"
 msgid "Today"
 msgstr "今日"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "オンボーディング・ボタンの切り替え"
+
 msgid "Toggle elements"
 msgstr "エレメントを切り替えます"
 
@@ -64426,9 +64431,6 @@ msgstr "ログエントリを切り替えます"
 
 msgid "Toggle names"
 msgstr "名前を切り替える"
-
-msgid "Toggle onboarding button"
-msgstr "オンボーディング・ボタンの切り替え"
 
 msgid "Toggle result details"
 msgstr "結果の詳細を切り替える"
@@ -75799,6 +75801,10 @@ msgstr "曜日"
 msgid "days"
 msgstr "日"
 
+#, fuzzy
+msgid "days ago"
+msgstr "%d 日前"
+
 msgid "deadlocks/sec"
 msgstr "デッドロック/秒"
 
@@ -77517,6 +77523,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Go to the Saas Admin Panel"
+#~ msgstr "Saasの管理パネルに移動する"
 
 #~ msgid "Non-ASCII characters are not allowed here."
 #~ msgstr "ここでは非ASCII文字は使用できません。"

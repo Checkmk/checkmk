@@ -24094,6 +24094,10 @@ msgstr "Modello di globbing per i file di input"
 msgid "Go critical if all licenses are used"
 msgstr "Diventa critico se tutte le licenze sono utilizzate"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Vai alla pagina principale"
+
 msgid "Go to extension packages"
 msgstr "Andare ai pacchetti di estensione"
 
@@ -24102,9 +24106,6 @@ msgstr "Vai alla pagina principale"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Vai alle regole di questa connessione InfluxDB"
-
-msgid "Go to the Saas Admin Panel"
-msgstr ""
 
 msgid "Go to the report store"
 msgstr "Vai al negozio di rapporti"
@@ -65771,6 +65772,10 @@ msgstr "A:"
 msgid "Today"
 msgstr "Oggi"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "Stato risultante"
+
 msgid "Toggle elements"
 msgstr "Elementi a ginocchiera"
 
@@ -65779,9 +65784,6 @@ msgstr "Allineare le voci del registro"
 
 msgid "Toggle names"
 msgstr "Nomi a ginocchiera"
-
-msgid "Toggle onboarding button"
-msgstr ""
 
 msgid "Toggle result details"
 msgstr "Allinea i dettagli del risultato"
@@ -77259,6 +77261,10 @@ msgstr "giorno della settimana"
 
 msgid "days"
 msgstr "giorni"
+
+#, fuzzy
+msgid "days ago"
+msgstr "%d giorni fa"
 
 msgid "deadlocks/sec"
 msgstr "deadlocks/sec"

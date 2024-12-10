@@ -24548,6 +24548,10 @@ msgstr "Modèle de globalisation pour les fichiers d'entrée"
 msgid "Go critical if all licenses are used"
 msgstr "Devenir critique si toutes les licences sont utilisées"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Aller à la page principale"
+
 msgid "Go to extension packages"
 msgstr "Aller dans les paquets d'extension"
 
@@ -24556,9 +24560,6 @@ msgstr "Aller à la page principale"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Aller aux règles de cette connexion InfluxDB"
-
-msgid "Go to the Saas Admin Panel"
-msgstr ""
 
 msgid "Go to the report store"
 msgstr "Allez dans le magasin de rapports"
@@ -67076,6 +67077,10 @@ msgstr "A :"
 msgid "Today"
 msgstr "Aujourd'hui"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "État résultant"
+
 msgid "Toggle elements"
 msgstr "Éléments de basculement"
 
@@ -67084,9 +67089,6 @@ msgstr "Basculer les entrées du journal"
 
 msgid "Toggle names"
 msgstr "Basculer les noms"
-
-msgid "Toggle onboarding button"
-msgstr ""
 
 msgid "Toggle result details"
 msgstr "Basculer les détails du résultat"
@@ -78877,6 +78879,10 @@ msgstr "Jour de la semaine"
 
 msgid "days"
 msgstr "jours"
+
+#, fuzzy
+msgid "days ago"
+msgstr "Il y a %d jours"
 
 msgid "deadlocks/sec"
 msgstr "blocages/sec"

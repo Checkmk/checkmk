@@ -24328,6 +24328,10 @@ msgstr "Globbing patroon voor invoerbestanden"
 msgid "Go critical if all licenses are used"
 msgstr "Ga kritisch als alle licenties zijn gebruikt"
 
+#, fuzzy
+msgid "Go to admin panel"
+msgstr "Ga naar de hoofdpagina"
+
 msgid "Go to extension packages"
 msgstr "Ga naar uitbreidingspakketten"
 
@@ -24336,9 +24340,6 @@ msgstr "Ga naar de hoofdpagina"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Ga naar de regels van deze InfluxDB verbinding"
-
-msgid "Go to the Saas Admin Panel"
-msgstr ""
 
 msgid "Go to the report store"
 msgstr "Ga naar de rapport winkel"
@@ -66375,6 +66376,10 @@ msgstr "Naar:"
 msgid "Today"
 msgstr "Vandaag"
 
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "Resulterende staat"
+
 msgid "Toggle elements"
 msgstr "Schakel elementen"
 
@@ -66383,9 +66388,6 @@ msgstr "Logboekvermeldingen wijzigen"
 
 msgid "Toggle names"
 msgstr "Toggle namen"
-
-msgid "Toggle onboarding button"
-msgstr ""
 
 msgid "Toggle result details"
 msgstr "Toggle resultaat details"
@@ -78024,6 +78026,10 @@ msgstr "Dag van de week"
 
 msgid "days"
 msgstr "dagen"
+
+#, fuzzy
+msgid "days ago"
+msgstr "%d dagen geleden"
 
 msgid "deadlocks/sec"
 msgstr "deadlocks/sec"

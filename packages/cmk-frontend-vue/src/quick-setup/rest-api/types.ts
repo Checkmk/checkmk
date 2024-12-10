@@ -152,18 +152,3 @@ export interface QSRequestComplete {
 export interface QSResponseComplete {
   redirect_url: string
 }
-
-export interface MaybeRestApiCrashReport {
-  ext?: {
-    details?: {
-      crash_report_url?: {
-        href?: string
-      }
-    }
-  }
-}
-
-export interface MaybeRestApiError {
-  detail?: string
-  title?: string
-}

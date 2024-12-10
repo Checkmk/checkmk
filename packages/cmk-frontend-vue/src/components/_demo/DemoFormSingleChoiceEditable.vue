@@ -9,7 +9,7 @@ import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEd
 import type { SingleChoiceEditable } from '@/form/components/vue_formspec_components'
 import { configEntityAPI } from '@/form/components/utils/configuration_entity'
 
-import { passthrough, bypass, http } from 'msw'
+import { passthrough, bypass, http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
 
 import FormEditDispatcher from '@/form/components/FormEditDispatcher.vue'
@@ -62,6 +62,50 @@ function sleep(ms: number) {
 async function interceptor({ request }: { request: Request }) {
   await sleep(apiDelay.value)
 
+  if (apiError.value) {
+    if (apiError.value === 'proxy') {
+      return HttpResponse.html(
+        '<html><head><title>502 Proxy Error</title></head><body><h1>Proxy Error</h1></body></html>',
+        { status: 502 }
+      )
+    } else if (apiError.value === 'crash') {
+      return HttpResponse.json(
+        // not complete!
+        {
+          detail:
+            'AttributeError: "str" object has no attribute "get". Crash report generated. Please submit.',
+          ext: {
+            core: 'cmc',
+            crash_type: 'rest_api',
+            details: {
+              check_mk_info: {},
+              crash_report_url: {
+                href: 'https://hos/site/check_mk/crash.py?crash_id=e152c11a-387b-11ef-bca0-00505688fb56&site=site',
+                method: 'get',
+                rel: 'cmk/crash-report',
+                type: 'text/html'
+              }
+            }
+          },
+          status: 500,
+          title: 'Internal Server Error'
+        },
+        { status: 500 }
+      )
+    } else if (apiError.value === 'error') {
+      return HttpResponse.json(
+        {
+          title: 'An exception occured',
+          status: 500,
+          detail: 'Some error message, maybe even with <b><tt>html</tt></b> tags'
+        },
+        { status: 500 }
+      )
+    } else {
+      throw new Error()
+    }
+  }
+
   const headers = new Headers(request.headers)
   headers.set('Authorization', `Basic ${btoa(`${username.value}:${password.value}`)}`)
 
@@ -79,10 +123,6 @@ async function interceptor({ request }: { request: Request }) {
     body
   })
   const result = await fetch(bypass(r))
-  if (apiError.value) {
-    // TODO: should change status code for request and change the payload?!
-    throw Error('some error for getData')
-  }
   return result
 }
 
@@ -116,7 +156,7 @@ const password = ref<string>('cmk')
 const site = ref<string>('heute')
 const reloadCount = ref<number>(0)
 const apiDelay = ref<number>(0)
-const apiError = ref<boolean>(false)
+const apiError = ref<false | 'proxy' | 'crash' | 'error'>(false)
 const spec = ref<SingleChoiceEditable>()
 
 provide(dispatcherKey, FormEditDispatcher)
@@ -143,7 +183,9 @@ provide(dispatcherKey, FormEditDispatcher)
       api errors
       <select v-model="apiError">
         <option :value="false">no error</option>
-        <option :value="'true'">always error</option>
+        <option :value="'proxy'">proxy error</option>
+        <option :value="'crash'">crash report</option>
+        <option :value="'error'">error</option>
       </select>
     </label>
   </div>

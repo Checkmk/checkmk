@@ -6,6 +6,7 @@
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
 import type { Autocompleter } from '@/form/components/vue_formspec_components'
+import { cmkFetch } from '@/lib/cmkFetch'
 
 interface AjaxResponse {
   result: unknown
@@ -21,16 +22,14 @@ export async function fetchData<OutputType>(
   body['value'] = value
   const request = `request=${JSON.stringify(body)}`
 
-  const response = await fetch('ajax_vs_autocomplete.py', {
+  const response = await cmkFetch('ajax_vs_autocomplete.py', {
     method: 'POST',
     headers: {
       'Content-type': 'application/x-www-form-urlencoded'
     },
     body: request
   })
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
-  }
+  await response.raiseForStatus()
   const ajaxResponse = (await response.json()) as AjaxResponse
   if (ajaxResponse.result_code !== 0) {
     throw new Error(`AjaxResponse error! result code: ${ajaxResponse.result_code}`)

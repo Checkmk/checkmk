@@ -6,12 +6,9 @@
 import axios from 'axios'
 import type { AxiosError } from 'axios'
 import { CmkError } from '@/components/CmkError'
-import type {
-  ValidationError,
-  AllStagesValidationError,
-  MaybeRestApiError,
-  MaybeRestApiCrashReport
-} from './types'
+import type { ValidationError, AllStagesValidationError } from './types'
+
+import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
 
 class QuickSetupAxiosError extends CmkError<AxiosError> {
   override name = 'QuickSetupAxiosError'

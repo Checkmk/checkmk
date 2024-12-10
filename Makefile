@@ -165,6 +165,7 @@ clean:
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \
+	    --exclude="**/*.code-workspace" \
 	    --exclude="**/.idea" \
 	    --exclude=".werks/.last" \
 	    --exclude=".werks/.my_ids" \

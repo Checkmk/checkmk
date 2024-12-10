@@ -939,9 +939,15 @@ section_cfggen() {
 
 section_storcli() {
     if inpath storcli; then
-        _storcli() { storcli "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli "$@"
+        ); }
     elif inpath storcli64; then
-        _storcli() { storcli64 "$@"; }
+        _storcli() { (
+            cd "${MK_VARDIR}" 2>/dev/null || return
+            storcli64 "$@"
+        ); }
     else
         return 1
     fi

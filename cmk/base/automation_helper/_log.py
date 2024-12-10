@@ -10,13 +10,13 @@ from logging import Logger
 from pathlib import Path
 from typing import Final
 
-LOGGER_NAME: Final = "automation-helper"
+_LOGGER_NAME: Final = "automation-helper"
 
-LOGGER = logging.getLogger(LOGGER_NAME)
+LOGGER = logging.getLogger(_LOGGER_NAME)
 
 
 def configure_logger(log_directory: Path) -> None:
-    handler = logging.FileHandler(log_directory / f"{LOGGER_NAME}.log", encoding="UTF-8")
+    handler = logging.FileHandler(log_directory / f"{_LOGGER_NAME}.log", encoding="UTF-8")
     formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(process)d] %(message)s")
     handler.setFormatter(formatter)
     LOGGER.addHandler(handler)

@@ -11,6 +11,7 @@ import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import { immediateWatch } from '@/lib/watch'
 import HelpText from '@/components/HelpText.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 const props = defineProps<{
   id: string
@@ -52,42 +53,47 @@ function toggleActiveMode() {
     activeMode.value = 'edit'
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
   <div :id="`form-app--${id}`">
-    <input
-      v-if="showToggleMode"
-      type="button"
-      value="TOGGLE MODE"
-      @click="toggleActiveMode"
-    /><label v-if="showToggleMode">{{ activeMode }}</label>
-    <div v-if="activeMode === 'readonly' || activeMode === 'both'">
-      <FormReadonly
-        :data="dataRef"
-        :backend-validation="backendValidation"
-        :spec="spec"
-      ></FormReadonly>
-    </div>
+    <ErrorBoundary>
+      <input
+        v-if="showToggleMode"
+        type="button"
+        value="TOGGLE MODE"
+        @click="toggleActiveMode"
+      /><label v-if="showToggleMode">{{ activeMode }}</label>
+      <div v-if="activeMode === 'readonly' || activeMode === 'both'">
+        <FormReadonly
+          :data="dataRef"
+          :backend-validation="backendValidation"
+          :spec="spec"
+        ></FormReadonly>
+      </div>
 
-    <HelpText :help="spec.help" />
-    <div v-if="activeMode === 'edit' || activeMode === 'both'">
-      <table class="nform">
-        <tbody>
-          <tr>
-            <td>
-              <FormEdit
-                v-model:data="dataRef"
-                :v-if="renderMode === 'edit' || renderMode === 'both'"
-                :backend-validation="backendValidation"
-                :spec="spec"
-              />
-              <!-- This input field contains the computed json value which is sent when the form is submitted -->
-              <input v-model="valueAsJSON" :name="id" type="hidden" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <HelpText :help="spec.help" />
+      <div v-if="activeMode === 'edit' || activeMode === 'both'">
+        <table class="nform">
+          <tbody>
+            <tr>
+              <td>
+                <FormEdit
+                  v-model:data="dataRef"
+                  :v-if="renderMode === 'edit' || renderMode === 'both'"
+                  :backend-validation="backendValidation"
+                  :spec="spec"
+                />
+                <!-- This input field contains the computed json value which is sent when the form is submitted -->
+                <input v-model="valueAsJSON" :name="id" type="hidden" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ErrorBoundary>
   </div>
 </template>

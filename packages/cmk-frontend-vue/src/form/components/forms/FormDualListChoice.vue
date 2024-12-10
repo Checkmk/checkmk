@@ -129,7 +129,8 @@ const selectStyle = computed(() => {
         ? '200px'
         : `${Math.min(localElements.value.length * 15, 400)}px`,
     width: `${Math.max(20, Math.min(100, maxLength * 0.7))}em`,
-    marginTop: '3px'
+    marginTop: '3px',
+    maxWidth: '440px'
   }
 })
 
@@ -169,14 +170,13 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
             <div class="selected-info">
               <div class="title">{{ props.spec.i18n.available_options }}</div>
               <div>
-                {{ availableSelected.length }}/{{ localElements.length }}
+                {{ availableSelected.length }}/{{ items.inactive.length }}
                 {{ props.spec.i18n.selected }}
               </div>
             </div>
             <div class="search-input-wrapper" :class="!!searchInactive ? 'active' : ''">
               <input
                 ref="search-inactive-input"
-                tabindex="1"
                 class="search"
                 data-testid="search-inactive"
                 @input="
@@ -196,14 +196,13 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
             <div class="selected-info">
               <div class="title">{{ props.spec.i18n.selected_options }}</div>
               <div>
-                {{ activeSelected.length }}/{{ localElements.length }}
+                {{ activeSelected.length }}/{{ items.active.length }}
                 {{ props.spec.i18n.selected }}
               </div>
             </div>
             <div class="search-input-wrapper" :class="!!searchActive ? 'active' : ''">
               <input
                 ref="search-active-input"
-                tabindex="3"
                 class="search"
                 data-testid="search-active"
                 @input="
@@ -227,7 +226,6 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <select
                 :id="`${componentId}_available`"
                 v-model="availableSelected"
-                tabindex="2"
                 aria-label="available"
                 multiple
                 :style="selectStyle"
@@ -271,7 +269,6 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
               <select
                 :id="`${componentId}_active`"
                 v-model="activeSelected"
-                tabindex="4"
                 aria-label="active"
                 multiple
                 :style="selectStyle"

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 : "${MK_INSTALLDIR:=""}"
+: "${AGENT_USER:="cmk-agent"}"
+# "root" or "non-root"
+: "${DEPLOYMENT_MODE:="root"}"
 
 if [ -n "${MK_INSTALLDIR}" ]; then
     HOMEDIR="${MK_INSTALLDIR}/runtime/controller"
@@ -17,7 +20,7 @@ fi
 usage() {
     cat >&2 <<HERE
 Usage: ${0}
-Create the system user 'cmk-agent' for the Checkmk agent package.
+Create the system user '${AGENT_USER}' for the Checkmk agent package.
 HERE
     exit 1
 }
@@ -58,37 +61,43 @@ _activate_single_dir() {
 
 _adapt_user() {
     # Only change if the user really has our old home directory assigned!
-    [ "$(getent passwd "cmk-agent" | cut -d: -f6)" = "/var/lib/cmk-agent" ] && {
-        printf "Changing home directory of cmk-agent to %s\n" "${HOMEDIR}"
-        usermod -d "${HOMEDIR}" "cmk-agent"
+    [ "$(getent passwd "${AGENT_USER}" | cut -d: -f6)" = "/var/lib/cmk-agent" ] && {
+        printf "Changing home directory of %s to %s\n" "${AGENT_USER}" "${HOMEDIR}"
+        usermod -d "${HOMEDIR}" "${AGENT_USER}"
     }
 }
 
 _set_user_permissions() {
-    # cmk-agent needs access to some files that belong to root in single directory deployment
-    chown :cmk-agent "${MK_INSTALLDIR}/package/config"
-    agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
-    [ -e "${agent_controller_config}" ] && chown :cmk-agent "${agent_controller_config}"
-    pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
-    [ -e "${pre_configured_connections}" ] && chown :cmk-agent "${pre_configured_connections}"
+    if [ "${DEPLOYMENT_MODE}" = "non-root" ]; then
+        chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
+        chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/agent"
+        chown -R "${AGENT_USER}":"${AGENT_USER}" "${MK_INSTALLDIR}/runtime"
+    else
+        # Get more finegrained access for the agent controller user only
+        chown :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
+        agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
+        [ -e "${agent_controller_config}" ] && chown :"${AGENT_USER}" "${agent_controller_config}"
+        pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
+        [ -e "${pre_configured_connections}" ] && chown :"${AGENT_USER}" "${pre_configured_connections}"
+    fi
 }
 
 main() {
     [ "$1" ] && usage
 
-    # add cmk-agent system user
-    echo "Creating/updating cmk-agent user account ..."
+    # add Checkmk agent system user
+    printf "Creating/updating %s user account ...\n" "${AGENT_USER}"
     comment="Checkmk agent system user"
     usershell="/bin/false"
 
-    if id "cmk-agent" >/dev/null 2>&1; then
+    if id "${AGENT_USER}" >/dev/null 2>&1; then
         # check that the existing user is as expected
-        existing="$(getent passwd "cmk-agent")"
-        existing="${existing#cmk-agent:*:*:*:}"
+        existing="$(getent passwd "${AGENT_USER}")"
+        existing="${existing#"${AGENT_USER}":*:*:*:}"
         expected="${comment}:${HOMEDIR}:${usershell}"
         if [ "${existing}" != "${expected}" ]; then
-            echo "cmk-agent user found:  expected '${expected}'" >&2
-            echo "                      but found '${existing}'" >&2
+            printf "%s user found:  expected '%s'\n" "${AGENT_USER}" "${expected}" >&2
+            printf "                but found '%s'\n" "${existing}" >&2
         fi
         unset existing expected
     else
@@ -99,14 +108,14 @@ main() {
             --no-create-home \
             --user-group \
             --shell "${usershell}" \
-            "cmk-agent" || exit 1
+            "${AGENT_USER}" || exit 1
         user_is_new="yes"
     fi
 
     # Create home directory manually instead of doing this on user creation,
     # because it might already exist with wrong ownership
     mkdir -p "${HOMEDIR}"
-    chown -R cmk-agent:cmk-agent "${HOMEDIR}"
+    chown -R "${AGENT_USER}":"${AGENT_USER}" "${HOMEDIR}"
 
     [ -n "${MK_INSTALLDIR}" ] && _activate_single_dir
 

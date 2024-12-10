@@ -127,7 +127,7 @@ parse_options() {
 # TODO: This needs some serious massaging, some stuff probably don't even belong
 # here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
 run_setup_environment() {
-    REPO_DIR="$(realpath ../..)"
+    REPO_DIR="$(git rev-parse --show-toplevel)"
 
     # When executed via "make deb", e.g. during local builds, these are set and
     # confuse cargo.

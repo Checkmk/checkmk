@@ -2,6 +2,7 @@
 
 /// file: gerrit_stages.groovy
 
+// groovylint-disable-next-line NglParseError
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def log_stage_duration(last_stage_date) {

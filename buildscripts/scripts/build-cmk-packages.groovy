@@ -321,6 +321,7 @@ def main() {
                                 cleanup_directory("${WORKSPACE}/versions");
                                 sh("rm -rf ${distro_dir}");
                                 sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
+                                sh("rm -rf ${distro_dir}/tests/packaging/__pycache__");
                                 sh("rm -rf ${distro_dir}/bazel_execution_log*");
 
                                 // Clean Bazel cache for now to avoid copying outdated artifacts

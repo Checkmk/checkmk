@@ -80,7 +80,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "--retries",
         default=2,
         type=int,
-        help="""Number auf connection retries before failing""",
+        help="""Number of connection retries before failing""",
     )
     # required
     parser.add_argument(
@@ -160,12 +160,10 @@ def fetch_list_of_elements(redfishobj, fetch_elements, sections, data):
     return result_set
 
 
-def fetch_sections(redfishobj, fetching_sections, sections, data):
+def fetch_sections(redfishobj, fetching_sections, data):
     """fetch a single section of Redfish data"""
     result_set = {}
     for section in fetching_sections:
-        if section not in sections:
-            continue
         if section not in data.keys():
             continue
         section_data = fetch_data(redfishobj, data.get(section).get("@odata.id"), section)
@@ -411,7 +409,7 @@ def get_information(redfishobj):
                 vendor_data.firmware_version = element.get("FirmwareVersion", "")
 
     with SectionWriter("check_mk", " ") as w:
-        w.append("Version: 2.0")
+        w.append("Version: 2.0")  # TODO: is this still relevant?
         w.append(f"AgentOS: {vendor_data.version} - {vendor_data.firmware_version}")
 
     # fetch systems
@@ -428,16 +426,16 @@ def get_information(redfishobj):
 
     resulting_sections = list(set(systems_sections).intersection(sections))
     for system in systems_data:
-        result = fetch_sections(redfishobj, resulting_sections, sections, system)
+        result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)
         sub_sections = ["Mains", "Outlets", "Sensors"]
         pdu_data = result.get("RackPDUs")
         if isinstance(pdu_data, list):
             for entry in pdu_data:
-                result = fetch_sections(redfishobj, sub_sections, sub_sections, entry)
+                result = fetch_sections(redfishobj, sub_sections, entry)
                 process_result(result)
         else:
-            result = fetch_sections(redfishobj, sub_sections, sub_sections, pdu_data)
+            result = fetch_sections(redfishobj, sub_sections, pdu_data)
             process_result(result)
 
     return 0

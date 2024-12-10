@@ -94,8 +94,8 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
         quick_setup_id="quick_setup_test", mode="guided"
     )
     assert len(resp.json["overviews"]) == 1
-    assert len(resp.json["stage"]["next_stage_structure"]["components"]) == 1
-    assert resp.json["stage"]["next_stage_structure"]["actions"][0]["button"]["label"] == "Next"
+    assert len(resp.json["stage"]["components"]) == 1
+    assert resp.json["stage"]["actions"][0]["button"]["label"] == "Next"
 
 
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
@@ -129,14 +129,19 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.send_stage_retrieve_next(
+    resp = clients.QuickSetup.run_stage_action(
         quick_setup_id="quick_setup_test",
         stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
     )
-    assert resp.json["errors"] is None
+    assert resp.json["validation_errors"] is None
     assert len(resp.json["stage_recap"]) == 1
-    assert resp.json["next_stage_structure"]["actions"][0]["button"]["label"] == "Next"
+
+    resp = clients.QuickSetup.get_stage_structure(
+        quick_setup_id="quick_setup_test",
+        stage_index=1,
+    )
+    assert resp.json["actions"][0]["button"]["label"] == "Next"
 
 
 def _form_spec_extra_validate(
@@ -164,14 +169,14 @@ def test_failing_validate(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.send_stage_retrieve_next(
+    resp = clients.QuickSetup.run_stage_action(
         quick_setup_id="quick_setup_test",
         stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}}}],
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["errors"] == {
+    assert resp.json["validation_errors"] == {
         "stage_index": 0,
         "formspec_errors": {
             "formspec_unique_id": [
@@ -184,7 +189,6 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         },
         "stage_errors": [],
     }
-    assert resp.json["next_stage_structure"] is None
 
 
 def test_failing_validate_host_path(clients: ClientRegistry) -> None:
@@ -222,14 +226,14 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.send_stage_retrieve_next(
+    resp = clients.QuickSetup.run_stage_action(
         quick_setup_id="quick_setup_test",
         stage_action_id="action",
         stages=[{"form_data": {"host_data": {"host_path": "#invalid_host_path#"}}}],
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert resp.json["errors"] == {
+    assert resp.json["validation_errors"] == {
         "stage_index": 0,
         "formspec_errors": {
             "host_data": [
@@ -242,7 +246,6 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
         },
         "stage_errors": [],
     }
-    assert resp.json["next_stage_structure"] is None
 
 
 def test_quick_setup_save(clients: ClientRegistry) -> None:
@@ -355,14 +358,14 @@ def test_unique_id_must_be_unique(
             ),
         ],
     )
-    resp = clients.QuickSetup.send_stage_retrieve_next(
+    resp = clients.QuickSetup.run_stage_action(
         quick_setup_id="quick_setup_test",
         stage_action_id="action",
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "I_should_be_unique"}}}],
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert len(resp.json["errors"]["stage_errors"]) == 1
+    assert len(resp.json["validation_errors"]["stage_errors"]) == 1
 
 
 def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
@@ -655,7 +658,7 @@ class TestValidateAndRetrieveNext:
         )
         # the underlying background actually fails as it doesn't have access to the registered
         # quick setup defined in this scope
-        resp = clients.QuickSetup.send_stage_retrieve_next(
+        resp = clients.QuickSetup.run_stage_action(
             quick_setup_id="quick_setup_test",
             stage_action_id="action",
             stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],

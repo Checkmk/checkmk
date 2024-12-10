@@ -6,7 +6,8 @@
 Quick setup
 
 * GET quick setup guided stages or overview stages
-* POST validate stage and retrieve the next
+* GET a quick setup stage structure
+* POST validate stage
 * POST complete the quick setup and save
 """
 
@@ -23,26 +24,27 @@ from cmk.utils.encoding import json_encode
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
-    collection_href,
     object_action_href,
     object_href,
+    sub_object_href,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     AllStageErrors,
     complete_quick_setup,
+    get_stage_structure,
     get_stages_and_formspec_map,
     matching_stage_action,
+    NextStageStructure,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
     StageActionResult,
     start_quick_setup_stage_job,
+    validate_and_recap_stage,
     validate_custom_validators,
-    validate_stage_and_retrieve_next_stage_structure,
     validate_stages_formspecs,
-    ValidationAndNextStage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
@@ -52,11 +54,15 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormDat
 from cmk import fields
 
 from .. import background_job
-from .request_schemas import QuickSetupFinalSaveRequest, QuickSetupRequest
+from .request_schemas import (
+    QuickSetupFinalSaveRequest,
+    QuickSetupStageActionRequest,
+)
 from .response_schemas import (
     QuickSetupCompleteResponse,
     QuickSetupResponse,
-    QuickSetupStageResponse,
+    QuickSetupStageActionResponse,
+    QuickSetupStageStructure,
 )
 
 QUICKSETUP_ID = {
@@ -64,6 +70,14 @@ QUICKSETUP_ID = {
         required=True,
         description="The quick setup id",
         example="aws",
+    )
+}
+
+STAGE_INDEX = {
+    "stage_index": fields.String(
+        required=True,
+        description="The stage index",
+        example="1",
     )
 }
 
@@ -155,23 +169,66 @@ def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
 
 
 @Endpoint(
-    collection_href("quick_setup"),
-    "cmk/quick_setup",
+    sub_object_href(
+        domain_type="quick_setup_stage",
+        parent_domain_type="quick_setup",
+        obj_id="{stage_index}",
+        parent_id="{quick_setup_id}",
+    ),
+    "cmk/fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[QUICKSETUP_ID, STAGE_INDEX],
+    query_params=[QUICKSETUP_OBJECT_ID],
+    response_schema=QuickSetupStageStructure,
+)
+def quick_setup_get_stage_structure(params: Mapping[str, Any]) -> Response:
+    """Get a Quick setup stage structure"""
+    quick_setup_id = params["quick_setup_id"]
+    object_id = params.get("object_id")
+    stage_index = int(params["stage_index"])
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        return _serve_error(
+            title="Quick setup not found",
+            detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
+        )
+
+    prefill_data: ParsedFormData | None = None
+    if object_id:
+        prefill_data = quick_setup.load_data(object_id)
+        if not prefill_data:
+            return _serve_error(
+                title="Object not found",
+                detail=f"Object with id '{object_id}' does not exist.",
+            )
+
+    return _serve_data(
+        get_stage_structure(
+            stage=quick_setup.stages[stage_index](),
+            prefill_data=prefill_data,
+        )
+    )
+
+
+@Endpoint(
+    object_action_href("quick_setup", "{quick_setup_id}", "run-stage-action"),
+    "cmk/run",
     tag_group="Checkmk Internal",
     method="post",
     status_descriptions={
-        303: "The stage validation and retrieval action has been started in the background. "
+        303: "The stage validation and recap action has been started in the background. "
         "Redirecting to the 'Get background job status snapshot' endpoint."
     },
     additional_status_codes=[303],
-    query_params=[QUICKSETUP_OBJECT_ID],
-    request_schema=QuickSetupRequest,
-    response_schema=QuickSetupStageResponse,
+    path_params=[QUICKSETUP_ID],
+    request_schema=QuickSetupStageActionRequest,
+    response_schema=QuickSetupStageActionResponse,
 )
-def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Response:
-    """Validate the current stage and retrieve the next"""
+def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
+    """Run a Quick setup stage validation and recap action"""
     body = params["body"]
-    quick_setup_id = body["quick_setup_id"]
+    quick_setup_id = params["quick_setup_id"]
     stage_action_id = body["stage_action_id"]
 
     if (quick_setup := quick_setup_registry.get(quick_setup_id)) is None:
@@ -188,7 +245,6 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
             action_id=stage_action_id,
             stage_index=stage_index,
             user_input_stages=body["stages"],
-            object_id=params["object_id"],
         )
         background_job_status_link = constructors.link_endpoint(
             module_name="cmk.gui.openapi.endpoints.background_job",
@@ -199,14 +255,15 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
         response.location = urlparse(background_job_status_link["href"]).path
         return response
 
-    result = validate_stage_and_retrieve_next_stage_structure(
+    result = validate_and_recap_stage(
         quick_setup=quick_setup,
         stage_index=stage_index,
         stage_action_id=stage_action_id,
         input_stages=body["stages"],
-        object_id=params["object_id"],
     )
-    return _serve_data(result, status_code=200 if result.errors is None else 400)
+    return _serve_action_result(
+        result, status_code=200 if result.validation_errors is None else 400
+    )
 
 
 @Endpoint(
@@ -215,7 +272,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     tag_group="Checkmk Internal",
     method="get",
     path_params=[JOB_ID],
-    response_schema=QuickSetupStageResponse,
+    response_schema=QuickSetupStageActionResponse,
 )
 def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response:
     """Fetch the Quick setup stage action background job result"""
@@ -337,7 +394,7 @@ def _serve_data(
     | QuickSetupSaveRedirect
     | QuickSetupAllStages
     | AllStageErrors
-    | ValidationAndNextStage,
+    | NextStageStructure,
     status_code: int = 200,
 ) -> Response:
     return _prepare_response(asdict(data), status_code)
@@ -365,7 +422,8 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_guided_stages_or_overview_stages)
-    endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)
+    endpoint_registry.register(quick_setup_get_stage_structure)
+    endpoint_registry.register(quicksetup_run_stage_action)
     endpoint_registry.register(fetch_quick_setup_stage_action_result)
     endpoint_registry.register(save_quick_setup_action)
     endpoint_registry.register(edit_quick_setup_action)

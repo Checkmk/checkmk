@@ -71,7 +71,7 @@ class Action(BaseSchema):
     )
 
 
-class QuickSetupNextStageStructure(BaseSchema):
+class QuickSetupStageStructure(BaseSchema):
     components = fields.List(
         fields.Dict,
         example=[],
@@ -90,21 +90,22 @@ class QuickSetupNextStageStructure(BaseSchema):
     )
 
 
-class QuickSetupStageResponse(BaseSchema):
+class QuickSetupStageActionResponse(BaseSchema):
     stage_recap = fields.List(
         fields.Dict,
         example=[],
         description="A collection of widget recaps",
     )
-    next_stage_structure = fields.Nested(
-        QuickSetupNextStageStructure,
-        example={"components": [], "button_label": "", "prev_button_label": ""},
-        description="The next stage structure",
-    )
-    errors = fields.Nested(
+    validation_errors = fields.Nested(
         Errors,
         example={},
         description="All formspec errors and general stage errors",
+        allow_none=True,
+    )
+    background_job_exception = fields.String(
+        example="An exception message",
+        description="The exception message if the action was run in the background and raised "
+        "an unexpected exception",
         allow_none=True,
     )
 
@@ -181,7 +182,7 @@ class QuickSetupGuidedResponse(QuickSetupBaseResponse):
         description="The overview of the quicksetup stages",
     )
     stage = fields.Nested(
-        QuickSetupStageResponse,
+        QuickSetupStageStructure,
         example={"components": []},
         description="The first stage",
     )

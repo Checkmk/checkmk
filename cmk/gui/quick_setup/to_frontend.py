@@ -16,8 +16,6 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 
-from cmk.utils.encoding import json_encode
-
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobDefines,
@@ -148,13 +146,6 @@ class NextStageStructure:
 
 
 @dataclass
-class Stage:
-    next_stage_structure: NextStageStructure | None = None
-    errors: Errors | None = None
-    stage_recap: Sequence[Widget] = field(default_factory=list)
-
-
-@dataclass
 class AllStageErrors:
     all_stage_errors: Sequence[Errors]
 
@@ -163,7 +154,7 @@ class AllStageErrors:
 class QuickSetupOverview:
     quick_setup_id: QuickSetupId
     overviews: list[StageOverview]
-    stage: Stage
+    stage: NextStageStructure
     actions: list[Action]
     prev_button: Button
     mode: str = field(default="guided")
@@ -262,24 +253,22 @@ def quick_setup_guided_mode(
             )
             for stage in stages
         ],
-        stage=Stage(
-            next_stage_structure=NextStageStructure(
-                components=[
-                    _get_stage_components_from_widget(widget, prefill_data)
-                    for widget in stage_components(stages[0])
-                ],
-                actions=[
-                    Action(
-                        id=action.id,
-                        button=Button(
-                            label=action.next_button_label or NEXT_BUTTON_LABEL,
-                            aria_label=NEXT_BUTTON_ARIA_LABEL,
-                        ),
-                        load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
-                    )
-                    for action in stages[0].actions
-                ],
-            ),
+        stage=NextStageStructure(
+            components=[
+                _get_stage_components_from_widget(widget, prefill_data)
+                for widget in stage_components(stages[0])
+            ],
+            actions=[
+                Action(
+                    id=action.id,
+                    button=Button(
+                        label=action.next_button_label or NEXT_BUTTON_LABEL,
+                        aria_label=NEXT_BUTTON_ARIA_LABEL,
+                    ),
+                    load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
+                )
+                for action in stages[0].actions
+            ],
         ),
         actions=[
             Action(
@@ -466,26 +455,40 @@ def get_stage_structure(
     )
 
 
-@dataclass()
-class ValidationAndNextStage:
-    next_stage_structure: NextStageStructure | None = None
-    errors: Errors | None = None
+class StageActionResult(BaseModel, frozen=False):
+    validation_errors: Errors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
+    background_job_exception: str | None = None
+
+    @classmethod
+    def load_from_job_result(cls, job_id: str) -> "StageActionResult":
+        work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
+        result = store.load_text_from_file(cls._file_path(work_dir))
+        return cls.model_validate_json(result)
+
+    def save_to_file(self, work_dir: str) -> None:
+        store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())
+
+    @staticmethod
+    def _file_path(work_dir: str) -> str:
+        return os.path.join(
+            work_dir,
+            "validation_and_recap_result.json",
+        )
 
 
-def validate_stage_and_retrieve_next_stage_structure(
+def validate_and_recap_stage(
     quick_setup: QuickSetup,
     stage_index: StageIndex,
     stage_action_id: ActionId,
     input_stages: Sequence[dict],
-    object_id: str | None,
-) -> ValidationAndNextStage:
+) -> StageActionResult:
     stages, form_spec_map = get_stages_and_formspec_map(
         quick_setup=quick_setup,
         stage_index=stage_index,
     )
 
-    response = ValidationAndNextStage()
+    response = StageActionResult()
     if (
         errors := validate_stage(
             quick_setup=quick_setup,
@@ -496,14 +499,8 @@ def validate_stage_and_retrieve_next_stage_structure(
             quick_setup_formspec_map=form_spec_map,
         )
     ) is not None:
-        response.errors = errors
+        response.validation_errors = errors
         return response
-
-    prefill_data: ParsedFormData | None = None
-    if object_id := object_id:
-        prefill_data = quick_setup.load_data(object_id)
-        if not prefill_data:
-            raise MKGeneralException(f"Object with id '{object_id}' does not exist.")
 
     response.stage_recap = recap_stage(
         quick_setup_id=quick_setup.id,
@@ -512,13 +509,6 @@ def validate_stage_and_retrieve_next_stage_structure(
         stage_action_id=stage_action_id,
         stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
         quick_setup_formspec_map=form_spec_map,
-    )
-    if stage_index == StageIndex(len(quick_setup.stages) - 1):
-        return response
-
-    response.next_stage_structure = get_stage_structure(
-        stage=quick_setup.stages[stage_index + 1](),
-        prefill_data=prefill_data,
     )
     return response
 
@@ -589,29 +579,6 @@ def quick_setup_overview_mode(
     )
 
 
-class StageActionResult(BaseModel):
-    next_stage_structure: NextStageStructure | None = None
-    errors: Errors | None = None
-    stage_recap: Sequence[Widget] = field(default_factory=list)
-    background_job_exception: str | None = None
-
-    @classmethod
-    def load_from_job_result(cls, job_id: str) -> "StageActionResult":
-        work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
-        result = store.load_text_from_file(cls._file_path(work_dir))
-        return cls.model_validate_json(result)
-
-    def save_to_file(self, work_dir: str) -> None:
-        store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())
-
-    @staticmethod
-    def _file_path(work_dir: str) -> str:
-        return os.path.join(
-            work_dir,
-            "validation_and_next_structure_result.json",
-        )
-
-
 class QuickSetupStageActionBackgroundJob(BackgroundJob):
     housekeeping_max_age_sec = 1800
     housekeeping_max_count = 10
@@ -638,13 +605,11 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         action_id: ActionId,
         stage_index: StageIndex,
         user_input_stages: Sequence[dict],
-        object_id: str | None,
     ) -> None:
         self._quick_setup_id = quick_setup_id
         self._action_id = action_id
         self._stage_index = stage_index
         self._user_input_stages = user_input_stages
-        self._object_id = object_id
         super().__init__(job_id=self.create_job_id(quick_setup_id, stage_index, job_uuid))
 
     def run_quick_setup_stage_action(self, job_interface: BackgroundProcessInterface) -> None:
@@ -666,20 +631,15 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
 
         register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
-        action_result = validate_stage_and_retrieve_next_stage_structure(
+        action_result = validate_and_recap_stage(
             quick_setup=quick_setup,
             stage_index=self._stage_index,
             stage_action_id=self._action_id,
             input_stages=self._user_input_stages,
-            object_id=self._object_id,
         )
 
         job_interface.send_progress_update(_("Saving the result..."))
-        StageActionResult(
-            next_stage_structure=action_result.next_stage_structure,
-            errors=action_result.errors,
-            stage_recap=action_result.stage_recap,
-        ).save_to_file(job_interface.get_work_dir())
+        action_result.save_to_file(job_interface.get_work_dir())
         job_interface.send_result_message("Job finished.")
 
 
@@ -688,7 +648,6 @@ def start_quick_setup_stage_job(
     action_id: ActionId,
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
-    object_id: str | None,
 ) -> str:
     job_uuid = str(uuid.uuid4())
     job = QuickSetupStageActionBackgroundJob(
@@ -697,7 +656,6 @@ def start_quick_setup_stage_job(
         action_id=action_id,
         stage_index=stage_index,
         user_input_stages=user_input_stages,
-        object_id=object_id,
     )
 
     job_start = job.start(

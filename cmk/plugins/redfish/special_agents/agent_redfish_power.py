@@ -6,8 +6,9 @@
 
 import logging
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Any, Literal, TypeVar
 
 import urllib3
 from redfish import redfish_logger  # type: ignore[import-untyped]
@@ -29,6 +30,8 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
+
+SectionName = Literal["RackPDUs", "Mains", "Outlets", "Sensors"]
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -160,13 +163,15 @@ def fetch_list_of_elements(redfishobj, fetch_elements, sections, data):
     return result_set
 
 
-def fetch_sections(redfishobj, fetching_sections, data):
+def fetch_sections(
+    redfishobj: HttpClient, fetching_sections: Iterable[SectionName], data: Mapping
+) -> Mapping[SectionName, Any]:
     """fetch a single section of Redfish data"""
     result_set = {}
     for section in fetching_sections:
         if section not in data.keys():
             continue
-        section_data = fetch_data(redfishobj, data.get(section).get("@odata.id"), section)
+        section_data = fetch_data(redfishobj, data[section].get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
         if "Collection" in section_data.get("@odata.type"):
@@ -178,7 +183,9 @@ def fetch_sections(redfishobj, fetching_sections, data):
     return result_set
 
 
-def process_result(result):
+def process_result(
+    result: Mapping[SectionName, Any],
+) -> None:
     """process and output a fetched result set"""
     for key, value in result.items():
         with SectionWriter(f"redfish_{key.lower()}") as w:
@@ -421,19 +428,17 @@ def get_information(redfishobj):
     with SectionWriter("redfish_system") as w:
         w.append_json(systems_data)
 
-    resulting_sections = ["RackPDUs"]
+    resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)
     for system in systems_data:
         result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)
-        sub_sections = ["Mains", "Outlets", "Sensors"]
-        pdu_data = result.get("RackPDUs")
+        sub_sections: tuple[SectionName, ...] = ("Mains", "Outlets", "Sensors")
+        pdu_data = result["RackPDUs"]
         if isinstance(pdu_data, list):
             for entry in pdu_data:
-                result = fetch_sections(redfishobj, sub_sections, entry)
-                process_result(result)
+                process_result(fetch_sections(redfishobj, sub_sections, entry))
         else:
-            result = fetch_sections(redfishobj, sub_sections, pdu_data)
-            process_result(result)
+            process_result(fetch_sections(redfishobj, sub_sections, pdu_data))
 
     return 0
 

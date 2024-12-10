@@ -102,8 +102,10 @@ def get_application(
 
     @app.post("/automation")
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
+        logger.info("[automation] %s with args: %s received.", payload.name, payload.args)
         if cache.reload_required(request.app.state.last_reload_at):
             reload_config()
+            logger.warn("[automation] configurations were reloaded due to a stale state.")
 
         with (
             tracer.start_as_current_span(
@@ -122,7 +124,10 @@ def get_application(
                 # TODO: remove `reload_config` when automation helper is fully integrated.
                 exit_code = engine.execute(payload.name, list(payload.args), reload_config=False)
             except SystemExit:
+                logger.error("[automation] command raised a system exit exception.")
                 exit_code = AutomationExitCode.SYSTEM_EXIT
+            else:
+                logger.info("[automation] %s with args: %s processed.", payload.name, payload.args)
 
             return AutomationResponse(exit_code=exit_code, output=output_buffer.getvalue())
 

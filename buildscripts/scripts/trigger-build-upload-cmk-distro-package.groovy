@@ -117,6 +117,7 @@ def main() {
             "${checkout_dir}/${download_dir}/${package_name}",
             "${upload_path}",
             INTERNAL_DEPLOY_PORT,
+            ADDITONAL_ARGS="--mkpath",
         );
     }
 }

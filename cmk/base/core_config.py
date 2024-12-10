@@ -82,10 +82,6 @@ class MonitoringCore(abc.ABC):
             passwords,
             hosts_to_update,
         )
-        if config.ruleset_matching_stats:
-            config_cache.ruleset_matcher.persist_matching_stats(
-                "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
-            )
 
     @abc.abstractmethod
     def _create_config(

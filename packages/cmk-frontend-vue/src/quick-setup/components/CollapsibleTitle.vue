@@ -37,7 +37,8 @@ defineEmits(['toggleOpen'])
 <style scoped>
 .qs-collapsible-title {
   position: relative;
-  left: -27px;
+  margin-left: 0;
+  padding-left: 0;
   background: none;
   border: none;
   cursor: pointer;

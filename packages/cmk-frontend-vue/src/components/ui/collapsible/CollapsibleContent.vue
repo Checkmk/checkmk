@@ -16,7 +16,7 @@ const props = defineProps<CollapsibleContentProps>()
   </CollapsibleContent>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .ui-collapsible-content {
   &[data-state='open'] {
     animation: slideDown 300ms ease-out;
@@ -27,21 +27,31 @@ const props = defineProps<CollapsibleContentProps>()
   }
 }
 
+@mixin zero-height {
+  overflow: hidden;
+  height: 0;
+}
+
+@mixin full-height {
+  overflow: hidden;
+  height: var(--radix-collapsible-content-height);
+}
+
 @keyframes slideDown {
   from {
-    height: 0;
+    @include zero-height;
   }
   to {
-    height: var(--radix-collapsible-content-height);
+    @include full-height;
   }
 }
 
 @keyframes slideUp {
   from {
-    height: var(--radix-collapsible-content-height);
+    @include full-height;
   }
   to {
-    height: 0;
+    @include zero-height;
   }
 }
 </style>

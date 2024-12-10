@@ -1217,7 +1217,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(
                 login_url,
                 _("Create remote broker certificates"),
-                "update_service_labels_and_discovery_params",
+                "recreate_broker_certificate",
             )
 
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")

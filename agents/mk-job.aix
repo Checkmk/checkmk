@@ -72,7 +72,15 @@ main() {
         rm "${RUNNING_FILE}" 2>/dev/null
     }
 
-    echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
+    try_perl() {
+        perl -e 'print "start_time " . time . "\n"' >"${TMP_FILE}" 2>/dev/null
+    }
+
+    fallback_date() {
+        date +"start_time %s" >"${TMP_FILE}" 2>/dev/null
+    }
+    try_perl || fallback_date
+
     cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
 
     if [ ! -w "${RUNNING_FILE}" ]; then

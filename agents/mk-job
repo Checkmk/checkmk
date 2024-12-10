@@ -52,7 +52,15 @@ cleanup() {
     rm "${RUNNING_FILE}" 2>/dev/null
 }
 
-echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
+try_perl() {
+    echo "start_time $(perl -e 'print time')" >"${TMP_FILE}" 2>/dev/null
+}
+
+fallback_date() {
+    date +"start_time %s" >"${TMP_FILE}" 2>/dev/null
+}
+try_perl || fallback_date
+
 cp "${TMP_FILE}" "${RUNNING_FILE}" 2>/dev/null
 
 if [ ! -w "${RUNNING_FILE}" ]; then

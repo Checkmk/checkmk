@@ -15,6 +15,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
+    def docker_args = "${mount_reference_repo_dir}";
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
@@ -55,15 +56,7 @@ def main() {
         """.stripMargin());
 
     stage("Prepare workspace") {
-        inside_container(
-            args: [
-                "--env HOME=/home/jenkins",
-            ],
-            set_docker_group_id: true,
-            ulimit_nofile: 1024,
-            mount_credentials: true,
-            priviliged: true,
-        ) {
+        docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             dir("${checkout_dir}") {
                 /// remove downloaded packages since they consume dozens of MiB
                 sh("""rm -rf "${checkout_dir}/${download_dir}" """);
@@ -78,15 +71,7 @@ def main() {
     }
 
     stage("Trigger package build") {
-        inside_container(
-            args: [
-                "--env HOME=/home/jenkins",
-            ],
-            set_docker_group_id: true,
-            ulimit_nofile: 1024,
-            mount_credentials: true,
-            priviliged: true,
-        ) {
+        docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             dir("${checkout_dir}") {
                 upstream_build(
                     relative_job_name: "builders/build-cmk-distro-package",

@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::http::Server;
 use crate::pwstore::password_from_store;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
@@ -44,6 +45,10 @@ pub struct Cli {
     // #[arg(short = 'D', long = "disable-cert", verbatim_doc_comment)]
     #[arg(short = 'D', long = "disable-cert", verbatim_doc_comment, action = clap::ArgAction::SetTrue)]
     pub disable_certificate_verification: bool,
+
+    /// Physical server to connect to directly
+    #[arg(short = 'p', long)]
+    pub server: Option<Server>,
 
     /// URL to check
     #[arg(short, long)]

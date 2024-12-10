@@ -16,7 +16,7 @@ use crate::checking_types::{
     check_lower_levels, check_upper_levels, notice, Bounds, CheckResult, LowerLevels, State,
     UpperLevels,
 };
-use crate::http::{Body, OnRedirect, ProcessedResponse};
+use crate::http::{Body, OnRedirect, ProcessedResponse, Server};
 
 pub struct RequestInformation {
     pub request_url: Url,
@@ -24,6 +24,7 @@ pub struct RequestInformation {
     pub user_agent: String,
     pub onredirect: OnRedirect,
     pub timeout: Duration,
+    pub server: Option<Server>,
 }
 
 pub struct CheckParameters {
@@ -84,49 +85,61 @@ pub fn collect_response_checks(
 
     let (body, body_check_results) = check_body(response.body);
 
-    check_urls(request_information.request_url, response.final_url)
-        .into_iter()
-        .chain(check_redirect(
-            response.status,
-            request_information.onredirect,
-            response.redirect_target,
-        ))
-        .chain(check_method(request_information.method))
-        .chain(check_version(response.version))
-        .chain(check_status(response.status, params.status_code))
-        .chain(check_response_time(
-            response.time_headers,
-            response.time_body,
-            params.response_time_levels,
-            request_information.timeout,
-        ))
-        .chain(body_check_results)
-        .chain(check_page_age(
-            SystemTime::now(),
-            response
-                .headers
-                .get("last-modified")
-                .or(response.headers.get("date")),
-            params.document_age_levels,
-        ))
-        .chain(check_page_size(body.as_ref(), params.page_size))
-        .chain(check_certificate(
-            response.tls_info,
-            params.certificate_levels,
-            params.disable_certificate_verification,
-        ))
-        .chain(check_user_agent(request_information.user_agent))
-        .chain(check_headers(&response.headers, params.header_matchers))
-        .chain(check_body_matching(body.as_ref(), params.body_matchers))
-        .flatten()
-        .collect()
+    check_urls(
+        request_information.request_url,
+        response.final_url,
+        request_information.server,
+    )
+    .into_iter()
+    .chain(check_redirect(
+        response.status,
+        request_information.onredirect,
+        response.redirect_target,
+    ))
+    .chain(check_method(request_information.method))
+    .chain(check_version(response.version))
+    .chain(check_status(response.status, params.status_code))
+    .chain(check_response_time(
+        response.time_headers,
+        response.time_body,
+        params.response_time_levels,
+        request_information.timeout,
+    ))
+    .chain(body_check_results)
+    .chain(check_page_age(
+        SystemTime::now(),
+        response
+            .headers
+            .get("last-modified")
+            .or(response.headers.get("date")),
+        params.document_age_levels,
+    ))
+    .chain(check_page_size(body.as_ref(), params.page_size))
+    .chain(check_certificate(
+        response.tls_info,
+        params.certificate_levels,
+        params.disable_certificate_verification,
+    ))
+    .chain(check_user_agent(request_information.user_agent))
+    .chain(check_headers(&response.headers, params.header_matchers))
+    .chain(check_body_matching(body.as_ref(), params.body_matchers))
+    .flatten()
+    .collect()
 }
 
-fn check_urls(url: Url, final_url: Url) -> Vec<Option<CheckResult>> {
+fn check_urls(url: Url, final_url: Url, server: Option<Server>) -> Vec<Option<CheckResult>> {
     let url_text = format!("URL to test: {}", url);
     let mut results = vec![CheckResult::details(State::Ok, &url_text)];
     // If we end up with a different final_url, we obviously got redirected.
     // Since we didn't run into an error, the redirect must be OK.
+
+    if let Some(server) = server {
+        results.push(CheckResult::details(
+            State::Ok,
+            &format!("Connected to server: {}", server),
+        ));
+    }
+
     if url != final_url {
         results.push(CheckResult::details(
             State::Ok,
@@ -568,6 +581,7 @@ mod test_check_urls {
             check_urls(
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/").unwrap(),
+                None,
             ),
             vec![CheckResult::details(
                 State::Ok,
@@ -582,6 +596,7 @@ mod test_check_urls {
             check_urls(
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/baz").unwrap(),
+                None,
             ),
             vec![
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),

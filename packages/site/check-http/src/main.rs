@@ -138,6 +138,8 @@ fn make_configs(
                 None
             },
             disable_certificate_verification: args.disable_certificate_verification,
+            url: args.url.clone(),
+            server: args.server.clone(),
         },
         RequestConfig {
             url: args.url.clone(),
@@ -169,6 +171,7 @@ fn make_configs(
             user_agent,
             onredirect,
             timeout: args.timeout,
+            server: args.server.clone(),
         },
         CheckParameters {
             status_code: args.status_code,

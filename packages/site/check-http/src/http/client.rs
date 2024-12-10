@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::http::Server;
 use reqwest::{
     redirect::{Action, Attempt, Policy},
     tls::Version as TlsVersion,
@@ -28,7 +29,6 @@ pub enum ForceIP {
     Ipv4,
     Ipv6,
 }
-
 pub struct ClientConfig {
     pub version: Option<Version>,
     pub user_agent: String,
@@ -43,6 +43,8 @@ pub struct ClientConfig {
     pub proxy_url: Option<String>,
     pub proxy_auth: Option<(String, String)>,
     pub disable_certificate_verification: bool,
+    pub url: Url,
+    pub server: Option<Server>,
 }
 
 pub struct ClientAdapter {
@@ -63,6 +65,19 @@ impl ClientAdapter {
 fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(cfg.disable_certificate_verification);
+
+    let client = if let Some(server) = cfg.server {
+        let port = cfg.url.port().unwrap_or_else(|| match cfg.url.scheme() {
+            "http" => 80,
+            "https" => 443,
+            _ => panic!("Unsupported URL scheme"),
+        });
+        let server_socket_addr = server.to_socket_addr(port).unwrap();
+        let domain = cfg.url.domain().unwrap_or_default();
+        client.resolve(domain, server_socket_addr)
+    } else {
+        client
+    };
 
     let client = if cfg.ignore_proxy_env {
         client.no_proxy()

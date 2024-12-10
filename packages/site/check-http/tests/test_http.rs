@@ -94,6 +94,8 @@ fn make_standard_configs(
             proxy_url: None,
             proxy_auth: None,
             disable_certificate_verification: false,
+            url: url.clone(),
+            server: None,
         },
         RequestConfig {
             url: url.clone(),
@@ -113,6 +115,7 @@ fn make_standard_configs(
             user_agent: "test_http".to_string(),
             onredirect: OnRedirect::Follow,
             timeout: Duration::from_secs(1),
+            server: None,
         },
         CheckParameters {
             status_code: vec![],

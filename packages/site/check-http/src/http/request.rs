@@ -15,6 +15,56 @@ use reqwest::{
 use tracing::{event, span, Level};
 
 use super::client::ClientAdapter;
+use anyhow::bail;
+use std::fmt;
+use std::net::IpAddr;
+use std::str::FromStr;
+
+#[derive(Clone, Debug)]
+pub enum Server {
+    IpAddr(IpAddr),
+    Url(Url),
+}
+
+impl fmt::Display for Server {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Server::IpAddr(ip) => write!(f, "{}", ip),
+            Server::Url(url) => write!(f, "{}", url),
+        }
+    }
+}
+
+impl FromStr for Server {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(ip) = s.parse::<IpAddr>() {
+            Ok(Server::IpAddr(ip))
+        } else if let Ok(url) = s.parse::<Url>() {
+            Ok(Server::Url(url))
+        } else {
+            bail!("Invalid server address: {}", s)
+        }
+    }
+}
+
+impl Server {
+    pub fn to_socket_addr(&self, port: u16) -> Result<std::net::SocketAddr, anyhow::Error> {
+        match self {
+            Server::IpAddr(ip) => Ok(std::net::SocketAddr::new(*ip, port)),
+            Server::Url(url) => {
+                let host = url
+                    .host_str()
+                    .ok_or_else(|| anyhow::anyhow!("Invalid URL: no host"))?;
+                let ip = std::net::ToSocketAddrs::to_socket_addrs(&(host, port))?
+                    .next()
+                    .ok_or_else(|| anyhow::anyhow!("Unable to resolve host: {}", host))?;
+                Ok(ip)
+            }
+        }
+    }
+}
 
 pub struct RequestConfig {
     pub url: Url,
@@ -66,7 +116,7 @@ pub async fn send(
     let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
 
-    event!(target: "debug_headers", Level::INFO, "HTTP headers: \n{:?}", headers);
+    event!(target: "debug_headers", Level::INFO, "HTTP headers: \n{:#?}", headers);
 
     let (body, time_body) = if fetch_body {
         let start = Instant::now();

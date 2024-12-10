@@ -1,3 +1,5 @@
+-r requirements_dev.txt
+-r cmk/requirements_protobuf_pinned.txt
 -r packages/cmk-agent-based/requirements.txt
 -r packages/cmk-agent-receiver/requirements.txt
 -r packages/cmk-ccc/requirements.txt

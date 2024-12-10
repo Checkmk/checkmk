@@ -12,6 +12,7 @@ exports_files([
     "Pipfile.lock",
     "pyproject.toml",
     "requirements.txt",
+    "requirements_dev.txt",
     "requirements_lock.txt",
 ])
 
@@ -73,19 +74,11 @@ refresh_compile_commands(
     },
 )
 
-genrule(
-    name = "_append_dependencies_from_pipfile",
-    srcs = [
-        ":requirements.txt",
-        "//cmk:requirements.txt",
-    ],
-    outs = ["requirements_cmk.txt"],
-    cmd = "cat $(location :requirements.txt) $(location //cmk:requirements.txt) > $@",
-)
-
 pip_compile(
     name = "requirements",
     data = [
+        "//:requirements_dev.txt",
+        "//cmk:requirements_protobuf_pinned.txt",
         "//packages/cmk-agent-based:requirements.txt",
         "//packages/cmk-agent-receiver:requirements.txt",
         "//packages/cmk-ccc:requirements.txt",
@@ -107,7 +100,7 @@ pip_compile(
             "//non-free/packages/cmk-otel-collector:requirements.txt",
         ],
     }),
-    requirements_in = ":requirements_cmk.txt",
+    requirements_in = ":requirements.txt",
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],

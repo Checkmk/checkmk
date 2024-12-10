@@ -5,18 +5,6 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-genrule(
-    name = "_generate_requirements_in",
-    srcs = [
-        "@//:Pipfile",
-        "@//:Pipfile.lock",
-    ],
-    outs = ["requirements_in.orig"],
-    # We need to filter out editable reqs are the relative paths are not
-    # accessible in the sandbox.  Failing to do so raises an `InstallationError`.
-    cmd = "pipenv requirements --dev | grep -Ev '^\\-e[[:space:]]' > $@",
-)
-
 FILTER_OUT = [
     # Provided elsewhere
     "rrdtool",
@@ -24,18 +12,18 @@ FILTER_OUT = [
 
 genrule(
     name = "_prune_requirements_in",
-    srcs = ["requirements_in.orig"],
+    srcs = ["//cmk:requirements.txt"],
     outs = ["requirements_pruned.txt"],
     cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
 )
 
 genrule(
     name = "_pin_protobuf_requirement",
-    srcs = ["requirements_pruned.txt"],
-    outs = ["requirements.txt"],
+    srcs = [":requirements_pruned.txt"],
+    outs = ["requirements_protobuf_pinned.txt"],
     # We go for "compatible release" with `~=`.
     cmd = "cat $< <(echo protobuf~=%s) > $@" % PROTOBUF_PYTHON_VERSION,
-    visibility = ["//:__pkg__"],
+    visibility = ["//:__subpackages__"],
 )
 
 REQUIRED_EXTERNAL_DEPS = [

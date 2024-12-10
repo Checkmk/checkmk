@@ -147,6 +147,19 @@ def parameter_form() -> Dictionary:
                     ),
                 ),
             ),
+            "ignore_templates": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    title=Title("Templates"),
+                    label=Label("Do not monitor VM templates"),
+                    prefill=DefaultValue(False),
+                    help_text=Help(
+                        "A template is created by converting a stopped VM. It cannot be started or modified "
+                        "without converting or cloning it back to a VM. This option tells the vSphere agent "
+                        "to exclude template VMs in its output."
+                    ),
+                ),
+            ),
             "host_pwr_display": DictElement(
                 required=False,
                 parameter_form=SingleChoice(

@@ -90,7 +90,6 @@ provide_clone = { repo_name, credentials_id ->
                 credentialsId: credentials_id,
                 url: "ssh://jenkins@review.lan.tribe29.com:29418/${repo_name}",
             ]],
-// groovylint-disable-next-line NglParseError
             branches: [new hudson.plugins.git.BranchSpec("FETCH_HEAD")],
             extensions: [
                 [$class: 'CloneOption',

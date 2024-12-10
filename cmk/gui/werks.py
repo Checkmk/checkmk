@@ -524,7 +524,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     (None, _("All editions")),
                     *(
                         (e.short, _("Werks only concerning the %s") % e.title)
-                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE)
+                        for e in (Edition.CCE, Edition.CME, Edition.CEE, Edition.CRE, Edition.CSE)
                     ),
                 ],
             ),

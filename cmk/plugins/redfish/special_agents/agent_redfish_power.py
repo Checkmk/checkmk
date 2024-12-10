@@ -180,13 +180,13 @@ def fetch_sections(redfishobj, fetching_sections, data):
 
 def process_result(result):
     """process and output a fetched result set"""
-    for element in list(result.keys()):
-        with SectionWriter(f"redfish_{element.lower()}") as w:
-            if isinstance(result.get(element), list):
-                for entry in result.get(element):
+    for key, value in result.items():
+        with SectionWriter(f"redfish_{key.lower()}") as w:
+            if isinstance(value, list):
+                for entry in value:
                     w.append_json(entry)
             else:
-                w.append_json(result.get(element))
+                w.append_json(value)
 
 
 class VendorGeneric:
@@ -389,7 +389,6 @@ def detect_vendor(root_data):
 
 def get_information(redfishobj):
     """get a the information from the Redfish management interface"""
-    sections = ["PowerEquipment", "RackPDUs"]
     base_data = fetch_data(redfishobj, "/redfish/v1", "Base")
 
     vendor_data = detect_vendor(base_data)
@@ -422,9 +421,7 @@ def get_information(redfishobj):
     with SectionWriter("redfish_system") as w:
         w.append_json(systems_data)
 
-    systems_sections = ["RackPDUs"]
-
-    resulting_sections = list(set(systems_sections).intersection(sections))
+    resulting_sections = ["RackPDUs"]
     for system in systems_data:
         result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)

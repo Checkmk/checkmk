@@ -20,9 +20,7 @@ from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecompose
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
-from cmk.gui.form_specs.private import (
-    ListOfStrings as FSListOfStrings,
-)
+from cmk.gui.form_specs.private import ListOfStrings as FSListOfStrings
 from cmk.gui.form_specs.private import (
     OptionalChoice,
     SingleChoiceElementExtended,
@@ -544,13 +542,15 @@ def validate_host_parents(host):
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
-                None, _("You configured the host to be it's own parent, which is not allowed.")
+                None,
+                _("You configured the host to be it's own parent, which is not allowed."),
             )
 
         parent = Host.host(parent_name)
         if not parent:
             raise MKUserError(
-                None, _("You defined the non-existing host '%s' as a parent.") % parent_name
+                None,
+                _("You defined the non-existing host '%s' as a parent.") % parent_name,
             )
 
         if host.site_id() != parent.site_id():
@@ -869,7 +869,8 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.Nested(
-            gui_fields.NetworkScanResult, description="Read only access to the network scan result"
+            gui_fields.NetworkScanResult,
+            description="Read only access to the network scan result",
         )
 
     def valuespec(self) -> ValueSpec:
@@ -1277,7 +1278,10 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         )
 
     def filter_matches(
-        self, crit: list[str], value: list[str] | tuple[str, str, str], hostname: HostName
+        self,
+        crit: list[str],
+        value: list[str] | tuple[str, str, str],
+        hostname: HostName,
     ) -> bool:
         return crit == list(value)
 

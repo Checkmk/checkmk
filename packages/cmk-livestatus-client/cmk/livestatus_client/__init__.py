@@ -16,8 +16,10 @@ import socket
 import ssl
 import threading
 import time
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from functools import cache
 from io import BytesIO
@@ -379,6 +381,22 @@ class Helpers:
                 "No matching entries found for query: Empty result to Stats-Query"
             )
         return [sum(column) for column in zip(*data)]
+
+    @staticmethod
+    def _serialize_command(command: Command) -> str:
+        def _serialize_type(value: Command.Arguments) -> str:
+            match value:
+                case str():
+                    return lqencode(value)
+                case bool():
+                    return str(int(value))
+                case int():
+                    return str(value)
+                case datetime():
+                    return str(int(value.timestamp()))
+
+        serialized_args = ";".join(map(_serialize_type, command.args))
+        return f"{command.name};{serialized_args}"
 
 
 @cache
@@ -908,6 +926,13 @@ class SingleSiteConnection(Helpers):
         ):
             self.send_command(f"COMMAND {command_str}")
 
+    def command_obj(
+        self,
+        command: Command,
+        _site: SiteId | None = None,
+    ) -> None:
+        self.command(self._serialize_command(command))
+
     def send_command(self, command: str) -> None:
         if self.socket is None:
             self.connect()
@@ -1381,6 +1406,9 @@ class MultiSiteConnection(Helpers):
             )
         conn[0].command(command)
 
+    def command_obj(self, command: Command, sitename: SiteId | None = SiteId("local")) -> None:
+        self.command(self._serialize_command(command), sitename)
+
     # Return connection to localhost (UNIX), if available
     def local_connection(self) -> SingleSiteConnection:
         for _sitename, site, connection in self.connections:
@@ -1592,3 +1620,18 @@ def get_rrd_data(
         if (step := int(raw_step)) == 0
         else RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )
+
+
+@dataclass(frozen=True)
+class Command(ABC):
+    type Arguments = int | str | datetime | bool
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Name of the command to be sent."""
+
+    @property
+    @abstractmethod
+    def args(self) -> list[Arguments]:
+        """Arguments for the command."""

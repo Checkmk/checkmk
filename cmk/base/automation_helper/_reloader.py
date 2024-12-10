@@ -17,7 +17,7 @@ RELOADER_SLEEP_INTERVAL: Final = 5
 
 def log_reload_info(last_change_at: float) -> None:
     when = round(time.time() - last_change_at, 2)
-    logger.info(f"Reloading application (change detected {when}s ago)...")
+    logger.info(f"[reloader] change detected {when}s ago reloading now...")
 
 
 def reload_application() -> None:
@@ -38,5 +38,5 @@ def run_reloader(cache: Cache) -> None:
 
 class Reloader(Thread):
     def __init__(self, cache: Cache) -> None:
-        logger.info("Initializing reloader thread...")
+        logger.info("[reloader] initializing thread...")
         super().__init__(target=run_reloader, name="reloader", kwargs={"cache": cache}, daemon=True)

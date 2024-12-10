@@ -52,9 +52,9 @@ class AutomationWatcherHandler(PatternMatchingEventHandler):
     def _log_handled_event(cls, event: FileSystemEvent) -> None:
         match event.event_type:
             case "moved":
-                logger.info("%s (overwritten)", event.dest_path)
+                logger.info("[watcher] %s (overwritten)", event.dest_path)
             case _:
-                logger.info("%s (%s)", event.src_path, event.event_type)
+                logger.info("[watcher] %s (%s)", event.src_path, event.event_type)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -111,7 +111,7 @@ def run_watcher(root: Path, schedules: Sequence[Schedule], cache: Cache) -> None
 
 class Watcher(Thread):
     def __init__(self, cfg: WatcherConfig, cache: Cache) -> None:
-        logger.info("Initializing watcher thread...")
+        logger.info("[watcher] initializing thread...")
         kwargs = {"root": cfg.root, "schedules": cfg.schedules, "cache": cache}
         super().__init__(target=run_watcher, name="watcher", kwargs=kwargs, daemon=True)
 

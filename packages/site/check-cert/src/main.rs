@@ -44,7 +44,7 @@ fn parse_levels<F, T1, T2, U>(strat: LevelsStrategy, lvl: Vec<T1>, mut conv: F) 
 where
     T1: std::fmt::Debug,
     T2: std::fmt::Debug + std::convert::From<T1>,
-    U: Clone + std::default::Default + std::cmp::PartialOrd,
+    U: Clone + std::default::Default + std::cmp::PartialOrd + std::fmt::Display,
     F: FnMut(T2) -> U,
 {
     let lvl: [_; 2] = lvl.try_into().expect("invalid arg count");

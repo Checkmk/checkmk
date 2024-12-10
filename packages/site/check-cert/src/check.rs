@@ -154,7 +154,26 @@ pub struct LevelsChecker<T> {
 
 impl<T> LevelsChecker<T>
 where
-    T: Clone + PartialOrd,
+    T: Display,
+{
+    fn append_to(&self, text: &str) -> String {
+        format!(
+            "{text} {}",
+            match self.strategy {
+                LevelsStrategy::Upper =>
+                    format!("(warn/crit at {}/{})", self.levels.warn, self.levels.crit),
+                LevelsStrategy::Lower => format!(
+                    "(warn/crit below {}/{})",
+                    self.levels.warn, self.levels.crit
+                ),
+            }
+        )
+    }
+}
+
+impl<T> LevelsChecker<T>
+where
+    T: Clone + PartialOrd + Display,
 {
     pub fn try_new(
         strategy: LevelsStrategy,
@@ -180,9 +199,18 @@ where
         // According to documentation the details default to the summary.
         // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
         let (summary, details) = match (output, state) {
-            (OutputType::Notice(text), State::Ok) => (None, Some(text)),
-            (OutputType::Notice(text), _) => (Some(text.clone()), Some(text)),
-            (OutputType::Summary(text), _) => (Some(text.clone()), Some(text)),
+            (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
+            (OutputType::Notice(text), _) => {
+                let text = self.append_to(&text);
+                (Some(text.clone()), Some(text))
+            }
+            (OutputType::Summary(text), State::Ok) => {
+                (Some(text.clone().to_string()), Some(text.to_string()))
+            }
+            (OutputType::Summary(text), _) => {
+                let text = self.append_to(&text);
+                (Some(text.clone()), Some(text))
+            }
         };
         CheckResult {
             state,
@@ -1050,7 +1078,7 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Warn);
         assert_eq!(
             format!("{}", coll),
-            "notice (!) | label=15ms;10;20;;\nnotice"
+            "notice (warn/crit at 10/20) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10/20)"
         );
     }
 }

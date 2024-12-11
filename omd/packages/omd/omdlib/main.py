@@ -366,6 +366,9 @@ def walk_skel(
         # to delete their existing htpasswd.
         "etc/htpasswd",
         "etc/diskspace.conf",
+        "local/lib/python3/cmk/base/plugins/agent_based",
+        "local/lib/python3/cmk/base/plugins",
+        "local/lib/python3/cmk/base",
     ]
 
     with contextlib.chdir(root):

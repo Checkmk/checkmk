@@ -82,6 +82,20 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.cpu.nodes:*.node_name": {"title": _l("Node name")},
         ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
         ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
+        ".hardware.firmware.": {"title": _l("Firmware")},
+        ".hardware.firmware.redfish:": {
+            "title": _l("Redfish"),
+            "keyorder": ["component", "version", "location", "description"],
+            "view": "invfirmwareredfish",
+        },
+        ".hardware.firmware.redfish:*.component": {"title": _l("Component")},
+        ".hardware.firmware.redfish:*.version": {"title": _l("Version")},
+        ".hardware.firmware.redfish:*.location": {"title": _l("Location")},
+        ".hardware.firmware.redfish:*.description": {"title": _l("Description")},
+        ".hardware.firmware.redfish:*.updateable": {
+            "title": _l("Update possible"),
+            "paint": "bool",
+        },
         ".hardware.memory.": {
             "title": _l("Memory (RAM)"),
             "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],

@@ -24,6 +24,7 @@ py_library(
         "cmk/werks/markup.py",
         "cmk/werks/models.py",
         "cmk/werks/parse.py",
+        "cmk/werks/utils.py",
         "cmk/werks/validate.py",
     ],
     imports = ["."],
@@ -32,6 +33,7 @@ py_library(
         "//omd:__pkg__",
     ],
     deps = [
+        "//packages/cmk-ccc",
         requirement("gitpython"),
         requirement("lxml"),
         requirement("markdown"),
@@ -55,8 +57,6 @@ py_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    args = ["--config-file=$(location pyproject.toml)"],
-    data = ["pyproject.toml"],
     main = ":__test__.py",
     deps = [
         ":__test__",

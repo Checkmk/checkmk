@@ -28,8 +28,7 @@ from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.werks import load_werk
 from cmk.werks.models import Class, Level, Werk
-
-from ..werk import WerkTranslator
+from cmk.werks.utils import WerkTranslator
 
 logger = logging.getLogger(__name__)
 

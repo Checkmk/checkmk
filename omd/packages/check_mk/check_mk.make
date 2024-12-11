@@ -31,12 +31,12 @@ include ../artifacts.make
 $(CHECK_MK_WERKS_PATH): $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
 	PYTHONPATH=$(REPO_PATH) \
-	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks precompile $(REPO_PATH)/.werks $@ --filter-by-edition cre
+	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.werks.utils precompile $(REPO_PATH)/.werks $@ --filter-by-edition cre
 
 $(CHECK_MK_CHANGELOG_PATH): $(CHECK_MK_WERKS_PATH) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(CHECK_MK_WORK_DIR)
 	PYTHONPATH=$(REPO_PATH) \
-	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks changelog $@ $<
+	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.werks.utils changelog $@ $<
 
 # RPM/DEB build are currently working on the same working directory and would
 # influence each other. Need to be cleaned up later

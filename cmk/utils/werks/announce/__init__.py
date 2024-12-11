@@ -12,9 +12,12 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 from cmk.ccc.version import ReleaseType, Version
 
 from cmk.werks.models import Class, Compatibility, Edition, Werk
-
-from .. import has_content, load_raw_files
-from ..werk import sort_by_version_and_component, WerkTranslator
+from cmk.werks.utils import (
+    has_content,
+    load_raw_files,
+    sort_by_version_and_component,
+    WerkTranslator,
+)
 
 
 class SimpleWerk(NamedTuple):

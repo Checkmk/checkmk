@@ -66,9 +66,9 @@ test('List elements are draggable', async () => {
   })
 
   const draggables = wrapper.findAll('[aria-label="Drag to reorder"]')
-  draggables[0]!.trigger('dragstart')
-  draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
-  draggables[0]!.trigger('dragend')
+  await draggables[0]!.trigger('dragstart')
+  await draggables[0]!.trigger('drag', { clientX: 0, clientY: 50 })
+  await draggables[0]!.trigger('dragend')
 
   wrapper.vm.$nextTick(() => {
     expect(wrapper.find('[data-testid="test-data"]').text()).toBe('["second_value","first_value"]')

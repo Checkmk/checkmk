@@ -54,7 +54,7 @@ test('dropdown updates selecedOption', async () => {
   expect(selectedOption).toBe('option1')
 
   // Check that dropdown now shows the selected option
-  rerender({ ...props, selectedOption })
+  await rerender({ ...props, selectedOption })
   await waitFor(() => screen.getByText('Option 1'))
 })
 

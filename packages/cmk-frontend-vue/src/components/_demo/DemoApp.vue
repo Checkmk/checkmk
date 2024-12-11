@@ -24,8 +24,8 @@ const selectedCss = ref<'cmk' | 'none'>('cmk')
 const currentRoute = useRoute()
 const screenshotMode = ref(currentRoute.query.screenshot === 'true')
 
-function enableScreenshotMode() {
-  router.push({ path: currentRoute.path, query: { screenshot: 'true' } })
+async function enableScreenshotMode() {
+  await router.push({ path: currentRoute.path, query: { screenshot: 'true' } })
 }
 
 watch(
@@ -51,19 +51,19 @@ async function setCss(name: 'cmk' | 'none') {
 
 immediateWatch(
   () => selectedCss.value,
-  (name: 'cmk' | 'none') => {
+  async (name: 'cmk' | 'none') => {
     selectedCss.value = name
-    setCss(name)
-    setTheme(selectedTheme.value)
+    await setCss(name)
+    await setTheme(selectedTheme.value)
   }
 )
 
 immediateWatch(
   () => selectedTheme.value,
-  (name: 'facelift' | 'modern-dark') => {
+  async (name: 'facelift' | 'modern-dark') => {
     selectedTheme.value = name
-    setCss(selectedCss.value)
-    setTheme(name)
+    await setCss(selectedCss.value)
+    await setTheme(name)
   }
 )
 </script>

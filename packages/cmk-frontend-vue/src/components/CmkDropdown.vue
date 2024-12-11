@@ -67,6 +67,7 @@ function showSuggestions(): void {
     filterString.value = ''
     filteredOptions.value = options.map((_, index) => index)
     selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     nextTick(() => {
       suggestionInputRef.value?.focus()
     })
@@ -93,6 +94,7 @@ function selectSuggestion(filteredOptionIndex: number | null): void {
     throw new Error('Invalid filtered option index')
   }
   selectedSuggestionOptionIndex.value = optionIndex
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   nextTick(() => {
     optionRefs.value[optionIndex]?.scrollIntoView({ block: 'nearest' })
   })

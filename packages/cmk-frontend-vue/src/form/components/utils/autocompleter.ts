@@ -48,19 +48,19 @@ export function setupAutocompleter<OutputType>(autocompleter: Autocompleter | nu
   if (autocompleter === null) {
     return { input, focus, output }
   }
-  watch(input, () => {
-    updateOutput()
+  watch(input, async () => {
+    await updateOutput()
   })
 
-  watch(focus, () => {
+  watch(focus, async () => {
     if (focus.value) {
-      updateOutput()
+      await updateOutput()
     }
   })
 
-  const updateOutput = () => {
+  const updateOutput = async () => {
     if (autocompleter.fetch_method === 'ajax_vs_autocomplete') {
-      fetchData<OutputType>(input.value, autocompleter.data).then((result: OutputType) => {
+      await fetchData<OutputType>(input.value, autocompleter.data).then((result: OutputType) => {
         output.value = result
       })
     }

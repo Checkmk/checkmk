@@ -32,18 +32,20 @@ const [validation, value] = useValidation<string[]>(
 const localElements = ref<{ name: string; title: string }[]>(props.spec.elements)
 const loading: Ref<boolean> = ref(false) // Loading flag
 
-onMounted(() => {
+onMounted(async () => {
   if (!props.spec.autocompleter) {
     return
   }
   loading.value = true
-  fetchData<{ choices: [string, string][] }>('', props.spec.autocompleter.data).then((result) => {
-    localElements.value = result['choices'].map(([id, title]) => ({
-      name: id,
-      title: title.length > 60 ? `${title.substring(0, 57)}...` : title
-    }))
-    loading.value = false
-  })
+  await fetchData<{ choices: [string, string][] }>('', props.spec.autocompleter.data).then(
+    (result) => {
+      localElements.value = result['choices'].map(([id, title]) => ({
+        name: id,
+        title: title.length > 60 ? `${title.substring(0, 57)}...` : title
+      }))
+      loading.value = false
+    }
+  )
 })
 
 const searchInactive = ref('')

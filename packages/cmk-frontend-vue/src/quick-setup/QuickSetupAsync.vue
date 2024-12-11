@@ -118,6 +118,7 @@ const nextStage = async (actionId: string | null = null) => {
     acts.length = 0
 
     for (const action of result.next_stage_structure.actions) {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       acts.push(processActionData(ActionType.Next, action, nextStage))
     }
 
@@ -165,6 +166,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     const acts: QuickSetupStageAction[] = []
     if (stageIndex !== data.stages.length - 1) {
       for (const action of stage.actions) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         acts.push(processActionData(ActionType.Next, action, nextStage))
       }
     }
@@ -203,6 +205,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
     form_spec_errors: {},
     errors: [],
     user_input: ref({}),
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     actions: [...data.actions.map((action) => processActionData(ActionType.Save, action, save))]
   })
   loadedAllStages.value = true
@@ -227,6 +230,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
 
     if (isFirst) {
       for (const action of data.stage.next_stage_structure.actions) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         acts.push(processActionData(ActionType.Next, action, nextStage))
       }
     }
@@ -253,6 +257,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     errors: [],
     user_input: ref({}),
     actions: [
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       ...data.actions.map((action) => processActionData(ActionType.Save, action, save)),
       processActionData(
         ActionType.Prev,

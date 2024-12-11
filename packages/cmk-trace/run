@@ -116,7 +116,7 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$(bazel info workspace)"/.venv_uv/bin/activate
+    source "$("$BAZEL_CMD" info workspace)"/.venv_uv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
@@ -126,24 +126,26 @@ run_clean() {
 }
 
 run_unit_tests() {
-    setup_venv
-    pytest
+    "${BAZEL_CMD}" test "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
 }
 
 run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
-    setup_venv
-    ruff check --select I --diff cmk tests
-    ruff format --check --diff cmk tests
+    "${BAZEL_CMD}" lint \
+        --aspect:interactive=false \
+        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --diff \
+        --machine \
+        :all
+    "${BAZEL_CMD}" run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy //packages/cmk-trace:all
+    "${BAZEL_CMD}" build --config=mypy "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
 }
 
 run_ruff() {
-    setup_venv
-    ruff check cmk tests
+    "${BAZEL_CMD}" lint :all
 }
 
 run_bandit() {
@@ -156,9 +158,12 @@ run_bandit() {
 
 run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
-    setup_venv
-    ruff check --select I --fix cmk tests
-    ruff format cmk tests
+    "${BAZEL_CMD}" lint \
+        --aspect:interactive=false \
+        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --fix \
+        :all
+    "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_documentation() {

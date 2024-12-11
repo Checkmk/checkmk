@@ -11,10 +11,9 @@ from opentelemetry import trace as otel_trace
 
 @pytest.fixture(name="reset_global_tracer_provider")
 def _fixture_reset_global_tracer_provider() -> Iterator[None]:
-    # pylint: disable=protected-access
-    provider_orig = otel_trace._TRACER_PROVIDER
+    provider_orig = otel_trace._TRACER_PROVIDER  # noqa: SLF001
     try:
         yield
     finally:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = provider_orig
+        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False  # noqa: SLF001
+        otel_trace._TRACER_PROVIDER = provider_orig  # noqa: SLF001

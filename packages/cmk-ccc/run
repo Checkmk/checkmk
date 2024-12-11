@@ -126,7 +126,7 @@ run_clean() {
 }
 
 run_unit_tests() {
-    "${BAZEL_CMD}" test //packages/cmk-ccc:all
+    "${BAZEL_CMD}" test "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
 }
 
 run_check_format() {
@@ -141,7 +141,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy //packages/cmk-ccc:all
+    "${BAZEL_CMD}" build --config=mypy "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
 }
 
 run_ruff() {

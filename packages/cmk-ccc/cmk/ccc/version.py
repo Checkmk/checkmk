@@ -498,7 +498,7 @@ def parse_check_mk_version(v: str) -> int:
         _, multiply = var_map[var_type]
         val += num * multiply
 
-    return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
+    return int(f"{int(major):02}{int(minor):02}{sub:02}{val:05}")
 
 
 class VersionsCompatible:
@@ -715,7 +715,7 @@ def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
     }
 
 
-def _get_os_info() -> str:  # noqa: C901
+def _get_os_info() -> str:
     for path_release_file in (
         Path("/etc/redhat-release"),
         Path("/etc/SuSE-release"),

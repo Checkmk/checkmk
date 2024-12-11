@@ -2,13 +2,13 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 import traceback
 import uuid
-from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
 from pydantic import BaseModel
 
@@ -24,17 +24,21 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue.form_spec_visitor import (
-    parse_value_from_frontend,
-    serialize_data_for_frontend,
     validate_value_from_frontend,
 )
-from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE
-from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
-from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
+from cmk.gui.quick_setup.handlers.utils import (
+    Action,
+    Button,
+    form_spec_parse,
+    get_stage_components_from_widget,
+    LOAD_WAIT_LABEL,
+    NEXT_BUTTON_ARIA_LABEL,
+    NEXT_BUTTON_LABEL,
+    PREV_BUTTON_ARIA_LABEL,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
     stage_components,
@@ -43,8 +47,6 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
     CallableValidator,
     FormspecMap,
     QuickSetup,
-    QuickSetupAction,
-    QuickSetupActionMode,
     QuickSetupStage,
     QuickSetupStageAction,
 )
@@ -57,23 +59,11 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
-    Collapsible,
     FormSpecId,
-    FormSpecWrapper,
-    ListOfWidgets,
     Widget,
 )
 
 from cmk.rulesets.v1.form_specs import FormSpec
-
-GUIDED_MODE_STRING = _("Guided mode")
-OVERVIEW_MODE_STRING = _("Overview mode")
-LOAD_WAIT_LABEL = _("Please wait...")
-PREV_BUTTON_LABEL = _("Back")
-PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")
-NEXT_BUTTON_LABEL = _("Next")
-NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
-COMPLETE_BUTTON_ARIA_LABEL = _("Save")
 
 
 class InvalidStageException(MKGeneralException):
@@ -92,25 +82,6 @@ class QuickSetupValidationError:
 
 
 ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
-
-
-@dataclass
-class Button:
-    label: str
-    aria_label: str
-
-
-@dataclass
-class Action:
-    id: ActionId
-    button: Button
-    load_wait_label: str = field(default=LOAD_WAIT_LABEL)
-
-
-@dataclass
-class StageOverview:
-    title: str
-    sub_title: str | None
 
 
 @dataclass
@@ -138,75 +109,6 @@ class Errors:
         return bool(self.formspec_errors or self.stage_errors)
 
 
-@dataclass
-class NextStageStructure:
-    components: Sequence[dict]
-    actions: Sequence[Action]
-    prev_button: Button | None = None
-
-
-@dataclass
-class AllStageErrors:
-    all_stage_errors: Sequence[Errors]
-
-
-@dataclass
-class QuickSetupOverview:
-    quick_setup_id: QuickSetupId
-    overviews: list[StageOverview]
-    stage: NextStageStructure
-    actions: list[Action]
-    prev_button: Button
-    mode: str = field(default="guided")
-    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
-    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
-
-
-@dataclass
-class CompleteStage:
-    title: str
-    sub_title: str | None
-    components: Sequence[dict]
-    actions: Sequence[Action]
-    prev_button: Button
-
-
-@dataclass
-class QuickSetupAllStages:
-    quick_setup_id: QuickSetupId
-    stages: list[CompleteStage]
-    actions: list[Action]
-    mode: str = field(default="overview")
-    guided_mode_string: str = field(default=GUIDED_MODE_STRING)
-    overview_mode_string: str = field(default=OVERVIEW_MODE_STRING)
-
-
-def _get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormData | None) -> dict:
-    if isinstance(widget, (ListOfWidgets, Collapsible, ConditionalNotificationStageWidget)):
-        widget_as_dict = asdict(widget)
-        widget_as_dict["items"] = [
-            _get_stage_components_from_widget(item, prefill_data) for item in widget.items
-        ]
-        return widget_as_dict
-
-    if isinstance(widget, FormSpecWrapper):
-        form_spec = cast(FormSpec, widget.form_spec)
-        return {
-            "widget_type": widget.widget_type,
-            "form_spec": asdict(
-                serialize_data_for_frontend(
-                    form_spec=form_spec,
-                    field_id=str(widget.id),
-                    origin=DataOrigin.DISK,
-                    value=prefill_data.get(widget.id) if prefill_data else DEFAULT_VALUE,
-                    do_validate=False,
-                )
-            ),
-        }
-
-    return asdict(widget)
-
-
 def _stage_validate_all_form_spec_keys_existing(
     current_stage_form_data: RawFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
@@ -227,62 +129,6 @@ def _form_spec_validate(
         for form_spec_id, form_data in current_stage_form_data.items()
         if (errors := validate_value_from_frontend(expected_formspecs_map[form_spec_id], form_data))
     }
-
-
-def _form_spec_parse(
-    all_stages_form_data: Sequence[RawFormData],
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> ParsedFormData:
-    return {
-        form_spec_id: parse_value_from_frontend(expected_formspecs_map[form_spec_id], form_data)
-        for current_stage_form_data in all_stages_form_data
-        for form_spec_id, form_data in current_stage_form_data.items()
-    }
-
-
-def quick_setup_guided_mode(
-    quick_setup: QuickSetup, prefill_data: ParsedFormData | None
-) -> QuickSetupOverview:
-    stages = [stage() for stage in quick_setup.stages]
-    return QuickSetupOverview(
-        quick_setup_id=quick_setup.id,
-        overviews=[
-            StageOverview(
-                title=stage.title,
-                sub_title=stage.sub_title,
-            )
-            for stage in stages
-        ],
-        stage=NextStageStructure(
-            components=[
-                _get_stage_components_from_widget(widget, prefill_data)
-                for widget in stage_components(stages[0])
-            ],
-            actions=[
-                Action(
-                    id=action.id,
-                    button=Button(
-                        label=action.next_button_label or NEXT_BUTTON_LABEL,
-                        aria_label=NEXT_BUTTON_ARIA_LABEL,
-                    ),
-                    load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
-                )
-                for action in stages[0].actions
-            ],
-        ),
-        actions=[
-            Action(
-                id=action.id,
-                button=Button(label=action.label, aria_label=COMPLETE_BUTTON_ARIA_LABEL),
-                load_wait_label=LOAD_WAIT_LABEL,
-            )
-            for action in quick_setup.actions
-        ],
-        prev_button=Button(
-            label=PREV_BUTTON_LABEL,
-            aria_label=PREV_BUTTON_ARIA_LABEL,
-        ),
-    )
 
 
 def get_stages_and_formspec_map(
@@ -386,26 +232,10 @@ def validate_custom_validators(
         errors.stage_errors.extend(
             custom_validator(
                 quick_setup_id,
-                _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
+                form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             )
         )
     return errors
-
-
-def validate_stages_formspecs(
-    stages_raw_formspecs: Sequence[RawFormData],
-    quick_setup_formspec_map: FormspecMap,
-) -> Sequence[Errors] | None:
-    stages_errors = []
-    for stage_index in range(len(stages_raw_formspecs)):
-        errors = validate_stage_formspecs(
-            stage_index=StageIndex(stage_index),
-            stages_raw_formspecs=stages_raw_formspecs[: stage_index + 1],
-            quick_setup_formspec_map=quick_setup_formspec_map,
-        )
-        if errors.exist():
-            stages_errors.append(errors)
-    return stages_errors or None
 
 
 def recap_stage(
@@ -416,7 +246,7 @@ def recap_stage(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
 ) -> Sequence[Widget]:
-    parsed_formspec = _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
+    parsed_formspec = form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map)
     recap_widgets: list[Widget] = []
     for recap_callable in matching_stage_action(stages[stage_index], stage_action_id).recap:
         recap_widgets.extend(
@@ -427,32 +257,6 @@ def recap_stage(
             )
         )
     return recap_widgets
-
-
-def get_stage_structure(
-    stage: QuickSetupStage,
-    prefill_data: ParsedFormData | None = None,
-) -> NextStageStructure:
-    return NextStageStructure(
-        components=[
-            _get_stage_components_from_widget(widget, prefill_data)
-            for widget in stage_components(stage)
-        ],
-        prev_button=Button(label=stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL)
-        if stage.prev_button_label
-        else None,
-        actions=[
-            Action(
-                id=action.id,
-                load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
-                button=Button(
-                    label=action.next_button_label or NEXT_BUTTON_LABEL,
-                    aria_label=NEXT_BUTTON_ARIA_LABEL,
-                ),
-            )
-            for action in stage.actions
-        ],
-    )
 
 
 class StageActionResult(BaseModel, frozen=False):
@@ -511,72 +315,6 @@ def validate_and_recap_stage(
         quick_setup_formspec_map=form_spec_map,
     )
     return response
-
-
-def complete_quick_setup(
-    action: QuickSetupAction,
-    mode: QuickSetupActionMode,
-    stages_raw_formspecs: Sequence[RawFormData],
-    quick_setup_formspec_map: FormspecMap,
-    object_id: str | None = None,
-) -> QuickSetupSaveRedirect:
-    return QuickSetupSaveRedirect(
-        redirect_url=action.action(
-            _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
-            mode,
-            object_id,
-        )
-    )
-
-
-def quick_setup_overview_mode(
-    quick_setup: QuickSetup,
-    prefill_data: ParsedFormData | None,
-) -> QuickSetupAllStages:
-    stages = [stage() for stage in quick_setup.stages]
-    return QuickSetupAllStages(
-        quick_setup_id=quick_setup.id,
-        stages=[
-            CompleteStage(
-                title=stage.title,
-                sub_title=stage.sub_title,
-                components=[
-                    _get_stage_components_from_widget(widget, prefill_data)
-                    for widget in stage_components(stage)
-                ],
-                # TODO: the actions as well the prev_button should be removed from the overview mode
-                #  as they are not rendered. The removal must be performed alongside adjustment
-                #  of the frontend code.
-                actions=[
-                    Action(
-                        id=action.id,
-                        button=Button(
-                            label=action.next_button_label or NEXT_BUTTON_LABEL,
-                            aria_label=NEXT_BUTTON_ARIA_LABEL,
-                        ),
-                        load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
-                    )
-                    for action in stage.actions
-                ],
-                prev_button=Button(
-                    label=stage.prev_button_label or PREV_BUTTON_LABEL,
-                    aria_label=PREV_BUTTON_ARIA_LABEL,
-                ),
-            )
-            for stage in stages
-        ],
-        actions=[
-            Action(
-                id=action.id,
-                button=Button(
-                    label=action.label,
-                    aria_label=COMPLETE_BUTTON_ARIA_LABEL,
-                ),
-                load_wait_label=LOAD_WAIT_LABEL,
-            )
-            for action in quick_setup.actions
-        ],
-    )
 
 
 class QuickSetupStageActionBackgroundJob(BackgroundJob):
@@ -670,3 +408,36 @@ def start_quick_setup_stage_job(
         raise MKUserError(None, str(job_start.error))
 
     return job.get_job_id()
+
+
+@dataclass
+class NextStageStructure:
+    components: Sequence[dict]
+    actions: Sequence[Action]
+    prev_button: Button | None = None
+
+
+def get_stage_structure(
+    stage: QuickSetupStage,
+    prefill_data: ParsedFormData | None = None,
+) -> NextStageStructure:
+    return NextStageStructure(
+        components=[
+            get_stage_components_from_widget(widget, prefill_data)
+            for widget in stage_components(stage)
+        ],
+        prev_button=Button(label=stage.prev_button_label, aria_label=PREV_BUTTON_ARIA_LABEL)
+        if stage.prev_button_label
+        else None,
+        actions=[
+            Action(
+                id=action.id,
+                load_wait_label=action.load_wait_label or LOAD_WAIT_LABEL,
+                button=Button(
+                    label=action.next_button_label or NEXT_BUTTON_LABEL,
+                    aria_label=NEXT_BUTTON_ARIA_LABEL,
+                ),
+            )
+            for action in stage.actions
+        ],
+    )

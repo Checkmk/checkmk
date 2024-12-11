@@ -5,7 +5,7 @@
 
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 
-from cmk.gui.quick_setup.to_frontend import get_stages_and_formspec_map, recap_stage
+from cmk.gui.quick_setup.handlers.stage import get_stages_and_formspec_map, recap_stage
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage, QuickSetupStageAction

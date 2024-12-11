@@ -29,22 +29,24 @@ from cmk.gui.openapi.restful_objects.constructors import (
     sub_object_href,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.quick_setup.to_frontend import (
+from cmk.gui.quick_setup.handlers.setup import (
     AllStageErrors,
     complete_quick_setup,
-    get_stage_structure,
-    get_stages_and_formspec_map,
-    matching_stage_action,
-    NextStageStructure,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
+    validate_stages_formspecs,
+)
+from cmk.gui.quick_setup.handlers.stage import (
+    get_stage_structure,
+    get_stages_and_formspec_map,
+    matching_stage_action,
+    NextStageStructure,
     StageActionResult,
     start_quick_setup_stage_job,
     validate_and_recap_stage,
     validate_custom_validators,
-    validate_stages_formspecs,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect

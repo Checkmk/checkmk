@@ -9,7 +9,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from .config_setups import register as register_config_setups
-from .to_frontend import QuickSetupStageActionBackgroundJob
+from .handlers.stage import QuickSetupStageActionBackgroundJob
 from .v0_unstable._registry import QuickSetupRegistry
 
 

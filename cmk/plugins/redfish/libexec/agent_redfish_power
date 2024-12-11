@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+'''call for special agent function'''
+# (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
+
+# License: GNU General Public License v2
+
+import sys
+
+from cmk.plugins.redfish.special_agents.agent_redfish_power import main
+
+if __name__ == "__main__":
+    sys.exit(main())

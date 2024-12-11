@@ -116,8 +116,6 @@ run_optionally_exclusive "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPU
     ${EXTRA_ARGS} \
     --iidfile "${IIDFILE}" \
     --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
-    --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \
-    --build-context dev_images="${CHECKOUT_ROOT}/defines/dev-images" \
     -f "${CHECKOUT_ROOT}/defines/dev-images/reference/Dockerfile" \
     "${TEMP_CONTEXT_DIR}" \
     1>&2

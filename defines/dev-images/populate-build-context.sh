@@ -7,10 +7,33 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev/null 2>&1 && pwd)"
+TARGET_DIR="$(realpath "${1:-.}")"
+
+(
+    cd "${REPO_ROOT}/buildscripts/infrastructure/build-nodes/scripts"
+    cp \
+        build_lib.sh \
+        Check_MK-pubkey.gpg \
+        install-iwyu.sh install-clang.sh \
+        install-docker.sh \
+        install-nodejs.sh \
+        install-shellcheck.sh \
+        install-musl-tools.sh \
+        install-packer.sh \
+        install-make-dist-deps.sh \
+        install-aws-cli.sh \
+        install-buildifier.sh \
+        install-taplo.sh \
+        "${TARGET_DIR}"
+)
+
+cp \
+    "${REPO_ROOT}/defines/dev-images/entrypoint.sh" \
+    "${TARGET_DIR}"
 
 cp \
     "${REPO_ROOT}/defines.make" \
     "${REPO_ROOT}/package_versions.bzl" \
     "${REPO_ROOT}/.bazelversion" \
     "${REPO_ROOT}/omd/strip_binaries" \
-    "${1:-.}"
+    "${TARGET_DIR}"

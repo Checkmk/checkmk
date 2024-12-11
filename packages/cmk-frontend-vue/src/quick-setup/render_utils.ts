@@ -14,7 +14,7 @@ import type {
   StageData
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { QuickSetupStageAction, VnodeOrNull } from './components/quick-setup/quick_setup_types'
-import type { QSAction } from './rest_api_types'
+import type { QSAction } from './rest-api/types'
 
 export type UpdateCallback = (value: StageData) => void
 

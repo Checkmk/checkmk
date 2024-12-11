@@ -13,7 +13,7 @@ import {
   validateStage,
   getAllStages,
   editQuickSetup
-} from './rest_api'
+} from './rest-api/api'
 import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
@@ -25,8 +25,8 @@ import type {
   DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import type { QSInitializationResponse, QSStageResponse } from './rest_api_types'
-import { isValidationError, isAllStagesValidationError } from './rest_api_types'
+import type { QSInitializationResponse, QSStageResponse } from './rest-api/types'
+import { isValidationError, isAllStagesValidationError } from './rest-api/types'
 import { asStringArray } from './utils'
 import type {
   StageData,

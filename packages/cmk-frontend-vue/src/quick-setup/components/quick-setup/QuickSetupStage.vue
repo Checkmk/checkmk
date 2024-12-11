@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import { Label } from '@/components/ui/label'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
@@ -35,8 +35,8 @@ const { ErrorBoundary } = useErrorBoundary()
     @click="(_mouse_event) => onClickGoTo"
   >
     <div class="qs-stage__content">
-      <Label variant="title" :on-click="onClickGoTo">{{ title }}</Label>
-      <Label v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</Label>
+      <CmkLabel variant="title" :on-click="onClickGoTo">{{ title }}</CmkLabel>
+      <CmkLabel v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</CmkLabel>
 
       <ErrorBoundary v-if="isCompleted && recapContent">
         <component :is="recapContent" />

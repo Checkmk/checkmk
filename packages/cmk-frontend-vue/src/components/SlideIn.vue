@@ -13,7 +13,7 @@ import {
   DialogRoot
 } from 'radix-vue'
 import CmkIcon from '@/components/CmkIcon.vue'
-import { Label } from '@/components/ui/label'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 export interface SlideInProps {
   open: boolean
@@ -37,7 +37,7 @@ const emit = defineEmits(['close'])
         @escape-key-down="emit('close')"
       >
         <DialogTitle v-if="header" class="slide-in__title">
-          <Label variant="title">{{ header.title }}</Label>
+          <CmkLabel variant="title">{{ header.title }}</CmkLabel>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
             <CmkIcon name="close" size="xsmall" />
           </DialogClose>

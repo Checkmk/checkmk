@@ -11,7 +11,6 @@
 if [ -n "${MK_INSTALLDIR}" ]; then
     HOMEDIR="${MK_INSTALLDIR}/runtime/controller"
     CONTROLLER_BINARY="${MK_INSTALLDIR}/package/bin/cmk-agent-ctl"
-    OLD_HOMEDIR="/var/lib/cmk-agent"
 else
     HOMEDIR="/var/lib/cmk-agent"
     CONTROLLER_BINARY="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
@@ -39,32 +38,6 @@ _issue_legacy_pull_warning() {
 WARNING: The agent controller is operating in an insecure mode! To secure the connection run \`cmk-agent-ctl register\`.
 
 HERE
-}
-
-_activate_single_dir() {
-    [ -e "${OLD_HOMEDIR}" ] && systemctl status cmk-agent-ctl-daemon >/dev/null 2>&1 && {
-        echo "Stopping cmk-agent-ctl daemon for migration of home directory."
-        systemctl stop cmk-agent-ctl-daemon >/dev/null 2>&1
-        restart_agent_controller_daemon="yes"
-    }
-
-    _adapt_user
-    _set_user_permissions
-
-    [ "${restart_agent_controller_daemon}" = "yes" ] && {
-        # This is probably not necessary because upcoming scripts will replace the service anyways,
-        # but we better leave the situation as initially found.
-        echo "Starting cmk-agent-ctl daemon again."
-        systemctl start cmk-agent-ctl-daemon >/dev/null 2>&1
-    }
-}
-
-_adapt_user() {
-    # Only change if the user really has our old home directory assigned!
-    [ "$(getent passwd "${AGENT_USER}" | cut -d: -f6)" = "/var/lib/cmk-agent" ] && {
-        printf "Changing home directory of %s to %s\n" "${AGENT_USER}" "${HOMEDIR}"
-        usermod -d "${HOMEDIR}" "${AGENT_USER}"
-    }
 }
 
 _set_user_permissions() {
@@ -117,7 +90,7 @@ main() {
     mkdir -p "${HOMEDIR}"
     chown -R "${AGENT_USER}":"${AGENT_USER}" "${HOMEDIR}"
 
-    [ -n "${MK_INSTALLDIR}" ] && _activate_single_dir
+    [ -n "${MK_INSTALLDIR}" ] && _set_user_permissions
 
     if [ "${user_is_new}" ]; then
         _allow_legacy_pull

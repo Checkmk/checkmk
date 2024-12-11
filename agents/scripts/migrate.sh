@@ -5,7 +5,9 @@
 
 : "${MK_INSTALLDIR:=""}"
 : "${OLD_MK_VARDIR:="/var/lib/check_mk_agent"}"
-: "${OLD_HOMEDIR:="/var/lib/cmk-agent"}"
+: "${AGENT_USER:="cmk-agent"}"
+
+LEGACY_HOMEDIR="/var/lib/cmk-agent"
 
 usage() {
     cat >&2 <<HERE
@@ -17,7 +19,8 @@ HERE
 
 main() {
     [ -n "${MK_INSTALLDIR}" ] && migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
-    [ -n "${MK_INSTALLDIR}" ] && migrate_controller_registration "${OLD_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+    [ -n "${MK_INSTALLDIR}" ] && migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+    [ -n "${MK_INSTALLDIR}" ] && migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
 }
 
 migrate_runtime_dir() {
@@ -40,6 +43,30 @@ migrate_controller_registration() {
         printf "Found agent controller registered connections at legacy home directory %s, migrating to %s.\n" "${old_homedir}" "${new_homedir}"
         mv "${old_registry}" "${new_homedir}"
         rm -r "${old_homedir}"
+    }
+}
+
+_migrate_home() {
+    old_homedir="$1"
+    new_homedir="$2"
+
+    # Only change if the user really has the legacy home directory assigned!
+    [ "$(getent passwd "${AGENT_USER}" | cut -d: -f6)" = "${old_homedir}" ] || return 0
+
+    systemctl status cmk-agent-ctl-daemon >/dev/null 2>&1 && {
+        echo "Stopping cmk-agent-ctl daemon for migration of home directory."
+        systemctl stop cmk-agent-ctl-daemon >/dev/null 2>&1
+        restart_agent_controller_daemon="yes"
+    }
+
+    printf "Changing home directory of %s to %s\n" "${AGENT_USER}" "${new_homedir}"
+    usermod -d "${new_homedir}" "${AGENT_USER}"
+
+    [ "${restart_agent_controller_daemon}" = "yes" ] && {
+        # This is probably not necessary because upcoming scripts will replace the service anyways,
+        # but we better leave the situation as initially found.
+        echo "Starting cmk-agent-ctl daemon again."
+        systemctl start cmk-agent-ctl-daemon >/dev/null 2>&1
     }
 }
 

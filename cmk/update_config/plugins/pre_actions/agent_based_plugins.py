@@ -38,6 +38,9 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
         conflict_mode: ConflictMode,
     ) -> bool:
         path_config = get_path_config()
+        # This means MKP are not supported so we bail out early
+        if path_config is None:
+            return False
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()

@@ -45,10 +45,16 @@ def prompt(message: str) -> str:
     return input(message)
 
 
-def get_path_config() -> PathConfig:
+def get_path_config() -> PathConfig | None:
+    local_path = plugins_local_path()
+    addons_path = addons_plugins_local_path()
+    if local_path is None:
+        return None
+    if addons_path is None:
+        return None
     return PathConfig(
-        cmk_plugins_dir=plugins_local_path(),
-        cmk_addons_plugins_dir=addons_plugins_local_path(),
+        cmk_plugins_dir=local_path,
+        cmk_addons_plugins_dir=addons_path,
         agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
         agents_dir=paths.local_agents_dir,
         alert_handlers_dir=paths.local_alert_handlers_dir,

@@ -42,6 +42,9 @@ class PreUpdateUIExtensions(PreUpdateAction):
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
         path_config = get_path_config()
+        # abort early is MKPs are not supported
+        if path_config is None:
+            return
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()

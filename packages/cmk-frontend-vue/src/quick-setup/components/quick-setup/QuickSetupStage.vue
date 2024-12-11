@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import { Label } from '@/components/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
@@ -42,19 +42,17 @@ const { ErrorBoundary } = useErrorBoundary()
         <component :is="recapContent" />
       </ErrorBoundary>
 
-      <Collapsible :open="isOpen">
-        <CollapsibleContent>
-          <QuickSetupStageContent
-            :index="index"
-            :number-of-stages="numberOfStages"
-            :loading="loading"
-            :mode="mode"
-            :errors="errors"
-            :actions="actions"
-            :content="content || null"
-          />
-        </CollapsibleContent>
-      </Collapsible>
+      <CmkCollapsible :open="isOpen">
+        <QuickSetupStageContent
+          :index="index"
+          :number-of-stages="numberOfStages"
+          :loading="loading"
+          :mode="mode"
+          :errors="errors"
+          :actions="actions"
+          :content="content || null"
+        />
+      </CmkCollapsible>
     </div>
   </li>
 </template>

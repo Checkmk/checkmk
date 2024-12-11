@@ -4,20 +4,30 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { CollapsibleContent, type CollapsibleContentProps } from 'radix-vue'
+import { CollapsibleContent, CollapsibleRoot, useForwardPropsEmits } from 'radix-vue'
+import type { CollapsibleRootEmits, CollapsibleRootProps } from 'radix-vue'
 
-const props = defineProps<CollapsibleContentProps>()
+const props = defineProps<CollapsibleRootProps>()
+const emits = defineEmits<CollapsibleRootEmits>()
+
+const forwarded = useForwardPropsEmits(props, emits)
 </script>
 
 <template>
   <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
-  <CollapsibleContent v-bind="props" class="ui-collapsible-content">
-    <slot />
-  </CollapsibleContent>
+  <CollapsibleRoot v-slot="{ open: openSlot }" v-bind="forwarded" class="cmk-collapsible">
+    <CollapsibleContent :open="openSlot" class="cmk-collapsible__content">
+      <slot />
+    </CollapsibleContent>
+  </CollapsibleRoot>
 </template>
 
 <style scoped lang="scss">
-.ui-collapsible-content {
+.cmk-collapsible {
+  padding-top: 2px;
+}
+
+.cmk-collapsible__content {
   &[data-state='open'] {
     animation: slideDown 300ms ease-out;
   }

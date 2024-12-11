@@ -444,7 +444,7 @@ rule_spec_redfish_datasource_programs = SpecialAgent(
     title=Title("Redfish Compatible Management Controller"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_valuespec_special_agents_redfish,
-    help_text=(
+    help_text=Help(
         "This rule selects the Agent Redfish instead of the normal Check_MK Agent "
         "which collects the data through the Redfish REST API"
     ),
@@ -455,7 +455,7 @@ rule_spec_redfish_power_datasource_programs = SpecialAgent(
     title=Title("Redfish Compatible Power Equipment (PDU)"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_valuespec_special_agents_redfish_power,
-    help_text=(
+    help_text=Help(
         "This rule selects the Agent Redfish instead of the normal Check_MK Agent "
         "which collects the data through the Redfish REST API"
     ),

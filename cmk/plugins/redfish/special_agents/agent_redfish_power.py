@@ -6,12 +6,18 @@
 
 import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-import redfish
 import urllib3
-from redfish.rest.v1 import JsonDecodingError, RetriesExhaustedError, ServerDownOrUnreachableError
+from redfish import redfish_logger  # type: ignore[import-untyped]
+from redfish.rest.v1 import (  # type: ignore[import-untyped]
+    HttpClient,
+    JsonDecodingError,
+    redfish_client,
+    RetriesExhaustedError,
+    ServerDownOrUnreachableError,
+)
 
 from cmk.utils import password_store
 
@@ -114,7 +120,7 @@ def fetch_data(redfishobj, url, component):
 def fetch_collection(redfishobj, data, component):
     """fetch a whole collection from Redfish data"""
     member_list = data.get("Members")
-    data_list = []
+    data_list: list = []
     if not member_list:
         return data_list
     for element in member_list:
@@ -189,10 +195,10 @@ class VendorGeneric:
     """Generic Vendor Definition"""
 
     name = "Generic"
-    version = None
+    version: str | None = None
     firmware_version = None
     view_supported = False
-    view_select = None
+    view_select: Mapping[str, Sequence[Mapping[str, Sequence[str]]]] | None = None
     expand_string = ""
 
 
@@ -257,7 +263,7 @@ class VendorDellData(VendorGeneric):
     """Dell specific settings"""
 
     name = "Dell"
-    version = None
+    version: str | None = None
     firmware_version = None
     expand_string = "?$expand=*($levels=1)"
 
@@ -275,7 +281,7 @@ class VendorFujitsuData(VendorGeneric):
     """Fujitsu specific settings"""
 
     name = "Fujitsu"
-    version = None
+    version: str | None = None
     firmware_version = None
     expand_string = "?$expand=Members"
 
@@ -284,7 +290,7 @@ class VendorCiscoData(VendorGeneric):
     """Cisco specific settings"""
 
     name = "Cisco"
-    version = None
+    version: str | None = None
     firmware_version = None
     expand_string = ""
 
@@ -311,7 +317,7 @@ class VendorRaritanData(VendorGeneric):
     """Raritan specific settings"""
 
     name = "Raritan"
-    version = None
+    version: str | None = None
     firmware_version = None
     expand_string = ""
 
@@ -325,6 +331,7 @@ def detect_vendor(root_data):
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
+    vendor_data: VendorGeneric
     match vendor_string:
         case "Hpe" | "Hp":
             vendor_data = VendorHPEData()
@@ -343,7 +350,7 @@ def detect_vendor(root_data):
                     vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
                         "Version"
                     )
-                if vendor_data.version.lower() == "ilo 5":
+                if vendor_data.version and vendor_data.version.lower() == "ilo 5":
                     vendor_data.view_supported = True
             return vendor_data
 
@@ -392,7 +399,7 @@ def get_information(redfishobj):
     manager_url = base_data.get("Managers", {}).get("@odata.id")
     systems_url = base_data.get("PowerEquipment", {}).get("@odata.id")
 
-    manager_data = False
+    manager_data = []
 
     # fetch managers
     if manager_url:
@@ -436,14 +443,14 @@ def get_information(redfishobj):
     return 0
 
 
-def get_session(args: Args):
+def get_session(args: Args) -> HttpClient:
     """create a Redfish session with given arguments"""
     try:
         redfish_host = f"{args.proto}://{args.host}:{args.port}"
         if args.password_id:
             pw_id, pw_path = args.password_id.split(":")
         # Create a Redfish client object
-        redfishobj = redfish.redfish_client(
+        redfishobj = redfish_client(
             base_url=redfish_host,
             username=args.user,
             password=(
@@ -478,7 +485,7 @@ def agent_redfish_main(args: Args) -> int:
         # Config logger used by Restful library
         logger_file = "RedfishApi.log"
         logger_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        logger = redfish.redfish_logger(logger_file, logger_format, logging.INFO)
+        logger = redfish_logger(logger_file, logger_format, logging.INFO)
         logger.info("Redfish API")
 
     # Start Redfish Session Object

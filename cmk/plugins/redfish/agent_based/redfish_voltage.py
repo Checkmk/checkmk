@@ -57,7 +57,7 @@ def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
     )
     yield Result(state=State(0), summary=volt_msg)
 
-    if perfdata.value is not None:
+    if perfdata and perfdata.value is not None:
         yield from check_levels(
             value=perfdata.value,
             levels_upper=perfdata.levels_upper,

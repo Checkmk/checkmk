@@ -24,7 +24,7 @@ from cmk.plugins.redfish.lib import (
 def discovery_redfish_temperatures(section: RedfishAPIData) -> DiscoveryResult:
     """Discover temperature sensors"""
     for key in section.keys():
-        temps = section[key].get("Temperatures", None)
+        temps = section[key].get("Temperatures")
         if not temps:
             continue
         for temp in temps:

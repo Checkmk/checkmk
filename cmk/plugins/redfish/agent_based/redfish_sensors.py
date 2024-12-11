@@ -45,7 +45,7 @@ def discovery_redfish_sensors(section: RedfishAPIData) -> DiscoveryResult:
 
 def check_redfish_sensors(item: str, params: TempParamDict, section: RedfishAPIData) -> CheckResult:
     """Check single sensor state"""
-    data = section.get(item, None)
+    data = section.get(item)
     if data is None:
         return
 

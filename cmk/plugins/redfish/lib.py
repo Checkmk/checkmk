@@ -5,22 +5,22 @@
 """functions for all redfish components"""
 
 import json
-from typing import Any, Dict, NamedTuple, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any, Literal, NamedTuple
 
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
-Levels = Optional[Tuple[float, float]]
-RedfishAPIData = Dict[str, object]
+Levels = tuple[Literal["fixed"], tuple[float, float]]
+RedfishAPIData = Mapping[str, Any]
 
 
 class Perfdata(NamedTuple):
     """normal monitoring performance data"""
 
-    name: str
     value: float
-    levels_upper: Levels
-    levels_lower: Levels
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]]
+    levels_upper: Levels | None
+    levels_lower: Levels | None
+    boundaries: tuple[float | None, float | None] | None
 
 
 def parse_redfish(string_table: StringTable) -> RedfishAPIData:
@@ -38,7 +38,7 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
         "SmartStorageLogicalDrive",
     ]
 
-    parsed = {}
+    parsed: dict[str, Mapping[str, Any]] = {}
     for line in string_table:
         entry = json.loads(line[0])
         # error entry
@@ -67,7 +67,7 @@ def discovery_redfish_multiple(section: RedfishAPIData) -> DiscoveryResult:
         yield Service(item=item)
 
 
-def _try_convert_to_float(value: str) -> Optional[float]:
+def _try_convert_to_float(value: str | None) -> float | None:
     if value is None:
         return None
     try:
@@ -76,7 +76,7 @@ def _try_convert_to_float(value: str) -> Optional[float]:
         return None
 
 
-def redfish_item_hpe(section: RedfishAPIData):
+def redfish_item_hpe(section: RedfishAPIData) -> str:
     """Item names for HPE devices"""
     # Example
     # "/redfish/v1/Systems/1/SmartStorage/ArrayControllers/0/LogicalDrives/1/"
@@ -87,22 +87,22 @@ def redfish_item_hpe(section: RedfishAPIData):
         "LogicalDrives",
     ]
     item = ""
-    logical_item = section.get("@odata.id", None).strip("/")
+    logical_item = str(section["@odata.id"]).strip("/")
     logical_list = logical_item.split("/")
     if any(x in logical_list for x in hpe_types):
         item = f"{logical_list[-3]}:{logical_list[-1]}"
     return item
 
 
-def redfish_health_state(state: Dict[str, Any]):
+def redfish_health_state(state: Mapping[str, Any]) -> tuple[int, str]:
     """Transfer Redfish health to monitoring health state"""
-    health_map: Dict[str, Tuple[int, str]] = {
+    health_map: dict[str, tuple[int, str]] = {
         "OK": (0, "Normal"),
         "Warning": (1, "A condition requires attention."),
         "Critical": (2, "A critical condition requires immediate attention."),
     }
 
-    state_map: Dict[str, Tuple[int, str]] = {
+    state_map: dict[str, tuple[int, str]] = {
         "Enabled": (0, "This resource is enabled."),
         "Disabled": (1, "This resource is disabled."),
         "StandbyOffline": (
@@ -170,9 +170,8 @@ capturing information for debugging.",
     return dev_state, ", ".join(dev_msg)
 
 
-def process_redfish_perfdata(entry: Dict[str, Any]):
+def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
     """Redfish performance data to monitoring performance data"""
-    name = entry.get("Name")
     value = None
     if "Reading" in entry.keys():
         value = entry.get("Reading", 0)
@@ -203,14 +202,13 @@ def process_redfish_perfdata(entry: Dict[str, Any]):
     if upper_warn is not None and upper_crit is None:
         upper_crit = float("inf")
 
-    def optional_tuple(warn: Optional[float], crit: Optional[float]) -> Levels:
+    def optional_tuple(warn: float | None, crit: float | None) -> Levels | None:
         assert (warn is None) == (crit is None)
         if warn is not None and crit is not None:
             return ("fixed", (warn, crit))
         return None
 
     return Perfdata(
-        name,
         value,
         levels_upper=optional_tuple(upper_warn, upper_crit),
         levels_lower=optional_tuple(min_warn, min_crit),

@@ -33,7 +33,8 @@ def discover_redfish_system(section: RedfishAPIData) -> DiscoveryResult:
         yield Service(item="state")
     else:
         for element in section:
-            item = f"state {element.get('Id', '0')}"
+            # FIXME: If this works, the section must look completely different
+            item = f"state {element.get('Id', '0')}"  # type: ignore[attr-defined]
             yield Service(item=item)
 
 
@@ -42,10 +43,11 @@ def check_redfish_system(item: str, section: RedfishAPIData) -> CheckResult:
         return
     data = None
     if len(section) == 1:
-        data = section[0]
+        # FIXME: If this works, the section must look completely different
+        data = section[0]  # type: ignore[index]
     else:
         for element in section:
-            if f"state {element.get('Id')}" == item:
+            if f"state {element.get('Id')}" == item:  # type: ignore[attr-defined]
                 data = element
                 break
 

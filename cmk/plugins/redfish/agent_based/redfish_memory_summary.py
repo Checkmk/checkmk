@@ -18,26 +18,27 @@ from cmk.plugins.redfish.lib import (
 
 
 def discover_redfish_memory_summary(section: RedfishAPIData) -> DiscoveryResult:
+    # FIXME: If this works, the section must look completely different
     if len(section) == 1:
         for element in section:
-            if "MemorySummary" in element.keys():
+            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
                 yield Service(item="Summary")
     else:
         for element in section:
-            if "MemorySummary" in element.keys():
-                item = f"Summary {element.get('Id', '0')}"
+            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
+                item = f"Summary {element.get('Id', '0')}"  # type: ignore[attr-defined]
                 yield Service(item=item)
 
 
 def check_redfish_memory_summary(item: str, section: RedfishAPIData) -> CheckResult:
     result = None
     if len(section) == 1:
-        result = section[0].get("MemorySummary")
+        result = section[0].get("MemorySummary")  # type: ignore[index]
     else:
         for element in section:
-            if "MemorySummary" in element.keys():
-                if item == f"Summary {element.get('Id', '0')}":
-                    result = element.get("MemorySummary")
+            if "MemorySummary" in element.keys():  # type: ignore[attr-defined]
+                if item == f"Summary {element.get('Id', '0')}":  # type: ignore[attr-defined]
+                    result = element.get("MemorySummary")  # type: ignore[attr-defined]
                     break
 
     if not result:

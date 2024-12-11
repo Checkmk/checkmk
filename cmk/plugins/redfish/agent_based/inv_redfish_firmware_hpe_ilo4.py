@@ -27,7 +27,7 @@ def inventory_redfish_firmware_hpe_ilo4(section: RedfishAPIData) -> InventoryRes
     path = ["hardware", "firmware", "redfish"]
     padding = len(str(len(section)))
     for index, entry_id in enumerate(section):
-        entry = section.get(entry_id)
+        entry = section[entry_id]
         component_name = f"{str(index).zfill(padding)}-{entry[0].get('Name')}"
         yield TableRow(
             path=path,

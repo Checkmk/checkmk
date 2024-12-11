@@ -116,6 +116,7 @@ class CMKOpenApiSession(requests.Session):
         self.services = ServicesAPI(self)
         self.agents = AgentsAPI(self)
         self.rules = RulesAPI(self)
+        self.rulesets = RulesetsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -283,15 +284,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def get_rulesets(self) -> list[dict[str, Any]]:
-        response = self.get(
-            "/domain-types/ruleset/collections/all",
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
 
     def get_broker_connections(
         self,
@@ -1084,6 +1076,17 @@ class RulesAPI(BaseAPI):
         response = self.session.get(
             "/domain-types/rule/collections/all",
             params={"ruleset_name": ruleset_name},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+
+class RulesetsAPI(BaseAPI):
+    def get_all(self) -> list[dict[str, Any]]:
+        response = self.session.get(
+            "/domain-types/ruleset/collections/all",
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

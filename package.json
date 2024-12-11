@@ -1,0 +1,23 @@
+{
+  "name": "master",
+  "version": "1.0.0",
+  "description": "![PR-CI status](https://github.com/Checkmk/checkmk/actions/workflows/pr.yaml/badge.svg)",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chokidar": "^4.0.1",
+    "glob": "^11.0.0",
+    "gulp": "^5.0.0",
+    "gulp-exec": "^5.0.0",
+    "gulp-watch": "^5.0.1",
+    "through2": "^4.0.2"
+  }
+}

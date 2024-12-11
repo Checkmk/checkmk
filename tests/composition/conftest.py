@@ -130,7 +130,7 @@ def _connection(
             "site_id": remote_site.id,
         }
 
-    central_site.openapi.create_site(
+    central_site.openapi.sites.create(
         {
             "basic_settings": basic_settings,
             "status_connection": {
@@ -163,7 +163,7 @@ def _connection(
             },
         }
     )
-    central_site.openapi.login_to_site(remote_site.id)
+    central_site.openapi.sites.login(remote_site.id)
     central_site.openapi.activate_changes_and_wait_for_completion(
         # this seems to be necessary to avoid sporadic CI failures
         force_foreign_changes=True,
@@ -173,7 +173,7 @@ def _connection(
     finally:
         hostnames = {h["id"] for h in central_site.openapi.hosts.get_all()}
         logger.warning("Hosts left: %s", hostnames)
-        central_site.openapi.delete_site(remote_site.id)
+        central_site.openapi.sites.delete(remote_site.id)
         central_site.openapi.activate_changes_and_wait_for_completion(
             # this seems to be necessary to avoid sporadic CI failures
             force_foreign_changes=True,

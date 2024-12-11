@@ -118,6 +118,7 @@ class CMKOpenApiSession(requests.Session):
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
         self.broker_connections = BrokerConnectionsAPI(self)
+        self.sites = SitesAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -285,62 +286,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def create_site(self, site_config: dict) -> None:
-        response = self.post(
-            "/domain-types/site_connection/collections/all",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json={"site_config": site_config},
-        )
-
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def update_site(self, site_id: str, site_config: dict) -> None:
-        response = self.put(
-            f"/objects/site_connection/{site_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json={"site_config": site_config},
-        )
-
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-    def show_site(self, site_id: str) -> dict[str, Any]:
-        response = self.get(
-            f"/objects/site_connection/{site_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-        )
-
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-
-        value: dict[str, Any] = response.json()
-        return value
-
-    def delete_site(self, site_id: str) -> None:
-        if (
-            response := self.post(f"/objects/site_connection/{site_id}/actions/delete/invoke")
-        ).status_code != 204:
-            raise UnexpectedResponse.from_response(response)
-
-    def login_to_site(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
-        response = self.post(
-            f"/objects/site_connection/{site_id}/actions/login/invoke",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json={"username": user, "password": password},
-        )
-
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
     def create_dynamic_host_configuration(
         self,
@@ -1089,5 +1034,65 @@ class BrokerConnectionsAPI(BaseAPI):
                 "Content-Type": "application/json",
             },
         )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class SitesAPI(BaseAPI):
+    def create(self, site_config: dict) -> None:
+        response = self.session.post(
+            "/domain-types/site_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def update(self, site_id: str, site_config: dict) -> None:
+        response = self.session.put(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"site_config": site_config},
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def show(self, site_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/site_connection/{site_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value
+
+    def delete(self, site_id: str) -> None:
+        if (
+            response := self.session.post(
+                f"/objects/site_connection/{site_id}/actions/delete/invoke"
+            )
+        ).status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def login(self, site_id: str, user: str = "cmkadmin", password: str = "cmk") -> None:
+        response = self.session.post(
+            f"/objects/site_connection/{site_id}/actions/login/invoke",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={"username": user, "password": password},
+        )
+
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

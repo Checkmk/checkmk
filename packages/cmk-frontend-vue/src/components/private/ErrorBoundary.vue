@@ -24,10 +24,10 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 
 <template>
   <AlertBox v-if="props.error.value !== null" variant="error">
-    <strong>
-      An unexpected error occurred. Reload the Page to try again. If the Problem persists, reach out
-      to the Checkmk support.
-    </strong>
+    <div>
+      An unknown error occurred.<br />
+      Refresh the page to try again. If the problem persists, reach out to the Checkmk support.
+    </div>
     <CmkButton v-if="details === false" @click="details = true">Show details</CmkButton>
     <div v-else>
       <pre>{{ errorMessage }}</pre>

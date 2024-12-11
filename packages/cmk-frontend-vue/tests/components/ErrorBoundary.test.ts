@@ -22,7 +22,7 @@ test('ErrorBoundary shows full stack', async () => {
   spy.mockRestore()
 
   // we now see a unspecific error message:
-  screen.getByText('An unexpected error occurred.', { exact: false })
+  screen.getByText('An unknown error occurred.', { exact: false })
 
   // and click the button for more details:
   const details = screen.getByRole<HTMLButtonElement>('button', { name: 'Show details' })

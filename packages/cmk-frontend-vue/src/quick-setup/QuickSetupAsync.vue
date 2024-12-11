@@ -381,7 +381,7 @@ const handleError = (err: unknown) => {
     stages.value[quickSetupHook.stage.value]!.form_spec_errors = err.formspec_errors || {}
   } else if (err instanceof Error) {
     const message =
-      'An error occurred while trying to proceed to the next step. Please try again to confirm this is not a one-time occurrence. Please verify the logs if this error persists.'
+      'An unknown error occurred. Refresh the page to try again. If the problem persists, reach out to the Checkmk support.'
     globalError.value = {
       type: 'DetailedError',
       message: message,

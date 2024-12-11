@@ -99,7 +99,7 @@ export function requiresSomeInput(validators: Validator[]): boolean {
   })
 }
 
-export function groupDictionaryValidations(
+export function groupNestedValidations(
   elements: Array<{ name: string }>,
   newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {

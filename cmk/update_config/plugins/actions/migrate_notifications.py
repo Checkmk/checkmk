@@ -82,7 +82,7 @@ class MigrateNotifications(UpdateAction):
 
                 parameters_per_method[method].update(
                     {
-                        parameter_id[0]: self._get_visitor_data(
+                        parameter_id[0]: self._get_data_for_disk(
                             method=method,
                             parameter=parameter,  # type: ignore[arg-type]
                             nr=nr,
@@ -111,7 +111,7 @@ class MigrateNotifications(UpdateAction):
             "       If everything works as expected you can remove the backup.\n"
         )
 
-    def _get_visitor_data(
+    def _get_data_for_disk(
         self,
         method: NotificationParameterMethod,
         parameter: dict[str, Any],
@@ -123,7 +123,7 @@ class MigrateNotifications(UpdateAction):
                 comment="Auto migrated on update",
                 docu_url="",
             ),
-            parameter_properties=parameter,
+            parameter_properties={"method_parameters": parameter},
         )
         form_spec = notification_parameter_registry.form_spec(method)
         visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.DISK))
@@ -131,7 +131,10 @@ class MigrateNotifications(UpdateAction):
         validation_errors = visitor.validate(data)
         process_validation_messages(validation_errors)
 
-        return visitor.to_disk(data)
+        # The catalog formspec uses "method_parameters" as additional nested key, we don't need it
+        disk_data = visitor.to_disk(data)
+        disk_data["parameter_properties"] = disk_data["parameter_properties"]["method_parameters"]
+        return disk_data
 
 
 update_action_registry.register(

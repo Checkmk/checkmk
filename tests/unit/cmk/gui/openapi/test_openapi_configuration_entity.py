@@ -70,7 +70,7 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
             "entity_type_specifier": "dummy_params",
             "data": {
                 "general": {"description": "foo"},
-                "parameter_properties": {"test_param": "bar"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
             },
         }
     )
@@ -88,7 +88,7 @@ def test_update_configuration_entity(
         "dummy_params",
         {
             "general": {"description": "foo"},
-            "parameter_properties": {"test_param": "initial_value"},
+            "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
         },
         None,
     )
@@ -101,7 +101,7 @@ def test_update_configuration_entity(
             "entity_id": entity.ident,
             "data": {
                 "general": {"description": "foo"},
-                "parameter_properties": {"test_param": "bar"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
             },
         }
     )
@@ -109,23 +109,25 @@ def test_update_configuration_entity(
     # THEN
     updated_entity = get_notification_parameter(registry, entity.ident).data
     # Ignore is needed because every plugin model has different keys (and not "test_param"
-    assert updated_entity["parameter_properties"]["test_param"] == "bar"
+    assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
 
 @pytest.mark.parametrize(
     "data, expected_error_fields",
     [
-        ({}, {"general": {"": [mock.ANY]}, "parameter_properties": {"": [mock.ANY]}}),
+        ({}, {"general": {"description": {"": [mock.ANY]}}}),
         (
             {"general": {}, "parameter_properties": {}},
             {
                 "general": {"description": {"": [mock.ANY]}},
-                "parameter_properties": {"test_param": {"": [mock.ANY]}},
             },
         ),
         (
-            {"general": {"description": "foo"}, "parameter_properties": {"test_param": {}}},
-            {"parameter_properties": {"test_param": {"": [mock.ANY]}}},
+            {
+                "general": {"description": "foo"},
+                "parameter_properties": {"method_parameters": {"test_param": {}}},
+            },
+            {"parameter_properties": {"method_parameters": {"test_param": {"": [mock.ANY]}}}},
         ),
     ],
 )
@@ -154,7 +156,10 @@ def test_list_configuration_entities(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        {
+            "general": {"description": "foo"},
+            "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+        },
         None,
     )
 
@@ -177,7 +182,10 @@ def test_get_configuration_entity(
     entity = save_notification_parameter(
         registry,
         "dummy_params",
-        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        {
+            "general": {"description": "foo"},
+            "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+        },
         None,
     )
 
@@ -190,7 +198,10 @@ def test_get_configuration_entity(
     # THEN
     assert resp.json["title"] == "foo"
     assert resp.json["extensions"]["general"]["description"] == "foo"
-    assert resp.json["extensions"]["parameter_properties"]["test_param"] == "some_value"
+    assert (
+        resp.json["extensions"]["parameter_properties"]["method_parameters"]["test_param"]
+        == "some_value"
+    )
 
 
 def test_get_configuration_entity_throws_404(clients: ClientRegistry) -> None:
@@ -214,5 +225,9 @@ def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:
     schema = resp.json["extensions"]["schema"]
     default_values = resp.json["extensions"]["default_values"]
     assert schema["type"] == "catalog"
-    assert schema["topics"][1]["dictionary"]["elements"][0]["parameter_form"]["type"] == "string"
-    assert default_values["parameter_properties"]["test_param"] == "some_default_value"
+    dictionary = schema["elements"][1]["elements"][0]["parameter_form"]
+    assert dictionary["elements"][0]["parameter_form"]["type"] == "string"
+    assert (
+        default_values["parameter_properties"]["method_parameters"]["test_param"]
+        == "some_default_value"
+    )

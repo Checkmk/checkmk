@@ -473,15 +473,12 @@ class DataSize(FormSpec):
 
 
 @dataclass(kw_only=True)
-class Topic:
+class TopicElement:
     name: str
-    dictionary: Dictionary
-
-
-@dataclass(kw_only=True)
-class Catalog(FormSpec):
-    topics: list[Topic]
-    type: str = "catalog"
+    required: bool
+    parameter_form: FormSpec
+    default_value: Any
+    type: str = "topic_element"
 
 
 @dataclass(kw_only=True)
@@ -574,6 +571,27 @@ class ListUniqueSelection(FormSpec):
     no_element_label: str
     unique_selection_elements: list[str]
     type: str = "list_unique_selection"
+
+
+@dataclass(kw_only=True)
+class TopicGroup:
+    title: str
+    elements: list[TopicElement]
+    i18n_base: I18nFormSpecBase
+    type: str = "topic_group"
+
+
+@dataclass(kw_only=True)
+class Topic:
+    name: str
+    title: str
+    elements: Union[list[TopicGroup], list[TopicElement]]
+
+
+@dataclass(kw_only=True)
+class Catalog(FormSpec):
+    elements: list[Topic]
+    type: str = "catalog"
 
 
 Components = Union[

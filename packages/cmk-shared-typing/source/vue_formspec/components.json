@@ -924,17 +924,81 @@
                 }
             ]
         },
+        "topic_group": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "topic_group",
+                    "default": "topic_group"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/topic_element"
+                    }
+                },
+                "i18n_base": {
+                    "$ref": "#/$defs/i18n_base"
+                }
+            },
+            "required": ["type", "title", "elements", "i18n_base"]
+        },
+        "topic_element": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "topic_element",
+                    "default": "topic_element"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "parameter_form": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "default_value": {}
+            },
+            "required": [
+                "type",
+                "required",
+                "name",
+                "parameter_form",
+                "default_value"
+            ]
+        },
         "topic": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
                 },
-                "dictionary": {
-                    "$ref": "#/$defs/dictionary"
+                "title": {
+                    "type": "string"
+                },
+                "elements": {
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/topic_group"
+                            }
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/topic_element"
+                            }
+                        }
+                    ]
                 }
             },
-            "required": ["name", "dictionary"]
+            "required": ["name", "title", "elements"]
         },
         "catalog": {
             "type": "object",
@@ -949,14 +1013,14 @@
                             "const": "catalog",
                             "default": "catalog"
                         },
-                        "topics": {
+                        "elements": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/$defs/topic"
                             }
                         }
                     },
-                    "required": ["type", "topics"]
+                    "required": ["type", "elements"]
                 }
             ]
         },

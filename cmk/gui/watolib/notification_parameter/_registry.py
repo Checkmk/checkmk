@@ -26,6 +26,7 @@ from cmk.gui.form_specs.private import (
     not_empty,
     Topic,
 )
+from cmk.gui.form_specs.private.catalog import TopicElement
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.valuespec import Migrate as ValueSpecMigrate
@@ -108,55 +109,47 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                 )
 
         return Catalog(
-            topics=[
-                Topic(
-                    name="general",
-                    dictionary=Dictionary(
-                        title=Title("Parameter properties"),
-                        elements={
-                            "description": DictElement(
-                                parameter_form=String(
-                                    title=Title("Description"),
-                                    field_size=FieldSize.LARGE,
-                                    custom_validate=[not_empty()],
+            elements={
+                "general": Topic(
+                    title=Title("Parameter properties"),
+                    elements={
+                        "description": TopicElement(
+                            parameter_form=String(
+                                title=Title("Description"),
+                                field_size=FieldSize.LARGE,
+                                custom_validate=[not_empty()],
+                            ),
+                            required=True,
+                        ),
+                        "comment": TopicElement(
+                            parameter_form=CommentTextArea(
+                                title=Title("Comment"),
+                            )
+                        ),
+                        "docu_url": TopicElement(
+                            parameter_form=String(
+                                title=Title("Documentation URL"),
+                                help_text=Help(
+                                    "An optional URL pointing to documentation or any other page. This will be "
+                                    "displayed as an icon and open "
+                                    "a new page when clicked. You can use either global URLs (beginning with "
+                                    "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                                    "URLs (that are relative to <tt>check_mk/</tt>)."
                                 ),
-                                required=True,
-                            ),
-                            "comment": DictElement(
-                                parameter_form=CommentTextArea(
-                                    title=Title("Comment"),
-                                )
-                            ),
-                            "docu_url": DictElement(
-                                parameter_form=String(
-                                    title=Title("Documentation URL"),
-                                    help_text=Help(
-                                        "An optional URL pointing to documentation or any other page. This will be "
-                                        "displayed as an icon and open "
-                                        "a new page when clicked. You can use either global URLs (beginning with "
-                                        "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                                        "URLs (that are relative to <tt>check_mk/</tt>)."
-                                    ),
-                                )
-                            ),
-                        },
-                    ),
+                            )
+                        ),
+                    },
                 ),
-                Topic(
-                    name="parameter_properties",
-                    # TODO if sections are not rendered by fixed DictGroup(),
-                    # we will need this:
-                    # dictionary=FormSpecDictionary(
-                    #    title=Title("Parameter properties"),
-                    #    elements={
-                    #        "properties": DictElement(
-                    #            parameter_form=param_form_spec,
-                    #        )
-                    #    },
-                    # ),
-                    dictionary=param_form_spec,
+                "parameter_properties": Topic(
+                    title=Title("Parameter properties"),
+                    elements={
+                        "method_parameters": TopicElement(
+                            required=True,
+                            parameter_form=param_form_spec,
+                        ),
+                    },
                 ),
-            ]
+            }
         )
 
     def _construct_form_spec_from_valuespec(self, method: str) -> Dictionary:

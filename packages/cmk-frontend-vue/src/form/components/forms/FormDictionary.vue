@@ -10,10 +10,7 @@ import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import {
-  groupDictionaryValidations,
-  type ValidationMessages
-} from '@/form/components/utils/validation'
+import { groupNestedValidations, type ValidationMessages } from '@/form/components/utils/validation'
 import FormHelp from '../FormHelp.vue'
 import { useId } from '@/form/utils'
 import HelpText from '@/components/HelpText.vue'
@@ -84,7 +81,7 @@ immediateWatch(
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, newValidation)
+    const [, _elementValidation] = groupNestedValidations(props.spec.elements, newValidation)
     elementValidation.value = _elementValidation
   }
 )

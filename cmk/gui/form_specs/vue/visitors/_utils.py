@@ -51,12 +51,14 @@ def optional_validation(
 
 
 def create_validation_error(
-    value: object, error_message: Title | Message | str
+    value: object, error_message: Title | Message | str, location: list[str] | None = None
 ) -> list[shared_type_defs.ValidationMessage]:
     if isinstance(error_message, (Title, Message)):
         error_message = error_message.localize(translate_to_current_language)
     return [
-        shared_type_defs.ValidationMessage(location=[], message=error_message, invalid_value=value)
+        shared_type_defs.ValidationMessage(
+            location=location or [], message=error_message, invalid_value=value
+        )
     ]
 
 

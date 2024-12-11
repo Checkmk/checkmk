@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormCatalog from '@/form/components/forms/FormCatalog.vue'
+import FormCatalog from '@/form/components/forms/form_catalog/FormCatalog.vue'
 import type {
   String as StringSpec,
   Dictionary as DictionarySpec,
@@ -69,26 +69,35 @@ function renderSimpleCatalog() {
         title: 'catalog title',
         help: 'catalog help',
         validators: [],
-        topics: [
+        elements: [
           {
-            name: 'some_ut_key',
-            dictionary: getDictionaryFormspec(
+            name: 'main_topic',
+            title: 'topic_title',
+            elements: [
               {
-                title: 'ut embedded dictionary title'
-                // this title will be moved into the catalog and displayed there a stitle
-              },
-              [
-                {
-                  name: 'ut_string_1',
-                  parameter_form: getStringFormspec('title of string input'),
-                  group: null
-                }
-              ]
-            )
+                type: 'topic_element',
+                name: 'dict_key',
+                required: true,
+                default_value: {},
+                parameter_form: getDictionaryFormspec(
+                  {
+                    title: 'dict_title'
+                    // this title will be moved into the catalog and displayed there a stitle
+                  },
+                  [
+                    {
+                      name: 'ut_string_1',
+                      parameter_form: getStringFormspec('title of string input'),
+                      group: null
+                    }
+                  ]
+                )
+              }
+            ]
           }
         ]
       },
-      data: { some_ut_key: {} }, // TODO: some_ut_key is required. should it be?
+      data: { main_topic: { dict_key: { some_ut_key: {} } } }, // TODO: some_ut_key is required. should it be?
       backendValidation: []
     }
   })
@@ -97,26 +106,23 @@ function renderSimpleCatalog() {
 test('FormCatalog open/close topic', async () => {
   renderSimpleCatalog()
 
-  // just make sure that the string input is rendered
-  await screen.findByText('title of string input')
-
-  const headline = await screen.findByText('ut embedded dictionary title')
+  const headline = await screen.findByText('topic_title')
+  const img = headline.querySelector('img')
   // the visibility of elements is changed via classes and css, but the css is not
   // available in the tests, so we have to manually check if the classes are added.
   // TODO: we should really change our code to make the following possible:
   // it should be quite easy to use v-show for that...
   // expect(title).not.toBeVisible()
-  const parent = headline.parentElement!.parentElement!.parentElement!
-  expect(parent).toHaveClass('open')
-  expect(parent).not.toHaveClass('closed')
+  expect(img).toHaveClass('open')
+  expect(img).not.toHaveClass('closed')
 
-  await fireEvent.click(headline.parentElement!)
-  expect(parent).not.toHaveClass('open')
-  expect(parent).toHaveClass('closed')
+  await fireEvent.click(headline)
+  expect(img).not.toHaveClass('open')
+  expect(img).toHaveClass('closed')
 
-  await fireEvent.click(headline.parentElement!)
-  expect(parent).toHaveClass('open')
-  expect(parent).not.toHaveClass('closed')
+  await fireEvent.click(headline)
+  expect(img).toHaveClass('open')
+  expect(img).not.toHaveClass('closed')
 })
 
 test.skip('FormCatalog collapse/open all - skipped until the toggle gets a better implementation', async () => {
@@ -146,26 +152,36 @@ test('FormCatalog default value', async () => {
         help: 'catalog help',
         i18n_base: { required: 'required' },
         validators: [],
-        topics: [
+        elements: [
           {
-            name: 'some_ut_key',
-            dictionary: getDictionaryFormspec(
+            name: 'topic_name',
+            title: 'topic_title',
+            elements: [
               {
-                title: 'ut embedded dictionary title'
-                // this title will be moved into the catalog and displayed there a stitle
-              },
-              [
-                {
-                  name: stringIdent,
-                  parameter_form: getStringFormspec('title of string input'),
-                  default_value: 'ut_string_1 default value'
-                }
-              ]
-            )
+                name: 'some_ut_key',
+                type: 'topic_element',
+                required: true,
+                default_value: {},
+                parameter_form: getDictionaryFormspec(
+                  {
+                    title: 'ut embedded dictionary title'
+                    // this title will be moved into the catalog and displayed there a title
+                  },
+                  [
+                    {
+                      name: stringIdent,
+                      required: true,
+                      parameter_form: getStringFormspec('title of string input'),
+                      default_value: 'ut_string_1 default value'
+                    }
+                  ]
+                )
+              }
+            ]
           }
         ]
       } as Catalog,
-      data: { some_ut_key: {} },
+      data: { topic_name: { some_ut_key: {} } },
       backendValidation: []
     }
   }
@@ -175,13 +191,13 @@ test('FormCatalog default value', async () => {
   await screen.findByText('title of string input')
 
   expect(getCurrentData()).toBe(
-    '{"some_ut_key":{"ut_string_1_name_default":"ut_string_1 default value"}}'
+    '{"topic_name":{"some_ut_key":{"ut_string_1_name_default":"ut_string_1 default value"}}}'
   )
 
   await rerender(getDefinition('some_other_string_indent'))
 
   expect(getCurrentData()).toBe(
-    '{"some_ut_key":{"some_other_string_indent":"ut_string_1 default value"}}'
+    '{"topic_name":{"some_ut_key":{"some_other_string_indent":"ut_string_1 default value"}}}'
   )
 })
 
@@ -193,31 +209,56 @@ test('FormCatalog backend validation', async () => {
       help: 'catalog help',
       i18n_base: { required: 'required' },
       validators: [],
-      topics: [
+      elements: [
         {
-          name: 'ut_topic_1',
-          dictionary: getDictionaryFormspec({}, [
+          name: 'topic_name',
+          title: 'topic_title',
+          elements: [
             {
-              name: 'ut_topic_1_dict_1',
-              parameter_form: getStringFormspec('ut_topic_1_dict_1_key_1')
-            }
-          ])
-        },
-        {
-          name: 'ut_topic_2',
-          dictionary: getDictionaryFormspec({}, [
+              name: 'ut_topic_element_1',
+              type: 'topic_element',
+              default_value: {},
+              required: true,
+              parameter_form: getDictionaryFormspec({}, [
+                {
+                  name: 'ut_topic_1_dict_1',
+                  parameter_form: getStringFormspec('ut_topic_1_dict_1_key_1')
+                }
+              ])
+            },
             {
-              name: 'ut_topic_2_dict_1',
-              parameter_form: getStringFormspec('ut_topic_2_dict_1_key_1')
+              name: 'ut_topic_element_2',
+              type: 'topic_element',
+              default_value: {},
+              required: true,
+              parameter_form: getDictionaryFormspec({}, [
+                {
+                  name: 'ut_topic_2_dict_1',
+                  parameter_form: getStringFormspec('ut_topic_2_dict_1_key_1')
+                }
+              ])
             }
-          ])
+          ]
         }
       ]
     } as Catalog,
-    data: { ut_topic_1: {}, ut_topic_2: {} },
+    data: {
+      topic_name: {
+        ut_topic_element_1: { ut_topic_1_dict_1: '' },
+        ut_topic_element_2: { ut_topic_2_dict_1: '' }
+      }
+    },
     backendValidation: [
-      { location: ['ut_topic_1', 'ut_topic_1_dict_1'], message: 'ut_error_1', invalid_value: '' },
-      { location: ['ut_topic_2', 'ut_topic_2_dict_1'], message: 'ut_error_2', invalid_value: '' }
+      {
+        location: ['topic_name', 'ut_topic_element_1', 'ut_topic_1_dict_1'],
+        message: 'ut_error_1',
+        invalid_value: ''
+      },
+      {
+        location: ['topic_name', 'ut_topic_element_2', 'ut_topic_2_dict_1'],
+        message: 'ut_error_2',
+        invalid_value: ''
+      }
     ]
   }
   renderFormWithData(spec)

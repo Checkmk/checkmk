@@ -33,7 +33,7 @@ import type {
   FileUpload
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
-  groupDictionaryValidations,
+  groupNestedValidations,
   groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
@@ -245,7 +245,7 @@ function renderDict(
 ): VNode {
   const dictElements: VNode[] = []
   // Note: Dictionary validations are not shown
-  const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
+  const [, elementValidations] = groupNestedValidations(formSpec.elements, backendValidation)
   formSpec.elements.map((element) => {
     if (value[element.name] === undefined) {
       return

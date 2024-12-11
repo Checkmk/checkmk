@@ -7,7 +7,6 @@
 from ._constants import PS_DISCOVERY_RULES
 from ._impl import (
     ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorAutomationUser,
     ConfigGeneratorBasicWATOConfig,
     ConfigGeneratorRegistrationUser,
     get_default_notification_rule,
@@ -18,7 +17,6 @@ from ._impl import (
 
 __all__ = [
     "ConfigGeneratorAcknowledgeInitialWerks",
-    "ConfigGeneratorAutomationUser",
     "ConfigGeneratorBasicWATOConfig",
     "ConfigGeneratorRegistrationUser",
     "new_notification_parameter_id",

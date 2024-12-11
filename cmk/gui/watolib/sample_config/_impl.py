@@ -224,16 +224,16 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         werks.acknowledge_all_werks(check_permission=False)
 
 
-class ConfigGeneratorAutomationUser(SampleConfigGenerator):
-    """Create the default Checkmk "automation" user"""
+class ConfigGeneratorRegistrationUser(SampleConfigGenerator):
+    """Create the default Checkmk "agent registation" user"""
 
-    name = "automation"
-    role = "admin"
-    alias = "Check_MK Automation - used for calling web services"
+    name = "agent_registration"
+    role = "agent_registration"
+    alias = "Check_MK Agent Registration - used for agent registration"
 
     @classmethod
     def ident(cls) -> str:
-        return "create_automation_user"
+        return "create_registration_automation_user"
 
     @classmethod
     def sort_index(cls) -> int:
@@ -243,19 +243,3 @@ class ConfigGeneratorAutomationUser(SampleConfigGenerator):
         create_cmk_automation_user(
             datetime.now(), name=self.name, role=self.role, alias=self.alias, store_secret=True
         )
-
-
-class ConfigGeneratorRegistrationUser(ConfigGeneratorAutomationUser):
-    """Create the default Checkmk "agent registation" user"""
-
-    @classmethod
-    def ident(cls) -> str:
-        return "create_registration_automation_user"
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 61
-
-    name = "agent_registration"
-    role = "agent_registration"
-    alias = "Check_MK Agent Registration - used for agent registration"

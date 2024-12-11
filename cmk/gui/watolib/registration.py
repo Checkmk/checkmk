@@ -89,7 +89,6 @@ from .rulespecs import (
 )
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorAutomationUser,
     ConfigGeneratorBasicWATOConfig,
     ConfigGeneratorRegistrationUser,
 )
@@ -150,7 +149,6 @@ def register(
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
-    sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
     sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(

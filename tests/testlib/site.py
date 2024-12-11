@@ -54,13 +54,14 @@ import livestatus
 from cmk.ccc.version import Edition, Version
 
 from cmk import trace
+from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
 
 ADMIN_USER: Final[str] = "cmkadmin"
-AUTOMATION_USER: Final[str] = "automation"
+AUTOMATION_USER: Final[str] = "not_automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
 
 
@@ -102,6 +103,7 @@ class Site:
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
+        self._automation_secret: Password | None = None
 
         self.update = update
         self.update_conflict_mode = update_conflict_mode
@@ -109,11 +111,12 @@ class Site:
 
         self.check_wait_timeout = check_wait_timeout
 
+        # We start with ADMIN_USER and change it to the automation user once it is created
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
             port=self.apache_port if self.exists() else 80,
-            user=AUTOMATION_USER if self.exists() else ADMIN_USER,
-            password=self.get_automation_secret() if self.exists() else self.admin_password,
+            user=ADMIN_USER,
+            password=self.admin_password,
             site=self.id,
             site_version=self.version,
         )
@@ -833,9 +836,6 @@ class Site:
         self._update_cmk_core_config()
 
         self.openapi.port = self.apache_port
-        self.openapi.set_authentication_header(
-            user=AUTOMATION_USER, password=self.get_automation_secret()
-        )
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", "UTC"))
 
@@ -853,8 +853,6 @@ class Site:
             "etc/check_mk/conf.d/wato/rules.mk",
             "etc/check_mk/multisite.d/wato/tags.mk",
             "etc/check_mk/conf.d/wato/global.mk",
-            "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret",
         ]
 
         missing = []
@@ -1136,9 +1134,26 @@ class Site:
     def core_history_log_timeout(self) -> int:
         return 10 if self.core_name() == "cmc" else 30
 
+    def _create_automation_user(self) -> None:
+        username = AUTOMATION_USER
+        self._automation_secret = Password.random(24)
+
+        self.openapi.users.create(
+            username=username,
+            fullname="Automation user for tests",
+            password=self._automation_secret.raw,
+            email="auomation@localhost",
+            contactgroups=[],
+            roles=["admin"],
+            is_automation_user=True,
+            store_automation_secret=False,
+        )
+        self.openapi.set_authentication_header(user=username, password=self._automation_secret.raw)
+
     @tracer.start_as_current_span("Site.prepare_for_tests")
     def prepare_for_tests(self) -> None:
         logger.info("Prepare for tests")
+        self._create_automation_user()
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.version.is_saas_edition():
@@ -1365,13 +1380,9 @@ class Site:
         return self.root / "var" / "log"
 
     def get_automation_secret(self) -> str:
-        secret_path = "var/check_mk/web/automation/automation.secret"
-        secret = self.read_file(secret_path).strip()
-
-        if secret == "":
-            raise Exception("Failed to read secret from %s" % secret_path)
-
-        return secret
+        if self._automation_secret is None:
+            raise RuntimeError("Automation user was not created yet")
+        return self._automation_secret.raw
 
     def get_site_internal_secret(self) -> Secret:
         secret_path = "etc/site_internal.secret"
@@ -1539,7 +1550,8 @@ class SiteFactory:
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
-            site.activate_changes_and_wait_for_core_reload()
+            # We created a user as AUTH_USER aka cmkadmin, meanwhile we are automationuser...
+            site.activate_changes_and_wait_for_core_reload(allow_foreign_changes=True)
 
         if auto_restart_httpd:
             restart_httpd()

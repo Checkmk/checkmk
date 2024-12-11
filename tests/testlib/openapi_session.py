@@ -117,6 +117,7 @@ class CMKOpenApiSession(requests.Session):
         self.agents = AgentsAPI(self)
         self.rules = RulesAPI(self)
         self.rulesets = RulesetsAPI(self)
+        self.broker_connections = BrokerConnectionsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -284,65 +285,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def get_broker_connections(
-        self,
-    ) -> Sequence[Mapping[str, object]]:
-        response = self.get(
-            "/domain-types/broker_connection/collections/all",
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
-
-    def create_broker_connection(
-        self, connection_id: str, *, connecter: str, connectee: str
-    ) -> Mapping[str, object]:
-        response = self.post(
-            "/domain-types/broker_connection/collections/all",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json={
-                "connection_id": connection_id,
-                "connection_config": BrokerConnectionInfo(
-                    connecter={"site_id": connecter},
-                    connectee={"site_id": connectee},
-                ),
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return {str(k): v for k, v in response.json().items()}
-
-    def edit_broker_connection(
-        self, connection_id: str, *, connecter: str, connectee: str
-    ) -> Mapping[str, object]:
-        response = self.put(
-            f"/objects/broker_connection/{connection_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-            json={
-                "connection_config": BrokerConnectionInfo(
-                    connecter={"site_id": connecter},
-                    connectee={"site_id": connectee},
-                ),
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
-        return {str(k): v for k, v in response.json().items()}
-
-    def delete_broker_connection(self, connection_id: str) -> None:
-        response = self.delete(
-            f"/objects/broker_connection/{connection_id}",
-            headers={
-                "Content-Type": "application/json",
-            },
-        )
-        if response.status_code != 204:
-            raise UnexpectedResponse.from_response(response)
 
     def create_site(self, site_config: dict) -> None:
         response = self.post(
@@ -1092,3 +1034,60 @@ class RulesetsAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]
         return value
+
+
+class BrokerConnectionsAPI(BaseAPI):
+    def get_all(
+        self,
+    ) -> Sequence[Mapping[str, object]]:
+        response = self.session.get(
+            "/domain-types/broker_connection/collections/all",
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [{str(k): v for k, v in el.items()} for el in response.json()["value"]]
+
+    def create(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.post(
+            "/domain-types/broker_connection/collections/all",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_id": connection_id,
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def edit(self, connection_id: str, *, connecter: str, connectee: str) -> Mapping[str, object]:
+        response = self.session.put(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            json={
+                "connection_config": BrokerConnectionInfo(
+                    connecter={"site_id": connecter},
+                    connectee={"site_id": connectee},
+                ),
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return {str(k): v for k, v in response.json().items()}
+
+    def delete(self, connection_id: str) -> None:
+        response = self.session.delete(
+            f"/objects/broker_connection/{connection_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)

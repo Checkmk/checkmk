@@ -162,11 +162,11 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
     """Establish a direct connection between two sites"""
     connection_id = f"comp_test_p2p_{remote_site.id}_{remote_site_2.id}"
     try:
-        central_site.openapi.create_broker_connection(
+        central_site.openapi.broker_connections.create(
             connection_id, connecter=remote_site.id, connectee=remote_site_2.id
         )
         central_site.openapi.activate_changes_and_wait_for_completion()
         yield
     finally:
-        central_site.openapi.delete_broker_connection(connection_id)
+        central_site.openapi.broker_connections.delete(connection_id)
         central_site.openapi.activate_changes_and_wait_for_completion()

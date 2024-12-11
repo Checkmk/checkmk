@@ -67,6 +67,82 @@ class CachedSectionWriter(SectionManager):
         )
 
 
+@dataclass()
+class CachePerSection:
+    """Cache settings for every section"""
+
+    Memory: int | None = None
+    Power: int | None = None
+    Processors: int | None = None
+    Thermal: int | None = None
+    FirmwareInventory: int | None = 9600
+    NetworkAdapters: int | None = None
+    NetworkInterfaces: int | None = None
+    EthernetInterfaces: int | None = None
+    Storage: int | None = None
+    ArrayControllers: int | None = None
+    SmartStorage: int | None = None
+    HostBusAdapters: int | None = None
+    PhysicalDrives: int | None = None
+    LogicalDrives: int | None = None
+    Drives: int | None = None
+    Volumes: int | None = None
+    SimpleStorage: int | None = None
+
+
+@dataclass()
+class CacheTimestampPerSection:
+    """Cache timestamp if section is cached"""
+
+    Memory: int | None = None
+    Power: int | None = None
+    Processors: int | None = None
+    Thermal: int | None = None
+    FirmwareInventory: int | None = None
+    NetworkAdapters: int | None = None
+    NetworkInterfaces: int | None = None
+    EthernetInterfaces: int | None = None
+    Storage: int | None = None
+    ArrayControllers: int | None = None
+    SmartStorage: int | None = None
+    HostBusAdapters: int | None = None
+    PhysicalDrives: int | None = None
+    LogicalDrives: int | None = None
+    Drives: int | None = None
+    Volumes: int | None = None
+    SimpleStorage: int | None = None
+
+
+@dataclass()
+class VendorData:
+    """Vendor data object"""
+
+    name: str
+    version: str | None = None
+    firmware_version: str | None = None
+    view_supported: bool | None = False
+    view_select: Mapping[str, object] | None = None
+    view_response: Mapping[str, object] | None = None
+    expand_string: str | None = None
+
+
+@dataclass()
+class RedfishData:
+    """Redfish data object"""
+
+    hostname: str
+    use_cache: bool
+    redfish_connection: redfish.redfish_client
+    sections: Sequence[str] | None = None
+    cache_per_section: CachePerSection | None = None
+    cache_timestamp_per_section: CacheTimestampPerSection | None = None
+    manager_data: Mapping[str, object] | None = None
+    chassis_data: Mapping[str, object] | None = None
+    base_data: Mapping[str, object] | None = None
+    vendor_data: VendorData | None = None
+    section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(default_factory=dict)
+
+
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     """Parse arguments needed to construct an URL and for connection conditions"""
     sections = [
@@ -340,82 +416,6 @@ def process_result(redfishobj):
                         w.append_json(entry)
                 else:
                     w.append_json(result.get(element))
-
-
-@dataclass()
-class CachePerSection:
-    """Cache settings for every section"""
-
-    Memory: int | None = None
-    Power: int | None = None
-    Processors: int | None = None
-    Thermal: int | None = None
-    FirmwareInventory: int | None = 9600
-    NetworkAdapters: int | None = None
-    NetworkInterfaces: int | None = None
-    EthernetInterfaces: int | None = None
-    Storage: int | None = None
-    ArrayControllers: int | None = None
-    SmartStorage: int | None = None
-    HostBusAdapters: int | None = None
-    PhysicalDrives: int | None = None
-    LogicalDrives: int | None = None
-    Drives: int | None = None
-    Volumes: int | None = None
-    SimpleStorage: int | None = None
-
-
-@dataclass()
-class CacheTimestampPerSection:
-    """Cache timestamp if section is cached"""
-
-    Memory: int | None = None
-    Power: int | None = None
-    Processors: int | None = None
-    Thermal: int | None = None
-    FirmwareInventory: int | None = None
-    NetworkAdapters: int | None = None
-    NetworkInterfaces: int | None = None
-    EthernetInterfaces: int | None = None
-    Storage: int | None = None
-    ArrayControllers: int | None = None
-    SmartStorage: int | None = None
-    HostBusAdapters: int | None = None
-    PhysicalDrives: int | None = None
-    LogicalDrives: int | None = None
-    Drives: int | None = None
-    Volumes: int | None = None
-    SimpleStorage: int | None = None
-
-
-@dataclass()
-class VendorData:
-    """Vendor data object"""
-
-    name: str
-    version: str | None = None
-    firmware_version: str | None = None
-    view_supported: bool | None = False
-    view_select: Mapping[str, object] | None = None
-    view_response: Mapping[str, object] | None = None
-    expand_string: str | None = None
-
-
-@dataclass()
-class RedfishData:
-    """Redfish data object"""
-
-    hostname: str
-    use_cache: bool
-    redfish_connection: redfish.redfish_client
-    sections: Sequence[str] | None = None
-    cache_per_section: CachePerSection | None = None
-    cache_timestamp_per_section: CacheTimestampPerSection | None = None
-    manager_data: Mapping[str, object] | None = None
-    chassis_data: Mapping[str, object] | None = None
-    base_data: Mapping[str, object] | None = None
-    vendor_data: VendorData | None = None
-    section_data: Mapping[str, Sequence[Mapping[str, object]]] = field(default_factory=dict)
 
 
 def detect_vendor(root_data):

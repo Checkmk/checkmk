@@ -5,6 +5,7 @@
 
 import logging
 from typing import Final
+from unittest.mock import MagicMock, patch
 
 import pytest
 from polyfactory.factories import TypedDictFactory
@@ -94,8 +95,8 @@ SPECTRUM_RULE_CONFIG: Final = [
 ]
 
 
-@pytest.mark.skip(reason="Fails because of UUID difference in PW")
-def test_migrate_spectrum_notification_parameter() -> None:
+@patch("cmk.gui.wato._notification_parameter._spectrum.uuid4", return_value="<migrate-uuid>")
+def test_migrate_spectrum_notification_parameter(_: MagicMock) -> None:
     value = migrate_parameters(SPECTRUM_RULE_CONFIG)
     expected = {
         "spectrum": {
@@ -110,7 +111,7 @@ def test_migrate_spectrum_notification_parameter() -> None:
                     "community": (
                         "cmk_postprocessed",
                         "explicit_password",
-                        ("<uuid-1>", "gaergerag"),
+                        ("<migrate-uuid>", "gaergerag"),
                     ),
                     "baseoid": "1.3.6.1.4.1.1234",
                 },
@@ -345,8 +346,8 @@ OPSGENIE_ISSUES_RULE_CONFIG: Final = [
 ]
 
 
-@pytest.mark.skip(reason="Fails because of UUID difference in PW")
-def test_migrate_opsgenie_notification_parameter() -> None:
+@patch("cmk.rulesets.v1.form_specs._migrations.uuid4", return_value="<migrate-uuid>")
+def test_migrate_opsgenie_notification_parameter(_: MagicMock) -> None:
     value = migrate_parameters(OPSGENIE_ISSUES_RULE_CONFIG)
     expected = {
         "opsgenie_issues": {
@@ -360,7 +361,7 @@ def test_migrate_opsgenie_notification_parameter() -> None:
                     "password": (
                         "cmk_postprocessed",
                         "explicit_password",
-                        ("<uuid-b>", "zhfziuofoziudfozuidouizd"),
+                        ("<migrate-uuid>", "zhfziuofoziudfozuidouizd"),
                     ),
                     "proxy_url": (
                         "cmk_postprocessed",
@@ -574,8 +575,11 @@ PAGERDUTY_RULE_CONFIG: Final = [
 ]
 
 
-@pytest.mark.skip(reason="Fails because of UUID difference in PW")
-def test_migrate_pagerduty_notification_parameter() -> None:
+@patch(
+    "cmk.gui.wato._notification_parameter._pagerduty.password_store.ad_hoc_password_id",
+    return_value="<migrate-uuid>",
+)
+def test_migrate_pagerduty_notification_parameter(_: MagicMock) -> None:
     value = migrate_parameters(PAGERDUTY_RULE_CONFIG)
     expected = {
         "pagerduty": {
@@ -589,7 +593,7 @@ def test_migrate_pagerduty_notification_parameter() -> None:
                     "routing_key": (
                         "cmk_postprocessed",
                         "explicit_password",
-                        ("<uuid-1>", "zhfziuofoziudfozuidouizd"),
+                        ("<migrate-uuid>", "zhfziuofoziudfozuidouizd"),
                     ),
                     "webhook_url": "https://events.pagerduty.com/v2/enqueue",
                     "proxy_url": ("cmk_postprocessed", "no_proxy", ""),
@@ -751,8 +755,8 @@ SIGNL4_RULE_CONFIG: Final = [
 ]
 
 
-@pytest.mark.skip(reason="Fails because of UUID difference in PW")
-def test_migrate_signl4_notification_parameter() -> None:
+@patch("cmk.rulesets.v1.form_specs._migrations.uuid4", return_value="<migrate-uuid>")
+def test_migrate_signl4_notification_parameter(_: MagicMock) -> None:
     value = migrate_parameters(SIGNL4_RULE_CONFIG)
     expected = {
         "signl4": {
@@ -766,7 +770,7 @@ def test_migrate_signl4_notification_parameter() -> None:
                     "password": (
                         "cmk_postprocessed",
                         "explicit_password",
-                        ("<uuid-a>", "gaergerag"),
+                        ("<migrate-uuid>", "gaergerag"),
                     ),
                     "url_prefix": ("automatic_https", None),
                     "proxy_url": ("cmk_postprocessed", "no_proxy", ""),

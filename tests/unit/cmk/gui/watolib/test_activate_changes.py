@@ -16,7 +16,7 @@ from unittest.mock import patch
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-from tests.testlib.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from tests.unit.testlib.rabbitmq import get_expected_definition
 from tests.unit.testlib.utils import reset_registries
@@ -106,13 +106,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ty="dir",
             ident="piggyback_hub",
             site_path="etc/check_mk/piggyback_hub.d/wato",
-            excludes=[],
-        ),
-        # CMK-20769: The otel collector repl path is only registered for CCE and CME.
-        ReplicationPath(
-            ty="file",
-            ident="otel_collector",
-            site_path="etc/check_mk/otel_collector.d/wato/otel_collector.mk",
             excludes=[],
         ),
     ]

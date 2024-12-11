@@ -754,7 +754,8 @@ class Site:
             try:
                 _ = run(
                     [
-                        f"{repo_path()}/scripts/run-uvenv",
+                        f"{repo_path()}/scripts/run-pipenv",
+                        "run",
                         f"{repo_path()}/tests/scripts/install-cmk.py",
                     ],
                     env=dict(

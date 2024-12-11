@@ -37,7 +37,7 @@ def main() {
                     usernameVariable: 'NEXUS_USER')]) {
                 withEnv(["PYTHONUNBUFFERED=1"]) {
                     dir("${checkout_dir}") {
-                        sh(script: """scripts/run-uvenv \
+                        sh(script: """scripts/run-pipenv run \
                         buildscripts/scripts/assert_build_artifacts.py \
                         --editions_file "${checkout_dir}/editions.yml" \
                         assert_build_artifacts \

@@ -7,7 +7,7 @@ include ../../defines.make
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXOPTS    ?= -W
-SPHINXBUILD   ?= ../../scripts/run-uvenv sphinx-build
+SPHINXBUILD   ?= ../../scripts/run-pipenv run sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 

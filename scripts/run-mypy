@@ -25,4 +25,4 @@ if [ ! -f "$VENV_MYPY_PATH" ]; then
 fi
 
 # shellcheck disable=SC2086
-exec "$REPO_PATH/scripts/run-uvenv" mypy ${JUNIT_XML} "$@"
+exec "$REPO_PATH/scripts/run-pipenv" run mypy ${JUNIT_XML} "$@"

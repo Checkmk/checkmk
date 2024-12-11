@@ -281,7 +281,7 @@ STAGES:
       DIR: ""
       ENV_VARS:
           CHANGED_WERK_FILES: "${CHANGED_WERK_FILES}"
-      COMMAND: "./scripts/run-in-docker.sh ./scripts/run-uvenv python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
+      COMMAND: "./scripts/run-in-docker.sh ./scripts/run-pipenv run python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
 
@@ -289,14 +289,14 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES
       DIR: ""
       COMMAND: |
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
           # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
-          scripts/run-in-docker.sh scripts/run-uvenv python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
-          scripts/run-in-docker.sh scripts/run-uvenv ./werk list &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
+          scripts/run-in-docker.sh scripts/run-pipenv run ./werk list &>> ${RESULTS}/werk_commands.txt
       TEXT_ON_SKIP: "No Werk code files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 

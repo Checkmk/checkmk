@@ -92,7 +92,7 @@ def main() {
                             sh("""
                                 git config --add user.name ${user};
                                 git config --add user.email ${JENKINS_MAIL};
-                                scripts/run-uvenv python3 -m cmk.utils.werks mail \
+                                scripts/run-pipenv run python3 -m cmk.utils.werks mail \
                                 . origin/${branch} werk_mail ${cmd_line};
                             """);
                         }

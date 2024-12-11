@@ -118,13 +118,12 @@ def execute_tests_in_container(
                 dockerpty.exec_command(
                     client.api,
                     container.id,
-                    ["sudo", "-u", _TESTUSER, "/git/scripts/run-uvenv"] + command,
+                    ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "run"] + command,
                 )
-
             dockerpty.exec_command(
                 client.api,
                 container.id,
-                ["sudo", "su", _TESTUSER, "-c", "source /git/.venv/bin/activate; bash"],
+                ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "shell"],
             )
 
             return 0
@@ -338,7 +337,7 @@ def _create_cmk_image(
         logger.info("Install Checkmk version")
         _exec_run(
             container,
-            ["scripts/run-uvenv", "/git/tests/scripts/install-cmk.py"],
+            ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
             workdir="/git",
             environment={**container_env, "SKIP_MAKEFILE_CALL": "1"},
             stream=True,

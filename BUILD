@@ -140,7 +140,7 @@ write_file(
 
 create_venv(
     name = "create_venv",
-    destination_folder = ".venv",
+    destination_folder = ".venv_uv",
     requirements_txt = "@//:requirements_lock.txt",
     site_packages_extra_files = [":sitecustomize.py"],
 )

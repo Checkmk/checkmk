@@ -9,7 +9,6 @@ from typing import Sequence
 from cmk.ccc.i18n import _
 
 from cmk.gui.quick_setup.handlers.stage import (
-    Errors,
     NextStageStructure,
     validate_stage_formspecs,
 )
@@ -23,6 +22,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     PREV_BUTTON_LABEL,
+    ValidationErrors,
 )
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import stage_components
@@ -52,7 +52,7 @@ class StageOverview:
 
 @dataclass
 class AllStageErrors:
-    all_stage_errors: Sequence[Errors]
+    all_stage_errors: Sequence[ValidationErrors]
 
 
 def complete_quick_setup(
@@ -200,7 +200,7 @@ def quick_setup_overview_mode(
 def validate_stages_formspecs(
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
-) -> Sequence[Errors] | None:
+) -> Sequence[ValidationErrors] | None:
     stages_errors = []
     for stage_index in range(len(stages_raw_formspecs)):
         errors = validate_stage_formspecs(

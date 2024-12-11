@@ -8,7 +8,7 @@ import traceback
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
@@ -37,6 +37,9 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_ARIA_LABEL,
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
+    QuickSetupValidationError,
+    ValidationErrorMap,
+    ValidationErrors,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -74,39 +77,6 @@ class InvalidStageException(MKGeneralException):
 # cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components
 # but can't be imported here. Once we move this module, we can remove this
 # and use the one from the other module.
-@dataclass
-class QuickSetupValidationError:
-    message: str
-    invalid_value: Any
-    location: Sequence[str] = field(default_factory=list)
-
-
-ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
-
-
-@dataclass
-class Errors:
-    """Data class representing errors that occurred during the validation process
-
-    Attributes:
-        stage_index:
-            The index of the stage where the error occurred. If None, the error is stage independent
-            (for example a Quick setup (not stage) custom validation failed when attempting to
-            perform the complete action)
-        formspec_errors:
-            A mapping of form spec ids to a list of validation errors that occurred for the
-            respective form spec. These are usually stage specific
-        stage_errors:
-            A list of general stage errors that occurred during the validation process (besides the
-            formspecs)
-    """
-
-    stage_index: StageIndex | None
-    formspec_errors: ValidationErrorMap = field(default_factory=dict)
-    stage_errors: GeneralStageErrors = field(default_factory=list)
-
-    def exist(self) -> bool:
-        return bool(self.formspec_errors or self.stage_errors)
 
 
 def _stage_validate_all_form_spec_keys_existing(
@@ -156,7 +126,7 @@ def validate_stage(
     stage_action_id: ActionId,
     stages: Sequence[QuickSetupStage],
     quick_setup_formspec_map: FormspecMap,
-) -> Errors | None:
+) -> ValidationErrors | None:
     """Validate the form data of a Quick setup stage.
 
     Notes:
@@ -204,8 +174,8 @@ def validate_stage_formspecs(
     stage_index: StageIndex,
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
-) -> Errors:
-    errors = Errors(stage_index=stage_index)
+) -> ValidationErrors:
+    errors = ValidationErrors(stage_index=stage_index)
     errors.stage_errors.extend(
         _stage_validate_all_form_spec_keys_existing(
             stages_raw_formspecs[stage_index], quick_setup_formspec_map
@@ -226,8 +196,8 @@ def validate_custom_validators(
     custom_validators: Iterable[CallableValidator],
     stages_raw_formspecs: Sequence[RawFormData],
     quick_setup_formspec_map: FormspecMap,
-) -> Errors:
-    errors = Errors(stage_index=None)
+) -> ValidationErrors:
+    errors = ValidationErrors(stage_index=None)
     for custom_validator in custom_validators:
         errors.stage_errors.extend(
             custom_validator(
@@ -260,7 +230,7 @@ def recap_stage(
 
 
 class StageActionResult(BaseModel, frozen=False):
-    validation_errors: Errors | None = None
+    validation_errors: ValidationErrors | None = None
     stage_recap: Sequence[Widget] = field(default_factory=list)
     background_job_exception: str | None = None
 

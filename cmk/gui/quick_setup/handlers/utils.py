@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import asdict, dataclass, field
-from typing import cast, Mapping, Sequence
+from typing import Any, cast, Mapping, MutableMapping, MutableSequence, Sequence
 
 from cmk.ccc.i18n import _
 
@@ -14,7 +14,13 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
-from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, ParsedFormData, RawFormData
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ActionId,
+    GeneralStageErrors,
+    ParsedFormData,
+    RawFormData,
+    StageIndex,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -80,3 +86,38 @@ def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormDat
         }
 
     return asdict(widget)
+
+
+@dataclass
+class QuickSetupValidationError:
+    message: str
+    invalid_value: Any
+    location: Sequence[str] = field(default_factory=list)
+
+
+ValidationErrorMap = MutableMapping[FormSpecId, MutableSequence[QuickSetupValidationError]]
+
+
+@dataclass
+class ValidationErrors:
+    """Data class representing errors that occurred during the validation process
+
+    Attributes:
+        stage_index:
+            The index of the stage where the error occurred. If None, the error is stage independent
+            (for example a Quick setup (not stage) custom validation failed when attempting to
+            perform the complete action)
+        formspec_errors:
+            A mapping of form spec ids to a list of validation errors that occurred for the
+            respective form spec. These are usually stage specific
+        stage_errors:
+            A list of general stage errors that occurred during the validation process (besides the
+            formspecs)
+    """
+
+    stage_index: StageIndex | None
+    formspec_errors: ValidationErrorMap = field(default_factory=dict)
+    stage_errors: GeneralStageErrors = field(default_factory=list)
+
+    def exist(self) -> bool:
+        return bool(self.formspec_errors or self.stage_errors)

@@ -55,7 +55,7 @@ from cmk import fields
 
 from .. import background_job
 from .request_schemas import (
-    QuickSetupFinalSaveRequest,
+    QuickSetupFinalActionRequest,
     QuickSetupStageActionRequest,
 )
 from .response_schemas import (
@@ -282,18 +282,18 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
 
 
 @Endpoint(
-    object_action_href("quick_setup", "{quick_setup_id}", "save"),
-    "cmk/save_quick_setup",
+    object_action_href("quick_setup", "{quick_setup_id}", "run-action"),
+    "cmk/run_setup",
     method="post",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_MODE],
     additional_status_codes=[201],
-    request_schema=QuickSetupFinalSaveRequest,
+    request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
-def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
-    """Save the quick setup"""
+def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
+    """Run a quick setup action"""
     return complete_quick_setup_action(params, QuickSetupActionMode.SAVE)
 
 
@@ -305,7 +305,7 @@ def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
     additional_status_codes=[201],
-    request_schema=QuickSetupFinalSaveRequest,
+    request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
 def edit_quick_setup_action(params: Mapping[str, Any]) -> Response:
@@ -425,5 +425,5 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(quick_setup_get_stage_structure)
     endpoint_registry.register(quicksetup_run_stage_action)
     endpoint_registry.register(fetch_quick_setup_stage_action_result)
-    endpoint_registry.register(save_quick_setup_action)
+    endpoint_registry.register(quick_setup_run_action)
     endpoint_registry.register(edit_quick_setup_action)

@@ -267,7 +267,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.save_quick_setup(
+    resp = clients.QuickSetup.run_quick_setup_action(
         quick_setup_id="quick_setup_test",
         payload={"button_id": "save", "stages": []},
     )
@@ -292,7 +292,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    clients.QuickSetup.save_quick_setup(
+    clients.QuickSetup.run_quick_setup_action(
         quick_setup_id="quick_setup_test",
         payload={"button_id": "some_nonexistent_id", "stages": []},
         expect_ok=False,
@@ -610,7 +610,7 @@ def test_validation_on_save_all(
             ),
         ],
     )
-    resp = clients.QuickSetup.save_quick_setup(
+    resp = clients.QuickSetup.run_quick_setup_action(
         quick_setup_id="quick_setup_test",
         payload={
             "button_id": "save",

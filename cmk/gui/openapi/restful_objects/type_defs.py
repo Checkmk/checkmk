@@ -74,6 +74,7 @@ DomainType = Literal[
 
 CmkEndpointName = Literal[
     "cmk/run",
+    "cmk/run_setup",
     "cmk/activate",
     "cmk/bake",
     "cmk/bake_and_sign",

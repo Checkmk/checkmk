@@ -40,10 +40,10 @@ class QuickSetupStageActionRequest(BaseSchema):
     )
 
 
-class QuickSetupFinalSaveRequest(BaseSchema):
+class QuickSetupFinalActionRequest(BaseSchema):
     button_id = fields.String(
         required=True,
-        description="Unique id of the save button clicked by the user",
+        description="Unique id of the action button clicked by the user",
         example="save",
     )
     stages = fields.List(

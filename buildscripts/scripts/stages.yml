@@ -190,6 +190,7 @@ STAGES:
       ENV_VARS:
           MYPY_ADDOPTS: "--no-color-output --junit-xml ${RESULTS}/mypy.xml --no-incremental"
       COMMAND: "make --quiet test-mypy-docker &> ${RESULTS}/python-typing.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "MYPY"
       RESULT_CHECK_FILE_PATTERN: "results/python-typing.txt"
@@ -225,6 +226,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES,CHANGED_CMK_BUILD_FILE,CHANGED_AGENT_FILES
       DIR: "tests"
       COMMAND: "make test-unit-docker"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/testlogs/unit/repo/test.xml"
@@ -316,6 +318,7 @@ STAGES:
       ENV_VARS:
           PYLINT_ARGS: "--output-format=parseable"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "Neither pyproject.toml nor Python files changed"
       RESULT_CHECK_TYPE: "PYLINT"
       RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
@@ -426,6 +429,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_LIVESTATUS_FILES
       DIR: "packages/livestatus"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/livestatus.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Livestatus files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
@@ -434,6 +438,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "packages/cmc"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/cmc.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmc files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
@@ -577,6 +582,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES
       DIR: "packages/neb"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/neb.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No neb files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
@@ -585,6 +591,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_UNIXCAT_FILES
       DIR: "packages/unixcat"
       COMMAND: "../../scripts/run-in-docker.sh BAZEL_CMD=../../scripts/run-bazel.sh ./run --all &> ${RESULTS}/unixcat.txt"
+      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No unixcat files changed"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"

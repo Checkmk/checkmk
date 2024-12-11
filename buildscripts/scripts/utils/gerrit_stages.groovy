@@ -47,28 +47,30 @@ def create_stage(Map args, time_stage_started) {
                 passwordVariable: 'BAZEL_CACHE_PASSWORD',
                 usernameVariable: 'BAZEL_CACHE_USER'),
         ) {
-            withEnv(args.ENV_VAR_LIST) {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir(args.DIR) {
-                        cmd_status = sh(script: args.COMMAND, returnStatus: true);
-                    }
-                    duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
-                    desc_add_status_row(
-                        args.NAME,
-                        duration, cmd_status==0 ? "success" : "failure",
-                        "${args.RESULT_CHECK_FILE_PATTERN}"
-                    );
-
-                    println("Check results: ${args.RESULT_CHECK_TYPE}");
-                    if (args.RESULT_CHECK_TYPE) {
-                        issues = test_jenkins_helper.analyse_issues(
-                            args.RESULT_CHECK_TYPE,
-                            args.RESULT_CHECK_FILE_PATTERN,
-                            false
+            lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: args.BAZEL_LOCKS_AMOUNT, resource : null) {
+                withEnv(args.ENV_VAR_LIST) {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        dir(args.DIR) {
+                            cmd_status = sh(script: args.COMMAND, returnStatus: true);
+                        }
+                        duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
+                        desc_add_status_row(
+                            args.NAME,
+                            duration, cmd_status==0 ? "success" : "failure",
+                            "${args.RESULT_CHECK_FILE_PATTERN}"
                         );
+
+                        println("Check results: ${args.RESULT_CHECK_TYPE}");
+                        if (args.RESULT_CHECK_TYPE) {
+                            issues = test_jenkins_helper.analyse_issues(
+                                args.RESULT_CHECK_TYPE,
+                                args.RESULT_CHECK_FILE_PATTERN,
+                                false
+                            );
+                        }
+                        /// make the stage fail if the command returned nonzero
+                        sh("exit ${cmd_status}");
                     }
-                    /// make the stage fail if the command returned nonzero
-                    sh("exit ${cmd_status}");
                 }
             }
         }

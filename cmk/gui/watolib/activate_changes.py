@@ -2612,47 +2612,52 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            uninstalled, installed = mkp_tool.update_active_packages(
-                mkp_tool.Installer(paths.installed_packages_dir),
-                mkp_tool.PathConfig(
-                    cmk_plugins_dir=plugins_local_path(),
-                    cmk_addons_plugins_dir=addons_plugins_local_path(),
-                    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-                    agents_dir=paths.local_agents_dir,
-                    alert_handlers_dir=paths.local_alert_handlers_dir,
-                    bin_dir=paths.local_bin_dir,
-                    check_manpages_dir=paths.local_legacy_check_manpages_dir,
-                    checks_dir=paths.local_checks_dir,
-                    doc_dir=paths.local_doc_dir,
-                    gui_plugins_dir=paths.local_gui_plugins_dir,
-                    installed_packages_dir=paths.installed_packages_dir,
-                    inventory_dir=paths.local_inventory_dir,
-                    lib_dir=paths.local_lib_dir,
-                    locale_dir=paths.local_locale_dir,
-                    local_root=paths.local_root,
-                    mib_dir=paths.local_mib_dir,
-                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-                    notifications_dir=paths.local_notifications_dir,
-                    pnp_templates_dir=paths.local_pnp_templates_dir,
-                    manifests_dir=paths.tmp_dir,
-                    web_dir=paths.local_web_dir,
-                ),
-                mkp_tool.PackageStore(
-                    enabled_dir=paths.local_enabled_packages_dir,
-                    local_dir=paths.local_optional_packages_dir,
-                    shipped_dir=paths.optional_packages_dir,
-                ),
-                ec.mkp_callbacks(),
-                version.__version__,
-                parse_version=version.parse_check_mk_version,
-            )
-            mkp_tool.make_post_package_change_actions(
-                on_any_change=(
-                    mkp_tool.reload_services_affected_by_mkp_changes,
-                    invalidate_visuals_cache,
-                    setup_search_index.request_index_rebuild,
+
+            local_path = plugins_local_path()
+            addons_path = addons_plugins_local_path()
+
+            if local_path is not None and addons_path is not None:
+                uninstalled, installed = mkp_tool.update_active_packages(
+                    mkp_tool.Installer(paths.installed_packages_dir),
+                    mkp_tool.PathConfig(
+                        cmk_plugins_dir=local_path,
+                        cmk_addons_plugins_dir=addons_path,
+                        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+                        agents_dir=paths.local_agents_dir,
+                        alert_handlers_dir=paths.local_alert_handlers_dir,
+                        bin_dir=paths.local_bin_dir,
+                        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+                        checks_dir=paths.local_checks_dir,
+                        doc_dir=paths.local_doc_dir,
+                        gui_plugins_dir=paths.local_gui_plugins_dir,
+                        installed_packages_dir=paths.installed_packages_dir,
+                        inventory_dir=paths.local_inventory_dir,
+                        lib_dir=paths.local_lib_dir,
+                        locale_dir=paths.local_locale_dir,
+                        local_root=paths.local_root,
+                        mib_dir=paths.local_mib_dir,
+                        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+                        notifications_dir=paths.local_notifications_dir,
+                        pnp_templates_dir=paths.local_pnp_templates_dir,
+                        manifests_dir=paths.tmp_dir,
+                        web_dir=paths.local_web_dir,
+                    ),
+                    mkp_tool.PackageStore(
+                        enabled_dir=paths.local_enabled_packages_dir,
+                        local_dir=paths.local_optional_packages_dir,
+                        shipped_dir=paths.optional_packages_dir,
+                    ),
+                    ec.mkp_callbacks(),
+                    version.__version__,
+                    parse_version=version.parse_check_mk_version,
                 )
-            )([*uninstalled, *installed])
+                mkp_tool.make_post_package_change_actions(
+                    on_any_change=(
+                        mkp_tool.reload_services_affected_by_mkp_changes,
+                        invalidate_visuals_cache,
+                        setup_search_index.request_index_rebuild,
+                    )
+                )([*uninstalled, *installed])
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()

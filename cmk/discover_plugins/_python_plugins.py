@@ -115,28 +115,36 @@ def discover_modules(
     )
 
 
-def plugins_local_path() -> Path:
+def plugins_local_path() -> Path | None:
     """Return the first local path for cmk plugins
 
     Currently there is always exactly one.
     """
-    return Path(_first_writable_safe_python_path(), *CMK_PLUGINS.split("."))
+    return (
+        None
+        if (raw_local := _first_writable_safe_python_path()) is None
+        else Path(raw_local, *CMK_PLUGINS.split("."))
+    )
 
 
-def addons_plugins_local_path() -> Path:
+def addons_plugins_local_path() -> Path | None:
     """Return the first local path for cmk addon plugins
 
     Currently there is always exactly one.
     """
-    return Path(_first_writable_safe_python_path(), *CMK_ADDONS_PLUGINS.split("."))
+    return (
+        None
+        if (raw_local := _first_writable_safe_python_path()) is None
+        else Path(raw_local, *CMK_ADDONS_PLUGINS.split("."))
+    )
 
 
-def _first_writable_safe_python_path() -> str:
+def _first_writable_safe_python_path() -> str | None:
     """Return the best guess for the `local` path
 
     It's the first writable path in sys.path, omitting '.'.
     """
-    return next(p for p in sys.path if p and os.access(p, os.W_OK))
+    return next((p for p in sys.path if p and os.access(p, os.W_OK)), None)
 
 
 _T = TypeVar("_T")

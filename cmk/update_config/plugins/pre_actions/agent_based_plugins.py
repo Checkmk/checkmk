@@ -34,6 +34,9 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         path_config = get_path_config()
+        # In this case we have no mkp plugins available so bail out early
+        if path_config is None:
+            return
         _installer, package_map = get_installer_and_package_map(path_config)
         inactive_files = self._get_files()
         if inactive_files:

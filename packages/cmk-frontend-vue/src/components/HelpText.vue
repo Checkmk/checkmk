@@ -8,6 +8,7 @@ import { ref, useTemplateRef } from 'vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
 import CmkIcon from './CmkIcon.vue'
 import CmkHtml from './CmkHtml.vue'
+import CmkScrollContainer from './CmkScrollContainer.vue'
 
 const props = defineProps<{
   help: string
@@ -50,16 +51,18 @@ const closeHelp = () => {
           class="help-text__icon"
           data-testid="help-icon"
       /></TooltipTrigger>
-      <TooltipContent
-        side="top"
-        align="start"
-        class="help-text__content"
-        as-child
-        @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
-        @escape-key-down="closeHelp"
-      >
-        <div><CmkHtml :html="props.help" /></div>
-      </TooltipContent>
+      <CmkScrollContainer>
+        <TooltipContent
+          side="top"
+          align="start"
+          class="help-text__content"
+          as-child
+          @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
+          @escape-key-down="closeHelp"
+        >
+          <div><CmkHtml :html="props.help" /></div>
+        </TooltipContent>
+      </CmkScrollContainer>
     </Tooltip>
   </TooltipProvider>
 </template>
@@ -106,21 +109,5 @@ body.show_help .help-text__icon {
   .text {
     line-height: 1.2;
   }
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--custom-scroll-bar-backgroud-color);
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: var(--custom-scroll-bar-thumb-color);
-  border-radius: 1rem;
-  border: 3px solid var(--custom-scroll-bar-thumb-border-color);
 }
 </style>

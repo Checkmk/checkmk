@@ -16,6 +16,7 @@ import type {
 
 import { useId } from '@/form/utils'
 import { fetchData } from '../utils/autocompleter'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   spec: DualListChoice
@@ -225,22 +226,24 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
         <tr>
           <td>
             <div v-if="items.inactive.length > 0">
-              <select
-                :id="`${componentId}_available`"
-                v-model="availableSelected"
-                aria-label="available"
-                multiple
-                :style="selectStyle"
-              >
-                <option
-                  v-for="element in items.inactive"
-                  :key="JSON.stringify(element.name)"
-                  :value="element.name"
-                  @dblclick="() => handleDoubleClickToAddItem(element.name)"
+              <CmkScrollContainer>
+                <select
+                  :id="`${componentId}_available`"
+                  v-model="availableSelected"
+                  aria-label="available"
+                  multiple
+                  :style="selectStyle"
                 >
-                  {{ element.title }}
-                </option>
-              </select>
+                  <option
+                    v-for="element in items.inactive"
+                    :key="JSON.stringify(element.name)"
+                    :value="element.name"
+                    @dblclick="() => handleDoubleClickToAddItem(element.name)"
+                  >
+                    {{ element.title }}
+                  </option>
+                </select>
+              </CmkScrollContainer>
             </div>
 
             <div v-else :style="selectStyle" class="no-element-in-select">
@@ -397,22 +400,5 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
   user-select: none;
   opacity: 0.5;
   border-radius: 3px;
-}
-
-/* custom scroll bar => should be removed or moved to globals*/
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #303946;
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #e0e0e4;
-  border-radius: 1rem;
-  border: 3px solid #303946;
 }
 </style>

@@ -9,6 +9,7 @@ import CmkButton from './CmkButton.vue'
 import useClickOutside from '@/lib/useClickOutside'
 import FormRequired from '@/form/private/FormRequired.vue'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
+import CmkScrollContainer from './CmkScrollContainer.vue'
 
 export interface DropdownOption {
   name: string
@@ -193,22 +194,24 @@ function wrap(index: number, length: number): number {
       <span :class="{ hidden: !showFilter, input: true }">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
-      <div class="cmk-dropdown__options-container">
-        <template v-for="(option, index) in options" :key="option.name">
-          <li
-            v-show="filteredOptions.includes(index)"
-            :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
-            role="option"
-            :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
-            @click.prevent="() => selectOption(index)"
-          >
-            {{ option.title }}
+      <CmkScrollContainer>
+        <div class="cmk-dropdown__options-container">
+          <template v-for="(option, index) in options" :key="option.name">
+            <li
+              v-show="filteredOptions.includes(index)"
+              :ref="(el) => (optionRefs[index] = el as HTMLLIElement)"
+              role="option"
+              :class="{ selected: index === selectedSuggestionOptionIndex, selectable: true }"
+              @click.prevent="() => selectOption(index)"
+            >
+              {{ option.title }}
+            </li>
+          </template>
+          <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
+            {{ noResultsHint }}
           </li>
-        </template>
-        <li v-if="filteredOptions.length === 0 && noResultsHint !== ''">
-          {{ noResultsHint }}
-        </li>
-      </div>
+        </div>
+      </CmkScrollContainer>
     </ul>
   </div>
 </template>

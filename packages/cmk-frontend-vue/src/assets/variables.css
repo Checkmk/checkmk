@@ -24,6 +24,7 @@
   --tag-ruleset-color: rgba(222, 67, 131);
   --default-help-icon-bg-color: rgb(6, 103, 193);
   --default-help-icon-bg-color-hover: rgb(56, 133, 205);
+  --scrollbar-color: rgb(78, 93, 105);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -53,7 +54,6 @@
   --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
-  --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
 
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later)*/
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
@@ -88,6 +88,7 @@
 
     --icon-info-circle: url('~cmk-frontend/src/themes/facelift/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/facelift/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -138,6 +139,7 @@
 
     --icon-info-circle: url('~cmk-frontend/src/themes/modern-dark/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/src/themes/modern-dark/images/tree_closed.svg');
+    --icon-search: url('~cmk-frontend/src/themes/modern-dark/images/icon_search_action.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

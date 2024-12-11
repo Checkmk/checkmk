@@ -8,6 +8,7 @@ import { ref, useTemplateRef, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 const props = defineProps<{
   id?: string
@@ -152,20 +153,22 @@ watch(autocompleterOutput, (newValue) => {
       />
     </span>
 
-    <ul
-      v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
-      class="suggestions"
-      @blur="handleListBlur"
-    >
-      <li
-        v-for="(option, index) in filteredSuggestions"
-        :key="option"
-        :class="{ selected: index === selectedSuggestionIndex }"
-        @click="() => handleCloseList(option)"
+    <CmkScrollContainer>
+      <ul
+        v-if="props.show && filteredSuggestions.length > 0 && !!showSuggestions"
+        class="suggestions"
+        @blur="handleListBlur"
       >
-        {{ option }}
-      </li>
-    </ul>
+        <li
+          v-for="(option, index) in filteredSuggestions"
+          :key="option"
+          :class="{ selected: index === selectedSuggestionIndex }"
+          @click="() => handleCloseList(option)"
+        >
+          {{ option }}
+        </li>
+      </ul>
+    </CmkScrollContainer>
   </div>
 </template>
 
@@ -260,21 +263,5 @@ table.nform input {
       color: var(--default-select-hover-color);
     }
   }
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #303946;
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #e0e0e4;
-  border-radius: 1rem;
-  border: 3px solid #303946;
 }
 </style>

@@ -14,6 +14,7 @@ import {
 } from 'radix-vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
+import CmkScrollContainer from './CmkScrollContainer.vue'
 
 export interface SlideInProps {
   open: boolean
@@ -42,9 +43,12 @@ const emit = defineEmits(['close'])
             <CmkIcon name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
-        <div class="slide-in__slot">
-          <slot />
-        </div>
+
+        <CmkScrollContainer type="outer">
+          <div class="slide-in__slot">
+            <slot />
+          </div>
+        </CmkScrollContainer>
       </DialogContent>
     </DialogPortal>
   </DialogRoot>

@@ -8,7 +8,7 @@
 # fields: mode, title, icon, permission, help
 
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import cmk.ccc.version as cmk_version
 
@@ -352,6 +352,10 @@ class MainModuleHWSWInventory(ABCMainModule):
     @property
     def is_show_more(self) -> bool:
         return True
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["hardware", "software"]
 
 
 class MainModuleNetworkingServices(ABCMainModule):

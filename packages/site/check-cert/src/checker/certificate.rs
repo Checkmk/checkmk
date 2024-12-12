@@ -321,9 +321,8 @@ fn check_validity_not_after(
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
             OutputType::Summary(format!(
-                "Remaining validity: {} day(s) ({})",
+                "Server certificate validity: {} day(s)",
                 time_to_expiration.whole_days(),
-                not_after
             )),
             LevelsCheckerArgs::builder()
                 .label("certificate_remaining_validity")

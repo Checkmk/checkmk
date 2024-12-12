@@ -8,22 +8,6 @@ set -e
 JOBS=6
 readonly BAZEL_CMD=${BAZEL_CMD:-bazel}
 
-SOURCES=(
-    typescript/vue_formspec_components.ts
-    typescript/configuration_entity.ts
-    typescript/notifications.ts
-    typescript/graph_designer.ts
-)
-# you should also modify the following files if you change something here!
-# buildscripts/scripts/stages.yml
-# packages/cmk-frontend-vue/.prettierignore
-DESTINATIONS=(
-    ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
-    ../../packages/cmk-frontend-vue/src/form/components/configuration_entity.ts
-    ../../packages/cmk-frontend-vue/src/notification/type_defs.ts
-    ../../packages/cmk-frontend-vue/src/graph-designer/type_defs.ts
-)
-
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -208,20 +192,7 @@ run_build() {
     if [ "$CI" == "true" ]; then
         echo "Checking if the generated files are up-to-date..."
         git diff --exit-code .
-    else
-        echo "Copying the generated files..."
     fi
-
-    for i in "${!SOURCES[@]}"; do
-        SOURCE=${SOURCES[$i]}
-        DESTINATION=${DESTINATIONS[$i]}
-        if [ "$CI" == "true" ]; then
-            # this is a hack, we should create another "copy" or "diff" target
-            diff "$SOURCE" "$DESTINATION"
-        else
-            cp "$SOURCE" "$DESTINATION"
-        fi
-    done
 
     echo "Done."
 }

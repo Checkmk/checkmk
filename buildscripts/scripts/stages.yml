@@ -175,7 +175,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
     - NAME: CHANGED_SHARED_TYPING_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^packages/cmk-frontend-vue/src/form/components/configuration_entity.ts\\|^packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts\\|^packages/cmk-frontend-vue/src/notification/type_defs.ts\\|^packages/cmk-frontend-vue/src/graph-designer/type_defs.ts' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/' || true"
 
     - NAME: CHANGED_CMK_FRONTEND_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"

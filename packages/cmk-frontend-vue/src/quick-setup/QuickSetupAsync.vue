@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref, toValue, type Ref, watch, provide, readonly } from 'vue'
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
-import { formatError } from '@/components/CmkError'
+import { formatError } from '@/lib/error.ts'
 import {
   saveQuickSetup,
   getOverview,

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref, computed, type Ref } from 'vue'
 import AlertBox from '../AlertBox.vue'
 import CmkButton from '../CmkButton.vue'
-import { formatError } from '../CmkError'
+import { formatError } from '@/lib/error.ts'
 
 const details = ref<boolean>(false)
 

@@ -5,7 +5,7 @@
  */
 import axios from 'axios'
 import type { AxiosError } from 'axios'
-import { CmkError } from '@/components/CmkError'
+import { CmkError } from '@/lib/error.ts'
 import type { ValidationError, AllStagesValidationError } from './types'
 
 import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'

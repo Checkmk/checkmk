@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import { CmkError } from '@/components/CmkError'
+import { CmkError } from '@/lib/error.ts'
 import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
 
 type FetchParams = Parameters<typeof fetch>

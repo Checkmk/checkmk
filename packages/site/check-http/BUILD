@@ -1,7 +1,7 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 rust_library(
     name = "check-http-lib",

@@ -2,8 +2,8 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
-load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//:bazel_variables.bzl", "edition_deps")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 genrule(
     name = "_generate_requirements_in",

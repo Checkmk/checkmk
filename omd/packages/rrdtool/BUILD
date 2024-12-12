@@ -1,7 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 pkg_files(
     name = "rrdtool_bin",

@@ -30,28 +30,24 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.handlers.setup import (
-    AllStageErrors,
-    complete_quick_setup,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
-    validate_stages_formspecs,
+    validate_and_complete_quick_setup,
 )
 from cmk.gui.quick_setup.handlers.stage import (
     get_stage_structure,
-    get_stages_and_formspec_map,
     matching_stage_action,
     NextStageStructure,
     StageActionResult,
     start_quick_setup_stage_job,
     validate_and_recap_stage,
-    validate_custom_validators,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
+from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, StageIndex
 
 from cmk import fields
 
@@ -338,65 +334,28 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
 
-    stage_index = StageIndex(len(body["stages"]) - 1)
-    _stages, form_spec_map = get_stages_and_formspec_map(
-        quick_setup=quick_setup,
-        stage_index=stage_index,
-    )
-
-    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in body["stages"]]
-    if (
-        stage_errors := validate_stages_formspecs(
-            stages_raw_formspecs=stages_raw_formspecs,
-            quick_setup_formspec_map=form_spec_map,
-        )
-    ) is not None:
-        return _serve_data(
-            AllStageErrors(
-                all_stage_errors=stage_errors,
-            ),
-            status_code=400,
-        )
-
-    action = next((action for action in quick_setup.actions if action.id == action_id), None)
-    if action is None:
+    if next((action for action in quick_setup.actions if action.id == action_id), None) is None:
         return _serve_error(
-            title="Save action not found",
-            detail=f"Save action with id '{action_id}' does not exist.",
+            title="Action not found",
+            detail=f"Action with id '{action_id}' does not exist.",
         )
 
-    errors = validate_custom_validators(
-        quick_setup_id=quick_setup_id,
-        custom_validators=action.custom_validators,
-        stages_raw_formspecs=stages_raw_formspecs,
-        quick_setup_formspec_map=form_spec_map,
+    result = validate_and_complete_quick_setup(
+        quick_setup=quick_setup,
+        action_id=action_id,
+        mode=mode,
+        input_stages=body["stages"],
+        object_id=params.get("object_id"),
     )
-    if errors.exist():
-        return _serve_data(
-            AllStageErrors(
-                all_stage_errors=[errors],
-            ),
-            status_code=400,
-        )
 
-    return _serve_data(
-        complete_quick_setup(
-            action=action,
-            mode=mode,
-            stages_raw_formspecs=stages_raw_formspecs,
-            quick_setup_formspec_map=form_spec_map,
-            object_id=params.get("object_id"),
-        ),
-        status_code=201,
-    )
+    if not result.redirect_url and not result.all_stage_errors:
+        raise ValueError("The Quick setup action did not return a result")
+
+    return _serve_action_result(result, status_code=201 if result.all_stage_errors is None else 400)
 
 
 def _serve_data(
-    data: QuickSetupOverview
-    | QuickSetupSaveRedirect
-    | QuickSetupAllStages
-    | AllStageErrors
-    | NextStageStructure,
+    data: QuickSetupOverview | QuickSetupSaveRedirect | QuickSetupAllStages | NextStageStructure,
     status_code: int = 200,
 ) -> Response:
     return _prepare_response(asdict(data), status_code)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, cast, Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Any, cast, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
 
 from cmk.ccc.i18n import _
 
@@ -14,10 +14,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
+from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator, FormspecMap
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ActionId,
     GeneralStageErrors,
     ParsedFormData,
+    QuickSetupId,
     RawFormData,
     StageIndex,
 )
@@ -121,3 +123,20 @@ class ValidationErrors:
 
     def exist(self) -> bool:
         return bool(self.formspec_errors or self.stage_errors)
+
+
+def validate_custom_validators(
+    quick_setup_id: QuickSetupId,
+    custom_validators: Iterable[CallableValidator],
+    stages_raw_formspecs: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+) -> ValidationErrors:
+    errors = ValidationErrors(stage_index=None)
+    for custom_validator in custom_validators:
+        errors.stage_errors.extend(
+            custom_validator(
+                quick_setup_id,
+                form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
+            )
+        )
+    return errors

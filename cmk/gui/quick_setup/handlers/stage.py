@@ -38,6 +38,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     QuickSetupValidationError,
+    validate_custom_validators,
     ValidationErrorMap,
     ValidationErrors,
 )
@@ -47,7 +48,6 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     stage_components,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import (
-    CallableValidator,
     FormspecMap,
     QuickSetup,
     QuickSetupStage,
@@ -188,23 +188,6 @@ def validate_stage_formspecs(
         stages_raw_formspecs[stage_index],
         quick_setup_formspec_map,
     )
-    return errors
-
-
-def validate_custom_validators(
-    quick_setup_id: QuickSetupId,
-    custom_validators: Iterable[CallableValidator],
-    stages_raw_formspecs: Sequence[RawFormData],
-    quick_setup_formspec_map: FormspecMap,
-) -> ValidationErrors:
-    errors = ValidationErrors(stage_index=None)
-    for custom_validator in custom_validators:
-        errors.stage_errors.extend(
-            custom_validator(
-                quick_setup_id,
-                form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
-            )
-        )
     return errors
 
 

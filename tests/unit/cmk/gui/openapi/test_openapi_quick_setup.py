@@ -272,7 +272,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
         payload={"button_id": "save", "stages": []},
     )
     resp.assert_status_code(201)
-    assert resp.json == {"redirect_url": "http://save/url"}
+    assert resp.json["redirect_url"] == "http://save/url"
 
 
 def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
@@ -488,7 +488,7 @@ def test_quick_setup_edit(clients: ClientRegistry) -> None:
         object_id="obj1",
     )
     resp.assert_status_code(201)
-    assert resp.json == {"redirect_url": "http://save/url"}
+    assert resp.json["redirect_url"] == "http://save/url"
 
 
 @pytest.mark.parametrize(

@@ -131,12 +131,17 @@ class QuickSetupAction:
 
             Therefore, relevant custom validators should be included again here (especially
             if the 'overview' mode is enabled)
+        run_in_background:
+            A flag indicating if the action should be executed in the background. This should
+            be used for actions that CAN take a long time to complete. This is
+            necessary as the interface will run into a Gateway Timeout error after 120 seconds
     """
 
     id: ActionId
     label: str
     action: CallableAction
     custom_validators: Iterable[CallableValidator] = ()
+    run_in_background: bool = False
 
 
 @dataclass(frozen=True)

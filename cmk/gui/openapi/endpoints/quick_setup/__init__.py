@@ -34,6 +34,7 @@ from cmk.gui.quick_setup.handlers.setup import (
     quick_setup_overview_mode,
     QuickSetupAllStages,
     QuickSetupOverview,
+    start_quick_setup_job,
     validate_and_complete_quick_setup,
 )
 from cmk.gui.quick_setup.handlers.stage import (
@@ -286,7 +287,11 @@ def fetch_quick_setup_stage_action_result(params: Mapping[str, Any]) -> Response
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_MODE],
-    additional_status_codes=[201],
+    additional_status_codes=[201, 303],
+    status_descriptions={
+        303: "The validation and complete action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
     request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
@@ -302,7 +307,11 @@ def quick_setup_run_action(params: Mapping[str, Any]) -> Response:
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
     query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
-    additional_status_codes=[201],
+    additional_status_codes=[201, 303],
+    status_descriptions={
+        303: "The validation and complete action has been started in the background. "
+        "Redirecting to the 'Get background job status snapshot' endpoint."
+    },
     request_schema=QuickSetupFinalActionRequest,
     response_schema=QuickSetupCompleteResponse,
 )
@@ -327,6 +336,7 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
     action_id = body["button_id"]
+    object_id = params.get("object_id")
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         return _serve_error(
@@ -334,18 +344,36 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
 
-    if next((action for action in quick_setup.actions if action.id == action_id), None) is None:
+    action = next((action for action in quick_setup.actions if action.id == action_id), None)
+    if action is None:
         return _serve_error(
             title="Action not found",
             detail=f"Action with id '{action_id}' does not exist.",
         )
+
+    if action.run_in_background:
+        background_job_id = start_quick_setup_job(
+            quick_setup=quick_setup,
+            action_id=action.id,
+            mode=mode,
+            user_input_stages=body["stages"],
+            object_id=object_id,
+        )
+        background_job_status_link = constructors.link_endpoint(
+            module_name="cmk.gui.openapi.endpoints.background_job",
+            rel="cmk/show",
+            parameters={background_job.JobID.field_name: background_job_id},
+        )
+        response = Response(status=303)
+        response.location = urlparse(background_job_status_link["href"]).path
+        return response
 
     result = validate_and_complete_quick_setup(
         quick_setup=quick_setup,
         action_id=action_id,
         mode=mode,
         input_stages=body["stages"],
-        object_id=params.get("object_id"),
+        object_id=object_id,
     )
 
     if not result.redirect_url and not result.all_stage_errors:

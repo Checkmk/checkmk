@@ -9,6 +9,7 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from .config_setups import register as register_config_setups
+from .handlers.setup import QuickSetupActionBackgroundJob
 from .handlers.stage import QuickSetupStageActionBackgroundJob
 from .v0_unstable._registry import QuickSetupRegistry
 
@@ -22,3 +23,4 @@ def register(
     _modes.register(main_module_registry, mode_registry)
     register_config_setups(quick_setup_registry)
     job_registry.register(QuickSetupStageActionBackgroundJob)
+    job_registry.register(QuickSetupActionBackgroundJob)

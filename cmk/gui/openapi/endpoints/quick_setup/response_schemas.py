@@ -8,6 +8,13 @@ from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
 
+BACKGROUND_JOB_EXCEPTION = fields.String(
+    example="An exception message",
+    description="The exception message if the action was run in the background and raised "
+    "an unexpected exception",
+    allow_none=True,
+)
+
 
 class QuickSetupStageOverviewResponse(BaseSchema):
     title = fields.String(
@@ -102,12 +109,7 @@ class QuickSetupStageActionResponse(BaseSchema):
         description="All formspec errors and general stage errors",
         allow_none=True,
     )
-    background_job_exception = fields.String(
-        example="An exception message",
-        description="The exception message if the action was run in the background and raised "
-        "an unexpected exception",
-        allow_none=True,
-    )
+    background_job_exception = BACKGROUND_JOB_EXCEPTION
 
 
 class QuickSetupCompleteStageResponse(BaseSchema):
@@ -220,3 +222,5 @@ class QuickSetupCompleteResponse(BaseSchema):
         description="A list of stage errors",
         example=[],
     )
+
+    background_job_exception = BACKGROUND_JOB_EXCEPTION

@@ -2,14 +2,27 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import os
+import traceback
+import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Sequence
 
 from pydantic import BaseModel
 
+from cmk.ccc import store
 from cmk.ccc.i18n import _
 
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundJobDefines,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.logged_in import user
+from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.stage import (
     get_stages_and_formspec_map,
     NextStageStructure,
@@ -28,6 +41,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     validate_custom_validators,
     ValidationErrors,
 )
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import stage_components
 from cmk.gui.quick_setup.v0_unstable.setups import (
@@ -253,6 +267,23 @@ def complete_quick_setup(
 class CompleteActionResult(BaseModel):
     all_stage_errors: Sequence[ValidationErrors] | None = None
     redirect_url: str | None = None
+    background_job_exception: str | None = None
+
+    @classmethod
+    def load_from_job_result(cls, job_id: str) -> "CompleteActionResult":
+        work_dir = str(Path(BackgroundJobDefines.base_dir) / job_id)
+        result = store.load_text_from_file(cls._file_path(work_dir))
+        return cls.model_validate_json(result)
+
+    def save_to_file(self, work_dir: str) -> None:
+        store.save_text_to_file(self._file_path(work_dir), self.model_dump_json())
+
+    @staticmethod
+    def _file_path(work_dir: str) -> str:
+        return os.path.join(
+            work_dir,
+            "validation_and_action_result.json",
+        )
 
 
 def validate_and_complete_quick_setup(
@@ -289,3 +320,99 @@ def validate_and_complete_quick_setup(
         object_id=object_id,
     ).redirect_url
     return result
+
+
+class QuickSetupActionBackgroundJob(BackgroundJob):
+    housekeeping_max_age_sec = 1800
+    housekeeping_max_count = 10
+
+    job_prefix = "quick_setup_action"
+
+    @classmethod
+    def gui_title(cls) -> str:
+        return _("Run Quick Setup Action")
+
+    @classmethod
+    def create_job_id(
+        cls,
+        quick_setup_id: str,
+        job_uuid: str,
+    ) -> str:
+        return f"{cls.job_prefix}-{quick_setup_id.replace(":", "_")}-{job_uuid}"
+
+    def __init__(
+        self,
+        job_uuid: str,
+        quick_setup_id: QuickSetupId,
+        action_id: ActionId,
+        user_input_stages: Sequence[dict],
+        mode: QuickSetupActionMode,
+        object_id: str | None,
+    ) -> None:
+        self._quick_setup_id = quick_setup_id
+        self._action_id = action_id
+        self._user_input_stages = user_input_stages
+        self._mode = mode
+        self._object_id = object_id
+        super().__init__(job_id=self.create_job_id(quick_setup_id, job_uuid))
+
+    def run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
+        job_interface.get_logger().debug("Running Quick setup action finally")
+        with job_interface.gui_context():
+            try:
+                self._run_quick_setup_stage(job_interface)
+            except Exception as e:
+                job_interface.get_logger().debug(
+                    "Exception raised while the Quick setup stage action: %s", e
+                )
+                job_interface.send_exception(str(e))
+                CompleteActionResult(background_job_exception=traceback.format_exc()).save_to_file(
+                    job_interface.get_work_dir()
+                )
+
+    def _run_quick_setup_stage(self, job_interface: BackgroundProcessInterface) -> None:
+        job_interface.send_progress_update(_("Starting Quick stage action..."))
+
+        register_config_setups(quick_setup_registry)
+        quick_setup = quick_setup_registry[self._quick_setup_id]
+        action_result = validate_and_complete_quick_setup(
+            quick_setup=quick_setup,
+            action_id=self._action_id,
+            mode=self._mode,
+            input_stages=self._user_input_stages,
+            object_id=self._object_id,
+        )
+
+        job_interface.send_progress_update(_("Saving the result..."))
+        action_result.save_to_file(job_interface.get_work_dir())
+        job_interface.send_result_message("Job finished.")
+
+
+def start_quick_setup_job(
+    quick_setup: QuickSetup,
+    action_id: ActionId,
+    mode: QuickSetupActionMode,
+    user_input_stages: Sequence[dict],
+    object_id: str | None,
+) -> str:
+    job_uuid = str(uuid.uuid4())
+    job = QuickSetupActionBackgroundJob(
+        job_uuid=job_uuid,
+        quick_setup_id=quick_setup.id,
+        action_id=action_id,
+        user_input_stages=user_input_stages,
+        mode=mode,
+        object_id=object_id,
+    )
+
+    job_start = job.start(
+        job.run_quick_setup_stage,
+        InitialStatusArgs(
+            title=_("Running Quick setup %s action %s") % (quick_setup.id, action_id),
+            user=str(user.id) if user.id else None,
+        ),
+    )
+    if job_start.is_error():
+        raise MKUserError(None, str(job_start.error))
+
+    return job.get_job_id()

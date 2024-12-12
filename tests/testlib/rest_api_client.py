@@ -2966,12 +2966,14 @@ class QuickSetupClient(RestApiClient):
         self,
         quick_setup_id: str,
         payload: dict[str, Any],
+        follow_redirects: bool = True,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{quick_setup_id}/actions/run-action/invoke",
             body=payload,
+            follow_redirects=follow_redirects,
             expect_ok=expect_ok,
         )
 

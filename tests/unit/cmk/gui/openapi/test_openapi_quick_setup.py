@@ -45,27 +45,30 @@ from cmk.rulesets.v1.form_specs import (
 def register_quick_setup(
     setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None,
-    action_custom_validators: Iterable[CallableValidator] | None = None,
+    actions: Sequence[QuickSetupAction] | None = None,
 ) -> None:
+    if actions is None:
+        actions = [
+            QuickSetupAction(
+                id=ActionId("save"),
+                label="Complete",
+                action=lambda stages, mode, object_id: "http://save/url",
+                custom_validators=[],
+            ),
+            QuickSetupAction(
+                id=ActionId("other_save"),
+                label="Complete2: The Sequel",
+                action=lambda stages, mode, object_id: "http://other_save",
+                custom_validators=[],
+            ),
+        ]
+
     quick_setup_registry.register(
         QuickSetup(
             title="Quick Setup Test",
             id=QuickSetupId("quick_setup_test"),
             stages=setup_stages if setup_stages is not None else [],
-            actions=[
-                QuickSetupAction(
-                    id=ActionId("save"),
-                    label="Complete",
-                    action=lambda stages, mode, object_id: "http://save/url",
-                    custom_validators=action_custom_validators or [],
-                ),
-                QuickSetupAction(
-                    id=ActionId("other_save"),
-                    label="Complete2: The Sequel",
-                    action=lambda stages, mode, object_id: "http://other_save",
-                    custom_validators=action_custom_validators or [],
-                ),
-            ],
+            actions=actions,
             load_data=load_data,
         ),
     )
@@ -566,7 +569,14 @@ def test_validation_on_save_all(
     clients: ClientRegistry, post_data: list, expected_errors: list
 ) -> None:
     register_quick_setup(
-        action_custom_validators=[_form_spec_extra_validate],
+        actions=[
+            QuickSetupAction(
+                id=ActionId("save"),
+                label="Complete",
+                action=lambda stages, mode, object_id: "http://save/url",
+                custom_validators=[_form_spec_extra_validate],
+            ),
+        ],
         setup_stages=[
             lambda: QuickSetupStage(
                 title="stage1",
@@ -663,5 +673,58 @@ class TestValidateAndRetrieveNext:
             stage_action_id="action",
             stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: "test_account_name"}}}],
             follow_redirects=False,
+        )
+        assert "objects/background_job" in resp.headers["Location"]
+
+
+class TestCompleteAction:
+    @pytest.mark.usefixtures("inline_background_jobs")
+    def test_openapi_background_job_setup_action(self, clients: ClientRegistry) -> None:
+        register_quick_setup(
+            actions=[
+                QuickSetupAction(
+                    id=ActionId("save"),
+                    label="Complete",
+                    action=lambda stages, mode, object_id: "http://save/url",
+                    custom_validators=[],
+                    run_in_background=True,
+                ),
+            ],
+            setup_stages=[
+                lambda: QuickSetupStage(
+                    title="stage1",
+                    configure_components=[
+                        FormSpecWrapper(
+                            id=FormSpecId("id_1"),
+                            form_spec=String(
+                                title=Title("string_id_1"),
+                                custom_validate=(validators.LengthInRange(min_value=10),),
+                            ),
+                        ),
+                    ],
+                    actions=[
+                        QuickSetupStageAction(
+                            id=ActionId("action"),
+                            custom_validators=[],
+                            recap=[],
+                            next_button_label="Next",
+                        )
+                    ],
+                ),
+            ],
+        )
+        # the underlying background actually fails as it doesn't have access to the registered
+        # quick setup defined in this scope
+        resp = clients.QuickSetup.run_quick_setup_action(
+            quick_setup_id="quick_setup_test",
+            payload={
+                "button_id": "save",
+                "stages": [
+                    {"form_data": {"id_1": "valid_data"}},
+                    {"form_data": {"id_2": "valid_data"}},
+                ],
+            },
+            follow_redirects=False,
+            expect_ok=True,
         )
         assert "objects/background_job" in resp.headers["Location"]

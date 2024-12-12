@@ -10,11 +10,11 @@ from cmk.gui.form_specs.private.condition_choices import (
     ConditionGroupID,
     Conditions,
 )
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue

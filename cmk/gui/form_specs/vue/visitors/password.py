@@ -7,7 +7,6 @@ from typing import Literal
 
 from cmk.utils.password_store import ad_hoc_password_id
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
@@ -15,6 +14,7 @@ from cmk.gui.watolib.password_store import passwordstore_choices
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Password
+from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue

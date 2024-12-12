@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue

@@ -23,7 +23,8 @@ from cmk.gui.openapi.endpoints.configuration_entity import _to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
+
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 if TYPE_CHECKING:
     from cmk.gui.openapi.endpoints.downtime import FindByType

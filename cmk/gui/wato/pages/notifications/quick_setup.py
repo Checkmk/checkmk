@@ -34,16 +34,6 @@ from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import (
-    Autocompleter,
-    AutocompleterData,
-    AutocompleterParams,
-    CascadingSingleChoiceLayout,
-    Condition,
-    ConditionGroup,
-    DictionaryLayout,
-    ListOfStringsLayout,
-)
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
@@ -83,7 +73,6 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
@@ -116,6 +105,17 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress, LengthInRange, ValidationError
+from cmk.shared_typing.configuration_entity import ConfigEntityType
+from cmk.shared_typing.vue_formspec_components import (
+    Autocompleter,
+    AutocompleterData,
+    AutocompleterParams,
+    CascadingSingleChoiceLayout,
+    Condition,
+    ConditionGroup,
+    DictionaryLayout,
+    ListOfStringsLayout,
+)
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")

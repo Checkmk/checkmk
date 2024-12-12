@@ -42,7 +42,6 @@ from cmk.gui.form_specs.private import (
     TimeSpecific,
     UnknownFormSpec,
 )
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (
@@ -99,6 +98,7 @@ from cmk.rulesets.v1.form_specs import (
     TimePeriod,
     TimeSpan,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from .validators import (
     build_float_validator,

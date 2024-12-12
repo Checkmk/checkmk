@@ -10,7 +10,6 @@ from cmk.ccc.i18n import _
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
@@ -50,6 +49,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 NEXT_BUTTON_ARIA_LABEL = _("Go to the next stage")
 PREV_BUTTON_ARIA_LABEL = _("Go to the previous stage")

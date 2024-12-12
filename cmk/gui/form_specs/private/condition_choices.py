@@ -6,10 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal, TypeAlias
 
-from cmk.gui.form_specs.vue.shared_type_defs import ConditionGroup
-
 from cmk.rulesets.v1 import Label
 from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.shared_typing.vue_formspec_components import ConditionGroup
 
 ConditionID: TypeAlias = str
 ConditionGroupID: TypeAlias = str

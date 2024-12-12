@@ -15,7 +15,6 @@ from cmk.utils.notify_types import (
     NotificationParameterMethod,
 )
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import process_validation_messages
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
@@ -25,6 +24,8 @@ from cmk.gui.form_specs.vue.visitors import (
 )
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 from cmk.gui.watolib.sample_config import new_notification_parameter_id
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._registry import NotificationParameterRegistry
 

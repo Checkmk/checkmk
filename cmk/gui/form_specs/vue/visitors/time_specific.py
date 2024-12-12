@@ -8,7 +8,6 @@ from typing import Any, TypedDict
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
 from cmk.gui.form_specs.private.time_specific import TimeSpecific
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
@@ -18,6 +17,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     List,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor

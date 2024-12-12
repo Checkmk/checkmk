@@ -29,7 +29,6 @@ from cmk.gui.form_specs.private import (
     MonitoredHostExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -50,6 +49,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     RulespecSubGroup,
 )
+
+from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
 RulespecGroupMonitoringAgentsLinuxUnixAgent: type[RulespecSubGroup] | None

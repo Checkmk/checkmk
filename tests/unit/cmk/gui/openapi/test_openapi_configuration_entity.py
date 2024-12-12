@@ -11,7 +11,6 @@ from tests.testlib.rest_api_client import ClientRegistry
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
     NotificationParameter,
@@ -25,6 +24,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     String,
 )
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class DummyNotificationParams(NotificationParameter):

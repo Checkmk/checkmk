@@ -6,10 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
-
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, FormSpec
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 T = TypeVar("T")
 

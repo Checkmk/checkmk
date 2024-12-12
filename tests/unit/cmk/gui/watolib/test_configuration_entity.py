@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.gui.watolib.configuration_entity import configuration_entity as ce
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
+
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 @pytest.mark.parametrize(

@@ -79,6 +79,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.discover_plugins")),
             _in_component(imported=imported, component=Component("cmk.agent_based")),
             _in_component(imported=imported, component=Component("cmk.rulesets")),
+            _in_component(imported=imported, component=Component("cmk.shared_typing")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls")),
             _in_component(imported=imported, component=Component("cmk.werks")),
             _in_component(imported=imported, component=Component("cmk.messaging")),

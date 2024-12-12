@@ -7,11 +7,11 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import TypeVar
 
 from cmk.gui.form_specs.private.labels import Labels
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._type_defs import EMPTY_VALUE, EmptyValue

@@ -9,13 +9,13 @@ from typing import Any, cast, Self
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor

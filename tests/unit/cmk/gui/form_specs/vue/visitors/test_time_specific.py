@@ -5,7 +5,6 @@
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.private import TimeSpecific
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors import (
     DataOrigin,
     DEFAULT_VALUE,
@@ -21,6 +20,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Integer,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def time_specific_int_spec() -> TimeSpecific:

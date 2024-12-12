@@ -29,8 +29,8 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex
+from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
 
-from ...form_specs.vue.shared_type_defs import ListOfStringsLayout
 from ._helpers import notification_macro_help_fs
 
 

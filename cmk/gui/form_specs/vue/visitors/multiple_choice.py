@@ -10,7 +10,6 @@ from cmk.gui.form_specs.private.multiple_choice import (
     MultipleChoiceExtended,
     MultipleChoiceExtendedLayout,
 )
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
@@ -24,6 +23,7 @@ from cmk.gui.form_specs.vue.visitors._utils import (
 from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 T = TypeVar("T")
 

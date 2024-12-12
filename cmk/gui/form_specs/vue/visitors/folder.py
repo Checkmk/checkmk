@@ -5,11 +5,11 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.folder import Folder
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import validators
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue

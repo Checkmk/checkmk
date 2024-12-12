@@ -7,12 +7,12 @@
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.private import Catalog, Topic
-from cmk.gui.form_specs.vue.shared_type_defs import ValidationMessage
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 
 def test_catalog_validation_simple(

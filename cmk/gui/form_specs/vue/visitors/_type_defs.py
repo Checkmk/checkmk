@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Any
 
-from cmk.gui.form_specs.vue.shared_type_defs import ValidationMessage
+from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 DataForDisk = Any
 

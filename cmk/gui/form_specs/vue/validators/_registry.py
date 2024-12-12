@@ -5,7 +5,7 @@
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 VueValidatorCreator = Callable[[Any], list[shared_type_defs.Validator]]
 

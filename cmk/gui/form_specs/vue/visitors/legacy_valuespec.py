@@ -8,12 +8,12 @@ from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 
 from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue

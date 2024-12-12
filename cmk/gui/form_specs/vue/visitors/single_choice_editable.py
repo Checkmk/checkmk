@@ -6,9 +6,11 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
@@ -41,7 +43,6 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
             get_list_of_configuration_entities,
             get_readable_entity_selection,
         )
-        from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
         title, help_text = get_title_and_help(self.form_spec)
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)

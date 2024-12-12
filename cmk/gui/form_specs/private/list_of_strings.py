@@ -5,9 +5,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
-
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
+from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
 
 
 @dataclass(frozen=True, kw_only=True)

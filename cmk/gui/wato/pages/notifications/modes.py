@@ -137,19 +137,6 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
-from cmk.gui.watolib.notification_types import (
-    CoreStats,
-    CoreStatsI18n,
-    FallbackWarning,
-    FallbackWarningI18n,
-    NotificationParametersOverview,
-    Notifications,
-    NotificationStats,
-    NotificationStatsI18n,
-    Rule,
-    RuleSection,
-    RuleTopic,
-)
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     NotificationParameterConfigFile,
@@ -170,6 +157,20 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
+
+from cmk.shared_typing.notifications import (
+    CoreStats,
+    CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
+    NotificationParametersOverview,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 
 
 def register(

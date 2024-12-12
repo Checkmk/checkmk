@@ -7,7 +7,6 @@ from typing import Any, final, Generic, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import (
     DataForDisk,
     DataOrigin,
@@ -18,6 +17,7 @@ from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecD
 
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs._base import ModelT
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 FormSpecModel = TypeVar("FormSpecModel", bound=FormSpec[Any])
 

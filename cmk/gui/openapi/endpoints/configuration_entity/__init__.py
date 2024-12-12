@@ -12,7 +12,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, assert_never
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
@@ -33,9 +32,10 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_list_of_configuration_entities,
     save_configuration_entity,
 )
-from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
 from cmk import fields
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 ENTITY_ID_FIELD = {
     "entity_id": fields.String(

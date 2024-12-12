@@ -5,9 +5,8 @@
 
 from dataclasses import dataclass
 
-from cmk.gui.form_specs.vue.shared_type_defs import CascadingSingleChoiceLayout
-
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 @dataclass(frozen=True, kw_only=True)

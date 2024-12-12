@@ -7,9 +7,9 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec
+from cmk.shared_typing.vue_formspec_components import DictionaryLayout
 
 
 # TODO: improve typing

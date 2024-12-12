@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.string import StringVisitor
 from cmk.gui.i18n import _
+
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._type_defs import EmptyValue
 

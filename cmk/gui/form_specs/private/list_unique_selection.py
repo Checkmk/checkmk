@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.gui.form_specs.private.validators import ModelT
-from cmk.gui.form_specs.vue.shared_type_defs import CascadingSingleChoiceLayout
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -20,6 +19,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
 )
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 
 @dataclass(frozen=True, kw_only=True)

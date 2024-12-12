@@ -11,7 +11,6 @@ from werkzeug.datastructures import FileStorage
 
 from cmk.utils.render import filesize
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
@@ -21,6 +20,7 @@ from cmk.gui.utils.encrypter import Encrypter
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import FileUpload
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue

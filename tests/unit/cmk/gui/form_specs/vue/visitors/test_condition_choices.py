@@ -5,7 +5,11 @@
 from dataclasses import asdict
 
 from cmk.gui.form_specs.private import ConditionChoices, not_empty
-from cmk.gui.form_specs.vue.shared_type_defs import (
+from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
+from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
+
+from cmk.rulesets.v1 import Label
+from cmk.shared_typing.vue_formspec_components import (
     Condition,
     ConditionChoicesValue,
     ConditionGroup,
@@ -15,10 +19,6 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     Or,
     ValidationMessage,
 )
-from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
-from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
-
-from cmk.rulesets.v1 import Label
 
 CONDITION_CHOICES_FS = ConditionChoices(
     select_condition_group_to_add=Label("add"),

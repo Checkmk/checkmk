@@ -11,7 +11,6 @@ from cmk.utils.notify_types import (
 )
 
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
@@ -34,6 +33,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 class DummyNotificationParams(NotificationParameter):

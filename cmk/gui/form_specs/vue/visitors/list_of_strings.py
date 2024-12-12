@@ -6,10 +6,10 @@
 from collections.abc import Sequence
 
 from cmk.gui.form_specs.private import ListOfStrings
-from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor

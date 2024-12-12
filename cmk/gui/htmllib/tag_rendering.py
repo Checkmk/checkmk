@@ -62,61 +62,57 @@ def render_element(
     return HTML.without_escaping(f"{open_tag}{tag_content}</{tag_name}>")
 
 
-def _render_attributes(  # pylint: disable=too-many-branches
-    **attrs: HTMLTagAttributeValue,
-) -> Iterator[str]:
-    css = _get_normalized_css_classes(attrs)
-    if css:
+def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
+    if css := _get_normalized_css_classes(attrs):
         attrs["class"] = css
 
-    # options such as 'selected' and 'checked' dont have a value in html tags
-    options = []
+    yield from (f' {key}="{value}"' for key, value in _extract_attrs(attrs))
+    yield from (f" {key}=''" for key in _extract_options(attrs))
 
+
+def _extract_attrs(
+    raw_attrs: dict[str, HTMLTagAttributeValue],
+) -> Iterator[tuple[str, str]]:
     # Links require href to be first attribute
-    href = attrs.pop("href", None)
-    if href:
-        attributes = list(attrs.items())
-        attributes.insert(0, ("href", href))
-    else:
-        attributes = list(attrs.items())
+    attrs = {"href": href, **raw_attrs} if (href := raw_attrs.get("href", None)) else raw_attrs
+    return (
+        (_format_key(key), _format_value(key, val))
+        for key, val in attrs.items()
+        if val is not None and val != ""
+    )
 
-    # render all attributes
-    for key_unescaped, v in attributes:
-        if v is None:
-            continue
 
-        key = escaping.escape_attribute(key_unescaped.rstrip("_"))
+def _extract_options(raw_attrs: dict[str, HTMLTagAttributeValue]) -> Iterator[str]:
+    # options such as 'selected' and 'checked' dont have a value in html tags
+    return (_format_key(key) for key, val in raw_attrs.items() if val == "")
 
-        if key.startswith("data_"):
-            key = key.replace("_", "-", 1)  # HTML data attribute: 'data-name'
 
-        if v == "":
-            options.append(key)
-            continue
+def _format_key(key: str) -> str:
+    if (escaped_key := escaping.escape_attribute(key.rstrip("_"))).startswith("data_"):
+        return escaped_key.replace("_", "-", 1)
 
-        if not isinstance(v, list):
-            v = escaping.escape_attribute(v)
-        else:
-            if key == "class":
-                sep = " "
-            elif key == "style" or key.startswith("on"):
-                sep = "; "
-            else:
-                # TODO: Can we drop this special Feature? No idea what it is used for.
-                sep = "_"
+    return escaped_key
 
-            joined_value = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
 
-            # TODO: Can we drop this special feature? Find an cleanup the call sites
-            if sep.startswith(";"):
-                joined_value = re.sub(";+", ";", joined_value)
+def _format_value(key: str, value: str | list[str]) -> str:
+    if isinstance(value, list):
+        separator = _get_separator(key)
+        joined = separator.join(escaping.escape_attribute(attr) for attr in value if attr)
 
-            v = joined_value
+        # TODO: Can we drop this special feature?
+        if separator.startswith(";"):
+            return re.sub(";+", ";", joined)
 
-        yield f' {key}="{v}"'
+        return joined
 
-    for k in options:
-        yield " %s=''" % k
+    return escaping.escape_attribute(value)
+
+
+def _get_separator(key: str) -> str:
+    if key.startswith("on"):
+        return "; "
+    # TODO: Can we drop this special Feature? No idea what it is used for. (defaults to "_")
+    return {"class": " ", "style": "; "}.get(key, "_")
 
 
 def normalize_css_spec(css_classes: CSSSpec) -> list[str]:

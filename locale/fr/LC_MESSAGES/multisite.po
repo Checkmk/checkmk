@@ -34892,7 +34892,15 @@ msgstr ""
 msgid "Lower level for message rate"
 msgstr "Niveau inférieur pour le taux de messages"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "Niveau inférieur pour le nombre d'exécuteurs de ce nœud"
+
 msgid "Lower level for number of executors of this node"
+msgstr "Niveau inférieur pour le nombre d'exécuteurs de ce nœud"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "Niveau inférieur pour le nombre d'exécuteurs de ce nœud"
 
 msgid "Lower level for published message rate"
@@ -71100,6 +71108,10 @@ msgid "Upper level for message rate"
 msgstr "Niveau supérieur pour le taux de messages"
 
 msgid "Upper level for number of busy executors of this node"
+msgstr "Niveau supérieur pour le nombre d'exécuteurs occupés de ce nœud"
+
+#, fuzzy
+msgid "Upper level for number of executors of this node"
 msgstr "Niveau supérieur pour le nombre d'exécuteurs occupés de ce nœud"
 
 msgid "Upper level for number of idle executors of this node"

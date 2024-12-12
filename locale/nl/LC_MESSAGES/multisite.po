@@ -34567,7 +34567,15 @@ msgstr ""
 msgid "Lower level for message rate"
 msgstr "Lager niveau voor berichtensnelheid"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "Lager niveau voor het aantal uitvoerders van dit knooppunt"
+
 msgid "Lower level for number of executors of this node"
+msgstr "Lager niveau voor het aantal uitvoerders van dit knooppunt"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "Lager niveau voor het aantal uitvoerders van dit knooppunt"
 
 msgid "Lower level for published message rate"
@@ -70394,6 +70402,10 @@ msgid "Upper level for message rate"
 msgstr "Bovenste niveau voor berichtensnelheid"
 
 msgid "Upper level for number of busy executors of this node"
+msgstr "Bovenste niveau voor het aantal bezette uitvoerders van dit knooppunt"
+
+#, fuzzy
+msgid "Upper level for number of executors of this node"
 msgstr "Bovenste niveau voor het aantal bezette uitvoerders van dit knooppunt"
 
 msgid "Upper level for number of idle executors of this node"

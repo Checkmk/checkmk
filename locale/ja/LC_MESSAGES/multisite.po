@@ -33311,7 +33311,15 @@ msgstr "ファイル記述子のオープン試行率の下位レベル"
 msgid "Lower level for message rate"
 msgstr "メッセージレートの下位レベル"
 
+#, fuzzy
+msgid "Lower level for number of busy executors of this node"
+msgstr "このノードのエグゼキュータの数の下位レベル"
+
 msgid "Lower level for number of executors of this node"
+msgstr "このノードのエグゼキュータの数の下位レベル"
+
+#, fuzzy
+msgid "Lower level for number of idle executors of this node"
 msgstr "このノードのエグゼキュータの数の下位レベル"
 
 msgid "Lower level for published message rate"
@@ -68411,6 +68419,10 @@ msgid "Upper level for message rate"
 msgstr "メッセージレートの上位レベル"
 
 msgid "Upper level for number of busy executors of this node"
+msgstr "このノードのビジーなエグゼキュータの数の上位レベル"
+
+#, fuzzy
+msgid "Upper level for number of executors of this node"
 msgstr "このノードのビジーなエグゼキュータの数の上位レベル"
 
 msgid "Upper level for number of idle executors of this node"

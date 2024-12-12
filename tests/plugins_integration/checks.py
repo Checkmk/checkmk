@@ -658,7 +658,7 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         "tag_piggyback": "piggyback",
         "tag_address_family": "no-ip",
     }
-    test_site_piggyback.openapi.create_dynamic_host_configuration(
+    test_site_piggyback.openapi.dcd.create(
         dcd_id=dcd_id,
         title="DCD Connector for piggyback hosts",
         host_attributes=host_attributes,
@@ -673,7 +673,7 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         yield
     finally:
         if not config.skip_cleanup:
-            test_site_piggyback.openapi.delete_dynamic_host_configuration(dcd_id)
+            test_site_piggyback.openapi.dcd.delete(dcd_id)
             test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
                 force_foreign_changes=True
             )

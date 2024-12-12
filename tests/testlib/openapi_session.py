@@ -120,6 +120,7 @@ class CMKOpenApiSession(requests.Session):
         self.broker_connections = BrokerConnectionsAPI(self)
         self.sites = SitesAPI(self)
         self.background_jobs = BackgroundJobsAPI(self)
+        self.dcd = DcdAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -296,55 +297,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def create_dynamic_host_configuration(
-        self,
-        dcd_id: str,
-        title: str,
-        comment: str = "",
-        disabled: bool = False,
-        restrict_source_hosts: list | None = None,
-        interval: int = 60,
-        host_attributes: dict | None = None,
-        delete_hosts: bool = False,
-        discover_on_creation: bool = True,
-        no_deletion_time_after_init: int = 600,
-        max_cache_age: int = 3600,
-        validity_period: int = 60,
-    ) -> None:
-        """Create a DCD connection via REST API."""
-        resp = self.post(
-            "/domain-types/dcd/collections/all",
-            json={
-                "dcd_id": dcd_id,
-                "title": title,
-                "comment": comment,
-                "disabled": disabled,
-                "site": self.site,
-                "connector_type": "piggyback",
-                "restrict_source_hosts": restrict_source_hosts or [],
-                "interval": interval,
-                "creation_rules": [
-                    {
-                        "folder_path": "/",
-                        "host_attributes": host_attributes or {},
-                        "delete_hosts": delete_hosts,
-                    }
-                ],
-                "discover_on_creation": discover_on_creation,
-                "no_deletion_time_after_init": no_deletion_time_after_init,
-                "max_cache_age": max_cache_age,
-                "validity_period": validity_period,
-            },
-        )
-        if resp.status_code != 200:
-            raise UnexpectedResponse.from_response(resp)
-
-    def delete_dynamic_host_configuration(self, dcd_id: str) -> None:
-        """Delete a DCD connection via REST API."""
-        resp = self.delete(f"/objects/dcd/{dcd_id}")
-        if resp.status_code != 204:
-            raise UnexpectedResponse.from_response(resp)
 
     def create_ldap_connection(
         self,
@@ -1130,3 +1082,54 @@ class BackgroundJobsAPI(BaseAPI):
 
         value: dict[str, Any] = response.json()
         return value
+
+
+class DcdAPI(BaseAPI):
+    def create(
+        self,
+        dcd_id: str,
+        title: str,
+        comment: str = "",
+        disabled: bool = False,
+        restrict_source_hosts: list | None = None,
+        interval: int = 60,
+        host_attributes: dict | None = None,
+        delete_hosts: bool = False,
+        discover_on_creation: bool = True,
+        no_deletion_time_after_init: int = 600,
+        max_cache_age: int = 3600,
+        validity_period: int = 60,
+    ) -> None:
+        """Create a DCD connection via REST API."""
+        resp = self.session.post(
+            "/domain-types/dcd/collections/all",
+            json={
+                "dcd_id": dcd_id,
+                "title": title,
+                "comment": comment,
+                "disabled": disabled,
+                "site": self.session.site,
+                "connector_type": "piggyback",
+                "restrict_source_hosts": restrict_source_hosts or [],
+                "interval": interval,
+                "creation_rules": [
+                    {
+                        "folder_path": "/",
+                        "host_attributes": host_attributes or {},
+                        "delete_hosts": delete_hosts,
+                    }
+                ],
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "max_cache_age": max_cache_age,
+                "validity_period": validity_period,
+            },
+        )
+        if resp.status_code != 200:
+            raise UnexpectedResponse.from_response(resp)
+
+    def delete(self, dcd_id: str) -> None:
+        """Delete a DCD connection via REST API."""
+        resp = self.session.delete(f"/objects/dcd/{dcd_id}")
+        if resp.status_code != 204:
+            raise UnexpectedResponse.from_response(resp)

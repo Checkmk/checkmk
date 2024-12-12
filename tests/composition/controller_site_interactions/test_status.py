@@ -33,13 +33,13 @@ def _get_status_output_json(
 ) -> Iterator[Mapping[str, Any]]:
     try:
         site.openapi.hosts.create(hostname=hostname, attributes=dict(host_attributes))
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.changes.activate_and_wait_for_completion()
 
         register_controller(ctl_path, site, hostname)
         yield controller_status_json(ctl_path)
     finally:
         site.openapi.hosts.delete(hostname=hostname)
-        site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized

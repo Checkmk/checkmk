@@ -32,7 +32,7 @@ def _test_rename_preserves_registration(
                 "site": registration_site.id,
             },
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
         register_controller(
             ctl_path,
             registration_site,
@@ -53,7 +53,7 @@ def _test_rename_preserves_registration(
         hostnames = set(central_site.openapi.hosts.get_all_names())
         for hostname_ in hostnames.intersection({hostname, new_hostname}):
             central_site.openapi.hosts.delete(hostname_)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 @skip_if_not_containerized

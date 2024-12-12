@@ -59,11 +59,11 @@ def _setup_piggyback_host(
                 "tag_piggyback": "piggyback",
             },
         )
-        source_site.openapi.activate_changes_and_wait_for_completion()
+        source_site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
         source_site.openapi.hosts.delete(hostname_piggyback)
-        source_site.openapi.activate_changes_and_wait_for_completion()
+        source_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.fixture(name="prepare_piggyback_environment", scope="module")
@@ -83,10 +83,10 @@ def _prepare_piggyback_environment(central_site: Site, remote_site: Site) -> Ite
                 [_HOSTNAME_PIGGYBACKED_B],
             ),
         ):
-            central_site.openapi.activate_changes_and_wait_for_completion()
+            central_site.openapi.changes.activate_and_wait_for_completion()
             yield
     finally:
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
 
 def _schedule_check_and_discover(site: Site, hostname_source: str, hostname_piggyback: str) -> None:
@@ -146,16 +146,16 @@ def _create_and_rename_host(
             },
         )
 
-        source_site.openapi.activate_changes_and_wait_for_completion()
+        source_site.openapi.changes.activate_and_wait_for_completion()
 
         source_site.openapi.hosts.rename_and_wait_for_completion(
             hostname_old="other_host", hostname_new=hostname_piggyback, etag="*"
         )
-        source_site.openapi.activate_changes_and_wait_for_completion()
+        source_site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
         source_site.openapi.hosts.delete(hostname_piggyback)
-        source_site.openapi.activate_changes_and_wait_for_completion()
+        source_site.openapi.changes.activate_and_wait_for_completion()
 
 
 def test_piggyback_rename_host(
@@ -210,7 +210,7 @@ def test_piggyback_hub_disabled_globally(
         _schedule_check_and_discover(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
         assert _piggybacked_service_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
@@ -245,7 +245,7 @@ def test_piggyback_hub_disabled_remote_site(
         _schedule_check_and_discover(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
         assert _piggybacked_service_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED_A
@@ -266,7 +266,7 @@ def _move_host(central_site: Site, to_remote_site: str, hostname_piggyback: str)
         hostname_piggyback,
         update_attributes={"site": to_remote_site},
     )
-    central_site.openapi.activate_changes_and_wait_for_completion()
+    central_site.openapi.changes.activate_and_wait_for_completion()
 
 
 def test_piggyback_services_move_host(

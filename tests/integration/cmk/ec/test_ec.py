@@ -111,7 +111,7 @@ def _write_ec_rule(site: Site, rule: list | None) -> None:
 def _activate_ec_changes(site: Site) -> None:
     replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
     site.write_text_file(str(replication_changes_path), str(_get_replication_change()))
-    site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
 def _generate_message_via_events_pipe(site: Site, message: str, end_of_line: bool = True) -> None:

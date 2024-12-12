@@ -108,6 +108,7 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
 
+        self.changes = ChangesAPI(self)
         self.users = UsersAPI(self)
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
@@ -168,75 +169,6 @@ class CMKOpenApiSession(requests.Session):
             )
 
         return response
-
-    def activate_changes(
-        self,
-        sites: list[str] | None = None,
-        force_foreign_changes: bool = False,
-    ) -> None:
-        response = self.post(
-            "/domain-types/activation_run/actions/activate-changes/invoke",
-            json={
-                "redirect": True,
-                "sites": sites or [],
-                "force_foreign_changes": force_foreign_changes,
-            },
-            headers={"If-Match": "*"},
-            # We want to get the redirect response and handle that below. So don't let requests
-            # handle that for us.
-            allow_redirects=False,
-        )
-        if response.status_code == 200:
-            logger.info("Activation id: %s", response.json()["id"])
-            return  # changes are activated
-        if response.status_code == 422:
-            raise NoActiveChanges  # there are no changes
-        if 300 <= response.status_code < 400:
-            redirect_url = response.headers["Location"]
-
-            # Extract the activation ID from the wait-for-completion URL
-            # "/{site_id}/check_mk/api/1.0/objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
-            assert redirect_url.split("/")[6] == "activation_run"
-            activation_id = redirect_url.split("/")[7]
-            logger.info("Activation pending (ID: %s)", activation_id)
-
-            raise Redirect(redirect_url=redirect_url)  # activation pending
-        raise UnexpectedResponse.from_response(response)
-
-    def pending_changes(self, sites: list[str] | None = None) -> list[dict[str, Any]]:
-        """Returns a list of all changes currently pending."""
-        response = self.get("/domain-types/activation_run/collections/pending_changes")
-        assert response.status_code == 200
-        value: list[dict[str, Any]] = response.json()["value"]
-        return value
-
-    @tracer.start_as_current_span("activate_changes_and_wait_for_completion")
-    def activate_changes_and_wait_for_completion(
-        self,
-        sites: list[str] | None = None,
-        force_foreign_changes: bool = False,
-        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
-    ) -> bool:
-        """Activate changes via REST API and wait for completion.
-
-        Returns:
-            * True if changes are activated
-            * False if there are no changes to be activated
-        """
-        logger.info("Activate changes and wait %ds for completion...", timeout)
-        with self.wait_for_completion(timeout, "get", "activate_changes"):
-            try:
-                self.activate_changes(sites, force_foreign_changes)
-            except NoActiveChanges:
-                logger.info("There were no changes to activate")
-                return False
-
-        pending_changes = self.pending_changes()
-        assert (
-            not pending_changes
-        ), f"There are pending changes that were not activated: {pending_changes}"
-
-        return True
 
     @contextmanager
     def wait_for_completion(
@@ -304,6 +236,68 @@ class CMKOpenApiSession(requests.Session):
 class BaseAPI:
     def __init__(self, session: CMKOpenApiSession) -> None:
         self.session = session
+
+
+class ChangesAPI(BaseAPI):
+    def activate(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+    ) -> None:
+        response = self.session.post(
+            "/domain-types/activation_run/actions/activate-changes/invoke",
+            json={
+                "redirect": True,
+                "sites": sites or [],
+                "force_foreign_changes": force_foreign_changes,
+            },
+            headers={"If-Match": "*"},
+            # We want to get the redirect response and handle that below. So don't let requests
+            # handle that for us.
+            allow_redirects=False,
+        )
+        if response.status_code == 200:
+            logger.info("Activation id: %s", response.json()["id"])
+            return  # changes are activated
+        if response.status_code == 422:
+            raise NoActiveChanges  # there are no changes
+        if 300 <= response.status_code < 400:
+            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+        raise UnexpectedResponse.from_response(response)
+
+    def get_pending(self) -> list[dict[str, Any]]:
+        """Returns a list of all changes currently pending."""
+        response = self.session.get("/domain-types/activation_run/collections/pending_changes")
+        assert response.status_code == 200
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    @tracer.start_as_current_span("activate_and_wait_for_completion")
+    def activate_and_wait_for_completion(
+        self,
+        sites: list[str] | None = None,
+        force_foreign_changes: bool = False,
+        timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
+    ) -> bool:
+        """Activate changes via REST API and wait for completion.
+
+        Returns:
+            * True if changes are activated
+            * False if there are no changes to be activated
+        """
+        logger.info("Activate changes and wait %ds for completion...", timeout)
+        with self.session.wait_for_completion(timeout, "get", "activate_changes"):
+            try:
+                self.activate(sites, force_foreign_changes)
+            except NoActiveChanges:
+                return False
+
+        pending_changes = self.get_pending()
+        assert (
+            not pending_changes
+        ), f"There are pending changes that were not activated: {pending_changes}"
+
+        return True
 
 
 class UsersAPI(BaseAPI):

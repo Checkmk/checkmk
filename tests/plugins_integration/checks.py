@@ -635,9 +635,7 @@ def wait_for_dcd_pend_changes(site: Site) -> None:
     """Wait up to 60 seconds for DCD to activate changes."""
     max_count = 60
     count = 0
-    while (
-        n_pending_changes := len(site.openapi.pending_changes([site.id]))
-    ) > 0 and count < max_count:
+    while (n_pending_changes := len(site.openapi.changes.get_pending())) > 0 and count < max_count:
         logger.info(
             "Waiting for changes to be activated by the DCD connector. Count: %s/%s",
             count,
@@ -668,12 +666,12 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         delete_hosts=True,
         no_deletion_time_after_init=60,
     )
-    test_site_piggyback.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    test_site_piggyback.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
     try:
         yield
     finally:
         if not config.skip_cleanup:
             test_site_piggyback.openapi.dcd.delete(dcd_id)
-            test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
+            test_site_piggyback.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=True
             )

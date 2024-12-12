@@ -381,4 +381,4 @@ def clean_up_host(site: Site, hostname: HostName) -> Iterator[None]:
             deleted = True
 
         if deleted:
-            site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+            site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

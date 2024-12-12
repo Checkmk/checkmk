@@ -165,8 +165,8 @@ def p2p_connection(central_site: Site, remote_site: Site, remote_site_2: Site) -
         central_site.openapi.broker_connections.create(
             connection_id, connecter=remote_site.id, connectee=remote_site_2.id
         )
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
         central_site.openapi.broker_connections.delete(connection_id)
-        central_site.openapi.activate_changes_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()

@@ -170,7 +170,7 @@ def create_notification_user(site: Site, admin: bool = False) -> Iterator[tuple[
         customer="global" if site.version.is_managed_edition() else None,
         roles=["admin"] if admin else [],
     )
-    site.openapi.activate_changes_and_wait_for_completion()
+    site.openapi.changes.activate_and_wait_for_completion()
     yield user_name, email_address
     site.openapi.users.delete(user_name)
-    site.openapi.activate_changes_and_wait_for_completion()
+    site.openapi.changes.activate_and_wait_for_completion()

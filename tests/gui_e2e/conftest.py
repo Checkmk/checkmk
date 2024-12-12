@@ -245,7 +245,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
         created_hosts_list
     )
-    test_site.openapi.activate_changes_and_wait_for_completion()
+    test_site.openapi.changes.activate_and_wait_for_completion()
 
     logger.info("Schedule the 'Check_MK' service")
     for host_name in created_hosts_list:
@@ -258,7 +258,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
         logger.info("Clean up: delete the host(s) and the rule")
         test_site.openapi.hosts.bulk_delete(created_hosts_list)
         test_site.openapi.rules.delete(rule_id)
-        test_site.openapi.activate_changes_and_wait_for_completion()
+        test_site.openapi.changes.activate_and_wait_for_completion()
         test_site.delete_dir(test_site_dump_path)
 
 

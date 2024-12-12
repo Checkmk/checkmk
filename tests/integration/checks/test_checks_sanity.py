@@ -62,7 +62,7 @@ def _host_services(
         wait_until_host_receives_data(site, hostname)
         wait_for_agent_cache_omd_status(site)
         site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion([str(hostname)])
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.changes.activate_and_wait_for_completion()
         if active_mode:
             site.reschedule_services(hostname)
         else:

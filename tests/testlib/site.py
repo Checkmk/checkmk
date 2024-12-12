@@ -1412,7 +1412,7 @@ class Site:
                             "A previous activation is still running. Does the wait work?"
                         )
 
-            changed = self.openapi.activate_changes_and_wait_for_completion(
+            changed = self.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=allow_foreign_changes
             )
             if changed:
@@ -1777,7 +1777,7 @@ class SiteFactory:
             site.version.edition.short == target_version.edition.short
         ), "Edition mismatch during update!"
 
-        site.openapi.activate_changes_and_wait_for_completion()
+        site.openapi.changes.activate_and_wait_for_completion()
 
         return site
 

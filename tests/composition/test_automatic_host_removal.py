@@ -24,7 +24,7 @@ def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,
 ) -> None:
-    assert not central_site.openapi.pending_changes()
+    assert not central_site.openapi.changes.get_pending()
 
     unresolvable_host_central = "not-dns-resolvable-central"
     unresolvable_host_remote = "not-dns-resolvable-remote"
@@ -49,7 +49,7 @@ def test_automatic_host_removal(
         },
     )
 
-    central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
     try:
 
@@ -66,7 +66,7 @@ def test_automatic_host_removal(
 
         logger.info("Waiting for changes to be activated")
         wait_until(
-            lambda: not central_site.openapi.pending_changes(),
+            lambda: not central_site.openapi.changes.get_pending(),
             timeout=180,
             interval=20,
         )
@@ -81,4 +81,4 @@ def test_automatic_host_removal(
             central_site.openapi.hosts.delete(unresolvable_host_central)
         if unresolvable_host_remote in central_site.openapi.hosts.get_all_names():
             central_site.openapi.hosts.delete(unresolvable_host_remote)
-        central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+        central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

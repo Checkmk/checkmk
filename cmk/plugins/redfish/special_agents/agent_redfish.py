@@ -6,8 +6,6 @@
 
 import json
 import logging
-import os
-import pickle
 import sys
 import time
 from collections.abc import Collection, Container, Iterable, Mapping, Sequence
@@ -751,22 +749,29 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
     return 0
 
 
+def _make_cached_section_path(hostname: str, section: str) -> Path:
+    return paths.tmp_dir / "agents" / "agent_redfish" / f"{hostname}_{section}.json"
+
+
 def store_section_data(redfishobj: RedfishData) -> None:
     """save section data to file"""
     for section in redfishobj.section_data.keys():
         if not getattr(redfishobj.cache_per_section, section):
             continue
-        store_data: dict = {}
-        store_path = (
-            paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}_{section}.pkl"
-        )
         if getattr(redfishobj.cache_timestamp_per_section, section):
             continue
-        store_data.setdefault("timestamp", int(time.time()))
-        store_data.setdefault("data", redfishobj.section_data.get(section))
-        with open(store_path, "wb") as file:
-            pickle.dump(store_data, file)
-        file.close()
+
+        store_path = _make_cached_section_path(redfishobj.hostname, section)
+        store_path.parent.mkdir(parents=True, exist_ok=True)
+
+        store_path.write_text(
+            json.dumps(
+                {
+                    "timestamp": int(time.time()),
+                    "data": redfishobj.section_data.get(section),
+                }
+            )
+        )
 
 
 def load_section_data(redfishobj: RedfishData) -> RedfishData:
@@ -775,16 +780,21 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
     for key, value in redfishobj.cache_per_section.__dict__.items():
         if not value:
             continue
-        store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}_{key}.pkl"
-        if os.path.exists(store_path):
-            with open(store_path, "rb") as file:
-                store_data = pickle.load(file)
+
+        store_path = _make_cached_section_path(redfishobj.hostname, key)
+        try:
+            raw = store_path.read_text()
+        except FileNotFoundError:
+            pass
+        else:
+            store_data = json.loads(raw)
             current_time = int(time.time())
             if store_data["timestamp"] + value < current_time:
                 continue
             setattr(timestamps, key, store_data["timestamp"])
             redfishobj.section_data.setdefault(key, store_data["data"])
             redfishobj.sections.remove(key)
+
     redfishobj.cache_timestamp_per_section = timestamps
     return redfishobj
 

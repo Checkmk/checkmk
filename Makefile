@@ -267,5 +267,4 @@ Pipfile.lock:
 
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv: Pipfile.lock
-	rm -rf $@
 	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

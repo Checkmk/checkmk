@@ -8,6 +8,8 @@ import re
 from collections.abc import Iterator
 from typing import cast
 
+from cmk.utils import urls
+
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
@@ -104,6 +106,9 @@ def _format_value(key: str, value: str | list[str]) -> str:
             return re.sub(";+", ";", joined)
 
         return joined
+
+    if key == "href" and urls.is_allowed_url(value):
+        return value
 
     return escaping.escape_attribute(value)
 

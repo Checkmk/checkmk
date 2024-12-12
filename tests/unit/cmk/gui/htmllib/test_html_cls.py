@@ -281,11 +281,11 @@ def test_render_a_href_must_be_first_attribute_when_rendered() -> None:
 
 def test_render_a_with_query_params() -> None:
     a = HTMLWriter.render_a("link", href="wato.py?bar=val&foo=val")
-    assert str(a) == '<a href="wato.py?bar=val&amp;foo=val">link</a>'
+    assert str(a) == '<a href="wato.py?bar=val&foo=val">link</a>'
 
 
 def test_render_a_with_makeuri_contextless() -> None:
     request = Request(create_environ())
     uri = makeuri_contextless(request, [("foo", "val"), ("bar", "val")], filename="wato.py")
     a = HTMLWriter.render_a("link", href=uri)
-    assert str(a) == '<a href="wato.py?bar=val&amp;foo=val">link</a>'
+    assert str(a) == '<a href="wato.py?bar=val&foo=val">link</a>'

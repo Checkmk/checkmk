@@ -30,7 +30,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/Makefile' || true"
 
     - NAME: CHANGED_OMDLIB_FILES
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep -e '^omd/packages/omd/omdlib/' -e '^cmk/utils/' || true"
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^omd/packages/omd/omdlib/\\|^cmk/utils/' || true"
 
     - NAME: CHANGED_OMDLIB_TESTS
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^tests/unit/omdlib/' || true"
@@ -60,10 +60,10 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-pipenv' || true"
 
     - NAME: CHANGED_BAZEL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '\\.bzl$' -e 'BUILD' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.bzl$\\|BUILD' || true"
 
     - NAME: CHANGED_CMK_BUILD_FILE
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^cmk/BUILD' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^cmk/BUILD' || true"
 
     - NAME: CHANGED_AGENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/' || true"
@@ -103,13 +103,13 @@ VARIABLES:
     ########## packages ########################################################
 
     - NAME: CHANGED_CHECK_CERT_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/site/check-cert/' --regexp '^packages/site/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-cert/\\|^packages/site/Cargo' || true"
 
     - NAME: CHANGED_CHECK_HTTP_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/site/check-http/' --regexp '^packages/site/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/site/check-http/\\|^packages/site/Cargo' || true"
 
     - NAME: CHANGED_MK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/host/mk-sql/' --regexp '^packages/host/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/mk-sql/\\|^packages/host/Cargo' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
@@ -118,7 +118,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
 
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep --regexp '^packages/host/cmk-agent-ctl/' --regexp '^packages/host/Cargo' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/host/cmk-agent-ctl/\\|^packages/host/Cargo' || true"
 
     - NAME: CHANGED_CMK_AGENT_RECEIVER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-receiver/' || true"

@@ -17,13 +17,7 @@ HERE
     exit 1
 }
 
-main() {
-    [ -n "${MK_INSTALLDIR}" ] && migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
-    [ -n "${MK_INSTALLDIR}" ] && migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
-    [ -n "${MK_INSTALLDIR}" ] && migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
-}
-
-migrate_runtime_dir() {
+_migrate_runtime_dir() {
     old_runtime_dir="$1"
     new_runtime_dir="$2"
 
@@ -34,7 +28,7 @@ migrate_runtime_dir() {
     }
 }
 
-migrate_controller_registration() {
+_migrate_controller_registration() {
     old_homedir="$1"
     new_homedir="$2"
     old_registry="${old_homedir}/registered_connections.json"
@@ -68,6 +62,12 @@ _migrate_home() {
         echo "Starting cmk-agent-ctl daemon again."
         systemctl start cmk-agent-ctl-daemon >/dev/null 2>&1
     }
+}
+
+main() {
+    [ -n "${MK_INSTALLDIR}" ] && _migrate_runtime_dir "${OLD_MK_VARDIR}" "${MK_INSTALLDIR}/runtime"
+    [ -n "${MK_INSTALLDIR}" ] && _migrate_controller_registration "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
+    [ -n "${MK_INSTALLDIR}" ] && _migrate_home "${LEGACY_HOMEDIR}" "${MK_INSTALLDIR}/runtime/controller"
 }
 
 main "$@"

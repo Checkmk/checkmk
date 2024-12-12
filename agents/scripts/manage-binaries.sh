@@ -18,24 +18,6 @@ HERE
     exit 1
 }
 
-_setup_alternatives_command() {
-    [ -n "${MK_INSTALLDIR}" ] || {
-        # Only in single directory deployment we can be sure that all binaries under package/bin are our own,
-        # and run echo the alternatives command on all of them.
-        # Since this script is also executed in multi directory deployment, we exit silently here.
-        exit 0
-    }
-
-    if which update-alternatives >/dev/null 2>&1; then
-        ALTERNATIVES="update-alternatives"
-    elif which alternatives >/dev/null 2>&1; then
-        ALTERNATIVES="alternatives"
-    else
-        echo "Found neither 'update-alternatives' nor 'alternatives' command. Aborting."
-        exit 1
-    fi
-}
-
 _install_symlinks() {
     _setup_alternatives_command
     _remove_old_agent_controller
@@ -58,6 +40,24 @@ _install_symlinks() {
         # Since we currently don't support multiple agent installations, this is OK for the moment.
         ln -s "${binary}" "${SYMLINK_DIR}/${name}"
     done
+}
+
+_setup_alternatives_command() {
+    [ -n "${MK_INSTALLDIR}" ] || {
+        # Only in single directory deployment we can be sure that all binaries under package/bin are our own,
+        # and run echo the alternatives command on all of them.
+        # Since this script is also executed in multi directory deployment, we exit silently here.
+        exit 0
+    }
+
+    if which update-alternatives >/dev/null 2>&1; then
+        ALTERNATIVES="update-alternatives"
+    elif which alternatives >/dev/null 2>&1; then
+        ALTERNATIVES="alternatives"
+    else
+        echo "Found neither 'update-alternatives' nor 'alternatives' command. Aborting."
+        exit 1
+    fi
 }
 
 _remove_old_agent_controller() {

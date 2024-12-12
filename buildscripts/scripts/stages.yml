@@ -142,7 +142,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
 
     - NAME: CHANGED_CMK_EVENTS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/events/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-events/' || true"
 
     - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"

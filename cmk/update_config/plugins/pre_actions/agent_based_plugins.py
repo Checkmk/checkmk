@@ -35,29 +35,20 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         path_config = get_path_config()
         _installer, package_map = get_installer_and_package_map(path_config)
-        for path in self._get_files():
-            package_id = package_map.get(path.resolve())
-            logger.error(_error_message_inactive_local_file(path, package_id))
-
-            if package_id is None:
-                if _continue_on_inactive_local_file(conflict_mode):
-                    continue
-                raise MKUserError(None, "inactive local file")
-
-            if _continue_on_inactive_package(conflict_mode):
-                continue
-            raise MKUserError(None, "inactive package")
-
-
-def _error_message_inactive_local_file(path: Path, package_id: PackageID | None) -> str:
-    hint = "" if package_id is None else f"of package {package_id.name} [{package_id.version}] "
-    return (
-        f"Found obsolete file: '{path}' {hint}(please remove it).\n"
-        f"See: {werk_reference_url(WerkReference.DECOMMISSION_V1_API)}\n\n"
-    )
+        inactive_files = self._get_files()
+        if inactive_files:
+            for path in inactive_files:
+                package_id = package_map.get(path.resolve())
+                logger.error(_error_message_obsolete_file(path, package_id))
+            logger.error(
+                "Found obsolete files. These files are disabled by updating to the new version."
+            )
+            logger.error("See: %s\n", werk_reference_url(WerkReference.DECOMMISSION_V1_API))
+            if not _continue_per_users_choice(conflict_mode):
+                raise MKUserError(None, "decommissioned files")
 
 
-def _continue_on_inactive_local_file(conflict_mode: ConflictMode) -> bool:
+def _continue_per_users_choice(conflict_mode: ConflictMode) -> bool:
     return continue_per_users_choice(
         conflict_mode,
         "You can abort the update process (A) and remove the file(s) or continue the update (c).\n\n"
@@ -65,12 +56,9 @@ def _continue_on_inactive_local_file(conflict_mode: ConflictMode) -> bool:
     )
 
 
-def _continue_on_inactive_package(conflict_mode: ConflictMode) -> bool:
-    return continue_per_users_choice(
-        conflict_mode,
-        "You can abort the update process (A) and disable/remove the packages or continue the update (c).\n\n"
-        "Abort the update process? [A/c] \n",
-    )
+def _error_message_obsolete_file(path: Path, package_id: PackageID | None) -> str:
+    hint = "" if package_id is None else f"of package {package_id.name} [{package_id.version}] "
+    return f"Obsolete file: '{path}' {hint}"
 
 
 pre_update_action_registry.register(

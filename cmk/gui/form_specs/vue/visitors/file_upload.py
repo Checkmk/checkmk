@@ -55,11 +55,10 @@ class _FileSizeValidator:
     def __init__(self, max_size: int) -> None:
         self._max_size = max_size
 
-    def __call__(self, value: FileUploadModel) -> None:
-        if not value.file_content_encrypted:
+    def __call__(self, value: tuple[str, str, bytes]) -> None:
+        if not value[2]:
             return
-        file_content = FileUploadVisitor.decrypt_content(value.file_content_encrypted)
-        if len(file_content) > self._max_size:
+        if len(value[2]) > self._max_size:
             raise ValidationError(
                 Message("File size exceeds the maximum allowed size of %s bytes")
                 % filesize(self._max_size)
@@ -73,8 +72,8 @@ class _MimeTypeValidator:
     ) -> None:
         self._mime_types = mime_types
 
-    def __call__(self, value: FileUploadModel) -> None:
-        if value.file_type in self._mime_types:
+    def __call__(self, value: tuple[str, str, bytes]) -> None:
+        if value[1] in self._mime_types:
             return
 
         raise ValidationError(
@@ -89,10 +88,9 @@ class _FileExtensionValidator:
     ) -> None:
         self._extension_types = extension_types
 
-    def __call__(self, value: FileUploadModel) -> None:
-        if value.file_name is not None and any(
-            value.file_name.endswith(ext) for ext in self._extension_types
-        ):
+    def __call__(self, value: tuple[str, str, bytes]) -> None:
+        file_name = value[0]
+        if file_name is not None and any(file_name.endswith(ext) for ext in self._extension_types):
             return
 
         raise ValidationError(
@@ -175,8 +173,8 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
             parsed_value,
         )
 
-    def _validators(self) -> Sequence[Callable[[FileUploadModel], object]]:
-        validators: list[Callable[[FileUploadModel], object]] = []
+    def _validators(self) -> Sequence[Callable[[tuple[str, str, bytes]], object]]:
+        validators: list[Callable[[tuple[str, str, bytes]], object]] = []
 
         if self.form_spec.mime_types:
             validators.append(_MimeTypeValidator(frozenset(self.form_spec.mime_types)))
@@ -193,7 +191,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
     ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error("", Title("Invalid file"))
-        return compute_validation_errors(self._validators(), parsed_value)
+        return compute_validation_errors(self._validators(), self._to_disk(raw_value, parsed_value))
 
     def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> object:
         assert parsed_value.file_name is not None

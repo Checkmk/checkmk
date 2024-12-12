@@ -18,7 +18,7 @@
 #      scripts/check-current-commit
 #
 REPO_PATH="$(git rev-parse --show-toplevel)"
-PIPENV=$REPO_PATH/scripts/run-pipenv
+UVENV=$REPO_PATH/scripts/run-uvenv
 
 if [ "$1" == "diff" ]; then
     HEAD=origin/master..HEAD
@@ -26,20 +26,5 @@ else
     HEAD=HEAD
 fi
 
-run_pipenv() {
-    PIPENV_VENV_IN_PROJECT=true \
-        PIPENV_NOSPIN=true \
-        PIPENV_HIDE_EMOJIS=true \
-        PIPENV_NO_INHERIT=true \
-        PIPENV_PIPFILE="$REPO_PATH/Pipfile" \
-        PIPENV_IGNORE_VIRTUALENVS=1 \
-        $PIPENV "$@"
-}
-
-# This has the effect that the virtual-envs are kept up-to-date before pre-commit starts.
-# If we don't do this there might be a possibility that the virtual-env will change even if
-# it's python binary is currently being executed. This would lead to a "Text file busy" OSError.
-run_pipenv run true
-
 # shellcheck disable=SC2046  # No, don't quote this
-pre-commit run --files $(git diff-tree --no-commit-id --name-only -r $HEAD)
+${UVENV} pre-commit run --files $(git diff-tree --no-commit-id --name-only -r $HEAD)

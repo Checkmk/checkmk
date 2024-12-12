@@ -114,7 +114,7 @@ def main() {
                         /// to have an arbitrary location, so we have to provide
                         /// `download` inside the checkout_dir
                         sh("""
-                            scripts/run-pipenv run python \
+                            scripts/run-uvenv python \
                             buildscripts/scripts/build-cmk-container.py \
                             --branch=${branch_name} \
                             --edition=${EDITION} \
@@ -170,7 +170,7 @@ def main() {
                 smart_stage(name: "Load image", condition: !build_image) {
                     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                         sh("""
-                            scripts/run-pipenv run python \
+                            scripts/run-uvenv python \
                             buildscripts/scripts/build-cmk-container.py \
                             --branch=${branch_name} \
                             --edition=${EDITION} \
@@ -185,7 +185,7 @@ def main() {
 
                 smart_stage(name: "Push images", condition: push_to_registry) {
                     sh("""
-                        scripts/run-pipenv run python \
+                        scripts/run-uvenv python \
                         buildscripts/scripts/build-cmk-container.py \
                         --branch=${branch_name} \
                         --edition=${EDITION} \

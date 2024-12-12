@@ -30,11 +30,11 @@ if [ "$NUM_PARAM" == "0" ]; then
 fi
 
 REPO_PATH="$(git rev-parse --show-toplevel)"
-PIPENV="$REPO_PATH/scripts/run-pipenv"
+UVENV="$REPO_PATH/scripts/run-uvenv"
 
 pushd "$REPO_PATH" >/dev/null
 
-$PIPENV run python -m pytest --doctest-modules "${FILES[@]}" || (
+$UVENV python -m pytest --doctest-modules "${FILES[@]}" || (
     EXIT=$?
     if test $EXIT -eq 5 || test $EXIT -eq 4; then
         # This means no tests have been found.

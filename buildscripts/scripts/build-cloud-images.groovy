@@ -184,7 +184,7 @@ def create_publish_stages(targets_names, version, publish) {
                         // Used global env variable from jenkins:
                         // AWS_MARKETPLACE_SCANNER_ARN and AWS_AMI_IMAGE_PRODUCT_ID
                         sh("""
-                           scripts/run-pipenv run buildscripts/scripts/publish_cloud_images.py \
+                           scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py \
                             --cloud-type ${target} --new-version ${version} \
                             --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}' --image-name ${name} \
                             --marketplace-scanner-arn '${AWS_MARKETPLACE_SCANNER_ARN}' \

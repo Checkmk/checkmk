@@ -10,10 +10,8 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-PIPENV             := scripts/run-pipenv
+UVENV              := scripts/run-uvenv
 
-LOCK_FD := 200
-LOCK_PATH := .venv.lock
 PY_PATH := .venv/bin/python
 ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
@@ -29,7 +27,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        Pipfile.lock protobuf-files frontend-vue .venv
+        requirements_lock.txt protobuf-files frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -124,8 +122,8 @@ frontend-vue:
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(UVENV) python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
 
 packages:
@@ -232,7 +230,7 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 format-python:
-	./scripts/run-pipenv run ruff check --select I --fix
+	./scripts/run-uvenv ruff check --select I --fix
 	./.venv/bin/ruff format
 
 
@@ -249,7 +247,7 @@ documentation:
 	echo Nothing to do here remove this target
 
 sw-documentation-docker:
-	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
+	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
 Pipfile.lock:
 	@( \
@@ -267,15 +265,7 @@ Pipfile.lock:
 		fi \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
-
-# .venv is PHONY because the dependencies are resolved now in the make_venv script
+# .venv is PHONY because the dependencies are resolved by bazel
 .venv: Pipfile.lock
-	@( \
-		flock $(LOCK_FD); \
-		$(REPO_PATH)/scripts/make_venv \
-	) $(LOCK_FD)>$(LOCK_PATH)
-
-
-# .venv_uv is PHONY because the dependencies are resolved by bazel
-.venv_uv: Pipfile.lock
+	rm -rf $@
 	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

@@ -18,6 +18,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
 from cmk.utils import paths
+from cmk.utils.caching import cache_manager
 
 from cmk.base import config
 from cmk.base.automations import AutomationExitCode
@@ -46,6 +47,7 @@ class HealthCheckResponse(BaseModel, frozen=True):
 
 
 def reload_automation_config() -> None:
+    cache_manager.clear()
     config.load(validate_hosts=False)
 
 

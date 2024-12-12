@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """rule for assinging the special agent to host objects"""
 
+from collections.abc import Mapping
+
+from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -14,428 +17,213 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     FixedValue,
     Integer,
-    migrate_to_password,
-    MultipleChoice,
-    MultipleChoiceElement,
     Password,
+    SingleChoice,
+    SingleChoiceElement,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
-def _valuespec_special_agents_redfish() -> Dictionary:
-    return Dictionary(
-        title=Title("Redfish Compatible Management Controller"),
-        elements={
-            "user": DictElement(
-                parameter_form=String(
-                    title=Title("Username"),
-                ),
-                required=True,
+def _auth_elements() -> Mapping[str, DictElement]:
+    return {
+        "user": DictElement(
+            parameter_form=String(
+                title=Title("Username"),
             ),
-            "password": DictElement(
-                parameter_form=Password(
-                    title=Title("Password"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
-                    migrate=migrate_to_password,
-                ),
-                required=True,
+            required=True,
+        ),
+        "password": DictElement(
+            parameter_form=Password(
+                title=Title("Password"),
             ),
-            "sections": DictElement(
-                parameter_form=MultipleChoice(
-                    title=Title("Enabled Sections... (only use in case of problems)"),
-                    help_text=Help("If there are problems please use disabled sections."),
-                    elements=[
-                        MultipleChoiceElement(name="Memory", title=Title("Memory Modules")),
-                        MultipleChoiceElement(name="Power", title=Title("Powers Supply")),
-                        MultipleChoiceElement(name="Processors", title=Title("CPUs")),
-                        MultipleChoiceElement(name="Thermal", title=Title("Fan and Temperatures")),
-                        MultipleChoiceElement(
-                            name="FirmwareInventory",
-                            title=Title("Firmware Versions"),
-                        ),
-                        MultipleChoiceElement(name="NetworkAdapters", title=Title("Network Cards")),
-                        MultipleChoiceElement(
-                            name="NetworkInterfaces",
-                            title=Title("Network Interfaces 1"),
-                        ),
-                        MultipleChoiceElement(
-                            name="EthernetInterfaces",
-                            title=Title("Network Interfaces 2"),
-                        ),
-                        MultipleChoiceElement(name="Storage", title=Title("Storage")),
-                        MultipleChoiceElement(
-                            name="ArrayControllers",
-                            title=Title("Array Controllers"),
-                        ),
-                        MultipleChoiceElement(
-                            name="SmartStorage",
-                            title=Title("HPE - Storagesubsystem"),
-                        ),
-                        MultipleChoiceElement(
-                            name="HostBusAdapters",
-                            title=Title("Hostbustadapters"),
-                        ),
-                        MultipleChoiceElement(
-                            name="PhysicalDrives", title=Title("iLO5 - Physical Drives")
-                        ),
-                        MultipleChoiceElement(
-                            name="LogicalDrives", title=Title("iLO5 - Logical Drives")
-                        ),
-                        MultipleChoiceElement(name="Drives", title=Title("Drives")),
-                        MultipleChoiceElement(name="Volumes", title=Title("Volumes")),
-                        MultipleChoiceElement(
-                            name="SimpleStorage",
-                            title=Title("Simple Storage Collection (tbd)"),
-                        ),
-                    ],
-                    prefill=DefaultValue(
-                        [
-                            "Memory",
-                            "Power",
-                            "Processors",
-                            "Thermal",
-                            "FirmwareInventory",
-                            "NetworkAdapters",
-                            "NetworkInterfaces",
-                            "EthernetInterfaces",
-                            "Storage",
-                            "ArrayControllers",
-                            "SmartStorage",
-                            "HostBusAdapters",
-                            "PhysicalDrives",
-                            "LogicalDrives",
-                            "Drives",
-                            "Volumes",
-                            "SimpleStorage",
-                        ]
+            required=True,
+        ),
+    }
+
+
+def _connection_elements() -> Mapping[str, DictElement]:
+    return {
+        "port": DictElement(
+            required=True,
+            parameter_form=Integer(
+                title=Title("TCP Port"),
+                help_text=Help("Port number for connection to the Rest API. Usually 443 (TLS)"),
+                prefill=DefaultValue(443),
+                custom_validate=(validators.NetworkPort(),),
+            ),
+        ),
+        "proto": DictElement(
+            required=True,
+            parameter_form=SingleChoice(
+                title=Title("Protocol"),
+                prefill=DefaultValue("https"),
+                help_text=Help("Protocol for the connection to the Rest API."),
+                elements=[
+                    SingleChoiceElement(
+                        name="https",
+                        title=Title("https"),
                     ),
-                    show_toggle_all=True,
-                ),
-            ),
-            "disabled_sections": DictElement(
-                parameter_form=MultipleChoice(
-                    title=Title("Disabled Sections..."),
-                    help_text=Help("Please only define sections or disabled sections."),
-                    elements=[
-                        MultipleChoiceElement(name="Memory", title=Title("Memory Modules")),
-                        MultipleChoiceElement(name="Power", title=Title("Powers Supply")),
-                        MultipleChoiceElement(name="Processors", title=Title("CPUs")),
-                        MultipleChoiceElement(name="Thermal", title=Title("Fan and Temperatures")),
-                        MultipleChoiceElement(
-                            name="FirmwareInventory",
-                            title=Title("Firmware Versions"),
-                        ),
-                        MultipleChoiceElement(name="NetworkAdapters", title=Title("Network Cards")),
-                        MultipleChoiceElement(
-                            name="NetworkInterfaces",
-                            title=Title("Network Interfaces 1"),
-                        ),
-                        MultipleChoiceElement(
-                            name="EthernetInterfaces",
-                            title=Title("Network Interfaces 2"),
-                        ),
-                        MultipleChoiceElement(name="Storage", title=Title("Storage")),
-                        MultipleChoiceElement(
-                            name="ArrayControllers",
-                            title=Title("Array Controllers"),
-                        ),
-                        MultipleChoiceElement(
-                            name="SmartStorage",
-                            title=Title("HPE - Storagesubsystem"),
-                        ),
-                        MultipleChoiceElement(
-                            name="HostBusAdapters",
-                            title=Title("Hostbustadapters"),
-                        ),
-                        MultipleChoiceElement(
-                            name="PhysicalDrives", title=Title("iLO5 - Physical Drives")
-                        ),
-                        MultipleChoiceElement(
-                            name="LogicalDrives", title=Title("iLO5 - Logical Drives")
-                        ),
-                        MultipleChoiceElement(name="Drives", title=Title("Drives")),
-                        MultipleChoiceElement(name="Volumes", title=Title("Volumes")),
-                        MultipleChoiceElement(
-                            name="SimpleStorage",
-                            title=Title("Simple Storage Collection (tbd)"),
-                        ),
-                    ],
-                    prefill=DefaultValue([]),
-                    show_toggle_all=True,
-                ),
-            ),
-            "cached_sections": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Cached times for single sections"),
-                    elements={
-                        "cache_time_Memory": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Memory"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Power": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Power"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Processors": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Processors"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Thermal": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Thermal"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_FirmwareInventory": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section FirmwareInventory"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_NetworkAdapters": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section NetworkAdapters"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_NetworkInterfaces": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section NetworkInterfaces"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_EthernetInterfaces": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section EthernetInterfaces"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Storage": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Storage"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_ArrayControllers": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section ArrayControllers"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_SmartStorage": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section SmartStorage"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_HostBusAdapters": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section HostBusAdapters"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_PhysicalDrives": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section PhysicalDrives"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_LogicalDrives": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section LogicalDrives"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Drives": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Drives"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_Volumes": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section Volumes"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                        "cache_time_SimpleStorage": DictElement(
-                            parameter_form=Integer(
-                                title=Title("Section SimpleStorage"),
-                                prefill=DefaultValue(60),
-                                custom_validate=(validators.NumberInRange(min_value=1),),
-                                unit_symbol="s",
-                            ),
-                        ),
-                    },
-                ),
-            ),
-            "port": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - TCP Port number"),
-                    help_text=Help(
-                        "Port number for connection to the Rest API. Usually 8443 (TLS)"
+                    SingleChoiceElement(
+                        name="http",
+                        title=Title("http (insecure)"),
                     ),
-                    prefill=DefaultValue(443),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=65535),),
-                ),
+                ],
             ),
-            "proto": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Advanced - Protocol"),
-                    prefill=DefaultValue("https"),
-                    help_text=Help(
-                        "Protocol for the connection to the Rest API."
-                        "https is highly recommended!!!"
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="http",
-                            title=Title("http"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="https",
-                            title=Title("https"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                    ],
-                ),
+        ),
+        "retries": DictElement(
+            required=True,
+            parameter_form=Integer(
+                title=Title("Number of connection retries"),
+                help_text=Help("Number of retry attempts made by the special agent."),
+                prefill=DefaultValue(2),
+                custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
             ),
-            "retries": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - Number of retries"),
-                    help_text=Help("Number of retry attempts made by the special agent."),
-                    prefill=DefaultValue(10),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
+        ),
+        "timeout": DictElement(
+            required=True,
+            parameter_form=TimeSpan(
+                title=Title("Timeout for connection"),
+                help_text=Help(
+                    "Number of seconds for a single connection attempt before it times out."
                 ),
+                prefill=DefaultValue(3.0),
+                displayed_magnitudes=(TimeMagnitude.SECOND,),
+                custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
             ),
-            "timeout": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - Timeout for connection"),
-                    help_text=Help(
-                        "Number of seconds for a single connection attempt before timeout occurs."
-                    ),
-                    prefill=DefaultValue(10),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
-                ),
-            ),
-            "debug": DictElement(
-                parameter_form=BooleanChoice(
-                    title=Title("Debug mode"),
-                    label=Label("enabled"),
-                ),
-            ),
-        },
-    )
+        ),
+    }
+
+
+def migrate_redfish_common(data: object) -> Mapping[str, object]:
+    """Add the defaults for the now mandatory fields"""
+    if not isinstance(data, Mapping):
+        raise TypeError(data)
+    return {
+        "user": data["user"],
+        "password": data["password"],
+        "port": data.get("port", 443),
+        "proto": p if isinstance(p := data.get("proto", "https"), str) else p[0],
+        "retries": data.get("retries", 2),
+        "timeout": float(data.get("timeout", 3.0)),
+    }
 
 
 def _valuespec_special_agents_redfish_power() -> Dictionary:
     return Dictionary(
         title=Title("Redfish Compatible Power Equipment (PDU)"),
         elements={
-            "user": DictElement(
-                parameter_form=String(
-                    title=Title("Username"),
-                ),
+            **_auth_elements(),
+            **_connection_elements(),
+        },
+        migrate=migrate_redfish_common,
+    )
+
+
+rule_spec_redfish_power_datasource_programs = SpecialAgent(
+    name="redfish_power",
+    title=Title("Redfish Compatible Power Equipment (PDU)"),
+    topic=Topic.SERVER_HARDWARE,
+    parameter_form=_valuespec_special_agents_redfish_power,
+    help_text=Help(
+        "This rule configures the Redfish integration to query PDUs via the Redfish REST API"
+    ),
+)
+
+
+def _fetching_settings() -> DictElement:
+    return DictElement(
+        required=False,
+        parameter_form=Dictionary(
+            title=Title("Fetching setting for individual sections"),
+            help_text=Help(
+                "If sections can not be fetched or take a long time, you can configure them to be fetched"
+                " not as often or not at all."
+            ),
+            elements={
+                s.name: DictElement(
+                    required=True,
+                    parameter_form=CascadingSingleChoice(
+                        title=s.title,
+                        prefill=DefaultValue("always"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="always",
+                                title=Title("Always"),
+                                parameter_form=FixedValue(value=0.0),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="cached",
+                                title=Title("Cache this section"),
+                                parameter_form=TimeSpan(
+                                    displayed_magnitudes=(
+                                        TimeMagnitude.MINUTE,
+                                        TimeMagnitude.HOUR,
+                                    )
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="never",
+                                title=Title("Never"),
+                                parameter_form=FixedValue(value=-1.0),
+                            ),
+                        ],
+                    ),
+                )
+                for s in REDFISH_SECTIONS
+            },
+        ),
+    )
+
+
+def migrate_redfish(data: object) -> Mapping[str, object]:
+    if not isinstance(data, Mapping):
+        raise TypeError(data)
+    if "fetching" in data:
+        return data
+
+    enabled_sections = data.get("sections", [s.name for s in REDFISH_SECTIONS])
+    disabled_sections = data.get("disabled_sections", ())
+    cached_sections = [
+        (name.removeprefix("cache_time_"), interval)
+        for name, interval in data.get("cached_sections", {}).items()
+    ]
+
+    fetching = {
+        **{n: ("always", 0.0) for n in enabled_sections},
+        **{n: ("never", -1.0) for n in disabled_sections},
+        **{n: ("cached", float(i)) for n, i in cached_sections},
+    }
+    return {
+        **migrate_redfish_common(data),
+        **(
+            {}
+            if all(mode == "always" for (mode, _) in fetching.values())
+            else {"fetching": fetching}
+        ),
+        "debug": data.get("debug", False),
+    }
+
+
+def _valuespec_special_agents_redfish() -> Dictionary:
+    return Dictionary(
+        title=Title("Redfish Compatible Management Controller"),
+        elements={
+            **_auth_elements(),
+            "fetching": _fetching_settings(),
+            **_connection_elements(),
+            "debug": DictElement(
                 required=True,
-            ),
-            "password": DictElement(
-                parameter_form=Password(
-                    title=Title("Password"),
-                ),
-                required=True,
-            ),
-            "port": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - TCP Port number"),
-                    help_text=Help(
-                        "Port number for connection to the Rest API. Usually 8443 (TLS)"
-                    ),
-                    prefill=DefaultValue(443),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=65535),),
-                ),
-            ),
-            "proto": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Advanced - Protocol"),
-                    prefill=DefaultValue("https"),
-                    help_text=Help(
-                        "Protocol for the connection to the Rest API."
-                        "https is highly recommended!!!"
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="http",
-                            title=Title("http"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="https",
-                            title=Title("https"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                    ],
-                ),
-            ),
-            "retries": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - Number of retries"),
-                    help_text=Help("Number of retry attempts made by the special agent."),
-                    prefill=DefaultValue(10),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
-                ),
-            ),
-            "timeout": DictElement(
-                parameter_form=Integer(
-                    title=Title("Advanced - Timeout for connection"),
-                    help_text=Help(
-                        "Number of seconds for a single connection attempt before timeout occurs."
-                    ),
-                    prefill=DefaultValue(10),
-                    custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
+                parameter_form=BooleanChoice(
+                    title=Title("Debug mode"),
+                    label=Label("enabled"),
                 ),
             ),
         },
+        migrate=migrate_redfish,
     )
 
 
@@ -445,18 +233,6 @@ rule_spec_redfish_datasource_programs = SpecialAgent(
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_valuespec_special_agents_redfish,
     help_text=Help(
-        "This rule selects the Agent Redfish instead of the normal Check_MK Agent "
-        "which collects the data through the Redfish REST API"
-    ),
-)
-
-rule_spec_redfish_power_datasource_programs = SpecialAgent(
-    name="redfish_power",
-    title=Title("Redfish Compatible Power Equipment (PDU)"),
-    topic=Topic.SERVER_HARDWARE,
-    parameter_form=_valuespec_special_agents_redfish_power,
-    help_text=Help(
-        "This rule selects the Agent Redfish instead of the normal Check_MK Agent "
-        "which collects the data through the Redfish REST API"
+        "This rule configures the Redfish integration to query management controller via the Redfish REST API"
     ),
 )

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """server side component to create the special agent call"""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -16,61 +17,97 @@ from cmk.server_side_calls.v1 import (
 )
 
 
-class Params(BaseModel):
-    """params validator"""
+class ParamsRedfish(BaseModel):
+    user: str
+    password: Secret
+    fetching: Mapping[
+        str,
+        tuple[Literal["always", "cached", "never"], float],
+    ]
+    port: int
+    proto: Literal["http", "https"]
+    retries: int
+    timeout: float
+    debug: bool
 
-    user: str | None = None
-    password: Secret | None = None
-    port: int | None = None
-    proto: tuple[str, str | None] = ("https", None)
-    sections: list | None = None
-    disabled_sections: list | None = None
-    cached_sections: dict | None = None
-    timeout: int | None = None
-    retries: int | None = None
-    debug: bool | None = None
+
+class ParamsRedfishPower(BaseModel):
+    user: str
+    password: Secret
+    port: int
+    proto: Literal["http", "https"]
+    retries: int
+    timeout: float
 
 
 def _agent_redfish_arguments(
-    params: Params, host_config: HostConfig
+    params: ParamsRedfish, host_config: HostConfig
 ) -> Iterator[SpecialAgentCommand]:
-    command_arguments: list[str | Secret] = []
-    if params.user is not None:
-        command_arguments += ["-u", params.user]
-    if params.password is not None:
-        command_arguments += ["--password-id", params.password]
-    if params.port is not None:
-        command_arguments += ["-p", str(params.port)]
-    if params.proto is not None:
-        command_arguments += ["-P", params.proto[0]]
-    if params.sections is not None:
-        command_arguments += ["-m", ",".join(params.sections)]
-    if params.disabled_sections is not None:
-        command_arguments += ["-n", ",".join(params.disabled_sections)]
-    if params.timeout is not None:
-        command_arguments += ["--timeout", str(params.timeout)]
-    if params.retries is not None:
-        command_arguments += ["--retries", str(params.retries)]
-    if params.debug:
-        command_arguments += ["--debug"]
-    if params.cached_sections is not None:
-        cache_sections = []
-        for n, m in params.cached_sections.items():
-            cache_sections.append(f"{n.removeprefix("cache_time_")}-{m}")
-        command_arguments += ["-c", ",".join(cache_sections)]
+    enabled_sections = (s for s, (mode, _) in params.fetching.items() if mode != "never")
+    disabled_sections = (s for s, (mode, _) in params.fetching.items() if mode == "never")
+    cached_sections = (
+        f"{name}-{int(interval)}"
+        for name, (mode, interval) in params.fetching.items()
+        if mode == "cached"
+    )
 
-    command_arguments.append(host_config.primary_ip_config.address or host_config.name)
-    yield SpecialAgentCommand(command_arguments=command_arguments)
+    yield SpecialAgentCommand(
+        command_arguments=[
+            "-u",
+            params.user,
+            "--password-id",
+            params.password,
+            "-p",
+            str(params.port),
+            "-P",
+            params.proto,
+            "-m",
+            ",".join(enabled_sections),
+            "-n",
+            ",".join(disabled_sections),
+            "-c",
+            ",".join(cached_sections),
+            "--timeout",
+            str(params.timeout),
+            "--retries",
+            str(params.retries),
+            *(("--debug",) if params.debug else ()),
+            host_config.primary_ip_config.address or host_config.name,
+        ]
+    )
 
 
 special_agent_redfish = SpecialAgentConfig(
     name="redfish",
-    parameter_parser=Params.model_validate,
+    parameter_parser=ParamsRedfish.model_validate,
     commands_function=_agent_redfish_arguments,
 )
 
+
+def _agent_redfish_power_arguments(
+    params: ParamsRedfishPower, host_config: HostConfig
+) -> Iterator[SpecialAgentCommand]:
+    yield SpecialAgentCommand(
+        command_arguments=[
+            "-u",
+            params.user,
+            "--password-id",
+            params.password,
+            "-p",
+            str(params.port),
+            "-P",
+            params.proto,
+            "--timeout",
+            str(params.timeout),
+            "--retries",
+            str(params.retries),
+            host_config.primary_ip_config.address or host_config.name,
+        ]
+    )
+
+
 special_agent_redfish_power = SpecialAgentConfig(
     name="redfish_power",
-    parameter_parser=Params.model_validate,
-    commands_function=_agent_redfish_arguments,
+    parameter_parser=ParamsRedfishPower.model_validate,
+    commands_function=_agent_redfish_power_arguments,
 )

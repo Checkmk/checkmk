@@ -6,14 +6,64 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple
 
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+from cmk.rulesets.v1 import Title
 
 SectionSystem = Sequence[Mapping[str, Any]]
 
 Levels = tuple[Literal["fixed"], tuple[float, float]]
 RedfishAPIData = Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class Section:
+    name: str
+    title: Title
+
+
+REDFISH_SECTIONS = (
+    Section(name="Memory", title=Title("Memory Modules")),
+    Section(name="Power", title=Title("Powers Supply")),
+    Section(name="Processors", title=Title("CPUs")),
+    Section(name="Thermal", title=Title("Fan and Temperatures")),
+    Section(
+        name="FirmwareInventory",
+        title=Title("Firmware Versions"),
+    ),
+    Section(name="NetworkAdapters", title=Title("Network Cards")),
+    Section(
+        name="NetworkInterfaces",
+        title=Title("Network Interfaces 1"),
+    ),
+    Section(
+        name="EthernetInterfaces",
+        title=Title("Network Interfaces 2"),
+    ),
+    Section(name="Storage", title=Title("Storage")),
+    Section(
+        name="ArrayControllers",
+        title=Title("Array Controllers"),
+    ),
+    Section(
+        name="SmartStorage",
+        title=Title("HPE - Storagesubsystem"),
+    ),
+    Section(
+        name="HostBusAdapters",
+        title=Title("Hostbustadapters"),
+    ),
+    Section(name="PhysicalDrives", title=Title("iLO5 - Physical Drives")),
+    Section(name="LogicalDrives", title=Title("iLO5 - Logical Drives")),
+    Section(name="Drives", title=Title("Drives")),
+    Section(name="Volumes", title=Title("Volumes")),
+    Section(
+        name="SimpleStorage",
+        title=Title("Simple Storage Collection (tbd)"),
+    ),
+)
 
 
 class Perfdata(NamedTuple):

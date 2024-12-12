@@ -26,6 +26,7 @@ from redfish.rest.v1 import (  # type: ignore[import-untyped]
 
 from cmk.utils import password_store, paths
 
+from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.special_agents.v0_unstable.agent_common import (
     SectionManager,
     SectionWriter,
@@ -155,25 +156,7 @@ class RedfishData:
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     """Parse arguments needed to construct an URL and for connection conditions"""
-    sections = [
-        "Power",
-        "Thermal",
-        "Memory",
-        "NetworkAdapters",
-        "NetworkInterfaces",
-        "Processors",
-        "Storage",
-        "EthernetInterfaces",
-        "FirmwareInventory",
-        "SmartStorage",
-        "ArrayControllers",
-        "HostBusAdapters",
-        "LogicalDrives",
-        "PhysicalDrives",
-        "SimpleStorage",
-        "Drives",
-        "Volumes",
-    ]
+    sections = [s.name for s in REDFISH_SECTIONS]
 
     parser = create_default_argument_parser(description=__doc__)
     # required

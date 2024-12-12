@@ -50,6 +50,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/nagios/plugins/",
+    renames = {"check-http": "check_httpv2"},
     visibility = ["//omd:__pkg__"],
 )
 

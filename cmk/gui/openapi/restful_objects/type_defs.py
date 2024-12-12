@@ -65,6 +65,7 @@ DomainType = Literal[
     "aux_tag",
     "autocomplete",
     "quick_setup",
+    "quick_setup_action_result",
     "quick_setup_stage",
     "quick_setup_stage_action_result",
     "managed_robots",

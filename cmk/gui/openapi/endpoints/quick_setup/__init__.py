@@ -30,6 +30,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.handlers.setup import (
+    CompleteActionResult,
     quick_setup_guided_mode,
     quick_setup_overview_mode,
     QuickSetupAllStages,
@@ -380,6 +381,21 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
         raise ValueError("The Quick setup action did not return a result")
 
     return _serve_action_result(result, status_code=201 if result.all_stage_errors is None else 400)
+
+
+@Endpoint(
+    object_href("quick_setup_action_result", "{job_id}"),
+    "cmk/fetch",
+    tag_group="Checkmk Internal",
+    method="get",
+    path_params=[JOB_ID],
+    response_schema=QuickSetupCompleteResponse,
+)
+def fetch_quick_setup_action_result(params: Mapping[str, Any]) -> Response:
+    """Fetch the Quick action background job result"""
+    action_background_job_id = params["job_id"]
+    action_result = CompleteActionResult.load_from_job_result(job_id=action_background_job_id)
+    return _serve_action_result(action_result)
 
 
 def _serve_data(

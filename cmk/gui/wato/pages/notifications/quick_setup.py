@@ -534,7 +534,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "match_host_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Match host groups"),
+                                        title=Title("Host groups"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=group_name,
@@ -594,7 +594,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         ),
                                         "match_service_groups": DictElement(
                                             parameter_form=MultipleChoiceExtended(
-                                                title=Title("Match service groups"),
+                                                title=Title("Service groups"),
                                                 elements=[
                                                     MultipleChoiceElement(
                                                         name=group_name,
@@ -644,9 +644,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                 ],
             ),
             Collapsible(
-                title=_("Assignee filters"),
+                title=_("Contact group filters"),
                 help_text=_(
-                    "Not the recipient, but filters hosts and services assigned to specific person(s) or group(s)"
+                    "Not the recipient, but filters hosts and services assigned "
+                    "to a contact group or members of a contact group",
                 ),
                 items=[
                     FormSpecWrapper(
@@ -656,7 +657,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                             elements={
                                 "contact_groups": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Contact groups"),
+                                        title=Title("Groups"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=name,
@@ -670,8 +671,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "users": DictElement(
                                     parameter_form=ListExtended(
-                                        title=Title("Users"),
+                                        title=Title("Members"),
                                         editable_order=False,
+                                        help_text=Help(
+                                            "Filters for hosts or services that "
+                                            "have at least one of the contact "
+                                            "group members assigned to them."
+                                        ),
                                         element_template=SingleChoice(
                                             prefill=InputHint(Title("Select user")),
                                             no_elements_text=Message(  # TODO:  Doesn't seem to do anything.
@@ -756,7 +762,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "sites": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Match sites"),
+                                        title=Title("Sites"),
                                         elements=[
                                             MultipleChoiceElement(
                                                 name=name,
@@ -770,7 +776,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 ),
                                 "check_type_plugin": DictElement(
                                     parameter_form=MultipleChoiceExtended(
-                                        title=Title("Match check types"),
+                                        title=Title("Check types"),
                                         elements=Autocompleter(
                                             fetch_method="check_types_autocompleter",
                                             data={"ident": "check_types", "params": {}},

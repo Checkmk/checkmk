@@ -11,100 +11,118 @@
 /// rid of as soon as possible
 
 def provide_agent_updaters(version, edition, disable_cache) {
-    upstream_build(
-        relative_job_name: "builders/build-linux-agent-updater",
-        build_params: [
-            DISABLE_CACHE: disable_cache,
-            VERSION: version,
+    // This _should_ go to an externally maintained file (single point of truth), see
+    // https://jira.lan.tribe29.com/browse/CMK-13857
+    // and https://review.lan.tribe29.com/c/check_mk/+/67387
+    // For now it's nearly JSON like and can be treated as such.
+    def upstream_job_details = [
+        "build-linux-agent-updater": [
+            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            //       Windows can't handle long folder names so we take the absolute
+            //       (production) jobs to build our upstream stuff (both Linux and
+            //       Windows for consistency)
+            relative_job_name: "checkmk/master/builders/build-linux-agent-updater",
+            /// no Linux agent updaters for raw edition..
+            condition: true, // edition != "raw",  // FIXME!
+            dependency_paths: [
+                "agents",
+                "non-free/cmk-update-agent"
+            ],
+            install_cmd: """\
+                # check-mk-agent-*.{deb,rpm}
+                cp *.deb *.rpm ${checkout_dir}/agents/
+                # artifact file flags are not being kept - building a tar would be better..
+                install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
+                if [ "${edition}" != "raw" ]; then
+                    echo "edition is ${edition} => copy Linux agent updaters"
+                    install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/cmk-update-agent/
+                fi
+                """.stripIndent(),
         ],
-        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-        dependency_paths: ["agents", "non-free/cmk-update-agent"],
-        dest: "artifacts/build-linux-agent-updater",
-    );
-    dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
-        sh("""
-            tree -pufiga .
+        "winagt-build": [
+            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            //       Windows can't handle long folder names so we take the absolute
+            //       (production) jobs to build our upstream stuff (both Linux and
+            //       Windows for consistency)
+            relative_job_name: "checkmk/master/winagt-build",
+            dependency_paths: [
+                "agents/wnx",
+                "agents/windows",
+                "packages/host/cmk-agent-ctl",
+                "packages/host/mk-sql",
+            ],
+            install_cmd: """\
+                cp \
+                    check_mk_agent-64.exe \
+                    check_mk_agent.exe \
+                    check_mk_agent.msi \
+                    check_mk_agent_unsigned.msi \
+                    cmk-agent-ctl.exe \
+                    check_mk.yml \
+                    check_mk.user.yml \
+                    OpenHardwareMonitorLib.dll \
+                    OpenHardwareMonitorCLI.exe \
+                    mk-sql.exe \
+                    robotmk_ext.exe \
+                    windows_files_hashes.txt \
+                    ${checkout_dir}/agents/windows/
+                (
+                    cd ${checkout_dir}/agents/windows
+                    ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
+                        check_mk_agent.msi \
+                        check_mk_agent_unsigned.msi \
+                        unsign-msi.patch
+                )
+                """.stripIndent(),
+        ],
+        "winagt-build-modules": [
+            // NOTE: actually the prefix 'checkmk/master/' should not be here, but
+            //       Windows can't handle long folder names so we take the absolute
+            //       (production) jobs to build our upstream stuff (both Linux and
+            //       Windows for consistency)
+            relative_job_name: "checkmk/master/winagt-build-modules",
+            dependency_paths: [
+                "agents/modules/windows",
+            ],
+            install_cmd: """\
+                cp \
+                    ./*.cab \
+                    ${checkout_dir}/agents/windows/
+                """.stripIndent(),
+        ],
+    ];
 
-            # check-mk-agent-*.{deb,rpm}
-            cp *.deb *.rpm ${checkout_dir}/agents/
-            # artifact file flags are not being kept - building a tar would be better..
-            install -m 755 -D cmk-agent-ctl* mk-sql -t ${checkout_dir}/agents/linux/
-        """);
-        if (edition != "raw") {
-            sh("install -m 755 -D cmk-update-agent* -t ${checkout_dir}/non-free/cmk-update-agent/");
+    def artifacts_base_dir = "tmp_artifacts";
+
+    upstream_job_details.collect { job_name, details ->
+        if ( ! details.get("condition", true) ) {
+            return;
+        }
+        println("Build ${job_name}");
+        details.collect { key, value ->
+            println("  ${key}: ${value}");
+        }
+        upstream_build(
+            relative_job_name: details.relative_job_name,
+            build_params: [
+                DISABLE_CACHE: disable_cache,
+                VERSION: version,
+            ],
+            dependency_paths: details.dependency_paths,
+            dest: "${artifacts_base_dir}/${job_name}",
+        );
+        dir("${checkout_dir}/${artifacts_base_dir}/${job_name}") {
+            sh(details.install_cmd);
         }
     }
 
-    upstream_build(
-        relative_job_name: "winagt-build",  // TODO: move to builders
-        build_params: [
-            DISABLE_CACHE: disable_cache,
-            VERSION: version,
-        ],
-        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-        dependency_paths: [
-            "agents/wnx",
-            "agents/windows",
-            "packages/host/cmk-agent-ctl",
-            "packages/host/mk-sql"
-        ],
-        dest: "artifacts/winagt-build",
-    );
-
-    dir("${checkout_dir}/artifacts/winagt-build") {
-        // FIXME, what about
-        // ./check_mk.yml
-        // ./cmk-agent-ctl.exe
-        // ./unit_tests_results.zip
-        // ./watest32.exe
-        // ./watest64.exe
-
-        // TODO: SPoT!!
-        sh("""
-            tree -pufiga .
-            cp \
-                check_mk_agent-64.exe \
-                check_mk_agent.exe \
-                check_mk_agent.msi \
-                check_mk_agent_unsigned.msi \
-                check_mk.user.yml \
-                OpenHardwareMonitorLib.dll \
-                OpenHardwareMonitorCLI.exe \
-                mk-sql.exe \
-                robotmk_ext.exe \
-                windows_files_hashes.txt \
-                ${checkout_dir}/agents/windows/
-        """);
-    }
-    dir("${checkout_dir}/agents/windows") {
-        sh("""
-            ${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh \
-                check_mk_agent.msi \
-                check_mk_agent_unsigned.msi \
-                unsign-msi.patch
-        """);
-    }
-
-    upstream_build(
-        relative_job_name: "winagt-build-modules",  // TODO: move to builders
-        build_params: [
-            DISABLE_CACHE: disable_cache,
-            VERSION: version,
-        ],
-        // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-        dependency_paths: ["agents/modules/windows"],
-        dest: "artifacts/winagt-build-modules",
-    );
-
-    dir("${checkout_dir}/agents/windows") {
-        sh("""
-            tree -pufiga ${checkout_dir}/artifacts/winagt-build-modules
-
-            cp \
-                ${checkout_dir}/artifacts/winagt-build-modules/*.cab \
-                ${checkout_dir}/agents/windows
-        """);
-    }
+    /// Cleanup
+    sh("""
+        # needed only because upstream_build() only downloads relative
+        # to `base-dir` which has to be `checkout_dir`
+        rm -rf ${checkout_dir}/${artifacts_base_dir}
+        rm -rf ${checkout_dir}/agents/windows_tmp ${checkout_dir}/agents_tmp
+    """);
 }
 
 def sign_package(source_dir, package_path) {

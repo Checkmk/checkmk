@@ -171,7 +171,6 @@ EXCLUDE_PROPER= \
 
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock" \
 	    --exclude=".cargo" \
 	    --exclude="node_modules" \
 	    --exclude=".cache"
@@ -249,22 +248,15 @@ documentation:
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
-Pipfile.lock:
-	@( \
-		flock $(LOCK_FD); \
-		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify > /dev/null; then \
-			if [ "${CI}" == "true" ]; then \
-				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
-				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \
-				echo "make Pipfile.lock"; \
-				exit 1; \
-			fi; \
-			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
-			|| ( $(RM) -r .venv ; exit 1 ) \
-			&& ( exec $(LOCK_FD)>&- ; bazel run //:requirements.update ) \
-		fi \
-	) $(LOCK_FD)>$(LOCK_PATH)
-
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv: Pipfile.lock
+	if ! bazel test //:requirements_test > /dev/null; then \
+		if [ "${CI}" == "true" ]; then \
+			echo "A locking of requirements_lock.txt is needed, but we're executed in the CI, where this should not be done."; \
+			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \
+			echo "bazel run //:requirements.update"; \
+			exit 1; \
+		fi; \
+		bazel run //:requirements.update; \
+	fi; \
 	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

@@ -81,9 +81,6 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
     Collection::from(&mut unwrap_into!(
         Some(check_subject_cn(subject_cn, config.subject_cn)),
-        Some(SimpleCheckResult::notice(format!(
-            "Subject CN: {subject_cn}"
-        ))),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
             let name = "Subject O";

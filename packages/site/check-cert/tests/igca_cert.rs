@@ -37,7 +37,6 @@ fn test_cert_ok() {
         format!(
             "Subject CN: IGC/A\n\
             Subject CN: IGC/A\n\
-            Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
             Serial number: {SERIAL}\n\
@@ -76,7 +75,6 @@ fn test_cert_wrong_serial() {
         format!(
             "Subject CN: IGC/A, \
             Serial number: {SERIAL} but expected {serial} (!)\n\
-            Subject CN: IGC/A\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\

@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "1cb204b51c027a61c7030f44bf8fa474debefbd59d13ea2094e228bfd7c03050",
+  "moduleFileHash": "13b77b6815c3fcb55b0d04a35f3ff680df650e484cef548faf231874ca879d10",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -63,7 +63,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 87,
+                "line": 90,
                 "column": 25
               }
             },
@@ -97,7 +97,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 110,
+                "line": 113,
                 "column": 13
               }
             },
@@ -115,7 +115,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 140,
+                "line": 143,
                 "column": 13
               }
             }
@@ -129,7 +129,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 31,
+            "line": 34,
             "column": 23
           },
           "imports": {},
@@ -144,7 +144,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 32,
+                "line": 35,
                 "column": 17
               }
             }
@@ -158,7 +158,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 58,
+            "line": 61,
             "column": 20
           },
           "imports": {
@@ -181,7 +181,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 59,
+                "line": 62,
                 "column": 10
               }
             }
@@ -195,7 +195,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 73,
+            "line": 76,
             "column": 22
           },
           "imports": {
@@ -213,7 +213,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 74,
+                "line": 77,
                 "column": 19
               }
             }
@@ -776,7 +776,8 @@
           "remote_patches": {},
           "remote_patch_strip": 0,
           "patches": [
-            "@@//bazel/patches:rules_uv_rm_venv.patch"
+            "@@//bazel/patches:rules_uv_rm_venv.patch",
+            "@@//bazel/patches:rules_uv_quiet.patch"
           ],
           "patch_cmds": [],
           "patch_args": [

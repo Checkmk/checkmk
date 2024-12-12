@@ -20,6 +20,7 @@ from redfish.rest.v1 import (  # type: ignore[import-untyped]
     HttpClient,
     JsonDecodingError,
     redfish_client,
+    RestResponse,
     RetriesExhaustedError,
     ServerDownOrUnreachableError,
 )
@@ -74,7 +75,7 @@ class CachedSectionWriter(SectionManager):
         )
 
 
-@dataclass()
+@dataclass
 class CachePerSection:
     """Cache settings for every section"""
 
@@ -97,7 +98,7 @@ class CachePerSection:
     SimpleStorage: int | None = None
 
 
-@dataclass()
+@dataclass
 class CacheTimestampPerSection:
     """Cache timestamp if section is cached"""
 
@@ -120,7 +121,7 @@ class CacheTimestampPerSection:
     SimpleStorage: int | None = None
 
 
-@dataclass()
+@dataclass
 class VendorData:
     """Vendor data object"""
 
@@ -133,13 +134,38 @@ class VendorData:
     expand_string: str | None = None
 
 
-@dataclass()
+class RedfishClient:
+    """the redfish.HttpClient is completely untyped, so wrap it"""
+
+    def __init__(self, client: HttpClient) -> None:
+        self._client = client
+
+    def get(self, url: str, timeout: int | None) -> RestResponse:
+        return self._client.get(url, timeout=timeout)
+
+    def get_session_location(self) -> object:  # bytes | None ?
+        return self._client.get_session_location()
+
+    def get_session_key(self) -> object:
+        return self._client.get_session_location()
+
+    def set_session_location(self, location: object) -> None:
+        self._client.set_session_location(location)
+
+    def set_session_key(self, session: object) -> None:
+        self._client.set_session_key(session)
+
+    def login(self, auth: Literal["session"]) -> None:
+        self._client.login(auth=auth)
+
+
+@dataclass
 class RedfishData:
     """Redfish data object"""
 
     hostname: str
     use_cache: bool
-    redfish_connection: HttpClient
+    redfish_connection: RedfishClient
     sections: set[str] = field(default_factory=set)
     cache_per_section: CachePerSection | None = None
     cache_timestamp_per_section: CacheTimestampPerSection | None = None
@@ -264,13 +290,13 @@ def dropnonascii(input_str: str) -> str:
 
 
 def fetch_data(
-    redfishobj: RedfishData, url: str, component: object, timeout: int | None = None
+    client: RedfishClient, url: str, component: object, timeout: int | None = None
 ) -> Any:
     """fetch a single data object from Redfish"""
     if timeout:
-        response_url = redfishobj.redfish_connection.get(url, timeout=timeout)
+        response_url = client.get(url, timeout=timeout)
     else:
-        response_url = redfishobj.redfish_connection.get(url, None)
+        response_url = client.get(url, None)
     if response_url.status == 200:
         try:
             response_dict = response_url.dict
@@ -282,7 +308,7 @@ def fetch_data(
 
 
 def fetch_collection(
-    redfishobj: RedfishData, data: Mapping[str, Any], component: object
+    client: RedfishClient, data: Mapping[str, Any], component: object
 ) -> Sequence[Mapping[str, Any]]:
     """fetch a whole collection from Redfish data"""
     member_list = data.get("Members")
@@ -291,18 +317,18 @@ def fetch_collection(
         return data_list
     for element in member_list:
         if element.get("@odata.id"):
-            element_data = fetch_data(redfishobj, element.get("@odata.id"), component)
+            element_data = fetch_data(client, element.get("@odata.id"), component)
             data_list.append(element_data)
     return data_list
 
 
 def fetch_entry(redfishobj: RedfishData, entry: Mapping[str, Any], section: str) -> RedfishData:
     """fetch a list entry and add the result"""
-    result = fetch_data(redfishobj, entry["@odata.id"], section)
+    result = fetch_data(redfishobj.redfish_connection, entry["@odata.id"], section)
     if "error" in result.keys():
         return redfishobj
     if "Collection" in result.get("@odata.type", "No Data"):
-        result = fetch_collection(redfishobj, result, section)
+        result = fetch_collection(redfishobj.redfish_connection, result, section)
         if section in redfishobj.section_data.keys():
             redfishobj.section_data[section].extend(result)
         else:
@@ -355,12 +381,14 @@ def fetch_sections(
             continue
         if section not in data.keys():
             continue
-        section_data = fetch_data(redfishobj, data[section]["@odata.id"], section)
+        section_data = fetch_data(
+            redfishobj.redfish_connection, data[section]["@odata.id"], section
+        )
         if section_data.get("Members@odata.count") == 0:
             continue
         if "Collection" in section_data.get("@odata.type", {}):
             if section_data.get("Members@odata.count", 0) != 0:
-                result = fetch_collection(redfishobj, section_data, section)
+                result = fetch_collection(redfishobj.redfish_connection, section_data, section)
                 if section in redfishobj.section_data.keys():
                     redfishobj.section_data[section].extend(result)
                 else:
@@ -383,7 +411,9 @@ def fetch_hpe_smartstorage(
     """fetch hpe smartstorage sections"""
     storage_link = link_list.get("SmartStorage", None)
     if storage_link:
-        result = fetch_data(redfishobj, storage_link["@odata.id"], "SmartStorage")
+        result = fetch_data(
+            redfishobj.redfish_connection, storage_link["@odata.id"], "SmartStorage"
+        )
         storage_links = result["Links"]
         assert not isinstance(storage_links, str)
         storage_sections = [
@@ -506,7 +536,7 @@ def detect_vendor(root_data: Mapping[str, Any]) -> VendorData:
 def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=too-many-branches
     """get a the information from the Redfish management interface"""
     load_section_data(redfishobj)
-    redfishobj.base_data = fetch_data(redfishobj, "/redfish/v1", "Base")
+    redfishobj.base_data = fetch_data(redfishobj.redfish_connection, "/redfish/v1", "Base")
 
     redfishobj.vendor_data = (vendor_data := detect_vendor(redfishobj.base_data))
 
@@ -521,14 +551,14 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
     if manager_url:
         if vendor_data.expand_string:
             manager_col = fetch_data(
-                redfishobj,
+                redfishobj.redfish_connection,
                 manager_url + vendor_data.expand_string,
                 "Manager",
             )
             manager_data = manager_col.get("Members", [])
         else:
-            manager_col = fetch_data(redfishobj, manager_url, "Manager")
-            manager_data = fetch_collection(redfishobj, manager_col, "Manager")
+            manager_col = fetch_data(redfishobj.redfish_connection, manager_url, "Manager")
+            manager_data = fetch_collection(redfishobj.redfish_connection, manager_col, "Manager")
 
         for element in manager_data:
             data_model = str(list(element.get("Oem", {"Unknown": "Unknown model"}).keys())[0])
@@ -544,8 +574,8 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
         w.append(f"OSPlatform: {vendor_data.name}")
 
     # fetch systems
-    systems_col = fetch_data(redfishobj, systems_url, "System")
-    systems_data = fetch_collection(redfishobj, systems_col, "System")
+    systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")
+    systems_data = fetch_collection(redfishobj.redfish_connection, systems_col, "System")
 
     if data_model in ["Hpe", "Hp"]:
         data_model_links = []
@@ -570,7 +600,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
             res_dir = None
 
         if res_dir:
-            res_data = fetch_data(redfishobj, res_dir, "ResourceDirectory")
+            res_data = fetch_data(redfishobj.redfish_connection, res_dir, "ResourceDirectory")
             res_instances = res_data.get("Instances", [])
             assert not isinstance(res_instances, str)
             for instance in res_instances:
@@ -578,7 +608,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
                     "@odata.type", ""
                 ) and "FirmwareInventory" in instance.get("@odata.id", ""):
                     firmwares = fetch_data(
-                        redfishobj,
+                        redfishobj.redfish_connection,
                         instance["@odata.id"] + vendor_data.expand_string,
                         "FirmwareDirectory",
                     )
@@ -624,7 +654,7 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
         )
         if vendor_data.expand_string:
             firmwares = fetch_data(
-                redfishobj,
+                redfishobj.redfish_connection,
                 "".join(firmware_url),
                 "FirmwareDirectory",
                 timeout=10,
@@ -637,11 +667,11 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
                 )
         else:
             firmware_col = fetch_data(
-                redfishobj,
+                redfishobj.redfish_connection,
                 "".join(firmware_url),
                 "FirmwareDirectory",
             )
-            firmwares = fetch_collection(redfishobj, firmware_col, "Manager")
+            firmwares = fetch_collection(redfishobj.redfish_connection, firmware_col, "Manager")
             redfishobj.section_data.setdefault("FirmwareInventory", list(firmwares))
 
     for system in systems_data:
@@ -670,8 +700,8 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
             fetch_extra_data(redfishobj, data_model, extra_links, redfishobj.sections, system)
 
     # fetch chassis
-    chassis_col = fetch_data(redfishobj, chassis_url, "Chassis")
-    chassis_data = fetch_collection(redfishobj, chassis_col, "Chassis")
+    chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
+    chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
     with SectionWriter("redfish_chassis") as w:
         w.append_json(chassis_data)
     chassis_sections = [
@@ -775,18 +805,20 @@ def get_session(args: Args) -> RedfishData:
         redfishobj = RedfishData(
             hostname=f"{args.host}_{args.port}",
             use_cache=False,
-            redfish_connection=redfish_client(
-                base_url=redfish_host,
-                username=args.user,
-                password=(
-                    args.password
-                    if args.password is not None
-                    else password_store.lookup(Path(pw_path), pw_id)
-                ),
-                cafile="",
-                default_prefix="/redfish/v1",
-                timeout=args.timeout,
-                max_retry=args.retries,
+            redfish_connection=RedfishClient(
+                redfish_client(
+                    base_url=redfish_host,
+                    username=args.user,
+                    password=(
+                        args.password
+                        if args.password is not None
+                        else password_store.lookup(Path(pw_path), pw_id)
+                    ),
+                    cafile="",
+                    default_prefix="/redfish/v1",
+                    timeout=args.timeout,
+                    max_retry=args.retries,
+                )
             ),
         )
         existing_session = load_session_key(redfishobj)

@@ -105,7 +105,12 @@ export const saveQuickSetup = async (
     stages: formData.map((step) => ({ form_data: step }))
   }
 
-  return await _saveQuickSetup(url, payload)
+  try {
+    const { data } = await axios.post(url, payload)
+    return data
+  } catch (err) {
+    throw processError(err)
+  }
 }
 
 /**
@@ -131,15 +136,8 @@ export const editQuickSetup = async (
     stages: formData.map((step) => ({ form_data: step }))
   }
 
-  return await _saveQuickSetup(url, payload)
-}
-
-const _saveQuickSetup = async (
-  url: string,
-  payload: QSRequestComplete
-): Promise<QSResponseComplete> => {
   try {
-    const { data } = await axios.post(url, payload)
+    const { data } = await axios.put(url, payload)
     return data
   } catch (err) {
     throw processError(err)

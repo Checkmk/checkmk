@@ -506,15 +506,42 @@ where
 }
 
 #[derive(Debug)]
+struct TaggedText {
+    state: State,
+    text: Option<String>,
+}
+
+impl Display for TaggedText {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.text.as_ref().map_or(Ok(()), |text| match self.state {
+            State::Ok => write!(f, "{}", text),
+            State::Warn => write!(f, "{} (!)", text),
+            State::Crit => write!(f, "{} (!!)", text),
+            State::Unknown => write!(f, "{} (?)", text),
+        })
+    }
+}
+
+#[derive(Debug)]
 enum Details {
-    Text(String),
+    Text(TaggedText),
     Metric(Metric<Real>),
-    TextMetric(String, Metric<Real>),
+    TextMetric(TaggedText, Metric<Real>),
+}
+
+impl Details {
+    fn new(state: State, text: Option<String>, metric: Option<Metric<Real>>) -> Self {
+        match (text, metric) {
+            (None, Some(m)) => Self::Metric(m),
+            (t, None) => Self::Text(TaggedText { state, text: t }),
+            (t, Some(m)) => Self::TextMetric(TaggedText { state, text: t }, m),
+        }
+    }
 }
 
 #[derive(Debug)]
 enum FlatDetailsView<'a> {
-    Text(&'a String),
+    Text(&'a TaggedText),
     Metric(&'a Metric<Real>),
 }
 
@@ -543,9 +570,20 @@ impl<'a> IntoIterator for &'a Details {
 }
 
 #[derive(Debug)]
-struct Summary {
-    state: State,
-    text: Option<String>,
+struct Summary(TaggedText);
+
+impl Summary {
+    fn state(&self) -> State {
+        self.0.state
+    }
+
+    fn text(&self) -> Option<&String> {
+        self.0.text.as_ref()
+    }
+
+    fn new(state: State, text: Option<String>) -> Self {
+        Self(TaggedText { state, text })
+    }
 }
 
 #[derive(Debug, Default)]
@@ -569,7 +607,7 @@ impl Display for Collection {
             .summary
             .iter()
             .flat_map(|s| {
-                s.text.as_ref().map(|text| match s.state {
+                s.text().map(|text| match s.state() {
                     State::Ok => text.to_string(),
                     State::Warn => format!("{} (!)", text),
                     State::Crit => format!("{} (!!)", text),
@@ -621,13 +659,14 @@ impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
             state: check_result.state,
-            summary: vec![Summary {
-                state: check_result.state,
-                text: check_result.summary,
-            }],
+            summary: vec![Summary::new(check_result.state, check_result.summary)],
             details: {
                 let mut v = vec![];
-                v.extend(check_result.details.map(Details::Text));
+                v.extend(
+                    check_result
+                        .details
+                        .map(|t| Details::new(check_result.state, Some(t), None)),
+                );
                 v
             },
         }
@@ -640,15 +679,12 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.state);
-                out.summary.push(Summary {
-                    state: cr.state,
-                    text: cr.summary,
-                });
+                out.summary.push(Summary::new(cr.state, cr.summary));
                 out.details.extend(match (cr.details, cr.metrics) {
                     (None, None) => vec![],
-                    (Some(text), None) => vec![Details::Text(text)],
+                    (Some(text), None) => vec![Details::new(cr.state, Some(text), None)],
                     (None, Some(metric)) => vec![Details::Metric(metric)],
-                    (Some(text), Some(metric)) => vec![Details::TextMetric(text, metric)],
+                    (text, metric) => vec![Details::new(cr.state, text, metric)],
                 });
                 out
             })
@@ -1024,8 +1060,8 @@ mod test_writer_format {
             "summary ok, summary warn (!), summary crit (!!)\n\
             details ok\n\
             notice\n\
-            details warn\n\
-            details crit"
+            details warn (!)\n\
+            details crit (!!)"
         );
     }
 
@@ -1043,8 +1079,8 @@ mod test_writer_format {
             format!("{}", coll),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             notice\n\
-            details warn\n\
-            details crit"
+            details warn (!)\n\
+            details crit (!!)"
         );
     }
 
@@ -1061,7 +1097,7 @@ mod test_writer_format {
             format!("{}", coll),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             notice\n\
-            details warn"
+            details warn (!)"
         );
     }
 
@@ -1078,7 +1114,7 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Warn);
         assert_eq!(
             format!("{}", coll),
-            "notice (warn/crit at 10/20) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10/20)"
+            "notice (warn/crit at 10/20) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10/20) (!)"
         );
     }
 }

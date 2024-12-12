@@ -1651,6 +1651,13 @@ class ABCDeleteHosts:
         except FileNotFoundError:
             pass
 
+    def _delete_robotmk_html_log_dir(self, hostname: HostName) -> None:
+        with suppress(FileNotFoundError):
+            shutil.rmtree(
+                # Keep in sync with cmk.cee.robotmk.html_log_dir
+                omd_root / "var" / "robotmk" / "html_logs" / hostname
+            )
+
 
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
@@ -1686,6 +1693,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._delete_datasource_dirs(hostname)
         self._delete_baked_agents(hostname)
         self._delete_logwatch(hostname)
+        self._delete_robotmk_html_log_dir(hostname)
 
 
 automations.register(AutomationDeleteHosts())
@@ -1725,6 +1733,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
         self._delete_datasource_dirs(hostname)
         self._delete_logwatch(hostname)
+        self._delete_robotmk_html_log_dir(hostname)
 
 
 automations.register(AutomationDeleteHostsKnownRemote())

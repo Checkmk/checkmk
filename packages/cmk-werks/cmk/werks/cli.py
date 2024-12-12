@@ -35,7 +35,7 @@ from .parse import WerkV2ParseResult
 class WerkId:
     __slots__ = ("__id",)
 
-    def __init__(self, id: int):  # pylint: disable=redefined-builtin
+    def __init__(self, id: int):  # noqa: A002 # pylint: disable=redefined-builtin
         self.__id = id
 
     @override
@@ -621,7 +621,7 @@ def main_show(args: argparse.Namespace) -> None:
     if "all" in args.ids:
         ids = list(load_werks().keys())
     else:
-        ids = [WerkId(id) for id in args.ids] or [get_last_werk()]
+        ids = [WerkId(i) for i in args.ids] or [get_last_werk()]
 
     for wid in ids:
         if wid != ids[0]:

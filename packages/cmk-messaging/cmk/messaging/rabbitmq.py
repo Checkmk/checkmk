@@ -152,6 +152,12 @@ def make_default_remote_user_permission(user_name: str) -> Permission:
 def find_shortest_paths(
     edges: Sequence[tuple[str, str]],
 ) -> Mapping[tuple[str, str], tuple[str, ...]]:
+    """
+    >>> sorted(find_shortest_paths([]).items())
+    []
+    >>> sorted(find_shortest_paths([("a", "b"), ("b", "c"), ("a", "c")]).items())
+    [(('a', 'b'), ('a', 'b')), (('a', 'c'), ('a', 'c')), (('b', 'a'), ('b', 'a')), (('b', 'c'), ('b', 'c')), (('c', 'a'), ('c', 'a')), (('c', 'b'), ('c', 'b'))]
+    """
     known_paths: dict[tuple[str, str], tuple[str, ...]] = {
         (start, end): (start, end) for start, end in edges
     }

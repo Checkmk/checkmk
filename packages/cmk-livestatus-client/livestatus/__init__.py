@@ -4,4 +4,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
-from cmk.livestatus_client import *  # noqa: F403 # pylint: disable=wildcard-import,unused-wildcard-import,line-too-long
+# TODO: The "bazel lint ..." calls for run_check_format() and run_check_ruff() don't agree on their findings. Why??
+from cmk.livestatus_client import *  # noqa: F403,RUF100

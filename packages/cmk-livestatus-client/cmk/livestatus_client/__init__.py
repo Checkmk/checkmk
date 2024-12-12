@@ -505,9 +505,7 @@ def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, i
         >>> parse_socket_url('Hallo Welt!')
         Traceback (most recent call last):
         ...
-        cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
-Must begin with 'tcp:', 'tcp6:' or 'unix:'
-
+        packages.cmk-livestatus-client.cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. Must begin with 'tcp:', 'tcp6:' or 'unix:'
     """
     if ":" in url:
         family_txt, url = url.split(":", 1)
@@ -654,7 +652,7 @@ class SingleSiteConnection(Helpers):
     def _create_socket(
         self,
         family: socket.AddressFamily,
-        site_name: SiteId | None = None,  # pylint: disable=unused-argument
+        site_name: SiteId | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
     ) -> socket.socket:
         """Creates the Livestatus client socket
 
@@ -899,7 +897,7 @@ class SingleSiteConnection(Helpers):
     def command(
         self,
         command: str,
-        site: SiteId | None = None,  # pylint: disable=unused-argument
+        site: SiteId | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):

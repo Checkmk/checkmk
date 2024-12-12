@@ -119,6 +119,10 @@ def notification_message(
     plugin: NotificationPluginName,
     context: NotificationContext,
 ) -> SanitizedLivestatusLogStr:
+    """
+    >>> notification_message(NotificationPluginName("hurz"), NotificationContext({"CONTACTNAME": "foo", "HOSTNAME": "bar"}))
+    'HOST NOTIFICATION: foo;bar;UNKNOWN;hurz;'
+    """
     return _format_notification_message(plugin, context)
 
 

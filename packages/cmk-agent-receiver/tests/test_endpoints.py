@@ -56,10 +56,7 @@ def test_register_existing_ok(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    def rest_api_register_mock(
-        *args: object,  # pylint: disable=unused-argument
-        **kwargs: object,  # pylint: disable=unused-argument
-    ) -> RegisterResponse:
+    def rest_api_register_mock(*_args: object, **_kwargs: object) -> RegisterResponse:
         _symlink_push_host(tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 

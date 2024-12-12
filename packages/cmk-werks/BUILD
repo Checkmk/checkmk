@@ -1,3 +1,4 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -64,15 +65,18 @@ py_test(
     ],
 )
 
+format_multirun(
+    name = "format",
+    python = "@aspect_rules_lint//format:ruff",
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-werks",
     strip_path_prefixes = ["packages/cmk-werks"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [
-        ":cmk-werks",
-    ],
+    deps = [":cmk-werks"],
 )
 
 package_wheel(

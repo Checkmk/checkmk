@@ -40,7 +40,7 @@ class Config:
         # adapt this.
         return branch_name
 
-    def adapt_werk_string(self, werk_string: str, werk_id: int) -> str:  # pylint: disable=unused-argument
+    def adapt_werk_string(self, werk_string: str, werk_id: int) -> str:  # noqa: ARG002 # pylint: disable=unused-argument
         # there is one faulty werk in cmk repo, but in many branches
         # its easier to fix here...
         return werk_string

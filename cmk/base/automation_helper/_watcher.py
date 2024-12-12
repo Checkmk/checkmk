@@ -129,4 +129,21 @@ _SCHEDULES = (
         relative_path="etc/check_mk/conf.d",
         patterns=["*.mk"],
     ),
+    Schedule(
+        ignore_directories=True,
+        recursive=True,
+        relative_path="var/check_mk/autochecks",
+        patterns=["*.mk"],
+    ),
+    Schedule(
+        ignore_directories=True,
+        recursive=True,
+        relative_path="var/check_mk/discovered_host_labels",
+        patterns=["*.mk"],
+    ),
+    Schedule(
+        ignore_directories=True,
+        recursive=False,
+        patterns=["var/check_mk/stored_passwords"],
+    ),
 )

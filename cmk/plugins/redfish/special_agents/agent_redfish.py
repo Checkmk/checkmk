@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special Agent to fetch Redfish data from management interfaces"""
 
+import json
 import logging
 import os
 import pickle
@@ -12,7 +13,7 @@ import time
 from collections.abc import Collection, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Any, Final, Literal, Self
 
 import urllib3
 from redfish import redfish_logger  # type: ignore[import-untyped]
@@ -36,11 +37,6 @@ from cmk.special_agents.v0_unstable.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
-
-
-class _SessionData(TypedDict, total=True):
-    location: object
-    session: object
 
 
 class CachedSectionWriter(SectionManager):
@@ -134,6 +130,33 @@ class VendorData:
     expand_string: str | None = None
 
 
+class ClientSession:
+    """Client session data"""
+
+    DIR = paths.tmp_dir / "agents/agent_redfish"
+
+    def __init__(self, location: str, session: str) -> None:
+        self.location: Final = location
+        self.session: Final = session
+
+    @classmethod
+    def loadf(cls, hostname: str) -> Self | None:
+        """Load session data from file"""
+        try:
+            raw = (cls.DIR / f"{hostname}.json").read_text()
+        except FileNotFoundError:
+            return None
+        raw_json = json.loads(raw)
+        return cls(location=str(raw_json["location"]), session=str(raw_json["session"]))
+
+    def savef(self, hostname: str) -> None:
+        """Save session data to file"""
+        self.DIR.mkdir(parents=True, exist_ok=True)
+        (self.DIR / f"{hostname}.json").write_text(
+            json.dumps({"location": self.location, "session": self.session})
+        )
+
+
 class RedfishClient:
     """the redfish.HttpClient is completely untyped, so wrap it"""
 
@@ -143,20 +166,24 @@ class RedfishClient:
     def get(self, url: str, timeout: int | None) -> RestResponse:
         return self._client.get(url, timeout=timeout)
 
-    def get_session_location(self) -> object:  # bytes | None ?
-        return self._client.get_session_location()
+    def make_session(self, host_name: str, auth: Literal["session"]) -> None:
+        if session := ClientSession.loadf(host_name):
+            self._client.set_session_location(session.location)
+            self._client.set_session_key(session.session)
+            if (
+                self._client.get("/redfish/v1/SessionService/Sessions", None).status == 200
+                or self._client.get("/redfish/v1/Sessions", None).status == 200
+            ):
+                return
+            # cleanup old session information
+            self._client.set_session_location(None)
+            self._client.set_session_key(None)
 
-    def get_session_key(self) -> object:
-        return self._client.get_session_location()
-
-    def set_session_location(self, location: object) -> None:
-        self._client.set_session_location(location)
-
-    def set_session_key(self, session: object) -> None:
-        self._client.set_session_key(session)
-
-    def login(self, auth: Literal["session"]) -> None:
+        # Login with the Redfish client
         self._client.login(auth=auth)
+        ClientSession(
+            str(self._client.get_session_location()), str(self._client.get_session_key())
+        ).savef(host_name)
 
 
 @dataclass
@@ -724,20 +751,6 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
     return 0
 
 
-def store_session_key(redfishobj: RedfishData) -> None:
-    """save session data to file"""
-    if not os.path.exists(paths.tmp_dir / "agents" / "agent_redfish"):
-        os.makedirs(paths.tmp_dir / "agents" / "agent_redfish")
-    store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
-
-    store_data = _SessionData(
-        location=redfishobj.redfish_connection.get_session_location(),
-        session=redfishobj.redfish_connection.get_session_key(),
-    )
-    with open(store_path, "wb") as file:
-        pickle.dump(store_data, file)
-
-
 def store_section_data(redfishobj: RedfishData) -> None:
     """save section data to file"""
     for section in redfishobj.section_data.keys():
@@ -776,22 +789,6 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
     return redfishobj
 
 
-def load_session_key(redfishobj: RedfishData) -> None | _SessionData:
-    """load existing redfish session data"""
-    store_path = paths.tmp_dir / "agents" / "agent_redfish" / f"{redfishobj.hostname}.pkl"
-    try:
-        with open(store_path, "rb") as file:
-            # Deserialize and retrieve the variable from the file
-            data = pickle.load(file)
-    except Exception as e:
-        print(f"Exception: {e}")
-        return None
-
-    if (session := data.get("session")) and (location := data.get("location")):
-        return _SessionData(location=location, session=session)
-    return None
-
-
 def get_session(args: Args) -> RedfishData:
     """create a Redfish session with given arguments"""
     try:
@@ -821,25 +818,8 @@ def get_session(args: Args) -> RedfishData:
                 )
             ),
         )
-        existing_session = load_session_key(redfishobj)
-        # existing session with key found reuse this session instead of login
-        if existing_session:
-            redfishobj.redfish_connection.set_session_location(existing_session.get("location"))
-            redfishobj.redfish_connection.set_session_key(existing_session.get("session"))
-            response_url = redfishobj.redfish_connection.get(
-                "/redfish/v1/SessionService/Sessions", None
-            )
-            if response_url.status == 200:
-                return redfishobj
-            response_url = redfishobj.redfish_connection.get("/redfish/v1/Sessions", None)
-            if response_url.status == 200:
-                return redfishobj
+        redfishobj.redfish_connection.make_session(redfishobj.hostname, auth="session")
 
-        # Login with the Redfish client
-        # cleanup old session information
-        redfishobj.redfish_connection.set_session_location(None)
-        redfishobj.redfish_connection.set_session_key(None)
-        redfishobj.redfish_connection.login(auth="session")
     except ServerDownOrUnreachableError as excp:
         sys.stderr.write(
             f"ERROR: server not reachable or does not support RedFish. Error Message: {excp}\n"
@@ -848,7 +828,7 @@ def get_session(args: Args) -> RedfishData:
     except RetriesExhaustedError as excp:
         sys.stderr.write(f"ERROR: too many retries for connection attempt: {excp}\n")
         sys.exit(1)
-    store_session_key(redfishobj)
+
     return redfishobj
 
 

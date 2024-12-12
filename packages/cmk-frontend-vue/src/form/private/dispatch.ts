@@ -10,7 +10,7 @@ import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_compo
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
-import FormConditionChoices from '@/form/components/forms/form_condition_choices'
+import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoice.vue'
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
 import FormMetric from '../components/forms/FormMetric.vue'

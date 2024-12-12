@@ -42,7 +42,7 @@ import {
   translateOperator,
   type Operator,
   type OperatorI18n
-} from './forms/form_condition_choices/utils'
+} from './forms/FormConditionChoices/utils'
 
 function renderForm(
   formSpec: FormSpec,

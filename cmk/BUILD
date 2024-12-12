@@ -218,6 +218,7 @@ py_library(
     imports = [".."],
     visibility = ["//tests/unit:__pkg__"],
     deps = [
+        "//agents/plugins:mk_jolokia",
         "@rrdtool_native//:rrdtool_python_lib",
     ] + select({
         "@//:gpl_repo": [],
@@ -273,8 +274,7 @@ py_pytest_main(
 py_doc_test(
     name = "doctest",
     srcs = [
-        "//cmk:lib_cmk",
-        "//cmk:lib_cmk_cre",
+        "//cmk:lib_cmk_repo",
     ],
     env = {
         "PYTHONWARNINGS": "ignore",

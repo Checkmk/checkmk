@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue'
-import type { Labels, Autocompleter } from '@/form/components/vue_formspec_components'
+import type { Labels, Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormLabels from '@/form/components/forms/FormLabels.vue'
 import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'

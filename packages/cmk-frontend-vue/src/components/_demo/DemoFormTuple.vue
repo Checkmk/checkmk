@@ -8,7 +8,11 @@ import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 
-import type { Tuple, String, SingleChoice } from '@/form/components/vue_formspec_components'
+import type {
+  Tuple,
+  String,
+  SingleChoice
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 

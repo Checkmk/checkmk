@@ -32,7 +32,7 @@ import {
   type I18N,
   type Operation,
   type Transformation
-} from '@/graph-designer/type_defs'
+} from 'cmk-shared-typing/typescript/graph_designer'
 import { type SpecLineType, type Topic } from '@/graph-designer/components/type_defs'
 import { type ValidationMessages } from '@/form'
 import useDragging from '@/lib/useDragging'

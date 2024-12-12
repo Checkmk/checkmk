@@ -20,9 +20,6 @@ export default [
       '**/dist-dev/**',
       '**/dist-ssr/**',
       '**/coverage/**',
-      'src/notification/type_defs.ts',
-      'src/graph-designer/type_defs.ts',
-      'src/form/components/configuration_entity.ts',
       'src/components/_demo/public/mockServiceWorker.js'
     ]
   },

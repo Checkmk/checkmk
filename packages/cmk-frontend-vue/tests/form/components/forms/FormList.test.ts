@@ -7,7 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import { mount } from '@vue/test-utils'
 import FormList from '@/form/components/forms/FormList.vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import FormDataVisualizer from '../FormDataVisualizer.vue'
 

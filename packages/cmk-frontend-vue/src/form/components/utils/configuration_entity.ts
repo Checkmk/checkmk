@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ConfigEntityType } from '@/form/components/configuration_entity'
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
 
 import { cmkFetch, type CmkFetchResponse } from '@/lib/cmkFetch'

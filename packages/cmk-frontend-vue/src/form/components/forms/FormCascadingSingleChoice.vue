@@ -16,7 +16,7 @@ import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useFormEditDispatcher } from '@/form/private'
 import { useId } from '@/form/utils'
 import { immediateWatch } from '@/lib/watch'

@@ -4,7 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
-import type { ValidationMessage, Validator } from '@/form/components/vue_formspec_components'
+import type {
+  ValidationMessage,
+  Validator
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { immediateWatch } from '@/lib/watch'
 
 /**

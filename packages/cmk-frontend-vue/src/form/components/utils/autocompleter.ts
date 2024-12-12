@@ -5,7 +5,10 @@
  */
 import type { Ref } from 'vue'
 import { ref, watch } from 'vue'
-import type { Autocompleter, AutocompleterData } from '@/form/components/vue_formspec_components'
+import type {
+  Autocompleter,
+  AutocompleterData
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { cmkFetch } from '@/lib/cmkFetch'
 
 interface AjaxResponse {

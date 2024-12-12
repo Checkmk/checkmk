@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import NotificationRules from '@/notification/components/NotificationRules.vue'
-import type { RuleSection } from '@/notification/type_defs'
+import type { RuleSection } from 'cmk-shared-typing/typescript/notifications'
 
 defineProps<{
   parameters: RuleSection[]

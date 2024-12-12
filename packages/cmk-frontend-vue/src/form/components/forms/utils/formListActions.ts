@@ -7,7 +7,7 @@
 import type { ValidationMessages } from '@/form'
 import { groupIndexedValidations, validateValue } from '@/form/components/utils/validation'
 import type { Ref } from 'vue'
-import type { Validator } from '@/form/components/vue_formspec_components'
+import type { Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 export default function formListActions(
   props: {

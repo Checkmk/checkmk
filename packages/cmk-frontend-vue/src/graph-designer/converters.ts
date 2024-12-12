@@ -8,7 +8,7 @@ import {
   type GraphOptionUnitCustom,
   type GraphOptionUnitCustomNotation,
   type GraphOptionExplicitVerticalRangeBoundaries
-} from '@/graph-designer/type_defs'
+} from 'cmk-shared-typing/typescript/graph_designer'
 
 function convertToNotation(notation: GraphOptionUnitCustomNotation) {
   if (notation === 'time') {

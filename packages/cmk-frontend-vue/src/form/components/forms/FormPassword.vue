@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import FormValidation from '@/form/components/FormValidation.vue'
-import type { Password } from '@/form/components/vue_formspec_components'
+import type { Password } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/lib/watch'

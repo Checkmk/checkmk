@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Autocompleter, Metric, Validator } from '@/form/components/vue_formspec_components'
+import type {
+  Autocompleter,
+  Metric,
+  Validator
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormMetric from '@/form/components/forms/FormMetric.vue'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { vi } from 'vitest'

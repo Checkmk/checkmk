@@ -8,7 +8,7 @@ import { computed, ref, watch } from 'vue'
 import { type ValidationMessages } from '@/form/components/utils/validation'
 import CmkList from '@/components/CmkList'
 import formListActions from '@/form/components/forms/utils/formListActions'
-import type { ListUniqueSelection } from '@/form/components/vue_formspec_components'
+import type { ListUniqueSelection } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useFormEditDispatcher } from '@/form/private'
 
 const props = defineProps<{

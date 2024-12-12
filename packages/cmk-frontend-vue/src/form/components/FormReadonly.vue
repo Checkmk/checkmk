@@ -31,7 +31,7 @@ import type {
   ConditionGroup,
   TimeSpecific,
   FileUpload
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
   groupDictionaryValidations,
   groupIndexedValidations,

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkList from '@/components/CmkList'
 import ConditionChoice from './ConditionChoice.vue'
-import type * as typing from '@/form/components/vue_formspec_components'
+import type * as typing from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'

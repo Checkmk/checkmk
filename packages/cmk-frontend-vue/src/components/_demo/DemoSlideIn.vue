@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import SlideIn from '@/components/SlideIn.vue'
-import type { Catalog } from '@/form/components/vue_formspec_components'
+import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'

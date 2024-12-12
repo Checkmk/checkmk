@@ -21,6 +21,7 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cmk-shared-typing": "file:../cmk-shared-typing",
     "lucide-vue-next": "^0.456.0",
     "radix-vue": "^1.9.9",
     "sanitize-html": "^2.13.1",

@@ -12,7 +12,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import type {
   DualListChoice,
   MultipleChoiceElement
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import { useId } from '@/form/utils'
 import { fetchData } from '../utils/autocompleter'

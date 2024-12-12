@@ -16,7 +16,7 @@ import type {
   FormSpec,
   String,
   ValidationMessage
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 import { dispatcherKey } from '@/form/private'

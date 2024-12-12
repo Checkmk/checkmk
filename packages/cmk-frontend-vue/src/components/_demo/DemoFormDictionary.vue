@@ -6,7 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
-import type { Dictionary, FixedValue, String } from '@/form/components/vue_formspec_components'
+import type {
+  Dictionary,
+  FixedValue,
+  String
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 
 defineProps<{ screenshotMode: boolean }>()

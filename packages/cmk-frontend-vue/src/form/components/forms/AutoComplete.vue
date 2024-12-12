@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
-import type { Autocompleter } from '../vue_formspec_components'
+import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { X } from 'lucide-vue-next'
 
 const props = defineProps<{

@@ -10,7 +10,7 @@ import type {
   Dictionary as DictionarySpec,
   DictionaryElement,
   Catalog
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
 type PartialExcept<T, K extends keyof T> = Pick<T, K> & Partial<Omit<T, K>>

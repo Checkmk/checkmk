@@ -5,7 +5,7 @@
  */
 
 import { type Component } from 'vue'
-import type { Components } from '@/form/components/vue_formspec_components'
+import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 // TODO: move this file CMK-19774
 import { ref } from 'vue'
-import type { List, String } from '@/form/components/vue_formspec_components'
+import type { List, String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormList from '@/form/components/forms/FormList.vue'
 
 defineProps<{ screenshotMode: boolean }>()

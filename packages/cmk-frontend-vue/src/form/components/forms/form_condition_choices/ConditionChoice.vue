@@ -11,7 +11,7 @@ import {
   type ConditionChoicesValue,
   type ConditionGroup,
   type Condition
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { immediateWatch } from '@/lib/watch'
 import { computed, ref, watch } from 'vue'
 import { type OperatorI18n, type Operator } from './utils'

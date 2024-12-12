@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { waitFor, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 
 function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {

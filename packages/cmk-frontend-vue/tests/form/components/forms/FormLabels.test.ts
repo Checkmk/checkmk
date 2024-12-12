@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import FormLabel from '@/form/components/forms/FormLabels.vue'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 import { ref, watch } from 'vue'
 

@@ -9,7 +9,7 @@ import { ref } from 'vue'
 import { useFormEditDispatcher } from '@/form/private'
 
 import { immediateWatch } from '@/lib/watch'
-import type * as FormSpec from '@/form/components/vue_formspec_components'
+import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import {
   groupDictionaryValidations,
   type ValidationMessages

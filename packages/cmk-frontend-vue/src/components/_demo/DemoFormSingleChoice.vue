@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 
-import type { SingleChoice } from '@/form/components/vue_formspec_components'
+import type { SingleChoice } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
 defineProps<{ screenshotMode: boolean }>()
 

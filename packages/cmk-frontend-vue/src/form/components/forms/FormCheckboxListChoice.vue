@@ -9,7 +9,7 @@ import FormValidation from '@/form/components/FormValidation.vue'
 import type {
   CheckboxListChoice,
   MultipleChoiceElement
-} from '@/form/components/vue_formspec_components'
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkCheckbox from '@/components/CmkCheckbox.vue'
 
 const props = defineProps<{

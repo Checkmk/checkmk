@@ -170,13 +170,10 @@ CMK_PACKAGES = [
 ] + select({
     "@//:gpl_repo": [],
     "@//:gpl+enterprise_repo": [
+        "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],
 })
-
-CMK_PACKAGES_NON_FREE = [
-    "//non-free/packages/cmk-mknotifyd",
-]
 
 py_library(
     name = "lib_cmk",
@@ -268,7 +265,7 @@ py_wheel(
         "lib_cmk",
         "lib_cmk_" + edition,
         "//non-free/packages/cmc-protocols:config_proto_pb2",
-    ] + CMK_PACKAGES_NON_FREE,
+    ],
 ) for edition in [
     "cce",
     "cee",

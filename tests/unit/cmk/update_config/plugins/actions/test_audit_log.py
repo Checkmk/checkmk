@@ -203,13 +203,13 @@ def test_conversion_needed(tmp_path: Path) -> None:
     old_store = OldAuditStore(store_path)
     for entry in EXAMPLE_ENTRIES:
         old_store.append(entry)
-        assert WatoAuditLogConversion.needs_conversion(store_path)
+        assert WatoAuditLogConversion.needs_conversion([store_path])
 
     WatoAuditLogConversion.convert_file(store_path)
-    assert not WatoAuditLogConversion.needs_conversion(store_path)
+    assert not WatoAuditLogConversion.needs_conversion([store_path])
 
     new_store_path = tmp_path / "wato_audit2.log"
     new_store = AuditLogStore(new_store_path)
     for entry in EXAMPLE_ENTRIES:
         new_store.append(entry)
-        assert not WatoAuditLogConversion.needs_conversion(new_store_path)
+        assert not WatoAuditLogConversion.needs_conversion([new_store_path])

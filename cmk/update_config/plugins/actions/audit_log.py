@@ -23,14 +23,25 @@ from cmk.update_config.update_state import UpdateActionState
 
 class WatoAuditLogConversion(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        for file_ in (wato_var_dir() / "log").glob("wato_audit.*"):
-            if self.needs_conversion(file_):
-                self.convert_file(file_)
+        audit_logs = list((wato_var_dir() / "log").glob("wato_audit.*"))
+        if not self.needs_conversion(audit_logs):
+            return
+        for file_ in audit_logs:
+            self.convert_file(file_)
 
     @staticmethod
-    def needs_conversion(file_: Path) -> bool:
+    def needs_conversion(logs: list[Path]) -> bool:
+        """check if we need the conversion
+
+        Checking a file can take up to 15s. That makes checking every file very expensive. So let's
+        assume if one file is converted all are converted. In order to check if a file is
+        converted, we should make sure that we read something and it is not just a empty
+        file..."""
+
         try:
-            AuditLogStore(file_).read()
+            for file_ in logs:
+                if AuditLogStore(file_).read():
+                    return False
         except MKUserError:
             return True
         return False

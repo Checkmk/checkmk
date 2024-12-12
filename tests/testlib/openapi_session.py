@@ -122,6 +122,7 @@ class CMKOpenApiSession(requests.Session):
         self.background_jobs = BackgroundJobsAPI(self)
         self.dcd = DcdAPI(self)
         self.ldap_connection = LDAPConnectionAPI(self)
+        self.passwords = PasswordsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -298,30 +299,6 @@ class CMKOpenApiSession(requests.Session):
                 raise UnexpectedResponse.from_response(response)
 
             time.sleep(0.5)
-
-    def create_password(
-        self,
-        ident: str,
-        title: str,
-        comment: str,
-        password: str,
-        owner: str = "admin",
-    ) -> None:
-        """Create a password via REST API."""
-        response = self.post(
-            "/domain-types/password/collections/all",
-            json={
-                "ident": ident,
-                "title": title,
-                "comment": comment,
-                "documentation_url": "localhost",
-                "password": password,
-                "owner": owner,
-                "shared": ["all"],
-            },
-        )
-        if response.status_code != 200:
-            raise UnexpectedResponse.from_response(response)
 
 
 class BaseAPI:
@@ -1136,3 +1113,29 @@ class LDAPConnectionAPI(BaseAPI):
         resp = self.session.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
+
+
+class PasswordsAPI(BaseAPI):
+    def create(
+        self,
+        ident: str,
+        title: str,
+        comment: str,
+        password: str,
+        owner: str = "admin",
+    ) -> None:
+        """Create a password via REST API."""
+        response = self.session.post(
+            "/domain-types/password/collections/all",
+            json={
+                "ident": ident,
+                "title": title,
+                "comment": comment,
+                "documentation_url": "localhost",
+                "password": password,
+                "owner": owner,
+                "shared": ["all"],
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)

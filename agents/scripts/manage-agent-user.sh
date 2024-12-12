@@ -40,24 +40,22 @@ WARNING: The agent controller is operating in an insecure mode! To secure the co
 HERE
 }
 
-_set_user_permissions() {
-    if [ "${DEPLOYMENT_MODE}" = "non-root" ]; then
-        chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
-        chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/agent"
-        chown -R "${AGENT_USER}":"${AGENT_USER}" "${MK_INSTALLDIR}/runtime"
-    else
-        # Get more finegrained access for the agent controller user only
-        chown :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
-        agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
-        [ -e "${agent_controller_config}" ] && chown :"${AGENT_USER}" "${agent_controller_config}"
-        pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
-        [ -e "${pre_configured_connections}" ] && chown :"${AGENT_USER}" "${pre_configured_connections}"
-    fi
+_set_agent_user_permissions() {
+    chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
+    chown -R :"${AGENT_USER}" "${MK_INSTALLDIR}/package/agent"
+    chown -R "${AGENT_USER}":"${AGENT_USER}" "${MK_INSTALLDIR}/runtime"
 }
 
-main() {
-    [ "$1" ] && usage
+_set_agent_controller_user_permissions() {
+    # Get more finegrained access for the agent controller user only
+    chown :"${AGENT_USER}" "${MK_INSTALLDIR}/package/config"
+    agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
+    [ -e "${agent_controller_config}" ] && chown :"${AGENT_USER}" "${agent_controller_config}"
+    pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
+    [ -e "${pre_configured_connections}" ] && chown :"${AGENT_USER}" "${pre_configured_connections}"
+}
 
+_add_user() {
     # add Checkmk agent system user
     printf "Creating/updating %s user account ...\n" "${AGENT_USER}"
     comment="Checkmk agent system user"
@@ -90,14 +88,25 @@ main() {
     mkdir -p "${HOMEDIR}"
     chown -R "${AGENT_USER}":"${AGENT_USER}" "${HOMEDIR}"
 
-    [ -n "${MK_INSTALLDIR}" ] && _set_user_permissions
-
     if [ "${user_is_new}" ]; then
         _allow_legacy_pull
         _issue_legacy_pull_warning
     fi
     unset homedir comment usershell
 
+}
+
+main() {
+    [ "${DEPLOYMENT_MODE}" = "non-root" ] && {
+        _add_user
+        _set_agent_user_permissions
+        exit 0
+    }
+
+    "${CONTROLLER_BINARY}" --version >/dev/null 2>&1 && {
+        _add_user
+        [ -n "${MK_INSTALLDIR}" ] && _set_agent_controller_user_permissions
+    }
 }
 
 main "$@"

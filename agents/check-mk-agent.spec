@@ -76,11 +76,7 @@ fi
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy
 
-# Only create our dedicated user, if the controller is in place (and working)
-# Otherwise we can do without the user.
-if "/usr/bin"/cmk-agent-ctl --version >/dev/null 2>&1; then
-    BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/manage-agent-user.sh
-fi
+BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/manage-agent-user.sh
 
 /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
 

@@ -191,7 +191,7 @@ $(SKEL_PERMISSIONS): $(INSTALL)
 	    fi ; \
 	done ; \
 	bazel build //omd:skel_permissions_$(EDITION_SHORT) ; \
-	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION_SHORT)\n" ; \
+	OUTPUT="$${OUTPUT}# Bazel\n$$(cat $(REPO_PATH)/bazel-bin/omd/skel.permissions_$(EDITION_SHORT))\n" ; \
 	echo -e "$$OUTPUT" > $(SKEL_PERMISSIONS)
 
 $(INSTALL_GLOBAL): $(SKEL_PERMISSIONS) $(BOM)

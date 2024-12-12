@@ -47,7 +47,6 @@ def create_stage(Map args, time_stage_started) {
                 passwordVariable: 'BAZEL_CACHE_PASSWORD',
                 usernameVariable: 'BAZEL_CACHE_USER'),
         ) {
-            lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: args.BAZEL_LOCKS_AMOUNT, resource : null) {
                 withEnv(args.ENV_VAR_LIST) {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         dir(args.DIR) {
@@ -72,7 +71,6 @@ def create_stage(Map args, time_stage_started) {
                         sh("exit ${cmd_status}");
                     }
                 }
-            }
         }
         return [cmd_status == 0, issues];
     }

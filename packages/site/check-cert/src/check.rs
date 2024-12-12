@@ -347,19 +347,23 @@ impl SimpleCheckResult {
     }
 
     pub fn ok(summary: impl Into<String>) -> Self {
-        Self::new(State::Ok, as_option(summary), None)
+        let s = as_option(summary);
+        Self::new(State::Ok, s.clone(), s)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, as_option(summary), None)
+        let s = as_option(summary);
+        Self::new(State::Warn, s.clone(), s)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, as_option(summary), None)
+        let s = as_option(summary);
+        Self::new(State::Crit, s.clone(), s)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, as_option(summary), None)
+        let s = as_option(summary);
+        Self::new(State::Unknown, s.clone(), s)
     }
 
     pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
@@ -909,28 +913,28 @@ mod test_writer_format {
     fn test_single_check_result_ok() {
         let coll = Collection::from(SimpleCheckResult::ok("summary"));
         assert_eq!(coll.state, State::Ok);
-        assert_eq!(format!("{}", coll), "summary");
+        assert_eq!(format!("{}", coll), "summary\nsummary");
     }
 
     #[test]
     fn test_single_check_result_warn() {
         let coll = Collection::from(SimpleCheckResult::warn("summary"));
         assert_eq!(coll.state, State::Warn);
-        assert_eq!(format!("{}", coll), "summary (!)");
+        assert_eq!(format!("{}", coll), "summary (!)\nsummary (!)");
     }
 
     #[test]
     fn test_single_check_result_crit() {
         let coll = Collection::from(SimpleCheckResult::crit("summary"));
         assert_eq!(coll.state, State::Crit);
-        assert_eq!(format!("{}", coll), "summary (!!)");
+        assert_eq!(format!("{}", coll), "summary (!!)\nsummary (!!)");
     }
 
     #[test]
     fn test_single_check_result_unknown() {
         let coll = Collection::from(SimpleCheckResult::unknown("summary"));
         assert_eq!(coll.state, State::Unknown);
-        assert_eq!(format!("{}", coll), "summary (?)");
+        assert_eq!(format!("{}", coll), "summary (?)\nsummary (?)");
     }
 
     #[test]
@@ -957,7 +961,13 @@ mod test_writer_format {
         let cr3 = SimpleCheckResult::ok("summary 3");
         let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
         assert_eq!(coll.state, State::Ok);
-        assert_eq!(format!("{}", coll), "summary 1, summary 2, summary 3");
+        assert_eq!(
+            format!("{}", coll),
+            "summary 1, summary 2, summary 3\n\
+            summary 1\n\
+            summary 2\n\
+            summary 3"
+        );
     }
 
     #[test]
@@ -967,7 +977,13 @@ mod test_writer_format {
         let cr3 = SimpleCheckResult::ok("summary 3");
         let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
         assert_eq!(coll.state, State::Warn);
-        assert_eq!(format!("{}", coll), "summary 1, summary 2 (!), summary 3");
+        assert_eq!(
+            format!("{}", coll),
+            "summary 1, summary 2 (!), summary 3\n\
+            summary 1\n\
+            summary 2 (!)\n\
+            summary 3"
+        );
     }
 
     #[test]
@@ -979,7 +995,10 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!)"
+            "summary 1, summary 2 (!), summary 3 (!!)\n\
+            summary 1\n\
+            summary 2 (!)\n\
+            summary 3 (!!)"
         );
     }
 
@@ -993,7 +1012,11 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            "summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)\n\
+            summary 1\n\
+            summary 2 (!)\n\
+            summary 3 (!!)\n\
+            summary 4 (?)"
         );
     }
 
@@ -1078,6 +1101,7 @@ mod test_writer_format {
         assert_eq!(
             format!("{}", coll),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
+            summary ok\n\
             notice\n\
             details warn (!)\n\
             details crit (!!)"
@@ -1096,6 +1120,7 @@ mod test_writer_format {
         assert_eq!(
             format!("{}", coll),
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
+            summary ok\n\
             notice\n\
             details warn (!)"
         );

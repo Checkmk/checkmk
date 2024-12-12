@@ -31,6 +31,12 @@ AUTH_SECRET = fields.String(
     "for further procession). This is the automation secret",
     example="DEYQEQQPYCFFBYH@AVMC",
 )
+AUTH_SECRET_STORE = fields.Boolean(
+    required=False,
+    description="If set to True, the secret will be stored unhashed in order to reuse it in rules.",
+    example=False,
+    load_default=False,
+)
 
 AUTH_CREATE_TYPE = fields.String(
     required=False,
@@ -50,6 +56,7 @@ AUTH_UPDATE_TYPE = fields.String(
 class AuthSecret(BaseSchema):
     auth_type = AUTH_CREATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthPassword(BaseSchema):
@@ -67,6 +74,7 @@ class AuthPassword(BaseSchema):
 class AuthUpdateSecret(BaseSchema):
     auth_type = AUTH_UPDATE_TYPE
     secret = AUTH_SECRET
+    store_automation_secret = AUTH_SECRET_STORE
 
 
 class AuthUpdatePassword(BaseSchema):

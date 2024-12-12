@@ -117,6 +117,11 @@ class AuthOptionOutput(BaseSchema):
     auth_type = fields.String(
         required=False, example="password", enum=["password", "automation", "saml2", "ldap"]
     )
+    store_automation_secret = fields.Boolean(
+        required=False,
+        description="If set to True, the secret is stored",
+        example=False,
+    )
     enforce_password_change = fields.Boolean(
         required=False,
         description="If set to True, the user will be forced to change his password on the next "

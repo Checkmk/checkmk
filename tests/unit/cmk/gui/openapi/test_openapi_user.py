@@ -231,7 +231,10 @@ def test_openapi_user_minimal_password_settings(
         )
 
     extensions = resp.json["extensions"]
-    assert extensions["auth_option"] == {"auth_type": "automation"}
+    assert extensions["auth_option"] == {
+        "auth_type": "automation",
+        "store_automation_secret": False,
+    }
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 

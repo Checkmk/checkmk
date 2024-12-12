@@ -10,7 +10,7 @@ import {
   type DetailedError,
   isDetailedError
 } from './quick_setup_types'
-import AlertBox from '@/components/AlertBox.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 
 const details = ref<boolean>(false)
@@ -25,7 +25,7 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 </script>
 
 <template>
-  <AlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
+  <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
     <strong>
       {{ error.message }}
     </strong>
@@ -33,8 +33,8 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
     <div v-else>
       <pre>{{ error.details }}</pre>
     </div>
-  </AlertBox>
-  <AlertBox v-if="validationErrors.length > 0" variant="error">
+  </CmkAlertBox>
+  <CmkAlertBox v-if="validationErrors.length > 0" variant="error">
     <p v-for="error in validationErrors" :key="error">{{ error }}</p>
-  </AlertBox>
+  </CmkAlertBox>
 </template>

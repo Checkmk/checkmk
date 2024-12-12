@@ -147,7 +147,8 @@ function wrap(index: number, length: number): number {
       role="combobox"
       :aria-label="selectedOptionTitle"
       :aria-expanded="suggestionsShown"
-      :class="{ 'cmk-dropdown__button': true, disabled: disabled || options.length === 0 }"
+      class="cmk-dropdown__button"
+      :class="{ disabled: disabled || options.length === 0 }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
@@ -169,7 +170,7 @@ function wrap(index: number, length: number): number {
       <span :class="{ hidden: !showFilter, input: true }">
         <input ref="suggestionInputRef" v-model="filterString" type="text"
       /></span>
-      <div class="options-container">
+      <div class="cmk-dropdown__options-container">
         <template v-for="(option, index) in options" :key="option.name">
           <li
             v-show="filteredOptions.includes(index)"
@@ -260,7 +261,7 @@ function wrap(index: number, length: number): number {
     }
   }
 
-  .options-container {
+  .cmk-dropdown__options-container {
     width: 100%;
     max-height: 200px;
     overflow-y: auto;

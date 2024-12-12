@@ -9,11 +9,11 @@ import CmkIcon from '@/components/CmkIcon.vue'
 
 type AlertType = 'error' | 'warning' | 'success' | 'info'
 
-interface AlertBoxProps {
+interface CmkAlertBoxProps {
   variant?: AlertType
 }
 
-const props = withDefaults(defineProps<AlertBoxProps>(), {
+const props = withDefaults(defineProps<CmkAlertBoxProps>(), {
   variant: 'info'
 })
 
@@ -34,19 +34,19 @@ const alertIconName = computed(() => {
 const alertClass = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'error qs-alert-box'
+      return 'error'
     case 'warning':
-      return 'warning qs-alert-box'
+      return 'warning'
     case 'success':
-      return 'success qs-alert-box'
+      return 'success'
     default:
-      return 'message qs-alert-box'
+      return 'message'
   }
 })
 </script>
 
 <template>
-  <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
+  <div class="cmk-alert-box" :class="alertClass" :style="{ maxWidth: 'fit-content' }">
     <CmkIcon :name="alertIconName" variant="inline" size="large" />
     <div>
       <slot />
@@ -57,7 +57,7 @@ const alertClass = computed(() => {
 <style scoped>
 /* TODO: try to unify this component with component FormValidation. the styling should be the same
          for all error messages, so the same base component should be used. */
-.qs-alert-box {
+.cmk-alert-box {
   display: flex;
   align-items: center;
   padding: 8px 12px;

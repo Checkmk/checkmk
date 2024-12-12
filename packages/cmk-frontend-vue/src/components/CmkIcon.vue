@@ -28,7 +28,7 @@ const cmkIconVariants = cva('', {
   variants: {
     variant: {
       plain: '',
-      inline: 'icon-element--inline'
+      inline: 'cmk-icon--inline'
     },
     size: {
       xsmall: '10px',
@@ -72,7 +72,7 @@ const getTransformRotate = () => {
 
 <template>
   <img
-    class="icon-element"
+    class="cmk-icon"
     :class="cmkIconVariants({ variant: props.variant, size: null })"
     :title="title || ''"
     :alt="title || ''"
@@ -80,7 +80,7 @@ const getTransformRotate = () => {
 </template>
 
 <style scoped>
-.icon-element {
+.cmk-icon {
   margin: 0;
   padding: 0;
   vertical-align: baseline;
@@ -90,7 +90,7 @@ const getTransformRotate = () => {
   height: v-bind('cmkIconVariants({size})');
   transform: v-bind('getTransformRotate()');
 
-  &.icon-element--inline {
+  &.cmk-icon--inline {
     margin-right: var(--spacing-half);
     vertical-align: middle;
   }

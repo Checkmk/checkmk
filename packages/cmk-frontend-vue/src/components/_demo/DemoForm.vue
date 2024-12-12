@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 // TODO: move this file CMK-19774
-import AlertBox from '@/components/AlertBox.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { computed } from 'vue'
 import router from './router'
 import { filterRoutes } from './utils'
@@ -19,13 +19,13 @@ const routes = computed(() => {
 
 <template>
   <template v-if="!screenshotMode">
-    <AlertBox variant="warning">
+    <CmkAlertBox variant="warning">
       <h2>Attention: No real Building-Blocks here!</h2>
       <p>
         This is just a demo for FormEdit, but you should use FormEdit only in combination with its
         backend/python counterpart. Don't start writing specs in JavaScript!
       </p>
-    </AlertBox>
+    </CmkAlertBox>
     <ul>
       <li v-for="route in routes" :key="route.path">
         <RouterLink :to="route.path">{{ route.name }}</RouterLink>

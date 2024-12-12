@@ -36,31 +36,36 @@ const props = defineProps<CmkCheckboxProps>()
   cursor: pointer;
   display: inline-block;
   padding: 2px 0;
-}
-.cmk-checkbox :deep(.cmk-checkbox__button) {
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-bg-color);
-  border-radius: 2px;
-  height: 14.5px;
-  width: 14.5px;
 
-  box-shadow: none; /* disable active/focus style of button */
-  padding: 0;
-  margin: 0;
-  vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
-}
-.cmk-checkbox:hover :deep(.cmk-checkbox__button) {
-  background-color: var(--input-hover-bg-color);
-}
-.cmk-checkbox .cmk-checkbox__indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.cmk-checkbox .cmk-checkbox__indicator svg {
-  width: 8px;
-}
-.cmk-checkbox span {
-  vertical-align: middle;
+  & :deep(.cmk-checkbox__button) {
+    background-color: var(--default-form-element-bg-color);
+    border: 1px solid var(--default-form-element-bg-color);
+    border-radius: 2px;
+    height: 14.5px;
+    width: 14.5px;
+
+    box-shadow: none; /* disable active/focus style of button */
+    padding: 0;
+    margin: 0;
+    vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
+  }
+
+  &:hover :deep(.cmk-checkbox__button) {
+    background-color: var(--input-hover-bg-color);
+  }
+
+  .cmk-checkbox__indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    svg {
+      width: 8px;
+    }
+  }
+
+  span {
+    vertical-align: middle;
+  }
 }
 </style>

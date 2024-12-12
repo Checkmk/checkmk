@@ -13,7 +13,7 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import AlertBox from '@/components/AlertBox.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 import { immediateWatch } from '@/lib/watch'
 import { useFormEditDispatcher } from '@/form/private'
@@ -108,9 +108,9 @@ const { ErrorBoundary } = useErrorBoundary()
         <CmkSpace />
         <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
         <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
-        <AlertBox v-if="backendValidation.length !== 0" variant="error">
+        <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
           {{ i18n.validation_error }}
-        </AlertBox>
+        </CmkAlertBox>
       </div>
       <div class="edit-object__content">
         <div v-if="schema !== undefined && data !== undefined">

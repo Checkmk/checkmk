@@ -19,15 +19,15 @@ defineExpose({
 const buttonVariants = cva('', {
   variants: {
     variant: {
-      primary: 'button--variant-primary', // high emphasis
-      secondary: 'button--variant-secondary', // less prominent
-      tertiary: 'button--variant-tertiary', // heightened attention
-      transparent: 'button--variant-transparent', // used only with icons
-      minimal: 'button--variant-minimal', // subtle styling
-      info: 'button--variant-info' // used only within info dialog
+      primary: 'cmk-button--variant-primary', // high emphasis
+      secondary: 'cmk-button--variant-secondary', // less prominent
+      tertiary: 'cmk-button--variant-tertiary', // heightened attention
+      transparent: 'cmk-button--variant-transparent', // used only with icons
+      minimal: 'cmk-button--variant-minimal', // subtle styling
+      info: 'cmk-button--variant-info' // used only within info dialog
     },
     size: {
-      small: 'button--size-small',
+      small: 'cmk-button--size-small',
       medium: ''
     }
   },
@@ -48,13 +48,13 @@ defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button ref="buttonRef" class="button" :class="buttonVariants({ variant, size })">
+  <button ref="buttonRef" class="cmk-button" :class="buttonVariants({ variant, size })">
     <slot />
   </button>
 </template>
 
 <style scoped>
-.button {
+.cmk-button {
   display: inline-flex;
   height: 30px;
   margin: 0;
@@ -64,49 +64,51 @@ defineProps<ButtonProps>()
   letter-spacing: unset;
 }
 
-.button--variant-primary {
+.cmk-button--variant-primary {
   border: 1px solid var(--default-submit-button-border-color);
 }
 
-.button--variant-tertiary {
+.cmk-button--variant-tertiary {
   text-underline-offset: 2px;
   text-decoration: underline var(--default-button-emphasis-color);
   text-decoration-thickness: 1px;
-}
-.button--variant-tertiary:hover {
-  font-weight: 600;
-  text-decoration-thickness: 3px;
+
+  &:hover {
+    font-weight: 600;
+    text-decoration-thickness: 3px;
+  }
 }
 
-.button--variant-tertiary,
-.button--variant-transparent,
-.button--variant-minimal {
+.cmk-button--variant-tertiary,
+.cmk-button--variant-transparent,
+.cmk-button--variant-minimal {
   height: auto;
   background: none;
   border: none;
   font-weight: normal;
 }
 
-.button--variant-tertiary,
-.button--variant-transparent {
+.cmk-button--variant-tertiary,
+.cmk-button--variant-transparent {
   padding: 0;
   margin: 0;
 }
-.button--variant-minimal:hover {
+
+.cmk-button--variant-minimal:hover {
   color: var(--default-button-emphasis-color);
 }
 
-.button--variant-info {
+.cmk-button--variant-info {
   background-color: var(--default-help-icon-bg-color);
   color: var(--white);
+
+  &:hover {
+    background-color: var(--default-help-icon-bg-color-hover);
+    color: var(--white);
+  }
 }
 
-.button--variant-info:hover {
-  background-color: var(--default-help-icon-bg-color-hover);
-  color: var(--white);
-}
-
-.button--size-small {
+.cmk-button--size-small {
   height: 25px;
 }
 </style>

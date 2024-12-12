@@ -12,8 +12,8 @@ const labelVariants = cva('', {
   variants: {
     variant: {
       default: '',
-      title: 'qs-ui-label--title',
-      subtitle: 'qs-ui-label--subtitle'
+      title: 'cmk-label--title',
+      subtitle: 'cmk-label--subtitle'
     }
   },
   defaultVariants: {
@@ -40,7 +40,7 @@ const delegatedProps = computed(() => {
   <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <Label
     v-bind="delegatedProps"
-    :class="[labelVariants({ variant }), { 'qs-ui-label--clickable': !!props.onClick }]"
+    :class="[labelVariants({ variant }), { 'cmk-label--clickable': !!props.onClick }]"
     @click="onClick"
   >
     <slot />
@@ -51,19 +51,19 @@ const delegatedProps = computed(() => {
 label {
   display: block;
 
-  &.qs-ui-label--title {
+  &.cmk-label--title {
     height: 24px;
     align-content: center;
     font-weight: var(--font-weight-bold);
     font-size: var(--font-size-xlarge);
   }
 
-  &.qs-ui-label--subtitle {
+  &.cmk-label--subtitle {
     font-size: var(--font-size-normal);
     margin-bottom: var(--spacing);
   }
 
-  &.qs-ui-label--clickable {
+  &.cmk-label--clickable {
     cursor: pointer;
     pointer-events: all;
   }

@@ -7,7 +7,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import DemoEmpty from './DemoEmpty.vue'
-import DemoAlertBox from './DemoAlertBox.vue'
+import DemoCmkAlertBox from './DemoCmkAlertBox.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoFormSingleChoiceEditableEditAsync from './DemoFormSingleChoiceEditableEditAsync.vue'
@@ -50,8 +50,8 @@ const routes: Route[] = [
   },
   {
     path: '/alertbox',
-    name: 'AlertBox',
-    component: DemoAlertBox
+    name: 'CmkAlertBox',
+    component: DemoCmkAlertBox
   },
   {
     path: '/slidein',

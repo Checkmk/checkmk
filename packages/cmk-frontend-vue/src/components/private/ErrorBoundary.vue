@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { ref, computed, type Ref } from 'vue'
-import AlertBox from '../AlertBox.vue'
+import CmkAlertBox from '../CmkAlertBox.vue'
 import CmkButton from '../CmkButton.vue'
 import { formatError } from '@/lib/error.ts'
 
@@ -23,7 +23,7 @@ const props = defineProps<{ error: Ref<Error | null> }>()
 </script>
 
 <template>
-  <AlertBox v-if="props.error.value !== null" variant="error">
+  <CmkAlertBox v-if="props.error.value !== null" variant="error">
     <div>
       An unknown error occurred.<br />
       Refresh the page to try again. If the problem persists, reach out to the Checkmk support.
@@ -32,7 +32,7 @@ const props = defineProps<{ error: Ref<Error | null> }>()
     <div v-else>
       <pre>{{ errorMessage }}</pre>
     </div>
-  </AlertBox>
+  </CmkAlertBox>
   <div v-else>
     <slot></slot>
   </div>

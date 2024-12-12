@@ -5,17 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import AlertBox from '@/components/AlertBox.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>
 
 <template>
   <ul>
-    <li><AlertBox variant="success">success</AlertBox></li>
-    <li><AlertBox variant="info">info</AlertBox></li>
-    <li><AlertBox variant="warning">warning</AlertBox></li>
-    <li><AlertBox variant="error">error</AlertBox></li>
+    <li><CmkAlertBox variant="success">success</CmkAlertBox></li>
+    <li><CmkAlertBox variant="info">info</CmkAlertBox></li>
+    <li><CmkAlertBox variant="warning">warning</CmkAlertBox></li>
+    <li><CmkAlertBox variant="error">error</CmkAlertBox></li>
   </ul>
 </template>
 

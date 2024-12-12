@@ -116,7 +116,7 @@ setup_venv() {
     # Further: uv seems to fall back to clang, see https://github.com/astral-sh/uv/issues/8036
     CC="gcc" ${BAZEL_CMD} run //:create_venv
     # shellcheck source=/dev/null
-    source "$("$BAZEL_CMD" info workspace)"/.venv/bin/activate
+    source "$(bazel info workspace)"/.venv/bin/activate
     SETUP_VENV_RAN=yes
 }
 
@@ -126,14 +126,14 @@ run_clean() {
 }
 
 run_unit_tests() {
-    "${BAZEL_CMD}" test "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
+    "${BAZEL_CMD}" test "/${PWD#"$(bazel info workspace)"}:all"
 }
 
 run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
         --diff \
         --machine \
         :all
@@ -141,7 +141,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy "/${PWD#"$("${BAZEL_CMD}" info workspace)"}:all"
+    "${BAZEL_CMD}" build --config=mypy "/${PWD#"$(bazel info workspace)"}:all"
 }
 
 run_ruff() {
@@ -160,7 +160,7 @@ run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
     "${BAZEL_CMD}" lint \
         --aspect:interactive=false \
-        --aspect:config="$("$BAZEL_CMD" info workspace)"/.aspect/cli/config_isort.yaml \
+        --aspect:config="$(bazel info workspace)"/.aspect/cli/config_isort.yaml \
         --fix \
         :all
     "${BAZEL_CMD}" run :format "$(realpath cmk)" "$(realpath tests)"

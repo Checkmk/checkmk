@@ -24,8 +24,25 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-aws-cli.sh \
         install-buildifier.sh \
         install-taplo.sh \
+        install-bazel.sh \
+        install-cmake.sh \
+        install-cmk-dependencies.sh \
+        install-gdb.sh \
+        install-gnu-toolchain.sh \
+        install-openssl.sh \
+        install-patchelf.sh \
+        install-pipenv.sh \
+        install-protobuf-cpp.sh \
+        install-python.sh \
+        install-rust-cargo.sh \
+        install-valgrind.sh \
+        ci.bazelrc \
         "${TARGET_DIR}"
 )
+
+cp \
+    "${REPO_ROOT}/omd/distros/"*.mk \
+    "${TARGET_DIR}"
 
 cp \
     "${REPO_ROOT}/defines/dev-images/entrypoint.sh" \

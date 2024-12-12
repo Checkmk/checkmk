@@ -105,8 +105,8 @@ main() {
 
     # Create home directory manually instead of doing this on user creation,
     # because it might already exist with wrong ownership
-    mkdir -p ${HOMEDIR}
-    chown -R cmk-agent:cmk-agent ${HOMEDIR}
+    mkdir -p "${HOMEDIR}"
+    chown -R cmk-agent:cmk-agent "${HOMEDIR}"
 
     [ -n "${MK_INSTALLDIR}" ] && _activate_single_dir
 

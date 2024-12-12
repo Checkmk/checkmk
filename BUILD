@@ -1,18 +1,28 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 
-exports_files([
-    "pyproject.toml",
-    "requirements_runtime.txt",
-    "requirements_dev.txt",
-    "requirements_all_lock.txt",
-])
+exports_files(
+    [
+        "pyproject.toml",
+        "requirements_runtime.txt",
+        "requirements_dev.txt",
+        "requirements_all_lock.txt",
+    ],
+)
+
+copy_to_directory(
+    name = "werks_group",
+    srcs = glob([".werks/*"]),
+    out_dir = "werks_dir",
+    visibility = ["//:__subpackages__"],
+)
 
 string_flag(
     name = "cmk_version",

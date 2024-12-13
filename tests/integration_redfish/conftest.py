@@ -34,15 +34,21 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def redfish_hosts(site: Site, dell_server_port: int, raritan_server_port: int) -> Iterator[Hosts]:
+def redfish_hosts(
+    site: Site, dell_server_port: int, hpe_server_port: int, raritan_server_port: int
+) -> Iterator[Hosts]:
     hosts = Hosts(
         dell_ok=HostName("blackfin-snapper"),
+        hpe_ok=HostName("queen-snapper"),
         raritan_ok=HostName("sockeye-salmon"),
     )
 
     created = {
         create_special_agent_host(site, hosts.dell_ok): create_special_agent_rule(
             site, hosts.dell_ok, "redfish", port=dell_server_port
+        ),
+        create_special_agent_host(site, hosts.hpe_ok): create_special_agent_rule(
+            site, hosts.hpe_ok, "redfish", port=hpe_server_port
         ),
         create_special_agent_host(site, hosts.raritan_ok): create_special_agent_rule(
             site, hosts.raritan_ok, "redfish_power", port=raritan_server_port
@@ -69,9 +75,14 @@ def _run_mockup_dell_server(tmp_dump_dir: Path) -> Iterator[int]:
     yield from _make_mockup_server(tmp_dump_dir, "dell", 8080)
 
 
+@pytest.fixture(scope="session", name="hpe_server_port")
+def _run_mockup_hpe_server(tmp_dump_dir: Path) -> Iterator[int]:
+    yield from _make_mockup_server(tmp_dump_dir, "hpe", 8081)
+
+
 @pytest.fixture(scope="session", name="raritan_server_port")
 def _run_mockup_raritan_server(tmp_dump_dir: Path) -> Iterator[int]:
-    yield from _make_mockup_server(tmp_dump_dir, "raritan_pdu", 8081)
+    yield from _make_mockup_server(tmp_dump_dir, "raritan_pdu", 8082)
 
 
 @pytest.fixture(scope="session", name="tmp_dump_dir")

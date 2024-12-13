@@ -25,6 +25,7 @@ MOCKUP_DUMPS_DIR = _THIS_DIR / "mockup-server/dumps"
 @dataclass(frozen=True)
 class Hosts:
     dell_ok: HostName
+    hpe_ok: HostName
     raritan_ok: HostName
 
 

@@ -134,18 +134,11 @@ http_archive(
     ],
 )
 
-OTEL_COL_VERSION = "0.113.0"
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
-OTEL_COL_FILENAME = "otelcol_" + OTEL_COL_VERSION + "_linux_amd64.tar.gz"
-
-# TODO: Conditionally load non-free packages, they are not available in the open source edition
-# It seems the approach via repo_license.bzl:http_archive_non_free does not work
-http_archive(
+http_file(
     name = "otel-collector",
-    build_file = "//non-free/packages/otel-collector:BUILD",
-    sha256 = "c327cc46b27df885d82d53ff59f096d38bca935f3431aee58b49810711b2a900",
-    urls = [
-        "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v" + OTEL_COL_VERSION + "/" + OTEL_COL_FILENAME,
-        UPSTREAM_MIRROR_URL + OTEL_COL_FILENAME,
-    ],
+    sha256 = "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
+    url = "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
+    executable=True,
 )

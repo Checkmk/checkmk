@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "225b907d03f484f01ceb8df51e2c10fc0d5b6fd0323b2a5beaf3405069a21c9b",
+  "moduleFileHash": "bea8388d8b55fb59e21cb4001a9e43e1bfc86f4b6066b86b9c0492d9c59fa607",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -102,21 +102,18 @@
               }
             },
             {
-              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
               "attributeValues": {
-                "build_file": "//non-free/packages/otel-collector:BUILD",
-                "sha256": "c327cc46b27df885d82d53ff59f096d38bca935f3431aee58b49810711b2a900",
-                "urls": [
-                  "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.113.0/otelcol_0.113.0_linux_amd64.tar.gz",
-                  "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol_0.113.0_linux_amd64.tar.gz"
-                ],
+                "sha256": "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
+                "url": "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
+                "executable": true,
                 "name": "otel-collector"
               },
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 143,
-                "column": 13
+                "line": 139,
+                "column": 10
               }
             }
           ],

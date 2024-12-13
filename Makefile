@@ -250,7 +250,7 @@ sw-documentation-docker:
 
 # .venv is PHONY because the dependencies are resolved by bazel
 .venv: Pipfile.lock
-	if ! bazel test //:requirements_test > /dev/null; then \
+	@if ! bazel test //:requirements_test > /dev/null; then \
 		if [ "${CI}" == "true" ]; then \
 			echo "A locking of requirements_lock.txt is needed, but we're executed in the CI, where this should not be done."; \
 			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \

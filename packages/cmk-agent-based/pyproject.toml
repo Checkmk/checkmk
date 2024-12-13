@@ -16,5 +16,6 @@ dependencies = { file = ["requirements.txt"] }
 [tool.bandit]
 
 [tool.pytest.ini_options]
-consider_namespace_packages = true
-testpaths = ["tests"]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
+addopts = "--doctest-modules --import-mode=importlib"

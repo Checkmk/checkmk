@@ -120,7 +120,7 @@ def _get_separator(key: str) -> str:
     return {"class": " ", "style": "; "}.get(key, "_")
 
 
-def normalize_css_spec(css_classes: CSSSpec) -> list[str]:
+def normalize_css_spec(css_classes: CSSSpec | str | None) -> list[str]:
     if isinstance(css_classes, list):
         return [c for c in css_classes if c is not None]
 

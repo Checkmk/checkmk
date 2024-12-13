@@ -45,6 +45,7 @@ def test_registered_automations() -> None:
         "get-check-information",
         "get-configuration",
         "get-section-information",
+        "get-service-name",
         "inventory",
         "notification-analyse",
         "notification-get-bulks",

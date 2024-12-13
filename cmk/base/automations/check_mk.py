@@ -92,6 +92,7 @@ from cmk.automations.results import (
     GetCheckInformationResult,
     GetConfigurationResult,
     GetSectionInformationResult,
+    GetServiceNameResult,
     GetServicesLabelsResult,
     NotificationAnalyseResult,
     NotificationGetBulksResult,
@@ -1518,6 +1519,51 @@ class AutomationGetServicesLabels(Automation):
 
 
 automations.register(AutomationGetServicesLabels())
+
+
+class AutomationGetServiceName(Automation):
+    cmd = "get-service-name"
+
+    def execute(
+        self,
+        args: list[str],
+        plugins: AgentBasedPlugins | None,
+        loaded_config: config.LoadedConfigFragment | None,
+    ) -> GetServiceNameResult:
+        if plugins is None:
+            plugins = load_plugins()
+        host_name, check_plugin_name, item = (
+            HostName(args[0]),
+            CheckPluginName(args[1]),
+            ast.literal_eval(args[2]),
+        )
+        if loaded_config is None:
+            loaded_config = load_config(
+                discovery_rulesets=agent_based_register.extract_known_discovery_rulesets(plugins)
+            )
+        ruleset_matcher = loaded_config.config_cache.ruleset_matcher
+        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        return GetServiceNameResult(
+            config.service_description(
+                ruleset_matcher,
+                host_name,
+                check_plugin_name,
+                service_name_template=(
+                    None
+                    if (
+                        p := agent_based_register.get_check_plugin(
+                            check_plugin_name, plugins.check_plugins
+                        )
+                    )
+                    is None
+                    else p.service_name
+                ),
+                item=item,
+            )
+        )
+
+
+automations.register(AutomationGetServiceName())
 
 
 @dataclass

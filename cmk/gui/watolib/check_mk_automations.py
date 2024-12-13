@@ -15,7 +15,7 @@ from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, Labels
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import Item, ServiceName
 
 from cmk.events.event_context import EventContext
 
@@ -282,6 +282,17 @@ def get_services_labels(
             args=[host_name, *service_names],
         ),
         results.GetServicesLabelsResult,
+    )
+
+
+def get_service_name(
+    host_name: HostName, check_plugin_name: CheckPluginName, item: Item
+) -> results.GetServiceNameResult:
+    return _deserialize(
+        _automation_serialized(
+            "get-service-name", args=[host_name, str(check_plugin_name), repr(item)]
+        ),
+        results.GetServiceNameResult,
     )
 
 

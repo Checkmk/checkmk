@@ -344,6 +344,18 @@ result_type_registry.register(GetServicesLabelsResult)
 
 
 @dataclass
+class GetServiceNameResult(ABCAutomationResult):
+    service_name: str
+
+    @staticmethod
+    def automation_call() -> str:
+        return "get-service-name"
+
+
+result_type_registry.register(GetServiceNameResult)
+
+
+@dataclass
 class AnalyseHostResult(ABCAutomationResult):
     labels: Labels
     label_sources: LabelSources

@@ -126,7 +126,7 @@ run_clean() {
 }
 
 run_unit_tests() {
-    "${BAZEL_CMD}" test "/${PWD#"$(bazel info workspace)"}:all"
+    "${BAZEL_CMD}" test :all
 }
 
 run_check_format() {
@@ -141,7 +141,7 @@ run_check_format() {
 }
 
 run_mypy() {
-    "${BAZEL_CMD}" build --config=mypy "/${PWD#"$(bazel info workspace)"}:all"
+    "${BAZEL_CMD}" build --config=mypy :all
 }
 
 run_ruff() {

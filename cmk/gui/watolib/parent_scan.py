@@ -23,7 +23,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -83,7 +82,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
     ) -> None:
-        with SuperUserContext():
+        with job_interface.gui_context():
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 

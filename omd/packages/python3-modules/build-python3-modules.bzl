@@ -59,7 +59,7 @@ build_cmd = """
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
-    # Keep in sync with scripts/run-pipenv
+    # Keep in sync with scripts/run-uvenv
     export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4
     export NPY_NUM_BUILD_JOBS=4
 

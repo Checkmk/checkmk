@@ -108,7 +108,6 @@ pip_compile(
 
 write_file(
     # WHY?
-    # * we used to install the packages as editable in our pipenv
     # * when creating a venv with bazel, we need to have everything sandbox-ed in bazel
     # * however we still want to use the packages somehow editable
     name = "sitecustomize",

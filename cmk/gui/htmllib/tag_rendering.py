@@ -6,7 +6,6 @@
 
 import re
 from collections.abc import Iterator
-from typing import cast
 
 from cmk.utils import urls
 
@@ -30,6 +29,8 @@ __all__ = [
     "render_element",
     "normalize_css_spec",
 ]
+
+_SUPPORTED_CSS_CLASS_KEYS = frozenset(["class_", "css", "cssclass", "class"])
 
 
 def render_start_tag(
@@ -65,11 +66,9 @@ def render_element(
 
 
 def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
-    if css := _get_normalized_css_classes(attrs):
-        attrs["class"] = css
-
-    yield from (f' {key}="{value}"' for key, value in _extract_attrs(attrs))
-    yield from (f" {key}=''" for key in _extract_options(attrs))
+    normalized = _attrs_with_normalized_class(attrs)
+    yield from (f' {key}="{value}"' for key, value in _extract_attrs(normalized))
+    yield from (f" {key}=''" for key in _extract_options(normalized))
 
 
 def _extract_attrs(
@@ -130,11 +129,17 @@ def normalize_css_spec(css_classes: CSSSpec | str | None) -> list[str]:
             return []
 
 
-def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> list[str]:
-    # make class attribute foolproof
-    css: list[str] = []
-    for k in ["class_", "css", "cssclass", "class"]:
-        if k in attrs:
-            cls_spec = cast(CSSSpec, attrs.pop(k))
-            css += normalize_css_spec(cls_spec)
-    return css
+def _attrs_with_normalized_class(attrs: HTMLTagAttributes) -> HTMLTagAttributes:
+    normalized = {}
+    css = []
+
+    for key, value in attrs.items():
+        if key in _SUPPORTED_CSS_CLASS_KEYS:
+            css += normalize_css_spec(value)
+        else:
+            normalized[key] = value
+
+    if css:
+        normalized["class"] = css
+
+    return normalized

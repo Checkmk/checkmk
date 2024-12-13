@@ -148,10 +148,13 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
+from cmk import trace
 from cmk.rulesets.v1.form_specs import FormSpec
 
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
+
+tracer = trace.get_tracer()
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -1314,39 +1317,50 @@ class ModeEditRuleset(WatoMode):
         service_name: ServiceName | None,
         rules: Sequence[Rule],
     ) -> dict[str, RuleMatchResult]:
-        service_labels = (
-            analyse_service(
-                site_id,
-                host_name,
-                service_name,
-            ).labels
-            if service_name
-            else {}
-        )
-        self._get_host_labels_from_remote_site()
-
-        rule_matches = {
-            rule.id: rule.matches(
-                host_name,
-                item,
-                service_name,
-                only_host_conditions=False,
-                service_labels=service_labels,
+        with tracer.start_as_current_span(
+            "ModeEditRuleset_analyze_rule_matching",
+            attributes={
+                "cmk.gui.site_id": site_id,
+                "cmk.gui.host_name": host_name,
+                "cmk.gui.item": repr(item),
+                "cmk.gui.service_name": repr(service_name),
+            },
+        ) as span:
+            service_labels = (
+                analyse_service(
+                    site_id,
+                    host_name,
+                    service_name,
+                ).labels
+                if service_name
+                else {}
             )
-            for rule in rules
-        }
+            span.set_attribute("cmk.service_labels", repr(service_labels))
+            self._get_host_labels_from_remote_site()
 
-        match_state = MatchState({"matched": False, "keys": set()})
-        return {
-            rule.id: self._make_match_result(
-                match_state,
-                rule,
-                rule_matches[rule.id],
-                host_name,
-                item,
-            )
-            for rule in rules
-        }
+            rule_matches = {
+                rule.id: rule.matches(
+                    host_name,
+                    item,
+                    service_name,
+                    only_host_conditions=False,
+                    service_labels=service_labels,
+                )
+                for rule in rules
+            }
+            span.set_attribute("cmk.gui.rule_matches", repr(rule_matches))
+
+            match_state = MatchState({"matched": False, "keys": set()})
+            return {
+                rule.id: self._make_match_result(
+                    match_state,
+                    rule,
+                    rule_matches[rule.id],
+                    host_name,
+                    item,
+                )
+                for rule in rules
+            }
 
     def _make_match_result(
         self,

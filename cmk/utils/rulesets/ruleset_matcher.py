@@ -36,7 +36,11 @@ from cmk.utils.regex import combine_patterns, regex
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
+from cmk import trace
+
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
+
+tracer = trace.get_tracer()
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
@@ -282,15 +286,33 @@ class RulesetMatcher:
         )
 
     def _checkgroup_match_object(
-        self, hostname: HostName, description: ServiceName, item: Item
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        item: Item,
+        span: trace.Span | None = None,
     ) -> RulesetMatchObject:
         cache_id = (hostname, description, item)
+        if span:
+            span.set_attribute("cmk.cache_id", repr(cache_id))
         with contextlib.suppress(KeyError):
             return self.__service_match_obj[cache_id]
 
+        match_object = RulesetMatchObject(
+            hostname,
+            item,
+            service_labels := self.labels_of_service(
+                hostname,
+                description,
+            ),
+        )
+        if span:
+            span.set_attribute("cmk.service_labels", repr(service_labels))
+            span.set_attribute("cmk.match_object", repr(match_object))
+
         return self.__service_match_obj.setdefault(
             cache_id,
-            RulesetMatchObject(hostname, item, self.labels_of_service(hostname, description)),
+            match_object,
         )
 
     def get_service_bool_value(
@@ -346,11 +368,26 @@ class RulesetMatcher:
         item: Item,
         ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> list[TRuleValue]:
-        return list(
-            self.get_service_ruleset_values(
-                self._checkgroup_match_object(hostname, description, item), ruleset
+        with tracer.start_as_current_span(
+            "RulesetMatcher_get_checkgroup_ruleset_values",
+            attributes={
+                "cmk.host_name": hostname,
+                "cmk.service_name": description,
+                "cmk.item": repr(item),
+                "cmk.ruleset": repr(ruleset),
+            },
+        ) as span:
+            return list(
+                self.get_service_ruleset_values(
+                    self._checkgroup_match_object(
+                        hostname,
+                        description,
+                        item,
+                        span,
+                    ),
+                    ruleset,
+                )
             )
-        )
 
     def get_service_ruleset_values(
         self,

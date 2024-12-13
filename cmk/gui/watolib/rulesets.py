@@ -55,6 +55,7 @@ from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 
+from cmk import trace
 from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 
 from .changes import add_change
@@ -79,6 +80,8 @@ from .rulespecs import (
 from .simple_config_file import WatoConfigFile
 from .timeperiods import TimeperiodSelection, TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
+
+tracer = trace.get_tracer()
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
@@ -1298,43 +1301,55 @@ class Rule:
         service_labels: Labels,
     ) -> bool:
         """Whether a given host or service/item matches this rule"""
-        matcher = _get_ruleset_matcher()
-        ruleset = self.to_single_base_ruleset()
+        with tracer.start_as_current_span(
+            "Rule_matches",
+            attributes={
+                "cmk.gui.host_name": hostname,
+                "cmk.gui.svc_desc_or_item": repr(svc_desc_or_item),
+                "cmk.gui.service_name": repr(svc_desc),
+                "cmk.gui.only_host_conditions": only_host_conditions,
+                "cmk.gui.service_labels": repr(service_labels),
+            },
+        ) as span:
+            matcher = _get_ruleset_matcher()
+            ruleset = self.to_single_base_ruleset()
 
-        def bool_(rules: Sequence[object]) -> bool:
-            """Just for the signature, make sure we don't call `bool` on a generator"""
-            return bool(rules)
+            span.set_attribute("cmk.gui.ruleset", repr(ruleset))
 
-        # BE AWARE: Depending on the service ruleset the service_description of
-        # the rules is only a check item or a full service name. For
-        # example the check parameters rulesets only use the item, and other
-        # service rulesets like disabled services ruleset use full service
-        # descriptions.
-        #
-        # The service_description attribute of the match_object must be set to
-        # either the item or the full service name, depending on the
-        # ruleset, but the labels of a service need to be gathered using the
-        # real service name.
-        if not self.ruleset.rulespec.is_for_services or only_host_conditions:
-            return bool_(matcher.get_host_values(hostname, ruleset))
+            def bool_(rules: Sequence[object]) -> bool:
+                """Just for the signature, make sure we don't call `bool` on a generator"""
+                return bool(rules)
 
-        match self.ruleset.item_type():
-            case "service":
-                if svc_desc_or_item is None:
-                    raise TypeError("svc_desc_or_item must be set for service rulesets")
-                return bool_(matcher.service_extra_conf(hostname, svc_desc_or_item, ruleset))
-            case "item":
-                if svc_desc is None:
-                    raise TypeError("svc_desc_or_item must be set for service rulesets")
-                return bool_(
-                    list(
-                        matcher.get_checkgroup_ruleset_values(
-                            hostname, svc_desc, svc_desc_or_item, ruleset
+            # BE AWARE: Depending on the service ruleset the service_description of
+            # the rules is only a check item or a full service name. For
+            # example the check parameters rulesets only use the item, and other
+            # service rulesets like disabled services ruleset use full service
+            # descriptions.
+            #
+            # The service_description attribute of the match_object must be set to
+            # either the item or the full service name, depending on the
+            # ruleset, but the labels of a service need to be gathered using the
+            # real service name.
+            if not self.ruleset.rulespec.is_for_services or only_host_conditions:
+                return bool_(matcher.get_host_values(hostname, ruleset))
+
+            match self.ruleset.item_type():
+                case "service":
+                    if svc_desc_or_item is None:
+                        raise TypeError("svc_desc_or_item must be set for service rulesets")
+                    return bool_(matcher.service_extra_conf(hostname, svc_desc_or_item, ruleset))
+                case "item":
+                    if svc_desc is None:
+                        raise TypeError("svc_desc_or_item must be set for service rulesets")
+                    return bool_(
+                        list(
+                            matcher.get_checkgroup_ruleset_values(
+                                hostname, svc_desc, svc_desc_or_item, ruleset
+                            )
                         )
                     )
-                )
-            case None:
-                return bool_(matcher.service_extra_conf(hostname, None, ruleset))
+                case None:
+                    return bool_(matcher.service_extra_conf(hostname, None, ruleset))
 
     def matches_search(  # pylint: disable=too-many-branches
         self,

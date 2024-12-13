@@ -275,6 +275,11 @@ class MKDockerClient(docker.DockerClient):  # type: ignore[misc]
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
         elif config["container_id"] == "long":
             self.all_containers = {c.attrs["Id"]: c for c in all_containers}
+        elif config["container_id"] == "combined":
+            self.all_containers = {
+                f'{os.uname()[1].split(".")[0]}_{c.attrs["Name"].lstrip("/")}': c
+                for c in all_containers
+            }
         else:
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self._env = {"REMOTE": os.getenv("REMOTE", "")}

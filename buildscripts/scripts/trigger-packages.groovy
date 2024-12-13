@@ -15,6 +15,7 @@ def build_stages(packages_file, force_build) {
                 stage(p.name) {
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                         def job = upstream_build(
+                            omit_build_venv: true,
                             download: false,
                             relative_job_name: "builders/build-cmk-package",
                             force_build: force_build,

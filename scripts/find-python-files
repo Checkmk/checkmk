@@ -38,11 +38,13 @@ get_candidates_from_filesystem() {
         SEARCH+=" non-free/cmk-update-agent"
         SEARCH+=" omd/packages/enterprise/alert_handlers"
         SEARCH+=" omd/packages/enterprise/bin"
-        SEARCH+=" packages/cmc/test"
+        SEARCH+=" omd/packages/enterprise/saml2/attribute_mappings"
+        SEARCH+=" omd/packages/enterprise/scripts/update-pre-hooks"
     fi
     SEARCH+=" locale"
     SEARCH+=" notifications"
     # Do not search whole omd/ because it may contain unpacked sub-packages
+    SEARCH+=" omd/license_sources"
     SEARCH+=" omd/packages/appliance"
     SEARCH+=" omd/packages/maintenance"
     SEARCH+=" omd/packages/omd"

@@ -57,11 +57,13 @@ GPL_HEADER_NOTIFICATION = re.compile(
 
 ignored_files = [
     "cmk/notification_plugins/ilert.py",
-    "notifications/ilert",
     "cmk/notification_plugins/signl4.py",
+    "notifications/ilert",
     "notifications/signl4",
-    "omd/packages/maintenance/merge-crontabs",
     "omd/packages/Python/pip",
+    "omd/packages/maintenance/merge-crontabs",
+    "tests/integration_redfish/mockup-server/redfishMockupServer.py",
+    "tests/integration_redfish/mockup-server/rfSsdpServer.py",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories

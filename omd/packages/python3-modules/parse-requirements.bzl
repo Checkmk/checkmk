@@ -50,7 +50,6 @@ def parse(content):
       options: List of pip option lines
     """
     content = content.replace("\r", "")
-
     result = struct(
         requirements = [],
         options = [],

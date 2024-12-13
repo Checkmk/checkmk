@@ -8,8 +8,6 @@ load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
 
 exports_files([
-    "Pipfile",
-    "Pipfile.lock",
     "pyproject.toml",
     "requirements_runtime.txt",
     "requirements_dev.txt",

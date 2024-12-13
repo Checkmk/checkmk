@@ -193,29 +193,11 @@ load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_py
 
 create_python_requirements(
     name = "python_modules",
-    # TODO: differentiate between own code and things we get from other omd packages
     ignored_modules = [
-        # Third party modules with special handling
-        "rrdtool",  # don't build with pip -> see rrdtool omd packages
-        # Our own packages
-        "agent-based",
-        "agent-receiver",
-        "ccc",
-        "crypto",
-        "graphing",
-        "messaging",
-        "mkp-tool",
-        "rulesets",
-        "server-side-calls",
-        "werks",
-        "trace",
-        "livestatus-client",
         # Broken third party packages
         "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
-    # TODO: Use the already existing requirements_runtime_lock.txt generated from requirements_runtime
-    pipfile_lock = "//:Pipfile.lock",
-    requirements = "//:Pipfile",
+    requirements_lock = "//:requirements_runtime_lock.txt",
 )
 
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")

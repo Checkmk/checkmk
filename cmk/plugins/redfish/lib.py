@@ -5,14 +5,14 @@
 """functions for all redfish components"""
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple
 
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 from cmk.rulesets.v1 import Title
 
-SectionSystem = Sequence[Mapping[str, Any]]
+SectionSystem = Mapping[str, Mapping[str, Any]]
 
 Levels = tuple[Literal["fixed"], tuple[float, float]]
 RedfishAPIData = Mapping[str, Any]

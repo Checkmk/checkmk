@@ -18,29 +18,11 @@ from cmk.plugins.redfish.lib import (
 
 
 def discover_redfish_memory_summary(section: SectionSystem) -> DiscoveryResult:
-    if len(section) == 1:
-        for element in section:
-            if "MemorySummary" in element.keys():
-                yield Service(item="Summary")
-    else:
-        for element in section:
-            if "MemorySummary" in element.keys():
-                item = f"Summary {element.get('Id', '0')}"
-                yield Service(item=item)
+    yield from (Service(item=item) for item in section)
 
 
 def check_redfish_memory_summary(item: str, section: SectionSystem) -> CheckResult:
-    result = None
-    if len(section) == 1:
-        result = section[0].get("MemorySummary")
-    else:
-        for element in section:
-            if "MemorySummary" in element.keys():
-                if item == f"Summary {element.get('Id', '0')}":
-                    result = element.get("MemorySummary")
-                    break
-
-    if not result:
+    if not (result := section.get(item)):
         return
 
     state = result.get("Status", {"Health": "Unknown"})
@@ -52,7 +34,7 @@ def check_redfish_memory_summary(item: str, section: SectionSystem) -> CheckResu
 
 check_plugin_redfish_memory_summary = CheckPlugin(
     name="redfish_memory_summary",
-    service_name="Memory %s",
+    service_name="Memory Summary %s",
     sections=["redfish_system"],
     discovery_function=discover_redfish_memory_summary,
     check_function=check_redfish_memory_summary,

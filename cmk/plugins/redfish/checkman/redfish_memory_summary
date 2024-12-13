@@ -10,5 +10,4 @@ discovery:
  One service is created for each memory module of the device.
 
 item:
- In case only one service is discovered the item is "Summary", in case more than one service is
- discovered, the item is "Summary <ID>".
+ The elements "Id".

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
-from typing import Any, Dict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -25,10 +23,7 @@ def parse_redfish_system(string_table: StringTable) -> SectionSystem | None:
         return None
 
     raw = json.loads(string_table[0][0])
-    return [{str(k): v for k, v in entry.items()} for entry in raw]
-
-
-Section = dict[str, Mapping[str, Any]]
+    return {str(entry.get("Id", "0")): {str(k): v for k, v in entry.items()} for entry in raw}
 
 
 agent_section_apt = AgentSection(
@@ -39,29 +34,11 @@ agent_section_apt = AgentSection(
 
 
 def discover_redfish_system(section: SectionSystem) -> DiscoveryResult:
-    if not section:
-        return
-    if len(section) == 1:
-        yield Service(item="state")
-    else:
-        for element in section:
-            item = f"state {element.get('Id', '0')}"
-            yield Service(item=item)
+    yield from (Service(item=item) for item in section)
 
 
 def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
-    if not section:
-        return
-    data = None
-    if len(section) == 1:
-        data = section[0]
-    else:
-        for element in section:
-            if f"state {element.get('Id')}" == item:
-                data = element
-                break
-
-    if not data:
+    if not (data := section.get(item)):
         return
 
     state = data.get("Status", {"Health": "Unknown"})
@@ -73,7 +50,7 @@ def check_redfish_system(item: str, section: SectionSystem) -> CheckResult:
 
 check_plugin_redfish_system = CheckPlugin(
     name="redfish_system",
-    service_name="System %s",
+    service_name="System state %s",
     sections=["redfish_system"],
     discovery_function=discover_redfish_system,
     check_function=check_redfish_system,

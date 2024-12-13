@@ -10,4 +10,4 @@ discovery:
  One service per system is created.
 
 item:
- The literal "state" if only one system is discovered, otherwise "state <system ID>".
+ The elements "Id".

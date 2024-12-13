@@ -19,6 +19,9 @@ dependencies = { file = ["requirements.txt"] }
 target-version = "py312"
 line-length = 100
 
+[tool.ruff.lint.isort]
+order-by-type = false
+
 [tool.mypy]
 packages = ["cmk", "tests"]
 strict = true

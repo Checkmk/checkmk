@@ -56,7 +56,7 @@ def _agent_redfish_arguments(
     if params.cached_sections is not None:
         cache_sections = []
         for n, m in params.cached_sections.items():
-            cache_sections.append(f"{n}-{m}")
+            cache_sections.append(f"{n.removeprefix("cache_time_")}-{m}")
         command_arguments += ["-c", ",".join(cache_sections)]
 
     command_arguments.append(host_config.primary_ip_config.address or host_config.name)

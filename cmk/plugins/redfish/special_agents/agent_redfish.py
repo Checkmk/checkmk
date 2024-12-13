@@ -68,52 +68,6 @@ class CachedSectionWriter(SectionManager):
 
 
 @dataclass
-class CachePerSection:
-    """Cache settings for every section"""
-
-    Memory: int | None = None
-    Power: int | None = None
-    Processors: int | None = None
-    Thermal: int | None = None
-    FirmwareInventory: int | None = 9600
-    NetworkAdapters: int | None = None
-    NetworkInterfaces: int | None = None
-    EthernetInterfaces: int | None = None
-    Storage: int | None = None
-    ArrayControllers: int | None = None
-    SmartStorage: int | None = None
-    HostBusAdapters: int | None = None
-    PhysicalDrives: int | None = None
-    LogicalDrives: int | None = None
-    Drives: int | None = None
-    Volumes: int | None = None
-    SimpleStorage: int | None = None
-
-
-@dataclass
-class CacheTimestampPerSection:
-    """Cache timestamp if section is cached"""
-
-    Memory: int | None = None
-    Power: int | None = None
-    Processors: int | None = None
-    Thermal: int | None = None
-    FirmwareInventory: int | None = None
-    NetworkAdapters: int | None = None
-    NetworkInterfaces: int | None = None
-    EthernetInterfaces: int | None = None
-    Storage: int | None = None
-    ArrayControllers: int | None = None
-    SmartStorage: int | None = None
-    HostBusAdapters: int | None = None
-    PhysicalDrives: int | None = None
-    LogicalDrives: int | None = None
-    Drives: int | None = None
-    Volumes: int | None = None
-    SimpleStorage: int | None = None
-
-
-@dataclass
 class VendorData:
     """Vendor data object"""
 
@@ -190,8 +144,8 @@ class RedfishData:
     use_cache: bool
     redfish_connection: RedfishClient
     sections: set[str] = field(default_factory=set)
-    cache_per_section: CachePerSection | None = None
-    cache_timestamp_per_section: CacheTimestampPerSection | None = None
+    cache_per_section: Mapping[str, int] = field(default_factory=dict)
+    cache_timestamp_per_section: Mapping[str, int] = field(default_factory=dict)
     manager_data: Mapping[str, object] | None = None
     chassis_data: Mapping[str, object] | None = None
     base_data: Mapping[str, Any] = field(default_factory=dict)
@@ -482,11 +436,11 @@ def process_result(redfishobj: RedfishData) -> None:
     """process and output a fetched result set"""
     result = redfishobj.section_data
     for element in list(result.keys()):
-        if getattr(redfishobj.cache_timestamp_per_section, element):
+        if cachetime := redfishobj.cache_timestamp_per_section.get(element):
             with CachedSectionWriter(
                 f"redfish_{element.lower()}",
-                cachetime=getattr(redfishobj.cache_timestamp_per_section, element),
-                validity=getattr(redfishobj.cache_per_section, element),
+                cachetime=cachetime,
+                validity=redfishobj.cache_per_section.get(element),
             ) as w:
                 if isinstance(result.get(element), list):
                     for entry in result[element]:
@@ -752,9 +706,9 @@ def _make_cached_section_path(hostname: str, section: str) -> Path:
 def store_section_data(redfishobj: RedfishData) -> None:
     """save section data to file"""
     for section in redfishobj.section_data.keys():
-        if not getattr(redfishobj.cache_per_section, section):
+        if not redfishobj.cache_per_section.get(section):
             continue
-        if getattr(redfishobj.cache_timestamp_per_section, section):
+        if redfishobj.cache_timestamp_per_section.get(section):
             continue
 
         store_path = _make_cached_section_path(redfishobj.hostname, section)
@@ -772,11 +726,8 @@ def store_section_data(redfishobj: RedfishData) -> None:
 
 def load_section_data(redfishobj: RedfishData) -> RedfishData:
     """load section data from file"""
-    timestamps = CacheTimestampPerSection()
-    for key, value in redfishobj.cache_per_section.__dict__.items():
-        if not value:
-            continue
-
+    timestamps = {}
+    for key, value in redfishobj.cache_per_section.items():
         store_path = _make_cached_section_path(redfishobj.hostname, key)
         try:
             raw = store_path.read_text()
@@ -787,7 +738,7 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
             current_time = int(time.time())
             if store_data["timestamp"] + value < current_time:
                 continue
-            setattr(timestamps, key, store_data["timestamp"])
+            timestamps[key] = store_data["timestamp"]
             redfishobj.section_data.setdefault(key, store_data["data"])
             redfishobj.sections.remove(key)
 
@@ -855,13 +806,10 @@ def agent_redfish_main(args: Args) -> int:
     redfishobj = get_session(args)
     sections = args.sections.split(",")
     sections_disabled = args.disabled_sections.split(",")
-    cached_sections = CachePerSection()
-    for element in args.cached_sections.split(","):
-        if len(element.split("-")) != 2:
-            continue
-        n, m = element.split("-")
-        setattr(cached_sections, n.replace("cache_time_", ""), int(m))
-    redfishobj.cache_per_section = cached_sections
+    redfishobj.cache_per_section = {
+        n: int(m)
+        for n, m, *_ in (element.split("-") for element in args.cached_sections.split(","))
+    }
     redfishobj.sections = set(sections).difference(sections_disabled)
     get_information(redfishobj)
     # logout not needed anymore if no problem - session saved to file

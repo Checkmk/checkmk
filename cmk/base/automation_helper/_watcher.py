@@ -127,7 +127,7 @@ _SCHEDULES = (
         ignore_directories=True,
         recursive=True,
         relative_path="etc/check_mk/conf.d",
-        patterns=["*.mk"],
+        patterns=["*.mk", "*.pkl"],
     ),
     Schedule(
         ignore_directories=True,

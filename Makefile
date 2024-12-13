@@ -27,7 +27,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         help install mrproper mrclean \
         packages setup setversion version openapi \
-        requirements_lock.txt protobuf-files frontend-vue .venv
+        requirements_all_lock.txt protobuf-files frontend-vue .venv
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -249,14 +249,14 @@ sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-uvenv make -C doc/documentation html
 
 # .venv is PHONY because the dependencies are resolved by bazel
-.venv: Pipfile.lock
-	@if ! bazel test //:requirements_test > /dev/null; then \
+.venv:
+	@if ! bazel test //:requirements_all_test > /dev/null; then \
 		if [ "${CI}" == "true" ]; then \
-			echo "A locking of requirements_lock.txt is needed, but we're executed in the CI, where this should not be done."; \
+			echo "A locking of requirements_all_lock.txt is needed, but we're executed in the CI, where this should not be done."; \
 			echo "It seems you forgot to commit the new lock file. Regenerate with e.g.:"; \
 			echo "bazel run //:requirements.update"; \
 			exit 1; \
 		fi; \
-		bazel run //:requirements.update; \
+		bazel run //:requirements_all.update && bazel run //:requirements_runtime.update; \
 	fi; \
 	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

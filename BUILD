@@ -11,9 +11,9 @@ exports_files([
     "Pipfile",
     "Pipfile.lock",
     "pyproject.toml",
-    "requirements.txt",
+    "requirements_runtime.txt",
     "requirements_dev.txt",
-    "requirements_lock.txt",
+    "requirements_all_lock.txt",
 ])
 
 string_flag(
@@ -74,34 +74,56 @@ refresh_compile_commands(
     },
 )
 
+genrule(
+    name = "_append_dev_dependencies",
+    srcs = [
+        ":requirements_runtime_lock.txt",
+    ],
+    outs = ["requirements_all.txt"],
+    cmd = "cat $< > $@; echo '-r requirements_dev.txt' >> $@",
+)
+
+# TODO: De-dup with list in cmk/BUILD:CMK_PACKAGES
+REQUIREMENTS_CMK = [
+    "//cmk:requirements_protobuf_pinned.txt",
+    "//packages/cmk-agent-based:requirements.txt",
+    "//packages/cmk-agent-receiver:requirements.txt",
+    "//packages/cmk-ccc:requirements.txt",
+    "//packages/cmk-crypto:requirements.txt",
+    "//packages/cmk-events:requirements.txt",
+    "//packages/cmk-graphing:requirements.txt",
+    "//packages/cmk-livestatus-client:requirements.txt",
+    "//packages/cmk-messaging:requirements.txt",
+    "//packages/cmk-mkp-tool:requirements.txt",
+    "//packages/cmk-rulesets:requirements.txt",
+    "//packages/cmk-server-side-calls:requirements.txt",
+    "//packages/cmk-shared-typing:requirements.txt",
+    "//packages/cmk-trace:requirements.txt",
+    "//packages/cmk-werks:requirements.txt",
+] + select({
+    "@//:gpl_repo": [],
+    "@//:gpl+enterprise_repo": [
+        "//non-free/packages/cmk-mknotifyd:requirements.txt",
+        "//non-free/packages/cmk-otel-collector:requirements.txt",
+    ],
+})
+
 pip_compile(
-    name = "requirements",
+    name = "requirements_runtime",
+    data = REQUIREMENTS_CMK,
+    requirements_in = ":requirements_runtime.txt",
+    requirements_txt = "@//:requirements_runtime_lock.txt",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+pip_compile(
+    name = "requirements_all",
     data = [
         "//:requirements_dev.txt",
-        "//cmk:requirements_protobuf_pinned.txt",
-        "//packages/cmk-agent-based:requirements.txt",
-        "//packages/cmk-agent-receiver:requirements.txt",
-        "//packages/cmk-ccc:requirements.txt",
-        "//packages/cmk-crypto:requirements.txt",
-        "//packages/cmk-events:requirements.txt",
-        "//packages/cmk-graphing:requirements.txt",
-        "//packages/cmk-livestatus-client:requirements.txt",
-        "//packages/cmk-messaging:requirements.txt",
-        "//packages/cmk-mkp-tool:requirements.txt",
-        "//packages/cmk-rulesets:requirements.txt",
-        "//packages/cmk-server-side-calls:requirements.txt",
-        "//packages/cmk-shared-typing:requirements.txt",
-        "//packages/cmk-trace:requirements.txt",
-        "//packages/cmk-werks:requirements.txt",
-    ] + select({
-        "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": [
-            "//non-free/packages/cmk-mknotifyd:requirements.txt",
-            "//non-free/packages/cmk-otel-collector:requirements.txt",
-        ],
-    }),
-    requirements_in = ":requirements.txt",
-    requirements_txt = "@//:requirements_lock.txt",
+    ] + REQUIREMENTS_CMK,
+    requirements_in = "@//:requirements_all.txt",
+    requirements_txt = "@//:requirements_all_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
@@ -133,7 +155,7 @@ write_file(
 create_venv(
     name = "create_venv",
     destination_folder = ".venv",
-    requirements_txt = "@//:requirements_lock.txt",
+    requirements_txt = "@//:requirements_all_lock.txt",
     site_packages_extra_files = [":sitecustomize.py"],
 )
 

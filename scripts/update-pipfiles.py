@@ -35,7 +35,7 @@ class LockPaths:
 
     def __init__(self, p: Path):
         self.pipfile_lock = p
-        requirements_lock = Path(p.parents[0] / "requirements_lock.txt")
+        requirements_lock = Path(p.parents[0] / "requirements_all_lock.txt")
         if requirements_lock.exists():
             self.requirement_lock = requirements_lock
 
@@ -46,7 +46,7 @@ class CommitInfo(NamedTuple):
 
 
 def _find_locks() -> Sequence[LockPaths]:
-    """return a list of paths where we found Pipfile.locks and - if residing next to it - a requirements_lock.txt"""
+    """return a list of paths where we found Pipfile.locks and - if residing next to it - a requirements_all_lock.txt"""
     return sorted(
         (
             LockPaths(Path(p))

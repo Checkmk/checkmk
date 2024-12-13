@@ -5,8 +5,8 @@
 import contextlib
 import http.client
 import json
-from collections.abc import Callable, Iterator, Sequence
-from typing import Any, Literal, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 

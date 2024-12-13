@@ -10,7 +10,8 @@ as the background process is running.
 
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui.background_job import BackgroundJob
 from cmk.gui.http import Response

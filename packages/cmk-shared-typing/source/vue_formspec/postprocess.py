@@ -51,7 +51,7 @@ class EnumString(cst.CSTTransformer):
 
 class OptionalRemover(cst.CSTTransformer):
     def __init__(self) -> None:
-        self.current_class: Optional[str] = None
+        self.current_class: str | None = None
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
         self.current_class = node.name.value

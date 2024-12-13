@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any, Dict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -27,7 +28,7 @@ def parse_redfish_system(string_table: StringTable) -> SectionSystem | None:
     return [{str(k): v for k, v in entry.items()} for entry in raw]
 
 
-Section = Dict[str, Mapping[str, Any]]
+Section = dict[str, Mapping[str, Any]]
 
 
 agent_section_apt = AgentSection(

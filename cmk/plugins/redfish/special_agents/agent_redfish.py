@@ -62,10 +62,8 @@ class CachedSectionWriter(SectionManager):
     ) -> None:
         super().__init__()
         self.append(
-            (
-                f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}"
-                f"{f':cached({cachetime},{validity})' if cachetime else ''}>>>"
-            )
+            f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}"
+            f"{f':cached({cachetime},{validity})' if cachetime else ''}>>>"
         )
 
 
@@ -649,16 +647,14 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
         w.append_json(systems_data)
 
     systems_sections = list(
-        set(
-            [
-                "FirmwareInventory",
-                "EthernetInterfaces",
-                "NetworkInterfaces",
-                "Processors",
-                "Storage",
-                "Memory",
-            ]
-        ).union(extra_links)
+        {
+            "FirmwareInventory",
+            "EthernetInterfaces",
+            "NetworkInterfaces",
+            "Processors",
+            "Storage",
+            "Memory",
+        }.union(extra_links)
     )
     systems_sub_sections = [
         "Drives",

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
 import uuid
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Sequence
 
 from werkzeug.datastructures import FileStorage
 

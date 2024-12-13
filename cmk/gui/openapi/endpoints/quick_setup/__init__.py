@@ -10,10 +10,10 @@ Quick setup
 * POST complete the quick setup and save
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import Any, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from cmk.utils.encoding import json_encode

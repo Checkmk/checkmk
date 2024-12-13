@@ -10,8 +10,6 @@ from contextlib import contextmanager
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.composition.cmk.piggyback.piggyback_test_helper import (
     create_local_check,
     disable_piggyback_hub_globally,
@@ -20,6 +18,8 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
     piggybacked_data_gets_updated,
     piggybacked_service_discovered,
 )
+
+from tests.testlib.site import Site
 
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"

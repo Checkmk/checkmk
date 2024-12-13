@@ -15,6 +15,8 @@ from typing import Any, Literal
 import pytest
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
+from tests.composition.utils import get_cre_agent_path
+
 from tests.testlib.agent import (
     agent_controller_daemon,
     bake_agents,
@@ -27,8 +29,6 @@ from tests.testlib.site import (
     tracing_config_from_env,
 )
 from tests.testlib.utils import is_containerized, run
-
-from tests.composition.utils import get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
 

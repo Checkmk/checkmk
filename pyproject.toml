@@ -76,9 +76,10 @@ section-order = [
   "third-party",
   "werks",
   "cmc_proto",
-  "testlib",
-  "integrationtests",
   "compositiontests",
+  "uitests",
+  "integrationtests",
+  "testlib",
   "unittests",
   "livestatus",
   "omd",
@@ -105,6 +106,7 @@ testlib = ["tests.testlib"]
 integrationtests = ["tests.integration"]
 compositiontests = ["tests.composition"]
 unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+uitests=["tests.gui_crawl", "tests.gui_e2e"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]

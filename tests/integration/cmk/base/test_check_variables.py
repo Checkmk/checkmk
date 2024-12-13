@@ -7,9 +7,9 @@ import subprocess
 
 import pytest
 
-from tests.testlib.site import Site
-
 from tests.integration.linux_test_host import create_linux_test_host
+
+from tests.testlib.site import Site
 
 from cmk.ccc import version as cmk_version
 

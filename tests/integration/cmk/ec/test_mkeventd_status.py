@@ -6,10 +6,10 @@
 import logging
 import time
 
+from tests.integration.event_console import CMKEventConsole
+
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
-
-from tests.integration.event_console import CMKEventConsole
 
 logger = logging.getLogger(__name__)
 

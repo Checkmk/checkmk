@@ -9,10 +9,10 @@ from collections.abc import Generator
 
 import pytest
 
+from tests.gui_crawl.crawler import Crawler, XssCrawler
+
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
-
-from tests.gui_crawl.crawler import Crawler, XssCrawler
 
 logger = logging.getLogger()
 

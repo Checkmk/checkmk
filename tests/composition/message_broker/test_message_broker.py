@@ -8,9 +8,6 @@ from typing import IO
 
 import pytest
 
-from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
-from tests.testlib.site import Site
-
 from tests.composition.message_broker.utils import (
     assert_message_exchange_working,
     broker_pong,
@@ -20,6 +17,9 @@ from tests.composition.message_broker.utils import (
     Timeout,
     timeout,
 )
+
+from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 

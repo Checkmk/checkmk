@@ -37,6 +37,14 @@ inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
 
+init_sudo() {
+    if inpath sudo && [ "$(whoami)" != "root" ]; then
+        sudo_as_root() { sudo --non-interactive "$@"; }
+    else
+        sudo_as_root() { "$@"; }
+    fi
+}
+
 get_file_atime() {
     stat -c %X "${1}" 2>/dev/null ||
         stat -f %a "${1}" 2>/dev/null ||
@@ -2285,6 +2293,8 @@ main_setup() {
     if "${DISABLE_STDERR:-true}"; then
         exec 2>/dev/null
     fi
+
+    init_sudo
 
     set_up_get_epoch
 

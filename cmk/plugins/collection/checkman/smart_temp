@@ -9,7 +9,8 @@ description:
  via {smartctl -A <device>}.
 
  The check uses information provided by the Checkmk linux agent which are available when the agent
- has been extended with the {smart} agent plugin.
+ has been extended with the {smart} agent plugin. The {smart} agent plugins has been superseded by
+ the {smart_posix} plugin.
 
  The original check has been created by Benjamin Odenthal and provided on Checkmk exchange and
  improved, integrated and documented by Lars Michelsen.

@@ -50,7 +50,7 @@ check_info["smart.temp"] = LegacyCheckDefinition(
     name="smart_temp",
     # section already migrated!
     service_name="Temperature SMART %s",
-    sections=["smart"],
+    sections=["smart"],  # This agent plugin was superseded by smart_posix
     discovery_function=inventory_smart_temp,
     check_function=check_smart_temp,
     check_ruleset_name="temperature",

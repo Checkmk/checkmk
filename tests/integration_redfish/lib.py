@@ -25,6 +25,7 @@ MOCKUP_DUMPS_DIR = _THIS_DIR / "mockup-server/dumps"
 @dataclass(frozen=True)
 class Hosts:
     dell_ok: HostName
+    raritan_ok: HostName
 
 
 def create_special_agent_host(site: Site, host_name: HostName) -> HostName:

@@ -21,6 +21,9 @@ repos:
       hooks:
         - id: ruff
         - id: ruff-format
+        # Run ruff import sorting
+        - id: ruff
+          args: [--select, I, --fix]
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:

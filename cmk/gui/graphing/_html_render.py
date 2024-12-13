@@ -53,7 +53,12 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
+from ._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderConfigBase,
+    GraphRenderOptions,
+    GraphTitleFormat,
+)
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
 from ._legacy import get_render_function, get_unit_info, LegacyUnitSpecification
 from ._utils import SizeEx
@@ -97,13 +102,15 @@ def host_service_graph_popup_cmk(
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
-        size=(30, 10),
-        font_size=SizePT(6.0),
-        resizable=False,
-        show_controls=False,
-        show_legend=False,
-        interaction=False,
-        show_time_range_previews=False,
+        GraphRenderOptions(
+            size=(30, 10),
+            font_size=SizePT(6.0),
+            resizable=False,
+            show_controls=False,
+            show_legend=False,
+            interaction=False,
+            show_time_range_previews=False,
+        ),
     )
 
     graph_data_range = make_graph_data_range(
@@ -757,8 +764,8 @@ def _render_graphs_from_definitions(
 ) -> HTML:
     output = HTML.empty()
     for graph_recipe in graph_recipes:
-        recipe_specific_render_config = graph_render_config.model_copy(
-            update=dict(graph_recipe.render_options)
+        recipe_specific_render_config = graph_render_config.update_from_options(
+            graph_recipe.render_options
         )
         recipe_specific_data_range = graph_data_range.model_copy(
             update=dict(graph_recipe.data_range or {})

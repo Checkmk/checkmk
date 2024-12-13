@@ -662,7 +662,7 @@ class RowShading(TypedDict):
 GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 
 
-class GraphRenderOptionsBase(TypedDict, total=False):
+class GraphRenderOptionsVS(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
     editing: bool
@@ -682,9 +682,6 @@ class GraphRenderOptionsBase(TypedDict, total=False):
     show_vertical_axis: bool
     size: tuple[int, int]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
-
-
-class GraphRenderOptionsVS(GraphRenderOptionsBase, total=False):
     title_format: Sequence[GraphTitleFormatVS]
 
 

@@ -12,7 +12,10 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
+from cmk.gui.graphing._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderOptions,
+)
 from cmk.gui.graphing._graph_templates import get_template_graph_specification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
@@ -186,7 +189,7 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
-        **graph_grender_options_from_vs(graph_render_options),
+        GraphRenderOptions.from_graph_render_options_vs(graph_render_options),
     )
 
     now = int(time.time())

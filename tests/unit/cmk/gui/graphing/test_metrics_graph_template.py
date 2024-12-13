@@ -219,7 +219,6 @@ def test_template_recipes() -> None:
                 ),
             ],
             additional_html=None,
-            render_options={},
             data_range=None,
             mark_requested_end_time=False,
             specification=FakeTemplateGraphSpecification(
@@ -261,7 +260,6 @@ def test_template_recipes() -> None:
                 )
             ],
             additional_html=None,
-            render_options={},
             data_range=None,
             mark_requested_end_time=False,
             specification=FakeTemplateGraphSpecification(

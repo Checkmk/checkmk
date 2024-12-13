@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tests for Certificate and friends"""
 
-# pylint: disable=protected-access
-
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
 from datetime import datetime, timezone

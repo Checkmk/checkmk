@@ -302,7 +302,7 @@ def migrate_to_password(
     raise TypeError(f"Could not migrate {model!r} to Password.")
 
 
-def migrate_to_proxy(  # pylint: disable=too-many-return-statements
+def migrate_to_proxy(
     model: object,
 ) -> tuple[
     Literal["cmk_postprocessed"],

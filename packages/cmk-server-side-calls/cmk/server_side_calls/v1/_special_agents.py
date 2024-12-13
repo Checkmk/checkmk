@@ -42,7 +42,7 @@ class SpecialAgentCommand:
     stdin: str | None = None
 
 
-class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few-public-methods
+class SpecialAgentConfig(Generic[_ParsedParameters]):
     """
     Defines a special agent
 

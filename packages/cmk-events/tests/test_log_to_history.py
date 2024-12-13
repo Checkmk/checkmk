@@ -29,7 +29,7 @@ class FakeLocalConnection:
     def command(
         self,
         command: str,
-        site: livestatus.SiteId | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+        site: livestatus.SiteId | None = None,  # noqa: ARG002
     ) -> None:
         self.__class__.sent_command = command
 

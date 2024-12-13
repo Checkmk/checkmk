@@ -4,11 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
-# pylint: disable=broad-exception-caught,raise-missing-from,consider-using-f-string
-# pylint: disable=too-many-lines,too-many-ancestors,too-many-arguments,too-many-locals
-# pylint: disable=too-many-instance-attributes,too-many-statements
-# pylint: disable=too-many-public-methods
-
 from __future__ import annotations
 
 import ast
@@ -534,7 +529,7 @@ class SingleSiteConnection(Helpers):
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
 
-    def __init__(  # pylint: disable=too-many-positional-arguments
+    def __init__(
         self,
         socketurl: str,
         site_name: SiteId | None = None,
@@ -652,7 +647,7 @@ class SingleSiteConnection(Helpers):
     def _create_socket(
         self,
         family: socket.AddressFamily,
-        site_name: SiteId | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+        site_name: SiteId | None = None,  # noqa: ARG002
     ) -> socket.socket:
         """Creates the Livestatus client socket
 
@@ -897,7 +892,7 @@ class SingleSiteConnection(Helpers):
     def command(
         self,
         command: str,
-        site: SiteId | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+        site: SiteId | None = None,  # noqa: ARG002
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
@@ -977,7 +972,7 @@ ConnectedSites = list[ConnectedSite]
 
 
 class MultiSiteConnection(Helpers):
-    def __init__(  # pylint: disable=too-many-branches
+    def __init__(
         self,
         sites: SiteConfigurations,
         disabled_sites: SiteConfigurations | None = None,
@@ -1543,7 +1538,7 @@ def livestatus_lql(
     return f"GET {what}s\n{query_filter}"
 
 
-def get_rrd_data(  # pylint: disable=too-many-positional-arguments
+def get_rrd_data(
     connection: SingleSiteConnection,
     host_name: str,
     service_description: str,

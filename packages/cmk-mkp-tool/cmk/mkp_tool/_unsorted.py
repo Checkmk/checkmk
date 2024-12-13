@@ -7,8 +7,6 @@ Everything from the packaging module that is not yet properly sorted.
 Don't add new stuff here!
 """
 
-# pylint: disable=too-many-arguments
-
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
@@ -228,7 +226,7 @@ def create(
     )
 
 
-def edit(  # pylint: disable=too-many-positional-arguments
+def edit(
     installer: Installer,
     pacname: PackageName,
     new_manifest: Manifest,
@@ -397,7 +395,7 @@ def remove_files(
     return tuple(errors)
 
 
-def _raise_for_installability(  # pylint: disable=too-many-positional-arguments
+def _raise_for_installability(
     installer: Installer,
     path_config: PathConfig,
     package: Manifest,
@@ -498,7 +496,7 @@ def _raise_for_too_old_cmk_version(
     """
     try:
         too_old = parse_version(site_version) < parse_version(min_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
@@ -522,7 +520,7 @@ def _raise_for_too_new_cmk_version(
 
     try:
         too_new = parse_version(site_version) >= parse_version(until_version)
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
@@ -601,7 +599,7 @@ def id_to_mkp(
     }
 
 
-def update_active_packages(  # pylint: disable=too-many-positional-arguments
+def update_active_packages(
     installer: Installer,
     path_config: PathConfig,
     package_store: PackageStore,

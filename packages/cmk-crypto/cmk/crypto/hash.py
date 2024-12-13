@@ -16,10 +16,10 @@ class HashAlgorithm(Enum):
     """This is just a facade to selected hash algorithms from cryptography"""
 
     MD5 = crypto_hashes.MD5()  # nosec B303 # BNS:e9bfaa
-    Sha1 = crypto_hashes.SHA1()  # pylint: disable=invalid-name # nosec B303 # BNS:02774b
-    Sha256 = crypto_hashes.SHA256()  # pylint: disable=invalid-name
-    Sha384 = crypto_hashes.SHA384()  # pylint: disable=invalid-name
-    Sha512 = crypto_hashes.SHA512()  # pylint: disable=invalid-name
+    Sha1 = crypto_hashes.SHA1()  # nosec B303 # BNS:02774b
+    Sha256 = crypto_hashes.SHA256()
+    Sha384 = crypto_hashes.SHA384()
+    Sha512 = crypto_hashes.SHA512()
 
     @classmethod
     def from_cryptography(cls, algo: crypto_hashes.HashAlgorithm) -> HashAlgorithm:

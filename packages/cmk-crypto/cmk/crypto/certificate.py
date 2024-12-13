@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+
 """This module contains functionality for dealing with X509 certificates.
 
 At the moment, only certificates based on RSA keys are supported.
@@ -75,7 +75,7 @@ class CertificateWithPrivateKey(NamedTuple):
     private_key: PrivateKey
 
     @classmethod
-    def generate_self_signed(  # pylint: disable=too-many-arguments
+    def generate_self_signed(
         cls,
         *,
         common_name: str,
@@ -139,7 +139,7 @@ class CertificateWithPrivateKey(NamedTuple):
         if passphrase is not None:
             if (
                 key_match := re.search(
-                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",  # pylint: disable=line-too-long
+                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",
                     content,
                 )
             ) is None:
@@ -159,7 +159,7 @@ class CertificateWithPrivateKey(NamedTuple):
             private_key=key,
         )
 
-    def issue_new_certificate(  # pylint: disable=too-many-arguments
+    def issue_new_certificate(
         self,
         *,
         common_name: str,
@@ -319,7 +319,7 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def _create(  # pylint: disable=too-many-arguments
+    def _create(
         cls,
         *,
         # subject info

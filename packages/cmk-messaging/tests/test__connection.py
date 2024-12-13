@@ -76,7 +76,7 @@ class ChannelTester:
         queue: str,
         exchange: str,
         routing_key: str,
-        arguments: None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+        arguments: None = None,  # noqa: ARG002
     ) -> None:
         self.bound_queues.append(Binding(exchange, routing_key, queue))
 
@@ -93,12 +93,12 @@ class ChannelTester:
 
     def basic_consume(
         self,
-        queue: str,  # noqa: ARG002 # pylint: disable=unused-argument
+        queue: str,  # noqa: ARG002
         on_message_callback: Callable[
             [pika.channel.Channel, pika.spec.Basic.Deliver, pika.BasicProperties, bytes],
             object,
         ],
-        auto_ack: bool,  # noqa: ARG002 # pylint: disable=unused-argument
+        auto_ack: bool,  # noqa: ARG002
     ) -> None:
         self.consumer = on_message_callback
 

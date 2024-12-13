@@ -311,7 +311,7 @@ def test_install_not_deleting_pushed_mkp_on_update(
     base_name = format_file_name(manifest.id)
     file_path = package_store.local_packages / base_name
     file_path.rename(package_store.enabled_packages / base_name)
-    install(  # pylint: disable=R0801 # yes, this line is similar to product code
+    install(
         installer,
         package_store,
         manifest.id,

@@ -20,7 +20,7 @@ from .site_context import agent_output_dir, internal_secret_path, r4r_dir
 class NotRegisteredException(Exception): ...
 
 
-class RegisteredHost:  # pylint: disable=too-few-public-methods
+class RegisteredHost:
     def __init__(self, uuid: UUID4) -> None:
         self.source_path: Final = agent_output_dir() / str(uuid)
         if not self.source_path.is_symlink():

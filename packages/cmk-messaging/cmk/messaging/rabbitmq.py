@@ -406,7 +406,7 @@ def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[st
 
 
 def rabbitmqctl_process(cmd: tuple[str, ...], /, *, wait: bool) -> subprocess.Popen[str]:
-    proc = subprocess.Popen(  # pylint: disable=consider-using-with
+    proc = subprocess.Popen(
         ["rabbitmqctl", *cmd],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

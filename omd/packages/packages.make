@@ -196,8 +196,6 @@ include \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
-    packages/Python/Python.make \
-    packages/python3-modules/python3-modules.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \

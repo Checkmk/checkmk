@@ -29,8 +29,6 @@ PACKAGES := \
     redis \
     libgsf \
     cpp-libs \
-    Python \
-    python3-modules \
     lcab \
     msitools \
     apache-omd \
@@ -112,7 +110,6 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	  egrep -h "^$${P_VAR}_INTERMEDIATE_INSTALL(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_CACHE_PKG_PROCESS(_[A-Z]+)?\s+:=\s+" $$inc_path >> $@ ; \
 	done || true
-	egrep -h "^PACKAGE_PYTHON3_MODULES_PYTHON_DEPS?\s+:=\s+" packages/python3-modules/python3-modules.make >> $@
 
 
 -include .config

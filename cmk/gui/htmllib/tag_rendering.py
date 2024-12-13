@@ -121,13 +121,13 @@ def _get_separator(key: str) -> str:
 
 
 def normalize_css_spec(css_classes: CSSSpec | str | None) -> list[str]:
-    if isinstance(css_classes, list):
-        return [c for c in css_classes if c is not None]
-
-    if css_classes is not None:
-        return [css_classes]
-
-    return []
+    match css_classes:
+        case [*css_specs]:
+            return [c for c in css_specs if c is not None]
+        case str(single_css_class):
+            return [single_css_class]
+        case _:
+            return []
 
 
 def _get_normalized_css_classes(attrs: HTMLTagAttributes) -> list[str]:

@@ -1012,16 +1012,23 @@ class Ruleset:
         resultlist = []
         resultdict: dict[str, Any] = {}
         effectiverules = []
-        for folder, rule_index, rule in self.get_rules():
-            if rule.is_disabled():
-                continue
 
-            if not rule.matches_host_and_item(
+        rules = self.get_rules()
+        rule_matches = {
+            rule.id: rule.matches_host_and_item(
                 hostname,
                 svc_desc_or_item,
                 svc_desc,
                 service_labels=service_labels,
-            ):
+            )
+            for _folder, _rule_index, rule in rules
+        }
+
+        for folder, rule_index, rule in rules:
+            if rule.is_disabled():
+                continue
+
+            if not rule_matches[rule.id]:
                 continue
 
             if self.match_type() == "all":

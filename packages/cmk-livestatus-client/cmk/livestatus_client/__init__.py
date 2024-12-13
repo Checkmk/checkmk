@@ -23,7 +23,7 @@ from functools import cache
 from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
 
-from opentelemetry import trace
+from cmk import trace
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -164,7 +164,7 @@ class LivestatusTestingError(RuntimeError):
 #   |  Global variables and Exception classes                              |
 #   '----------------------------------------------------------------------'
 
-tracer = trace.get_tracer("cmk.livestatus_client")
+tracer = trace.get_tracer()
 
 # TODO: This mechanism does not take different connection options into account
 # Keep a global array of persistent connections

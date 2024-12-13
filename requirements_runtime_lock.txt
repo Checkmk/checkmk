@@ -1379,7 +1379,6 @@ opentelemetry-api==1.29.0 \
     --hash=sha256:d04a6cf78aad09614f52964ecb38021e248f5714dc32c2e0d8fd99517b4d69cf
     # via
     #   -r _requirements_runtime.txt
-    #   -r packages/cmk-livestatus-client/requirements.txt
     #   -r packages/cmk-trace/requirements.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http

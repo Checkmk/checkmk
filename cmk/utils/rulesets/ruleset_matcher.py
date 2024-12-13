@@ -272,7 +272,10 @@ class RulesetMatcher:
             self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, item, labels)
 
     def _service_match_object(
-        self, hostname: HostName, description: ServiceName
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        service_labels: Labels | None = None,
     ) -> RulesetMatchObject:
         cache_id = (hostname, description, None)
         with contextlib.suppress(KeyError):
@@ -281,7 +284,9 @@ class RulesetMatcher:
         return self.__service_match_obj.setdefault(
             cache_id,
             RulesetMatchObject(
-                hostname, description, self.labels_of_service(hostname, description)
+                hostname,
+                description,
+                service_labels or self.labels_of_service(hostname, description),
             ),
         )
 
@@ -290,6 +295,7 @@ class RulesetMatcher:
         hostname: HostName,
         description: ServiceName,
         item: Item,
+        service_labels: Labels | None = None,
         span: trace.Span | None = None,
     ) -> RulesetMatchObject:
         cache_id = (hostname, description, item)
@@ -301,7 +307,8 @@ class RulesetMatcher:
         match_object = RulesetMatchObject(
             hostname,
             item,
-            service_labels := self.labels_of_service(
+            service_labels := service_labels
+            or self.labels_of_service(
                 hostname,
                 description,
             ),
@@ -352,12 +359,16 @@ class RulesetMatcher:
         )
 
     def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        ruleset: Sequence[RuleSpec[TRuleValue]],
+        service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
             self.get_service_ruleset_values(
-                self._service_match_object(hostname, description), ruleset
+                self._service_match_object(hostname, description, service_labels), ruleset
             )
         )
 
@@ -367,6 +378,7 @@ class RulesetMatcher:
         description: ServiceName,
         item: Item,
         ruleset: Sequence[RuleSpec[TRuleValue]],
+        service_labels: Labels | None = None,
     ) -> list[TRuleValue]:
         with tracer.start_as_current_span(
             "RulesetMatcher_get_checkgroup_ruleset_values",
@@ -383,6 +395,7 @@ class RulesetMatcher:
                         hostname,
                         description,
                         item,
+                        service_labels,
                         span,
                     ),
                     ruleset,

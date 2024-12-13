@@ -45,24 +45,6 @@ ignore = [
   "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
 ]
 
-# [tool.mypy]
-# mypy config moved to overrides in the root pyproject.toml
-
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = [
-  # We should at least document modules and classes. :-/
-  "missing-module-docstring",
-  "missing-class-docstring",
-  "missing-function-docstring",
-  # black and pylint disagree here, so let's silence pylint.
-  "multiple-statements",
-]
-
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["cmk", "tests"]

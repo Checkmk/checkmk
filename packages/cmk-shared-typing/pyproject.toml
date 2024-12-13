@@ -22,14 +22,6 @@ line-length = 100
 [tool.ruff.lint.isort]
 order-by-type = false
 
-[tool.pylint.format]
-max-line-length = 100
-persistent = "no"
-score = "no"
-
-[tool.pylint.messages_control]
-disable = "missing-docstring,fixme"
-
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["cmk", "tests"]

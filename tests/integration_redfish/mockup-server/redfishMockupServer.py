@@ -48,7 +48,11 @@ def dict_merge(dct, merge_dct):
     :return: None
     """
     for k in merge_dct:
-        if k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], collections.abc.Mapping):
+        if (
+            k in dct
+            and isinstance(dct[k], dict)
+            and isinstance(merge_dct[k], collections.abc.Mapping)
+        ):
             dict_merge(dct[k], merge_dct[k])
         else:
             dct[k] = merge_dct[k]
@@ -83,7 +87,11 @@ class RfMockupServer(BaseHTTPRequestHandler):
         """
         apath = self.server.mockDir
         rpath = clean_path(path, self.server.shortForm)
-        return "/".join([apath, rpath, filename]) if filename not in ["", None] else "/".join([apath, rpath])
+        return (
+            "/".join([apath, rpath, filename])
+            if filename not in ["", None]
+            else "/".join([apath, rpath])
+        )
 
     def get_cached_link(self, path):
         """get_cached_link
@@ -142,7 +150,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
         pattern = pattern if re.search(r"\{id\}$", pattern) else pattern + "{id}"
         newpath_id = data_received.get("Id", pattern.format(id=n))
         # Default to standard pattern if the received ID already exists in members
-        if data_received.get("Id") in [m.get("@odata.id").replace(self.path, "").strip("/") for m in members]:
+        if data_received.get("Id") in [
+            m.get("@odata.id").replace(self.path, "").strip("/") for m in members
+        ]:
             newpath_id = pattern.format(id=n)
         newpath = "/".join([self.path, newpath_id])
         while newpath in [m.get("@odata.id") for m in members]:
@@ -208,12 +218,17 @@ class RfMockupServer(BaseHTTPRequestHandler):
                                 http_headers = {}
                                 http_headers["Content-Type"] = "application/json"
 
-                                event_payload["Context"] = subscription.get("Context", "Default Context")
+                                event_payload["Context"] = subscription.get(
+                                    "Context", "Default Context"
+                                )
 
                                 # Send the event
                                 events.append(
                                     grequests.post(
-                                        subscription["Destination"], timeout=20, data=json.dumps(event_payload), headers=http_headers
+                                        subscription["Destination"],
+                                        timeout=20,
+                                        data=json.dumps(event_payload),
+                                        headers=http_headers,
                                     )
                                 )
                             else:
@@ -236,14 +251,26 @@ class RfMockupServer(BaseHTTPRequestHandler):
             # Check if all of the parameters are given
             if (
                 (("MetricReportName" in data_received) and ("MetricReportValues" in data_received))
-                or (("MetricReportName" in data_received) and ("GeneratedMetricReportValues" in data_received))
+                or (
+                    ("MetricReportName" in data_received)
+                    and ("GeneratedMetricReportValues" in data_received)
+                )
                 or (("MetricName" in data_received) and ("MetricValues" in data_received))
             ):
                 # If the EventType in the request is one of interest to the subscriber, build an event payload
-                expected_keys = ["MetricId", "MetricValue", "Timestamp", "MetricProperty", "MetricDefinition"]
+                expected_keys = [
+                    "MetricId",
+                    "MetricValue",
+                    "Timestamp",
+                    "MetricProperty",
+                    "MetricDefinition",
+                ]
                 my_name = data_received.get("MetricName", data_received.get("MetricReportName"))
                 my_data = data_received.get(
-                    "MetricValues", data_received.get("MetricReportValues", data_received.get("GeneratedMetricReportValues"))
+                    "MetricValues",
+                    data_received.get(
+                        "MetricReportValues", data_received.get("GeneratedMetricReportValues")
+                    ),
                 )
                 event_payload = {}
                 value_list = []
@@ -253,9 +280,13 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 event_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports/" + my_name
                 event_payload["Id"] = my_name
                 event_payload["Name"] = my_name
-                event_payload["MetricReportDefinition"] = {"@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/" + my_name}
+                event_payload["MetricReportDefinition"] = {
+                    "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/" + my_name
+                }
                 now = datetime.datetime.now()
-                event_payload["Timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S") + ("-%02d" % (now.microsecond / 10000))
+                event_payload["Timestamp"] = now.strftime("%Y-%m-%dT%H:%M:%S") + (
+                    "-%02d" % (now.microsecond / 10000)
+                )
 
                 for tup in my_data:
                     if all(x in tup for x in expected_keys):
@@ -275,12 +306,18 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
                 if not success:
                     collection_payload = {"Members": []}
-                    collection_payload["@odata.context"] = "/redfish/v1/$metadata#MetricReportCollection.MetricReportCollection"
-                    collection_payload["@odata.type"] = "#MetricReportCollection.v1_0_0.MetricReportCollection"
+                    collection_payload["@odata.context"] = (
+                        "/redfish/v1/$metadata#MetricReportCollection.MetricReportCollection"
+                    )
+                    collection_payload["@odata.type"] = (
+                        "#MetricReportCollection.v1_0_0.MetricReportCollection"
+                    )
                     collection_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports"
                     collection_payload["Name"] = "MetricReports"
 
-                if event_payload["@odata.id"] not in [member.get("@odata.id") for member in collection_payload["Members"]]:
+                if event_payload["@odata.id"] not in [
+                    member.get("@odata.id") for member in collection_payload["Members"]
+                ]:
                     collection_payload["Members"].append({"@odata.id": event_payload["@odata.id"]})
                 collection_payload["Members@odata.count"] = len(collection_payload["Members"])
                 self.patchedLinks[report_path] = collection_payload
@@ -303,7 +340,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
                             # Send the event
                             events.append(
                                 grequests.post(
-                                    subscription["Destination"], timeout=20, data=json.dumps(event_payload), headers=http_headers
+                                    subscription["Destination"],
+                                    timeout=20,
+                                    data=json.dumps(event_payload),
+                                    headers=http_headers,
                                 )
                             )
                         else:
@@ -506,7 +546,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     my_members = my_members[:top_count]
                     query_out = {"$skip": top_skip + top_count, "$top": top_count}
                     query_string = "&".join(["{}={}".format(k, v) for k, v in query_out.items()])
-                    output_data["Members@odata.nextLink"] = urlunparse(("", "", path, "", query_string, ""))
+                    output_data["Members@odata.nextLink"] = urlunparse(
+                        ("", "", path, "", query_string, "")
+                    )
                 else:
                     pass
 
@@ -522,7 +564,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 levels = int(regex_groups[2]) if regex_groups[1] else 1
                 self.handle_expand_query(output_data, expand_type, levels)
 
-            encoded_data = json.dumps(output_data, sort_keys=True, indent=4, separators=(",", ": ")).encode()
+            encoded_data = json.dumps(
+                output_data, sort_keys=True, indent=4, separators=(",", ": ")
+            ).encode()
 
             if not (self.server.headers and (os.path.isfile(fpath_headers))):
                 self.send_header("Content-Length", len(encoded_data))
@@ -571,7 +615,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         logger.info("   PATCH: Headers: {}".format(self.headers))
-        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
         logger.info("   PATCH: Content: type={} and params={}".format(ctype, pdict))
         self.try_to_sleep("PATCH", self.path)
 
@@ -620,7 +664,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         logger.info("   PUT: Headers: {}".format(self.headers))
-        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
         logger.info("   PUT: Content: type={} and params={}".format(ctype, pdict))
         self.try_to_sleep("PUT", self.path)
 
@@ -642,14 +686,14 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         logger.info("   POST: Headers: {}".format(self.headers))
-        ctype, pdict = multipart.parse_options_header(self.headers.get('content-type', None))
+        ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
         logger.info("   POST: Content: type={} and params={}".format(ctype, pdict))
         if "content-length" in self.headers:
             lenn = int(self.headers["content-length"])
             if lenn == 0:
                 data_received = {}
             else:
-                if ctype == 'multipart/form-data':
+                if ctype == "multipart/form-data":
                     data_received = None
                     boundary = pdict.get("boundary", "")
                     if not boundary:
@@ -662,7 +706,11 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     #
                     # The third part is optional: OemXXX
                     for part in multipart.MultipartParser(self.rfile, boundary, lenn):
-                        logger.info("   POST: MULTIPART: name={} and file={}".format(part.name, part.filename))
+                        logger.info(
+                            "   POST: MULTIPART: name={} and file={}".format(
+                                part.name, part.filename
+                            )
+                        )
                         if part.filename:
                             with tempfile.TemporaryDirectory() as tmpdir:
                                 part.save_as(os.path.join(tmpdir, part.filename))
@@ -726,7 +774,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     r_code = self.handle_eventing(data_received)
                     self.send_response(r_code)
                 # SubmitTestMetricReport
-                elif "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path:
+                elif (
+                    "TelemetryService/Actions/TelemetryService.SubmitTestMetricReport" in self.path
+                ):
                     r_code = self.handle_telemetry(data_received)
                     self.send_response(r_code)
                 # UpdateService (SimpleUpdate is handled part of the Actions, so only multipart is here)
@@ -743,7 +793,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
                             for action in payload["Actions"]:
                                 if action == "Oem":
                                     for oem_action in payload["Actions"][action]:
-                                        if payload["Actions"][action][oem_action]["target"] == self.path:
+                                        if (
+                                            payload["Actions"][action][oem_action]["target"]
+                                            == self.path
+                                        ):
                                             action_found = True
                                 else:
                                     if payload["Actions"][action]["target"] == self.path:
@@ -784,7 +837,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
             success, parentData = self.get_cached_link(parent_path)
             if success and parentData.get("Members") is not None:
                 self.patchedLinks[fpath] = "404"
-                parentData["Members"] = [x for x in parentData["Members"] if not x["@odata.id"] == self.path]
+                parentData["Members"] = [
+                    x for x in parentData["Members"] if not x["@odata.id"] == self.path
+                ]
                 parentData["Members@odata.count"] = len(parentData["Members"])
                 self.patchedLinks[parent_path] = parentData
                 self.send_response(204)
@@ -811,7 +866,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     try:
                         float(d[time_str])
                     except Exception:
-                        logger.info("Time in the json file, not a float/int value. Reading the default time.")
+                        logger.info(
+                            "Time in the json file, not a float/int value. Reading the default time."
+                        )
                         return self.server.responseTime
                     return float(d[time_str])
         else:
@@ -820,21 +877,50 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
 
 def main():
-
     logger.info("Redfish Mockup Server, version {}".format(tool_version))
 
     parser = argparse.ArgumentParser(description="Serve a static Redfish mockup.")
-    parser.add_argument("-H", "--host", "--Host", default="127.0.0.1", help="hostname or IP address (default 127.0.0.1)")
-    parser.add_argument("-p", "--port", "--Port", default=8000, type=int, help="host port (default 8000)")
+    parser.add_argument(
+        "-H",
+        "--host",
+        "--Host",
+        default="127.0.0.1",
+        help="hostname or IP address (default 127.0.0.1)",
+    )
+    parser.add_argument(
+        "-p", "--port", "--Port", default=8000, type=int, help="host port (default 8000)"
+    )
     parser.add_argument("-D", "--dir", "--Dir", help="path to mockup dir (may be relative to CWD)")
-    parser.add_argument("-E", "--test-etag", "--TestEtag", action="store_true", help="(unimplemented) etag testing")
-    parser.add_argument("-X", "--headers", action="store_true", help="load headers from headers.json files in mockup")
-    parser.add_argument("-t", "--time", default=0, help="delay in seconds added to responses (float or int)")
-    parser.add_argument("-T", action="store_true", help="delay response based on times in time.json files in mockup")
-    parser.add_argument("-s", "--ssl", action="store_true", help="place server in SSL (HTTPS) mode; requires a cert and key")
+    parser.add_argument(
+        "-E", "--test-etag", "--TestEtag", action="store_true", help="(unimplemented) etag testing"
+    )
+    parser.add_argument(
+        "-X",
+        "--headers",
+        action="store_true",
+        help="load headers from headers.json files in mockup",
+    )
+    parser.add_argument(
+        "-t", "--time", default=0, help="delay in seconds added to responses (float or int)"
+    )
+    parser.add_argument(
+        "-T", action="store_true", help="delay response based on times in time.json files in mockup"
+    )
+    parser.add_argument(
+        "-s",
+        "--ssl",
+        action="store_true",
+        help="place server in SSL (HTTPS) mode; requires a cert and key",
+    )
     parser.add_argument("--cert", help="the certificate for SSL")
     parser.add_argument("--key", help="the key for SSL")
-    parser.add_argument("-S", "--short-form", "--shortForm", action="store_true", help="apply short form to mockup (omit filepath /redfish/v1)")
+    parser.add_argument(
+        "-S",
+        "--short-form",
+        "--shortForm",
+        action="store_true",
+        help="apply short form to mockup (omit filepath /redfish/v1)",
+    )
     parser.add_argument("-P", "--ssdp", action="store_true", help="make mockup SSDP discoverable")
 
     args = parser.parse_args()
@@ -862,7 +948,9 @@ def main():
     logger.info("Response time: {} seconds".format(responseTime))
 
     # create the full path to the top directory holding the Mockup
-    mockDir = os.path.realpath(mockDirPath)  # creates real full path including path for CWD to the -D<mockDir> dir path
+    mockDir = os.path.realpath(
+        mockDirPath
+    )  # creates real full path including path for CWD to the -D<mockDir> dir path
     logger.info("Serving Mockup in absolute path: {}".format(mockDir))
 
     # check that we have a valid tall mockup--with /redfish in mockDir before proceeding
@@ -874,7 +962,10 @@ def main():
             sys.exit(1)
 
     if shortForm:
-        if os.path.isdir(mockDir) is not True or os.path.isfile(os.path.join(mockDir, "index.json")) is not True:
+        if (
+            os.path.isdir(mockDir) is not True
+            or os.path.isfile(os.path.join(mockDir, "index.json")) is not True
+        ):
             logger.info("ERROR: Invalid Mockup Directory--dir or index.json does not exist")
             sys.stderr.flush()
             sys.exit(1)
@@ -916,7 +1007,11 @@ def main():
         path, filename, jsonData = "/redfish/v1", "index.json", None
         apath = myServer.mockDir
         rpath = clean_path(path, myServer.shortForm)
-        fpath = os.path.join(apath, rpath, filename) if filename not in ["", None] else os.path.join(apath, rpath)
+        fpath = (
+            os.path.join(apath, rpath, filename)
+            if filename not in ["", None]
+            else os.path.join(apath, rpath)
+        )
         if os.path.isfile(fpath):
             with open(fpath) as f:
                 jsonData = json.load(f)
@@ -924,7 +1019,9 @@ def main():
         else:
             jsonData = None
         protocol = "{}://".format("https" if sslMode else "http")
-        mySSDP = RfSSDPServer(jsonData, "{}{}:{}{}".format(protocol, hostname, port, "/redfish/v1"), hostname)
+        mySSDP = RfSSDPServer(
+            jsonData, "{}{}:{}{}".format(protocol, hostname, port, "/redfish/v1"), hostname
+        )
 
     logger.info("Serving Redfish mockup on port: {}".format(port))
     try:

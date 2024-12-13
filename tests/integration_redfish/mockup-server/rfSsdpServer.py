@@ -2,7 +2,7 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/python-redfish-library/blob/main/LICENSE.md
 
-" Lib to receive ssdp packets "
+"Lib to receive ssdp packets"
 
 import logging
 import socket
@@ -17,7 +17,8 @@ ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.INFO)
 logger.addHandler(ch)
 
-class RfSSDPServer():
+
+class RfSSDPServer:
     def addSearchTarget(self, target):
         self.searchtargets.append(target)
 
@@ -33,17 +34,17 @@ class RfSSDPServer():
         :param timeout: int for packet timeout
         """
         ip = ip if ip is not None else "0.0.0.0"
-        self.searchtargets = ['ssdp:all', 'upnp:rootdevice', 'urn:dmtf-org:service:redfish-rest:1']
+        self.searchtargets = ["ssdp:all", "upnp:rootdevice", "urn:dmtf-org:service:redfish-rest:1"]
         self.ip, self.port = ip, port
         self.timeout = timeout
 
         # setup payload info
         self.location = location
-        self.UUID = root.get('UUID', 'nouuid')
+        self.UUID = root.get("UUID", "nouuid")
         self.cachecontrol = 1800
-        myVersion = root.get('RedfishVersion', '1.0.0')
-        self.major, self.minor, self.errata = tuple(myVersion.split('.'))
-        self.addSearchTarget('urn:dmtf-org:service:redfish-rest:1:{}'.format(self.minor))
+        myVersion = root.get("RedfishVersion", "1.0.0")
+        self.major, self.minor, self.errata = tuple(myVersion.split("."))
+        self.addSearchTarget("urn:dmtf-org:service:redfish-rest:1:{}".format(self.minor))
 
         # initiate multicast socket
         # rf-spec:
@@ -56,10 +57,14 @@ class RfSSDPServer():
         sock.settimeout(timeout)
 
         # join the multicast group on any interface, and allow for the loopback address
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton('239.255.255.250') + struct.pack(b"@I", socket.INADDR_ANY))
+        sock.setsockopt(
+            socket.IPPROTO_IP,
+            socket.IP_ADD_MEMBERSHIP,
+            socket.inet_aton("239.255.255.250") + struct.pack(b"@I", socket.INADDR_ANY),
+        )
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
 
-        sock.bind(('', port))
+        sock.bind(("", port))
         """
         Redfish Service Search Target (ST): "urn:dmtf-org:service:redfish-rest:1"
         For ssdp, "ssdp:all".
@@ -67,15 +72,15 @@ class RfSSDPServer():
         queries searching for Search Target (ST) of "upnp:rootdevice"
         """
         self.sock = sock
-        logger.info('SSDP Server Created')
+        logger.info("SSDP Server Created")
 
     def start(self):
-        logger.info('SSDP Server Running...')
+        logger.info("SSDP Server Running...")
         countTimeout = pcount = 0
         while True:
             try:
                 if countTimeout % 5 == 0:
-                    logger.info('Ssdp Poll... {} pings'.format(pcount))
+                    logger.info("Ssdp Poll... {} pings".format(pcount))
                     pcount = 0
                     countTimeout = 1
                 data, addr = self.sock.recvfrom(1024)
@@ -85,31 +90,37 @@ class RfSSDPServer():
                 countTimeout += 1
                 continue
             except Exception as e:
-                logger.info('error occurred ' + str(e))
+                logger.info("error occurred " + str(e))
                 pass
         pass
 
     def check(self, data, addr):
-        logger.info('SSDP Packet received from {}'.format(addr))
-        decoded = data.decode().replace('\r', '').split('\n')
+        logger.info("SSDP Packet received from {}".format(addr))
+        decoded = data.decode().replace("\r", "").split("\n")
         msgtype, decoded = decoded[0], decoded[1:]
-        decodeddict = {x.split(':',  1)[0].upper(): x.split(':', 1)[1].strip(' ') for x in decoded if x != ''}
+        decodeddict = {
+            x.split(":", 1)[0].upper(): x.split(":", 1)[1].strip(" ") for x in decoded if x != ""
+        }
 
-        if 'M-SEARCH' in msgtype:
-            st = decodeddict.get('ST')
+        if "M-SEARCH" in msgtype:
+            st = decodeddict.get("ST")
             if st in self.searchtargets:
-                response = ['HTTP/1.1 200 OK',
-                            'CACHE-CONTROL: max-age={}'.format(self.cachecontrol),
-                            'ST:urn:dmtf-org:service:redfish-rest:1:{}'.format(self.minor),
-                            'USN:uuid:{}::urn:dmtf-org:service:redfish-rest:1:{}'.format(self.UUID, self.minor),
-                            'AL:{}'.format(self.location),
-                            'EXT:']
+                response = [
+                    "HTTP/1.1 200 OK",
+                    "CACHE-CONTROL: max-age={}".format(self.cachecontrol),
+                    "ST:urn:dmtf-org:service:redfish-rest:1:{}".format(self.minor),
+                    "USN:uuid:{}::urn:dmtf-org:service:redfish-rest:1:{}".format(
+                        self.UUID, self.minor
+                    ),
+                    "AL:{}".format(self.location),
+                    "EXT:",
+                ]
 
-                response.extend(('', ''))
-                response = '\r\n'.join(response)
+                response.extend(("", ""))
+                response = "\r\n".join(response)
 
                 self.sock.sendto(response.encode(), addr)
-                logger.info('SSDP Packet sent to {}'.format(addr))
+                logger.info("SSDP Packet sent to {}".format(addr))
 
 
 """
@@ -130,7 +141,7 @@ def main(argv=None):
     hostname = "127.0.0.1"
     location = "http://127.0.0.1"
 
-    server = RfSSDPServer({}, '{}:{}{}'.format(location, '8000', '/redfish/v1'), hostname)
+    server = RfSSDPServer({}, "{}:{}{}".format(location, "8000", "/redfish/v1"), hostname)
 
     try:
         server.start()

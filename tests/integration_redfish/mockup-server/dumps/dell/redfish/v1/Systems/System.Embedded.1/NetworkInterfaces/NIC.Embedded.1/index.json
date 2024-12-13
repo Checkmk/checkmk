@@ -1,0 +1,24 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#NetworkInterface.NetworkInterface",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/NetworkInterfaces/NIC.Embedded.1",
+    "@odata.type": "#NetworkInterface.v1_2_1.NetworkInterface",
+    "Description": "Network Device View",
+    "Id": "NIC.Embedded.1",
+    "Links": {
+        "NetworkAdapter": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1"
+        }
+    },
+    "Name": "Network Device View",
+    "NetworkDeviceFunctions": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions"
+    },
+    "NetworkPorts": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts"
+    },
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    }
+}

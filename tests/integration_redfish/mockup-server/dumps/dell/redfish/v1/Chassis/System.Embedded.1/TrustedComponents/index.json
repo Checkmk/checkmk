@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#TrustedComponentCollection.TrustedComponentCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/TrustedComponents",
+    "@odata.type": "#TrustedComponentCollection.TrustedComponentCollection",
+    "Description": "Collection of TrustedComponents",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/TrustedComponents/TPM"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "TrustedComponents Collection"
+}

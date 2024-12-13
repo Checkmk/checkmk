@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#StorageControllerCollection.StorageControllerCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/AHCI.Embedded.2-1/Controllers",
+    "@odata.type": "#StorageControllerCollection.StorageControllerCollection",
+    "Description": "Collection Of Storage controllers",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/AHCI.Embedded.2-1/Controllers/AHCI.Embedded.2-1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Storage controller Collection"
+}

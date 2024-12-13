@@ -1,0 +1,67 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Volume.Volume",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Volumes/Disk.Virtual.239:RAID.Slot.3-1/Settings",
+    "@odata.type": "#Volume.v1_9_0.Volume",
+    "Actions": {},
+    "BlockSizeBytes": 512,
+    "CapacityBytes": 1199638052864,
+    "Description": "Virtual Disk 239 on RAID Controller in Slot 3",
+    "DisplayName": "SERVER2",
+    "Encrypted": false,
+    "EncryptionTypes": [
+        "NativeDriveEncryption"
+    ],
+    "EncryptionTypes@odata.count": 1,
+    "Id": "Disk.Virtual.239:RAID.Slot.3-1",
+    "Identifiers": [],
+    "Identifiers@odata.count": 0,
+    "Links": {
+        "Drives": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Drives/Disk.Bay.0:Enclosure.Internal.0-0:RAID.Slot.3-1"
+            },
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Drives/Disk.Bay.1:Enclosure.Internal.0-0:RAID.Slot.3-1"
+            }
+        ],
+        "Drives@odata.count": 2
+    },
+    "MediaSpanCount": 2,
+    "Name": "SERVER2",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellVolume.v1_0_0.DellVolume",
+            "DellVirtualDisk@Redfish.Deprecated": "Please migrate to use DellVolume",
+            "DellVolume": {
+                "DiskCachePolicy": "Default",
+                "DiskCachePolicy@Redfish.AllowableValues": [
+                    "Default",
+                    "Disabled",
+                    "Enabled"
+                ]
+            }
+        }
+    },
+    "Operations": [],
+    "Operations@odata.count": 0,
+    "OptimumIOSizeBytes": 262144,
+    "RAIDType": "RAID1",
+    "ReadCachePolicy": "ReadAhead",
+    "ReadCachePolicy@Redfish.AllowableValues": [
+        "ReadAhead",
+        "AdaptiveReadAhead",
+        "Off"
+    ],
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "VolumeType": "Mirrored",
+    "WriteCachePolicy": "ProtectedWriteBack",
+    "WriteCachePolicy@Redfish.AllowableValues": [
+        "WriteThrough",
+        "ProtectedWriteBack",
+        "UnprotectedWriteBack"
+    ]
+}

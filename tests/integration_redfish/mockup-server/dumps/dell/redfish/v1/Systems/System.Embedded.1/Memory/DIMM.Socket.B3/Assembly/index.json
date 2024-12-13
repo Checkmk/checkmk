@@ -1,0 +1,44 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Assembly.Assembly",
+    "@odata.type": "#Assembly.v1_4_0.Assembly",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B3/Assembly",
+    "Assemblies": [
+        {
+            "@odata.type": "#Assembly.v1_4_0.AssemblyData",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B3/Assembly#/Assemblies/0",
+            "BinaryDataURI": null,
+            "Description": "DDR5 DIMM",
+            "EngineeringChangeLevel": null,
+            "MemberId": "0",
+            "Model": "DDR5 DIMM",
+            "Name": "DIMM.Socket.B3#FRU",
+            "Oem": {
+                "Dell": {
+                    "@odata.type": "#DellOem.v1_3_0.DellOemResources",
+                    "DellAssembly": {
+                        "Description": "This resource shall be used to represent an assembly information.",
+                        "DeviceFQDD": "DIMM.Socket.B3",
+                        "Id": "DIMM.Socket.B3_0x23_FRU",
+                        "Name": "DellAssembly",
+                        "PackageType": "Memory",
+                        "SerialNumber": "XNDHS8CA8D1",
+                        "@odata.context": "/redfish/v1/$metadata#DellAssembly.DellAssembly",
+                        "@odata.type": "#DellAssembly.v1_0_0.DellAssembly",
+                        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Oem/Dell/DellAssembly/DIMM.Socket.B3_0x23_FRU"
+                    }
+                }
+            },
+            "PartNumber": "M321R4GA3BB6-CQKMS",
+            "Producer": "Samsung",
+            "ProductionDate": "2022-05-16T07:00:00Z",
+            "SKU": null,
+            "SparePartNumber": null,
+            "Vendor": "DELL",
+            "Version": null
+        }
+    ],
+    "Assemblies@odata.count": 1,
+    "Description": "Represents the properties of Assembly for the device",
+    "Id": "Assembly",
+    "Name": "DIMM.Socket.B3#FRU"
+}

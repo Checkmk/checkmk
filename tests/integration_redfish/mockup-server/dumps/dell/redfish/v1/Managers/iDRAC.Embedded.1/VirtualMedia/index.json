@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia",
+    "@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+    "Description": "iDRAC Virtual Media Services Settings",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/CD"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Virtual Media Services"
+}

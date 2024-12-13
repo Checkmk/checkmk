@@ -1,0 +1,50 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellNumericSensor.DellNumericSensor",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellNumericSensors/iDRAC.Embedded.1_0x23_SystemBoardInletTemp",
+    "@odata.type": "#DellNumericSensor.v1_1_1.DellNumericSensor",
+    "CurrentReading": 200.0,
+    "CurrentState": "Normal",
+    "Description": "An instance of DellNumericSensor will have data specific to sensor devices that returns only numeric readings and optionally supports thresholds settings.",
+    "DeviceID": "iDRAC.Embedded.1#SystemBoardInletTemp",
+    "ElementName": "System Board Inlet Temp",
+    "EnabledDefault": "Enabled",
+    "EnabledState": "Enabled",
+    "HealthState": "OK",
+    "Id": "iDRAC.Embedded.1_0x23_SystemBoardInletTemp",
+    "Links": {
+        "ComputerSystem": {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
+        }
+    },
+    "LowerThresholdCritical": -70,
+    "LowerThresholdNonCritical": 30,
+    "Name": "DellNumericSensor",
+    "OperationalStatus": [
+        "OK"
+    ],
+    "OperationalStatus@odata.count": 1,
+    "OtherSensorTypeDescription": null,
+    "PossibleStates": [
+        "Unknown",
+        "Fatal",
+        "Normal",
+        "Upper Fatal",
+        "Upper Critical",
+        "Upper Non-Critical",
+        "Lower Non-Critical",
+        "Lower Critical",
+        "Lower Fatal"
+    ],
+    "PossibleStates@odata.count": 9,
+    "PrimaryStatus": "OK",
+    "RateUnits": "None",
+    "ReadingUnits": "DegreesC",
+    "RequestedState": "NotApplicable",
+    "SensorType": "Temperature",
+    "SystemName": "system",
+    "TransitioningToState": "NotApplicable",
+    "UnitModifier": -1,
+    "UpperThresholdCritical": 420,
+    "UpperThresholdNonCritical": 380,
+    "ValueFormulation": 2
+}

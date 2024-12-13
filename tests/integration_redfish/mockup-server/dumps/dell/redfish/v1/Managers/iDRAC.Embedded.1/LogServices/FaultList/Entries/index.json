@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogEntryCollection.LogEntryCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/FaultList/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "Providing additional health information for the devices which support rolled up health data",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "FaultList Entries Collection"
+}

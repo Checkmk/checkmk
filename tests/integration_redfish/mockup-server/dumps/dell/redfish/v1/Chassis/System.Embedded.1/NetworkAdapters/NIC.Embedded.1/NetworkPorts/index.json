@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#NetworkPortCollection.NetworkPortCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts",
+    "@odata.type": "#NetworkPortCollection.NetworkPortCollection",
+    "Description": "Collection Of Network Port entities",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts/NIC.Embedded.1-1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts/NIC.Embedded.2-1"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Network Port Collection"
+}

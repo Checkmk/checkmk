@@ -1,0 +1,53 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Sensor.Sensor",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardSYSUsage",
+    "@odata.type": "#Sensor.v1_7_0.Sensor",
+    "Name": "System Board SYS Usage",
+    "Id": "SystemBoardSYSUsage",
+    "Description": "Instance of Sensor Id",
+    "ReadingType": "Percent",
+    "ReadingUnits": "%",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Reading": 0.0,
+    "PhysicalContext": "SystemBoard",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemSensor.v1_0_0.DellOemSensor",
+            "CurrentState": "Normal",
+            "DeviceID": "iDRAC.Embedded.1#SystemBoardSYSUsage",
+            "PossibleStates": [
+                "Unknown",
+                "Fatal",
+                "Normal",
+                "Upper Fatal",
+                "Upper Critical",
+                "Upper Non-Critical",
+                "Lower Non-Critical",
+                "Lower Critical",
+                "Lower Fatal"
+            ],
+            "PossibleStates@odata.count": 9,
+            "RequestedState": "NotApplicable"
+        }
+    },
+    "Thresholds": {
+        "UpperCritical": {
+            "Reading": null
+        },
+        "UpperCaution": {
+            "Reading": 101
+        },
+        "LowerCaution": {
+            "Reading": null
+        },
+        "LowerCritical": {
+            "Reading": null
+        },
+        "UpperCautionUser": {
+            "Reading": 101
+        }
+    }
+}

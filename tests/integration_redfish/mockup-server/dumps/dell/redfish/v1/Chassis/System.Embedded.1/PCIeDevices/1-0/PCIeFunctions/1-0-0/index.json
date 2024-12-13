@@ -1,0 +1,52 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PCIeFunction.PCIeFunction",
+    "@odata.etag": "\"1708629060\"",
+    "@odata.type": "#PCIeFunction.v1_5_0.PCIeFunction",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PCIeDevices/1-0/PCIeFunctions/1-0-0",
+    "ClassCode": "0x000002",
+    "Description": "NetXtreme BCM5720 Gigabit Ethernet PCIe",
+    "DeviceClass": "NetworkController",
+    "DeviceId": "0x165f",
+    "Enabled": true,
+    "FunctionId": 0,
+    "FunctionType": "Physical",
+    "Id": "1-0-0",
+    "Links": {
+        "StorageControllers": [],
+        "StorageControllers@odata.count": 0,
+        "Drives": [],
+        "Drives@odata.count": 0,
+        "EthernetInterfaces": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Embedded.1-1-1"
+            }
+        ],
+        "EthernetInterfaces@odata.count": 1,
+        "PCIeDevice": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PCIeDevices/1-0"
+        }
+    },
+    "Name": "NetXtreme BCM5720 Gigabit Ethernet PCIe",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellChassisPCIeFunction.v1_1_0.DellPCIeFunction",
+            "DellPCIeFunction": {
+                "DataBusWidth": "Unknown",
+                "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+                "LastUpdateTime": "2024-02-20T20:45:04+00:00",
+                "SlotLength": "Unknown",
+                "SlotType": "Unknown",
+                "Id": "NIC.Embedded.1-1-1"
+            }
+        }
+    },
+    "RevisionId": "0x00",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK",
+        "HealthRollup": "OK"
+    },
+    "SubsystemId": "0x0a6b",
+    "SubsystemVendorId": "0x1028",
+    "VendorId": "0x14e4"
+}

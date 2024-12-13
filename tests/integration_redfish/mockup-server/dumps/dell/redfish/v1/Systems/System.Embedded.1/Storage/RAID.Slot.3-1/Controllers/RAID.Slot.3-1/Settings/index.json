@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#StorageController.StorageController",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Controllers/RAID.Slot.3-1/Settings",
+    "@odata.type": "#StorageController.v1_7_0.StorageController",
+    "CacheSummary": {
+        "TotalCacheSizeMiB": 8192
+    },
+    "ControllerRates": {},
+    "Description": "RAID Controller in Slot 3",
+    "Id": "RAID.Slot.3-1",
+    "Name": "PERC H755 Adapter",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemStorageController.v1_0_0.DellOemStorageController",
+            "DellStorageController": {}
+        }
+    }
+}

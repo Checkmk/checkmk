@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellPresenceAndStatusSensorCollection.DellPresenceAndStatusSensorCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellPresenceAndStatusSensors",
+    "@odata.type": "#DellPresenceAndStatusSensorCollection.DellPresenceAndStatusSensorCollection",
+    "Description": "A collection of DellPresenceAndStatusSensor resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellPresenceAndStatusSensorCollection"
+}

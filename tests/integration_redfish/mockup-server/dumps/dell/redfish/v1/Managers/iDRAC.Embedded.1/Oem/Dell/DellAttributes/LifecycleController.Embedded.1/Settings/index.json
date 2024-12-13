@@ -1,0 +1,24 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellAttributes.DellAttributes",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellAttributes/LifecycleController.Embedded.1/Settings",
+    "@odata.type": "#DellAttributes.v1_0_0.DellAttributes",
+    "Actions": {
+        "#DellManager.ClearPending": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellAttributes/LifecycleController.Embedded.1/Settings/Actions/DellManager.ClearPending"
+        }
+    },
+    "AttributeRegistry": "ManagerAttributeRegistry.v1_0_0",
+    "Attributes": {},
+    "Description": "This schema provides settings of the oem attributes",
+    "Id": "LCSettings",
+    "Name": "OemAttributeRegistrySettings",
+    "Oem": {
+        "Dell": {
+            "@odata.context": "/redfish/v1/$metadata#DellManager.DellManager",
+            "@odata.type": "#DellManager.v1_4_0.DellManager",
+            "Jobs": {
+                "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs"
+            }
+        }
+    }
+}

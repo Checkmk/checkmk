@@ -1,0 +1,44 @@
+{
+    "@Redfish.Settings": {
+        "@odata.context": "/redfish/v1/$metadata#Settings.Settings",
+        "@odata.type": "#Settings.v1_3_5.Settings",
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBootSources/Settings"
+        },
+        "SupportedApplyTimes": [
+            "OnReset",
+            "AtMaintenanceWindowStart",
+            "InMaintenanceWindowOnReset"
+        ]
+    },
+    "@odata.context": "/redfish/v1/$metadata#DellBootSources.DellBootSources",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBootSources",
+    "@odata.type": "#DellBootSources.v1_1_0.DellBootSources",
+    "AttributeRegistry": "DellBootSourcesRegistry.v1_1_0",
+    "Attributes": {
+        "BootSeq": [
+            {
+                "Enabled": true,
+                "Id": "BIOS.Setup.1-1#BootSeq#HardDisk.List.1-1#81dc1ab05577b0942967953640301e64",
+                "Index": 0,
+                "Name": "HardDisk.List.1-1"
+            },
+            {
+                "Enabled": true,
+                "Id": "BIOS.Setup.1-1#BootSeq#NIC.Integrated.1-1-1#dcbc2b1b2865921ce3094a06b1407b74",
+                "Index": 1,
+                "Name": "NIC.Integrated.1-1-1"
+            }
+        ],
+        "HddSeq": [
+            {
+                "Id": "BIOS.Setup.1-1#HddSeq#RAID.Slot.3-1#2b062c9dd644e0549c8580313a8e74a5",
+                "Index": 0,
+                "Name": "RAID.Slot.3-1"
+            }
+        ]
+    },
+    "Description": "Boot Sources Current Settings",
+    "Id": "DellBootSources",
+    "Name": "Boot Sources Configuration Current Settings"
+}

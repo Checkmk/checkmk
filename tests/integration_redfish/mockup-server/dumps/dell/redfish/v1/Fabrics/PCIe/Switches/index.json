@@ -1,0 +1,8 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SwitchCollection.SwitchCollection",
+    "@odata.id": "/redfish/v1/Fabrics/PCIe/Switches",
+    "@odata.type": "#SwitchCollection.SwitchCollection",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "Switch Collection"
+}

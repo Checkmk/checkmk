@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#BootOption.BootOption",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/BootOptions/HardDisk.List.1-1",
+    "@odata.type": "#BootOption.v1_0_4.BootOption",
+    "BootOptionEnabled": true,
+    "BootOptionReference": "HardDisk.List.1-1",
+    "Description": "Current settings of the Legacy Boot option",
+    "DisplayName": "Hard drive C:",
+    "Id": "HardDisk.List.1-1",
+    "Name": "Legacy Boot option",
+    "UefiDevicePath": "VenHw(D6C0639F-C705-4EB9-AA4F-5802D8823DE6)"
+}

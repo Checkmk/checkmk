@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PCIeDeviceCollection.PCIeDeviceCollection",
+    "@odata.id": "/redfish/v1/Chassis/Enclosure.Internal.0-1:RAID.Slot.3-1/PCIeDevices",
+    "@odata.type": "#PCIeDeviceCollection.PCIeDeviceCollection",
+    "Description": "Collection of PCIeDevices",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/Enclosure.Internal.0-1:RAID.Slot.3-1/PCIeDevices/55-0"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "PCIeDevice Collection"
+}

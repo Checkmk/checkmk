@@ -1,0 +1,48 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PCIeFunction.PCIeFunction",
+    "@odata.etag": "\"1708629060\"",
+    "@odata.type": "#PCIeFunction.v1_5_0.PCIeFunction",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PCIeDevices/0-31/PCIeFunctions/0-31-4",
+    "ClassCode": "0x00000c",
+    "Description": "Intel Corporation",
+    "DeviceClass": "SerialBusController",
+    "DeviceId": "0x1bc9",
+    "Enabled": true,
+    "FunctionId": 4,
+    "FunctionType": "Physical",
+    "Id": "0-31-4",
+    "Links": {
+        "StorageControllers": [],
+        "StorageControllers@odata.count": 0,
+        "Drives": [],
+        "Drives@odata.count": 0,
+        "EthernetInterfaces": [],
+        "EthernetInterfaces@odata.count": 0,
+        "PCIeDevice": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PCIeDevices/0-31"
+        }
+    },
+    "Name": "Intel Corporation",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellChassisPCIeFunction.v1_1_0.DellPCIeFunction",
+            "DellPCIeFunction": {
+                "DataBusWidth": "Unknown",
+                "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+                "LastUpdateTime": "2023-12-30T01:13:13+00:00",
+                "SlotLength": "Unknown",
+                "SlotType": "Unknown",
+                "Id": "SMBus.Embedded.3-1"
+            }
+        }
+    },
+    "RevisionId": "0x11",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK",
+        "HealthRollup": "OK"
+    },
+    "SubsystemId": "0x0a6b",
+    "SubsystemVendorId": "0x1028",
+    "VendorId": "0x8086"
+}

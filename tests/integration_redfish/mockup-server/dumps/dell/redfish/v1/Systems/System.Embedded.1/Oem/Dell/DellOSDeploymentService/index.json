@@ -1,0 +1,103 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellOSDeploymentService.DellOSDeploymentService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService",
+    "@odata.type": "#DellOSDeploymentService.v1_1_0.DellOSDeploymentService",
+    "Actions": {
+        "#DellOSDeploymentService.BootToHD": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.BootToHD"
+        },
+        "#DellOSDeploymentService.BootToISOFromVFlash": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.BootToISOFromVFlash"
+        },
+        "#DellOSDeploymentService.BootToNetworkISO": {
+            "HashType@Redfish.AllowableValues": [
+                "MD5",
+                "SHA1"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.BootToNetworkISO"
+        },
+        "#DellOSDeploymentService.ConfigurableBootToNetworkISO": {
+            "HashType@Redfish.AllowableValues": [
+                "MD5",
+                "SHA1"
+            ],
+            "ResetType@Redfish.AllowableValues": [
+                "ColdReset",
+                "NoReset",
+                "WarmReset"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.ConfigurableBootToNetworkISO"
+        },
+        "#DellOSDeploymentService.ConnectNetworkISOImage": {
+            "HashType@Redfish.AllowableValues": [
+                "MD5",
+                "SHA1"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.ConnectNetworkISOImage"
+        },
+        "#DellOSDeploymentService.DeleteISOFromVFlash": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DeleteISOFromVFlash"
+        },
+        "#DellOSDeploymentService.DetachDrivers": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DetachDrivers"
+        },
+        "#DellOSDeploymentService.DetachISOFromVFlash": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DetachISOFromVFlash"
+        },
+        "#DellOSDeploymentService.DetachISOImage": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DetachISOImage"
+        },
+        "#DellOSDeploymentService.DisconnectNetworkISOImage": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DisconnectNetworkISOImage"
+        },
+        "#DellOSDeploymentService.DownloadISOToVFlash": {
+            "HashType@Redfish.AllowableValues": [
+                "MD5",
+                "SHA1"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS",
+                "TFTP"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.DownloadISOToVFlash"
+        },
+        "#DellOSDeploymentService.GetAttachStatus": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.GetAttachStatus"
+        },
+        "#DellOSDeploymentService.GetDriverPackInfo": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.GetDriverPackInfo"
+        },
+        "#DellOSDeploymentService.GetNetworkISOImageConnectionInfo": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.GetNetworkISOImageConnectionInfo"
+        },
+        "#DellOSDeploymentService.SkipISOImageBoot": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.SkipISOImageBoot"
+        },
+        "#DellOSDeploymentService.UnpackAndAttach": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.UnpackAndAttach"
+        },
+        "#DellOSDeploymentService.UnpackAndShare": {
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellOSDeploymentService/Actions/DellOSDeploymentService.UnpackAndShare"
+        }
+    },
+    "Description": "The DellOSDeploymentService resource provides some actions to support OS deployment configurations.",
+    "Id": "DellOSDeploymentService",
+    "Name": "DellOSDeploymentService"
+}

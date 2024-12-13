@@ -1,0 +1,29 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMedia.VirtualMedia",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk",
+    "@odata.type": "#VirtualMedia.v1_6_1.VirtualMedia",
+    "Actions": {
+        "#VirtualMedia.EjectMedia": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk/Actions/VirtualMedia.EjectMedia"
+        },
+        "#VirtualMedia.InsertMedia": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/VirtualMedia/RemovableDisk/Actions/VirtualMedia.InsertMedia"
+        }
+    },
+    "ConnectedVia": "NotConnected",
+    "Description": "iDRAC Virtual Media Services Settings",
+    "Id": "RemovableDisk",
+    "Image": null,
+    "ImageName": null,
+    "Inserted": false,
+    "MediaTypes": [
+        "USBStick"
+    ],
+    "MediaTypes@odata.count": 1,
+    "Name": "Virtual Removable Disk",
+    "Password": null,
+    "TransferMethod": null,
+    "TransferProtocolType": null,
+    "UserName": null,
+    "WriteProtected": null
+}

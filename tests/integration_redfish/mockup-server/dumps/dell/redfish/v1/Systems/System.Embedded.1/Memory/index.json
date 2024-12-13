@@ -1,0 +1,34 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#MemoryCollection.MemoryCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory",
+    "@odata.type": "#MemoryCollection.MemoryCollection",
+    "Description": "Collection of memory devices for this system",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B2"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B4"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A3"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A2"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.B3"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A4"
+        }
+    ],
+    "Members@odata.count": 8,
+    "Name": "Memory Devices Collection"
+}

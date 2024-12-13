@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SerialInterface.SerialInterface",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/SerialInterfaces/Serial.1",
+    "@odata.type": "#SerialInterface.v1_1_8.SerialInterface",
+    "Actions": {
+        "Oem": {
+            "#DellSerialInterface.SerialDataClear": {
+                "target": "/redfish/v1/Managers/iDRAC.Embedded.1/SerialInterfaces/Serial.1/Actions/Oem/DellSerialInterface.SerialDataClear"
+            },
+            "#DellSerialInterface.SerialDataExport": {
+                "target": "/redfish/v1/Managers/iDRAC.Embedded.1/SerialInterfaces/Serial.1/Actions/Oem/DellSerialInterface.SerialDataExport"
+            }
+        }
+    },
+    "Description": "Management for Serial Interface",
+    "Id": "Serial.1",
+    "Name": "Managed Serial Interface 1"
+}

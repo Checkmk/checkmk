@@ -1,0 +1,56 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Sensor.Sensor",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardInletTemp",
+    "@odata.type": "#Sensor.v1_7_0.Sensor",
+    "Name": "System Board Inlet Temp",
+    "Id": "SystemBoardInletTemp",
+    "Description": "Instance of Sensor Id",
+    "ReadingType": "Temperature",
+    "ReadingUnits": "Cel",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Reading": 20.0,
+    "PhysicalContext": "SystemBoard",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemSensor.v1_0_0.DellOemSensor",
+            "CurrentState": "Normal",
+            "DeviceID": "iDRAC.Embedded.1#SystemBoardInletTemp",
+            "PossibleStates": [
+                "Unknown",
+                "Fatal",
+                "Normal",
+                "Upper Fatal",
+                "Upper Critical",
+                "Upper Non-Critical",
+                "Lower Non-Critical",
+                "Lower Critical",
+                "Lower Fatal"
+            ],
+            "PossibleStates@odata.count": 9,
+            "RequestedState": "NotApplicable"
+        }
+    },
+    "Thresholds": {
+        "UpperCritical": {
+            "Reading": 42
+        },
+        "UpperCaution": {
+            "Reading": 38
+        },
+        "LowerCaution": {
+            "Reading": 3
+        },
+        "LowerCritical": {
+            "Reading": -7
+        },
+        "UpperCautionUser": {
+            "Reading": 38
+        },
+        "LowerCautionUser": {
+            "Reading": 3
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions",
+    "@odata.type": "#NetworkDeviceFunctionCollection.NetworkDeviceFunctionCollection",
+    "Description": "Collection Of Network Device Function entities",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.2-1-1"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Network Device Function Collection"
+}

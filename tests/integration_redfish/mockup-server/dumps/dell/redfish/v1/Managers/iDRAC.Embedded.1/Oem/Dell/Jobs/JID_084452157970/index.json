@@ -1,0 +1,21 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellJob.DellJob",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs/JID_084452157970",
+    "@odata.type": "#DellJob.v1_5_0.DellJob",
+    "ActualRunningStartTime": "2024-02-20T10:06:56",
+    "ActualRunningStopTime": "2024-02-20T10:08:25",
+    "CompletionTime": "2024-02-20T10:08:25",
+    "Description": "Job Instance",
+    "EndTime": "TIME_NA",
+    "Id": "JID_084452157970",
+    "JobState": "Completed",
+    "JobType": "RealTimeNoRebootConfiguration",
+    "Message": "Job completed successfully.",
+    "MessageArgs": [],
+    "MessageArgs@odata.count": 0,
+    "MessageId": "PR19",
+    "Name": "Configure: RAID.Slot.3-1",
+    "PercentComplete": 100,
+    "StartTime": "2024-02-20T10:06:55",
+    "TargetSettingsURI": null
+}

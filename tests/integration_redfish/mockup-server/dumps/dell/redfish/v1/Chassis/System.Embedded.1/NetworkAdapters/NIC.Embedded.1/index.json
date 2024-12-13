@@ -1,0 +1,88 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#NetworkAdapter.NetworkAdapter",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1",
+    "@odata.type": "#NetworkAdapter.v1_9_0.NetworkAdapter",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Assembly"
+    },
+    "Controllers": [
+        {
+            "ControllerCapabilities": {
+                "DataCenterBridging": {
+                    "Capable": false
+                },
+                "NPAR": {
+                    "NparCapable": false,
+                    "NparEnabled": false
+                },
+                "NPIV": {
+                    "MaxDeviceLogins": 0,
+                    "MaxPortLogins": 0
+                },
+                "NetworkDeviceFunctionCount": 2,
+                "NetworkPortCount": 2,
+                "VirtualizationOffload": {
+                    "SRIOV": {
+                        "SRIOVVEPACapable": false
+                    },
+                    "VirtualFunction": {
+                        "DeviceMaxCount": null,
+                        "MinAssignmentGroupSize": null,
+                        "NetworkPortMaxCount": null
+                    }
+                }
+            },
+            "FirmwarePackageVersion": "22.71.3",
+            "Links": {
+                "NetworkDeviceFunctions": [
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1"
+                    },
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.2-1-1"
+                    }
+                ],
+                "NetworkDeviceFunctions@odata.count": 2,
+                "NetworkPorts": [
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts/NIC.Embedded.1-1"
+                    },
+                    {
+                        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts/NIC.Embedded.2-1"
+                    }
+                ],
+                "NetworkPorts@odata.count": 2,
+                "Oem": {
+                    "Dell": {
+                        "@odata.type": "#DellOem.v1_3_0.DellOemLinks",
+                        "CPUAffinity": [],
+                        "CPUAffinity@odata.count": 0
+                    }
+                }
+            }
+        }
+    ],
+    "Controllers@odata.count": 1,
+    "Description": "Network Adapter View",
+    "Id": "NIC.Embedded.1",
+    "Manufacturer": "Broadcom Inc. and subsidiaries",
+    "Model": null,
+    "Name": "Network Adapter View",
+    "NetworkDeviceFunctions": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions"
+    },
+    "NetworkPorts": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkPorts"
+    },
+    "NetworkPorts@Redfish.Deprecated": "Please migrate to use /redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/{NetworkAdaptersId}/Ports",
+    "Ports": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/Ports"
+    },
+    "PartNumber": null,
+    "SerialNumber": null,
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellUSBDeviceCollection.DellUSBDeviceCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellUSBDevices",
+    "@odata.type": "#DellUSBDeviceCollection.DellUSBDeviceCollection",
+    "Description": "A collection of DellUSBDevice resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellUSBDeviceCollection"
+}

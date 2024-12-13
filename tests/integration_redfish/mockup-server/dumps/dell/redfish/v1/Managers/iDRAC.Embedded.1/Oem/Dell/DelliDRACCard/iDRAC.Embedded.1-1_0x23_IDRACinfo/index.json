@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DelliDRACCard.DelliDRACCard",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DelliDRACCard/iDRAC.Embedded.1-1_0x23_IDRACinfo",
+    "@odata.type": "#DelliDRACCard.v1_1_0.DelliDRACCard",
+    "Description": "An instance of DelliDRACCard will have data specific to the Integrated Dell Remote Access Controller (iDRAC) in the managed system.",
+    "IPMIVersion": "2.0",
+    "Id": "iDRAC.Embedded.1-1_0x23_IDRACinfo",
+    "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+    "LastUpdateTime": "2024-02-29T12:50:10+00:00",
+    "Name": "DelliDRACCard",
+    "URLString": "https://192.168.0.1:443"
+}

@@ -1,0 +1,66 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PowerSupply.PowerSupply",
+    "@odata.type": "#PowerSupply.v1_5_1.PowerSupply",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.1",
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.1/Assembly"
+    },
+    "Description": "An instance of PowerSupply",
+    "FirmwareVersion": "00.18.31",
+    "HotPluggable": true,
+    "Id": "PSU.Slot.1",
+    "InputNominalVoltageType": "AC100To240V",
+    "InputRanges": [
+        {
+            "CapacityWatts": 1400.0,
+            "NominalVoltageType": "AC100To240V"
+        }
+    ],
+    "LineInputStatus": "Normal",
+    "Manufacturer": "DELL",
+    "Metrics": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.1/Metrics"
+    },
+    "Model": "PWR SPLY,1400W,RDNT,LTON",
+    "Name": "PS1 Status",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemPower.v1_0_0.DellOemPower",
+            "DellPowerSupply": {
+                "ActiveInputVoltage": "Unknown",
+                "ActiveInputVoltage@Redfish.Deprecated": "Please migrate to use InputNominalVoltageType under DMTF PowerSupply",
+                "IsSwitchingSupply": true,
+                "OperationalStatus": [
+                    "OK"
+                ],
+                "OperationalStatus@odata.count": 1,
+                "RequestedState": "NotApplicable"
+            },
+            "DellPowerSupplyView": {
+                "DetailedState": "Presence Detected",
+                "DeviceDescription": "Power Supply 1",
+                "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+                "LastUpdateTime": "2024-02-29T12:51:24+00:00",
+                "PMBusMonitoring": "Capable",
+                "Range1MaxInputPowerWatts": 1568,
+                "RedMinNumberNeeded": 1,
+                "RedTypeOfSet": [
+                    "N+1",
+                    "InputPowerRedundancy",
+                    "Sparing"
+                ],
+                "RedTypeOfSet@odata.count": 3,
+                "RedundancyStatus": "FullyRedundant"
+            }
+        }
+    },
+    "PartNumber": "06C11WA03",
+    "PowerCapacityWatts": 1400.0,
+    "PowerSupplyType": "AC",
+    "SerialNumber": "XN2CCOXP6E4",
+    "SparePartNumber": "06C11WA03",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    }
+}

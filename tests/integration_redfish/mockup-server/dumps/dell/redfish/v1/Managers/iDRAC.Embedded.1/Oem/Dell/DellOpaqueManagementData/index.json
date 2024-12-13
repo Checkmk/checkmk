@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellOpaqueManagementDataCollection.DellOpaqueManagementDataCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellOpaqueManagementData",
+    "@odata.type": "#DellOpaqueManagementDataCollection.DellOpaqueManagementDataCollection",
+    "Description": "A collection of DellOpaqueManagementData resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellOpaqueManagementDataCollection"
+}

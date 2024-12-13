@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSlot.DellSlot",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSlots/iDRAC.Embedded.1_0x23_DIMMSLOTA15_0x23_Slot",
+    "@odata.type": "#DellSlot.v1_0_0.DellSlot",
+    "ConnectorLayout": "DIMM",
+    "Description": "DellSlot provides slot occupancy and device correlation information.",
+    "DeviceFQDD": null,
+    "EmptySlot": true,
+    "Id": "iDRAC.Embedded.1_0x23_DIMMSLOTA15_0x23_Slot",
+    "Name": "Memory Slot",
+    "Number": 0,
+    "NumberDescription": "A15",
+    "SlotEnabledState": "Enabled",
+    "Tag": "iDRAC.Embedded.1#DIMMSLOTA15#Slot"
+}

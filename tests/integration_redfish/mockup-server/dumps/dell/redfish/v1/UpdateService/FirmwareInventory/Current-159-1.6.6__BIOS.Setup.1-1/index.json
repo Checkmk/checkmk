@@ -1,0 +1,61 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SoftwareInventory.SoftwareInventory",
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Current-159-1.6.6__BIOS.Setup.1-1",
+    "@odata.type": "#SoftwareInventory.v1_9_0.SoftwareInventory",
+    "Description": "Represents Firmware Inventory",
+    "Id": "Current-159-1.6.6__BIOS.Setup.1-1",
+    "Name": "BIOS",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOem.v1_3_0.DellOemResources",
+            "DellSoftwareInventory": {
+                "@odata.context": "/redfish/v1/$metadata#DellSoftwareInventory.DellSoftwareInventory",
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Current-159-1.6.6__BIOS.Setup.1-1/Oem/Dell/DellSoftwareInventory/DCIM:CURRENT_0x23_741__BIOS.Setup.1-1",
+                "@odata.type": "#DellSoftwareInventory.v1_2_0.DellSoftwareInventory",
+                "BuildNumber": 0,
+                "Classifications": [
+                    "BIOS/FCode"
+                ],
+                "Classifications@odata.count": 1,
+                "ComponentID": "159",
+                "ComponentType": "BIOS",
+                "Description": "The DellSoftwareInventory resource is a representation of an available device firmware in the managed system.",
+                "DeviceID": null,
+                "ElementName": "BIOS",
+                "HashValue": "97ca9d0f0b37204350d315ce54d1b5067736c1cb75a25da08ca2e256d88a03ff",
+                "Id": "DCIM:CURRENT_0x23_741__BIOS.Setup.1-1",
+                "IdentityInfoType": [
+                    "OrgID:ComponentType:ComponentID"
+                ],
+                "IdentityInfoType@odata.count": 1,
+                "IdentityInfoValue": [
+                    "DCIM:BIOS:159"
+                ],
+                "IdentityInfoValue@odata.count": 1,
+                "InstallationDate": "NA",
+                "IsEntity": true,
+                "MajorVersion": 1,
+                "MinorVersion": 6,
+                "Name": "DellSoftwareInventory",
+                "PLDMCapabilitiesDuringUpdate": "0x00000000",
+                "PLDMFDPCapabilitiesDuringUpdate": "0x00000000",
+                "RevisionNumber": 6,
+                "RevisionString": null,
+                "SidebandUpdateCapable": false,
+                "Status": "AvailableForInstallation",
+                "SubDeviceID": null,
+                "SubVendorID": null,
+                "VendorID": null,
+                "impactsTPMmeasurements": true
+            }
+        }
+    },
+    "ReleaseDate": "2023-09-20T00:00:00Z",
+    "SoftwareId": "159",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "1.6.6"
+}

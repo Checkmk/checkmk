@@ -1,0 +1,91 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellLicenseManagementService.DellLicenseManagementService",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService",
+    "@odata.type": "#DellLicenseManagementService.v1_1_0.DellLicenseManagementService",
+    "Actions": {
+        "#DellLicenseManagementService.DeleteLicense": {
+            "DeleteOptions@Redfish.AllowableValues": [
+                "All",
+                "Force",
+                "NoOption"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.DeleteLicense"
+        },
+        "#DellLicenseManagementService.ExportLicense": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ExportLicense"
+        },
+        "#DellLicenseManagementService.ExportLicenseByDevice": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ExportLicenseByDevice"
+        },
+        "#DellLicenseManagementService.ExportLicenseByDeviceToNetworkShare": {
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ExportLicenseByDeviceToNetworkShare"
+        },
+        "#DellLicenseManagementService.ExportLicenseToNetworkShare": {
+            "IgnoreCertWarning@Redfish.AllowableValues": [
+                "Off",
+                "On"
+            ],
+            "ProxySupport@Redfish.AllowableValues": [
+                "DefaultProxy",
+                "Off",
+                "ParametersProxy"
+            ],
+            "ProxyType@Redfish.AllowableValues": [
+                "HTTP",
+                "SOCKS"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "HTTP",
+                "HTTPS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ExportLicenseToNetworkShare"
+        },
+        "#DellLicenseManagementService.ImportLicense": {
+            "ImportOptions@Redfish.AllowableValues": [
+                "All",
+                "Force",
+                "NoOption"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ImportLicense"
+        },
+        "#DellLicenseManagementService.ImportLicenseFromNetworkShare": {
+            "IgnoreCertWarning@Redfish.AllowableValues": [
+                "Off",
+                "On"
+            ],
+            "ImportOptions@Redfish.AllowableValues": [
+                "All",
+                "Force",
+                "NoOption"
+            ],
+            "ProxySupport@Redfish.AllowableValues": [
+                "DefaultProxy",
+                "Off",
+                "ParametersProxy"
+            ],
+            "ProxyType@Redfish.AllowableValues": [
+                "HTTP",
+                "SOCKS"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "HTTP",
+                "HTTPS",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ImportLicenseFromNetworkShare"
+        },
+        "#DellLicenseManagementService.ShowLicenseBits": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellLicenseManagementService/Actions/DellLicenseManagementService.ShowLicenseBits"
+        }
+    },
+    "Description": "The DellLicenseManagementService resource provides some actions to support License Management functionality.",
+    "Id": "DellLicenseManagementService",
+    "Name": "DellLicenseManagementService"
+}

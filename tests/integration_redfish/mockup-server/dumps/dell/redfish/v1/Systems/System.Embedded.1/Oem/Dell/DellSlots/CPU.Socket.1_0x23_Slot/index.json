@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSlot.DellSlot",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSlots/CPU.Socket.1_0x23_Slot",
+    "@odata.type": "#DellSlot.v1_0_0.DellSlot",
+    "ConnectorLayout": "Processor",
+    "Description": "DellSlot provides slot occupancy and device correlation information.",
+    "DeviceFQDD": "CPU.Socket.1",
+    "EmptySlot": false,
+    "Id": "CPU.Socket.1_0x23_Slot",
+    "Name": "Processor Slot",
+    "Number": 1,
+    "NumberDescription": "1",
+    "SlotEnabledState": "Enabled",
+    "Tag": "CPU.Socket.1#Slot"
+}

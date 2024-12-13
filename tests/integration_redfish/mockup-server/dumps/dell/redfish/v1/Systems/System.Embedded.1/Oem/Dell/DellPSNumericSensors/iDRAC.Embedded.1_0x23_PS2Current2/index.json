@@ -1,0 +1,55 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellPSNumericSensor.DellPSNumericSensor",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellPSNumericSensors/iDRAC.Embedded.1_0x23_PS2Current2",
+    "@odata.type": "#DellPSNumericSensor.v1_1_0.DellPSNumericSensor",
+    "CurrentReading": 2,
+    "CurrentState": "Normal",
+    "Description": "An instance of DellPSNumericSensor will have data specific to a power sensor device that returns only numeric readings and optionally supports of thresholds settings.",
+    "ElementName": "PS2 Current 2",
+    "EnabledDefault": "Enabled",
+    "EnabledState": "Enabled",
+    "HealthState": "OK",
+    "Id": "iDRAC.Embedded.1_0x23_PS2Current2",
+    "Links": {
+        "ComputerSystem": {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
+        },
+        "DellPowerSupplyCollection": [
+            {
+                "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Power/Oem/Dell/DellPowerSupply/PSU.Slot.2"
+            }
+        ],
+        "DellPowerSupplyCollection@odata.count": 1
+    },
+    "LowerThresholdCritical": null,
+    "LowerThresholdNonCritical": null,
+    "Name": "DellPSNumericSensor",
+    "OperationalStatus": [
+        "OK"
+    ],
+    "OperationalStatus@odata.count": 1,
+    "PossibleStates": [
+        "Unknown",
+        "Fatal",
+        "Normal",
+        "Upper Fatal",
+        "Upper Critical",
+        "Upper Non-Critical",
+        "Lower Non-Critical",
+        "Lower Critical",
+        "Lower Fatal"
+    ],
+    "PossibleStates@odata.count": 9,
+    "PrimaryStatus": "OK",
+    "RateUnits": "None",
+    "ReadingUnits": "Amps",
+    "RequestedState": "NotApplicable",
+    "Resolution": 1,
+    "SensorType": "PowerConsumption",
+    "SystemName": "srv:system",
+    "TransitioningToState": "NotApplicable",
+    "UnitModifier": -1,
+    "UpperThresholdCritical": null,
+    "UpperThresholdNonCritical": null,
+    "ValueFormulation": 2
+}

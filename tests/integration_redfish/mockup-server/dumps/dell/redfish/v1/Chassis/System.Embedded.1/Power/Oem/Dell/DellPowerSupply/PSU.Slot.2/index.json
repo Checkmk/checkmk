@@ -1,0 +1,23 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellPowerSupply.DellPowerSupply",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Power/Oem/Dell/DellPowerSupply/PSU.Slot.2",
+    "@odata.type": "#DellPowerSupply.v1_1_1.DellPowerSupply",
+    "ActiveInputVoltage": "Unknown",
+    "Description": "An instance of DellPowerSupply will have data specific to the Power Supply devices in the managed system.",
+    "Id": "PSU.Slot.2",
+    "IsSwitchingSupply": true,
+    "Links": {
+        "DellPSNumericSensorCollection": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellPSNumericSensors/iDRAC.Embedded.1_0x23_PS2Current2"
+            }
+        ],
+        "DellPSNumericSensorCollection@odata.count": 1
+    },
+    "Name": "DellPowerSupply",
+    "OperationalStatus": [
+        "OK"
+    ],
+    "OperationalStatus@odata.count": 1,
+    "RequestedState": "NotApplicable"
+}

@@ -1,0 +1,17 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#HostInterface.HostInterface",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/HostInterfaces/Host.1",
+    "@odata.type": "#HostInterface.v1_3_0.HostInterface",
+    "Description": "Management for Host Interface",
+    "ExternallyAccessible": false,
+    "HostEthernetInterfaces": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces"
+    },
+    "HostInterfaceType": "NetworkHostInterface",
+    "Id": "Host.1",
+    "InterfaceEnabled": false,
+    "ManagerEthernetInterface": {
+        "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/EthernetInterfaces/NIC.1"
+    },
+    "Name": "Managed Host Interface 1"
+}

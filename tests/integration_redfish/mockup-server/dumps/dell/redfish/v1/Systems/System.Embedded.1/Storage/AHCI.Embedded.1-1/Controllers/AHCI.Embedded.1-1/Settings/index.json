@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#StorageController.StorageController",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/AHCI.Embedded.1-1/Controllers/AHCI.Embedded.1-1/Settings",
+    "@odata.type": "#StorageController.v1_7_0.StorageController",
+    "CacheSummary": {
+        "TotalCacheSizeMiB": 0
+    },
+    "ControllerRates": {},
+    "Description": "Embedded AHCI 1",
+    "Id": "AHCI.Embedded.1-1",
+    "Name": "Sapphire Rapids SATA AHCI Controller",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemStorageController.v1_0_0.DellOemStorageController",
+            "DellStorageController": {}
+        }
+    }
+}

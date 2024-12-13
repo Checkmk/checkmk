@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PortMetrics.PortMetrics",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/Ports/NIC.Embedded.1-1/Metrics",
+    "@odata.type": "#PortMetrics.v1_4_0.PortMetrics",
+    "Description": "Port Metrics View",
+    "Transceivers": [
+        {
+            "RXInputPowerMilliWatts": null,
+            "SupplyVoltage": null,
+            "TXBiasCurrentMilliAmps": null,
+            "TXOutputPowerMilliWatts": null
+        }
+    ],
+    "Id": "NIC.Embedded.1-1",
+    "Name": "Port Metrics View"
+}

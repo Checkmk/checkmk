@@ -1,0 +1,31 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Sensor.Sensor",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Temperature.DIMM_MAX",
+    "@odata.type": "#Sensor.v1_7_0.Sensor",
+    "Name": "Max DIMM Temperature",
+    "Id": "Temperature.DIMM_MAX",
+    "Description": "Max DIMM Temperature",
+    "ReadingType": "Temperature",
+    "ReadingUnits": "Cel",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Reading": 38.0,
+    "PhysicalContext": "MemorySubsystem",
+    "Oem": {},
+    "Thresholds": {
+        "UpperCritical": {
+            "Reading": null
+        },
+        "UpperCaution": {
+            "Reading": null
+        },
+        "LowerCaution": {
+            "Reading": null
+        },
+        "LowerCritical": {
+            "Reading": null
+        }
+    }
+}

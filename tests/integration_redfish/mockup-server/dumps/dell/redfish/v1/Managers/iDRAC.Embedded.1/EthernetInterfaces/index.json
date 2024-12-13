@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#EthernetInterfaceCollection.EthernetInterfaceCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/EthernetInterfaces",
+    "@odata.type": "#EthernetInterfaceCollection.EthernetInterfaceCollection",
+    "Description": "Collection of EthernetInterfaces for this Manager",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/EthernetInterfaces/NIC.1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Ethernet Network Interface Collection"
+}

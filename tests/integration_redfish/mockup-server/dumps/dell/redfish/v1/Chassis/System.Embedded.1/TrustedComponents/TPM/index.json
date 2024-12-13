@@ -1,0 +1,19 @@
+{
+    "@odata.type": "#TrustedComponent.v1_1_0.TrustedComponent",
+    "@odata.context": "/redfish/v1/$metadata#TrustedComponent.TrustedComponent",
+    "Id": "TPM",
+    "Name": "TrustedComponent for TPM",
+    "Description": "TrustedComponent for Trusted Platform Module",
+    "TrustedComponentType": "Discrete",
+    "Certificates": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/TrustedComponents/TPM/Certificates"
+    },
+    "Links": {
+        "ComponentsProtected": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
+            }
+        ]
+    },
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/TrustedComponents/TPM"
+}

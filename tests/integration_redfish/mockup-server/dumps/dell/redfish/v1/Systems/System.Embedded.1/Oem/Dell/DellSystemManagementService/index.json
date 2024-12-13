@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSystemManagementService.DellSystemManagementService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSystemManagementService",
+    "@odata.type": "#DellSystemManagementService.v1_1_0.DellSystemManagementService",
+    "Actions": {
+        "#DellSystemManagementService.RebootChassisManager": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSystemManagementService/Actions/DellSystemManagementService.RebootChassisManager"
+        },
+        "#DellSystemManagementService.ShowErrorsOnLCD": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSystemManagementService/Actions/DellSystemManagementService.ShowErrorsOnLCD"
+        }
+    },
+    "Description": "DellSystemManagementService provides actions to support System Management functionalities.",
+    "Id": "DellSystemManagementService",
+    "Name": "DellSystemManagementService"
+}

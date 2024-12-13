@@ -1,0 +1,61 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SoftwareInventory.SoftwareInventory",
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Current-107649-7.10__RAID.Backplane.Firmware.0",
+    "@odata.type": "#SoftwareInventory.v1_9_0.SoftwareInventory",
+    "Description": "Represents Firmware Inventory",
+    "Id": "Current-107649-7.10__RAID.Backplane.Firmware.0",
+    "Name": "Backplane 0",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOem.v1_3_0.DellOemResources",
+            "DellSoftwareInventory": {
+                "@odata.context": "/redfish/v1/$metadata#DellSoftwareInventory.DellSoftwareInventory",
+                "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Current-107649-7.10__RAID.Backplane.Firmware.0/Oem/Dell/DellSoftwareInventory/DCIM:CURRENT_0x23_314_C_RAID.Backplane.Firmware.0",
+                "@odata.type": "#DellSoftwareInventory.v1_2_0.DellSoftwareInventory",
+                "BuildNumber": 0,
+                "Classifications": [
+                    "Firmware"
+                ],
+                "Classifications@odata.count": 1,
+                "ComponentID": "107649",
+                "ComponentType": "FRMW",
+                "Description": "The DellSoftwareInventory resource is a representation of an available device firmware in the managed system.",
+                "DeviceID": null,
+                "ElementName": "Backplane 0",
+                "HashValue": "d92a306c96d51d01f549d4e0bfc6f774236a61534595e143e558953ea26c3d9d",
+                "Id": "DCIM:CURRENT_0x23_314_C_RAID.Backplane.Firmware.0",
+                "IdentityInfoType": [
+                    "OrgID:ComponentType:ComponentID"
+                ],
+                "IdentityInfoType@odata.count": 1,
+                "IdentityInfoValue": [
+                    "DCIM:firmware:107649"
+                ],
+                "IdentityInfoValue@odata.count": 1,
+                "InstallationDate": "NA",
+                "IsEntity": true,
+                "MajorVersion": 7,
+                "MinorVersion": 10,
+                "Name": "DellSoftwareInventory",
+                "PLDMCapabilitiesDuringUpdate": "0x00000000",
+                "PLDMFDPCapabilitiesDuringUpdate": "0x00000000",
+                "RevisionNumber": 0,
+                "RevisionString": null,
+                "SidebandUpdateCapable": false,
+                "Status": "AvailableForInstallation",
+                "SubDeviceID": null,
+                "SubVendorID": null,
+                "VendorID": null,
+                "impactsTPMmeasurements": false
+            }
+        }
+    },
+    "ReleaseDate": "2023-03-02T00:00:00Z",
+    "SoftwareId": "107649",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Updateable": true,
+    "Version": "7.10"
+}

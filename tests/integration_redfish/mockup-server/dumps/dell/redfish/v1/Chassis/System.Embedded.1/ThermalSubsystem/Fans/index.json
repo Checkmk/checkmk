@@ -1,0 +1,52 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#FanCollection.FanCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans",
+    "@odata.type": "#FanCollection.FanCollection",
+    "Description": "Collection of Fan",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.1A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.1B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.2A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.2B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.3A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.3B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.4A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.4B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.5A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.5B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.6A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.6B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.7A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/ThermalSubsystem/Fans/Fan.Embedded.8A"
+        }
+    ],
+    "Members@odata.count": 14,
+    "Name": "Fan Collection"
+}

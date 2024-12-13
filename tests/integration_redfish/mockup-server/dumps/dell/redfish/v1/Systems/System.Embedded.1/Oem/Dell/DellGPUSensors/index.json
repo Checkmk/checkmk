@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellGPUSensorCollection.DellGPUSensorCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellGPUSensors",
+    "@odata.type": "#DellGPUSensorCollection.DellGPUSensorCollection",
+    "Description": "A collection of DellGPUSensor resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellGPUSensorCollection"
+}

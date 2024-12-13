@@ -1,0 +1,18 @@
+{
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Settings",
+    "@odata.type": "#ComputerSystem.v1_20_1.ComputerSystem",
+    "@odata.context": "/redfish/v1/$metadata#ComputerSystem.ComputerSystem",
+    "@Redfish.SettingsApplyTime": {
+        "ApplyTime": "OnReset",
+        "@odata.type": "#Settings.v1_3_5.PreferredApplyTime"
+    },
+    "AssetTag": null,
+    "Boot": {
+        "BootOrder": [],
+        "BootSourceOverrideMode": null,
+        "UefiTargetBootSourceOverride": null,
+        "StopBootOnFault": null
+    },
+    "Id": "System.Embedded.1",
+    "Name": "System"
+}

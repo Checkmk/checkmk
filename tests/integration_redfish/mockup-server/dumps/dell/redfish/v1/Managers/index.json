@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ManagerCollection.ManagerCollection",
+    "@odata.id": "/redfish/v1/Managers",
+    "@odata.type": "#ManagerCollection.ManagerCollection",
+    "Description": "BMC",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Manager"
+}

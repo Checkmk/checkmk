@@ -1,0 +1,40 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSoftwareInventory.DellSoftwareInventory",
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Oem/Dell/DellSoftwareInventory/DCIM:INSTALLED_0x23_304_C_Disk.Bay.8:Enclosure.Internal.0-1:RAID.Slot.3-1",
+    "@odata.type": "#DellSoftwareInventory.v1_2_0.DellSoftwareInventory",
+    "BuildNumber": null,
+    "Classifications": [
+        "Firmware"
+    ],
+    "Classifications@odata.count": 1,
+    "ComponentID": "112089",
+    "ComponentType": "FRMW",
+    "Description": "The DellSoftwareInventory resource is a representation of an available device firmware in the managed system.",
+    "DeviceID": null,
+    "ElementName": "Disk 8 in Backplane 1 of RAID Controller in Slot 3",
+    "HashValue": null,
+    "Id": "DCIM:INSTALLED_0x23_304_C_Disk.Bay.8:Enclosure.Internal.0-1:RAID.Slot.3-1",
+    "IdentityInfoType": [
+        "OrgID:ComponentType:ComponentID"
+    ],
+    "IdentityInfoType@odata.count": 1,
+    "IdentityInfoValue": [
+        "DCIM:firmware:112089"
+    ],
+    "IdentityInfoValue@odata.count": 1,
+    "InstallationDate": "2023-12-30T01:13:20Z",
+    "IsEntity": true,
+    "MajorVersion": null,
+    "MinorVersion": null,
+    "Name": "DellSoftwareInventory",
+    "PLDMCapabilitiesDuringUpdate": "0x00000000",
+    "PLDMFDPCapabilitiesDuringUpdate": "0x00000000",
+    "RevisionNumber": null,
+    "RevisionString": null,
+    "SidebandUpdateCapable": 0,
+    "Status": "Installed",
+    "SubDeviceID": null,
+    "SubVendorID": null,
+    "VendorID": null,
+    "impactsTPMmeasurements": false
+}

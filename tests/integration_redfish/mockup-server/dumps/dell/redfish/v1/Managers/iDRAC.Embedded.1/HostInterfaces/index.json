@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#HostInterfaceCollection.HostInterfaceCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/HostInterfaces",
+    "@odata.type": "#HostInterfaceCollection.HostInterfaceCollection",
+    "Description": "Collection of Host Interfaces for this System",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/HostInterfaces/Host.1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Host Interface Collection"
+}

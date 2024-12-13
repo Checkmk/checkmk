@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSystemQuickSyncCollection.DellSystemQuickSyncCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellSystemQuickSync",
+    "@odata.type": "#DellSystemQuickSyncCollection.DellSystemQuickSyncCollection",
+    "Description": "A collection of DellSystemQuickSync resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellSystemQuickSyncCollection"
+}

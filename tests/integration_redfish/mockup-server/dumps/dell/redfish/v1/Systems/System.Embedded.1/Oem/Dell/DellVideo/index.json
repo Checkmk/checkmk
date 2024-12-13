@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellVideoCollection.DellVideoCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellVideo",
+    "@odata.type": "#DellVideoCollection.DellVideoCollection",
+    "Description": "A collection of DellVideo resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellVideoCollection"
+}

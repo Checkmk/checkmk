@@ -1,0 +1,95 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellBootSourcesRegistry.DellBootSourcesRegistry",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/BootSources/BootSourcesRegistry",
+    "@odata.type": "#DellBootSourcesRegistry.v1_1_0.DellBootSourcesRegistry",
+    "Description": "This registry defines a representation of Boot Sources instances",
+    "Id": "DellBootSourcesRegistry.v1_1_0",
+    "Language": "en",
+    "Name": "Dell Boot Sources Registry",
+    "OwningEntity": "Dell",
+    "RegistryEntries": {
+        "Attributes": [
+            {
+                "AttributeName": "BootSeq",
+                "DisplayName": "Boot Sequence",
+                "DisplayOrder": 0,
+                "Entry": [
+                    {
+                        "DisplayName": "Hard drive C:",
+                        "Enabled": null,
+                        "Id": "BIOS.Setup.1-1#BootSeq#HardDisk.List.1-1#81dc1ab05577b0942967953640301e64",
+                        "Index": null,
+                        "Name": "HardDisk.List.1-1"
+                    },
+                    {
+                        "DisplayName": "Integrated NIC 1 Port 1 Partition 1: BRCM MBA Slot 2200 v227.0.134.3",
+                        "Enabled": null,
+                        "Id": "BIOS.Setup.1-1#BootSeq#NIC.Integrated.1-1-1#dcbc2b1b2865921ce3094a06b1407b74",
+                        "Index": null,
+                        "Name": "NIC.Integrated.1-1-1"
+                    }
+                ],
+                "HelpText": "This field tells the system where to find the operating system files needed for system startup. This field applies only when Boot Mode is 'BIOS'; it has no effect when Boot Mode is 'UEFI'.",
+                "Hidden": false,
+                "MenuPath": "./BootSettingsRef/BiosBootSettingsRef",
+                "ReadOnly": false,
+                "Type": "OrderedList"
+            },
+            {
+                "AttributeName": "HddSeq",
+                "DisplayName": "Hard-Disk Drive Sequence",
+                "DisplayOrder": 0,
+                "Entry": [
+                    {
+                        "DisplayName": "RAID Controller in Slot 3: PERC H755  Adapter(bus 37 dev 00)",
+                        "Id": "BIOS.Setup.1-1#HddSeq#RAID.Slot.3-1#2b062c9dd644e0549c8580313a8e74a5",
+                        "Index": null,
+                        "Name": "RAID.Slot.3-1"
+                    }
+                ],
+                "HelpText": "This field specifies the order in which hard-disk drives will be configured in the system. The first hard drive in the system will be the bootable C: drive in DOS/DOS-like operating systems. This field applies only when Boot Mode is 'BIOS'; it has no effect when Boot Mode is 'UEFI'.",
+                "Hidden": false,
+                "MenuPath": "./BootSettingsRef/BiosBootSettingsRef",
+                "ReadOnly": false,
+                "Type": "OrderedList"
+            }
+        ],
+        "Dependencies": [
+            {
+                "Dependency": {
+                    "MapFrom": [
+                        {
+                            "MapFromAttribute": "BootMode",
+                            "MapFromCondition": "EQU",
+                            "MapFromProperty": "CurrentValue",
+                            "MapFromValue": "Uefi"
+                        }
+                    ],
+                    "MapToAttribute": "BootSeq",
+                    "MapToProperty": "ReadOnly",
+                    "MapToValue": true
+                },
+                "DependencyFor": "BootSeq",
+                "Type": "Map"
+            },
+            {
+                "Dependency": {
+                    "MapFrom": [
+                        {
+                            "MapFromAttribute": "BootMode",
+                            "MapFromCondition": "EQU",
+                            "MapFromProperty": "CurrentValue",
+                            "MapFromValue": "Uefi"
+                        }
+                    ],
+                    "MapToAttribute": "HddSeq",
+                    "MapToProperty": "ReadOnly",
+                    "MapToValue": true
+                },
+                "DependencyFor": "HddSeq",
+                "Type": "Map"
+            }
+        ]
+    },
+    "RegistryVersion": "v1_1_0"
+}

@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellAttributes.DellAttributes",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Integrated.1-1-1/Settings",
+    "@odata.type": "#DellAttributes.v1_0_0.DellAttributes",
+    "Actions": {
+        "#DellManager.ClearPending": {
+            "target": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Integrated.1-1-1/Settings/Actions/DellManager.ClearPending"
+        }
+    },
+    "AttributeRegistry": "NetworkAttributeRegistry_NIC.Integrated.1-1-1",
+    "Attributes": {},
+    "Description": "This schema provides settings of the oem attributes",
+    "Id": "NIC.Integrated.1-1-1",
+    "Name": "DellNetworkAttributes"
+}

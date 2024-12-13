@@ -1,0 +1,19 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogServiceCollection.LogServiceCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices",
+    "@odata.type": "#LogServiceCollection.LogServiceCollection",
+    "Description": "Collection of Log Services for this Manager",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog"
+        },
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/FaultList"
+        }
+    ],
+    "Members@odata.count": 3,
+    "Name": "Log Service Collection"
+}

@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSlot.DellSlot",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSlots/Fan.Embedded.3A_0x23_Slot",
+    "@odata.type": "#DellSlot.v1_0_0.DellSlot",
+    "ConnectorLayout": "Fan",
+    "Description": "DellSlot provides slot occupancy and device correlation information.",
+    "DeviceFQDD": "Fan.Embedded.3A",
+    "EmptySlot": false,
+    "Id": "Fan.Embedded.3A_0x23_Slot",
+    "Name": "Fan Slot",
+    "Number": 3,
+    "NumberDescription": "3A",
+    "SlotEnabledState": "Enabled",
+    "Tag": "Fan.Embedded.3A#Slot"
+}

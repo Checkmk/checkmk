@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSlot.DellSlot",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSlots/PSU.Slot.2_0x23_Slot",
+    "@odata.type": "#DellSlot.v1_0_0.DellSlot",
+    "ConnectorLayout": "PowerSupply",
+    "Description": "DellSlot provides slot occupancy and device correlation information.",
+    "DeviceFQDD": "PSU.Slot.2",
+    "EmptySlot": false,
+    "Id": "PSU.Slot.2_0x23_Slot",
+    "Name": "Power Supply Slot",
+    "Number": 2,
+    "NumberDescription": "2",
+    "SlotEnabledState": "Enabled",
+    "Tag": "PSU.Slot.2#Slot"
+}

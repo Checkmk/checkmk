@@ -1,0 +1,93 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Memory.Memory",
+    "@odata.type": "#Memory.v1_17_1.Memory",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A1",
+    "AllowedSpeedsMHz": [
+        4800
+    ],
+    "AllowedSpeedsMHz@odata.count": 1,
+    "Assembly": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A1/Assembly"
+    },
+    "BaseModuleType": "RDIMM",
+    "BusWidthBits": 80,
+    "CacheSizeMiB": 0,
+    "CapacityMiB": 32768,
+    "DataWidthBits": 64,
+    "Description": "DIMM A1",
+    "DeviceLocator": "DIMM A1",
+    "Enabled": true,
+    "ErrorCorrection": "MultiBitECC",
+    "FirmwareRevision": null,
+    "Id": "DIMM.Socket.A1",
+    "Links": {
+        "Chassis": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1"
+        },
+        "Oem": {
+            "Dell": {
+                "@odata.type": "#DellOem.v1_3_0.DellOemLinks",
+                "CPUAffinity": [
+                    {
+                        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.1"
+                    }
+                ],
+                "CPUAffinity@odata.count": 1
+            }
+        },
+        "Processors": [
+            {
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.1"
+            }
+        ],
+        "Processors@odata.count": 1
+    },
+    "LogicalSizeMiB": 0,
+    "Manufacturer": "Samsung",
+    "MaxTDPMilliWatts": [],
+    "MaxTDPMilliWatts@odata.count": 0,
+    "MemoryDeviceType": "DDR5",
+    "MemorySubsystemControllerManufacturerID": null,
+    "MemorySubsystemControllerProductID": null,
+    "MemoryType": "DRAM",
+    "Metrics": {
+        "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A1/MemoryMetrics"
+    },
+    "ModuleManufacturerID": "0xce00",
+    "ModuleProductID": null,
+    "Name": "DIMM A1",
+    "NonVolatileSizeMiB": 0,
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOem.v1_3_0.DellOemResources",
+            "DellMemory": {
+                "BankLabel": "A",
+                "Id": "DIMM.Socket.A1",
+                "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+                "LastUpdateTime": "2023-12-30T01:13:13+00:00",
+                "ManufactureDate": "Mon May 16 07:00:00 2022 UTC",
+                "MemoryTechnology": "DRAM",
+                "Model": "DDR5 DIMM",
+                "Name": "DellMemory",
+                "RemainingRatedWriteEndurancePercent": null,
+                "SystemEraseCapability": "NotSupported",
+                "@odata.context": "/redfish/v1/$metadata#DellMemory.DellMemory",
+                "@odata.type": "#DellMemory.v1_1_0.DellMemory",
+                "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Memory/DIMM.Socket.A1/Oem/Dell/DellMemory/DIMM.Socket.A1"
+            }
+        }
+    },
+    "OperatingMemoryModes": [
+        "Volatile"
+    ],
+    "OperatingMemoryModes@odata.count": 1,
+    "OperatingSpeedMhz": 4800,
+    "PartNumber": "M321R4GA3BB6-CQKMS",
+    "RankCount": 2,
+    "SerialNumber": "XNDHS8CA958",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "VolatileSizeMiB": 32768
+}

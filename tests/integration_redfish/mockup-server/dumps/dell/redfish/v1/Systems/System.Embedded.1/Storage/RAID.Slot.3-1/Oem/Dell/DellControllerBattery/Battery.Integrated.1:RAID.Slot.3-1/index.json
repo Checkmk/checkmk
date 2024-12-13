@@ -1,0 +1,11 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellControllerBattery.DellControllerBattery",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Oem/Dell/DellControllerBattery/Battery.Integrated.1:RAID.Slot.3-1",
+    "@odata.type": "#DellControllerBattery.v1_0_0.DellControllerBattery",
+    "Description": "An instance of DellController will have RAID Controller specific data.",
+    "FQDD": "Battery.Integrated.1:RAID.Slot.3-1",
+    "Id": "Battery.Integrated.1:RAID.Slot.3-1",
+    "Name": "Battery on RAID Controller in Slot 3",
+    "PrimaryStatus": "OK",
+    "RAIDState": "Ready"
+}

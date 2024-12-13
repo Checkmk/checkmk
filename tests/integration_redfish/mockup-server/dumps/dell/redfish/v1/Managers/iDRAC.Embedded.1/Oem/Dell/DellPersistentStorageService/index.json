@@ -1,0 +1,83 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellPersistentStorageService.DellPersistentStorageService",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService",
+    "@odata.type": "#DellPersistentStorageService.v1_1_0.DellPersistentStorageService",
+    "Actions": {
+        "#DellPersistentStorageService.AttachPartition": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.AttachPartition"
+        },
+        "#DellPersistentStorageService.CreatePartition": {
+            "PartitionType@Redfish.AllowableValues": [
+                "Floppy",
+                "HardDisk"
+            ],
+            "SizeUnit@Redfish.AllowableValues": [
+                "GB",
+                "MB"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.CreatePartition"
+        },
+        "#DellPersistentStorageService.CreatePartitionUsingImage": {
+            "HashType@Redfish.AllowableValues": [
+                "MD5",
+                "SHA1"
+            ],
+            "PartitionType@Redfish.AllowableValues": [
+                "CDROM",
+                "Floppy",
+                "HardDisk"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "FTP",
+                "HTTP",
+                "NFS",
+                "TFTP"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.CreatePartitionUsingImage"
+        },
+        "#DellPersistentStorageService.DeletePartition": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.DeletePartition"
+        },
+        "#DellPersistentStorageService.DetachPartition": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.DetachPartition"
+        },
+        "#DellPersistentStorageService.ExportDataFromPartition": {
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "NFS",
+                "TFTP"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.ExportDataFromPartition"
+        },
+        "#DellPersistentStorageService.FormatPartition": {
+            "FormatType@Redfish.AllowableValues": [
+                "EXT2",
+                "EXT3",
+                "FAT16",
+                "FAT32"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.FormatPartition"
+        },
+        "#DellPersistentStorageService.InitializeMedia": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.InitializeMedia"
+        },
+        "#DellPersistentStorageService.ModifyPartition": {
+            "AccessType@Redfish.AllowableValues": [
+                "Read-Only",
+                "Read-Write"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.ModifyPartition"
+        },
+        "#DellPersistentStorageService.VFlashStateChange": {
+            "RequestedState@Redfish.AllowableValues": [
+                "Disable",
+                "Enable"
+            ],
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellPersistentStorageService/Actions/DellPersistentStorageService.VFlashStateChange"
+        }
+    },
+    "Description": "The DellPersistentStorageService resource provides some actions to support VFlash functionality.",
+    "Id": "DellPersistentStorageService",
+    "Name": "DellPersistentStorageService"
+}

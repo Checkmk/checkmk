@@ -1,0 +1,24 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellBootSources.DellBootSources",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBootSources/Settings",
+    "@odata.type": "#DellBootSources.v1_1_0.DellBootSources",
+    "Actions": {
+        "#DellManager.ClearPending": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBootSources/Settings/Actions/DellManager.ClearPending"
+        }
+    },
+    "AttributeRegistry": "DellBootSourcesRegistry.v1_1_0",
+    "Attributes": {},
+    "Description": "Boot Sources Pending Settings. These settings will be applied on next system reboot.",
+    "Id": "Settings",
+    "Name": "Boot Sources Configuration Pending Settings",
+    "Oem": {
+        "Dell": {
+            "@odata.context": "/redfish/v1/$metadata#DellManager.DellManager",
+            "@odata.type": "#DellManager.v1_4_0.DellManager",
+            "Jobs": {
+                "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs"
+            }
+        }
+    }
+}

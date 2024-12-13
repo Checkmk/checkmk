@@ -1,0 +1,91 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSoftwareInstallationService.DellSoftwareInstallationService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService",
+    "@odata.type": "#DellSoftwareInstallationService.v1_2_0.DellSoftwareInstallationService",
+    "Actions": {
+        "#DellSoftwareInstallationService.ClearUpdateSchedule": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.ClearUpdateSchedule"
+        },
+        "#DellSoftwareInstallationService.GetRepoBasedUpdateList": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.GetRepoBasedUpdateList"
+        },
+        "#DellSoftwareInstallationService.GetUpdateSchedule": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.GetUpdateSchedule"
+        },
+        "#DellSoftwareInstallationService.InstallFromRepository": {
+            "ApplyUpdate@Redfish.AllowableValues": [
+                "False",
+                "True"
+            ],
+            "IgnoreCertWarning@Redfish.AllowableValues": [
+                "Off",
+                "On"
+            ],
+            "ProxySupport@Redfish.AllowableValues": [
+                "DefaultProxy",
+                "Off",
+                "ParametersProxy"
+            ],
+            "ProxyType@Redfish.AllowableValues": [
+                "HTTP",
+                "SOCKS"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "FTP",
+                "HTTP",
+                "HTTPS",
+                "NFS",
+                "TFTP"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.InstallFromRepository"
+        },
+        "#DellSoftwareInstallationService.InstallFromURI": {
+            "IgnoreCertWarning@Redfish.AllowableValues": [
+                "Off",
+                "On"
+            ],
+            "ProxySupport@Redfish.AllowableValues": [
+                "DefaultProxy",
+                "Off",
+                "ParametersProxy"
+            ],
+            "ProxyType@Redfish.AllowableValues": [
+                "HTTP",
+                "SOCKS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.InstallFromURI"
+        },
+        "#DellSoftwareInstallationService.SetUpdateSchedule": {
+            "ApplyReboot@Redfish.AllowableValues": [
+                "NoReboot",
+                "RebootRequired"
+            ],
+            "IgnoreCertWarning@Redfish.AllowableValues": [
+                "Off",
+                "On"
+            ],
+            "ProxySupport@Redfish.AllowableValues": [
+                "DefaultProxy",
+                "Off",
+                "ParametersProxy"
+            ],
+            "ProxyType@Redfish.AllowableValues": [
+                "HTTP",
+                "SOCKS"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "FTP",
+                "HTTP",
+                "HTTPS",
+                "NFS",
+                "TFTP"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSoftwareInstallationService/Actions/DellSoftwareInstallationService.SetUpdateSchedule"
+        }
+    },
+    "Description": "The DellSoftwareInstallationService resource provides some actions to support software installation functionality.",
+    "Id": "DellSoftwareInstallationService",
+    "Name": "DellSoftwareInstallationService"
+}

@@ -1,0 +1,15 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSlot.DellSlot",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSlots/iDRAC.Embedded.1_0x23_IDSDMSD2_0x23_Slot",
+    "@odata.type": "#DellSlot.v1_0_0.DellSlot",
+    "ConnectorLayout": "IDSDM",
+    "Description": "DellSlot provides slot occupancy and device correlation information.",
+    "DeviceFQDD": null,
+    "EmptySlot": true,
+    "Id": "iDRAC.Embedded.1_0x23_IDSDMSD2_0x23_Slot",
+    "Name": "Dell Internal Dual SD Card Slot",
+    "Number": 2,
+    "NumberDescription": "2",
+    "SlotEnabledState": "Disabled",
+    "Tag": "iDRAC.Embedded.1#IDSDMSD2#Slot"
+}

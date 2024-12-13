@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SerialInterfaceCollection.SerialInterfaceCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/SerialInterfaces",
+    "@odata.type": "#SerialInterfaceCollection.SerialInterfaceCollection",
+    "Description": "Collection of Serial Interfaces for this System",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/SerialInterfaces/Serial.1"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Serial Interface Collection"
+}

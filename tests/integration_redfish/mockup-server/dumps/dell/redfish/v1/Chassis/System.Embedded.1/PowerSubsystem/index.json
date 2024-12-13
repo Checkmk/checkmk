@@ -1,0 +1,43 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PowerSubsystem.PowerSubsystem",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem",
+    "@odata.type": "#PowerSubsystem.v1_1_0.PowerSubsystem",
+    "Description": "Represents the properties of a Power Subsystem of the Chassis",
+    "Name": "Power Subsystem for Chassis",
+    "PowerSupplies": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies"
+    },
+    "PowerSupplyRedundancy": [
+        {
+            "MaxSupportedInGroup": 2,
+            "MinNeededInGroup": 1,
+            "RedundancyGroup": [
+                {
+                    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.1"
+                },
+                {
+                    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.2"
+                }
+            ],
+            "RedundancyGroup@odata.count": 2,
+            "RedundancyType": "NPlusM",
+            "Status": {
+                "Health": "OK",
+                "State": "Enabled"
+            }
+        }
+    ],
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    },
+    "CapacityWatts": 1960.0,
+    "Allocation": {
+        "RequestedWatts": 1394.29016113281,
+        "AllocatedWatts": 1518.0
+    },
+    "Batteries": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/Batteries"
+    },
+    "Id": "PowerSubsystem"
+}

@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSwitchConnectionService.DellSwitchConnectionService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSwitchConnectionService",
+    "@odata.type": "#DellSwitchConnectionService.v1_0_0.DellSwitchConnectionService",
+    "Actions": {
+        "#DellSwitchConnectionService.ServerPortConnectionRefresh": {
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSwitchConnectionService/Actions/DellSwitchConnectionService.ServerPortConnectionRefresh"
+        }
+    },
+    "Description": "DellSwitchConnectionService provides actions to support switch connection view functionality.",
+    "Id": "DellSwitchConnectionService",
+    "Name": "DellSwitchConnectionService"
+}

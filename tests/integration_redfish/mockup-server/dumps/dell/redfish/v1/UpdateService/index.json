@@ -1,0 +1,55 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#UpdateService.UpdateService",
+    "@odata.id": "/redfish/v1/UpdateService",
+    "@odata.type": "#UpdateService.v1_11_3.UpdateService",
+    "Actions": {
+        "#UpdateService.SimpleUpdate": {
+            "@Redfish.OperationApplyTimeSupport": {
+                "@odata.type": "#Settings.v1_3_5.OperationApplyTimeSupport",
+                "SupportedValues": [
+                    "Immediate",
+                    "OnReset",
+                    "OnStartUpdateRequest"
+                ]
+            },
+            "TransferProtocol@Redfish.AllowableValues": [
+                "HTTP",
+                "NFS",
+                "CIFS",
+                "TFTP",
+                "HTTPS"
+            ],
+            "target": "/redfish/v1/UpdateService/Actions/UpdateService.SimpleUpdate"
+        },
+        "#UpdateService.StartUpdate": {
+            "target": "/redfish/v1/UpdateService/Actions/UpdateService.StartUpdate"
+        },
+        "Oem": {
+            "DellUpdateService.v1_1_0#DellUpdateService.Install": {
+                "InstallUpon@Redfish.AllowableValues": [
+                    "Now",
+                    "NowAndReboot",
+                    "NextReboot"
+                ],
+                "target": "/redfish/v1/UpdateService/Actions/Oem/DellUpdateService.Install"
+            }
+        }
+    },
+    "Description": "Represents the properties for the Update Service",
+    "FirmwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory"
+    },
+    "HttpPushUri": "/redfish/v1/UpdateService/FirmwareInventory",
+    "Id": "UpdateService",
+    "MaxImageSizeBytes": null,
+    "MultipartHttpPushUri": "/redfish/v1/UpdateService/MultipartUpload",
+    "Name": "Update Service",
+    "ServiceEnabled": true,
+    "SoftwareInventory": {
+        "@odata.id": "/redfish/v1/UpdateService/SoftwareInventory"
+    },
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSensor.DellSensor",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellSensors/iDRAC.Embedded.1_0x23_DIMMSLOTB8",
+    "@odata.type": "#DellSensor.v1_0_0.DellSensor",
+    "CurrentState": "Unknown",
+    "Description": "An instance of DellSensor will represent a sensor, a hardware device that is capable of measuring the characteristics of a physical property.",
+    "ElementName": "DIMM SLOT B8",
+    "EnabledState": "Enabled",
+    "HealthState": "Unknown",
+    "Id": "iDRAC.Embedded.1_0x23_DIMMSLOTB8",
+    "Links": {
+        "ComputerSystem": {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1"
+        }
+    },
+    "Name": "DellSensor",
+    "SensorType": "Other"
+}

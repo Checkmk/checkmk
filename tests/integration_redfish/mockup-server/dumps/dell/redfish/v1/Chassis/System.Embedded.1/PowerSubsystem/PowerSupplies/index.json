@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#PowerSupplyCollection.PowerSupplyCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies",
+    "@odata.type": "#PowerSupplyCollection.PowerSupplyCollection",
+    "Description": "Power Supply Collection",
+    "Name": "Power Supply Collection",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/PowerSubsystem/PowerSupplies/PSU.Slot.2"
+        }
+    ],
+    "Members@odata.count": 2
+}

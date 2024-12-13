@@ -1,0 +1,42 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#EthernetInterface.EthernetInterface",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/EthernetInterfaces/NIC.Embedded.1-1-1",
+    "@odata.type": "#EthernetInterface.v1_10_0.EthernetInterface",
+    "AutoNeg": false,
+    "Description": "Embedded NIC 1 Port 1 Partition 1",
+    "EthernetInterfaceType": "Physical",
+    "FQDN": null,
+    "FullDuplex": false,
+    "HostName": null,
+    "IPv4Addresses": [],
+    "IPv4Addresses@odata.count": 0,
+    "IPv6AddressPolicyTable": [],
+    "IPv6AddressPolicyTable@odata.count": 0,
+    "IPv6Addresses": [],
+    "IPv6Addresses@odata.count": 0,
+    "IPv6DefaultGateway": null,
+    "IPv6StaticAddresses": [],
+    "IPv6StaticAddresses@odata.count": 0,
+    "Id": "NIC.Embedded.1-1-1",
+    "InterfaceEnabled": true,
+    "LinkStatus": "LinkDown",
+    "Links": {
+        "Chassis": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1"
+        }
+    },
+    "MACAddress": "C4:CB:E1:B9:3F:48",
+    "MTUSize": null,
+    "MaxIPv6StaticAddresses": null,
+    "Name": "System Ethernet Interface",
+    "NameServers": [],
+    "NameServers@odata.count": 0,
+    "PermanentMACAddress": "C4:CB:E1:B9:3F:48",
+    "SpeedMbps": 0,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "UefiDevicePath": "PciRoot(0x0)/Pci(0xC,0x0)/Pci(0x0,0x0)",
+    "VLAN": {}
+}

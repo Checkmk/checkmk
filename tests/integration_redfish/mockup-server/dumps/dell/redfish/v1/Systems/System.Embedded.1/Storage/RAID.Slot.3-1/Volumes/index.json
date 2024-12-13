@@ -1,0 +1,23 @@
+{
+    "@Redfish.OperationApplyTimeSupport": {
+        "@odata.type": "#Settings.v1_3_5.OperationApplyTimeSupport",
+        "SupportedValues": [
+            "Immediate",
+            "OnReset"
+        ]
+    },
+    "@odata.context": "/redfish/v1/$metadata#VolumeCollection.VolumeCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Volumes",
+    "@odata.type": "#VolumeCollection.VolumeCollection",
+    "Description": "Collection Of Volume",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Volumes/Disk.Virtual.239:RAID.Slot.3-1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Storage/RAID.Slot.3-1/Volumes/Disk.Virtual.238:RAID.Slot.3-1"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "Volume Collection"
+}

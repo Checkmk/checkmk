@@ -1,0 +1,50 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Sensor.Sensor",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PS2Current2",
+    "@odata.type": "#Sensor.v1_7_0.Sensor",
+    "Name": "PS2 Current 2",
+    "Id": "PS2Current2",
+    "Description": "Instance of Sensor Id",
+    "ReadingType": "Current",
+    "ReadingUnits": "A",
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "Reading": 0.2,
+    "PhysicalContext": "PowerSupply",
+    "Oem": {
+        "Dell": {
+            "@odata.type": "#DellOemSensor.v1_0_0.DellOemSensor",
+            "CurrentState": "Normal",
+            "DeviceID": "iDRAC.Embedded.1#PS2Current2",
+            "PossibleStates": [
+                "Unknown",
+                "Fatal",
+                "Normal",
+                "Upper Fatal",
+                "Upper Critical",
+                "Upper Non-Critical",
+                "Lower Non-Critical",
+                "Lower Critical",
+                "Lower Fatal"
+            ],
+            "PossibleStates@odata.count": 9,
+            "RequestedState": "NotApplicable"
+        }
+    },
+    "Thresholds": {
+        "UpperCritical": {
+            "Reading": null
+        },
+        "UpperCaution": {
+            "Reading": null
+        },
+        "LowerCaution": {
+            "Reading": null
+        },
+        "LowerCritical": {
+            "Reading": null
+        }
+    }
+}

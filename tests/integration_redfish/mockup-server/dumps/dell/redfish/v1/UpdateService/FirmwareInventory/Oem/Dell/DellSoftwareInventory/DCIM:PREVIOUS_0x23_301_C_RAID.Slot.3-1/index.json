@@ -1,0 +1,40 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSoftwareInventory.DellSoftwareInventory",
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Oem/Dell/DellSoftwareInventory/DCIM:PREVIOUS_0x23_301_C_RAID.Slot.3-1",
+    "@odata.type": "#DellSoftwareInventory.v1_2_0.DellSoftwareInventory",
+    "BuildNumber": 0,
+    "Classifications": [
+        "Firmware"
+    ],
+    "Classifications@odata.count": 1,
+    "ComponentID": "108807",
+    "ComponentType": "FRMW",
+    "Description": "The DellSoftwareInventory resource is a representation of an available device firmware in the managed system.",
+    "DeviceID": "10E2",
+    "ElementName": "PERC H755 Adapter",
+    "HashValue": "56ecbdadd2d884fb6a7f2e33fe8d30fca84315b2855d30bdadf6683872ab3ee8",
+    "Id": "DCIM:PREVIOUS_0x23_301_C_RAID.Slot.3-1",
+    "IdentityInfoType": [
+        "OrgID:ComponentType:VendorID:DeviceID:SubVendorID:SubDeviceID"
+    ],
+    "IdentityInfoType@odata.count": 1,
+    "IdentityInfoValue": [
+        "DCIM:firmware:1000:10E2:1028:1AE0"
+    ],
+    "IdentityInfoValue@odata.count": 1,
+    "InstallationDate": "NA",
+    "IsEntity": true,
+    "MajorVersion": 52,
+    "MinorVersion": 21,
+    "Name": "DellSoftwareInventory",
+    "PLDMCapabilitiesDuringUpdate": "0x00000000",
+    "PLDMFDPCapabilitiesDuringUpdate": "0x00000000",
+    "RevisionNumber": null,
+    "RevisionString": "1-5149",
+    "SidebandUpdateCapable": 0,
+    "Status": "AvailableForInstallation",
+    "SubDeviceID": "1AE0",
+    "SubVendorID": "1028",
+    "VendorID": "1000",
+    "impactsTPMmeasurements": true
+}

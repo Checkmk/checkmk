@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellTimeService.DellTimeService",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellTimeService",
+    "@odata.type": "#DellTimeService.v1_0_1.DellTimeService",
+    "Actions": {
+        "#DellTimeService.ManageTime": {
+            "target": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellTimeService/Actions/DellTimeService.ManageTime"
+        }
+    },
+    "Description": "DellTimeService provides actions to manage time (retrieve or set time) for the service processor.",
+    "Id": "DellTimeService",
+    "Name": "DellTimeService"
+}

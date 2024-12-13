@@ -1,0 +1,13 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSwitchConnection.DellSwitchConnection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/NetworkPorts/Oem/Dell/DellSwitchConnections/NIC.Embedded.1-1-1",
+    "@odata.type": "#DellSwitchConnection.v1_1_0.DellSwitchConnection",
+    "Description": "An instance of DellSwitchConnection will have the switch connection view information of all the ports.",
+    "FQDD": "NIC.Embedded.1-1-1",
+    "Id": "NIC.Embedded.1-1-1",
+    "InstanceID": "NIC.Embedded.1-1-1",
+    "Name": "DellSwitchConnection",
+    "StaleData": "NotStale",
+    "SwitchConnectionID": "No Link",
+    "SwitchPortConnectionID": "No Link"
+}

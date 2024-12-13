@@ -1,0 +1,56 @@
+{
+    "@Redfish.Settings": {
+        "@odata.context": "/redfish/v1/$metadata#Settings.Settings",
+        "@odata.type": "#Settings.v1_3_5.Settings",
+        "SettingsObject": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1/Settings"
+        },
+        "SupportedApplyTimes": [
+            "Immediate",
+            "AtMaintenanceWindowStart",
+            "OnReset",
+            "InMaintenanceWindowOnReset"
+        ]
+    },
+    "@odata.context": "/redfish/v1/$metadata#DellAttributes.DellAttributes",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Embedded.1/NetworkDeviceFunctions/NIC.Embedded.1-1-1/Oem/Dell/DellNetworkAttributes/NIC.Embedded.1-1-1",
+    "@odata.type": "#DellAttributes.v1_0_0.DellAttributes",
+    "AttributeRegistry": "NetworkAttributeRegistry_NIC.Embedded.1-1-1",
+    "Attributes": {
+        "DeviceName": "Broadcom NetXtreme Gigabit Ethernet (BCM5720)",
+        "ChipMdl": "BCM5720 A0",
+        "PCIDeviceID": "165F",
+        "BusDeviceFunction": "01:00:00",
+        "MacAddr": "C4:CB:E1:B9:3F:48",
+        "VirtMacAddr": "C4:CB:E1:B9:3F:48",
+        "FCoEOffloadSupport": "Unavailable",
+        "iSCSIOffloadSupport": "Unavailable",
+        "iSCSIBootSupport": "Unavailable",
+        "PXEBootSupport": "Available",
+        "FCoEBootSupport": "Unavailable",
+        "NicPartitioningSupport": "Unavailable",
+        "FlexAddressing": "Unavailable",
+        "TXBandwidthControlMaximum": "Unavailable",
+        "TXBandwidthControlMinimum": "Unavailable",
+        "EnergyEfficientEthernet": "Available",
+        "FamilyVersion": "22.71.3",
+        "ControllerBIOSVersion": "1.39",
+        "EFIVersion": "21.6.63",
+        "BlnkLeds": 0,
+        "BannerMessageTimeout": 5,
+        "VLanId": 1,
+        "EEEControl": "Enabled",
+        "LinkStatus": "Disconnected",
+        "BootOptionROM": "Enabled",
+        "LegacyBootProto": "NONE",
+        "BootStrapType": "AutoDetect",
+        "HideSetupPrompt": "Disabled",
+        "LnkSpeed": "AutoNeg",
+        "WakeOnLan": "Disabled",
+        "VLanMode": "Disabled",
+        "PermitTotalPortShutdown": "Disabled"
+    },
+    "Description": "DellNetworkAttributes represents the Network device attribute details.",
+    "Id": "NIC.Embedded.1-1-1",
+    "Name": "DellNetworkAttributes"
+}

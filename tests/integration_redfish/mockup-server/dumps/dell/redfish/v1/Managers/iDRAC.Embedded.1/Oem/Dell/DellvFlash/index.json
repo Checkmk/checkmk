@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellvFlashCollection.DellvFlashCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/DellvFlash",
+    "@odata.type": "#DellvFlashCollection.DellvFlashCollection",
+    "Description": "A collection of DellvFlash resource",
+    "Members": [],
+    "Members@odata.count": 0,
+    "Name": "DellvFlashCollection"
+}

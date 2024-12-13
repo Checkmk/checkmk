@@ -1,0 +1,9 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#CertificateCollection.CertificateCollection",
+    "@odata.type": "#CertificateCollection.CertificateCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/RemoteSystemLogs/CA/Certificates",
+    "Name": "Certificate Collection",
+    "Description": "A Collection of Secured Remote System Logs CA Certificate resource instances.",
+    "Members": [],
+    "Members@odata.count": 0
+}

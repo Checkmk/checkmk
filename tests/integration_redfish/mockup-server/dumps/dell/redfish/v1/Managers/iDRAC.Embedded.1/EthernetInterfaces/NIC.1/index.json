@@ -1,0 +1,157 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#EthernetInterface.EthernetInterface",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/EthernetInterfaces/NIC.1",
+    "@odata.type": "#EthernetInterface.v1_10_0.EthernetInterface",
+    "AutoNeg": true,
+    "Description": "Management Network Interface",
+    "EthernetInterfaceType": "Physical",
+    "FQDN": "SERVER2.domain.com",
+    "FullDuplex": true,
+    "HostName": "SERVER2",
+    "IPv4Addresses": [
+        {
+            "Address": "192.168.0.1",
+            "AddressOrigin": "DHCP",
+            "Gateway": "192.168.0.251",
+            "SubnetMask": "255.255.255.0"
+        }
+    ],
+    "IPv4Addresses@odata.count": 1,
+    "IPv6AddressPolicyTable": [],
+    "IPv6AddressPolicyTable@odata.count": 0,
+    "IPv6Addresses": [
+        {
+            "Address": "2000:c0:fe:fe:de:caff:b00:b1e5",
+            "AddressOrigin": "DHCPv6",
+            "AddressState": "Preferred",
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": "DHCPv6",
+            "AddressState": "Preferred",
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "::",
+            "AddressOrigin": null,
+            "AddressState": null,
+            "PrefixLength": 64
+        },
+        {
+            "Address": "fe80::20f0:a42b:dec2:5050",
+            "AddressOrigin": "LinkLocal",
+            "AddressState": "Preferred",
+            "PrefixLength": 64
+        }
+    ],
+    "IPv6Addresses@odata.count": 16,
+    "IPv6DefaultGateway": "fe80::da67:d9ff:fe09:e9c1",
+    "IPv6StaticAddresses": [
+        {
+            "Address": "::",
+            "PrefixLength": 64
+        }
+    ],
+    "IPv6StaticAddresses@odata.count": 1,
+    "Id": "NIC.1",
+    "InterfaceEnabled": true,
+    "Links": {
+        "Chassis": {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1"
+        }
+    },
+    "MACAddress": "c4:5a:b1:b9:1f:d3",
+    "MTUSize": 1500,
+    "MaxIPv6StaticAddresses": 1,
+    "Name": "Manager Ethernet Interface",
+    "NameServers": [
+        "192.168.0.100",
+        "54.62.36.22",
+        "::",
+        "::"
+    ],
+    "NameServers@odata.count": 4,
+    "PermanentMACAddress": "c4:5a:b1:b9:1f:d3",
+    "SpeedMbps": 1000,
+    "Status": {
+        "Health": "OK",
+        "State": "Enabled"
+    },
+    "VLAN": {
+        "VLANEnable": false,
+        "VLANId": 1
+    }
+}

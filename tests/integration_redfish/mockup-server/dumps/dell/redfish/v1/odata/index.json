@@ -1,0 +1,90 @@
+{
+    "@odata.context": "/redfish/v1/$metadata",
+    "value": [
+        {
+            "kind": "Singleton",
+            "name": "Service",
+            "url": "/redfish/v1"
+        },
+        {
+            "kind": "Singleton",
+            "name": "Systems",
+            "url": "/redfish/v1/Systems"
+        },
+        {
+            "kind": "Singleton",
+            "name": "Chassis",
+            "url": "/redfish/v1/Chassis"
+        },
+        {
+            "kind": "Singleton",
+            "name": "JobService",
+            "url": "/redfish/v1/JobService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "Managers",
+            "url": "/redfish/v1/Managers"
+        },
+        {
+            "kind": "Singleton",
+            "name": "TaskService",
+            "url": "/redfish/v1/TaskService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "AccountService",
+            "url": "/redfish/v1/AccountService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "SessionService",
+            "url": "/redfish/v1/SessionService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "JsonSchemas",
+            "url": "/redfish/v1/JsonSchemas"
+        },
+        {
+            "kind": "Singleton",
+            "name": "Registries",
+            "url": "/redfish/v1/Registries"
+        },
+        {
+            "kind": "Singleton",
+            "name": "EventService",
+            "url": "/redfish/v1/EventService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "Fabrics",
+            "url": "/redfish/v1/Fabrics"
+        },
+        {
+            "kind": "Singleton",
+            "name": "UpdateService",
+            "url": "/redfish/v1/UpdateService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "CertificateService",
+            "url": "/redfish/v1/CertificateService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "TelemetryService",
+            "url": "/redfish/v1/TelemetryService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "LicenseService",
+            "url": "/redfish/v1/LicenseService"
+        },
+        {
+            "kind": "Singleton",
+            "name": "ComponentIntegrity",
+            "url": "/redfish/v1/ComponentIntegrity"
+        }
+    ]
+}

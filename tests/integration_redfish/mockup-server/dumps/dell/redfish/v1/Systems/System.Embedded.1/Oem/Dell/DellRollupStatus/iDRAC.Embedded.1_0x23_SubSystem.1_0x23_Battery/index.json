@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Battery",
+    "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+    "CollectionName": "BatteryRollupStatus",
+    "Description": "Represents the subcomponent roll-up statuses.",
+    "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Battery",
+    "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Battery",
+    "Name": "DellRollupStatus",
+    "RollupStatus": "Ok",
+    "SubSystem": "Battery"
+}

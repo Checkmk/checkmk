@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#ProcessorCollection.ProcessorCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors",
+    "@odata.type": "#ProcessorCollection.ProcessorCollection",
+    "Description": "Collection of Processors for this System",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.2"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Processors/CPU.Socket.1"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "ProcessorsCollection"
+}

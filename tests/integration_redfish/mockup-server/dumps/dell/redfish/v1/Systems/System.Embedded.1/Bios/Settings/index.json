@@ -1,0 +1,26 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Bios.Bios",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Bios/Settings",
+    "@odata.type": "#Bios.v1_2_1.Bios",
+    "Id": "Settings",
+    "Name": "BIOS Configuration Pending Settings",
+    "Description": "BIOS Configuration Pending Settings. These settings will be applied on next system reboot.",
+    "AttributeRegistry": "BiosAttributeRegistry.v1_0_3",
+    "Attributes": {},
+    "Actions": {
+        "Oem": {
+            "DellManager.v1_0_0#DellManager.ClearPending": {
+                "target": "/redfish/v1/Systems/System.Embedded.1/Bios/Settings/Actions/Oem/DellManager.ClearPending"
+            }
+        }
+    },
+    "Oem": {
+        "Dell": {
+            "@odata.context": "/redfish/v1/$metadata#DellManager.DellManager",
+            "@odata.type": "#DellManager.v1_4_0.DellManager",
+            "Jobs": {
+                "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/Oem/Dell/Jobs"
+            }
+        }
+    }
+}

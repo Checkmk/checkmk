@@ -1,0 +1,40 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellSoftwareInventory.DellSoftwareInventory",
+    "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/Oem/Dell/DellSoftwareInventory/DCIM:INSTALLED_0x23_802__DriverPack.Embedded.1:LC.Embedded.1",
+    "@odata.type": "#DellSoftwareInventory.v1_2_0.DellSoftwareInventory",
+    "BuildNumber": 0,
+    "Classifications": [
+        "Firmware"
+    ],
+    "Classifications@odata.count": 1,
+    "ComponentID": "18981",
+    "ComponentType": "APAC",
+    "Description": "The DellSoftwareInventory resource is a representation of an available device firmware in the managed system.",
+    "DeviceID": null,
+    "ElementName": "Dell OS Driver Pack, 23.08.08, A00",
+    "HashValue": null,
+    "Id": "DCIM:INSTALLED_0x23_802__DriverPack.Embedded.1:LC.Embedded.1",
+    "IdentityInfoType": [
+        "OrgID:ComponentType:ComponentID"
+    ],
+    "IdentityInfoType@odata.count": 1,
+    "IdentityInfoValue": [
+        "DCIM:firmware:18981"
+    ],
+    "IdentityInfoValue@odata.count": 1,
+    "InstallationDate": "2023-12-30T04:40:56Z",
+    "IsEntity": true,
+    "MajorVersion": 23,
+    "MinorVersion": 8,
+    "Name": "DellSoftwareInventory",
+    "PLDMCapabilitiesDuringUpdate": "0x00000000",
+    "PLDMFDPCapabilitiesDuringUpdate": "0x00000000",
+    "RevisionNumber": 8,
+    "RevisionString": null,
+    "SidebandUpdateCapable": 0,
+    "Status": "Installed",
+    "SubDeviceID": null,
+    "SubVendorID": null,
+    "VendorID": null,
+    "impactsTPMmeasurements": false
+}

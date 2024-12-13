@@ -1,0 +1,12 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#FabricCollection.FabricCollection",
+    "@odata.id": "/redfish/v1/Fabrics",
+    "@odata.type": "#FabricCollection.FabricCollection",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Fabrics/PCIe"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Fabric Collection"
+}

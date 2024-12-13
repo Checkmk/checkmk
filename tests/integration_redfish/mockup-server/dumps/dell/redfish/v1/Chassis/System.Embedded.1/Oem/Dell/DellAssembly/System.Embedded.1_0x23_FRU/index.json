@@ -1,0 +1,11 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellAssembly.DellAssembly",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Oem/Dell/DellAssembly/System.Embedded.1_0x23_FRU",
+    "@odata.type": "#DellAssembly.v1_0_0.DellAssembly",
+    "Description": "This resource shall be used to represent an assembly information.",
+    "DeviceFQDD": "System.Embedded.1",
+    "Id": "System.Embedded.1_0x23_FRU",
+    "Name": "DellAssembly",
+    "PackageType": "Module/Card",
+    "SerialNumber": "ULIWGEYN532YXP"
+}

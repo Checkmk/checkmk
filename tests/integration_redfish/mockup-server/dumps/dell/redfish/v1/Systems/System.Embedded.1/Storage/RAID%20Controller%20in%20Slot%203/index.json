@@ -1,0 +1,32 @@
+{
+    "error": {
+        "@Message.ExtendedInfo": [
+            {
+                "Message": "Unable to complete the operation because the resource /redfish/v1/Systems/System.Embedded.1/Storage/RAID%20Controller%20in%20Slot%203 entered is not found.",
+                "MessageArgs": [
+                    "/redfish/v1/Systems/System.Embedded.1/Storage/RAID%20Controller%20in%20Slot%203"
+                ],
+                "MessageArgs@odata.count": 1,
+                "MessageId": "IDRAC.2.9.SYS403",
+                "RelatedProperties": [],
+                "RelatedProperties@odata.count": 0,
+                "Resolution": "Enter the correct resource and retry the operation. For resources with numeric ID in the URI, enable the \"Redfish.1#NumericDynamicSegmentsEnable\" attribute and retry the operation. For information about valid resource, see the Redfish Users Guide available on the support site.",
+                "Severity": "Critical"
+            },
+            {
+                "Message": "The resource at the URI '/redfish/v1/Systems/System.Embedded.1/Storage/RAID%20Controller%20in%20Slot%203' was not found.",
+                "MessageArgs": [
+                    "/redfish/v1/Systems/System.Embedded.1/Storage/RAID%20Controller%20in%20Slot%203"
+                ],
+                "MessageArgs@odata.count": 1,
+                "MessageId": "Base.1.12.ResourceMissingAtURI",
+                "RelatedProperties": [],
+                "RelatedProperties@odata.count": 0,
+                "Resolution": "Place a valid resource at the URI or correct the URI and resubmit the request.",
+                "Severity": "Critical"
+            }
+        ],
+        "code": "Base.1.12.GeneralError",
+        "message": "A general error has occurred. See ExtendedInfo for more information"
+    }
+}

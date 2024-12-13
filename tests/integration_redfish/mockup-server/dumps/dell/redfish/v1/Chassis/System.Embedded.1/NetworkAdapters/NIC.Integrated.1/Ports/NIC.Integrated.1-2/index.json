@@ -1,0 +1,52 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Port.Port",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/Ports/NIC.Integrated.1-2",
+    "@odata.type": "#Port.v1_9_0.Port",
+    "LinkNetworkTechnology": "Ethernet",
+    "CurrentSpeedGbps": 0,
+    "Description": "Instance of Port for NIC",
+    "Ethernet": {
+        "AssociatedMACAddresses": [
+            "04:32:01:1A:06:E1"
+        ],
+        "EEEEnabled": null,
+        "FlowControlConfiguration": "None",
+        "FlowControlStatus": "None",
+        "LLDPReceive": {},
+        "WakeOnLANEnabled": false
+    },
+    "LinkConfiguration": [
+        {
+            "AutoSpeedNegotiationCapable": true,
+            "AutoSpeedNegotiationEnabled": true
+        }
+    ],
+    "FunctionMaxBandwidth": [
+        {
+            "AllocationPercent": null,
+            "NetworkDeviceFunction": {
+                "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-2-1"
+            }
+        }
+    ],
+    "FunctionMinBandwidth": [
+        {
+            "AllocationPercent": null,
+            "NetworkDeviceFunction": {
+                "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/NetworkDeviceFunctions/NIC.Integrated.1-2-1"
+            }
+        }
+    ],
+    "Id": "NIC.Integrated.1-2",
+    "LinkStatus": "LinkDown",
+    "Metrics": {
+        "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/NetworkAdapters/NIC.Integrated.1/Ports/NIC.Integrated.1-2/Metrics"
+    },
+    "PortId": "2",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK",
+        "HealthRollup": "OK"
+    },
+    "Name": "Network Inteface Card(NIC) Port View"
+}

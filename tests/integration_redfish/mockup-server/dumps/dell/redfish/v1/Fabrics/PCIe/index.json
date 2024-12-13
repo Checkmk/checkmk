@@ -1,0 +1,18 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#Fabric.Fabric",
+    "@odata.id": "/redfish/v1/Fabrics/PCIe",
+    "@odata.type": "#Fabric.v1_3_0.Fabric",
+    "Description": "PCIe Fabric",
+    "FabricType": "PCIe",
+    "Id": "PCIe",
+    "Links": {},
+    "Name": "PCIe Fabric",
+    "Status": {
+        "Health": "OK",
+        "HealthRollup": "OK",
+        "State": "Enabled"
+    },
+    "Switches": {
+        "@odata.id": "/redfish/v1/Fabrics/PCIe/Switches"
+    }
+}

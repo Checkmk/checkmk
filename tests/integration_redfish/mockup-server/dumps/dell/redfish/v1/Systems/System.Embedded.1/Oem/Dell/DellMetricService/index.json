@@ -1,0 +1,28 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellMetricService.DellMetricService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellMetricService",
+    "@odata.type": "#DellMetricService.v1_2_0.DellMetricService",
+    "Actions": {
+        "#DellMetricService.ControlMetrics": {
+            "MetricCollectionEnabled@Redfish.AllowableValues": [
+                "Reset"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellMetricService/Actions/DellMetricService.ControlMetrics"
+        },
+        "#DellMetricService.ExportThermalHistory": {
+            "FileType@Redfish.AllowableValues": [
+                "CSV",
+                "XML"
+            ],
+            "ShareType@Redfish.AllowableValues": [
+                "CIFS",
+                "Local",
+                "NFS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellMetricService/Actions/DellMetricService.ExportThermalHistory"
+        }
+    },
+    "Description": "Provides the ability to manage metrics.",
+    "Id": "DellMetricService",
+    "Name": "DellMetricService"
+}

@@ -1,0 +1,22 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellPowerSupplyView.DellPowerSupplyView",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Power/Oem/Dell/DellPowerSupplyInventory/PSU.Slot.2",
+    "@odata.type": "#DellPowerSupplyView.v1_3_0.DellPowerSupplyView",
+    "Description": "An instance of DellPowerSupplyView will have data specific to the Power Supply devices in the managed system.",
+    "DetailedState": "Presence Detected",
+    "DeviceDescription": "Power Supply 2",
+    "Id": "PSU.Slot.2",
+    "LastSystemInventoryTime": "2024-02-22T19:12:31+00:00",
+    "LastUpdateTime": "2024-02-29T12:51:24+00:00",
+    "Name": "DellPowerSupplyView",
+    "PMBusMonitoring": "Capable",
+    "Range1MaxInputPowerWatts": 1568,
+    "RedMinNumberNeeded": 1,
+    "RedTypeOfSet": [
+        "N+1",
+        "InputPowerRedundancy",
+        "Sparing"
+    ],
+    "RedTypeOfSet@odata.count": 3,
+    "RedundancyStatus": "FullyRedundant"
+}

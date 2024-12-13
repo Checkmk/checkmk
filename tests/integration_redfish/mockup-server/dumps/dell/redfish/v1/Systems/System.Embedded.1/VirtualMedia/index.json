@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#VirtualMediaCollection.VirtualMediaCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia",
+    "@odata.type": "#VirtualMediaCollection.VirtualMediaCollection",
+    "Description": "Collection of Virtual Media",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/VirtualMedia/2"
+        }
+    ],
+    "Members@odata.count": 2,
+    "Name": "VirtualMedia Collection"
+}

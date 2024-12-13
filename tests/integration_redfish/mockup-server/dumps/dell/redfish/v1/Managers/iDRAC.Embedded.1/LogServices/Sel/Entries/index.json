@@ -1,0 +1,28 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#LogEntryCollection.LogEntryCollection",
+    "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+    "@odata.type": "#LogEntryCollection.LogEntryCollection",
+    "Description": "System Event Logs for this manager",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries/1",
+            "@odata.type": "#LogEntry.v1_15_0.LogEntry",
+            "Created": "2024-02-22T04:15:03-06:00",
+            "Description": "Log Entry 1",
+            "EntryCode": "Assert",
+            "EntryType": "SEL",
+            "GeneratorId": "0x0020",
+            "Id": "1",
+            "Message": "Log cleared.",
+            "MessageArgs": [],
+            "MessageArgs@odata.count": 0,
+            "MessageId": "6f02ffff",
+            "Name": "Log Entry 1",
+            "SensorNumber": 114,
+            "SensorType": "Event Logging Disabled",
+            "Severity": "OK"
+        }
+    ],
+    "Members@odata.count": 1,
+    "Name": "Log Entry Collection"
+}

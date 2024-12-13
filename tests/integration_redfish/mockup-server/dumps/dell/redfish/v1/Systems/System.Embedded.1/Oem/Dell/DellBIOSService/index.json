@@ -1,0 +1,16 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellBIOSService.DellBIOSService",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBIOSService",
+    "@odata.type": "#DellBIOSService.v1_0_0.DellBIOSService",
+    "Actions": {
+        "#DellBIOSService.DeviceRecovery": {
+            "Device@Redfish.AllowableValues": [
+                "BIOS"
+            ],
+            "target": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellBIOSService/Actions/DellBIOSService.DeviceRecovery"
+        }
+    },
+    "Description": "The DellBIOSService resource provides some actions to support BIOS functionality.",
+    "Id": "DellBIOSService",
+    "Name": "DellBIOSService"
+}

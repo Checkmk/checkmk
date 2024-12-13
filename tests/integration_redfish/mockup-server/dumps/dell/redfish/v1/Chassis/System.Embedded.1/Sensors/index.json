@@ -1,0 +1,130 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#SensorCollection.SensorCollection",
+    "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors",
+    "@odata.type": "#SensorCollection.SensorCollection",
+    "Description": "Collection of Sensors",
+    "Members": [
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PS1Current1"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PS2Current2"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PS1Voltage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PS2Voltage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardPwrConsumption"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardIOUsage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardMEMUsage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardSYSUsage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardCPUUsage"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU1VCCINVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU1VCCFAVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU1VCCDVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU2VCCINVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU2VCCFAVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU2VCCDVR"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.1A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.3A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.5A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.1B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.3B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.5B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.2A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.4A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.6A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.2B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.4B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.6B"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.7A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Fan.Embedded.8A"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU1Temp"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/CPU2Temp"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardInletTemp"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/SystemBoardExhaustTemp"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.1_MaximumFrequency"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.2_MaximumFrequency"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.1_InputPower"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.2_InputPower"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.1_OutputPower"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/PSU.Slot.2_OutputPower"
+        },
+        {
+            "@odata.id": "/redfish/v1/Chassis/System.Embedded.1/Sensors/Temperature.DIMM_MAX"
+        }
+    ],
+    "Members@odata.count": 40,
+    "Name": "SensorCollection"
+}

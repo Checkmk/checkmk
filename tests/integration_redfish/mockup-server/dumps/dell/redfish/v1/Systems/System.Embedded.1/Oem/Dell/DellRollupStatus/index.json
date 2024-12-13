@@ -1,0 +1,142 @@
+{
+    "@odata.context": "/redfish/v1/$metadata#DellRollupStatusCollection.DellRollupStatusCollection",
+    "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus",
+    "@odata.type": "#DellRollupStatusCollection.DellRollupStatusCollection",
+    "Description": "A collection of DellRollupStatus resource",
+    "Members": [
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Current",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "CurrentRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Current",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Current",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Current"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Voltage",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "VoltageRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Voltage",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Voltage",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Voltage"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Intrusion",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "IntrusionRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Intrusion",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Intrusion",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Intrusion"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Processor",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "ProcessorRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Processor",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Processor",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Processor"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Memory",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "MemoryRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Memory",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Memory",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Memory"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Fan",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "FanRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Fan",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Fan",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Fan"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Temperature",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "TemperatureRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Temperature",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Temperature",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Temperature"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_PowerSupply",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "PowerSupplyRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_PowerSupply",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#PowerSupply",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "PowerSupply"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Battery",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "BatteryRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Battery",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Battery",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Battery"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Storage",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "StorageRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_Storage",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#Storage",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "Storage"
+        },
+        {
+            "@odata.context": "/redfish/v1/$metadata#DellRollupStatus.DellRollupStatus",
+            "@odata.id": "/redfish/v1/Systems/System.Embedded.1/Oem/Dell/DellRollupStatus/iDRAC.Embedded.1_0x23_SubSystem.1_0x23_SEL_0x2F_Misc",
+            "@odata.type": "#DellRollupStatus.v1_0_0.DellRollupStatus",
+            "CollectionName": "SEL/MiscRollupStatus",
+            "Description": "Represents the subcomponent roll-up statuses.",
+            "Id": "iDRAC.Embedded.1_0x23_SubSystem.1_0x23_SEL_0x2F_Misc",
+            "InstanceID": "iDRAC.Embedded.1#SubSystem.1#SEL/Misc",
+            "Name": "DellRollupStatus",
+            "RollupStatus": "Ok",
+            "SubSystem": "SEL/Misc"
+        }
+    ],
+    "Members@odata.count": 11,
+    "Name": "DellRollupStatusCollection"
+}

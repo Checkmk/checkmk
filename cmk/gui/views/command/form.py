@@ -8,6 +8,7 @@ from typing import Literal
 
 from livestatus import SiteId
 
+from cmk.gui import weblib
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options
@@ -18,7 +19,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
-from cmk.gui.utils.selection_id import SelectionId
 
 from .base import Command, CommandConfirmDialogOptions, CommandExecutor, CommandSpec
 from .group import CommandGroup
@@ -207,7 +207,8 @@ def do_actions(  # pylint: disable=too-many-branches
         message += '<br><a href="{}">{}</a>'.format(backurl, _("Back to view"))
         if request.var("show_checkboxes") == "1":
             request.del_var("selection")
-            backurl += "&selection=" + SelectionId.from_request(request)
+            weblib.selection_id()
+            backurl += "&selection=" + request.get_str_input_mandatory("selection")
             message += '<br><a href="{}">{}</a>'.format(
                 backurl,
                 _("Back to view with checkboxes reset"),

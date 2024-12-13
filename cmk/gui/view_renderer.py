@@ -45,7 +45,6 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
@@ -122,6 +121,8 @@ class GUIViewRenderer(ABCViewRenderer):
             html.body_start(view_title(view_spec, self.view.context))
 
         if display_options.enabled(display_options.T):
+            if self.view.checkboxes_displayed:
+                weblib.selection_id()
             breadcrumb = self.view.breadcrumb()
             top_heading(
                 html,
@@ -169,9 +170,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 rows = _filter_selected_rows(
                     view_spec,
                     rows,
-                    user.get_rowselection(
-                        SelectionId.from_request(request), "view-" + view_spec["name"]
-                    ),
+                    user.get_rowselection(weblib.selection_id(), "view-" + view_spec["name"]),
                 )
 
             if (
@@ -266,9 +265,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 selected = _filter_selected_rows(
                     view_spec,
                     rows,
-                    user.get_rowselection(
-                        SelectionId.from_request(request), "view-" + view_spec["name"]
-                    ),
+                    user.get_rowselection(weblib.selection_id(), "view-" + view_spec["name"]),
                 )
                 row_info = "%d/%s" % (len(selected), row_info)
             html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))

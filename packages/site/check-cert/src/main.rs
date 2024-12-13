@@ -15,6 +15,8 @@ use std::time::Duration as StdDuration;
 use std::time::Instant;
 use time::Duration;
 
+mod version;
+
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
@@ -56,7 +58,7 @@ where
 }
 
 #[derive(Parser, Debug)]
-#[command(about = "check_cert")]
+#[command(about = "check_cert", version = version::VERSION)]
 struct Args {
     /// URL to check
     #[arg(short, long)]

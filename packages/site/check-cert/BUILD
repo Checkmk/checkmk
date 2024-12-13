@@ -1,5 +1,14 @@
 load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+
+file_from_flag(
+    name = "version.rs",
+    out = "src/version.rs",
+    content = ["pub const VERSION: &str = %r;"],
+    value = "//:cmk_version",
+    visibility = ["//visibility:private"],
+)
 
 rust_library(
     name = "check-cert-lib",
@@ -24,7 +33,10 @@ rust_library(
 
 rust_binary(
     name = "check-cert",
-    srcs = ["src/main.rs"],
+    srcs = [
+        "src/main.rs",
+        ":version.rs",
+    ],
     aliases = aliases(),
     crate_name = "check_cert",
     edition = "2021",

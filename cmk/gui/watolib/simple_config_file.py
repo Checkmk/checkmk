@@ -37,12 +37,14 @@ class WatoConfigFile(ABC, Generic[_G]):
         spec_class: TypeAlias,
     ) -> None:
         self._config_file_path = config_file_path
-        # No performance impact - only called during cmk-update-config
-        self.validator = TypeAdapter(spec_class)  # nosemgrep: type-adapter-detected
+        self.spec_class = spec_class
 
     def validate(self, raw: object) -> _G:
         try:
-            return self.validator.validate_python(raw, strict=True)
+            # No performance impact - only called during cmk-update-config
+            return TypeAdapter(self.spec_class).validate_python(  # nosemgrep: type-adapter-detected
+                raw, strict=True
+            )
         except ValidationError as exc:
             raise ConfigValidationError(
                 which_file=self.name,

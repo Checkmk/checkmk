@@ -521,13 +521,14 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
             if not vendor_data.firmware_version:
                 vendor_data.firmware_version = element.get("FirmwareVersion", "")
 
-    with SectionWriter("check_mk", " ") as w:
-        w.append("Version: 2.3.0")
-        w.append("AgentOS: redfish")
-        w.append("OSType: redfish")
-        w.append(f"OSName: {vendor_data.version}")
-        w.append(f"OSVersion: {vendor_data.firmware_version}")
-        w.append(f"OSPlatform: {vendor_data.name}")
+    labels = {
+        "cmk/os_family": "redfish",
+        "cmk/os_name": vendor_data.version,
+        "cmk/os_platform": vendor_data.name,
+        "cmk/os_type": "redfish",
+        "cmk/os_version": vendor_data.firmware_version,
+    }
+    sys.stdout.write("<<<labels:sep(0)>>>\n" f"{json.dumps(labels)}\n")
 
     # fetch systems
     systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")

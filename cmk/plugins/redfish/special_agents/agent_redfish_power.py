@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special Agent to fetch Redfish data from management interfaces"""
 
+import json
 import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
@@ -275,9 +276,14 @@ def get_information(redfishobj):
         for element in manager_data:
             fw_version = fw_version or element.get("FirmwareVersion")
 
-    with SectionWriter("check_mk", " ") as w:
-        w.append("Version: 2.0")  # TODO: is this still relevant?
-        w.append(f"AgentOS: {vendor_data.version} - {vendor_data.firmware_version}")
+    labels: Mapping[str, str] = {
+        "cmk/os_family": "redfish",
+        **({"cmk/os_name": v} if (v := vendor_data.version) else {}),
+        "cmk/os_platform": vendor_data.name,
+        "cmk/os_type": "redfish",
+        **({"cmk/os_version": fw_version} if fw_version else {}),
+    }
+    sys.stdout.write("<<<labels:sep(0)>>>\n" f"{json.dumps(labels)}\n")
 
     # fetch systems
     systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])

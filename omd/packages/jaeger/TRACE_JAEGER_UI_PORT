@@ -23,11 +23,11 @@ case "$1" in
 
         cat <<EOF >"$OMD_ROOT"/etc/jaeger/apache.conf
 # Written by TRACE_JAEGER_UI_PORT hook
-LoadModule proxy_module /omd/sites/heute/lib/apache/modules/mod_proxy.so
-LoadModule proxy_http_module /omd/sites/heute/lib/apache/modules/mod_proxy_http.so
+LoadModule proxy_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy.so
+LoadModule proxy_http_module /omd/sites/$OMD_SITE/lib/apache/modules/mod_proxy_http.so
 
-ProxyPass "/heute/jaeger" "http://[::1]:$PORT/heute/jaeger" retry=0 timeout=120
-ProxyPassReverse "/heute/jaeger"  "http://[::1]:$PORT/heute/jaeger"
+ProxyPass "/$OMD_SITE/jaeger" "http://[::1]:$PORT/$OMD_SITE/jaeger" retry=0 timeout=120
+ProxyPassReverse "/$OMD_SITE/jaeger"  "http://[::1]:$PORT/$OMD_SITE/jaeger"
 EOF
 
         cat <<EOF >"$OMD_ROOT"/etc/jaeger/omd-query-port.yaml

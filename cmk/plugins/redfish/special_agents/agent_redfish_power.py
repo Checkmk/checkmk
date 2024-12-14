@@ -202,9 +202,6 @@ class VendorGeneric:
     name = "Generic"
     version: str | None = None
     firmware_version = None
-    view_supported = False
-    view_select: Mapping[str, Sequence[Mapping[str, Sequence[str]]]] | None = None
-    expand_string = ""
 
 
 class VendorHPEData(VendorGeneric):
@@ -213,46 +210,6 @@ class VendorHPEData(VendorGeneric):
     name = "HPE"
     version = None
     firmware_version = None
-    expand_string = "?$expand=."
-
-    """
-        Select and store view (supported from ILO 5)
-        ATTENTION: This will only work as long as we are querying servers
-        with "1" System, "1" Chassi and "1" Manager
-        OK for now but will be changed once we have to query blade centers
-    """
-    view_supported = False
-    view_select = {
-        "Select": [
-            {
-                "From": f"/Systems/1/Memory/{expand_string}",
-                "Properties": ["Members AS Memory"],
-            },
-            {
-                "From": f"/Systems/1/Processors/{expand_string}",
-                "Properties": ["Members AS Processors"],
-            },
-            {
-                "From": f"/Systems/1/EthernetInterfaces/{expand_string}",
-                "Properties": ["Members AS EthernetInterfaces"],
-            },
-            {
-                "From": f"/Systems/1/BaseNetworkAdapters/{expand_string}",
-                "Properties": ["Members AS NetworkAdapters"],
-            },
-            {
-                "From": f"/Chassis/1/Power/{expand_string}",
-                "Properties": ["PowerSupplies", "Redundancy AS PowerRedundancy"],
-            },
-            {"From": "/Chassis/1/Thermal/", "Properties": ["Temperatures", "Fans"]},
-            {"From": f"/Managers/{expand_string}", "Properties": ["Members as ILO"]},
-            {
-                "From": f"/Managers/1/EthernetInterfaces/{expand_string}",
-                "Properties": ["Members as ILOInterfaces"],
-            },
-        ]
-    }
-    view_response = None
 
 
 class VendorLenovoData(VendorGeneric):
@@ -261,7 +218,6 @@ class VendorLenovoData(VendorGeneric):
     name = "Lenovo"
     version = None
     firmware_version = None
-    expand_string = "?$expand=*"
 
 
 class VendorDellData(VendorGeneric):
@@ -270,7 +226,6 @@ class VendorDellData(VendorGeneric):
     name = "Dell"
     version: str | None = None
     firmware_version = None
-    expand_string = "?$expand=*($levels=1)"
 
 
 class VendorHuaweiData(VendorGeneric):
@@ -279,7 +234,6 @@ class VendorHuaweiData(VendorGeneric):
     name = "Huawei"
     version = None
     firmware_version = None
-    expand_string = "?$expand=.%28$levels=1%29"
 
 
 class VendorFujitsuData(VendorGeneric):
@@ -288,7 +242,6 @@ class VendorFujitsuData(VendorGeneric):
     name = "Fujitsu"
     version: str | None = None
     firmware_version = None
-    expand_string = "?$expand=Members"
 
 
 class VendorCiscoData(VendorGeneric):
@@ -297,7 +250,6 @@ class VendorCiscoData(VendorGeneric):
     name = "Cisco"
     version: str | None = None
     firmware_version = None
-    expand_string = ""
 
 
 class VendorAmiData(VendorGeneric):
@@ -306,7 +258,6 @@ class VendorAmiData(VendorGeneric):
     name = "Ami"
     version = None
     firmware_version = None
-    expand_string = ""
 
 
 class VendorSupermicroData(VendorGeneric):
@@ -315,7 +266,6 @@ class VendorSupermicroData(VendorGeneric):
     name = "Supermicro"
     version = None
     firmware_version = None
-    expand_string = ""
 
 
 class VendorRaritanData(VendorGeneric):
@@ -324,7 +274,6 @@ class VendorRaritanData(VendorGeneric):
     name = "Raritan"
     version: str | None = None
     firmware_version = None
-    expand_string = ""
 
 
 def detect_vendor(root_data):
@@ -355,8 +304,6 @@ def detect_vendor(root_data):
                     vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
                         "Version"
                     )
-                if vendor_data.version and vendor_data.version.lower() == "ilo 5":
-                    vendor_data.view_supported = True
             return vendor_data
 
         case "Lenovo":

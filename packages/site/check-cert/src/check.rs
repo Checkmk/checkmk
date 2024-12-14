@@ -202,7 +202,7 @@ where
             (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
             (OutputType::Notice(text), _) => {
                 let text = self.append_to(&text);
-                (Some(text.clone()), Some(text))
+                (Some(text), None)
             }
             (OutputType::Summary(text), State::Ok) => (Some(text), None),
             (OutputType::Summary(text), _) => {
@@ -670,7 +670,7 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
                     (None, None) => cr
                         .summary
                         .map_or(vec![], |t| vec![Details::new(cr.state, Some(t), None)]),
-                    (d, m) => vec![Details::new(cr.state, d, m)],
+                    (d, m) => vec![Details::new(cr.state, d.or(cr.summary), m)],
                 });
                 out
             })
@@ -1019,7 +1019,10 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;"
+            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;\n\
+            summary 1\n\
+            summary 2 (!)\n\
+            summary 3 (!!)"
         );
         assert!(vec.is_empty());
     }
@@ -1043,7 +1046,10 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;"
+            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;\n\
+            summary 1\n\
+            summary 2 (!)\n\
+            summary 3 (!!)"
         );
     }
 
@@ -1104,7 +1110,8 @@ mod test_writer_format {
             "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             summary ok\n\
             notice\n\
-            details warn (!)"
+            details warn (!)\n\
+            summary crit (!!)"
         );
     }
 

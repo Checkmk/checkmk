@@ -69,15 +69,12 @@ class CachedSectionWriter(SectionManager):
 
 
 @dataclass
-class VendorData:
+class Vendor:
     """Vendor data object"""
 
     name: str
     version: str | None = None
     firmware_version: str | None = None
-    view_supported: bool | None = False
-    view_select: Mapping[str, object] | None = None
-    view_response: Mapping[str, object] | None = None
     expand_string: str | None = None
 
 
@@ -150,7 +147,7 @@ class RedfishData:
     manager_data: Mapping[str, object] | None = None
     chassis_data: Mapping[str, object] | None = None
     base_data: Mapping[str, Any] = field(default_factory=dict)
-    vendor_data: VendorData | None = None
+    vendor_data: Vendor | None = None
     section_data: dict[str, Any] = field(default_factory=dict)
 
 
@@ -439,7 +436,7 @@ def process_result(redfishobj: RedfishData) -> None:
                     w.append_json(result.get(element))
 
 
-def detect_vendor(root_data: Mapping[str, Any]) -> VendorData:
+def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
     """Extract Vendor information from base data"""
     vendor_string = ""
     if root_data.get("Oem"):
@@ -450,7 +447,7 @@ def detect_vendor(root_data: Mapping[str, Any]) -> VendorData:
 
     match vendor_string:
         case "Hpe" | "Hp":
-            vendor_data = VendorData(name="HPE", expand_string="?$expand=.")
+            vendor_data = Vendor(name="HPE", expand_string="?$expand=.")
             if vendor_string in ["Hp"]:
                 vendor_data.expand_string = ""
             manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
@@ -471,26 +468,25 @@ def detect_vendor(root_data: Mapping[str, Any]) -> VendorData:
             return vendor_data
 
         case "Lenovo":
-            return VendorData(name="Lenovo", version="xClarity", expand_string="?$expand=*")
+            return Vendor(name="Lenovo", version="xClarity", expand_string="?$expand=*")
 
         case "Dell":
-            return VendorData(name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)")
+            return Vendor(name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)")
 
         case "Huawei":
-            return VendorData(
-                name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29"
-            )
+            return Vendor(name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29")
 
         case "ts_fujitsu":
-            return VendorData(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
+            return Vendor(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
 
         case "Cisco" | "Cisco Systems Inc.":
-            return VendorData(name="Cisco", version="CIMC")
+            return Vendor(name="Cisco", version="CIMC")
 
         case "Ami" | "Supermicro" | "Seagate" as name:
-            return VendorData(name=name)
+            return Vendor(name=name)
 
-    return VendorData(name="Generic")
+    # TODO: why not use the vendor string here?
+    return Vendor(name="Generic")
 
 
 def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=too-many-branches

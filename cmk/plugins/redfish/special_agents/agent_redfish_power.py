@@ -7,8 +7,9 @@
 import logging
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 
 import urllib3
 from redfish import redfish_logger  # type: ignore[import-untyped]
@@ -196,87 +197,14 @@ def process_result(
                 w.append_json(value)
 
 
-class VendorGeneric:
-    """Generic Vendor Definition"""
-
-    name = "Generic"
-    version: str | None = None
-    firmware_version = None
-
-
-class VendorHPEData(VendorGeneric):
-    """HPE specific settings"""
-
-    name = "HPE"
-    version = None
-    firmware_version = None
+@dataclass(frozen=True, kw_only=True)
+class Vendor:
+    name: str
+    version: str | None
+    firmware_version: str | None
 
 
-class VendorLenovoData(VendorGeneric):
-    """Lenovo specific settings"""
-
-    name = "Lenovo"
-    version = None
-    firmware_version = None
-
-
-class VendorDellData(VendorGeneric):
-    """Dell specific settings"""
-
-    name = "Dell"
-    version: str | None = None
-    firmware_version = None
-
-
-class VendorHuaweiData(VendorGeneric):
-    """Huawei specific settings"""
-
-    name = "Huawei"
-    version = None
-    firmware_version = None
-
-
-class VendorFujitsuData(VendorGeneric):
-    """Fujitsu specific settings"""
-
-    name = "Fujitsu"
-    version: str | None = None
-    firmware_version = None
-
-
-class VendorCiscoData(VendorGeneric):
-    """Cisco specific settings"""
-
-    name = "Cisco"
-    version: str | None = None
-    firmware_version = None
-
-
-class VendorAmiData(VendorGeneric):
-    """Ami specific settings"""
-
-    name = "Ami"
-    version = None
-    firmware_version = None
-
-
-class VendorSupermicroData(VendorGeneric):
-    """Supermicro specific settings"""
-
-    name = "Supermicro"
-    version = None
-    firmware_version = None
-
-
-class VendorRaritanData(VendorGeneric):
-    """Raritan specific settings"""
-
-    name = "Raritan"
-    version: str | None = None
-    firmware_version = None
-
-
-def detect_vendor(root_data):
+def detect_vendor(root_data: Any) -> Vendor:
     """Extract Vendor information from base data"""
     vendor_string = ""
     if root_data.get("Oem"):
@@ -285,60 +213,46 @@ def detect_vendor(root_data):
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
-    vendor_data: VendorGeneric
     match vendor_string:
         case "Hpe" | "Hp":
-            vendor_data = VendorHPEData()
             manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
-            if manager_data:
-                vendor_data.version = manager_data.get("ManagerType")
-                if vendor_data.version is None:
-                    vendor_data.version = (
+            if not manager_data:
+                return Vendor(name="HPE", version=None, firmware_version=None)
+
+            return Vendor(
+                name="HPE",
+                version=(
+                    manager_data.get("ManagerType")
+                    or (
                         root_data.get("Oem", {})
                         .get(vendor_string, {})
                         .get("Moniker", {})
                         .get("PRODGEN")
                     )
-                vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
-                if vendor_data.firmware_version is None:
-                    vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
-                        "Version"
-                    )
-            return vendor_data
+                ),
+                firmware_version=(
+                    manager_data.get("ManagerFirmwareVersion")
+                    or manager_data.get("Languages", {})[0].get("Version")
+                ),
+            )
 
-        case "Lenovo":
-            return VendorLenovoData()
+        case "Lenovo" | "Huawei" | "Ami" | "Supermicro" as name:
+            return Vendor(name=name, version=None, firmware_version=None)
 
         case "Dell":
-            vendor_data = VendorDellData()
-            vendor_data.version = "iDRAC"
-            return vendor_data
-
-        case "Huawei":
-            return VendorHuaweiData()
+            return Vendor(name="Dell", version="iDRAC", firmware_version=None)
 
         case "ts_fujitsu":
-            vendor_data = VendorFujitsuData()
-            vendor_data.version = "iRMC"
-            return vendor_data
-
-        case "Ami":
-            return VendorAmiData()
-
-        case "Supermicro":
-            return VendorSupermicroData()
+            return Vendor(name="Fujitsu", version="iRMC", firmware_version=None)
 
         case "Cisco" | "Cisco Systems Inc.":
-            vendor_data = VendorCiscoData()
-            vendor_data.version = "CIMC"
-            return vendor_data
+            return Vendor(name="Cisco", version="CIMC", firmware_version=None)
 
         case "Raritan":
-            vendor_data = VendorRaritanData()
-            vendor_data.version = "BMC"
-            return vendor_data
+            return Vendor(name="Raritan", version="BMC", firmware_version=None)
 
-    return VendorGeneric()
+    # TODO: Why not use the vendor_string anyway?
+    return Vendor(name="Generic", version=None, firmware_version=None)
 
 
 def get_information(redfishobj):
@@ -351,6 +265,7 @@ def get_information(redfishobj):
     systems_url = base_data.get("PowerEquipment", {}).get("@odata.id")
 
     manager_data = []
+    fw_version = vendor_data.firmware_version
 
     # fetch managers
     if manager_url:
@@ -358,8 +273,7 @@ def get_information(redfishobj):
         manager_data = fetch_collection(redfishobj, manager_col, "Manager")
 
         for element in manager_data:
-            if not vendor_data.firmware_version:
-                vendor_data.firmware_version = element.get("FirmwareVersion", "")
+            fw_version = fw_version or element.get("FirmwareVersion")
 
     with SectionWriter("check_mk", " ") as w:
         w.append("Version: 2.0")  # TODO: is this still relevant?

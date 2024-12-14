@@ -148,9 +148,6 @@ msgstr ""
 " Isto também inclui quaisquer alterações efectuadas desde a última ativação "
 "que não necessitaram de ativação manual (marcadas com "
 
-msgid " Want to be notified about the public release? "
-msgstr ""
-
 #, python-format
 msgid " and %s '%s'"
 msgstr " e %s '%s'"
@@ -696,9 +693,9 @@ msgstr "%s etiquetas correspondentes: %s"
 msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s pode estar em falta. Não deverá estar vazio se estiver definido."
 
-#, python-format
-msgid "%s notification rules are matching"
-msgstr "%s regras de notificação são correspondentes"
+#, fuzzy, python-format
+msgid "%s notification %s"
+msgstr "última notificação"
 
 #, python-format
 msgid ""
@@ -729,10 +726,6 @@ msgstr "%s propriedades"
 #, python-format
 msgid "%s rate"
 msgstr "%s rate"
-
-#, fuzzy, python-format
-msgid "%s resulting notifications"
-msgstr "Notificações resultantes"
 
 #, fuzzy, python-format
 msgid "%s rules"
@@ -882,6 +875,14 @@ msgstr "(níveis de alerta SLA a %d/%d de incidentes restantes)"
 msgid "(SLA alert levels at %r%%/%r%% left)"
 msgstr "(níveis de alerta de SLA a %d%%/%d%% restantes)"
 
+#, fuzzy
+msgid "(Select host)"
+msgstr "Eliminar o anfitrião"
+
+#, fuzzy
+msgid "(Select service)"
+msgstr "Eliminar utilizador"
+
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(nomes TLS, HTTP e DNS)"
 
@@ -1024,10 +1025,6 @@ msgstr "-.-- %"
 
 msgid "-.-- ms"
 msgstr "-.-- ms"
-
-#, fuzzy
-msgid "."
-msgstr "S."
 
 #, python-format
 msgid "... (%d more)"
@@ -4708,6 +4705,22 @@ msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
 #, fuzzy
+msgid "Advanced - Number of retries"
+msgstr "Número de tentativas"
+
+#, fuzzy
+msgid "Advanced - Protocol"
+msgstr "Opções disponíveis"
+
+#, fuzzy
+msgid "Advanced - TCP Port number"
+msgstr "Número da porta TCP"
+
+#, fuzzy
+msgid "Advanced - Timeout for connection"
+msgstr "Média de pedidos por conexão"
+
+#, fuzzy
 msgid "Advanced condition simulation"
 msgstr "Opções disponíveis"
 
@@ -5210,6 +5223,12 @@ msgstr "Alvo automático agregado PGA"
 
 msgid "Aggregate PGA target parameter"
 msgstr "Parâmetro alvo PGA agregado"
+
+msgid ""
+"Aggregate values of several data points of an OpenTelemetry metric from "
+"different time points. The aggregation function is applied to the values of "
+"the data points which have the same attributes."
+msgstr ""
 
 msgid "Aggregated assumed state"
 msgstr "Estado assumido agregado"
@@ -7071,6 +7090,10 @@ msgstr "Agente para %s (%s)"
 msgid "Arguments:"
 msgstr "Argumentos:"
 
+#, fuzzy
+msgid "Array Controllers"
+msgstr "Arrays (Controladores)"
+
 msgid "Arrays (Controllers)"
 msgstr "Arrays (Controladores)"
 
@@ -7206,10 +7229,6 @@ msgstr "Atribuir através de expressões regulares"
 
 msgid "Assignee"
 msgstr ""
-
-#, fuzzy
-msgid "Assignee filters"
-msgstr "Filtros de serviço"
 
 msgid "Assignment of hosts to contact groups"
 msgstr "Designação de anfitriões para grupos de contato"
@@ -7762,11 +7781,12 @@ msgstr "URL de automação:"
 msgid "Automation calls"
 msgstr "Chamadas de automação"
 
-msgid "Automation secret"
-msgstr "Segredo de automação"
-
 msgid "Automation secret for machine accounts"
 msgstr "Segredo de automação para contas de máquinas"
+
+#, fuzzy
+msgid "Automation user"
+msgstr "Segredo de automação"
 
 #, fuzzy
 msgid "Automation user authentication via HTTP parameters"
@@ -10859,6 +10879,9 @@ msgstr "Utilização da CPU no Linux/UNIX"
 msgid "CPU utilization: Cluster"
 msgstr "Utilização da CPU: Cluster"
 
+msgid "CPUs"
+msgstr ""
+
 #, fuzzy
 msgid "CPUs physical name"
 msgstr "Nome do Volume Físico"
@@ -10988,6 +11011,10 @@ msgstr "Memória em cache"
 
 msgid "Cached output of monitoring agent"
 msgstr "Saída em cache do agente de monitoramento"
+
+#, fuzzy
+msgid "Cached times for single sections"
+msgstr "Falhas de cache por segundo"
 
 msgid "Caches"
 msgstr "Caches"
@@ -12153,6 +12180,9 @@ msgstr "Check timeout para serviços (Microcore)"
 msgid "Check type"
 msgstr "Tipo de cheque"
 
+msgid "Check types"
+msgstr "Tipos de cheques"
+
 msgid "Check uniserv service"
 msgstr "Verificar serviço uniserv"
 
@@ -12231,10 +12261,6 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Automação Checkmk"
-
-#, fuzzy
-msgid "Checkmk Cloud Trial"
-msgstr "Logotipo Checkmk"
 
 msgid "Checkmk Configuration Files"
 msgstr "Arquivos de configuração Checkmk"
@@ -13494,10 +13520,6 @@ msgstr "Recolha informações dos locais Checkmk para análise diagnóstica."
 msgid "Collect performance data for disk latency"
 msgstr "Recolher dados de desempenho para a latência do disco"
 
-#, fuzzy
-msgid "Collect ruleset matching statistics"
-msgstr "Estatísticas de tráfego de clusters"
-
 msgid "Collection Size"
 msgstr "Tamanho da colecção"
 
@@ -14282,12 +14304,14 @@ msgstr ""
 "Configure aqui a URL base para o Web-GUI de Monitorização. Inclua o nome do "
 "site. Usado para link para verificar_mk fora de jira."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the community to be used when contacting this host via SNMP v1/v2 "
-"or v3. You can also configure the SNMP community using the <a href=\"%s"
-"\">SNMP Communities</a> ruleset. Configuring a community when creating a "
-"host overrides the community defined by the rules."
+"or v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+"credentials of monitored host</a> ruleset. Configuring a community "
+"explicitly here overrides the community defined by a rule. Communication via "
+"SNMP v1 and v2c is unencrypted. Consider using SNMP v3 for a higher level of "
+"security."
 msgstr ""
 "Configure a comunidade a ser utilizada quando contactar este anfitrião "
 "através de SNMP v1/v2 ou v3. Também pode configurar a comunidade SNMP "
@@ -14623,6 +14647,10 @@ msgstr ""
 msgid "Connect to the local site"
 msgstr "Conecte-se ao site local"
 
+#, fuzzy
+msgid "Connect to the remote site"
+msgstr "Conectar-se a locais remotos"
+
 msgid "Connect via TCP (IPv4)"
 msgstr "Conectar-se via TCP (IPv4)"
 
@@ -14842,6 +14870,10 @@ msgstr "Grupo de contato (efetivo)"
 
 msgid "Contact group claim name"
 msgstr "Nome do pedido do grupo de contacto"
+
+#, fuzzy
+msgid "Contact group filters"
+msgstr "Grupos de contato"
 
 #, fuzzy
 msgid "Contact group membership"
@@ -19361,6 +19393,10 @@ msgstr "Deficiente "
 msgid "Disabled (configured away by admin)"
 msgstr "Desactivado (não configurado pelo administrador)"
 
+#, fuzzy
+msgid "Disabled Sections..."
+msgstr "Seções para deficientes físicos"
+
 msgid "Disabled active checks"
 msgstr "Verificações ativas para deficientes"
 
@@ -19498,6 +19534,10 @@ msgid "Discovery rules"
 msgstr "Regras de Descoberta"
 
 msgid "Discovery settings"
+msgstr "Configurações de descoberta"
+
+#, fuzzy
+msgid "Discovery settings for physical ports"
 msgstr "Configurações de descoberta"
 
 msgid "Discovery state"
@@ -19641,10 +19681,6 @@ msgstr "Etiquetas do anfitrião descobertas do anfitrião"
 
 msgid "Disovered services of the host"
 msgstr "Serviços do anfitrião"
-
-#, fuzzy
-msgid "Dispatch notification"
-msgstr "Desactivar as notificações"
 
 msgid "Display"
 msgstr "Mostrar"
@@ -20763,6 +20799,10 @@ msgstr ""
 msgid "Down"
 msgstr "Para baixo"
 
+#, fuzzy
+msgid "Down only"
+msgstr "Conte apenas"
+
 msgid "Download"
 msgstr "Descarregar"
 
@@ -20960,6 +21000,10 @@ msgstr "Tipo de condutor a utilizar em vez de fazer uma selecção automática"
 #, fuzzy
 msgid "Driver version"
 msgstr "Versão do Motorista"
+
+#, fuzzy
+msgid "Drives"
+msgstr "Condução"
 
 msgid "Drop Domain Suffix"
 msgstr "Sufixo de Domínio Drop"
@@ -21942,6 +21986,18 @@ msgstr "Corrente eléctrica"
 msgid "Electrical energy"
 msgstr "Energia eléctrica"
 
+#, fuzzy
+msgid "Electrical input power"
+msgstr "Energia eléctrica"
+
+#, fuzzy
+msgid "Electrical input voltage"
+msgstr "Tensão eléctrica"
+
+#, fuzzy
+msgid "Electrical output power"
+msgstr "Energia eléctrica"
+
 msgid "Electrical power"
 msgstr "Energia eléctrica"
 
@@ -22294,6 +22350,9 @@ msgstr "Activado (activo neste sítio)"
 
 msgid "Enabled (inactive on this site)"
 msgstr "Activado (inactivo neste sítio)"
+
+msgid "Enabled Sections... (only use in case of problems)"
+msgstr ""
 
 msgid "Enabled in time range"
 msgstr "Ativado no intervalo de tempo"
@@ -24403,6 +24462,10 @@ msgstr "Caindo"
 msgid "Fan Name"
 msgstr "Nome do Fã"
 
+#, fuzzy
+msgid "Fan and Temperatures"
+msgstr "Temperatura"
+
 msgid "Fan speed"
 msgstr "Velocidade do ventilador"
 
@@ -24676,6 +24739,10 @@ msgstr "Tamanho do arquivo em"
 msgid "File size below"
 msgstr "Tamanho do arquivo abaixo"
 
+#, python-format
+msgid "File size exceeds the maximum allowed size of %s bytes"
+msgstr ""
+
 #, fuzzy
 msgid "File size levels"
 msgstr "Níveis de tamanho de arquivo"
@@ -24828,6 +24895,14 @@ msgstr "Filtrar mensagens duplicadas no registo de eventos do Windows"
 msgid "Filter pattern (RegExp)"
 msgstr "Padrão de filtro (RegExp)"
 
+#, fuzzy
+msgid "Filter selection by host name:"
+msgstr "Filtrar %s selecção por nome de mangueira: "
+
+#, fuzzy
+msgid "Filter selection by service:"
+msgstr "Filtrar %s seleção por serviço: "
+
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrar anotações válidas por padrão de chave"
 
@@ -24843,6 +24918,11 @@ msgstr "Opções de filtragem e computação"
 
 msgid "Filters"
 msgstr "Filtros"
+
+msgid ""
+"Filters for hosts or services that have at least one of the contact group "
+"members assigned to them."
+msgstr ""
 
 msgid "Final notification result"
 msgstr "Resultado da notificação final"
@@ -24913,6 +24993,10 @@ msgstr "Conexões de Firewall"
 
 msgid "Firmware"
 msgstr "Firmware"
+
+#, fuzzy
+msgid "Firmware Versions"
+msgstr "Versão Kernel"
 
 msgid "First"
 msgstr "Primeiro"
@@ -26819,6 +26903,10 @@ msgstr "Estado do módulo Switch HP"
 msgid "HP-UX Multipath Count"
 msgstr "HP-UX Multipath Count"
 
+#, fuzzy
+msgid "HPE - Storagesubsystem"
+msgstr "Sistemas de armazenamento EMC VNX"
+
 msgid "HPE StoreOnce"
 msgstr "HPE StoreOnce"
 
@@ -27520,6 +27608,11 @@ msgid ""
 msgstr ""
 "Aqui você pode configurar quais serviços são exibidos, dependendo do seu "
 "estado. Este é um filtro no nível de exibição e não no nível de consulta."
+
+#, fuzzy
+msgid "Here you can configured the credentials to be used."
+msgstr ""
+"Aqui você pode configurar as configurações de tempo limite em segundos."
 
 msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
@@ -29393,14 +29486,8 @@ msgstr ""
 msgid "Host %s not known in ntopng"
 msgstr "Hospedeiro %s não conhecido em ntopng"
 
-msgid "Host & service events"
-msgstr "Acolhimento & eventos de serviço"
-
 msgid "Host & service groups"
 msgstr "Acolhimento & grupos de serviço"
-
-msgid "Host & service history"
-msgstr "Histórico de serviços e hospedagem"
 
 msgid "Host & service problems"
 msgstr "Problemas de alojamento e serviços"
@@ -30130,6 +30217,10 @@ msgstr "Hostalias"
 
 msgid "Hostalias (regex)"
 msgstr "Hostalias (regex)"
+
+#, fuzzy
+msgid "Hostbustadapters"
+msgstr "Estados de acolhimento"
 
 #, fuzzy
 msgid "Hostname"
@@ -31240,11 +31331,6 @@ msgstr ""
 "substituirão as configurações globais feitas aqui."
 
 msgid ""
-"If enabled, the core will collect statistics (cache hits/misses) during the "
-"ruleset matching process."
-msgstr ""
-
-msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr ""
 "Se estiver ativado, os detalhes do serviço conterão o nome de utilizador de "
@@ -31520,6 +31606,12 @@ msgstr ""
 "contexto com o número de linhas que foram removidas: [a mensagem acima foi "
 "repetida n vezes]. A definição deste sinalizador pode ajudar a diminuir o "
 "tamanho da saída do agente no caso de serem geradas muitas linhas duplicadas."
+
+#, fuzzy
+msgid "If there are problems please use disabled sections."
+msgstr ""
+"<br>Se houver problemas de permissão, por favor assegure-se de que o usuário "
+"do site tem permissões de escrita."
 
 msgid ""
 "If there is more than one plan testing the same application, then the "
@@ -33218,6 +33310,11 @@ msgstr ""
 "'docker_container_node_name')."
 
 msgid ""
+"In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, "
+"<i>Dynamic host configuration</i>"
+msgstr ""
+
+msgid ""
 "In order to save resources on the target host and on the update server it is "
 "recommended to do the update checks not more than once every 10 minutes."
 msgstr ""
@@ -33635,9 +33732,6 @@ msgstr "Índices"
 
 msgid "Indices to query"
 msgstr "Índices a consultar"
-
-msgid "Individual automation user credentials"
-msgstr "Credenciais de usuário de automação individual"
 
 msgid ""
 "Individual patterns matching the text (which must have been matched by the "
@@ -40077,6 +40171,10 @@ msgstr "Memória"
 msgid "Memory (RAM)"
 msgstr "Memória (RAM)"
 
+#, fuzzy
+msgid "Memory Modules"
+msgstr "Níveis de memória"
+
 msgid "Memory Pool Name"
 msgstr "Nome do Pool de Memória"
 
@@ -42241,6 +42339,10 @@ msgstr "Problemas com o espaço de nome"
 msgid "Namespaces"
 msgstr "Namespaces"
 
+#, fuzzy
+msgid "Naming for outlets at discovery"
+msgstr "Netapp descoberta da porta"
+
 msgid "Native cluster mode"
 msgstr "Modo de cluster nativo"
 
@@ -42384,11 +42486,23 @@ msgstr "Uso de memória Netscaler"
 msgid "Network"
 msgstr "Rede"
 
+#, fuzzy
+msgid "Network Cards"
+msgstr "Endereço da rede"
+
 msgid "Network ID"
 msgstr "ID da rede"
 
 msgid "Network IO"
 msgstr "IO de rede"
+
+#, fuzzy
+msgid "Network Interfaces 1"
+msgstr "Interfaces de rede"
+
+#, fuzzy
+msgid "Network Interfaces 2"
+msgstr "Interfaces de rede"
 
 msgid "Network Load Balancer Listeners"
 msgstr "Balancim de Carga de Rede"
@@ -43560,8 +43674,8 @@ msgid "Not supported"
 msgstr "Não suportado"
 
 msgid ""
-"Not the recipient, but filters hosts and services assigned to specific "
-"person(s) or group(s)"
+"Not the recipient, but filters hosts and services assigned to a contact "
+"group or members of a contact group"
 msgstr ""
 
 msgid "Not yet monitored"
@@ -43601,6 +43715,12 @@ msgid ""
 msgstr ""
 "Nota: A expiração dos agradecimentos só funciona quando se utiliza o Checkmk "
 "Micro Core."
+
+#, python-format
+msgid ""
+"Note: For access options like AssumeRole or a custom IAM region, please use "
+"the %s."
+msgstr ""
 
 msgid ""
 "Note: If you also set a limit in the report, then the limit set here will "
@@ -43759,6 +43879,10 @@ msgstr "A colecção de gráficos '%s' não existe"
 #, fuzzy
 msgid "Notification method (plug-in)"
 msgstr "Plugins de notificação"
+
+#, fuzzy
+msgid "Notification method and parameter"
+msgstr "Fase de notificação"
 
 #, fuzzy
 msgid "Notification overview"
@@ -44444,6 +44568,9 @@ msgstr "Número de tentativas"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "Número de tentativas (sem contar com a execução inicial regular)"
 
+msgid "Number of retry attempts made by the special agent."
+msgstr ""
+
 msgid "Number of rule groups"
 msgstr "Número de grupos de regras"
 
@@ -44456,6 +44583,10 @@ msgstr "Número de Pedaços"
 
 msgid "Number of search results"
 msgstr "Número de resultados da pesquisa"
+
+msgid ""
+"Number of seconds for a single connection attempt before timeout occurs."
+msgstr ""
 
 msgid "Number of seconds to wait for a TCP connection"
 msgstr "Número de segundos a aguardar por uma ligação TCP"
@@ -45497,6 +45628,13 @@ msgstr ""
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
 msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "OpenTelemetry metric name"
+msgstr "Adicionar configuração do estado"
+
+msgid "OpenTelemetry metrics (Experimental)"
+msgstr ""
 
 msgid "OpenVMS processes"
 msgstr "Processos OpenVMS"
@@ -49190,6 +49328,9 @@ msgstr ""
 "relatório está a ser criado. Por exemplo, se você criar um relatório semanal "
 "na segunda-feira 00:00, você precisa selecionar <i>last week</i>."
 
+msgid "Please only define sections or disabled sections."
+msgstr ""
+
 msgid "Please provide a '.xml' file"
 msgstr "Forneça um ficheiro '.xml'"
 
@@ -49696,6 +49837,10 @@ msgstr ""
 msgid "Port"
 msgstr "Porto"
 
+#, fuzzy
+msgid "Port ID"
+msgstr "Porto"
+
 msgid "Port Number"
 msgstr "Número do porto"
 
@@ -49723,6 +49868,10 @@ msgstr "Número de porta para conexão HTTPS à vSphere"
 
 msgid "Port number for communicating with the PLC"
 msgstr "Número de porta para comunicação com o PLC"
+
+#, fuzzy
+msgid "Port number for connection to the Rest API. Usually 8443 (TLS)"
+msgstr "Número de porta para conexão HTTPS à vSphere"
 
 msgid "Port number that 3par is listening on. The default is 8080."
 msgstr "Porta número que a 3par está a ouvir. O padrão é 8080."
@@ -49850,6 +49999,10 @@ msgstr "Desligado"
 
 msgid "Powering on"
 msgstr "Ligar"
+
+#, fuzzy
+msgid "Powers Supply"
+msgstr "Fontes de alimentação"
 
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr "Pre-/Pós-fixos para TNSALIAS"
@@ -50409,6 +50562,10 @@ msgstr "Protocolo"
 msgid "Protocol Overview"
 msgstr "Visão geral do protocolo"
 
+msgid ""
+"Protocol for the connection to the Rest API.https is highly recommended!!!"
+msgstr ""
+
 msgid "Protocol of Server"
 msgstr "Protocolo de Servidor"
 
@@ -50421,13 +50578,6 @@ msgstr ""
 
 msgid "Provide command for python script execution"
 msgstr "Fornecer comando para execução de scripts python"
-
-msgid ""
-"Provide individual credentials of an automation user with administrative "
-"privileges on the remote site."
-msgstr ""
-"Fornecer credenciais individuais de um usuário de automação com privilégios "
-"administrativos no local remoto."
 
 msgid "Provide levels"
 msgstr "Fornecer níveis"
@@ -51593,6 +51743,27 @@ msgstr "Vermelho"
 msgid "Redacted secrets changed."
 msgstr "Segredos redigidos alterados."
 
+msgid "Redfish"
+msgstr ""
+
+msgid "Redfish Compatible Management Controller"
+msgstr ""
+
+msgid "Redfish Compatible Power Equipment (PDU)"
+msgstr ""
+
+#, fuzzy
+msgid "Redfish Ethernet Interface discovery"
+msgstr "Pendente de descoberta de serviços"
+
+#, fuzzy
+msgid "Redfish outlet discovery"
+msgstr "Descoberta do contador MSSQL"
+
+#, fuzzy
+msgid "Redfish physical port discovery"
+msgstr "Estados físicos portuários a descobrir"
+
 msgid "Redirect URL (has to be https)"
 msgstr "URL redireccionada (tem de ser https)"
 
@@ -52138,9 +52309,6 @@ msgstr ""
 
 msgid "Remote port number"
 msgstr "Número da porta remota"
-
-msgid "Remote site URL"
-msgstr "URL do site remoto"
 
 #, python-format
 msgid "Remote sites are not allowed when central site in license state %s"
@@ -53882,6 +54050,9 @@ msgid "Rulesets that contain rules with references to the changed tags"
 msgstr ""
 "Conjuntos de regras que contêm regras com referências às etiquetas alteradas"
 
+msgid "Run Quick Setup Stage Action"
+msgstr ""
+
 msgid "Run agent as non-root user (Linux)"
 msgstr "Executar agente como usuário não-root (Linux)"
 
@@ -53970,6 +54141,10 @@ msgstr "Instâncias de execução da norma a pedido (A, C, D, H, I, M, R, T, Z)"
 
 msgid "Running On-Demand X instances"
 msgstr "Executar instâncias X a pedido"
+
+#, python-format
+msgid "Running Quick setup %s stage %s action %s"
+msgstr ""
 
 msgid "Running VMs"
 msgstr "Execução de VMs"
@@ -54663,6 +54838,9 @@ msgstr "Configurações salvas apenas para leitura"
 msgid "Saved space"
 msgstr "Espaço guardado"
 
+msgid "Saving the result..."
+msgstr ""
+
 msgid "Scalar"
 msgstr ""
 
@@ -55100,10 +55278,78 @@ msgstr "Chave secreta"
 msgid "Section"
 msgstr "Secção"
 
+#, fuzzy
+msgid "Section ArrayControllers"
+msgstr "Arrays (Controladores)"
+
 msgid "Section Content"
 msgstr "Conteúdo da secção"
 
+#, fuzzy
+msgid "Section Drives"
+msgstr "Secções"
+
+#, fuzzy
+msgid "Section EthernetInterfaces"
+msgstr "Interfaces de Fibra-canal"
+
+#, fuzzy
+msgid "Section FirmwareInventory"
+msgstr "Inventário"
+
+#, fuzzy
+msgid "Section HostBusAdapters"
+msgstr "Estado da ligação"
+
+#, fuzzy
+msgid "Section LogicalDrives"
+msgstr "Seleção de alarmes"
+
+#, fuzzy
+msgid "Section Memory"
+msgstr "Nome da seção"
+
 msgid "Section Name"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section NetworkAdapters"
+msgstr "Adaptadores de rede"
+
+#, fuzzy
+msgid "Section NetworkInterfaces"
+msgstr "Interfaces de rede"
+
+#, fuzzy
+msgid "Section PhysicalDrives"
+msgstr "Discos Físicos"
+
+#, fuzzy
+msgid "Section Power"
+msgstr "Envio de energia"
+
+#, fuzzy
+msgid "Section Processors"
+msgstr "Processador"
+
+#, fuzzy
+msgid "Section SimpleStorage"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section SmartStorage"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section Storage"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section Thermal"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section Volumes"
 msgstr "Nome da seção"
 
 msgid "Section name"
@@ -55662,8 +55908,8 @@ msgid "Send notifications to remote Event Console"
 msgstr "Enviar notificações para console de eventos remoto"
 
 #, fuzzy
-msgid "Send out HTML/ASCII email notification according to notification rules"
-msgstr "As notificações serão enviadas de acordo com as regras de notificação"
+msgid "Send out notification for specific method"
+msgstr "Configurações de tempo para métodos específicos"
 
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
@@ -57871,6 +58117,10 @@ msgstr "Saltar silenciosamente as mensagens excedentes"
 msgid "Simple Notification Service (SNS)"
 msgstr "Serviço de notificação simples (SNS)"
 
+#, fuzzy
+msgid "Simple Storage Collection (tbd)"
+msgstr "Serviço de Armazenamento Simples (S3)"
+
 msgid "Simple Storage Service (S3)"
 msgstr "Serviço de Armazenamento Simples (S3)"
 
@@ -58078,13 +58328,6 @@ msgstr "Alvos de backup do site"
 
 msgid "Site base URL"
 msgstr "URL base do site"
-
-msgid ""
-"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
-"<tt>https://myhost/mysite</tt>)."
-msgstr ""
-"URL de base do sítio para aceder à API REST para, por exemplo, criar "
-"anfitriões (por exemplo, <tt>https://myhost/mysite</tt>)."
 
 msgid "Site certificate validity"
 msgstr "Validade do certificado do local"
@@ -59144,6 +59387,22 @@ msgstr ""
 " As predefinições são mostradas na página de manual do checks (veja <i>%s</"
 "i> )."
 
+msgid ""
+"Specify how to name the outlets during discovery:\n"
+"\n"
+" Port ID: Use the ID of the port as name\n"
+"\n"
+" User Label: Add the user label of the ports name, in addition to the ID: "
+"'ID-UserLabel'\n"
+"\n"
+" Zero padded port ID: Use the zero padded port ID (to the length of the "
+"highest port ID)"
+msgstr ""
+
+#, fuzzy
+msgid "Specify if port state UP, DOWN or booth should be discovered"
+msgstr "Especificar que tipos de portos não devem ser descobertos"
+
 msgid "Specify input state evaluation"
 msgstr "Especificar a avaliação do estado de entrada"
 
@@ -59869,6 +60128,9 @@ msgstr "Começou em %s"
 #, python-format
 msgid "Started at: %s."
 msgstr "Comecei por aí: %s."
+
+msgid "Starting Quick stage action..."
+msgstr ""
 
 msgid "Starting VMs"
 msgstr "Iniciar VMs"
@@ -67230,6 +67492,14 @@ msgstr "Ainda não há elementos definidos para esta seleção."
 msgid "There are no elements for selection."
 msgstr "Não há elementos para seleção."
 
+#, fuzzy, python-format
+msgid ""
+"There are no parameters defined for this method yet. Please <a href=\"wato."
+"py?mode=notification_parameters&method=%s\">create</a> at least one first."
+msgstr ""
+"Você ainda não definiu nenhum grupo %s. Por favor <a href=\"wato.py?"
+"mode=edit_%s_group\">criar</a> pelo menos um primeiro."
+
 #, fuzzy
 msgid "There are no passwords defined for this selection yet."
 msgstr "Ainda não há elementos definidos para esta seleção."
@@ -70600,6 +70870,14 @@ msgstr ""
 "Esta regra selecciona o Agente de Sensores IPMI em vez do Agente Checkmk "
 "normal que recolhe os dados através do comando FreeIPMI resp. IPMItool"
 
+#, fuzzy
+msgid ""
+"This rule selects the Agent Redfish instead of the normal Check_MK Agent "
+"which collects the data through the Redfish REST API"
+msgstr ""
+"Esta regra selecciona o Agente HP MSA em vez do Agente Checkmk normal que "
+"recolhe os dados através da interface Web do HP MSA"
+
 msgid ""
 "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk "
 "Agent which collects the data through the Ruckus Spot web interface"
@@ -72791,6 +73069,14 @@ msgstr "Para:"
 msgid "Today"
 msgstr "Hoje"
 
+#, fuzzy
+msgid "Toggle 'Getting Started' button"
+msgstr "Estado resultante"
+
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "Estado resultante"
+
 msgid "Toggle elements"
 msgstr "Alternar elementos"
 
@@ -72799,9 +73085,6 @@ msgstr "Alternar entradas de log"
 
 msgid "Toggle names"
 msgstr "Alternar nomes"
-
-msgid "Toggle onboarding button"
-msgstr ""
 
 msgid "Toggle result details"
 msgstr "Alternar os detalhes do resultado"
@@ -76572,8 +76855,16 @@ msgstr "Espaço não utilizado"
 msgid "Up"
 msgstr "Para cima"
 
+#, fuzzy
+msgid "Up & Down"
+msgstr "Para baixo"
+
 msgid "Up Down (long)"
 msgstr "Para cima Para baixo (longo)"
+
+#, fuzzy
+msgid "Up only"
+msgstr "IPv4 apenas"
 
 msgid "Up-to-date replicas"
 msgstr "Réplicas actualizadas"
@@ -76626,6 +76917,10 @@ msgstr "Actualizar etiquetas do anfitrião"
 
 msgid "Update package database"
 msgstr "Actualizar a base de dados do pacote"
+
+#, fuzzy
+msgid "Update possible"
+msgstr "Pré-visualização de atualização"
 
 msgid "Update preview"
 msgstr "Pré-visualização de atualização"
@@ -77504,9 +77799,6 @@ msgstr "Níveis de utilização"
 msgid "Use \"CERT\" as service name prefix"
 msgstr "Use um prefixo do namespace"
 
-msgid "Use \"Checkmk Automation\" user"
-msgstr "Use o usuário \"Checkmk Automation"
-
 #, fuzzy
 msgid "Use \"HTTP(S)\" as service name prefix"
 msgstr "Use o nome da porta como nome do serviço"
@@ -77983,6 +78275,10 @@ msgstr "Use o pseudónimo como nome DNS / endereço IP"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "Utilizar o catálogo de plugins de verificação."
+
+#, fuzzy
+msgid "Use the credentials of an automation user"
+msgstr "Use as credenciais do usuário de 'automação'"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Use as credenciais do usuário de 'automação'"
@@ -78592,6 +78888,10 @@ msgstr "Identificação do usuário para login na web"
 
 msgid "User ID for web login (if login required)"
 msgstr "ID de usuário para login na web (se for necessário login)"
+
+#, fuzzy
+msgid "User Label"
+msgstr "Nome do usuário"
 
 #, fuzzy
 msgid "User agent"
@@ -80381,6 +80681,9 @@ msgstr "Aguardando"
 
 msgid "Waitlocks"
 msgstr "Waitlocks"
+
+msgid "Want to be notified about the public release? "
+msgstr ""
 
 msgid "Wanted Host State"
 msgstr "Procurado Estado de acolhimento"
@@ -84433,6 +84736,10 @@ msgstr "Você precisa fornecer um comentário para o seu tempo parado."
 msgid "You need to supply a comment."
 msgstr "Você precisa fornecer um comentário."
 
+#, fuzzy
+msgid "You need to supply a new secret in order to store it."
+msgstr "Você precisa fornecer um comentário para o seu tempo parado."
+
 msgid ""
 "You should see the standard Robot Framework HTML log below. However, this "
 "content is generated externally. It is prone to injection attacks (executed "
@@ -84751,6 +85058,9 @@ msgstr "meta dados ZFS"
 msgid "ZFS storage pool status"
 msgstr "Status do pool de armazenamento ZFS"
 
+msgid "Zero padded port ID"
+msgstr ""
+
 msgid "Zertificon Mail Queues"
 msgstr "Filas de espera do correio Zertificon"
 
@@ -84855,6 +85165,10 @@ msgstr "adicionar \"ISL\" à descrição do serviço para links de interswitch"
 
 msgid "add ISL"
 msgstr "adicionar ISL"
+
+#, fuzzy
+msgid "advanced configuration"
+msgstr "Configuração RRA"
 
 msgid "aggregation"
 msgid_plural "aggregations"
@@ -85216,6 +85530,10 @@ msgstr "Dia da semana"
 
 msgid "days"
 msgstr "dias"
+
+#, fuzzy
+msgid "days ago"
+msgstr "%d dias atrás"
 
 msgid "deadlocks/sec"
 msgstr "bloqueios/segundo"
@@ -85638,11 +85956,24 @@ msgstr "horário"
 msgid "htpasswd"
 msgstr "htpasswd"
 
+msgid "http"
+msgstr ""
+
+msgid "https"
+msgstr ""
+
 msgid "iCalendar"
 msgstr "iCalendar"
 
 msgid "iCalendar File"
 msgstr "Arquivo do iCalendar"
+
+msgid "iLO5 - Logical Drives"
+msgstr ""
+
+#, fuzzy
+msgid "iLO5 - Physical Drives"
+msgstr "Discos Físicos"
 
 msgid "iLert alert source API key"
 msgstr "Chave de API de alerta do iLert"
@@ -86135,6 +86466,12 @@ msgstr "não presentes"
 msgid "notif."
 msgstr "Notif."
 
+#, fuzzy
+msgid "notification"
+msgid_plural "notifications"
+msgstr[0] "Notificação"
+msgstr[1] "Notificação"
+
 msgid "notification rule"
 msgstr "regra de notificação"
 
@@ -86476,6 +86813,12 @@ msgid_plural "rules"
 msgstr[0] "regra"
 msgstr[1] "regras"
 
+#, fuzzy
+msgid "rule matches"
+msgid_plural "rules are matching"
+msgstr[0] "Esta regra corresponde"
+msgstr[1] "Esta regra corresponde"
+
 msgid "rule pack was not exported"
 msgstr "o pacote de regras não foi exportado"
 
@@ -86619,6 +86962,10 @@ msgstr "entradas de status"
 
 msgid "stopped"
 msgstr "parado"
+
+#, fuzzy
+msgid "store the secret"
+msgstr "Segredo pré-partilhado"
 
 #, fuzzy
 msgid "strict"
@@ -86963,6 +87310,9 @@ msgstr ""
 msgid "{region} ({id_})"
 msgstr ""
 
+msgid "{timePeriodName} - {timePeriodSpec['alias']}"
+msgstr ""
+
 msgid "{} - {}"
 msgstr ""
 
@@ -86983,6 +87333,69 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Assignee filters"
+#~ msgstr "Filtros de serviço"
+
+#~ msgid "Host & service events"
+#~ msgstr "Acolhimento & eventos de serviço"
+
+#~ msgid "Host & service history"
+#~ msgstr "Histórico de serviços e hospedagem"
+
+#, python-format
+#~ msgid "%s notification rules are matching"
+#~ msgstr "%s regras de notificação são correspondentes"
+
+#, fuzzy, python-format
+#~ msgid "%s resulting notifications"
+#~ msgstr "Notificações resultantes"
+
+#, fuzzy
+#~ msgid "."
+#~ msgstr "S."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud Trial"
+#~ msgstr "Logotipo Checkmk"
+
+#, fuzzy
+#~ msgid "Collect ruleset matching statistics"
+#~ msgstr "Estatísticas de tráfego de clusters"
+
+#, fuzzy
+#~ msgid "Dispatch notification"
+#~ msgstr "Desactivar as notificações"
+
+#, fuzzy
+#~ msgid ""
+#~ "Send out HTML/ASCII email notification according to notification rules"
+#~ msgstr ""
+#~ "As notificações serão enviadas de acordo com as regras de notificação"
+
+#~ msgid "Individual automation user credentials"
+#~ msgstr "Credenciais de usuário de automação individual"
+
+#~ msgid ""
+#~ "Provide individual credentials of an automation user with administrative "
+#~ "privileges on the remote site."
+#~ msgstr ""
+#~ "Fornecer credenciais individuais de um usuário de automação com "
+#~ "privilégios administrativos no local remoto."
+
+#~ msgid "Remote site URL"
+#~ msgstr "URL do site remoto"
+
+#~ msgid ""
+#~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "
+#~ "<tt>https://myhost/mysite</tt>)."
+#~ msgstr ""
+#~ "URL de base do sítio para aceder à API REST para, por exemplo, criar "
+#~ "anfitriões (por exemplo, <tt>https://myhost/mysite</tt>)."
+
+#~ msgid "Use \"Checkmk Automation\" user"
+#~ msgstr "Use o usuário \"Checkmk Automation"
 
 #, fuzzy
 #~ msgid "This permission allows users to view managed robots."
@@ -87062,9 +87475,6 @@ msgstr "Use SSL para a conexão."
 
 #~ msgid "The synchronization finished."
 #~ msgstr "A sincronização terminou."
-
-#~ msgid "Check types"
-#~ msgstr "Tipos de cheques"
 
 #, python-format
 #~ msgid "Failed to get changes from sites: %s."

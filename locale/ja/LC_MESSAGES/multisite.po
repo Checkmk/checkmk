@@ -142,9 +142,6 @@ msgstr ""
 " これには、前回アクティベーション以降に行われた変更のうち、手動によるアクティ"
 "ベーションを必要としないもの（マークされたもの）も含まれます "
 
-msgid " Want to be notified about the public release? "
-msgstr " 公開リリースに関する通知を希望しますか？ "
-
 #, python-format
 msgid " and %s '%s'"
 msgstr " および%s '%s'"
@@ -682,9 +679,9 @@ msgstr ""
 "%sは、設定されている場合は空であってはならないので、見つからないことがありま"
 "す。"
 
-#, python-format
-msgid "%s notification rules are matching"
-msgstr "%s 通知ルール"
+#, fuzzy, python-format
+msgid "%s notification %s"
+msgstr "最終通知"
 
 #, python-format
 msgid ""
@@ -714,10 +711,6 @@ msgstr "%s プロパティ"
 #, python-format
 msgid "%s rate"
 msgstr "%sレート"
-
-#, python-format
-msgid "%s resulting notifications"
-msgstr "%s 結果の通知"
 
 #, fuzzy, python-format
 msgid "%s rules"
@@ -867,6 +860,14 @@ msgstr "(SLAアラートレベル %d/%d のインシデントが残っていま�
 msgid "(SLA alert levels at %r%%/%r%% left)"
 msgstr "(SLAアラートレベル%r%%/%r%%が残っています)"
 
+#, fuzzy
+msgid "(Select host)"
+msgstr "ホストを削除"
+
+#, fuzzy
+msgid "(Select service)"
+msgstr "ユーザーを削除"
+
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS、HTTP、およびDNS名)"
 
@@ -1008,10 +1009,6 @@ msgstr "-.--%"
 
 msgid "-.-- ms"
 msgstr "-.-- ms"
-
-#, fuzzy
-msgid "."
-msgstr "S."
 
 #, python-format
 msgid "... (%d more)"
@@ -4534,6 +4531,22 @@ msgstr "管理者（「すべての定義済み条件への書き込みアクセ
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
+#, fuzzy
+msgid "Advanced - Number of retries"
+msgstr "再試行回数"
+
+#, fuzzy
+msgid "Advanced - Protocol"
+msgstr "高度なオプション"
+
+#, fuzzy
+msgid "Advanced - TCP Port number"
+msgstr "TCPポート番号"
+
+#, fuzzy
+msgid "Advanced - Timeout for connection"
+msgstr "接続あたりの平均リクエスト"
+
 msgid "Advanced condition simulation"
 msgstr "高度な条件シミュレーション"
 
@@ -4995,6 +5008,12 @@ msgstr "PGA自動ターゲットを集約する"
 
 msgid "Aggregate PGA target parameter"
 msgstr "PGAターゲットパラメータを集約します"
+
+msgid ""
+"Aggregate values of several data points of an OpenTelemetry metric from "
+"different time points. The aggregation function is applied to the values of "
+"the data points which have the same attributes."
+msgstr ""
 
 msgid "Aggregated assumed state"
 msgstr "集計された想定状態"
@@ -6752,6 +6771,10 @@ msgstr "引数ファイル(%s)"
 msgid "Arguments:"
 msgstr "引数:"
 
+#, fuzzy
+msgid "Array Controllers"
+msgstr "アレイ(コントローラー)"
+
 msgid "Arrays (Controllers)"
 msgstr "アレイ(コントローラー)"
 
@@ -6886,10 +6909,6 @@ msgstr "正規表現で割り当てる"
 
 msgid "Assignee"
 msgstr ""
-
-#, fuzzy
-msgid "Assignee filters"
-msgstr "サービスフィルター"
 
 msgid "Assignment of hosts to contact groups"
 msgstr "連絡先グループへのホストの割り当て"
@@ -7412,11 +7431,12 @@ msgstr "自動化URL:"
 msgid "Automation calls"
 msgstr "オートメーションコール"
 
-msgid "Automation secret"
-msgstr "自動化の秘密"
-
 msgid "Automation secret for machine accounts"
 msgstr "マシンアカウントの自動化の秘密"
+
+#, fuzzy
+msgid "Automation user"
+msgstr "自動化の秘密"
 
 msgid "Automation user authentication via HTTP parameters"
 msgstr "HTTPパラメータによるユーザー認証の自動化"
@@ -10421,6 +10441,9 @@ msgstr "Linux/UNIXでのCPU使用率"
 msgid "CPU utilization: Cluster"
 msgstr "CPU utilitzation: クラスター"
 
+msgid "CPUs"
+msgstr ""
+
 msgid "CPUs physical name"
 msgstr "物理ボリューム名"
 
@@ -10545,6 +10568,10 @@ msgstr "キャッシュされたメモリ"
 
 msgid "Cached output of monitoring agent"
 msgstr "監視エージェントのキャッシュされた出力"
+
+#, fuzzy
+msgid "Cached times for single sections"
+msgstr "1秒あたりのキャッシュミス"
 
 msgid "Caches"
 msgstr "キャッシュ"
@@ -11657,6 +11684,9 @@ msgstr "サービスのタイムアウトを確認する(Micro core)"
 msgid "Check type"
 msgstr "タイプを確認してください"
 
+msgid "Check types"
+msgstr "タイプを確認する"
+
 msgid "Check uniserv service"
 msgstr "uniservサービスを確認する"
 
@@ -11733,10 +11763,6 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk Appliance information"
 msgstr "Checkmkの自動化"
-
-#, fuzzy
-msgid "Checkmk Cloud Trial"
-msgstr "Checkmkロゴ"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
@@ -12920,10 +12946,6 @@ msgstr "診断分析のためにCheckmkサイトの情報を収集します。"
 msgid "Collect performance data for disk latency"
 msgstr "ディスク遅延のパフォーマンスデータを収集する"
 
-#, fuzzy
-msgid "Collect ruleset matching statistics"
-msgstr "クラスタートラフィック統計"
-
 msgid "Collection Size"
 msgstr "コレクションのサイズ"
 
@@ -13677,12 +13699,14 @@ msgstr ""
 "モニタリング Web-GUI のベース URL をここで設定します。サイト名を含めてくださ"
 "い。jiraからcheck_mkを出すためのリンクに使用します。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the community to be used when contacting this host via SNMP v1/v2 "
-"or v3. You can also configure the SNMP community using the <a href=\"%s"
-"\">SNMP Communities</a> ruleset. Configuring a community when creating a "
-"host overrides the community defined by the rules."
+"or v3. You can also configure the SNMP community using the <a href='%s'>SNMP "
+"credentials of monitored host</a> ruleset. Configuring a community "
+"explicitly here overrides the community defined by a rule. Communication via "
+"SNMP v1 and v2c is unencrypted. Consider using SNMP v3 for a higher level of "
+"security."
 msgstr ""
 "SNMP v1/v2またはv3を介してこのホストに接続するときに使用するコミュニティを構"
 "成できます。<a href=\"%s\">SNMPコミュニティ</a>ルールセットを使用してSNMPコ"
@@ -13995,6 +14019,10 @@ msgstr ""
 msgid "Connect to the local site"
 msgstr "ローカルサイトに接続する"
 
+#, fuzzy
+msgid "Connect to the remote site"
+msgstr "リモートサイトに接続する"
+
 msgid "Connect via TCP (IPv4)"
 msgstr "TCP経由で接続(IPv4)"
 
@@ -14207,6 +14235,10 @@ msgstr "連絡先グループ(有効)"
 
 msgid "Contact group claim name"
 msgstr "コンタクトグループ請求名"
+
+#, fuzzy
+msgid "Contact group filters"
+msgstr "連絡先グループ"
 
 msgid "Contact group membership"
 msgstr "連絡グループのメンバー"
@@ -18530,6 +18562,10 @@ msgstr "無効 "
 msgid "Disabled (configured away by admin)"
 msgstr "無効にする（管理者が設定しない）"
 
+#, fuzzy
+msgid "Disabled Sections..."
+msgstr "無効なセクション"
+
 msgid "Disabled active checks"
 msgstr "アクティブチェックを無効にしました"
 
@@ -18663,6 +18699,10 @@ msgid "Discovery rules"
 msgstr "ディスカバリールール"
 
 msgid "Discovery settings"
+msgstr "ディスカバリー設定"
+
+#, fuzzy
+msgid "Discovery settings for physical ports"
 msgstr "ディスカバリー設定"
 
 msgid "Discovery state"
@@ -18802,9 +18842,6 @@ msgstr "ホストのDisoveredホストラベル"
 
 msgid "Disovered services of the host"
 msgstr "ホストのサービスを発見"
-
-msgid "Dispatch notification"
-msgstr "通知の配信"
 
 msgid "Display"
 msgstr "表示"
@@ -19822,6 +19859,10 @@ msgstr "ダブルクリックでさらに拡大"
 msgid "Down"
 msgstr "ダウン"
 
+#, fuzzy
+msgid "Down only"
+msgstr "カウントのみ"
+
 msgid "Download"
 msgstr "ダウンロード"
 
@@ -20011,6 +20052,10 @@ msgstr "自動選択せずに使用するドライバの種類"
 
 msgid "Driver version"
 msgstr "ドライババージョン"
+
+#, fuzzy
+msgid "Drives"
+msgstr "ドライバ"
 
 msgid "Drop Domain Suffix"
 msgstr "ドメインサフィックスを削除する"
@@ -21001,6 +21046,18 @@ msgstr "電流"
 msgid "Electrical energy"
 msgstr "電気エネルギー"
 
+#, fuzzy
+msgid "Electrical input power"
+msgstr "電力"
+
+#, fuzzy
+msgid "Electrical input voltage"
+msgstr "電圧"
+
+#, fuzzy
+msgid "Electrical output power"
+msgstr "電力"
+
 msgid "Electrical power"
 msgstr "電力"
 
@@ -21342,6 +21399,9 @@ msgstr "有効（このサイトで有効）"
 
 msgid "Enabled (inactive on this site)"
 msgstr "有効（このサイトでは非アクティブ）"
+
+msgid "Enabled Sections... (only use in case of problems)"
+msgstr ""
 
 msgid "Enabled in time range"
 msgstr "時間範囲で有効"
@@ -23414,6 +23474,10 @@ msgstr "落下"
 msgid "Fan Name"
 msgstr "ファン名"
 
+#, fuzzy
+msgid "Fan and Temperatures"
+msgstr "温度"
+
 msgid "Fan speed"
 msgstr "ファン回転速度"
 
@@ -23682,6 +23746,10 @@ msgstr "ファイルサイズ"
 msgid "File size below"
 msgstr "以下のファイルサイズ"
 
+#, python-format
+msgid "File size exceeds the maximum allowed size of %s bytes"
+msgstr ""
+
 #, fuzzy
 msgid "File size levels"
 msgstr "ファイルサイズレベル"
@@ -23833,6 +23901,14 @@ msgstr "Windowsイベントログの重複メッセージのフィルタリン�
 msgid "Filter pattern (RegExp)"
 msgstr "フィルタパターン(RegExp)"
 
+#, fuzzy
+msgid "Filter selection by host name:"
+msgstr "ホスト名で %s の選択範囲をフィルタリング: "
+
+#, fuzzy
+msgid "Filter selection by service:"
+msgstr "%sの選択をサービスでフィルタリングします。 "
+
 msgid "Filter valid annotations by key pattern"
 msgstr "キーパターンによる有効なアノテーションのフィルタリング"
 
@@ -23848,6 +23924,11 @@ msgstr "フィルタリングと計算のオプション"
 
 msgid "Filters"
 msgstr "フィルタ"
+
+msgid ""
+"Filters for hosts or services that have at least one of the contact group "
+"members assigned to them."
+msgstr ""
 
 msgid "Final notification result"
 msgstr "最終通知結果"
@@ -23918,6 +23999,10 @@ msgstr "ファイアウォール接続"
 
 msgid "Firmware"
 msgstr "ファームウェア"
+
+#, fuzzy
+msgid "Firmware Versions"
+msgstr "カーネルバージョン"
 
 msgid "First"
 msgstr "最初"
@@ -25786,6 +25871,10 @@ msgstr "HPスイッチモジュールの状態"
 msgid "HP-UX Multipath Count"
 msgstr "HP-UXマルチパスカウント"
 
+#, fuzzy
+msgid "HPE - Storagesubsystem"
+msgstr "EMC VNXストレージシステム"
+
 msgid "HPE StoreOnce"
 msgstr "HPE StoreOnce"
 
@@ -26475,6 +26564,10 @@ msgid ""
 msgstr ""
 "ここでは、状態に応じて表示されるサービスを構成できます。これは、クエリレベル"
 "ではなく表示レベルのフィルタです。"
+
+#, fuzzy
+msgid "Here you can configured the credentials to be used."
+msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
 
 msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
@@ -28327,14 +28420,8 @@ msgstr ""
 msgid "Host %s not known in ntopng"
 msgstr "ntopngでホスト %s が不明"
 
-msgid "Host & service events"
-msgstr "ホスト&サービスイベント"
-
 msgid "Host & service groups"
 msgstr "ホスト&サービスグループ"
-
-msgid "Host & service history"
-msgstr "ホストとサービスの履歴"
 
 msgid "Host & service problems"
 msgstr "ホストとサービスの問題"
@@ -29060,6 +29147,10 @@ msgstr "Hostalias"
 
 msgid "Hostalias (regex)"
 msgstr "ホストのエイリアス(正規表現)"
+
+#, fuzzy
+msgid "Hostbustadapters"
+msgstr "ホストの状態"
 
 #, fuzzy
 msgid "Hostname"
@@ -30156,11 +30247,6 @@ msgstr ""
 "こで行われたグローバル設定を上書きします。"
 
 msgid ""
-"If enabled, the core will collect statistics (cache hits/misses) during the "
-"ruleset matching process."
-msgstr ""
-
-msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr "有効な場合、サービスの詳細にはプロセス所有者のユーザー名が含まれます。"
 
@@ -30420,6 +30506,12 @@ msgstr ""
 "を配信し、その後、削除された行数を含む文脈行を出力します。[上記のメッセージ"
 "は n 回繰り返されました]。このフラグを設定すると、多くの重複行が生成された場"
 "合に、エージェントの出力サイズを小さくすることができます。"
+
+#, fuzzy
+msgid "If there are problems please use disabled sections."
+msgstr ""
+"<br>権限に問題がある場合は、サイトユーザーに書き込み権限があることを確認して"
+"ください。"
 
 msgid ""
 "If there is more than one plan testing the same application, then the "
@@ -32060,6 +32152,11 @@ msgstr ""
 "ば、'ノード名:'チェックボックスは'docker_container_node_name'に属します)。"
 
 msgid ""
+"In order to reuse that secret for other rules, e.g. <i>Bi Aggregations</i>, "
+"<i>Dynamic host configuration</i>"
+msgstr ""
+
+msgid ""
 "In order to save resources on the target host and on the update server it is "
 "recommended to do the update checks not more than once every 10 minutes."
 msgstr ""
@@ -32484,9 +32581,6 @@ msgstr "インデックス"
 
 msgid "Indices to query"
 msgstr "クエリするインデックス"
-
-msgid "Individual automation user credentials"
-msgstr "個々の自動化ユーザーの資格情報"
 
 msgid ""
 "Individual patterns matching the text (which must have been matched by the "
@@ -38818,6 +38912,10 @@ msgstr "記憶"
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
 
+#, fuzzy
+msgid "Memory Modules"
+msgstr "メモリレベル"
+
 msgid "Memory Pool Name"
 msgstr "メモリプール名"
 
@@ -40983,6 +41081,10 @@ msgstr "名前空間の問題"
 msgid "Namespaces"
 msgstr "名前空間"
 
+#, fuzzy
+msgid "Naming for outlets at discovery"
+msgstr "Netappポートの検出"
+
 msgid "Native cluster mode"
 msgstr "ネイティブ クラスターモード"
 
@@ -41124,11 +41226,23 @@ msgstr "Netscalerのメモリ使用量"
 msgid "Network"
 msgstr "ネットワーク"
 
+#, fuzzy
+msgid "Network Cards"
+msgstr "ネットワークアドレス"
+
 msgid "Network ID"
 msgstr "ネットワークID"
 
 msgid "Network IO"
 msgstr "ネットワークIO"
+
+#, fuzzy
+msgid "Network Interfaces 1"
+msgstr "ネットワークインターフェース"
+
+#, fuzzy
+msgid "Network Interfaces 2"
+msgstr "ネットワークインターフェース"
 
 msgid "Network Load Balancer Listeners"
 msgstr "ネットワークロードバランサーリスナー"
@@ -42285,8 +42399,8 @@ msgid "Not supported"
 msgstr "サポートされていません"
 
 msgid ""
-"Not the recipient, but filters hosts and services assigned to specific "
-"person(s) or group(s)"
+"Not the recipient, but filters hosts and services assigned to a contact "
+"group or members of a contact group"
 msgstr ""
 
 msgid "Not yet monitored"
@@ -42326,6 +42440,12 @@ msgid ""
 msgstr ""
 "注意:確認応答の有効期限は、Checkmk Micro Coreを使用している場合にのみ機能しま"
 "す。"
+
+#, python-format
+msgid ""
+"Note: For access options like AssumeRole or a custom IAM region, please use "
+"the %s."
+msgstr ""
 
 msgid ""
 "Note: If you also set a limit in the report, then the limit set here will "
@@ -42482,6 +42602,10 @@ msgstr "グラフコレクション '%s'は存在しません"
 #, fuzzy
 msgid "Notification method (plug-in)"
 msgstr "通知プラグイン"
+
+#, fuzzy
+msgid "Notification method and parameter"
+msgstr "通知フェーズ"
 
 #, fuzzy
 msgid "Notification overview"
@@ -43152,6 +43276,9 @@ msgstr "再試行回数"
 msgid "Number of retries (not counting the initial regular run)"
 msgstr "再試行回数(最初の通常の実行はカウントされません)"
 
+msgid "Number of retry attempts made by the special agent."
+msgstr ""
+
 msgid "Number of rule groups"
 msgstr "ルールグループの数"
 
@@ -43163,6 +43290,10 @@ msgstr "ランの数:"
 
 msgid "Number of search results"
 msgstr "検索結果の数"
+
+msgid ""
+"Number of seconds for a single connection attempt before timeout occurs."
+msgstr ""
 
 msgid "Number of seconds to wait for a TCP connection"
 msgstr "TCP接続待ちの秒数"
@@ -44203,6 +44334,13 @@ msgstr ""
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
 msgstr "状態構成を追加する"
+
+#, fuzzy
+msgid "OpenTelemetry metric name"
+msgstr "状態構成を追加する"
+
+msgid "OpenTelemetry metrics (Experimental)"
+msgstr ""
 
 msgid "OpenVMS processes"
 msgstr "OpenVMSのプロセス"
@@ -47849,6 +47987,10 @@ msgstr ""
 "入力します。例えば、週次レポートを月曜日00:00に作成する場合、<i>先週</i>を選"
 "択する必要があります。"
 
+#, fuzzy
+msgid "Please only define sections or disabled sections."
+msgstr "ブラウザの指示に従って認証を行ってください。"
+
 msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
@@ -48331,6 +48473,10 @@ msgstr ""
 msgid "Port"
 msgstr "ポート"
 
+#, fuzzy
+msgid "Port ID"
+msgstr "ポート"
+
 msgid "Port Number"
 msgstr "ポート番号"
 
@@ -48358,6 +48504,10 @@ msgstr "vSphereへのHTTPS接続のポート番号"
 
 msgid "Port number for communicating with the PLC"
 msgstr "PLCと通信するためのポート番号"
+
+#, fuzzy
+msgid "Port number for connection to the Rest API. Usually 8443 (TLS)"
+msgstr "vSphereへのHTTPS接続のポート番号"
 
 msgid "Port number that 3par is listening on. The default is 8080."
 msgstr "3parがリッスンしているポート番号。デフォルトは8080です。"
@@ -48485,6 +48635,10 @@ msgstr "電源オフ"
 
 msgid "Powering on"
 msgstr "電源オン"
+
+#, fuzzy
+msgid "Powers Supply"
+msgstr "電源供給装置"
 
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr "TNSALIASの前/後修正"
@@ -49037,6 +49191,10 @@ msgstr "プロトコル"
 msgid "Protocol Overview"
 msgstr "プロトコルの概要"
 
+msgid ""
+"Protocol for the connection to the Rest API.https is highly recommended!!!"
+msgstr ""
+
 msgid "Protocol of Server"
 msgstr "サーバーのプロトコル"
 
@@ -49048,12 +49206,6 @@ msgstr "DatadogインスタンスのAPIホストと■情報をここに入力�
 
 msgid "Provide command for python script execution"
 msgstr "Pythonスクリプト実行用のコマンドを提供する"
-
-msgid ""
-"Provide individual credentials of an automation user with administrative "
-"privileges on the remote site."
-msgstr ""
-"自動化ユーザーの個々の資格情報に、リモートサイトの管理者権限を提供します。"
 
 msgid "Provide levels"
 msgstr "レベルを提供する"
@@ -50230,6 +50382,27 @@ msgstr "赤"
 msgid "Redacted secrets changed."
 msgstr "編集済みの秘密が変更されました。"
 
+msgid "Redfish"
+msgstr ""
+
+msgid "Redfish Compatible Management Controller"
+msgstr ""
+
+msgid "Redfish Compatible Power Equipment (PDU)"
+msgstr ""
+
+#, fuzzy
+msgid "Redfish Ethernet Interface discovery"
+msgstr "保留中のサービス検出"
+
+#, fuzzy
+msgid "Redfish outlet discovery"
+msgstr "MSSQLカウンターの検出"
+
+#, fuzzy
+msgid "Redfish physical port discovery"
+msgstr "検出する物理ポートの状態"
+
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
 
@@ -50762,9 +50935,6 @@ msgstr ""
 
 msgid "Remote port number"
 msgstr "リモートポート番号"
-
-msgid "Remote site URL"
-msgstr "リモートサイトのURL"
 
 #, python-format
 msgid "Remote sites are not allowed when central site in license state %s"
@@ -52479,6 +52649,9 @@ msgstr "ルールセット"
 msgid "Rulesets that contain rules with references to the changed tags"
 msgstr "変更されたタグへの参照を含むルールを含むルールセット"
 
+msgid "Run Quick Setup Stage Action"
+msgstr ""
+
 msgid "Run agent as non-root user (Linux)"
 msgstr "root以外のユーザーとしてエージェントを実行する(Linux)"
 
@@ -52570,6 +52743,10 @@ msgstr ""
 
 msgid "Running On-Demand X instances"
 msgstr "オンデマンド X インスタンスの起動"
+
+#, python-format
+msgid "Running Quick setup %s stage %s action %s"
+msgstr ""
 
 msgid "Running VMs"
 msgstr "ランニング"
@@ -53264,6 +53441,9 @@ msgstr "保存された読み取り専用設定"
 msgid "Saved space"
 msgstr "保存スペース"
 
+msgid "Saving the result..."
+msgstr ""
+
 msgid "Scalar"
 msgstr ""
 
@@ -53689,10 +53869,78 @@ msgstr "秘密鍵"
 msgid "Section"
 msgstr "セクション"
 
+#, fuzzy
+msgid "Section ArrayControllers"
+msgstr "アレイ(コントローラー)"
+
 msgid "Section Content"
 msgstr "セクションの内容"
 
+#, fuzzy
+msgid "Section Drives"
+msgstr "セクション"
+
+#, fuzzy
+msgid "Section EthernetInterfaces"
+msgstr "ファイバチャネルインターフェイス"
+
+#, fuzzy
+msgid "Section FirmwareInventory"
+msgstr "インベントリ"
+
+#, fuzzy
+msgid "Section HostBusAdapters"
+msgstr "接続状態"
+
+#, fuzzy
+msgid "Section LogicalDrives"
+msgstr "アラームの選択"
+
+#, fuzzy
+msgid "Section Memory"
+msgstr "セクション名"
+
 msgid "Section Name"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section NetworkAdapters"
+msgstr "ネットワークアダプタ"
+
+#, fuzzy
+msgid "Section NetworkInterfaces"
+msgstr "ネットワークインターフェース"
+
+#, fuzzy
+msgid "Section PhysicalDrives"
+msgstr "物理ディスク"
+
+#, fuzzy
+msgid "Section Power"
+msgstr "送信力"
+
+#, fuzzy
+msgid "Section Processors"
+msgstr "プロセッサー"
+
+#, fuzzy
+msgid "Section SimpleStorage"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section SmartStorage"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section Storage"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section Thermal"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section Volumes"
 msgstr "セクション名"
 
 msgid "Section name"
@@ -54259,8 +54507,8 @@ msgid "Send notifications to remote Event Console"
 msgstr "リモートイベントコンソールに通知を送信する"
 
 #, fuzzy
-msgid "Send out HTML/ASCII email notification according to notification rules"
-msgstr "通知は、通知ルールに従って送信されます"
+msgid "Send out notification for specific method"
+msgstr "特定のメソッドのタイミング設定"
 
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
@@ -56435,6 +56683,10 @@ msgstr "超過メッセージをサイレントにスキップします"
 msgid "Simple Notification Service (SNS)"
 msgstr "簡易通知サービス(SNS)"
 
+#, fuzzy
+msgid "Simple Storage Collection (tbd)"
+msgstr "シンプルストレージサービス(S3)"
+
 msgid "Simple Storage Service (S3)"
 msgstr "シンプルストレージサービス(S3)"
 
@@ -56637,13 +56889,6 @@ msgstr "サイトのバックアップターゲット"
 
 msgid "Site base URL"
 msgstr "サイトベースURL"
-
-msgid ""
-"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
-"<tt>https://myhost/mysite</tt>)."
-msgstr ""
-"たとえば、ホストを作成するためにREST APIにアクセスするためのサイトベース"
-"URL(たとえば、<tt> https://myhost/mysite </tt>)。"
 
 msgid "Site certificate validity"
 msgstr "サイト証明書の有効性"
@@ -57683,6 +57928,22 @@ msgstr ""
 "\n"
 " デフォルトはcheckmkのマニュアルページに記載されています(<i>%s</i>)。"
 
+msgid ""
+"Specify how to name the outlets during discovery:\n"
+"\n"
+" Port ID: Use the ID of the port as name\n"
+"\n"
+" User Label: Add the user label of the ports name, in addition to the ID: "
+"'ID-UserLabel'\n"
+"\n"
+" Zero padded port ID: Use the zero padded port ID (to the length of the "
+"highest port ID)"
+msgstr ""
+
+#, fuzzy
+msgid "Specify if port state UP, DOWN or booth should be discovered"
+msgstr "検出しないポートタイプを指定します"
+
 msgid "Specify input state evaluation"
 msgstr "入力状態評価の指定"
 
@@ -58372,6 +58633,9 @@ msgstr "%s で開始"
 #, python-format
 msgid "Started at: %s."
 msgstr "開始: %s。"
+
+msgid "Starting Quick stage action..."
+msgstr ""
 
 msgid "Starting VMs"
 msgstr "VMs起動"
@@ -65550,6 +65814,14 @@ msgstr "この選択にはまだ要素が定義されていません。"
 msgid "There are no elements for selection."
 msgstr "選択する要素はありません。"
 
+#, fuzzy, python-format
+msgid ""
+"There are no parameters defined for this method yet. Please <a href=\"wato."
+"py?mode=notification_parameters&method=%s\">create</a> at least one first."
+msgstr ""
+"%s グループはまだ定義していません。最初に少なくとも1つ <a href=\"wato.py?"
+"mode=edit_%s_group\">作成</a>してください。"
+
 #, fuzzy
 msgid "There are no passwords defined for this selection yet."
 msgstr "この選択にはまだ要素が定義されていません。"
@@ -68789,6 +69061,14 @@ msgstr ""
 "このルールは、FreeIPMI respを介してデータを収集する通常のCheckmkエージェント"
 "の代わりに、Agent IPMIセンサーを選択します。IPMItoolコマンド"
 
+#, fuzzy
+msgid ""
+"This rule selects the Agent Redfish instead of the normal Check_MK Agent "
+"which collects the data through the Redfish REST API"
+msgstr ""
+"このルールは、HP MSAのWebインターフェイスを通じてデータを収集する通常の"
+"Checkmk Agentではなく、HP MSA Agentを選択します"
+
 msgid ""
 "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk "
 "Agent which collects the data through the Ruckus Spot web interface"
@@ -70903,6 +71183,14 @@ msgstr "に:"
 msgid "Today"
 msgstr "今日"
 
+#, fuzzy
+msgid "Toggle 'Getting Started' button"
+msgstr "オンボーディング・ボタンの切り替え"
+
+#, fuzzy
+msgid "Toggle 'Getting started' button"
+msgstr "オンボーディング・ボタンの切り替え"
+
 msgid "Toggle elements"
 msgstr "エレメントを切り替えます"
 
@@ -70911,9 +71199,6 @@ msgstr "ログエントリを切り替えます"
 
 msgid "Toggle names"
 msgstr "名前を切り替える"
-
-msgid "Toggle onboarding button"
-msgstr "オンボーディング・ボタンの切り替え"
 
 msgid "Toggle result details"
 msgstr "結果の詳細を切り替える"
@@ -74678,8 +74963,16 @@ msgstr "未使用スペース"
 msgid "Up"
 msgstr "アップ"
 
+#, fuzzy
+msgid "Up & Down"
+msgstr "ダウン"
+
 msgid "Up Down (long)"
 msgstr "アップダウン(ロング)"
+
+#, fuzzy
+msgid "Up only"
+msgstr "IPv4のみ"
 
 msgid "Up-to-date replicas"
 msgstr "最新のレプリカ"
@@ -74732,6 +75025,10 @@ msgstr "ホストラベルを更新する"
 
 msgid "Update package database"
 msgstr "パッケージデータベースを更新する"
+
+#, fuzzy
+msgid "Update possible"
+msgstr "プレビューを更新"
 
 msgid "Update preview"
 msgstr "プレビューを更新"
@@ -75586,9 +75883,6 @@ msgstr "使用レベル"
 msgid "Use \"CERT\" as service name prefix"
 msgstr "名前空間プレフィックスを使用する"
 
-msgid "Use \"Checkmk Automation\" user"
-msgstr "\"Checkmk Automation\" ユーザーを使用する"
-
 #, fuzzy
 msgid "Use \"HTTP(S)\" as service name prefix"
 msgstr "サービス名としてポート名を使用する"
@@ -76063,6 +76357,10 @@ msgstr "DNS名/IPアドレスとしてエイリアスを使用します"
 #, fuzzy
 msgid "Use the catalog of check plug-ins."
 msgstr "チェックプラグインのカタログを使用する。"
+
+#, fuzzy
+msgid "Use the credentials of an automation user"
+msgstr "automationユーザーの認証情報を使用する"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "automationユーザーの認証情報を使用する"
@@ -76650,6 +76948,10 @@ msgstr "Webログイン用のユーザーID"
 
 msgid "User ID for web login (if login required)"
 msgstr "WebログインのユーザーID(ログインが必要な場合)"
+
+#, fuzzy
+msgid "User Label"
+msgstr "ユーザー名"
 
 #, fuzzy
 msgid "User agent"
@@ -78422,6 +78724,10 @@ msgstr "待っています"
 
 msgid "Waitlocks"
 msgstr "ウェイトロック"
+
+#, fuzzy
+msgid "Want to be notified about the public release? "
+msgstr " 公開リリースに関する通知を希望しますか？ "
 
 msgid "Wanted Host State"
 msgstr "ホストの状態取得"
@@ -82341,6 +82647,10 @@ msgstr "ダウンタイムについてコメントを提供する必要があり
 msgid "You need to supply a comment."
 msgstr "コメントを入力する必要があります。"
 
+#, fuzzy
+msgid "You need to supply a new secret in order to store it."
+msgstr "ダウンタイムについてコメントを提供する必要があります。"
+
 msgid ""
 "You should see the standard Robot Framework HTML log below. However, this "
 "content is generated externally. It is prone to injection attacks (executed "
@@ -82656,6 +82966,9 @@ msgstr "ZFSメタデータ"
 msgid "ZFS storage pool status"
 msgstr "ZFSストレージプールのステータス"
 
+msgid "Zero padded port ID"
+msgstr ""
+
 msgid "Zertificon Mail Queues"
 msgstr "Zertificon メールキュー"
 
@@ -82760,6 +83073,10 @@ msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
 msgid "add ISL"
 msgstr "ISLを追加"
+
+#, fuzzy
+msgid "advanced configuration"
+msgstr "RRA構成"
 
 msgid "aggregation"
 msgid_plural "aggregations"
@@ -83119,6 +83436,10 @@ msgstr "曜日"
 
 msgid "days"
 msgstr "日"
+
+#, fuzzy
+msgid "days ago"
+msgstr "%d 日前"
 
 msgid "deadlocks/sec"
 msgstr "デッドロック/秒"
@@ -83538,11 +83859,24 @@ msgstr "時間"
 msgid "htpasswd"
 msgstr "htpasswd"
 
+msgid "http"
+msgstr ""
+
+msgid "https"
+msgstr ""
+
 msgid "iCalendar"
 msgstr "iCalendar"
 
 msgid "iCalendar File"
 msgstr "iCalendarファイル"
+
+msgid "iLO5 - Logical Drives"
+msgstr ""
+
+#, fuzzy
+msgid "iLO5 - Physical Drives"
+msgstr "物理ディスク"
 
 msgid "iLert alert source API key"
 msgstr "iLertアラートソースAPIキー"
@@ -84040,6 +84374,11 @@ msgstr "現在ではない"
 msgid "notif."
 msgstr "通知."
 
+#, fuzzy
+msgid "notification"
+msgid_plural "notifications"
+msgstr[0] "通知"
+
 msgid "notification rule"
 msgstr "通知ルール"
 
@@ -84379,6 +84718,11 @@ msgid "rule"
 msgid_plural "rules"
 msgstr[0] "ルール"
 
+#, fuzzy
+msgid "rule matches"
+msgid_plural "rules are matching"
+msgstr[0] "このルールは一致します"
+
 msgid "rule pack was not exported"
 msgstr "ルールパックがエクスポートされない"
 
@@ -84519,6 +84863,10 @@ msgstr "ステータスエントリ"
 
 msgid "stopped"
 msgstr "停止"
+
+#, fuzzy
+msgid "store the secret"
+msgstr "事前共有したシークレット"
 
 #, fuzzy
 msgid "strict"
@@ -84864,6 +85212,9 @@ msgstr ""
 msgid "{region} ({id_})"
 msgstr ""
 
+msgid "{timePeriodName} - {timePeriodSpec['alias']}"
+msgstr ""
+
 msgid "{} - {}"
 msgstr ""
 
@@ -84885,6 +85236,66 @@ msgstr ""
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr ""
 "分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
+
+#, fuzzy
+#~ msgid "Assignee filters"
+#~ msgstr "サービスフィルター"
+
+#~ msgid "Host & service events"
+#~ msgstr "ホスト&サービスイベント"
+
+#~ msgid "Host & service history"
+#~ msgstr "ホストとサービスの履歴"
+
+#, python-format
+#~ msgid "%s notification rules are matching"
+#~ msgstr "%s 通知ルール"
+
+#, python-format
+#~ msgid "%s resulting notifications"
+#~ msgstr "%s 結果の通知"
+
+#, fuzzy
+#~ msgid "."
+#~ msgstr "S."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud Trial"
+#~ msgstr "Checkmkロゴ"
+
+#, fuzzy
+#~ msgid "Collect ruleset matching statistics"
+#~ msgstr "クラスタートラフィック統計"
+
+#~ msgid "Dispatch notification"
+#~ msgstr "通知の配信"
+
+#, fuzzy
+#~ msgid ""
+#~ "Send out HTML/ASCII email notification according to notification rules"
+#~ msgstr "通知は、通知ルールに従って送信されます"
+
+#~ msgid "Individual automation user credentials"
+#~ msgstr "個々の自動化ユーザーの資格情報"
+
+#~ msgid ""
+#~ "Provide individual credentials of an automation user with administrative "
+#~ "privileges on the remote site."
+#~ msgstr ""
+#~ "自動化ユーザーの個々の資格情報に、リモートサイトの管理者権限を提供します。"
+
+#~ msgid "Remote site URL"
+#~ msgstr "リモートサイトのURL"
+
+#~ msgid ""
+#~ "Site base URL for accessing the REST API to e.g. create hosts (e.g. "
+#~ "<tt>https://myhost/mysite</tt>)."
+#~ msgstr ""
+#~ "たとえば、ホストを作成するためにREST APIにアクセスするためのサイトベース"
+#~ "URL(たとえば、<tt> https://myhost/mysite </tt>)。"
+
+#~ msgid "Use \"Checkmk Automation\" user"
+#~ msgstr "\"Checkmk Automation\" ユーザーを使用する"
 
 #, fuzzy
 #~ msgid "This permission allows users to view managed robots."
@@ -84964,9 +85375,6 @@ msgstr ""
 
 #~ msgid "The synchronization finished."
 #~ msgstr "同期終了。"
-
-#~ msgid "Check types"
-#~ msgstr "タイプを確認する"
 
 #, python-format
 #~ msgid "Failed to get changes from sites: %s."

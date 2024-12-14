@@ -204,12 +204,10 @@ where
                 let text = self.append_to(&text);
                 (Some(text.clone()), Some(text))
             }
-            (OutputType::Summary(text), State::Ok) => {
-                (Some(text.clone().to_string()), Some(text.to_string()))
-            }
+            (OutputType::Summary(text), State::Ok) => (Some(text), None),
             (OutputType::Summary(text), _) => {
                 let text = self.append_to(&text);
-                (Some(text.clone()), Some(text))
+                (Some(text), None)
             }
         };
         CheckResult {
@@ -347,23 +345,19 @@ impl SimpleCheckResult {
     }
 
     pub fn ok(summary: impl Into<String>) -> Self {
-        let s = as_option(summary);
-        Self::new(State::Ok, s.clone(), s)
+        Self::new(State::Ok, as_option(summary), None)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        let s = as_option(summary);
-        Self::new(State::Warn, s.clone(), s)
+        Self::new(State::Warn, as_option(summary), None)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        let s = as_option(summary);
-        Self::new(State::Crit, s.clone(), s)
+        Self::new(State::Crit, as_option(summary), None)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        let s = as_option(summary);
-        Self::new(State::Unknown, s.clone(), s)
+        Self::new(State::Unknown, as_option(summary), None)
     }
 
     pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
@@ -671,12 +665,12 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.state);
-                out.summary.push(Summary::new(cr.state, cr.summary));
+                out.summary.push(Summary::new(cr.state, cr.summary.clone()));
                 out.details.extend(match (cr.details, cr.metrics) {
-                    (None, None) => vec![],
-                    (Some(text), None) => vec![Details::new(cr.state, Some(text), None)],
-                    (None, Some(metric)) => vec![Details::Metric(metric)],
-                    (text, metric) => vec![Details::new(cr.state, text, metric)],
+                    (None, None) => cr
+                        .summary
+                        .map_or(vec![], |t| vec![Details::new(cr.state, Some(t), None)]),
+                    (d, m) => vec![Details::new(cr.state, d, m)],
                 });
                 out
             })

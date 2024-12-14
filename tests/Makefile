@@ -50,7 +50,8 @@ SYSTEM_TESTS := \
     test-gui-e2e-cme \
     test-gui-e2e-cse \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+PYTEST_BASE_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
+PYTEST_SYSTEM_TEST_ARGS := $(PYTEST_BASE_TEST_ARGS) --session-timeout 10800
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
@@ -236,14 +237,14 @@ test-docker-docker:
 test-docker:
 	docker run --rm -i $$(../buildscripts/docker_image_aliases/resolve.py IMAGE_HADOLINT) < ../docker_image/Dockerfile
 	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
-	$(PYTEST) -x -T docker --log-cli-level=INFO docker
+	$(PYTEST) -x -T docker $(realpath docker) $(PYTEST_SYSTEM_TEST_ARGS)
 
 test-integration-agent-plugin-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-integration-agent-plugin
 
 test-integration-agent-plugin:
-	$(PYTEST) -x -T agent_plugin_integration --log-cli-level=INFO agent_plugin_integration
+	$(PYTEST) -x -T agent_plugin_integration $(realpath agent_plugin_integration) $(PYTEST_SYSTEM_TEST_ARGS)
 
 test-format-python: test-format-python-sort test-format-python-format
 
@@ -294,18 +295,18 @@ test-lint-groovy-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
 test-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) -T gui_crawl $(PYTEST_BASE_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_BASE_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py) --numprocesses=1
 
 test-gui-e2e test-gui-e2e-cee: prepare-playwright # full e2e test is done for cee
 	EDITION=cee $(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
+	$(PYTEST_BASE_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (cee or higher)
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
+	$(PYTEST_BASE_TEST_ARGS) $(realpath gui_e2e/cee)  --numprocesses=1
 
 test-gui-e2e-cce:
 	EDITION=cce $(MAKE) test-gui-e2e-non-free

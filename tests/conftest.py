@@ -36,6 +36,7 @@ from tests.testlib.repo import (  # noqa: E402
     is_saas_repo,
     repo_path,
 )
+from tests.testlib.timeouts import MonitorTimeout, SessionTimeoutError  # noqa: E402
 from tests.testlib.utils import run, verbose_called_process_error  # noqa: E402
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,16 @@ logger = logging.getLogger(__name__)
 # when pytest based tests are being run from inside the IDE
 # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
+    session_timeout_cli = "--session-timeout"
+    timeout_duration = pytestconfig.getoption(session_timeout_cli)
+    if "gui" in pytestconfig.getoption("-T") and timeout_duration > 0:
+        pytest.exit(f"'UI-tests' do not support usage of '{session_timeout_cli}'!")
+    with MonitorTimeout(timeout=timeout_duration):
+        yield
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -69,7 +80,11 @@ def pytest_exception_interact(
         return
 
     _excp = excinfo.value
-    if excinfo.type in (TimeoutError, PWTimeoutError):
+    if excinfo.type == SessionTimeoutError:
+        # Prevents execution of the next test and exits the pytest-run, and
+        # leads to clean termination of the affected test run.
+        node.session.shouldstop = True
+    elif excinfo.type in (TimeoutError, PWTimeoutError):
         try:
             top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
             print(top_output)
@@ -162,6 +177,14 @@ def pytest_addoption(parser):
         default=None,
         type=int,
         help="Select only the first N tests from the collection list.",
+    )
+    parser.addoption(
+        "--session-timeout",
+        action="store",
+        metavar="TIMEOUT",
+        default=0,
+        type=int,
+        help="Terminate testsuite run cleanly after TIMEOUT seconds. By default, 0 (disabled).",
     )
 
 

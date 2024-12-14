@@ -661,19 +661,7 @@ impl Display for Collection {
 
 impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
-        Self {
-            state: check_result.state,
-            summary: vec![Summary::new(check_result.state, check_result.summary)],
-            details: {
-                let mut v = vec![];
-                v.extend(
-                    check_result
-                        .details
-                        .map(|t| Details::new(check_result.state, Some(t), None)),
-                );
-                v
-            },
-        }
+        Self::from(&mut vec![check_result.into()])
     }
 }
 

@@ -26,8 +26,11 @@ def main() -> int:
         f"tmp/check_mk/otel_collector/{args.host_name}",
     )
 
+    # The collector starts a new file every second, so:
     file_paths = list(folder.iterdir())
-    time.sleep(1)  # let the control
+    time.sleep(1)
+    # Investing one second here means the collector
+    # is done writing into all files in our list.
 
     by_timestamp: dict[int, str] = {}
     for file_path in file_paths:

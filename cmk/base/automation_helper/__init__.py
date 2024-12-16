@@ -63,6 +63,7 @@ def main() -> int:
 
         server_config = ApplicationServerConfig(
             daemon=True,
+            unix_socket=run_directory / "automation-helper.sock",
             pid_file=run_directory / APPLICATION_PID_FILE,
             access_log=log_directory / APPLICATION_ACCESS_LOG,
             error_log=log_directory / APPLICATION_ERROR_LOG,

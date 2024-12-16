@@ -12,10 +12,10 @@ from threading import Thread
 from typing import Final
 
 import gunicorn.app.base  # type: ignore[import-untyped]
-import gunicorn.util  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
-APPLICATION_SOCKET: Final = "unix:tmp/run/automation-helper.sock"
+from cmk.ccc.daemon import daemonize
+
 APPLICATION_WORKER_CLASS: Final = "uvicorn.workers.UvicornWorker"
 APPLICATION_WORKER_COUNT: Final = 2
 
@@ -23,6 +23,7 @@ APPLICATION_WORKER_COUNT: Final = 2
 @dataclasses.dataclass(frozen=True)
 class ApplicationServerConfig:
     daemon: bool
+    unix_socket: Path
     pid_file: Path
     access_log: Path
     error_log: Path
@@ -37,7 +38,7 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
         self._options = {
             "daemon": cfg.daemon,
             "umask": 0o077,
-            "bind": APPLICATION_SOCKET,
+            "bind": f"unix:{cfg.unix_socket}",
             "workers": APPLICATION_WORKER_COUNT,
             "worker_class": APPLICATION_WORKER_CLASS,
             "pidfile": str(cfg.pid_file),
@@ -58,8 +59,9 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
 
     def run(self) -> None:
         assert self.cfg is not None, "Gunicorn server config is required to run application."
+
         if self.cfg.daemon:
-            gunicorn.util.daemonize()
+            daemonize()
 
         for service in self._services:
             service.start()

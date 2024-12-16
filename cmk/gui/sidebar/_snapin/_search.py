@@ -741,6 +741,7 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
+        search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
                 livestatus.lqencode(query)
@@ -761,6 +762,9 @@ class QuicksearchSnapin(SidebarSnapin):
             if active_config.debug:
                 raise
             html.show_error(traceback.format_exc())
+
+        if not search_objects:
+            return
 
         QuicksearchResultRenderer().show(
             self._quicksearch_manager._evaluate_results(search_objects), query

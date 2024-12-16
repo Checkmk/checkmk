@@ -1,0 +1,13 @@
+Title: Don't create crash report on invalid regex in quicksearch
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1734348625
+Edition: cre
+Level: 1
+Version: 2.2.0p38
+
+If an invalid regex was used in the quicksearch, a user error message was
+shown and in the background a crash report was created.
+
+Now only the user error message will be shown.

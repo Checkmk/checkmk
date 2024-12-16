@@ -11,7 +11,7 @@ UVENV := $(REPO_PATH)/scripts/run-uvenv
 
 # You can set these variables from the command line, and also
 # from the environment for the first one.
-SPHINXOPTS    ?= --keep-going
+SPHINXOPTS    ?= --fail-on-warning
 SPHINXBUILD   := $(UVENV) sphinx-build
 BASEDIR       = $(REPO_PATH)/doc/plugin-api
 SOURCEDIR     = $(BASEDIR)/source

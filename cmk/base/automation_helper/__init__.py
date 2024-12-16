@@ -24,7 +24,7 @@ from ._log import configure_logger
 from ._reloader import Reloader
 from ._server import ApplicationServerConfig, run
 from ._tracer import configure_tracer
-from ._watcher import Watcher
+from ._watcher import run as run_watcher
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
 APPLICATION_LOG_DIRECTORY: Final = "automation-helper"
@@ -55,8 +55,6 @@ def main() -> int:
 
         reloader = Reloader(cache=cache)
 
-        watcher = Watcher(watcher_schedules(omd_root), cache)
-
         app = get_application(
             engine=automations,
             cache=cache,
@@ -72,7 +70,11 @@ def main() -> int:
 
         daemonize()
 
-        run(server_config, [watcher, reloader], app)
+        with run_watcher(
+            watcher_schedules(omd_root),
+            cache,
+        ):
+            run(server_config, [reloader], app)
 
     except Exception:
         return 1

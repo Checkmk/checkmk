@@ -27,8 +27,8 @@ from watchdog.events import (
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import Schedule
 from cmk.base.automation_helper._watcher import (
-    AutomationWatcherHandler,
-    start_automation_watcher_observer,
+    _AutomationWatcherHandler,
+    run,
 )
 
 MK_PATTERN: Final = "*.mk"
@@ -44,13 +44,13 @@ def get_cache() -> Generator[Cache]:
 
 
 @pytest.fixture(scope="function", name="file_watcher_handler")
-def get_file_watcher_handler(cache: Cache) -> AutomationWatcherHandler:
-    return AutomationWatcherHandler(cache=cache, patterns=[MK_PATTERN], ignore_directories=True)
+def get_file_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
+    return _AutomationWatcherHandler(cache=cache, patterns=[MK_PATTERN], ignore_directories=True)
 
 
 @pytest.fixture(scope="function", name="directory_watcher_handler")
-def get_directory_watcher_handler(cache: Cache) -> AutomationWatcherHandler:
-    return AutomationWatcherHandler(cache=cache, patterns=[DIRECTORY], ignore_directories=False)
+def get_directory_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
+    return _AutomationWatcherHandler(cache=cache, patterns=[DIRECTORY], ignore_directories=False)
 
 
 @pytest.fixture(scope="function", name="target_directory")
@@ -81,17 +81,21 @@ def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
             patterns=[TXT_FILE],
         ),
     ]
-    return start_automation_watcher_observer(schedules, cache)
+    return run(schedules, cache)
 
 
 def wait_for_observer_log_output(
-    log: pytest.LogCaptureFixture, interval: float = 0.001, tries: int = 100
-) -> str:
-    output = ""
-    while tries and not (output := log.text):
+    log: pytest.LogCaptureFixture,
+    output_to_wait_for: str,
+    interval: float = 0.001,
+    tries: int = 100,
+) -> None:
+    while tries:
+        if output_to_wait_for in log.text:
+            return
         tries -= 1
         time.sleep(interval)
-    return output
+    raise AssertionError(f"Expected output '{output_to_wait_for}' not found in log output")
 
 
 @pytest.mark.xfail(reason="Cannot reproduce the 'moved' event with shutil")
@@ -102,23 +106,17 @@ def test_observer_handles_moved_mk_file(
     tmp_file = tmp_path / f"{MK_FILE}.tmp"
     tmp_file.write_bytes(b"goodbye")
 
-    with caplog.at_level(logging.INFO):
-        with observer:
-            shutil.move(tmp_file, target_file)
-            log_output = wait_for_observer_log_output(caplog)
-
-    assert "foo.mk (overwritten)" in log_output
+    with caplog.at_level(logging.INFO), observer:
+        shutil.move(tmp_file, target_file)
+        wait_for_observer_log_output(caplog, "foo.mk (overwritten)")
 
 
 def test_observer_handles_created_mk_file(
     caplog: pytest.LogCaptureFixture, observer: ContextManager, target_file: Path
 ) -> None:
-    with caplog.at_level(logging.INFO):
-        with observer:
-            target_file.touch()
-            log_output = wait_for_observer_log_output(caplog)
-
-    assert "foo.mk (created)" in log_output
+    with caplog.at_level(logging.INFO), observer:
+        target_file.touch()
+        wait_for_observer_log_output(caplog, "foo.mk (created)")
 
 
 def test_observer_handles_modified_mk_file(
@@ -126,12 +124,9 @@ def test_observer_handles_modified_mk_file(
 ) -> None:
     target_file.touch()
 
-    with caplog.at_level(logging.INFO):
-        with observer:
-            target_file.write_bytes(b"hello")
-            log_output = wait_for_observer_log_output(caplog)
-
-    assert "foo.mk (modified)" in log_output
+    with caplog.at_level(logging.INFO), observer:
+        target_file.write_bytes(b"hello")
+        wait_for_observer_log_output(caplog, "foo.mk (modified)")
 
 
 def test_observer_handles_deleted_mk_file(
@@ -139,23 +134,17 @@ def test_observer_handles_deleted_mk_file(
 ) -> None:
     target_file.touch()
 
-    with caplog.at_level(logging.INFO):
-        with observer:
-            target_file.unlink()
-            log_output = wait_for_observer_log_output(caplog)
-
-    assert "foo.mk (deleted)" in log_output
+    with caplog.at_level(logging.INFO), observer:
+        target_file.unlink()
+        wait_for_observer_log_output(caplog, "foo.mk (deleted)")
 
 
 def test_observer_also_handles_txt_files(
     caplog: pytest.LogCaptureFixture, observer: ContextManager, target_directory: Path
 ) -> None:
-    with caplog.at_level(logging.INFO):
-        with observer:
-            (target_directory / TXT_FILE).touch()
-            log_output = wait_for_observer_log_output(caplog)
-
-    assert "foo.txt (created)" in log_output
+    with caplog.at_level(logging.INFO), observer:
+        (target_directory / TXT_FILE).touch()
+        wait_for_observer_log_output(caplog, "foo.txt (created)")
 
 
 @pytest.mark.parametrize(
@@ -173,7 +162,7 @@ def test_observer_also_handles_txt_files(
 )
 def test_automation_watcher_logging_pattern_match(
     caplog: pytest.LogCaptureFixture,
-    file_watcher_handler: AutomationWatcherHandler,
+    file_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
     output: str,
 ) -> None:
@@ -194,7 +183,7 @@ def test_automation_watcher_logging_pattern_match(
 )
 def test_automation_watcher_logging_no_match(
     caplog: pytest.LogCaptureFixture,
-    file_watcher_handler: AutomationWatcherHandler,
+    file_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
 ) -> None:
     with caplog.at_level(logging.INFO):
@@ -218,7 +207,7 @@ def test_automation_watcher_logging_no_match(
 )
 def test_automation_watcher_logging_directory_match(
     caplog: pytest.LogCaptureFixture,
-    directory_watcher_handler: AutomationWatcherHandler,
+    directory_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
     output: str,
 ) -> None:
@@ -242,7 +231,7 @@ def test_automation_watcher_logging_directory_match(
 )
 def test_automation_watcher_logging_directories_ignored(
     caplog: pytest.LogCaptureFixture,
-    file_watcher_handler: AutomationWatcherHandler,
+    file_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
 ) -> None:
     with caplog.at_level(logging.INFO):

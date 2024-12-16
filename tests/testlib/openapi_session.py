@@ -188,7 +188,15 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code == 422:
             raise NoActiveChanges  # there are no changes
         if 300 <= response.status_code < 400:
-            raise Redirect(redirect_url=response.headers["Location"])  # activation pending
+            redirect_url = response.headers["Location"]
+
+            # Extract the activation ID from the wait-for-completion URL
+            # "/{site_id}/check_mk/api/1.0/objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
+            assert redirect_url.split("/")[6] == "activation_run"
+            activation_id = redirect_url.split("/")[7]
+            logger.info("Activation pending (ID: %s)", activation_id)
+
+            raise Redirect(redirect_url=redirect_url)  # activation pending
         raise UnexpectedResponse.from_response(response)
 
     def pending_changes(self, sites: list[str] | None = None) -> list[dict[str, Any]]:
@@ -216,6 +224,7 @@ class CMKOpenApiSession(requests.Session):
             try:
                 self.activate_changes(sites, force_foreign_changes)
             except NoActiveChanges:
+                logger.info("There were no changes to activate")
                 return False
 
         pending_changes = self.pending_changes()

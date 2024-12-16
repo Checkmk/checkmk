@@ -1855,6 +1855,10 @@ class SiteFactory:
             ):
                 yield site
         finally:
+            # hosts should have been cleaned up by the tests
+            hostnames = {h["id"] for h in site.openapi.hosts.get_all()}
+            logger.warning("Hosts left on site '%s': %s", site.id, hostnames)
+
             if save_results:
                 site.save_results()
             if report_crashes:

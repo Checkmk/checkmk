@@ -10,7 +10,6 @@ from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
@@ -483,7 +482,7 @@ def test_automation_set_autochecks_v2(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> None:
+def test_automation_update_dns_cache(site: Site) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
@@ -492,8 +491,8 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
     # use .internal. FQDN to avoid false positives in name resolution
     unknown_host = "update-dns-cache-host.internal."
     try:
-        clients.HostConfig.create(host_name=unknown_host)
-        clients.HostConfig.create(host_name="localhost")
+        site.openapi.hosts.create(hostname=unknown_host)
+        site.openapi.hosts.create(hostname="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -512,9 +511,9 @@ def test_automation_update_dns_cache(site: Site, clients: ClientRegistry) -> Non
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
-        clients.HostConfig.delete("localhost")
-        clients.HostConfig.delete(unknown_host)
-        clients.ActivateChanges.call_activate_changes_and_wait_for_completion(timeout_seconds=120)
+        site.openapi.hosts.delete("localhost")
+        site.openapi.hosts.delete(unknown_host)
+        site.openapi.changes.activate_and_wait_for_completion(timeout=120)
 
 
 # TODO: Test with the different cores

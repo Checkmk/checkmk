@@ -24,6 +24,8 @@ def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,
 ) -> None:
+    assert not central_site.openapi.pending_changes()
+
     unresolvable_host_central = "not-dns-resolvable-central"
     unresolvable_host_remote = "not-dns-resolvable-remote"
 

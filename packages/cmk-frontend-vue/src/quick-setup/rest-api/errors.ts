@@ -6,9 +6,9 @@
 import axios from 'axios'
 import type { AxiosError } from 'axios'
 import { CmkError } from '@/lib/error.ts'
-import type { ValidationError, AllStagesValidationError } from './types'
 
 import type { MaybeRestApiError, MaybeRestApiCrashReport } from '@/lib/types'
+import type { Errors, StageErrors } from './response_types'
 
 class QuickSetupAxiosError extends CmkError<AxiosError> {
   override name = 'QuickSetupAxiosError'
@@ -29,6 +29,24 @@ class QuickSetupAxiosError extends CmkError<AxiosError> {
     }
     return ''
   }
+}
+
+type OrUndefined<T> = {
+  // similar to `Partial`, but explicitly undefined.
+  [key in keyof T]: T[key] | undefined
+}
+
+export interface RestApiError {
+  type: string
+}
+
+export interface ValidationError extends RestApiError, OrUndefined<StageErrors> {
+  type: 'validation'
+}
+
+export interface AllStagesValidationError extends RestApiError, OrUndefined<StageErrors> {
+  type: 'validation_all_stages'
+  all_stage_errors: Errors[] | undefined
 }
 
 /**
@@ -70,4 +88,19 @@ export const processError = (
   } else {
     return new CmkError('Unknown error has occurred', err)
   }
+}
+
+export const isAllStagesValidationError = (value: unknown): value is AllStagesValidationError => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === 'validation_all_stages'
+  )
+}
+
+export const isValidationError = (value: unknown): value is ValidationError => {
+  return (
+    typeof value === 'object' && value !== null && 'type' in value && value.type === 'validation'
+  )
 }

@@ -10,9 +10,10 @@ import { formatError } from '@/lib/error.ts'
 import {
   saveQuickSetup,
   getOverview,
-  validateStage,
   getAllStages,
-  editQuickSetup
+  editQuickSetup,
+  validateAndRecapStage,
+  getStageStructure
 } from './rest-api/api'
 import { formDataKey } from './keys'
 import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
@@ -25,8 +26,13 @@ import type {
   DetailedError
 } from './components/quick-setup/quick_setup_types'
 import { type QuickSetupAppProps } from './types'
-import type { QSInitializationResponse, QSStageResponse } from './rest-api/types'
-import { isValidationError, isAllStagesValidationError } from './rest-api/types'
+import type {
+  Action,
+  QuickSetupActionResponse,
+  QuickSetupGuidedResponse,
+  QuickSetupStageStructure
+} from './rest-api/response_types'
+import { isValidationError, isAllStagesValidationError } from './rest-api/errors'
 import { asStringArray } from './utils'
 import type {
   StageData,
@@ -78,7 +84,7 @@ provide(formDataKey, readonly(formData))
 // Stages flow control and user input update
 //
 //
-const nextStage = async (actionId: string | null = null) => {
+const nextStage = async (actionId: string) => {
   loading.value = true
   globalError.value = null
 
@@ -92,16 +98,21 @@ const nextStage = async (actionId: string | null = null) => {
     userInput.push(formData)
   }
 
-  let result: QSStageResponse | null = null
+  let actionResponse: QuickSetupActionResponse | null = null
 
   try {
-    result = await validateStage(props.quick_setup_id, userInput, actionId, props.objectId)
+    actionResponse = await validateAndRecapStage(
+      props.quick_setup_id,
+      actionId,
+      userInput,
+      props.objectId
+    )
   } catch (err: unknown) {
     handleError(err)
   }
 
   loading.value = false
-  if (!result) {
+  if (!actionResponse) {
     return
   }
 
@@ -109,25 +120,37 @@ const nextStage = async (actionId: string | null = null) => {
   stages.value[thisStageNumber]!.form_spec_errors = {}
   stages.value[thisStageNumber]!.errors = []
 
-  stages.value[thisStageNumber]!.recap = result.stage_recap
+  stages.value[thisStageNumber]!.recap = actionResponse.stage_recap
 
   //If we have not finished the quick setup yet, but still on the, regular step
   if (nextStageNumber < numberOfStages.value - 1) {
+    let nextStageStructure: QuickSetupStageStructure
+    try {
+      nextStageStructure = await getStageStructure(
+        props.quick_setup_id,
+        nextStageNumber,
+        props.objectId
+      )
+    } catch (err: unknown) {
+      handleError(err)
+    }
+
     const acts: QuickSetupStageAction[] = stages.value[nextStageNumber]?.actions || []
 
     acts.length = 0
 
-    for (const action of result.next_stage_structure.actions) {
+    for (const action of nextStageStructure!.actions) {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       acts.push(processActionData(ActionType.Next, action, nextStage))
     }
 
-    if (result.next_stage_structure.prev_button) {
+    if (nextStageStructure!.prev_button) {
       acts.push(
         processActionData(
           ActionType.Prev,
           {
-            button: result.next_stage_structure.prev_button,
+            id: 'prev',
+            button: nextStageStructure!.prev_button,
             load_wait_label: ''
           },
           prevStage
@@ -137,7 +160,7 @@ const nextStage = async (actionId: string | null = null) => {
 
     stages.value[nextStageNumber] = {
       ...stages.value[nextStageNumber]!,
-      components: result.next_stage_structure.components,
+      components: nextStageStructure!.components,
       recap: [],
       form_spec_errors: {},
       errors: [],
@@ -175,6 +198,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
         processActionData(
           ActionType.Prev,
           {
+            id: 'prev',
             button: stage.prev_button,
             load_wait_label: ''
           },
@@ -213,7 +237,7 @@ const loadAllStages = async (): Promise<QSStageStore[]> => {
 }
 
 const loadGuidedStages = async (): Promise<QSStageStore[]> => {
-  const data: QSInitializationResponse = await getOverview(props.quick_setup_id, props.objectId)
+  const data: QuickSetupGuidedResponse = await getOverview(props.quick_setup_id, props.objectId)
   const result: QSStageStore[] = []
 
   guidedModeLabel = data.guided_mode_string
@@ -229,7 +253,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     const acts: QuickSetupStageAction[] = []
 
     if (isFirst) {
-      for (const action of data.stage.next_stage_structure.actions) {
+      for (const action of data.stage.actions) {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         acts.push(processActionData(ActionType.Next, action, nextStage))
       }
@@ -238,7 +262,7 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     result.push({
       title: overview.title,
       sub_title: overview.sub_title || null,
-      components: isFirst ? data.stage.next_stage_structure.components : [],
+      components: isFirst ? data.stage.components : [],
       recap: [],
       form_spec_errors: {},
       errors: [],
@@ -258,11 +282,12 @@ const loadGuidedStages = async (): Promise<QSStageStore[]> => {
     user_input: ref({}),
     actions: [
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      ...data.actions.map((action) => processActionData(ActionType.Save, action, save)),
+      ...data.actions.map((action: Action) => processActionData(ActionType.Save, action, save)),
       processActionData(
         ActionType.Prev,
         {
-          button: data.prev_button,
+          id: 'prev',
+          button: data.prev_button!,
           load_wait_label: ''
         },
         prevStage

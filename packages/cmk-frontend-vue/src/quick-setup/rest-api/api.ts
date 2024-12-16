@@ -6,21 +6,44 @@
 import axios from 'axios'
 import { processError } from './errors'
 import type { StageData } from '../components/quick-setup/widgets/widget_types'
-import type {
-  QSInitializationResponse,
-  QSValidateStagesRequest,
-  QSStageResponse,
-  QSResponseComplete,
-  QSRequestComplete,
-  QSAllStagesResponse
-} from './types'
 
 import {
+  BACKGROUND_JOB_CHECK_INTERVAL,
   EDIT_QUICK_SETUP_URL,
-  GET_QUICK_SETUP_OVERVIEW_URL,
+  FETCH_BACKGROUND_JOB_RESULT_URL,
+  FETCH_QUICK_SETUP_OVERVIEW_URL,
+  FETCH_QUICK_SETUP_STAGE_STRUCTURE_URL,
+  GET_BACKGROUND_JOB_STATUS_URL,
   SAVE_QUICK_SETUP_URL,
-  VALIDATE_QUICK_SETUP_STAGE_URL
+  VALIDATE_AND_RECAP_STAGE_URL
 } from './constants'
+import type {
+  QuickSetupActionResponse,
+  QuickSetupCompleteResponse,
+  QuickSetupGuidedResponse,
+  QuickSetupOverviewResponse,
+  QuickSetupStageStructure
+} from './response_types'
+import type { QuickSetupFinalSaveRequest, QuickSetupStageActionRequest } from './request_types'
+import { wait } from '@/lib/utils'
+/**
+ * Wait until background job is finished
+ * @param id string - Background Job ID
+ */
+const waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
+  const url = GET_BACKGROUND_JOB_STATUS_URL.replace('{JOB_ID}', id)
+  let isActive = true
+  do {
+    const { data } = await axios.get(url)
+    isActive = !!data.extensions.active
+
+    if (!isActive) {
+      return
+    }
+
+    await wait(BACKGROUND_JOB_CHECK_INTERVAL)
+  } while (isActive)
+}
 
 /**
  * Get all stages overview together with the first stage components
@@ -31,8 +54,8 @@ import {
 export const getOverview = async (
   quickSetupId: string,
   objectId: string | null = null
-): Promise<QSInitializationResponse> => {
-  const baseUrl = GET_QUICK_SETUP_OVERVIEW_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
+): Promise<QuickSetupGuidedResponse> => {
+  const baseUrl = FETCH_QUICK_SETUP_OVERVIEW_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
   const url = objectId ? `${baseUrl}?object_id=${objectId}` : baseUrl
 
   try {
@@ -46,8 +69,8 @@ export const getOverview = async (
 export const getAllStages = async (
   quickSetupId: string,
   objectId: string | null = null
-): Promise<QSAllStagesResponse> => {
-  const baseUrl = `${GET_QUICK_SETUP_OVERVIEW_URL}?mode=overview`.replace(
+): Promise<QuickSetupOverviewResponse> => {
+  const baseUrl = `${FETCH_QUICK_SETUP_OVERVIEW_URL}?mode=overview`.replace(
     '{QUICK_SETUP_ID}',
     quickSetupId
   )
@@ -55,32 +78,6 @@ export const getAllStages = async (
 
   try {
     const { data } = await axios.get(url)
-    return data
-  } catch (err) {
-    throw processError(err)
-  }
-}
-
-export const validateStage = async (
-  quickSetupId: string,
-  formData: StageData[],
-  //nextStageIndex: number,
-  actionId: string | null = null,
-  objectId: string | null = null
-): Promise<QSStageResponse> => {
-  const url = objectId
-    ? `${VALIDATE_QUICK_SETUP_STAGE_URL}?object_id=${objectId}`
-    : VALIDATE_QUICK_SETUP_STAGE_URL
-  const payload: QSValidateStagesRequest = {
-    quick_setup_id: quickSetupId,
-    stages: formData.map((stage) => ({ form_data: stage }))
-  }
-  if (actionId) {
-    payload.stage_action_id = actionId
-  }
-
-  try {
-    const { data } = await axios.post(url, payload)
     return data
   } catch (err) {
     throw processError(err)
@@ -98,9 +95,9 @@ export const saveQuickSetup = async (
   quickSetupId: string,
   buttonId: string,
   formData: StageData[]
-): Promise<QSResponseComplete> => {
+): Promise<QuickSetupCompleteResponse> => {
   const url = SAVE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
-  const payload: QSRequestComplete = {
+  const payload: QuickSetupFinalSaveRequest = {
     button_id: buttonId,
     stages: formData.map((step) => ({ form_data: step }))
   }
@@ -126,12 +123,12 @@ export const editQuickSetup = async (
   buttonId: string,
   objectId: string,
   formData: StageData[]
-): Promise<QSResponseComplete> => {
+): Promise<QuickSetupCompleteResponse> => {
   const url = `${EDIT_QUICK_SETUP_URL}?object_id=${objectId}`.replace(
     '{QUICK_SETUP_ID}',
     quickSetupId
   )
-  const payload: QSRequestComplete = {
+  const payload: QuickSetupFinalSaveRequest = {
     button_id: buttonId,
     stages: formData.map((step) => ({ form_data: step }))
   }
@@ -142,4 +139,64 @@ export const editQuickSetup = async (
   } catch (err) {
     throw processError(err)
   }
+}
+
+export const validateAndRecapStage = async (
+  quickSetupId: string,
+  actionId: string,
+  formData: StageData[],
+  objectId: string | null = null
+): Promise<QuickSetupActionResponse> => {
+  const url = (
+    objectId
+      ? `${VALIDATE_AND_RECAP_STAGE_URL}?object_id=${objectId}`
+      : VALIDATE_AND_RECAP_STAGE_URL
+  ).replace('{QUICK_SETUP_ID}', quickSetupId)
+
+  const payload: QuickSetupStageActionRequest = {
+    stage_action_id: actionId,
+    stages: formData.map((stage) => ({ form_data: stage }))
+  }
+
+  try {
+    let result = await axios.post(url, payload)
+    let data = result.data
+
+    /*
+      If the action is executed synchronously, the response is a quick_setup domain object 
+      with the stage recap.
+
+      If the action is executed asynchronously, an object of the background_job domain is returned. 
+      The result can be obtained after the job has finished executing.
+    */
+    if (data?.domainType === 'background_job') {
+      const jobId = data.id
+      await waitForBackgroundJobToFinish(jobId)
+      const jobResultUrl = FETCH_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
+      result = await axios.get(jobResultUrl)
+      data = result.data
+    }
+
+    //TODO: It is possible that a 200 response carries error messages. Should be handled here
+    return data
+  } catch (err) {
+    throw processError(err)
+  }
+}
+
+export const getStageStructure = async (
+  quickSetupId: string,
+  stageIndex: number,
+  objectId: string | null = null
+): Promise<QuickSetupStageStructure> => {
+  const url = (
+    objectId
+      ? `${FETCH_QUICK_SETUP_STAGE_STRUCTURE_URL}?object_id=${objectId}`
+      : FETCH_QUICK_SETUP_STAGE_STRUCTURE_URL
+  )
+    .replace('{QUICK_SETUP_ID}', quickSetupId)
+    .replace('{STAGE_INDEX}', stageIndex.toString())
+
+  const { data } = await axios.get(url)
+  return data
 }

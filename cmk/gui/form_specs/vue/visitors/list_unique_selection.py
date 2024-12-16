@@ -5,7 +5,7 @@
 from collections.abc import Sequence
 from typing import Generic, TypeVar
 
-from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.private import CascadingSingleChoiceExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.list_unique_selection import (
     ListUniqueSelection,
     UniqueCascadingSingleChoiceElement,
@@ -100,7 +100,7 @@ class ListUniqueSelectionVisitor(Generic[T], FormSpecVisitor[ListUniqueSelection
 
     def _build_element_template(self) -> FormSpec[T]:
         if self.form_spec.single_choice_type is SingleChoice:
-            return SingleChoice(  # type: ignore[return-value]
+            return SingleChoiceExtended(
                 elements=[
                     element.parameter_form
                     for element in self.form_spec.elements

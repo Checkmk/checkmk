@@ -30,10 +30,14 @@ from cmk.gui.form_specs.private import (
     StringAutocompleter,
     World,
 )
+from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+    CascadingSingleChoiceElementExtended,
+)
 from cmk.gui.form_specs.private.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
+from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
@@ -96,7 +100,6 @@ from cmk.rulesets.v1.form_specs import (
     HostState,
     InputHint,
     Integer,
-    MultipleChoiceElement,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
@@ -157,7 +160,7 @@ def _event_choices(
     return [
         UniqueCascadingSingleChoiceElement(
             unique=False,
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="status_change",
                 title=Title("Status change"),
                 parameter_form=Tuple(
@@ -185,21 +188,21 @@ def _event_choices(
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="downtime",
                 title=Title("Start or end of downtime"),
                 parameter_form=FixedValue(value=None),
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="acknowledgement",
                 title=Title("Acknowledgement of problem"),
                 parameter_form=FixedValue(value=None),
             ),
         ),
         UniqueCascadingSingleChoiceElement(
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="flapping_state",
                 title=Title("Start or end of flapping state"),
                 parameter_form=FixedValue(value=None),
@@ -207,7 +210,7 @@ def _event_choices(
         ),
         UniqueCascadingSingleChoiceElement(
             unique=False,
-            parameter_form=CascadingSingleChoiceElement(
+            parameter_form=CascadingSingleChoiceElementExtended(
                 name="alert_handler",
                 title=Title("Alert handler execution"),
                 parameter_form=SingleChoice(
@@ -533,7 +536,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Host groups"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=group_name,
                                                 title=Title("%s") % group_name,
                                             )
@@ -597,7 +600,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=MultipleChoiceExtended(
                                                 title=Title("Service groups"),
                                                 elements=[
-                                                    MultipleChoiceElement(
+                                                    MultipleChoiceElementExtended(
                                                         name=group_name,
                                                         title=Title("%s") % group_name,
                                                     )
@@ -611,7 +614,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             parameter_form=MultipleChoiceExtended(
                                                 title=Title("Exclude service groups"),
                                                 elements=[
-                                                    MultipleChoiceElement(
+                                                    MultipleChoiceElementExtended(
                                                         name=group_name,
                                                         title=Title("%s") % group_name,
                                                     )
@@ -660,7 +663,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Groups"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
@@ -679,13 +682,13 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                             "have at least one of the contact "
                                             "group members assigned to them."
                                         ),
-                                        element_template=SingleChoice(
+                                        element_template=SingleChoiceExtended(
                                             prefill=InputHint(Title("Select user")),
                                             no_elements_text=Message(  # TODO:  Doesn't seem to do anything.
                                                 "No users available"
                                             ),
                                             elements=[
-                                                SingleChoiceElement(
+                                                SingleChoiceElementExtended(
                                                     name=userid,
                                                     title=Title("%s") % user,
                                                 )
@@ -761,7 +764,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                     parameter_form=MultipleChoiceExtended(
                                         title=Title("Sites"),
                                         elements=[
-                                            MultipleChoiceElement(
+                                            MultipleChoiceElementExtended(
                                                 name=name,
                                                 title=Title("%s") % title,
                                             )
@@ -1108,7 +1111,7 @@ def _get_sorted_users() -> list[tuple[UserId, str]]:
 def _contact_group_choice() -> Sequence[UniqueSingleChoiceElement]:
     return [
         UniqueSingleChoiceElement(
-            parameter_form=SingleChoiceElement(
+            parameter_form=SingleChoiceElementExtended(
                 name=ident,
                 title=Title(title),  # pylint: disable=localization-of-non-literal-string
             ),
@@ -1133,21 +1136,21 @@ def recipient() -> QuickSetupStage:
                                 cascading_single_choice_layout=CascadingSingleChoiceLayout.horizontal,
                                 elements=[
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All contacts of the affected object"),
                                             name="all_contacts_affected",
                                             parameter_form=FixedValue(value=None),
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All users with an email address"),
                                             name="all_email_users",
                                             parameter_form=FixedValue(value=None),
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Contact group"),
                                             name="contact_group",
                                             parameter_form=ListUniqueSelection(
@@ -1169,7 +1172,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Explicit email addresses"),
                                             name="explicit_email_addresses",
                                             parameter_form=ListOfStrings(
@@ -1189,7 +1192,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("Specific users"),
                                             name="specific_users",
                                             parameter_form=ListUniqueSelection(
@@ -1200,7 +1203,7 @@ def recipient() -> QuickSetupStage:
                                                 single_choice_type=SingleChoice,
                                                 elements=[
                                                     UniqueSingleChoiceElement(
-                                                        parameter_form=SingleChoiceElement(
+                                                        parameter_form=SingleChoiceElementExtended(
                                                             name=ident,
                                                             title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                                         )
@@ -1219,7 +1222,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             title=Title("All users"),
                                             name="all_users",
                                             parameter_form=FixedValue(value=None),
@@ -1244,7 +1247,7 @@ def recipient() -> QuickSetupStage:
                                 single_choice_type=CascadingSingleChoice,
                                 elements=[
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             name="contact_group",
                                             title=Title("Users of contact groups"),
                                             parameter_form=ListUniqueSelection(
@@ -1266,7 +1269,7 @@ def recipient() -> QuickSetupStage:
                                         ),
                                     ),
                                     UniqueCascadingSingleChoiceElement(
-                                        parameter_form=CascadingSingleChoiceElement(
+                                        parameter_form=CascadingSingleChoiceElementExtended(
                                             name="custom_macros",
                                             title=Title("Custom macros"),
                                             parameter_form=ListExtended(

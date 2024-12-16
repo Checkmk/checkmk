@@ -19,6 +19,19 @@ class MultipleChoiceExtendedLayout(str, Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
+class MultipleChoiceElementExtended(MultipleChoiceElement):
+    """Specifies an element of a multiple choice form.
+
+    It can and should only be used internally when using it to generate MultipleChoiceExtended
+    FormSpecs when the input data is not predefined, for example when creating FormSpecs based on
+    user input, like for contact groups.
+    """
+
+    def __post_init__(self):
+        pass
+
+
+@dataclass(frozen=True, kw_only=True)
 class MultipleChoiceExtended(FormSpec[Sequence[str]]):
     elements: Sequence[MultipleChoiceElement] | Autocompleter
     show_toggle_all: bool = False

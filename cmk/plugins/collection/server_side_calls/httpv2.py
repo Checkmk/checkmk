@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     EnvProxy,
     HostConfig,
+    IPAddressFamily,
     NoProxy,
     replace_macros,
     Secret,
@@ -41,6 +42,13 @@ class RedirectPolicy(StrEnum):
     FOLLOW = "follow"
     STICKY = "sticky"
     STICKYPORT = "stickyport"
+
+
+class AddressFamily(StrEnum):
+    ANY = "any"
+    IPV4 = "ipv4"
+    IPV6 = "ipv6"
+    PRIMARY = "primary"
 
 
 class DocumentBodyOption(StrEnum):
@@ -90,6 +98,11 @@ class MatchType(StrEnum):
     REGEX = "regex"
 
 
+class CertificateValidity(StrEnum):
+    VALIDATE = "validate"
+    NO_VALIDATION = "no_validation"
+
+
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
@@ -137,6 +150,7 @@ class Connection(BaseModel):
     http_versions: HttpVersion | None = None
     tls_versions: EnforceTlsVersion | None = None
     proxy: URLProxy | EnvProxy | NoProxy | None = None
+    address_family: AddressFamily | None = None
     redirects: RedirectPolicy | None = None
     timeout: float | None = None
     user_agent: str | None = None
@@ -188,10 +202,11 @@ class Content(BaseModel):
 
 
 class HttpSettings(BaseModel):
+    server: str | None = None
     connection: Connection | None = None
     response_time: FloatLevels | None = None
     server_response: ServerResponse | None = None
-    cert: FloatLevels | None = None
+    cert: tuple[CertificateValidity, FloatLevels | None] | None = None
     document: Document | None = None
     content: Content | None = None
 
@@ -234,22 +249,26 @@ def parse_http_params(params: Mapping[str, object]) -> Sequence[HttpEndpoint]:
 def generate_http_services(
     params: Sequence[HttpEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
-    macros = host_config.macros
     for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
         yield ActiveCheckCommand(
-            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
-            command_arguments=list(_command_arguments(endpoint, macros)),
+            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, host_config.macros)}",
+            command_arguments=list(_command_arguments(endpoint, host_config)),
         )
 
 
-def _command_arguments(endpoint: HttpEndpoint, macros: Mapping[str, str]) -> Iterator[str | Secret]:
+def _command_arguments(endpoint: HttpEndpoint, host_config: HostConfig) -> Iterator[str | Secret]:
+    macros = host_config.macros
+
     yield "--url"
     yield replace_macros(endpoint.url, macros)
 
+    if (server := endpoint.settings.server) is not None:
+        yield "--server"
+        yield replace_macros(server, macros)
     if (connection := endpoint.settings.connection) is not None:
-        yield from _connection_args(connection, macros)
+        yield from _connection_args(connection, host_config)
     if (response_time := endpoint.settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
     if (server_response := endpoint.settings.server_response) is not None:
@@ -262,7 +281,7 @@ def _command_arguments(endpoint: HttpEndpoint, macros: Mapping[str, str]) -> Ite
         yield from _content_args(content)
 
 
-def _connection_args(connection: Connection, macros: Mapping[str, str]) -> Iterator[str | Secret]:
+def _connection_args(connection: Connection, host_config: HostConfig) -> Iterator[str | Secret]:
     yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
@@ -270,6 +289,8 @@ def _connection_args(connection: Connection, macros: Mapping[str, str]) -> Itera
         yield from _tls_version_arg(tls_versions)
     if (proxy := connection.proxy) is not None:
         yield from _proxy_args(proxy)
+    if (address_family := connection.address_family) is not None:
+        yield from _address_family_args(address_family, host_config.primary_ip_config.family)
     if (redirects := connection.redirects) is not None:
         yield from _redirect_args(redirects)
     if (http_versions := connection.http_versions) is not None:
@@ -277,7 +298,7 @@ def _connection_args(connection: Connection, macros: Mapping[str, str]) -> Itera
     if (timeout := connection.timeout) is not None:
         yield from _timeout_args(timeout)
     if (user_agent := connection.user_agent) is not None:
-        yield from _user_agent_args(replace_macros(user_agent, macros))
+        yield from _user_agent_args(replace_macros(user_agent, host_config.macros))
     if (add_headers := connection.add_headers) is not None:
         yield from _send_header_args(add_headers)
 
@@ -323,6 +344,20 @@ def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
         case URLProxy(url=url):
             yield "--proxy-url"
             yield url
+
+
+def _address_family_args(
+    address_family: AddressFamily, primary_family: IPAddressFamily
+) -> Iterator[str]:
+    if address_family == AddressFamily.ANY:
+        return
+
+    yield "--force-ip-version"
+    yield {
+        AddressFamily.IPV4: "ipv4",
+        AddressFamily.IPV6: "ipv6",
+        AddressFamily.PRIMARY: ("ipv4" if primary_family is IPAddressFamily.IPV4 else "ipv6"),
+    }[address_family]
 
 
 def _method_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:
@@ -409,11 +444,16 @@ def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
         yield str(code)
 
 
-def _cert_args(cert_validation: FloatLevels) -> Iterator[str]:
+def _cert_args(cert_validation: tuple[CertificateValidity, FloatLevels | None]) -> Iterator[str]:
     match cert_validation:
-        case (LevelsType.FIXED, (float(warn), float(crit))):
-            yield "--certificate-levels"
-            yield f"{round(warn / _DAY)},{round(crit / _DAY)}"
+        case (CertificateValidity.NO_VALIDATION, _):
+            yield "--disable-cert"
+            return
+        case (CertificateValidity.VALIDATE, cert_levels):
+            match cert_levels:
+                case (LevelsType.FIXED, (float(warn), float(crit))):
+                    yield "--certificate-levels"
+                    yield f"{round(warn / _DAY)},{round(crit / _DAY)}"
 
 
 def _document_args(document: Document) -> Iterator[str]:
@@ -479,7 +519,7 @@ def _header_match_args(
 
 
 def _body_match_args(
-    body: tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex],
+    body: (tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex]),
 ) -> Iterator[str]:
     match body:
         case (MatchType.STRING, str(string)):

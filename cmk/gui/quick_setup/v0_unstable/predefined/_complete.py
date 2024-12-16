@@ -48,7 +48,12 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    _normalize_folder_name,
+    Folder,
+    folder_tree,
+    Host,
+)
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
@@ -128,11 +133,16 @@ def sanitize_folder_path(folder_path: str) -> Folder:
         return tree.all_folders()[sanitized_folder_path]
 
     folder = tree.root_folder()
-    for path in sanitized_folder_path.split("/"):
-        folder = folder.subfolder(path) or folder.create_subfolder(
-            name=path,
-            title=path,
-            attributes={},
+    for title in sanitized_folder_path.split("/"):
+        name = _normalize_folder_name(title)
+        folder = (
+            folder.subfolder_by_title(title)
+            or folder.subfolder(name)
+            or folder.create_subfolder(
+                name=name,
+                title=title,
+                attributes={},
+            )
         )
     return folder
 

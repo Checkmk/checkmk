@@ -445,8 +445,8 @@ class CheckmkApp:
         to avoid systemd dependency."""
         daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
 
-        python_pkg_name = "python3.11"
-        python_bin_name = "python3.11"
+        python_pkg_name = "python3.12"
+        python_bin_name = "python3.12"
         logger.info("Installing %s...", python_pkg_name)
         install_python_rc, install_python_output = app.exec_run(
             f"dnf install '{python_pkg_name}'",

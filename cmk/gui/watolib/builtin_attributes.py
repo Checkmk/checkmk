@@ -1027,7 +1027,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def form_spec(self) -> SingleChoiceExtended:
-        return SingleChoiceExtended[object](
+        return SingleChoiceExtended(
             title=Title("Protocol"),
             help_text=Help("Specify the protocol used to connect to the management board."),
             elements=[
@@ -1044,7 +1044,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
                     title=Title("IPMI"),
                 ),
             ],
-            type=object,
         )
 
     def openapi_field(self) -> gui_fields.Field:

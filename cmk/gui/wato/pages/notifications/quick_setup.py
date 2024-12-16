@@ -166,7 +166,6 @@ def _event_choices(
                         SingleChoiceExtended(
                             label=Label("From"),
                             prefill=DefaultValue(-1),
-                            type=int,
                             elements=[
                                 SingleChoiceElementExtended(name=state, title=title)
                                 for state, title in _get_states(what)
@@ -175,7 +174,6 @@ def _event_choices(
                         SingleChoiceExtended(
                             label=Label("to"),
                             prefill=DefaultValue(1) if what == "host" else DefaultValue(2),
-                            type=int,
                             elements=[
                                 SingleChoiceElementExtended(name=state, title=title)
                                 for state, title in _get_states(what)
@@ -449,7 +447,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 elements=[
                                                     SingleChoiceExtended(
                                                         title=Title("from:"),
-                                                        type=int,
                                                         elements=[
                                                             SingleChoiceElementExtended(
                                                                 name=name,
@@ -460,7 +457,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     ),
                                                     SingleChoiceExtended(
                                                         title=Title("to:"),
-                                                        type=int,
                                                         elements=[
                                                             SingleChoiceElementExtended(
                                                                 name=name,
@@ -476,7 +472,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         "syslog_facility": DictElement(
                                             parameter_form=SingleChoiceExtended(
                                                 title=Title("Syslog facility"),
-                                                type=int,
                                                 elements=[
                                                     SingleChoiceElementExtended(
                                                         name=name,
@@ -726,7 +721,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name="explicit",
                                                 title=Title("Explicit"),
                                                 parameter_form=SingleChoiceExtended(
-                                                    type=int,
                                                     elements=_get_service_levels_single_choice(),
                                                 ),
                                             ),
@@ -738,12 +732,10 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                     elements=[
                                                         SingleChoiceExtended(
                                                             title=Title("From:"),
-                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
                                                         SingleChoiceExtended(
                                                             title=Title("to:"),
-                                                            type=int,
                                                             elements=_get_service_levels_single_choice(),
                                                         ),
                                                     ],
@@ -756,7 +748,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                 "folder": DictElement(
                                     parameter_form=SingleChoiceExtended(
                                         title=Title("Folder"),
-                                        type=str,
                                         elements=[
                                             SingleChoiceElementExtended(
                                                 name=name,
@@ -1350,7 +1341,6 @@ def sending_conditions() -> QuickSetupStage:
                                     "restrict_timeperiod": DictElement(
                                         parameter_form=SingleChoiceExtended(
                                             title=Title("Restrict notifications to a time period"),
-                                            type=str,
                                             prefill=InputHint(Title("Select time period")),
                                             elements=[
                                                 SingleChoiceElementExtended(

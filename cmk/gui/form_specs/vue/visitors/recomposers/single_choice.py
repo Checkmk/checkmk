@@ -37,6 +37,4 @@ def recompose(form_spec: FormSpec[Any]) -> FormSpec[Any]:
         prefill=form_spec.prefill,
         ignored_elements=form_spec.ignored_elements,
         invalid_element_validation=form_spec.invalid_element_validation,
-        # SingleChoiceExtended
-        type=str,
     )

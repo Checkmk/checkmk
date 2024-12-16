@@ -1080,7 +1080,6 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
                 for choice in choices
             ],
             prefill=DefaultValue(choices[0][0]),
-            type=str,
         )
 
     @property

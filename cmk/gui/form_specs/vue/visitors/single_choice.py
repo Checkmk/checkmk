@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Generic, TypeVar
+from typing import cast, Generic, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -31,9 +31,11 @@ T = TypeVar("T")
 NO_SELECTION = None
 
 
-class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], T]):
-    def _is_valid_choice(self, value: T | EmptyValue) -> bool:
+class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], object]):
+    def _is_valid_choice(self, value: object) -> TypeGuard[T]:
         if isinstance(value, EmptyValue):
+            return False
+        if not self.form_spec.elements:
             return False
         return value in [x.name for x in self.form_spec.elements]
 
@@ -41,7 +43,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
     def option_id(cls, val: object) -> str:
         return option_id(val)
 
-    def _parse_value(self, raw_value: object) -> T | EmptyValue:
+    def _parse_value(self, raw_value: object) -> object | EmptyValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
@@ -58,9 +60,6 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             else:
                 # Found no matching option
                 return EMPTY_VALUE
-
-        if not isinstance(raw_value, self.form_spec.type):
-            return EMPTY_VALUE
 
         if not self._is_valid_choice(raw_value):
             # Note: An invalid choice does not always result in an empty value
@@ -79,13 +78,14 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 self.form_spec.invalid_element_validation
                 and self.form_spec.invalid_element_validation.mode == InvalidElementMode.KEEP
             ):
+                # This is the only case where we might return `object` instead of T
                 return raw_value
             return EMPTY_VALUE
 
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: T | EmptyValue
+        self, raw_value: object, parsed_value: object | EmptyValue
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -113,7 +113,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 elements=elements,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                frozen=self.form_spec.frozen and isinstance(raw_value, self.form_spec.type),
+                frozen=self.form_spec.frozen and self._is_valid_choice(raw_value),
                 input_hint=input_hint or _("Please choose"),
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 i18n_base=base_i18n_form_spec(),
@@ -136,7 +136,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
         return message_localized
 
     def _validate(
-        self, raw_value: object, parsed_value: T | EmptyValue
+        self, raw_value: object, parsed_value: object | EmptyValue
     ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue) or not self._is_valid_choice(parsed_value):
             return create_validation_error(
@@ -144,5 +144,5 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             )
         return compute_validation_errors(compute_validators(self.form_spec), parsed_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: T) -> T:
+    def _to_disk(self, raw_value: object, parsed_value: object) -> object:
         return parsed_value

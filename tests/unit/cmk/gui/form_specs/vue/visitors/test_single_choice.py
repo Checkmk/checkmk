@@ -33,13 +33,20 @@ def single_choice_spec(validator: InvalidElementValidator | None = None) -> Sing
 
 
 @pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])
+@pytest.mark.parametrize(
+    "invalid_choice",
+    [
+        pytest.param("wuff", id="same data type than element name"),
+        pytest.param(1, id="different data type than element name"),
+    ],
+)
 def test_invalid_single_choice_validator_keep(
     request_context: None,
     patch_theme: None,
     with_user: tuple[UserId, str],
     data_origin: DataOrigin,
+    invalid_choice: object,
 ) -> None:
-    invalid_choice = "wuff"
     single_choice = single_choice_spec(InvalidElementValidator(mode=InvalidElementMode.KEEP))
     visitor = get_visitor(single_choice, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(invalid_choice)
@@ -55,10 +62,10 @@ def test_invalid_single_choice_validator_keep(
     if data_origin == DataOrigin.FRONTEND:
         # You can not save an invalid value in the frontend
         with pytest.raises(MKGeneralException):
-            visitor.to_disk("wuff")
+            visitor.to_disk(invalid_choice)
     else:
         # If it comes from disk, it is sent back to disk
-        assert visitor.to_disk("wuff") == "wuff"
+        assert visitor.to_disk(invalid_choice) == invalid_choice
 
 
 @pytest.mark.parametrize("data_origin", [DataOrigin.DISK, DataOrigin.FRONTEND])

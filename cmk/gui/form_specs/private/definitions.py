@@ -51,7 +51,6 @@ class SingleChoiceElementExtended(Generic[T]):
 
 @dataclass(frozen=True, kw_only=True)
 class SingleChoiceExtended(Generic[T], FormSpec[T]):
-    # TODO: add a test to make sure classes don't drivt in different directions?!
     # SingleChoice:
     elements: Sequence[SingleChoiceElementExtended[T]]
     no_elements_text: Message | None = None
@@ -60,10 +59,6 @@ class SingleChoiceExtended(Generic[T], FormSpec[T]):
     prefill: DefaultValue[T] | InputHint[Title] = InputHint(Title("Please choose"))
     ignored_elements: tuple[str, ...] = ()
     invalid_element_validation: InvalidElementValidator | None = None
-
-    type: type[T]
-
-    # TODO: copy the code of the post init function?
 
 
 @dataclass(frozen=True, kw_only=True)

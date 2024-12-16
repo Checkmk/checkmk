@@ -38,5 +38,4 @@ def create_timeperiod_selection(
         title=title or Title("Select a time period"),
         help_text=help_text,
         elements=_get_timeperiod_choices(),
-        type=str,
     )

@@ -34,5 +34,4 @@ def recompose(form_spec: FormSpec[Any]) -> SingleChoiceExtended[Any]:
             )
             for timePeriodName, timePeriodSpec in timeperiods.load_timeperiods().items()
         ],
-        type=str,
     )

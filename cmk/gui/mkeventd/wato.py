@@ -5608,7 +5608,6 @@ class NotificationParameterMKEventDaemon(NotificationParameter):
                             )
                             for ident, title in syslog_facilities
                         ],
-                        type=int,
                     ),
                 ),
                 "remote": DictElement(

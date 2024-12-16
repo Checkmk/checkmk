@@ -303,6 +303,7 @@ def test_registered_painters() -> None:
         "inv_networking_hostname",
         "inv_networking_kube",
         "inv_networking_routes",
+        "inv_networking_sip_interfaces",
         "inv_networking_total_ethernet_ports",
         "inv_networking_total_interfaces",
         "inv_networking_tunnels",

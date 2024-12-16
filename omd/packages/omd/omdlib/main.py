@@ -3864,9 +3864,9 @@ exclude_options = [
     Option("no-logs", None, False, "do not copy the monitoring history and log files"),
     Option("no-agents", None, False, "do not copy agent files created by the agent bakery"),
     Option(
-        "no-past", 
-        "N", 
-        False, 
+        "no-past",
+        "N",
+        False,
         "do not copy RRD files, agent files the monitoring history and log files"
     ),
 ]

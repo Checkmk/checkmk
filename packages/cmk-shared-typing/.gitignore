@@ -1,3 +1,6 @@
-/python
-/typescript
-/.venv
+*.pyc
+*.egg-info
+/.venv/
+/build/
+
+/typescript/

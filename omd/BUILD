@@ -32,6 +32,7 @@ load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
         "//packages/cmk-mkp-tool:pkg_tar",
         "//packages/cmk-rulesets:pkg_tar",
         "//packages/cmk-server-side-calls:pkg_tar",
+        "//packages/cmk-shared-typing:pkg_tar",
         "//packages/cmk-trace:pkg_tar",
         "//packages/cmk-werks:pkg_tar",
     ] + edition_deps[edition],

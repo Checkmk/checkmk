@@ -137,6 +137,7 @@ write_file(
         "import sys",
         "dirname = os.path.dirname(__file__)",
         'sys.path.append(os.path.abspath(os.path.join(dirname, "../../../../")))',
+        'sys.path.append(os.path.abspath(os.path.join(dirname, "../../../../packages/cmk-shared-typing/python")))',
         'relative_packages_path = "../../../../packages"',
         "for p in os.listdir(os.path.join(dirname, relative_packages_path)):",
         "    sys.path.append(os.path.abspath(os.path.join(dirname, relative_packages_path, p)))",

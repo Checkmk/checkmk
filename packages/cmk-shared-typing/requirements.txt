@@ -1,3 +1,5 @@
 black
-datamodel-code-generator
+# Locked to 0.26.1 since 0.26.3 handled const strings differently
+# which broke inheritance.
+datamodel-code-generator==0.26.1
 libcst

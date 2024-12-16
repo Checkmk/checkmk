@@ -5,7 +5,7 @@ Component: checks
 Date: 1732872245
 Edition: cre
 Level: 1
-Version: 2.2.0p37
+Version: 2.2.0p38
 
 Incorrectly assigned permissions allowed local, unprivileged Windows users to read sensitive data of the Checkmk Windows agent.
 

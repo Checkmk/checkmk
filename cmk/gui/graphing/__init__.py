@@ -20,6 +20,7 @@ from ._metric_operation import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
+from ._metrics import registered_metrics
 from ._perfometer import get_first_matching_perfometer, parse_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete
@@ -47,4 +48,5 @@ __all__ = [
     "parse_perfometer",
     "perfometer_info",
     "PerfometerSpec",
+    "registered_metrics",
 ]

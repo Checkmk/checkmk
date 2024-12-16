@@ -92,6 +92,8 @@ def run_make_targets(Map args) {
                                     CI_JOB_NAME='${env.JOB_NAME}' \
                                     CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
                                     CI_BUILD_URL='${env.BUILD_URL}' \
+                                    # We can skip the make .venv call now, bc it has been built before parallelization
+                                    SKIP_MAKEFILE_CALL=1 \
                                     make ${args.MAKE_TARGET}""");
                                 }
                             }

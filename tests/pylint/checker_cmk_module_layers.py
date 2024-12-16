@@ -390,6 +390,7 @@ def _allow_for_cmk_update_config(
             _in_component(imported=imported, component=Component("cmk.gui")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk")),
             _in_component(imported=imported, component=Component("cmk.diskspace")),
+            _in_component(imported=imported, component=Component("cmk.validate_config")),
         )
     )
 
@@ -653,6 +654,7 @@ _COMPONENTS = (
     (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_for_cmk_update_config),
+    (Component("cmk.validate_config"), _allow_default_plus_gui_and_base),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
@@ -676,6 +678,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-wait-for-background-jobs"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),

@@ -11,7 +11,7 @@ from cmk.utils.timeperiod import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.watolib.timeperiods import load_timeperiod
 
-from cmk.update_config.plugins.actions.validate_mk_files import validate_timeperiods
+from cmk.validate_config import validate_timeperiods
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

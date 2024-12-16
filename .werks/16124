@@ -1,0 +1,17 @@
+Title: The alert handler master control has an immediate effect now in the CMC
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1734426864
+Edition: cee
+Level: 1
+Version: 2.2.0p38
+
+Due to a regression in Checkmk 2.0, the master control switch for alert
+handlers only had an effect after activating changes or reloading/restarting
+the CMC.  This fix restores the old immediate behavior. Note that users of
+the Nagios core were not affected.
+
+Technically, the Livestatus commands ENABLE_ALERT_HANDLERS and
+DISABLE_ALERT_HANDLERS (which are used by the master control) did not have
+an immediate effect in the CMC, only after (re-)loading the CMC config.

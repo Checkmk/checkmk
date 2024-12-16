@@ -257,6 +257,7 @@ sw-documentation-docker:
 			echo "bazel run //:requirements.update"; \
 			exit 1; \
 		fi; \
-		bazel run //:requirements_all.update && bazel run //:requirements_runtime.update; \
+		bazel run //:requirements_all.update && bazel mod deps --lockfile_mode=update; \
+		bazel run //:requirements_runtime.update && bazel mod deps --lockfile_mode=update; \
 	fi; \
 	CC="gcc" $(REPO_PATH)/scripts/run-bazel.sh run //:create_venv

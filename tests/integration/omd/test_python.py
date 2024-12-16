@@ -10,7 +10,6 @@ from subprocess import check_output
 from typing import NamedTuple, NewType
 
 import pytest
-from pipfile import Pipfile  # type: ignore[import-untyped]
 from semver import VersionInfo
 
 from tests.testlib.repo import repo_path
@@ -77,10 +76,6 @@ def assert_uninstall_and_purge_cache(pip_cmd: PipCommand, package_name: str, sit
         p = site.execute(cmd, stdout=subprocess.PIPE)
         p.communicate()
         assert p.returncode == 0
-
-
-def _load_pipfile_data() -> dict:
-    return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:

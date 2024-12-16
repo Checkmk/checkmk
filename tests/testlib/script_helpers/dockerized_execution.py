@@ -502,8 +502,6 @@ def _container_env(version: CMKVersion) -> Mapping[str, str]:
     # the docker image
     return {
         "LANG": "C",
-        "PIPENV_PIPFILE": "/git/Pipfile",
-        "PIPENV_VENV_IN_PROJECT": "true",
         "VERSION": version.version_spec,
         "EDITION": version.edition.short,
         "BRANCH": version.branch,

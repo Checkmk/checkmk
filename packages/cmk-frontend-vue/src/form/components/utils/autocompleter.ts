@@ -38,9 +38,14 @@ export async function fetchData<OutputType>(
   value: unknown,
   data: AutocompleterData
 ): Promise<OutputType> {
-  const body = JSON.parse(JSON.stringify(data)) as Record<string, unknown>
-  body['value'] = value
-  const request = `request=${JSON.stringify(body)}`
+  const body = structuredClone(data)
+  Object.entries(body.params).forEach(([k, v]) => {
+    // ajax_vs_autocomplete.py expects unset parameters, not None
+    if (v === null) {
+      delete body.params[k as keyof typeof body.params]
+    }
+  })
+  const request = `request=${JSON.stringify({ ...body, value })}`
 
   const response = await cmkFetch('ajax_vs_autocomplete.py', {
     method: 'POST',

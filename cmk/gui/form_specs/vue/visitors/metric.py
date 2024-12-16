@@ -24,7 +24,7 @@ class MetricVisitor(StringVisitor):
                 **string_autocompleter_args,
                 host_filter_autocompleter=shared_type_defs.Autocompleter(
                     data=shared_type_defs.AutocompleterData(
-                        ident="config_hostname",
+                        ident="monitored_hostname",
                         params=shared_type_defs.AutocompleterParams(
                             strict=True, escape_regex=False
                         ),
@@ -32,7 +32,7 @@ class MetricVisitor(StringVisitor):
                 ),
                 service_filter_autocompleter=shared_type_defs.Autocompleter(
                     data=shared_type_defs.AutocompleterData(
-                        ident="config_service_description",
+                        ident="monitored_service_description",
                         params=shared_type_defs.AutocompleterParams(
                             show_independent_of_context=True, strict=True, escape_regex=False
                         ),

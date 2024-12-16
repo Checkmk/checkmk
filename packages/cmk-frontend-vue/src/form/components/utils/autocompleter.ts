@@ -10,11 +10,28 @@ import type {
   AutocompleterData
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { cmkFetch } from '@/lib/cmkFetch'
+import { CmkError } from '@/lib/error'
 
-interface AjaxResponse {
-  result: unknown
-  result_code: number
-  severity: string
+interface MaybeApiError {
+  result?: string
+  result_code?: number
+  severity?: 'error'
+}
+
+class AutoCompleterResponseError extends CmkError<null> {
+  response: MaybeApiError
+
+  constructor(message: string, response: MaybeApiError) {
+    super(message, null)
+    this.response = response
+  }
+
+  override getContext(): string {
+    if (this.response.result_code !== 0 && this.response.result && this.response.severity) {
+      return `${this.response.severity}: ${this.response.result}`
+    }
+    return ''
+  }
 }
 
 export async function fetchData<OutputType>(
@@ -33,9 +50,12 @@ export async function fetchData<OutputType>(
     body: request
   })
   await response.raiseForStatus()
-  const ajaxResponse = (await response.json()) as AjaxResponse
+  const ajaxResponse = (await response.json()) as MaybeApiError
   if (ajaxResponse.result_code !== 0) {
-    throw new Error(`AjaxResponse error! result code: ${ajaxResponse.result_code}`)
+    throw new AutoCompleterResponseError(
+      'Autocompleter endpoint returned an error.',
+      ajaxResponse as MaybeApiError
+    )
   }
   return ajaxResponse.result as OutputType
 }

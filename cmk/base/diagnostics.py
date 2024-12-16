@@ -136,7 +136,7 @@ def _format_error(error):
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
 
-    _keep_num_dumps = 5
+    _keep_num_dumps = 10
 
     def __init__(self, parameters: DiagnosticsOptionalParameters | None = None) -> None:
         self.fixed_elements = self._get_fixed_elements()

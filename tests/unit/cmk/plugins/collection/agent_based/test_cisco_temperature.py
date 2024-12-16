@@ -732,6 +732,32 @@ def test_parse_admin_state_mapping(
             },
             id="fallback_no_coercion_for_severity_other",
         ),
+        pytest.param(
+            [
+                [["1010", "", "Switch 1 - Inlet Temp Sensor"]],
+                [["1010", "8", "9", "0", "49", "1"]],
+                [
+                    # no threshold values
+                    ["1010.1", "1", "1", ""],
+                    ["1010.2", "1", "1", ""],
+                ],
+                [["1010", "Switch 1 - Inlet Temp Sensor", "49", "56", "2"]],
+                [["oid_end", "description", "1"]],
+                [],
+            ],
+            {
+                "8": {
+                    "Switch 1 - Inlet Temp Sensor": {
+                        "dev_levels_lower": None,
+                        "dev_levels_upper": (56.0, 56.0),
+                        "dev_state": (1, "warning"),
+                        "raw_env_mon_state": "2",
+                        "reading": 49,
+                    },
+                }
+            },
+            id="no_threshold_values",
+        ),
     ],
 )
 def test_parse_cisco_temperature_thresholds(

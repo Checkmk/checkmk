@@ -25,9 +25,9 @@ from watchdog.events import (
 )
 
 from cmk.base.automation_helper._cache import Cache
+from cmk.base.automation_helper._config import Schedule
 from cmk.base.automation_helper._watcher import (
     AutomationWatcherHandler,
-    Schedule,
     start_automation_watcher_observer,
 )
 
@@ -68,10 +68,20 @@ def get_target_file(target_directory: Path) -> Path:
 @pytest.fixture(scope="function", name="observer")
 def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
     schedules: list[Schedule] = [
-        Schedule(ignore_directories=True, recursive=True, patterns=[MK_PATTERN]),
-        Schedule(ignore_directories=True, recursive=True, patterns=[TXT_FILE]),
+        Schedule(
+            path=target_directory,
+            ignore_directories=True,
+            recursive=True,
+            patterns=[MK_PATTERN],
+        ),
+        Schedule(
+            path=target_directory,
+            ignore_directories=True,
+            recursive=True,
+            patterns=[TXT_FILE],
+        ),
     ]
-    return start_automation_watcher_observer(target_directory, schedules, cache)
+    return start_automation_watcher_observer(schedules, cache)
 
 
 def wait_for_observer_log_output(

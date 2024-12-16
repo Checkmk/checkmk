@@ -19,11 +19,12 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
+from ._config import watcher_schedules
 from ._log import configure_logger
 from ._reloader import Reloader
 from ._server import ApplicationServerConfig, run
 from ._tracer import configure_tracer
-from ._watcher import Watcher, WatcherConfig
+from ._watcher import Watcher
 
 APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
 APPLICATION_LOG_DIRECTORY: Final = "automation-helper"
@@ -54,8 +55,7 @@ def main() -> int:
 
         reloader = Reloader(cache=cache)
 
-        watcher_config = WatcherConfig.load(root=omd_root)
-        watcher = Watcher(watcher_config, cache)
+        watcher = Watcher(watcher_schedules(omd_root), cache)
 
         app = get_application(
             engine=automations,

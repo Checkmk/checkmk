@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import dataclasses
 import time
 from collections.abc import Generator, Sequence
 from pathlib import Path
 from threading import Thread
-from typing import Final, Self
+from typing import Final
 
 from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from ._cache import Cache
+from ._config import Schedule
 from ._log import LOGGER
 
 WATCHER_SLEEP_INTERVAL: Final = 1
@@ -57,27 +57,9 @@ class AutomationWatcherHandler(PatternMatchingEventHandler):
                 LOGGER.info("[watcher] %s (%s)", event.src_path, event.event_type)
 
 
-@dataclasses.dataclass(frozen=True)
-class Schedule:
-    ignore_directories: bool
-    recursive: bool
-    relative_path: str = ""
-    patterns: Sequence[str] | None = None
-
-
-@dataclasses.dataclass(frozen=True)
-class WatcherConfig:
-    root: Path
-    schedules: Sequence[Schedule]
-
-    @classmethod
-    def load(cls, root: Path) -> Self:
-        return cls(root=root, schedules=_SCHEDULES)
-
-
 @contextlib.contextmanager
 def start_automation_watcher_observer(
-    root: Path, schedules: Sequence[Schedule], cache: Cache
+    schedules: Sequence[Schedule], cache: Cache
 ) -> Generator[None]:
     observer = Observer()
 
@@ -89,7 +71,7 @@ def start_automation_watcher_observer(
         )
         observer.schedule(
             handler,
-            path=str(root / schedule.relative_path),
+            path=str(schedule.path),
             recursive=schedule.recursive,
         )
 
@@ -103,47 +85,14 @@ def start_automation_watcher_observer(
         observer.join()
 
 
-def run_watcher(root: Path, schedules: Sequence[Schedule], cache: Cache) -> None:
-    with start_automation_watcher_observer(root, schedules, cache):
+def run_watcher(schedules: Sequence[Schedule], cache: Cache) -> None:
+    with start_automation_watcher_observer(schedules, cache):
         while True:
             time.sleep(WATCHER_SLEEP_INTERVAL)
 
 
 class Watcher(Thread):
-    def __init__(self, cfg: WatcherConfig, cache: Cache) -> None:
+    def __init__(self, schedules: Sequence[Schedule], cache: Cache) -> None:
         LOGGER.info("[watcher] initializing thread...")
-        kwargs = {"root": cfg.root, "schedules": cfg.schedules, "cache": cache}
+        kwargs = {"schedules": schedules, "cache": cache}
         super().__init__(target=run_watcher, name="watcher", kwargs=kwargs, daemon=True)
-
-
-_SCHEDULES = (
-    Schedule(
-        ignore_directories=True,
-        recursive=False,
-        relative_path="etc/check_mk",
-        patterns=["main.mk", "local.mk", "final.mk", "experimental.mk"],
-    ),
-    Schedule(
-        ignore_directories=True,
-        recursive=True,
-        relative_path="etc/check_mk/conf.d",
-        patterns=["*.mk", "*.pkl"],
-    ),
-    Schedule(
-        ignore_directories=True,
-        recursive=True,
-        relative_path="var/check_mk/autochecks",
-        patterns=["*.mk"],
-    ),
-    Schedule(
-        ignore_directories=True,
-        recursive=True,
-        relative_path="var/check_mk/discovered_host_labels",
-        patterns=["*.mk"],
-    ),
-    Schedule(
-        ignore_directories=True,
-        recursive=False,
-        patterns=["var/check_mk/stored_passwords"],
-    ),
-)

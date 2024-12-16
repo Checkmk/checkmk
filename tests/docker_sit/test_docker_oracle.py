@@ -238,6 +238,10 @@ class OracleDatabase:
 
     def _setup_container(self) -> None:
         """Initialise the container setup."""
+
+        logger.info("Unset the ociregion to prevent package management errors")
+        self.container.exec_run("""bash -c 'echo ""> "/etc/yum/vars/ociregion"'""", user="root")
+
         logger.info("Copying environment files to container...")
         for name in self.sql_files:
             assert copy_to_container(

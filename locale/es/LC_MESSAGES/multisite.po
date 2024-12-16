@@ -17200,7 +17200,7 @@ msgstr "Datos"
 msgid "Data directory"
 msgstr "Directorio principal"
 
-msgid "Data engress"
+msgid "Data egress"
 msgstr "Datos de la empresa"
 
 #, fuzzy

@@ -16366,7 +16366,7 @@ msgstr "データ"
 msgid "Data directory"
 msgstr "データディレクトリ"
 
-msgid "Data engress"
+msgid "Data egress"
 msgstr "データ入力"
 
 msgid "Data files"

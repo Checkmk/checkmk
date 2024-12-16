@@ -16527,7 +16527,7 @@ msgstr "Daten"
 msgid "Data directory"
 msgstr "Datenverzeichnis"
 
-msgid "Data engress"
+msgid "Data egress"
 msgstr "Daten-Egress"
 
 msgid "Data files"

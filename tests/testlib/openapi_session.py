@@ -124,6 +124,7 @@ class CMKOpenApiSession(requests.Session):
         self.dcd = DcdAPI(self)
         self.ldap_connection = LDAPConnectionAPI(self)
         self.passwords = PasswordsAPI(self)
+        self.license = LicenseAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -1133,3 +1134,11 @@ class PasswordsAPI(BaseAPI):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+
+
+class LicenseAPI(BaseAPI):
+    def download(self) -> requests.Response:
+        response = self.session.get("/domain-types/license_request/actions/download/invoke")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response

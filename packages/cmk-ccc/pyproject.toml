@@ -25,8 +25,3 @@ order-by-type = false
 [tool.mypy]
 packages = ["cmk", "tests"]
 strict = true
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
-testpaths = ["cmk", "tests"]
-addopts = "--doctest-modules --import-mode=importlib"

@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import signal
 import time
-from threading import Thread
-from typing import Final
+from collections.abc import Generator
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from threading import Event
+from typing import Callable, Final
 
 from ._cache import Cache
 from ._log import LOGGER
@@ -15,28 +16,35 @@ from ._log import LOGGER
 RELOADER_SLEEP_INTERVAL: Final = 5
 
 
-def log_reload_info(last_change_at: float) -> None:
-    when = round(time.time() - last_change_at, 2)
-    LOGGER.info(f"[reloader] change detected {when}s ago reloading now...")
+@contextmanager
+def run(
+    cache: Cache,
+    reload_callback: Callable[[], None],
+) -> Generator[None]:
+    LOGGER.info("[reloader] Initializing")
+    shutdown_flag = Event()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        executor.submit(_run, cache, reload_callback, shutdown_flag)
+        try:
+            LOGGER.info("[reloader] Operational")
+            yield
+        finally:
+            LOGGER.info("[reloader] Shutting down")
+            shutdown_flag.set()
+    LOGGER.info("[reloader] Shutdown complete")
 
 
-def reload_application() -> None:
-    os.kill(os.getpid(), signal.SIGHUP)
-
-
-def run_reloader(cache: Cache) -> None:
+def _run(
+    cache: Cache,
+    reload_callback: Callable[[], None],
+    shutdown_flag: Event,
+) -> None:
     last_change = cache.last_detected_change
-
-    while True:
-        time.sleep(RELOADER_SLEEP_INTERVAL)
-
+    while not shutdown_flag.wait(timeout=RELOADER_SLEEP_INTERVAL):
         if (cached_last_change := cache.last_detected_change) != last_change:
-            log_reload_info(cached_last_change)
-            reload_application()
+            LOGGER.info(
+                "[reloader] Change detected %.2f seconds ago, reloading",
+                time.time() - cached_last_change,
+            )
+            reload_callback()
             last_change = cached_last_change
-
-
-class Reloader(Thread):
-    def __init__(self, cache: Cache) -> None:
-        LOGGER.info("[reloader] initializing thread...")
-        super().__init__(target=run_reloader, name="reloader", kwargs={"cache": cache}, daemon=True)

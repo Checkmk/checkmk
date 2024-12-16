@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Launches automation helper application for processing automation commands."""
-
 import dataclasses
-from collections.abc import Sequence
 from pathlib import Path
-from threading import Thread
 from typing import Final
 
 import gunicorn.app.base  # type: ignore[import-untyped]
@@ -28,11 +24,8 @@ class ApplicationServerConfig:
 
 def run(
     app_server_config: ApplicationServerConfig,
-    services: Sequence[Thread],
     app: FastAPI,
 ) -> None:
-    for service in services:
-        service.start()
     _ApplicationServer(app, app_server_config).run()
 
 

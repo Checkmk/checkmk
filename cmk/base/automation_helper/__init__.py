@@ -6,6 +6,7 @@
 """Launches automation helper application for processing automation commands."""
 
 import os
+import signal
 from pathlib import Path
 from typing import Final
 
@@ -20,9 +21,10 @@ from cmk.base.automations import automations
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
 from ._config import watcher_schedules
-from ._log import configure_logger
-from ._reloader import Reloader
-from ._server import ApplicationServerConfig, run
+from ._log import configure_logger, LOGGER
+from ._reloader import run as run_reloader
+from ._server import ApplicationServerConfig
+from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
 
@@ -53,8 +55,6 @@ def main() -> int:
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)
 
-        reloader = Reloader(cache=cache)
-
         app = get_application(
             engine=automations,
             cache=cache,
@@ -70,11 +70,22 @@ def main() -> int:
 
         daemonize()
 
-        with run_watcher(
-            watcher_schedules(omd_root),
-            cache,
+        current_pid = os.getpid()
+
+        with (
+            run_watcher(
+                watcher_schedules(omd_root),
+                cache,
+            ),
+            run_reloader(
+                cache,
+                lambda: os.kill(current_pid, signal.SIGHUP),
+            ),
         ):
-            run(server_config, [reloader], app)
+            try:
+                run_server(server_config, app)
+            except SystemExit:
+                LOGGER.info("Received termination signal, shutting down")
 
     except Exception:
         return 1

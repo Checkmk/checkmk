@@ -19,7 +19,7 @@ from ._app import get_application, reload_automation_config
 from ._cache import Cache
 from ._log import configure_logger
 from ._reloader import Reloader
-from ._server import ApplicationServer, ApplicationServerConfig
+from ._server import ApplicationServerConfig, run
 from ._tracer import configure_tracer
 from ._watcher import Watcher, WatcherConfig
 
@@ -69,7 +69,7 @@ def main() -> int:
             error_log=log_directory / APPLICATION_ERROR_LOG,
         )
 
-        ApplicationServer(app, server_config, services=[watcher, reloader]).run()
+        run(server_config, [watcher, reloader], app)
 
     except Exception:
         return 1

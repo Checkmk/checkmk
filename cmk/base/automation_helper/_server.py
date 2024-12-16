@@ -29,41 +29,40 @@ class ApplicationServerConfig:
     error_log: Path
 
 
-class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
+def run(
+    app_server_config: ApplicationServerConfig,
+    services: Sequence[Thread],
+    app: FastAPI,
+) -> None:
+    if app_server_config.daemon:
+        daemonize()
+
+    for service in services:
+        service.start()
+
+    _ApplicationServer(app, app_server_config).run()
+
+
+class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
     def __init__(
-        self, app: FastAPI, cfg: ApplicationServerConfig, *, services: Sequence[Thread]
+        self,
+        app: FastAPI,
+        app_server_config: ApplicationServerConfig,
     ) -> None:
         self._app = app
-        self._services = services
-        self._options = {
-            "daemon": cfg.daemon,
-            "umask": 0o077,
-            "bind": f"unix:{cfg.unix_socket}",
-            "workers": APPLICATION_WORKER_COUNT,
-            "worker_class": APPLICATION_WORKER_CLASS,
-            "pidfile": str(cfg.pid_file),
-            "accesslog": str(cfg.access_log),
-            "errorlog": str(cfg.error_log),
-            # clients can dynamically set a timeout per request
-            "timeout": 0,
-        }
+        self._app_server_config = app_server_config
         super().__init__()
 
     def load_config(self) -> None:
-        assert self.cfg is not None, "Default server config expected to be loaded post-init."
-        for key, value in self._options.items():
-            self.cfg.set(key, value)
+        self.cfg.set("umask", 0o077)
+        self.cfg.set("bind", f"unix:{self._app_server_config.unix_socket}")
+        self.cfg.set("workers", APPLICATION_WORKER_COUNT)
+        self.cfg.set("worker_class", APPLICATION_WORKER_CLASS)
+        self.cfg.set("pidfile", str(self._app_server_config.pid_file))
+        self.cfg.set("accesslog", str(self._app_server_config.access_log))
+        self.cfg.set("errorlog", str(self._app_server_config.error_log))
+        # clients can dynamically set a timeout per request
+        self.cfg.set("timeout", 0)
 
     def load(self) -> FastAPI:
         return self._app
-
-    def run(self) -> None:
-        assert self.cfg is not None, "Gunicorn server config is required to run application."
-
-        if self.cfg.daemon:
-            daemonize()
-
-        for service in self._services:
-            service.start()
-
-        super().run()

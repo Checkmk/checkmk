@@ -78,7 +78,7 @@ class _UserSelection(DropdownChoice[UserId]):
                 (name, "{} - {}".format(name, us.get("alias", name)))
                 for (name, us) in users.items()
                 if (not only_contacts or us.get("contactgroups"))
-                and (not only_automation or us.get("automation_secret"))
+                and (not only_automation or us.get("is_automation_user"))
             )
             if nv is not None:
                 elements.insert(0, (None, nv))

@@ -2013,7 +2013,6 @@ def _resource_attributes_from_env(env: Mapping[str, str]) -> Mapping[str, str]:
     information is available. In case it is not there, be silent and don't expose the missing
     attribute.
     """
-    logger.warning("Environment: %r", env)
     return {
         name: val
         for name, val in [

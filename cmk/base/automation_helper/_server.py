@@ -14,15 +14,12 @@ from typing import Final
 import gunicorn.app.base  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
-from cmk.ccc.daemon import daemonize
-
 APPLICATION_WORKER_CLASS: Final = "uvicorn.workers.UvicornWorker"
 APPLICATION_WORKER_COUNT: Final = 2
 
 
 @dataclasses.dataclass(frozen=True)
 class ApplicationServerConfig:
-    daemon: bool
     unix_socket: Path
     pid_file: Path
     access_log: Path
@@ -34,12 +31,8 @@ def run(
     services: Sequence[Thread],
     app: FastAPI,
 ) -> None:
-    if app_server_config.daemon:
-        daemonize()
-
     for service in services:
         service.start()
-
     _ApplicationServer(app, app_server_config).run()
 
 

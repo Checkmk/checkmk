@@ -11,6 +11,8 @@ from typing import Final
 
 from setproctitle import setproctitle
 
+from cmk.ccc.daemon import daemonize
+
 from cmk.utils.redis import get_redis_client
 
 from cmk.base.automations import automations
@@ -62,12 +64,13 @@ def main() -> int:
         )
 
         server_config = ApplicationServerConfig(
-            daemon=True,
             unix_socket=run_directory / "automation-helper.sock",
             pid_file=run_directory / APPLICATION_PID_FILE,
             access_log=log_directory / APPLICATION_ACCESS_LOG,
             error_log=log_directory / APPLICATION_ERROR_LOG,
         )
+
+        daemonize()
 
         run(server_config, [watcher, reloader], app)
 

@@ -9,7 +9,7 @@ import { useValidation, type ValidationMessages } from '@/form/components/utils/
 import FormValidation from '@/form/components/FormValidation.vue'
 import { X } from 'lucide-vue-next'
 import { onBeforeUpdate, ref, watch } from 'vue'
-import AutoComplete from './AutoComplete.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { inputSizes } from '../utils/sizes'
 
 type StringMapping = Record<string, string>
@@ -135,7 +135,7 @@ const deleteItem = (item: string) => {
     "
   >
     <!-- In formLabel, the size on input is a fixed size -->
-    <AutoComplete
+    <FormAutocompleter
       :size="inputSizes['MEDIUM'].width"
       :autocompleter="props.spec.autocompleter"
       :placeholder="props.spec.i18n.add_some_labels"

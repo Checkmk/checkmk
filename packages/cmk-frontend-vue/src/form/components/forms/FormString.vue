@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 
-import AutoComplete from './AutoComplete.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { useId } from '@/form/utils'
 import { inputSizes } from '../utils/sizes'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -50,7 +50,7 @@ const componentId = useId()
     type="text"
     :size="inputSizes[props.spec.field_size].width"
   />
-  <AutoComplete
+  <FormAutocompleter
     v-if="spec.autocompleter"
     :id="componentId"
     :size="inputSizes[props.spec.field_size].width"

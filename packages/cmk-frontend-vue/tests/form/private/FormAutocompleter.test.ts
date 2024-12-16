@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import Autocomplete from '@/form/components/forms/AutoComplete.vue'
+import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 import { ref, watch } from 'vue'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 
@@ -30,9 +30,9 @@ vi.mock('@/form/components/utils/autocompleter', () => ({
   })
 }))
 
-describe('Autocompleter', () => {
+describe('FormAutocompleter', () => {
   test('should be rendered with placeholder', async () => {
-    render(Autocomplete, {
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
         show: false,
@@ -47,7 +47,7 @@ describe('Autocompleter', () => {
   })
 
   test('shoud emit entered item on pressing enter key on input without selecting any item from dropdown list', async () => {
-    render(Autocomplete, {
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Search...',
         show: false,
@@ -65,7 +65,7 @@ describe('Autocompleter', () => {
   })
 
   test('on input should open dropdown list with items', async () => {
-    render(Autocomplete, {
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         show: true,
@@ -93,7 +93,7 @@ describe('Autocompleter', () => {
   })
 
   test('on input should filter list', async () => {
-    render(Autocomplete, {
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         show: true,
@@ -120,7 +120,7 @@ describe('Autocompleter', () => {
   })
 
   test('on click on item from dropdown list should emit selected item', async () => {
-    const component = render(Autocomplete, {
+    const component = render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         show: true,
@@ -153,7 +153,7 @@ describe('Autocompleter', () => {
   })
 
   test('should emit selected item on pressing enter key on input after selecting item from dropdown list', async () => {
-    render(Autocomplete, {
+    render(FormAutocompleter, {
       props: {
         placeholder: 'Add some labels',
         show: true,

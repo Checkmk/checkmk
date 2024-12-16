@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 pkg_files(
@@ -39,16 +39,16 @@ package_wheel(
 
 # 'rrdtool' prefix cannot be stripped from filegroup
 # this is a workaround to be able to strip prefix
-exclude_from_filegroup(
+copy_directory(
     name = "rrdtool_bindings_workaround",
     src = "@rrdtool//:perl_bindings_gen_dir",
-    excludes = ["noting_to_exclude"],
+    out = "perl_bindings_dir",
 )
 
 pkg_files(
     name = "rrdtool_perl_bindings_files",
     srcs = [":rrdtool_bindings_workaround"],
-    strip_prefix = strip_prefix.from_pkg("rest"),
+    strip_prefix = strip_prefix.from_pkg("perl_bindings_dir"),
     visibility = ["//visibility:public"],
 )
 

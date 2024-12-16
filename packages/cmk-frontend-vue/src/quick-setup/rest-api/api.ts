@@ -24,7 +24,7 @@ import type {
   QuickSetupOverviewResponse,
   QuickSetupStageStructure
 } from './response_types'
-import type { QuickSetupFinalSaveRequest, QuickSetupStageActionRequest } from './request_types'
+import type { QuickSetupFinalActionRequest, QuickSetupStageActionRequest } from './request_types'
 import { wait } from '@/lib/utils'
 /**
  * Wait until background job is finished
@@ -97,7 +97,7 @@ export const saveQuickSetup = async (
   formData: StageData[]
 ): Promise<QuickSetupCompleteResponse> => {
   const url = SAVE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
-  const payload: QuickSetupFinalSaveRequest = {
+  const payload: QuickSetupFinalActionRequest = {
     button_id: buttonId,
     stages: formData.map((step) => ({ form_data: step }))
   }
@@ -128,7 +128,7 @@ export const editQuickSetup = async (
     '{QUICK_SETUP_ID}',
     quickSetupId
   )
-  const payload: QuickSetupFinalSaveRequest = {
+  const payload: QuickSetupFinalActionRequest = {
     button_id: buttonId,
     stages: formData.map((step) => ({ form_data: step }))
   }

@@ -20,9 +20,9 @@ export interface QuickSetupStageActionRequest {
 }
 
 /**
- * Save the quick setup
+ * Execute action on final stage
  */
-export interface QuickSetupFinalSaveRequest {
+export interface QuickSetupFinalActionRequest {
   button_id: string
   stages: QuickSetupStageRequest[]
 }

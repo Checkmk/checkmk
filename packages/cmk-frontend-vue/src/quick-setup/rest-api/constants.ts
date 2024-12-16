@@ -18,7 +18,7 @@ export const FETCH_QUICK_SETUP_STAGE_STRUCTURE_URL = `${API_ROOT}/objects/quick_
 export const VALIDATE_AND_RECAP_STAGE_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/actions/run-stage-action/invoke`
 
 /** @constant {string}  SAVE_QUICK_SETUP_URL - Save the quick setup */
-export const SAVE_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/actions/save/invoke`
+export const SAVE_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/actions/run-action/invoke`
 
 /** @constant {string}  EDIT_QUICK_SETUP_URL - Edit the quick setup */
 export const EDIT_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/actions/edit/invoke`

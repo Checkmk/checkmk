@@ -10,7 +10,7 @@ from collections.abc import Generator, Sequence
 from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-from ._cache import Cache
+from ._cache import Cache, CacheError
 from ._config import Schedule
 from ._log import LOGGER
 
@@ -56,20 +56,26 @@ class _AutomationWatcherHandler(PatternMatchingEventHandler):
         super().__init__(patterns=patterns_, ignore_directories=ignore_directories)
 
     def on_moved(self, event: FileSystemEvent) -> None:
-        self._cache.store_last_detected_change(time.time())
+        self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_created(self, event: FileSystemEvent) -> None:
-        self._cache.store_last_detected_change(time.time())
+        self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_modified(self, event: FileSystemEvent) -> None:
-        self._cache.store_last_detected_change(time.time())
+        self._store_last_detected_change(time.time())
         self._log_handled_event(event)
 
     def on_deleted(self, event: FileSystemEvent) -> None:
-        self._cache.store_last_detected_change(time.time())
+        self._store_last_detected_change(time.time())
         self._log_handled_event(event)
+
+    def _store_last_detected_change(self, time: float) -> None:
+        try:
+            self._cache.store_last_detected_change(time)
+        except CacheError as err:
+            LOGGER.error("[watcher] Cache failure", exc_info=err)
 
     @classmethod
     def _log_handled_event(cls, event: FileSystemEvent) -> None:

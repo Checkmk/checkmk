@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from threading import Event
 from typing import Callable, Final
 
-from ._cache import Cache
+from ._cache import Cache, CacheError
 from ._log import LOGGER
 
 RELOADER_SLEEP_INTERVAL: Final = 5
@@ -39,12 +39,20 @@ def _run(
     reload_callback: Callable[[], None],
     shutdown_flag: Event,
 ) -> None:
-    last_change = cache.last_detected_change
+    last_change = _retrieve_last_change(cache)
     while not shutdown_flag.wait(timeout=RELOADER_SLEEP_INTERVAL):
-        if (cached_last_change := cache.last_detected_change) != last_change:
+        if (cached_last_change := _retrieve_last_change(cache)) != last_change:
             LOGGER.info(
                 "[reloader] Change detected %.2f seconds ago, reloading",
                 time.time() - cached_last_change,
             )
             reload_callback()
             last_change = cached_last_change
+
+
+def _retrieve_last_change(cache: Cache) -> float:
+    try:
+        return cache.last_detected_change
+    except CacheError as err:
+        LOGGER.error("[reloader] Cache failure", exc_info=err)
+        return 0

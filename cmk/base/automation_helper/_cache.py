@@ -7,6 +7,7 @@ import dataclasses
 from typing import Final, Self
 
 import redis
+from redis.exceptions import ConnectionError
 
 LAST_DETECTED_CHANGE_TOPIC: Final = "last_change_detected"
 
@@ -20,11 +21,20 @@ class Cache:
         return cls(_client=client)
 
     def store_last_detected_change(self, time: float) -> None:
-        self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
+        try:
+            self._client.set(LAST_DETECTED_CHANGE_TOPIC, time)
+        except ConnectionError as err:
+            raise CacheError("Failed to store timestamp of detected change.") from err
 
     @property
     def last_detected_change(self) -> float:
-        return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
+        try:
+            return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
+        except ConnectionError as err:
+            raise CacheError("Failed to retrieve timestamp of last detected change.") from err
 
     def reload_required(self, last_reload: float) -> bool:
         return last_reload < self.last_detected_change
+
+
+class CacheError(Exception): ...

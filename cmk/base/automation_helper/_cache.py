@@ -26,15 +26,14 @@ class Cache:
         except ConnectionError as err:
             raise CacheError("Failed to store timestamp of detected change.") from err
 
-    @property
-    def last_detected_change(self) -> float:
+    def get_last_detected_change(self) -> float:
         try:
             return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
         except ConnectionError as err:
             raise CacheError("Failed to retrieve timestamp of last detected change.") from err
 
     def reload_required(self, last_reload: float) -> bool:
-        return last_reload < self.last_detected_change
+        return last_reload < self.get_last_detected_change()
 
 
 class CacheError(Exception): ...

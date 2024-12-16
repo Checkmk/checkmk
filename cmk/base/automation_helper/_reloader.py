@@ -52,7 +52,7 @@ def _run(
 
 def _retrieve_last_change(cache: Cache) -> float:
     try:
-        return cache.last_detected_change
+        return cache.get_last_detected_change()
     except CacheError as err:
         LOGGER.error("[reloader] Cache failure", exc_info=err)
         return 0

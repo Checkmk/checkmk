@@ -3754,7 +3754,7 @@ def ajax_popup_host_action_menu() -> None:
     # Detect network parents
     if request.get_str_input("show_parentscan_link"):
         html.open_a(
-            href="",
+            href="javascript:void(0)",
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
             % json.dumps([form_name, "_parentscan"]),
         )
@@ -3771,7 +3771,7 @@ def ajax_popup_host_action_menu() -> None:
             warning=True,
         )
         html.open_a(
-            href="",
+            href="javascript:void(0)",
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
             % json.dumps(
                 [
@@ -3793,7 +3793,7 @@ def ajax_popup_host_action_menu() -> None:
             suffix=host.name(),
         )
         html.open_a(
-            href="",
+            href="javascript:void(0)",
             onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s); cmk.popup_menu.close_popup()"
             % json.dumps(
                 [

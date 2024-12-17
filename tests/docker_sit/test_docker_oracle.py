@@ -242,6 +242,21 @@ class OracleDatabase:
                 self.container, self.ORAENV / name, self.ROOT
             ), "Failed to copy environment files!"
 
+        logger.info("Setup TNS listener")
+        listener_ora_text = (
+            "SID_LIST_LISTENER=(SID_LIST=(SID_DESC=(GLOBAL_DBNAME=FREE)(SID_NAME=FREE)))"
+        )
+        listener_ora = self.tns_admin_dir / "listener.ora"
+        self.container.exec_run(
+            f"""bash -c 'echo -e "{listener_ora_text}" >> "{listener_ora.as_posix()}"'"""
+        )
+
+        logger.info("Restart TNS listener")
+        rc, output = self.container.exec_run("lsnrctl stop", user="oracle")
+        assert rc == 0, f"Failed to stop listener: {output.decode('UTF-8')}"
+        rc, output = self.container.exec_run("lsnrctl start", user="oracle")
+        assert rc == 0, f"Failed to start listener: {output.decode('UTF-8')}"
+
         logger.info("Forcing listener registration...")
         rc, output = self.container.exec_run(
             f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/register_listener.sql"'""",

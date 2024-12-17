@@ -8,7 +8,6 @@
 This script evaluates a YAML file containing dynamic information about Jenkins pipeline stages
 and environmental conditions (e.g. changed files since last commit) and generates a static list
 of stages (i.e. without any variables left to evaluate).
-
 This list can either be executed directly or returned (JSON encoded on stdout or in file) in order
 to be read and handled later by a Jenkins pipelined job.
 """

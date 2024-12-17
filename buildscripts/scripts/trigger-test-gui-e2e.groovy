@@ -20,7 +20,7 @@ import groovy.json.JsonSlurperClassic
 /// ---
 ///
 def arguments_from_comments() {
-    def comment_msg = new String(Base64.getDecoder().decode(env.GERRIT_EVENT_COMMENT_TEXT));
+    def comment_msg = new String(Base64.getDecoder().decode(env.GERRIT_EVENT_COMMENT_TEXT ?: ""));
     currentBuild.description += "<br>Gerrit comment:<br>---<br><b>${comment_msg}</b><br>---";
 
     def matcher = comment_msg =~ /(?s)\n---\n(.*)\n---/;

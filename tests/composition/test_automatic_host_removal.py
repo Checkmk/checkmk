@@ -71,10 +71,6 @@ def test_automatic_host_removal(
             interval=20,
         )
 
-    except Exception as exc:
-        if not central_site.file_exists("var/check_mk/background_jobs/host_removal"):
-            raise RuntimeError("Host removal background job was not even started") from exc
-        raise
     finally:
         central_site.openapi.rules.delete(rule_id=rule_id)
         if unresolvable_host_central in central_site.openapi.hosts.get_all_names():

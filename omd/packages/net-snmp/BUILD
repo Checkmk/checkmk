@@ -1,7 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
-load("//bazel/rules:make_deployable.bzl", "make_deployable_file")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_dir", "make_deployable_file")
 
 bin_paths = [
     "encode_keychange",
@@ -33,6 +33,13 @@ bin_paths = [
     rpath = "\\$ORIGIN/../lib",
 ) for filename in bin_paths]
 
+make_deployable_dir(
+    name = "net-snmp_deployable_lib",
+    src = "@net-snmp//:gen_dir",
+    input_dir = "lib",
+    rpath = "\\$ORIGIN/../lib",
+)
+
 pkg_files(
     name = "net-snmp_bin_pkg",
     srcs = ["net-snmp_deployable_%s" % f for f in bin_paths],
@@ -45,7 +52,7 @@ pkg_files(
 exclude_from_filegroup(
     name = "net-snmp_rest",
     src = "@net-snmp//:gen_dir",
-    excludes = bin_paths,
+    excludes = bin_paths + ["lib/*"],
 )
 
 pkg_files(
@@ -54,6 +61,13 @@ pkg_files(
         ":net-snmp_rest",
     ],
     strip_prefix = "rest",
+)
+
+pkg_files(
+    name = "net-snmp_deployable_lib_pkg",
+    srcs = [
+        ":net-snmp_deployable_lib",
+    ],
 )
 
 pkg_mkdirs(
@@ -65,6 +79,7 @@ pkg_filegroup(
     name = "net-snmp_files_pkg",
     srcs = [
         ":net-snmp_bin_pkg",
+        ":net-snmp_deployable_lib_pkg",
         ":net-snmp_rest_pkg",
         ":net-snmp_skel",
     ],

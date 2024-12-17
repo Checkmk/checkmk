@@ -1808,6 +1808,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
+        global_settings_update: dict[str, object] | None = None,
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -1818,6 +1819,7 @@ class SiteFactory:
             save_results=save_results,
             report_crashes=report_crashes,
             tracing_config=tracing_config,
+            global_settings_update=global_settings_update,
         )
 
     def get_test_site(
@@ -1830,6 +1832,7 @@ class SiteFactory:
         save_results: bool = True,
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
+        global_settings_update: dict[str, object] | None = None,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1852,6 +1855,8 @@ class SiteFactory:
 
         try:
             self.setup_customers(site, ["customer1", "customer2"])
+            if global_settings_update:
+                site.update_global_settings(global_settings_update)
             self.initialize_site(
                 site,
                 init_livestatus=init_livestatus,

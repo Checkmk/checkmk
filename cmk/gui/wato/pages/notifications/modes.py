@@ -1121,6 +1121,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         super().__init__()
         options = user.load_file("analyze_notification_display_options", {})
         self._show_bulks = options.get("show_bulks", False)
+        self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
     def name(cls) -> str:
@@ -1259,10 +1260,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         title=(
                             _("Hide user rules") if self._show_user_rules else _("Show user rules")
                         ),
-                        icon_name={
-                            "icon": "checkbox",
-                            "emblem": "disable" if self._show_user_rules else "enable",
-                        },
+                        icon_name="toggle_on" if self._show_user_rules else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -1414,7 +1412,12 @@ class ModeAnalyzeNotifications(ModeNotifications):
                 self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_analyze_notification_display_options()
 
-        elif request.has_var("_replay"):
+        if request.has_var("_show_user"):
+            if transactions.check_transaction():
+                self._show_user_rules = bool(request.var("_show_user"))
+                self._save_analyze_notification_display_options()
+
+        if request.has_var("_replay"):
             if transactions.check_transaction():
                 replay_nr = request.get_integer_input_mandatory("_replay")
                 notification_replay(replay_nr)
@@ -1428,6 +1431,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             "analyze_notification_display_options",
             {
                 "show_bulks": self._show_bulks,
+                "show_user_rules": self._show_user_rules,
             },
         )
 
@@ -1435,8 +1439,8 @@ class ModeAnalyzeNotifications(ModeNotifications):
 class ModeTestNotifications(ModeNotifications):
     def __init__(self) -> None:
         super().__init__()
-        options = user.load_file("analyze_notification_display_options", {})
-        self._show_bulks = options.get("show_bulks", False)
+        options = user.load_file("test_notification_display_options", {})
+        self._show_user_rules = options.get("show_user_rules", False)
 
     @classmethod
     def name(cls) -> str:
@@ -1549,6 +1553,11 @@ class ModeTestNotifications(ModeNotifications):
 
     def action(self) -> ActionResult:
         check_csrf_token()
+
+        if request.has_var("_show_user"):
+            if transactions.check_transaction():
+                self._show_user_rules = bool(request.var("_show_user"))
+                self._save_test_notification_display_options()
 
         if self._test_notification_ongoing():
             if transactions.check_transaction():
@@ -2160,6 +2169,14 @@ class ModeTestNotifications(ModeNotifications):
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
             )
+
+    def _save_test_notification_display_options(self) -> None:
+        user.save_file(
+            "test_notification_display_options",
+            {
+                "show_user_rules": self._show_user_rules,
+            },
+        )
 
 
 def _validate_general_opts(value: dict, varprefix: str) -> None:

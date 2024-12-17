@@ -9,7 +9,7 @@ genrule(
     name = "_prune_requirements_in",
     srcs = ["//cmk:requirements.txt"],
     outs = ["requirements_pruned.txt"],
-    cmd = "cat $< | grep -v -e ^rrdtool== > $@",
+    cmd = "cat $< | grep -v -e ^rrdtool > $@",
 )
 
 genrule(

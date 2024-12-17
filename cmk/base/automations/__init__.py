@@ -8,7 +8,7 @@ import enum
 import os
 import signal
 import sys
-from contextlib import redirect_stdout, suppress
+from contextlib import nullcontext, redirect_stdout, suppress
 from types import FrameType
 from typing import NoReturn
 
@@ -19,6 +19,7 @@ from cmk.ccc.exceptions import MKException, MKTimeout
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
+from cmk.utils.timeout import Timeout
 
 from cmk.automations.results import ABCAutomationResult
 
@@ -58,8 +59,13 @@ class Automations:
     def execute(
         self, cmd: str, args: list[str], *, reload_config: bool = True
     ) -> AutomationExitCode:
-        self._handle_generic_arguments(args)
+        remaining_args, timeout = self._extract_timeout_from_args(args)
+        with nullcontext() if timeout is None else Timeout(timeout, message="Action timed out."):
+            return self._execute(cmd, remaining_args, reload_config=reload_config)
 
+    def _execute(
+        self, cmd: str, args: list[str], *, reload_config: bool = True
+    ) -> AutomationExitCode:
         try:
             try:
                 automation = self._automations[cmd]
@@ -110,18 +116,12 @@ class Automations:
 
         return AutomationExitCode.SUCCESS
 
-    def _handle_generic_arguments(self, args: list[str]) -> None:
-        """Handle generic arguments (currently only the optional timeout argument)"""
-        if len(args) > 1 and args[0] == "--timeout":
-            args.pop(0)
-            timeout = int(args.pop(0))
-
-            if timeout:
-                signal.signal(signal.SIGALRM, self._raise_automation_timeout)
-                signal.alarm(timeout)
-
-    def _raise_automation_timeout(self, _signum: int, _stackframe: FrameType | None) -> NoReturn:
-        raise MKTimeout("Action timed out.")
+    def _extract_timeout_from_args(self, args: list[str]) -> tuple[list[str], int | None]:
+        match args:
+            case ["--timeout", timeout, *remaining_args]:
+                return remaining_args, int(timeout)
+            case _:
+                return args, None
 
 
 class Automation(abc.ABC):

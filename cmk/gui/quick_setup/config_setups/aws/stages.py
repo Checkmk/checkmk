@@ -11,6 +11,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import request
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -45,7 +46,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -90,8 +91,11 @@ def prepare_aws() -> QuickSetupStage:
                 )
                 % HTMLWriter.render_a(
                     _("advanced configuration"),
-                    href=doc_reference_url(DocReference.AWS),
-                    target="_blank",
+                    href=makeuri_contextless(
+                        request,
+                        [("mode", "edit_ruleset"), ("varname", "special_agents:aws")],
+                        "wato.py",
+                    ),
                 )
             ),
             widgets.unique_id_formspec_wrapper(

@@ -224,7 +224,7 @@ class MegaMenuRenderer:
         html.open_h2()
         html.open_a(
             class_="show_all_topics",
-            href="",
+            href=None,
             onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id,
         )
         html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
@@ -239,7 +239,7 @@ class MegaMenuRenderer:
         for item in sorted(topic.items, key=lambda g: g.sort_index):
             self._show_item(item)
         html.open_li(class_="show_all_items")
-        html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
+        html.open_a(href=None, onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
         if user.get_attribute("icons_per_item"):
             html.icon("trans")
         html.write_text_permissive(_("Show all"))

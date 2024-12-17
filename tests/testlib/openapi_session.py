@@ -119,6 +119,7 @@ class CMKOpenApiSession(requests.Session):
         self.rulesets = RulesetsAPI(self)
         self.broker_connections = BrokerConnectionsAPI(self)
         self.sites = SitesAPI(self)
+        self.background_jobs = BackgroundJobsAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -734,6 +735,11 @@ class HostsAPI(BaseAPI):
                 self.get(hostname_new) is not None
             ), 'Failed to rename host "{hostname_old}" to "{hostname_new}"!'
 
+        response = self.session.background_jobs.show("rename-hosts")
+        assert (
+            response["extensions"]["status"]["state"] == "finished"
+        ), f"Rename job failed: {response}"
+
 
 class HostGroupsAPI(BaseAPI):
     def create(self, name: str, alias: str) -> requests.Response:
@@ -1108,3 +1114,19 @@ class SitesAPI(BaseAPI):
 
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class BackgroundJobsAPI(BaseAPI):
+    def show(self, job_id: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"/objects/background_job/{job_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: dict[str, Any] = response.json()
+        return value

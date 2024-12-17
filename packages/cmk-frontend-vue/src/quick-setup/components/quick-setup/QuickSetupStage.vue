@@ -29,8 +29,8 @@ const { ErrorBoundary } = useErrorBoundary()
   <li
     class="qs-stage"
     :class="{
-      'qs-stage-active': isSelectedStage && props.mode !== 'overview',
-      'qs-stage-complete': isCompleted && props.mode !== 'overview'
+      'qs-stage--active': isSelectedStage && props.mode !== 'overview',
+      'qs-stage--complete': isCompleted && props.mode !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
   >
@@ -91,12 +91,12 @@ const { ErrorBoundary } = useErrorBoundary()
     background-color: var(--qs-stage-line-color);
   }
 
-  &.qs-stage-active:before,
-  &.qs-stage-complete:before {
+  &.qs-stage--active:before,
+  &.qs-stage--complete:before {
     background-color: var(--success-dimmed);
   }
 
-  &.qs-stage-active:after {
+  &.qs-stage--active:after {
     background: linear-gradient(
       to bottom,
       var(--success-dimmed) 50px,
@@ -104,7 +104,7 @@ const { ErrorBoundary } = useErrorBoundary()
     );
   }
 
-  &.qs-stage-complete {
+  &.qs-stage--complete {
     pointer-events: none;
 
     &:before {

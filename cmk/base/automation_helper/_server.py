@@ -43,6 +43,8 @@ class ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc
             "pidfile": str(cfg.pid_file),
             "accesslog": str(cfg.access_log),
             "errorlog": str(cfg.error_log),
+            # clients can dynamically set a timeout per request
+            "timeout": 0,
         }
         super().__init__()
 

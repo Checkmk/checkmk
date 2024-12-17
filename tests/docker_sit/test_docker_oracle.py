@@ -334,14 +334,31 @@ class OracleDatabase:
         )
         self.checkmk.openapi.changes.activate_and_wait_for_completion()
 
-        logger.info("Wait until host %s has services...", self.name)
-        # TODO: refactor tests.testlib.agent.wait_until_host_has_services() to work w/o Site
-        wait_until(
-            lambda: len(self.checkmk.openapi.services.get_host_services(self.name, pending=False))
-            > 5,
-            timeout=120,
-            interval=20,
+        min_service_count = 10
+        logger.info(
+            "Wait until host %s has at least %s non-pending ORACLE services...",
+            self.name,
+            min_service_count,
         )
+
+        def _host_has_prefixed_services(host_name: str, prefix: str, min_count: int) -> bool:
+            services = self.checkmk.openapi.services.get_host_services(
+                host_name,
+                columns=["description", "has_been_checked"],
+            )
+            prefixed_services = [
+                _ for _ in services if _["extensions"]["description"].upper().startswith(prefix)
+            ]
+            if len(prefixed_services) < min_count:
+                return False
+            return all(True for _ in prefixed_services if _["extensions"]["has_been_checked"])
+
+        wait_until(
+            lambda: _host_has_prefixed_services(self.name, self.SERVICE_PREFIX, min_service_count),
+            timeout=300,
+            interval=60,
+        )
+        self.checkmk.openapi.changes.activate_and_wait_for_completion()
 
         self._create_oracle_wallet()
 

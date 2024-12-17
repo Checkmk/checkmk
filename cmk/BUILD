@@ -5,16 +5,11 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-FILTER_OUT = [
-    # Provided elsewhere
-    "rrdtool",
-]
-
 genrule(
     name = "_prune_requirements_in",
     srcs = ["//cmk:requirements.txt"],
     outs = ["requirements_pruned.txt"],
-    cmd = "cat $< | grep -v " + " ".join([("-e ^%s==" % pkg) for pkg in FILTER_OUT]) + " > $@",
+    cmd = "cat $< | grep -v -e ^rrdtool== > $@",
 )
 
 genrule(

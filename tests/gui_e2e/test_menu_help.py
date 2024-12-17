@@ -22,6 +22,11 @@ from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
         pytest.param("help_rest_api_intro", "docs.checkmk.com", id="rest_api_intro"),
         pytest.param("help_rest_api_docs", "/check_mk/api/doc/", id="rest_api_docs"),
         pytest.param("help_rest_api_gui", "/check_mk/api/.*/ui/", id="rest_api_gui"),
+        pytest.param(
+            "help_suggest_product_improvement",
+            "ideas.checkmk.com",
+            id="suggest_product_improvement",
+        ),
     ],
 )
 def test_help_menu(

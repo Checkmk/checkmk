@@ -313,6 +313,10 @@ class MainMenu(LocatorHelper):
         return self.help_menu("Info")
 
     @property
+    def help_suggest_product_improvement(self) -> Locator:
+        return self.help_menu("Suggest a product improvement")
+
+    @property
     def help_werks(self) -> Locator:
         return self.help_menu("Change log (Werks)")
 

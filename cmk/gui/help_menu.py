@@ -158,6 +158,21 @@ def _help_menu_topics(
                 items=developer_items(),
             ),
             TopicMenuTopic(
+                name="ideas_portal",
+                title=_("Ideas Portal"),
+                icon="lightbulb",
+                items=[
+                    TopicMenuItem(
+                        name="suggest_product_improvement",
+                        title=_("Suggest a product improvement"),
+                        url="https://ideas.checkmk.com/ ",
+                        target="_blank",
+                        sort_index=10,
+                        icon="lightbulb_idea",
+                    ),
+                ],
+            ),
+            TopicMenuTopic(
                 name="about_checkmk",
                 title=_("About Checkmk"),
                 icon="about_checkmk",

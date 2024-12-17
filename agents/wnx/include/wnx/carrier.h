@@ -197,8 +197,8 @@ public:
         return false;
     }
 
-    template <typename T>
-    static bool FireCommand(const std::wstring &peer_name, const T &port_name,
+    template <type::AnyStringView S>
+    static bool FireCommand(const std::wstring &peer_name, const S &port_name,
                             const void *data, size_t length) {
         CoreCarrier cc;
         auto port = wtools::ToUtf8(port_name);
@@ -209,8 +209,8 @@ public:
         return true;
     }
 
-    template <typename T>
-    static bool FireLog(const std::wstring &peer_name, const T &port_name,
+    template <type::AnyStringView S>
+    static bool FireLog(const std::wstring &peer_name, const S &port_name,
                         const void *data, size_t length) {
         CoreCarrier cc;
         auto port = wtools::ToUtf8(port_name);

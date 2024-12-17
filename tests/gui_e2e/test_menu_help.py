@@ -29,6 +29,11 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
             id="saas_status_page",
             marks=skip_if_not_saas_edition,
         ),
+        pytest.param(
+            "help_suggest_product_improvement",
+            "ideas.checkmk.com",
+            id="suggest_product_improvement",
+        ),
     ],
 )
 def test_help_menu(

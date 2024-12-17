@@ -24,12 +24,6 @@ class DummyAutomationEngineFailure:
         raise SystemExit()
 
 
-class DummyAutomationEngineTimeout:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
-        time.sleep(1)
-        return AutomationExitCode.SUCCESS
-
-
 EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
@@ -60,18 +54,6 @@ def test_automation_with_failure() -> None:
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SYSTEM_EXIT, "output": ""}
-
-
-def test_automation_with_timeout() -> None:
-    with get_test_client(engine=DummyAutomationEngineTimeout()) as client:
-        headers = {"keep-alive": "timeout=0"}
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD, headers=headers)
-
-    assert resp.status_code == 408
-    assert resp.json() == {
-        "exit_code": AutomationExitCode.TIMEOUT,
-        "output": "Timed out after 0 seconds",
-    }
 
 
 def test_health_check() -> None:

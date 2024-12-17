@@ -14,7 +14,7 @@ from cmk.utils.log import VERBOSE
 
 from cmk import trace
 
-from .automation_executor import AutomationExecutor, LocalAutomationResult
+from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
 
 class SubprocessExecutor(AutomationExecutor):
@@ -64,12 +64,10 @@ class SubprocessExecutor(AutomationExecutor):
 def _automation_command(
     command: str, args: Sequence[str], logger: logging.Logger, timeout: int | None
 ) -> list[str]:
-    timeout_args = ["--timeout", "%d" % timeout] if timeout else []
-
     cmd = ["check_mk"]
     if (log_level := logger.getEffectiveLevel()) <= logging.DEBUG:
         cmd.append("-vv")
     elif log_level <= VERBOSE:
         cmd.append("-v")
 
-    return [*cmd, "--automation", command, *timeout_args, *args]
+    return [*cmd, "--automation", command, *arguments_with_timeout(args, timeout)]

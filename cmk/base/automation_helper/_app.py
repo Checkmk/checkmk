@@ -3,17 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import asyncio
 import io
-import re
 import sys
 import time
-from collections.abc import AsyncGenerator, Callable, Coroutine, Iterator, Sequence
+from collections.abc import AsyncGenerator, Callable, Iterator, Sequence
 from contextlib import asynccontextmanager, contextmanager, redirect_stderr, redirect_stdout
-from typing import Final, Protocol
+from typing import Protocol
 
-from fastapi import FastAPI, Request, Response, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel
 
@@ -26,8 +23,6 @@ from cmk.base.automations import AutomationExitCode
 from ._cache import Cache
 from ._log import LOGGER, temporary_log_level
 from ._tracer import TRACER
-
-APPLICATION_MAX_REQUEST_TIMEOUT: Final = 60
 
 
 class AutomationPayload(BaseModel, frozen=True):
@@ -84,23 +79,6 @@ def get_application(
     app = FastAPI(lifespan=lifespan, openapi_url=None, docs_url=None, redoc_url=None)
 
     FastAPIInstrumentor.instrument_app(app)
-
-    @app.middleware("http")
-    async def timeout_middleware(
-        request: Request, call_next: Callable[[Request], Coroutine[None, None, Response]]
-    ) -> Response:
-        if timeout_header := re.match(r"timeout=(\d+)", request.headers.get("keep-alive", "")):
-            timeout = min(int(timeout_header.group(1)), APPLICATION_MAX_REQUEST_TIMEOUT)
-        else:
-            timeout = APPLICATION_MAX_REQUEST_TIMEOUT
-        try:
-            return await asyncio.wait_for(call_next(request), timeout=float(timeout))
-        except TimeoutError:
-            resp = AutomationResponse(
-                exit_code=AutomationExitCode.TIMEOUT,
-                output=f"Timed out after {timeout} seconds",
-            )
-            return JSONResponse(resp.model_dump(), status_code=status.HTTP_408_REQUEST_TIMEOUT)
 
     @app.post("/automation")
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:

@@ -77,8 +77,8 @@ class BaseNotificationPage(CmkPage):
         return self.main_area.locator().get_by_role("button", name="Service filters")
 
     @property
-    def _assignee_filters_button(self):
-        return self.main_area.locator().get_by_role("button", name="Assignee filters")
+    def _exclude_services_checkbox(self):
+        return self.main_area.locator().get_by_role("checkbox", name="Exclude services")
 
     @property
     def services_checkbox(self) -> Locator:
@@ -161,7 +161,7 @@ class BaseNotificationPage(CmkPage):
         if self.services_checkbox.is_hidden():
             self._service_filters_button.click()
         # The scrollbar interrupts the interaction with services checkbox -> scroll into view
-        self._assignee_filters_button.scroll_into_view_if_needed()
+        self._exclude_services_checkbox.scroll_into_view_if_needed()
 
     def apply_services_filter(self, service_name: str) -> None:
         self.expand_service_filters()

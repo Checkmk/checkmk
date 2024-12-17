@@ -100,7 +100,11 @@ def fixture_context_launch_kwargs(pytestconfig: pytest.Config) -> dict[str, t.An
 
     .. _BrowserContext: https://playwright.dev/python/docs/api/class-browsercontext
     """
-    kwargs = {"locale": pytestconfig.getoption("--locale")}
+    kwargs = {
+        "locale": pytestconfig.getoption("--locale"),
+        "user_agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:133.0) Gecko/20100101 "
+        "Firefox/133.0",  # Test test_help_menu.suggest_product_improvement needs it
+    }
     if pytestconfig.getoption("--video"):
         kwargs["record_video_dir"] = str(pytestconfig.getoption("--output"))
         kwargs["record_video_size"] = {"width": 1280, "height": 960}

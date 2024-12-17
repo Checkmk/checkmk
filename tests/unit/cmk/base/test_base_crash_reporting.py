@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.errorhandling import CheckCrashReport
+from cmk.base.errorhandling import CheckCrashReport, CheckDetails
 
 
 def _check_generic_crash_info(crash):
@@ -50,15 +50,21 @@ def test_check_crash_report_from_exception(tmp_path: Path) -> None:
                 "python_version": "",
                 "python_paths": [],
             },
-            details={
-                "check_output": "Output",
-                "host": hostname,
-                "is_cluster": False,
-                "description": "Uptime",
-                "check_type": "uptime",
-                "inline_snmp": False,
-                "enforced_service": False,
-            },
+            details=CheckDetails(
+                **{
+                    "item": "foo",
+                    "params": {},
+                    "check_output": "Output",
+                    "host": hostname,
+                    "is_cluster": False,
+                    "description": "Uptime",
+                    "check_type": "uptime",
+                    "manual_check": False,
+                    "uses_snmp": False,
+                    "inline_snmp": False,
+                    "enforced_service": False,
+                }
+            ),
             type_specific_attributes={},
         )
 

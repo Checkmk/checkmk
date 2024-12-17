@@ -21,8 +21,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, Self
+from typing import Final, Literal, NamedTuple, Self
 
+from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.site import get_omd_config
 
 
@@ -703,7 +704,7 @@ def _check_minimum_patch_release(
 # and diagnostics.
 
 
-def get_general_version_infos(omd_root: Path) -> dict[str, Any]:
+def get_general_version_infos(omd_root: Path) -> VersionInfo:
     return {
         "time": time.time(),
         "os": _get_os_info(),

@@ -3,12 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, NotRequired, Self, TypedDict
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
+from cmk.ccc.crash_reporting import (
+    ABCCrashReport,
+    CrashReportRegistry,
+    CrashReportStore,
+    VersionInfo,
+)
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
@@ -29,7 +33,29 @@ def register(crash_report_registry: CrashReportRegistry) -> None:
     crash_report_registry.register(GUICrashReport)
 
 
-class GUICrashReport(ABCCrashReport):
+class DashletDetails(TypedDict):
+    dashlet_id: NotRequired[int]
+    dashlet_type: NotRequired[str]
+    dashlet_spec: NotRequired[dict[str, Any]]
+
+
+class RequestDetails(TypedDict):
+    page: str
+    vars: dict[str, str]
+    username: str | None
+    user_agent: str
+    referer: str | None
+    is_mobile: bool
+    is_ssl_request: bool
+    language: str
+    request_method: str
+
+
+class GUIDetails(RequestDetails, DashletDetails):
+    pass
+
+
+class GUICrashReport(ABCCrashReport[GUIDetails]):
     @classmethod
     def type(cls):
         return "gui"
@@ -38,34 +64,48 @@ class GUICrashReport(ABCCrashReport):
     def from_exception(
         cls,
         crashdir: Path,
-        version_info: dict[str, object],
-        details: Mapping[str, Any] | None = None,
+        version_info: VersionInfo,
+        details: GUIDetails | None = None,
         type_specific_attributes: dict[str, Any] | None = None,
     ) -> Self:
         try:
             # Access any attribute to trigger proxy object lookup
             _x = request.meta
-            request_details = {
-                "page": requested_file_name(request) + ".py",
-                "vars": {
+            request_details = RequestDetails(
+                page=requested_file_name(request) + ".py",
+                vars={
                     key: "***" if value in ["password", "_password"] else value
                     for key, value in request.itervars()
                 },
-                "username": user.id,
-                "user_agent": request.user_agent.string,
-                "referer": request.referer,
-                "is_mobile": is_mobile(request, response),
-                "is_ssl_request": request.is_ssl_request,
-                "language": get_current_language(),
-                "request_method": request.request_method,
-            }
+                username=user.id,
+                user_agent=request.user_agent.string,
+                referer=request.referer,
+                is_mobile=is_mobile(request, response),
+                is_ssl_request=request.is_ssl_request,
+                language=get_current_language(),
+                request_method=request.request_method,
+            )
         except (RuntimeError, AttributeError):
-            request_details = {}
+            # TODO: for the moment we set the request details to unknown, but we should probably
+            #  introduce a new crash report type which does not require request details
+            request_details = RequestDetails(
+                page="unknown",
+                vars={},
+                username=None,
+                user_agent="unknown",
+                referer="unknown",
+                is_mobile=False,
+                is_ssl_request=False,
+                language="unknown",
+                request_method="unknown",
+            )
 
         return super().from_exception(
             crashdir,
             version_info,
-            details={**request_details, **(details or {})},
+            details=GUIDetails(**details, **request_details)
+            if details
+            else GUIDetails(**request_details),  # type: ignore[typeddict-item]
             type_specific_attributes=type_specific_attributes,
         )
 
@@ -81,7 +121,7 @@ class GUICrashReport(ABCCrashReport):
 
 
 def handle_exception_as_gui_crash_report(
-    details: dict | None = None,
+    details: GUIDetails | None = None,
     plain_error: bool = False,
     fail_silently: bool = False,
     show_crash_link: bool | None = None,
@@ -93,7 +133,7 @@ def handle_exception_as_gui_crash_report(
 
 
 def create_gui_crash_report(
-    details: dict | None = None,
+    details: GUIDetails | None = None,
 ) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
         cmk.utils.paths.crash_dir,

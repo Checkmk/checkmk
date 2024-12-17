@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from traceback import FrameSummary
 
 
-def local_files_involved_in_crash(exc_traceback: Sequence[tuple[str, int, str, str]]) -> list[str]:
+def local_files_involved_in_crash(exc_traceback: Sequence[FrameSummary]) -> list[str]:
     return [filepath for filepath, _lineno, _func, _line in exc_traceback if "/local/" in filepath]

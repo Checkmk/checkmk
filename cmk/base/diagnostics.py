@@ -502,10 +502,18 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         version_infos = cmk_version.get_general_version_infos(omd_root)
-        version_infos["arch"] = platform.machine()
-        time_obj = datetime.fromtimestamp(version_infos.get("time", 0))
-        version_infos["time_human_readable"] = time_obj.isoformat(sep=" ")
-        return version_infos
+        time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
+        return {
+            "arch": platform.machine(),
+            "time_human_readable": time_obj.isoformat(sep=" "),
+            "time": version_infos["time"],
+            "os": version_infos["os"],
+            "version": version_infos["version"],
+            "edition": version_infos["edition"],
+            "core": version_infos["core"],
+            "python_version": version_infos["python_version"],
+            "python_paths": list(version_infos["python_paths"]),
+        }
 
 
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):

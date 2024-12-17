@@ -18,6 +18,7 @@ from setproctitle import setproctitle
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting, store
+from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
@@ -41,7 +42,7 @@ def _pid_file(omd_root: Path) -> Path:
     return omd_root / "tmp" / "run" / "cmk-ui-job-scheduler.pid"
 
 
-class JobSchedulerCrashReport(crash_reporting.ABCCrashReport):
+class JobSchedulerCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
     @classmethod
     def type(cls) -> str:
         return "ui-job-scheduler"

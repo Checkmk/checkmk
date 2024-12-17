@@ -8,6 +8,7 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting
+from cmk.ccc.crash_reporting import VersionInfo
 
 import cmk.utils.paths
 
@@ -15,7 +16,7 @@ CrashReportStore = crash_reporting.CrashReportStore
 
 
 @crash_reporting.crash_report_registry.register
-class AgentCrashReport(crash_reporting.ABCCrashReport):
+class AgentCrashReport(crash_reporting.ABCCrashReport[VersionInfo]):
     @classmethod
     def type(cls) -> Literal["agent"]:
         return "agent"

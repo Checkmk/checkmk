@@ -28,7 +28,13 @@ if not os.environ.get("OMD_SITE"):
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
+from cmk.ccc.crash_reporting import (
+    ABCCrashReport,
+    BaseDetails,
+    crash_report_registry,
+    CrashReportStore,
+    VersionInfo,
+)
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
 
@@ -74,7 +80,7 @@ if trace_context := trace.extract_context_from_environment(dict(os.environ)):
 
 # We probably don't really need to register that here, do we?
 @crash_report_registry.register
-class CrashReport(ABCCrashReport):
+class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
     def type(cls) -> str:
         return "base"
@@ -83,8 +89,8 @@ class CrashReport(ABCCrashReport):
     def from_exception(
         cls,
         crashdir: Path,
-        version_info: dict[str, object],
-        _details: object = None,
+        version_info: VersionInfo,
+        _details: BaseDetails | None = None,
         _type_specific_attributes: object = None,
     ) -> Self:
         return super().from_exception(

@@ -2,12 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::constants;
+use crate::version;
 use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser, Default)]
-#[command(about = "Check SQL plugin.", version = constants::VERSION)]
+#[command(about = "Check SQL plugin.", version = version::VERSION)]
 pub struct Args {
     /// Enable verbose output. Use once (-v) for logging level DEBUG and twice (-vv) for logging
     /// level TRACE.

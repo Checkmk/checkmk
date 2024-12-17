@@ -1,0 +1,14 @@
+Title: Service grouping long loading or timeout
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1734440847
+Edition: cre
+Level: 1
+Version: 2.2.0p40
+
+When configuring the global setting "Grouping of services in table views"
+with specific grouping expressions (for example <code>(?!.<em>(CPU)).</em></code>) this could cause
+long loading times or even timeouts of view.
+
+This is now fixed and the grouping works as expected.

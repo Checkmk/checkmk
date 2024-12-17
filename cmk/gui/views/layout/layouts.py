@@ -403,10 +403,14 @@ def try_to_match_group(row: Row) -> GroupSpec | None:
             group_spec["pattern"], row["service_description"]
         ):
             if re.findall(r"(\([^)]*\))", group_spec["pattern"]):
-                group_spec["title"] = re.sub(
-                    group_spec["pattern"],
-                    escape_regex_chars(group_spec["title"]),
-                    row["service_description"],
+                return GroupSpec(
+                    title=re.sub(
+                        group_spec["pattern"],
+                        escape_regex_chars(group_spec["title"]),
+                        row["service_description"],
+                    ),
+                    pattern=group_spec["pattern"],
+                    min_items=group_spec["min_items"],
                 )
             return group_spec
 

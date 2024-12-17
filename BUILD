@@ -105,6 +105,7 @@ REQUIREMENTS_CMK = [
     "//packages/cmk-mkp-tool:requirements.txt",
     "//packages/cmk-rulesets:requirements.txt",
     "//packages/cmk-server-side-calls:requirements.txt",
+    # TODO: Move python related files to the python subdir in cmk-shared-typing
     "//packages/cmk-shared-typing:requirements.txt",
     "//packages/cmk-trace:requirements.txt",
     "//packages/cmk-werks:requirements.txt",

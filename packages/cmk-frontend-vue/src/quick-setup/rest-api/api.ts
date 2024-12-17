@@ -26,27 +26,9 @@ import type {
 } from './response_types'
 import type { QuickSetupFinalActionRequest, QuickSetupStageActionRequest } from './request_types'
 import { wait } from '@/lib/utils'
-/**
- * Wait until background job is finished
- * @param id string - Background Job ID
- */
-const waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
-  const url = GET_BACKGROUND_JOB_STATUS_URL.replace('{JOB_ID}', id)
-  let isActive = true
-  do {
-    const { data } = await axios.get(url)
-    isActive = !!data.extensions.active
-
-    if (!isActive) {
-      return
-    }
-
-    await wait(BACKGROUND_JOB_CHECK_INTERVAL)
-  } while (isActive)
-}
 
 /**
- * Get all stages overview together with the first stage components
+ * Retrive all stages overview together with the first stage components
  * @param quickSetupId string
  * @param objectId string | null
  * @returns Promise<QuickSetupOverviewRestApiResponse>
@@ -66,6 +48,12 @@ export const getOverview = async (
   }
 }
 
+/**
+ * Retrieve all stages components of a quick setup
+ * @param quickSetupId string
+ * @param objectId string | null
+ * @returns Promise<QuickSetupOverviewResponse>
+ */
 export const getAllStages = async (
   quickSetupId: string,
   objectId: string | null = null
@@ -89,7 +77,7 @@ export const getAllStages = async (
  * @param quickSetupId string
  * @param buttonId string
  * @param formData StageData[]
- * @returns
+ * @returns Promise<QuickSetupCompleteResponse>
  */
 export const saveQuickSetup = async (
   quickSetupId: string,
@@ -102,27 +90,22 @@ export const saveQuickSetup = async (
     stages: formData.map((step) => ({ form_data: step }))
   }
 
-  try {
-    const { data } = await axios.post(url, payload)
-    return data
-  } catch (err) {
-    throw processError(err)
-  }
+  return await _saveQuickSetupAndFetchRedirect(url, payload, 'post')
 }
 
 /**
  * Save an existing quick setup configuration
  * @param quickSetupId string
  * @param buttonId string
- * @param objectId string
  * @param formData StageData[]
- * @returns
+ * @param objectId string
+ * @returns Promise<QuickSetupCompleteResponse>
  */
 export const editQuickSetup = async (
   quickSetupId: string,
   buttonId: string,
-  objectId: string,
-  formData: StageData[]
+  formData: StageData[],
+  objectId: string
 ): Promise<QuickSetupCompleteResponse> => {
   const url = `${EDIT_QUICK_SETUP_URL}?object_id=${objectId}`.replace(
     '{QUICK_SETUP_ID}',
@@ -133,14 +116,17 @@ export const editQuickSetup = async (
     stages: formData.map((step) => ({ form_data: step }))
   }
 
-  try {
-    const { data } = await axios.put(url, payload)
-    return data
-  } catch (err) {
-    throw processError(err)
-  }
+  return await _saveQuickSetupAndFetchRedirect(url, payload, 'put')
 }
 
+/**
+ * Execute a stage validation action and get the recap
+ * @param quickSetupId string
+ * @param actionId string
+ * @param formData StageData[]
+ * @param objectId string | null
+ * @returns Promise<QuickSetupActionResponse>
+ */
 export const validateAndRecapStage = async (
   quickSetupId: string,
   actionId: string,
@@ -159,8 +145,7 @@ export const validateAndRecapStage = async (
   }
 
   try {
-    let result = await axios.post(url, payload)
-    let data = result.data
+    let { data } = await axios.post(url, payload)
 
     /*
       If the action is executed synchronously, the response is a quick_setup domain object 
@@ -170,20 +155,22 @@ export const validateAndRecapStage = async (
       The result can be obtained after the job has finished executing.
     */
     if (data?.domainType === 'background_job') {
-      const jobId = data.id
-      await waitForBackgroundJobToFinish(jobId)
-      const jobResultUrl = FETCH_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
-      result = await axios.get(jobResultUrl)
-      data = result.data
+      data = await _getDataFromBackgroundJob(data.id)
     }
 
-    //TODO: It is possible that a 200 response carries error messages. Should be handled here
     return data
   } catch (err) {
     throw processError(err)
   }
 }
 
+/**
+ * Retrieve the structure of a stage
+ * @param quickSetupId string
+ * @param stageIndex number
+ * @param objectId string | null
+ * @returns
+ */
 export const getStageStructure = async (
   quickSetupId: string,
   stageIndex: number,
@@ -199,4 +186,56 @@ export const getStageStructure = async (
 
   const { data } = await axios.get(url)
   return data
+}
+
+/**
+ * Wait until background job is finished
+ * @param id string - Background Job ID
+ */
+const _waitForBackgroundJobToFinish = async (id: string): Promise<void> => {
+  const url = GET_BACKGROUND_JOB_STATUS_URL.replace('{JOB_ID}', id)
+  let isActive = true
+  do {
+    const { data } = await axios.get(url)
+    isActive = !!data.extensions.active
+
+    if (!isActive) {
+      return
+    }
+
+    await wait(BACKGROUND_JOB_CHECK_INTERVAL)
+  } while (isActive)
+}
+
+/**
+ * Wait for a background job to finish and return the result
+ * @param jobId string
+ * @returns Promise<unknown>
+ */
+const _getDataFromBackgroundJob = async (jobId: string): Promise<unknown> => {
+  await _waitForBackgroundJobToFinish(jobId)
+  const jobResultUrl = FETCH_BACKGROUND_JOB_RESULT_URL.replace('{JOB_ID}', jobId)
+  const result = await axios.get(jobResultUrl)
+
+  //TODO: It is possible that a 200 response carries error messages. Should be handled here
+
+  return result.data
+}
+
+const _saveQuickSetupAndFetchRedirect = async (
+  url: string,
+  payload: QuickSetupFinalActionRequest,
+  method: 'post' | 'put'
+): Promise<QuickSetupCompleteResponse> => {
+  try {
+    let { data } = await axios.request({ url, method, data: payload })
+
+    if (data?.domainType === 'background_job') {
+      data = await _getDataFromBackgroundJob(data.id)
+    }
+
+    return data
+  } catch (err) {
+    throw processError(err)
+  }
 }

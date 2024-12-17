@@ -318,8 +318,8 @@ const save = async (buttonId: string) => {
       const { redirect_url: redirectUrl } = await editQuickSetup(
         props.quick_setup_id,
         buttonId,
-        props.objectId,
-        userInput
+        userInput,
+        props.objectId
       )
       window.location.href = redirectUrl
     } else {

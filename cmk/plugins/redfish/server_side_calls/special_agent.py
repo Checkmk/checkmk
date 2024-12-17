@@ -5,7 +5,7 @@
 """server side component to create the special agent call"""
 
 from collections.abc import Iterator, Mapping
-from typing import Literal
+from typing import Iterable, Literal
 
 from pydantic import BaseModel
 
@@ -16,14 +16,13 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentConfig,
 )
 
+FetchingOptions = Mapping[str, tuple[Literal["always", "cached", "never"], float]]
+
 
 class ParamsRedfish(BaseModel):
     user: str
     password: Secret
-    fetching: Mapping[
-        str,
-        tuple[Literal["always", "cached", "never"], float],
-    ]
+    fetching: FetchingOptions | None = None
     port: int
     proto: Literal["http", "https"]
     retries: int
@@ -40,17 +39,29 @@ class ParamsRedfishPower(BaseModel):
     timeout: float
 
 
+def _fetching_args(fetching: FetchingOptions | None) -> Iterable[str]:
+    if fetching is None:
+        return ()
+
+    enabled_sections = (s for s, (mode, _) in fetching.items() if mode != "never")
+    disabled_sections = (s for s, (mode, _) in fetching.items() if mode == "never")
+    cached_sections = (
+        f"{name}-{int(interval)}" for name, (mode, interval) in fetching.items() if mode == "cached"
+    )
+
+    return (
+        "-m",
+        ",".join(enabled_sections),
+        "-n",
+        ",".join(disabled_sections),
+        "-c",
+        ",".join(cached_sections),
+    )
+
+
 def _agent_redfish_arguments(
     params: ParamsRedfish, host_config: HostConfig
 ) -> Iterator[SpecialAgentCommand]:
-    enabled_sections = (s for s, (mode, _) in params.fetching.items() if mode != "never")
-    disabled_sections = (s for s, (mode, _) in params.fetching.items() if mode == "never")
-    cached_sections = (
-        f"{name}-{int(interval)}"
-        for name, (mode, interval) in params.fetching.items()
-        if mode == "cached"
-    )
-
     yield SpecialAgentCommand(
         command_arguments=[
             "-u",
@@ -61,12 +72,7 @@ def _agent_redfish_arguments(
             str(params.port),
             "-P",
             params.proto,
-            "-m",
-            ",".join(enabled_sections),
-            "-n",
-            ",".join(disabled_sections),
-            "-c",
-            ",".join(cached_sections),
+            *_fetching_args(params.fetching),
             "--timeout",
             str(int(params.timeout)),
             "--retries",

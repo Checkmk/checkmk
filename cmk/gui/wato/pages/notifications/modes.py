@@ -1635,15 +1635,32 @@ class ModeTestNotifications(ModeNotifications):
         html.open_div(class_="message_container")
         html.h2(_("Analysis results"))
         analyse_rules, analyse_resulting_notifications = analyse
-        match_count = len(tuple(entry for entry in analyse_rules if "match" in entry))
+        match_count_all = len(tuple(entry for entry in analyse_rules if "match" in entry))
+        match_count_user = len(
+            [rule for rule in analyse_rules if rule[1].get("contact") and "match" in rule]
+        )
+        match_count_global = match_count_all - match_count_user
+
         html.write_text_permissive(
-            _("%s notification %s")
+            _("%s notification %s (%d global %s, %d user %s)")
             % (
-                match_count,
+                match_count_all,
                 ungettext(
                     "rule matches",
                     "rules are matching",
-                    match_count,
+                    match_count_all,
+                ),
+                match_count_global,
+                ungettext(
+                    "rule",
+                    "rules",
+                    match_count_global,
+                ),
+                match_count_user,
+                ungettext(
+                    "rule",
+                    "rules",
+                    match_count_user,
                 ),
             )
         )

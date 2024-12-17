@@ -17,7 +17,7 @@ py_library(
         "python/cmk/shared_typing/notifications.py",
         "python/cmk/shared_typing/vue_formspec_components.py",
     ],
-    imports = ["."],
+    imports = ["python"],
     visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("black"),

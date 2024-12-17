@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "bea8388d8b55fb59e21cb4001a9e43e1bfc86f4b6066b86b9c0492d9c59fa607",
+  "moduleFileHash": "7e0d15496861edec7b0642c47dcc03b9b2d867beb37eb3a925c119b1847d4450",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -104,9 +104,9 @@
             {
               "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
               "attributeValues": {
+                "executable": true,
                 "sha256": "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
                 "url": "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
-                "executable": true,
                 "name": "otel-collector"
               },
               "devDependency": false,

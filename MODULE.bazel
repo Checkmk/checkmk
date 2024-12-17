@@ -138,7 +138,7 @@ http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_
 
 http_file(
     name = "otel-collector",
+    executable = True,
     sha256 = "b41803c86effc3aaae74b39c372df513070ebfd4b0fefd25a91e6e34e4e0f040",
     url = "https://artifacts.lan.tribe29.com/repository/upstream-archives/otelcol",
-    executable=True,
 )

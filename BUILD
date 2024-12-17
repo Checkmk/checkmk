@@ -151,6 +151,14 @@ pip_compile(
     visibility = ["//visibility:public"],
 )
 
+test_suite(
+    name = "requirements_test",
+    tests = [
+        ":requirements_all_test",
+        ":requirements_runtime_test",
+    ],
+)
+
 write_file(
     # WHY?
     # * when creating a venv with bazel, we need to have everything sandbox-ed in bazel

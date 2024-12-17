@@ -4,11 +4,11 @@
 
 #[cfg(windows)]
 use super::types;
-use super::{constants, site_spec};
+use super::{site_spec, version};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(about = "Checkmk agent controller.", version = constants::VERSION)]
+#[command(about = "Checkmk agent controller.", version = version::VERSION)]
 pub struct Cli {
     /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
     /// level DEBUG.

@@ -125,6 +125,8 @@ version:
 # replace any character (like 'p' or 'b') with a dot. Not completely correct,
 # but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
+	# IMPORTANT do not version bazelized packages here.  Bazel can set the
+	# version natively.
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' packages/cmk-ccc/cmk/ccc/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion

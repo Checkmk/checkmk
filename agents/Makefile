@@ -61,6 +61,8 @@ waitmax: waitmax.c
 	@echo "Fine. Typing 'make install' as root now will install into /usr/bin"
 
 setversion:
+	# IMPORTANT do not version bazelized packages here.  Bazel can set the
+	# version natively.
 	sed -i 's/$$CMK_VERSION = ".*/$$CMK_VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.ps1 ; \
 	sed -i 's/^set CMK_VERSION=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' windows/plugins/*.bat ; \
 	sed -i 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' windows/plugins/*.vbs ; \
@@ -88,13 +90,12 @@ setversion:
 	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/include/wnx/install_api.h
 	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
 	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
-	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(MK_SQL_DIR)/src/constants.rs
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 
 $(AGENT_CTL):
-	$(AGENT_CTL_DIR)/run --setup-environment --build
+	bazel build //packages/host/cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/host/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
 	strip $(AGENT_CTL)

@@ -75,6 +75,8 @@ NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resourc
 
 
 class Site:
+    _GLOBAL_SETTINGS_FILE: Final = "etc/check_mk/multisite.d/wato/global.mk"
+
     def __init__(
         self,
         version: CMKVersion,
@@ -1457,6 +1459,20 @@ class Site:
         wait_until(
             lambda: self.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
         )
+
+    def read_global_settings(self) -> dict[str, object]:
+        global_settings: dict[str, object] = {}
+        exec(self.read_file(self._GLOBAL_SETTINGS_FILE), {}, global_settings)
+        return global_settings
+
+    def write_global_settings(self, global_settings: Mapping[str, object]) -> None:
+        self.write_text_file(
+            self._GLOBAL_SETTINGS_FILE,
+            "\n".join(f"{key} = {repr(val)}" for key, val in global_settings.items()),
+        )
+
+    def update_global_settings(self, update: dict[str, object]) -> None:
+        self.write_global_settings(self.read_global_settings() | update)
 
 
 class SiteFactory:

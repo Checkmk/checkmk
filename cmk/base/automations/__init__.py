@@ -36,12 +36,9 @@ class MKAutomationError(MKException):
 
 
 class AutomationExitCode(enum.IntEnum):
-    """Supported exit code for an executed automation command."""
-
     SUCCESS = 0
     KNOWN_ERROR = 1
     UNKNOWN_ERROR = 2
-    SYSTEM_EXIT = 3
 
 
 class Automations:

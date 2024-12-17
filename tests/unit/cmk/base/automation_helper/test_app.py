@@ -21,7 +21,7 @@ class DummyAutomationEngineSuccess:
 
 class DummyAutomationEngineFailure:
     def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
-        raise SystemExit()
+        raise SystemExit(1)
 
 
 EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
@@ -53,7 +53,7 @@ def test_automation_with_failure() -> None:
         resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"exit_code": AutomationExitCode.SYSTEM_EXIT, "output": ""}
+    assert resp.json() == {"exit_code": 1, "output": ""}
 
 
 def test_health_check() -> None:

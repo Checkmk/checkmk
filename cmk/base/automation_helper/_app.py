@@ -102,10 +102,16 @@ def get_application(
         ):
             try:
                 # TODO: remove `reload_config` when automation helper is fully integrated.
-                exit_code = engine.execute(payload.name, list(payload.args), reload_config=False)
-            except SystemExit:
+                exit_code: int = engine.execute(
+                    payload.name, list(payload.args), reload_config=False
+                )
+            except SystemExit as system_exit:
                 LOGGER.error("[automation] command raised a system exit exception.")
-                exit_code = AutomationExitCode.SYSTEM_EXIT
+                exit_code = (
+                    system_exit_code
+                    if isinstance(system_exit_code := system_exit.code, int)
+                    else AutomationExitCode.UNKNOWN_ERROR
+                )
             else:
                 LOGGER.info("[automation] %s with args: %s processed.", payload.name, payload.args)
 

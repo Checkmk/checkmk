@@ -521,14 +521,14 @@ def test_docker_oracle(
     ]
 
     missing_services = [
-        f'{service.get("description")} (expected state: {service.get("state")}'
+        service.get("description")
         for service in expected_services
         if service.get("description") not in [_.get("description") for _ in actual_services]
     ]
     assert len(missing_services) == 0, f"Missing services: {missing_services}"
 
     unexpected_services = [
-        f'{service.get("description")} (actual state: {service.get("state")}'
+        service.get("description")
         for service in actual_services
         if service.get("description") not in [_.get("description") for _ in expected_services]
     ]

@@ -218,6 +218,7 @@ def test_registered_configvars() -> None:
         "experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
+        "automation_helper_active",
         "site_trace_send",
         "site_trace_receive",
     ]

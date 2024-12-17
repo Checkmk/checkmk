@@ -154,6 +154,7 @@ def test_default_config_from_plugins() -> None:
         "experimental_features",
         "inject_js_profiling_code",
         "load_frontend_vue",
+        "automation_helper_active",
         "configuration_bundles",
         "default_dynamic_visual_permission",
         "require_two_factor_all_users",

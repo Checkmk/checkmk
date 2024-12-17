@@ -647,3 +647,4 @@ class CREConfig:
     load_frontend_vue: Literal["static_files", "inject"] = "static_files"
     # Experimental feature flags
     experimental_features: dict[str, Any] = field(default_factory=dict)
+    automation_helper_active: bool = False

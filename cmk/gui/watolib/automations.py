@@ -71,9 +71,6 @@ from cmk import trace
 from . import automation_helper, automation_subprocess
 from .automation_executor import AutomationExecutor
 
-# INFO: flag for activating automation helper, which is necessary for testing helper locally.
-USE_AUTOMATION_HELPER_EXECUTOR: Final = False
-
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
 
@@ -115,7 +112,7 @@ def check_mk_local_automation_serialized(
 
         executor: AutomationExecutor = (
             automation_subprocess.SubprocessExecutor()
-            if force_cli_interface or not USE_AUTOMATION_HELPER_EXECUTOR
+            if force_cli_interface or not active_config.automation_helper_active
             else automation_helper.HelperExecutor()
         )
 

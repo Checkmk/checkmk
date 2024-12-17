@@ -17087,7 +17087,7 @@ msgstr "Date"
 msgid "Data directory"
 msgstr "Director de date"
 
-msgid "Data egress"
+msgid "Data engress"
 msgstr "Angajare de date"
 
 msgid "Data files"

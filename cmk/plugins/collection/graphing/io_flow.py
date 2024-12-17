@@ -9,7 +9,7 @@ UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 
 metric_egress = metrics.Metric(
     name="egress",
-    title=Title("Data egress"),
+    title=Title("Data engress"),
     unit=UNIT_BYTES,
     color=metrics.Color.BLUE,
 )

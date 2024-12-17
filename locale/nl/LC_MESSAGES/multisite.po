@@ -17077,8 +17077,8 @@ msgstr "Gegevens"
 msgid "Data directory"
 msgstr "Hoofdmap"
 
-msgid "Data egress"
-msgstr "Gegevens egress"
+msgid "Data engress"
+msgstr "Gegevens engress"
 
 #, fuzzy
 msgid "Data files"

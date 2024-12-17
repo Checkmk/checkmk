@@ -16915,7 +16915,7 @@ msgstr "Dati"
 msgid "Data directory"
 msgstr "Elenco dati"
 
-msgid "Data egress"
+msgid "Data engress"
 msgstr "Impegno per i dati"
 
 msgid "Data files"

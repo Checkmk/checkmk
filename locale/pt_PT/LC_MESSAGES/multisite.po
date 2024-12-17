@@ -17072,7 +17072,7 @@ msgstr "Dados"
 msgid "Data directory"
 msgstr "Diretório de dados"
 
-msgid "Data egress"
+msgid "Data engress"
 msgstr "Entrada de dados"
 
 #, fuzzy

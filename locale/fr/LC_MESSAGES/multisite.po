@@ -17217,7 +17217,7 @@ msgstr "Données"
 msgid "Data directory"
 msgstr "Répertoire principal"
 
-msgid "Data egress"
+msgid "Data engress"
 msgstr "Prise de données"
 
 #, fuzzy

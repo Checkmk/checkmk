@@ -227,7 +227,7 @@ class Version:
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
-    )  # e.g. "2.1.0p17-rc3+securtiy"
+    )  # e.g. "2.1.0p17-rc3+security"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # -> The master branch also uses the [branch_version]-[date] schema since 2023-11-16.

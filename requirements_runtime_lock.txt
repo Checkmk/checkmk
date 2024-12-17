@@ -100,12 +100,12 @@ apispec==6.8.0 \
     --hash=sha256:09d0b43eaf95fb3e94b5b15ba6288e45ae8b9a922f73073345b606204589df34 \
     --hash=sha256:861cca82bbc0652ca9acea896921b254944580342fde849f86f6dac1acc6ca96
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   apispec-oneofschema
 apispec-oneofschema==3.0.1 \
     --hash=sha256:56aeab968abf22b01b3fbcf2d3dc95be09585581f08c62c09bd94f5aa7192fab \
     --hash=sha256:a88b54c99ffc175f39217b38c5850706a78aadc4cf5cea31fe7c20e25c2491ee
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 argcomplete==3.5.2 \
     --hash=sha256:036d020d79048a5d525bc63880d7a4b8d1668566b8a76daf1144c0bbe0f63472 \
     --hash=sha256:23146ed7ac4403b70bd6026402468942ceba34a6732255b9edf5b7354f68a6bb
@@ -130,11 +130,11 @@ azure-core==1.32.0 \
 azure-identity==1.17.1 \
     --hash=sha256:32ecc67cc73f4bd0595e4f64b1ca65cd05186f4fe6f98ed2ae9f1aa32646efea \
     --hash=sha256:db8d59c183b680e763722bfe8ebc45930e6c57df510620985939f7f3191e0382
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 azure-storage-blob==12.20.0 \
     --hash=sha256:de6b3bf3a90e9341a6bcb96a2ebe981dffff993e9045818f6549afea827a52a9 \
     --hash=sha256:eeb91256e41d4b5b9bad6a87fd0a8ade07dd58aa52344e2c8d2746e27a017d3b
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 bcrypt==4.2.1 \
     --hash=sha256:041fa0155c9004eb98a232d54da05c0b41d4b8e66b6fc3cb71b4b3f6144ba837 \
     --hash=sha256:04e56e3fe8308a88b77e0afd20bec516f74aecf391cdd6e374f15cbed32783d6 \
@@ -197,12 +197,12 @@ blinker==1.9.0 \
 boto3==1.35.80 \
     --hash=sha256:21a3b18c3a7fd20e463708fe3fa035983105dc7f3a1c274e1903e1583ab91159 \
     --hash=sha256:50dae461ab5fbedfb81b690895d48a918fed0d5fdff37be1c4232770c0dc9712
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 botocore==1.35.80 \
     --hash=sha256:36e589dccb62380abd628b08fecfa2f7c89b99f41ec9fc42c467c94008c0be4a \
     --hash=sha256:b8dfceca58891cb2711bd6455ec4f7159051f3796e0f64adef9bb334f19d8a92
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   boto3
     #   s3transfer
 cached-property==2.0.1 \
@@ -439,7 +439,7 @@ cryptography==43.0.3 \
     --hash=sha256:f46304d6f0c6ab8e52770addfa2fc41e6629495548862279641972b6215451cd \
     --hash=sha256:f7b178f11ed3664fd0e995a47ed2b5ff0a12d893e41dd0494f406d1cf555cab7
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
     #   -r packages/cmk-crypto/requirements.txt
     #   azure-identity
@@ -521,7 +521,7 @@ cython==3.0.11 \
     --hash=sha256:eeb6860b0f4bfa402de8929833fe5370fa34069c7ebacb2d543cb017f21fb891 \
     --hash=sha256:f3953d2f504176f929862e5579cfc421860c33e9707f585d70d24e1096accdf7 \
     --hash=sha256:f988f7f8164a6079c705c39e2d75dbe9967e3dacafe041420d9af7b9ee424162
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 datamodel-code-generator==0.26.1 \
     --hash=sha256:3b7b49c4230fa197ca28847e1e8996cd664638a7e91796c826a61c60d4ccd8a2 \
     --hash=sha256:bbe8a6cc0b9cfdbfd294e336e02b4c50b481ffc3b3c608b5578b6d7aa02cc8ae
@@ -548,7 +548,7 @@ deprecated==1.2.15 \
 dicttoxml==1.7.16 \
     --hash=sha256:6f36ce644881db5cd8940bee9b7cb3f3f6b7b327ba8a67d83d3e2caa0538bf9d \
     --hash=sha256:8677671496d0d38e66c7179f82a7e9059f94887777955dc71b0ac602ee637c26
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 dnspython==2.7.0 \
     --hash=sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86 \
     --hash=sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1
@@ -559,7 +559,7 @@ dnspython==2.7.0 \
 docstring-parser==0.16 \
     --hash=sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e \
     --hash=sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 elementpath==4.6.0 \
     --hash=sha256:ba46bf07f66774927727ade55022b6c435fac06b2523cb3cd7689a1884d33468 \
     --hash=sha256:e578677f19ccc6ff374c4477c687c547ecbaf7b478d98abb951b7b4b45260a17
@@ -571,25 +571,25 @@ email-validator==2.2.0 \
 exchangelib==5.4.0 \
     --hash=sha256:8fc6a98e7cc7b203f1eafc332ddf19c46979809f7138d2411e19491fcb7aa69a \
     --hash=sha256:edd4f5bca3b6dc67a3ad02f4b6d02ea141bff0788e5eb692d3bd09dc16a9a897
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 fastapi==0.115.6 \
     --hash=sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654 \
     --hash=sha256:e9240b29e36fa8f4bb7290316988e90c381e5092e0cbe84e7818cc3713bcf305
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
 feedparser==6.0.11 \
     --hash=sha256:0be7ee7b395572b19ebeb1d6aafb0028dee11169f1c934e0ed67d54992f4ad45 \
     --hash=sha256:c9d0407b64c6f2a065d0ebb292c2b35c01050cc0dc33757461aaabdc4c4184d5
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 fido2==1.2.0 \
     --hash=sha256:e39f95920122d64283fda5e5581d95a206e704fa42846bfa4662f86aa0d3333b \
     --hash=sha256:f7c8ee62e359aa980a45773f9493965bb29ede1b237a9218169dbfe60c80e130
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 flask==3.0.3 \
     --hash=sha256:34e815dfaa43340d1d15a5c3a02b8476004037eb4840b34910c6e21679d288f3 \
     --hash=sha256:ceb27b0af3823ea2737928a4d99d125a06175b8512c445cbd9a9ce200ef76842
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 frozenlist==1.5.0 \
     --hash=sha256:000a77d6034fbad9b6bb880f7ec073027908f1b40254b5d6f26210d2dab1240e \
     --hash=sha256:03d33c2ddbc1816237a67f66336616416e2bbb6beb306e5f890f2eb22b959cdf \
@@ -698,7 +698,7 @@ gitpython==3.1.43 \
     --hash=sha256:35f314a9f878467f5453cc1fee295c3e18e52f1b99f10f6cf5b1682e968a9e7c \
     --hash=sha256:eec7ec56b92aad751f9912a73404bc02ba212a23adb2c7098ee668417051a1ff
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-werks/requirements.txt
 google-api-core[grpc]==2.24.0 \
     --hash=sha256:10d82ac0fca69c82a25b3efdeefccf6f28e02ebb97925a8cce8edbfe379929d9 \
@@ -713,12 +713,12 @@ google-api-core[grpc]==2.24.0 \
 google-api-python-client==2.155.0 \
     --hash=sha256:25529f89f0d13abcf3c05c089c423fb2858ac16e0b3727543393468d0d7af67c \
     --hash=sha256:83fe9b5aa4160899079d7c93a37be306546a17e6686e2549bcc9584f1a229747
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 google-auth==2.37.0 \
     --hash=sha256:0054623abf1f9c83492c63d3f47e77f0a544caa3d40b2d98e099a611c2dd5d00 \
     --hash=sha256:42664f18290a6be591be5329a96fe30184be1a1badb7292a7f686a9659de9ca0
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   google-api-core
     #   google-api-python-client
     #   google-auth-httplib2
@@ -738,11 +738,11 @@ google-cloud-access-context-manager==0.2.1 \
 google-cloud-asset==3.28.0 \
     --hash=sha256:25b716f02ed0dedce12d4659cdcae0149b6c5e3e7190c2a71644299189b0e3cd \
     --hash=sha256:9f345a7670b0d3cae08fd20fa9eeaa32ae49283b4ab06df3c8d73d8e8236b4e4
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 google-cloud-monitoring==2.24.0 \
     --hash=sha256:25c36c7fdedb1e7a5a80f187866c410847aa809c8055dc0dc8161d4404403c25 \
     --hash=sha256:a0d3848f4ef0f774bbb3021c86fd765dbbc6db176d78f71e96cf3398d3be1bb7
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 google-cloud-org-policy==1.11.1 \
     --hash=sha256:13e1ffcb9506956b1e94cc281d4e01f403e49847909d32f184c7a5a30109b1af \
     --hash=sha256:c715a4d8024e432a776961ca19bd4ce453bf7f4fab4450de1a6282a3c467ec9f
@@ -834,7 +834,7 @@ gunicorn==23.0.0 \
     --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d \
     --hash=sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
 h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
@@ -852,7 +852,7 @@ icalendar==5.0.7 \
     --hash=sha256:18ad51f9d1741d33795ddaf5c886c59f6575f287d30e5a145c2d42ef72910c7f \
     --hash=sha256:e306014a64dc4dcf638da0acb2487ee4ada57b871b03a62ed7b513dfc135655c
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   recurring-ical-events
     #   x-wr-timezone
 idna==3.10 \
@@ -893,14 +893,14 @@ jinja2==3.1.4 \
     --hash=sha256:4a3aee7acbbe7303aede8e9648d13b8bf88a429282aa6122a993f0ac800cb369 \
     --hash=sha256:bc5dd2abb727a5319567b7a813e6a2e7318c39f4f487cfe6c89c6f9c7d25197d
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   datamodel-code-generator
     #   flask
     #   pysmi-lextudio
 jira==3.8.0 \
     --hash=sha256:12190dc84dad00b8a6c0341f7e8a254b0f38785afdec022bd5941e1184a5a3fb \
     --hash=sha256:63719c529a570aaa01c3373dbb5a104dab70381c5be447f6c27f997302fa335a
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 jmespath==1.0.1 \
     --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980 \
     --hash=sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe
@@ -939,7 +939,7 @@ jsonschema-specifications==2023.12.1 \
 kubernetes==21.7.0 \
     --hash=sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5 \
     --hash=sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 lazy-object-proxy==1.10.0 \
     --hash=sha256:009e6bb1f1935a62889ddc8541514b6a9e1fcf302667dcb049a0be5c8f613e56 \
     --hash=sha256:02c83f957782cbbe8136bee26416686a6ae998c7b6191711a04da776dc9e47d4 \
@@ -1116,7 +1116,7 @@ lxml==4.9.3 \
     --hash=sha256:fcdd00edfd0a3001e0181eab3e63bd5c74ad3e67152c84f93f13769a40e073a7 \
     --hash=sha256:fe4bda6bd4340caa6e5cf95e73f8fea5c4bfc55763dd42f1b50a94c1b4a2fbd4
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-werks/requirements.txt
     #   exchangelib
 markdown==3.7 \
@@ -1192,7 +1192,7 @@ marshmallow==3.23.1 \
     --hash=sha256:3a8dfda6edd8dcdbf216c0ede1d1e78d230a6dc9c5a088f58c4083b974a0d468 \
     --hash=sha256:fece2eb2c941180ea1b7fcbd4a83c51bfdd50093fdd3ad2585ee5e1df2508491
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   apispec-oneofschema
     #   marshmallow-oneofschema
     #   netapp-ontap
@@ -1200,17 +1200,17 @@ marshmallow-oneofschema==3.1.1 \
     --hash=sha256:68b4a57d0281a04ac25d4eb7a4c5865a57090a0a8fd30fd6362c8e833ac6a6d9 \
     --hash=sha256:ff4cb2a488785ee8edd521a765682c2c80c78b9dc48894124531bdfa1ec9303b
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   apispec-oneofschema
 meraki==1.41.0 \
     --hash=sha256:697706311aa48953e72c462bcc830b0e21575aeac144d94c8383a745de6396b6 \
     --hash=sha256:6b3f31981d278cbba2cce5229436528da4ecac5054d1cb7da6467f6d854cac84
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 msal==1.26.0 \
     --hash=sha256:224756079fe338be838737682b49f8ebc20a87c1c5eeaf590daae4532b83de15 \
     --hash=sha256:be77ba6a8f49c9ff598bbcdc5dfcf1c9842f3044300109af738e8c3e371065b5
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   azure-identity
     #   msal-extensions
 msal-extensions==1.1.0 \
@@ -1320,7 +1320,7 @@ mypy-extensions==1.0.0 \
 netapp-ontap==9.14.1.0 \
     --hash=sha256:495e679e10e61b9bb2cf5a432a5cdaf9f2ec56855540ba221c021d31a6b91eb7 \
     --hash=sha256:9e1ed21dccae8d35574a0c506a3440e04b9e37a1dff1c2ae7906ec6e7afafaac
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 numpy==1.26.4 \
     --hash=sha256:03a8c78d01d9781b28a6989f6fa1bb2c4f2d51201cf99d3dd875df6fbd96b23b \
     --hash=sha256:08beddf13648eb95f8d867350f6a018a4be2e5ad54c8d8caed89ebca558b2818 \
@@ -1358,12 +1358,12 @@ numpy==1.26.4 \
     --hash=sha256:edd8b5fe47dab091176d21bb6de568acdd906d1887a4584a15a9a96a1dca06ef \
     --hash=sha256:f870204a840a60da0b12273ef34f7051e98c3b5961b61b0c2c1be6dfd64fbcd3 \
     --hash=sha256:ffa75af20b44f8dba823498024771d5ac50620e6915abac414251bd971b4529f
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 oauthlib==3.2.2 \
     --hash=sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca \
     --hash=sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   exchangelib
     #   requests-oauthlib
 openapi-schema-validator==0.6.2 \
@@ -1373,12 +1373,12 @@ openapi-schema-validator==0.6.2 \
 openapi-spec-validator==0.7.1 \
     --hash=sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959 \
     --hash=sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 opentelemetry-api==1.29.0 \
     --hash=sha256:5fcd94c4141cc49c736271f3e1efb777bebe9cc535759c54c936cca4f1b312b8 \
     --hash=sha256:d04a6cf78aad09614f52964ecb38021e248f5714dc32c2e0d8fd99517b4d69cf
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-livestatus-client/requirements.txt
     #   -r packages/cmk-trace/requirements.txt
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -1395,7 +1395,7 @@ opentelemetry-exporter-otlp==1.29.0 \
     --hash=sha256:b8da6e20f5b0ffe604154b1e16a407eade17ce310c42fb85bb4e1246fc3688ad \
     --hash=sha256:ee7dfcccbb5e87ad9b389908452e10b7beeab55f70a83f41ce5b8c4efbde6544
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-trace/requirements.txt
 opentelemetry-exporter-otlp-proto-common==1.29.0 \
     --hash=sha256:a9d7376c06b4da9cf350677bcddb9618ed4b8255c3f6476975f5e38274ecd3aa \
@@ -1429,19 +1429,19 @@ opentelemetry-instrumentation-asgi==0.50b0 \
 opentelemetry-instrumentation-fastapi==0.50b0 \
     --hash=sha256:16b9181682136da210295def2bb304a32fb9bdee9a935cdc9da43567f7c1149e \
     --hash=sha256:8f03b738495e4705fbae51a2826389c7369629dace89d0f291c06ffefdff5e52
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 opentelemetry-instrumentation-redis==0.50b0 \
     --hash=sha256:48c115189781a4eb1513457f4cb03f7c28bac45d4ca619802d0fec5d08db9e0f \
     --hash=sha256:ab5c983acdd2d4dd897b8d0f7c28d4fd548458259895830e43d9a206f4afa391
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 opentelemetry-instrumentation-requests==0.50b0 \
     --hash=sha256:2c60a890988d6765de9230004d0af9071b3b2e1ddba4ca3b631cfb8a1722208d \
     --hash=sha256:f8088c76f757985b492aad33331d21aec2f99c197472a57091c2e986a4b7ec8b
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 opentelemetry-instrumentation-wsgi==0.50b0 \
     --hash=sha256:4bc0fdf52b603507d6170a25504f0ceea358d7e90a2c0e8794b7b7eca5ea355c \
     --hash=sha256:c25b5f1b664d984a41546a34cf2f893dcde6cf56922f88c475864e7df37edf4a
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 opentelemetry-proto==1.29.0 \
     --hash=sha256:3c136aa293782e9b44978c738fff72877a4b78b5d21a64e879898db7b2d93e5d \
     --hash=sha256:495069c6f5495cbf732501cdcd3b7f60fda2b9d3d4255706ca99b7ca8dec53ff
@@ -1453,7 +1453,7 @@ opentelemetry-sdk==1.29.0 \
     --hash=sha256:173be3b5d3f8f7d671f20ea37056710217959e774e2749d984355d1f9391a30a \
     --hash=sha256:b0787ce6aade6ab84315302e72bd7a7f2f014b0fb1b7c3295b88afe014ed0643
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-trace/requirements.txt
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -1461,7 +1461,7 @@ opentelemetry-semantic-conventions==0.50b0 \
     --hash=sha256:02dc6dbcb62f082de9b877ff19a3f1ffaa3c306300fa53bfac761c4567c83d38 \
     --hash=sha256:e87efba8fdb67fb38113efea6a349531e75ed7ffc01562f65b802fcecb5e115e
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-trace/requirements.txt
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-asgi
@@ -1481,7 +1481,7 @@ opentelemetry-util-http==0.50b0 \
 opsgenie-sdk==2.1.5 \
     --hash=sha256:c38a2f0c7acbcbeb9202ced80ec857b5eda2d99919392fed4083bdfa7be32669 \
     --hash=sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 packaging==24.2 \
     --hash=sha256:09abb1bccd265c01f4a3aa3f7a7db064b36514d2cba19a2f694fe6150451a759 \
     --hash=sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f
@@ -1497,11 +1497,11 @@ packaging==24.2 \
     #   pytest
 paho-mqtt==1.6.1 \
     --hash=sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 paramiko==3.5.0 \
     --hash=sha256:1fedf06b085359051cd7d0d270cebe19e755a8a921cc2ddbfa647fb0cd7d68f9 \
     --hash=sha256:ad11e540da4f55cedda52931f1a3f812a8238a7af7f62a60de538cd80bb28124
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pathable==0.4.3 \
     --hash=sha256:5c869d315be50776cc8a993f3af43e0c60dc01506b399643f919034ebf4cdcab \
     --hash=sha256:cdd7b1f9d7d5c8b8d3315dbf5a86b2596053ae845f056f57d97c0eefff84da14
@@ -1591,7 +1591,7 @@ pillow==11.0.0 \
     --hash=sha256:fbbcb7b57dc9c794843e3d1258c0fbf0f48656d46ffe9e09b63bbd6e8cd5d0a2 \
     --hash=sha256:fcb4621042ac4b7865c179bb972ed0da0218a076dc1820ffc48b1d74c1e37fe9
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   jira
     #   reportlab
 platformdirs==4.3.6 \
@@ -1606,7 +1606,7 @@ ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   jsonpath-rw
     #   pysmi-lextudio
     #   python-active-directory
@@ -1722,7 +1722,7 @@ protobuf==5.28.3 \
     --hash=sha256:a3f6857551e53ce35e60b403b8a27b0295f7d6eb63d10484f12bc6879c715687 \
     --hash=sha256:cee1757663fa32a1ee673434fcf3bf24dd54763c79690201208bafec62f19eed
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   google-api-core
     #   google-cloud-access-context-manager
     #   google-cloud-asset
@@ -1751,7 +1751,7 @@ psutil==5.9.8 \
     --hash=sha256:bd1184ceb3f87651a67b2708d4c3338e9b10c5df903f2e3776b62303b26cb631 \
     --hash=sha256:d06016f7f8625a1825ba3732081d77c94589dca78b7a3fc072194851e88461a4 \
     --hash=sha256:d16bbddf0693323b8c6123dd804100241da461e41d6e332fb0ba6058f630f8c8
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 psycopg2-binary==2.9.6 \
     --hash=sha256:02c0f3757a4300cf379eb49f543fb7ac527fb00144d39246ee40e1df684ab514 \
     --hash=sha256:02c6e3cf3439e213e4ee930308dc122d6fb4d4bea9aef4a12535fbd605d1a2fe \
@@ -1815,12 +1815,12 @@ psycopg2-binary==2.9.6 \
     --hash=sha256:f6a88f384335bb27812293fdb11ac6aee2ca3f51d3c7820fe03de0a304ab6249 \
     --hash=sha256:f81e65376e52f03422e1fb475c9514185669943798ed019ac50410fb4c4df232 \
     --hash=sha256:ffe9dc0a884a8848075e576c1de0290d85a533a9f6e9c4e564f19adf8f6e54a7
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pyasn1==0.6.0 \
     --hash=sha256:3a35ab2c4b5ef98e17dfdec8ab074046fbda76e281c5a706ccd82328cfc8f64c \
     --hash=sha256:cca4bb0f2df5504f02f6f8a775b6e416ff9b0b3b16f7ee80b5a3153d9b804473
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   pyasn1-modules
     #   pysmb
     #   pysnmp-lextudio
@@ -1840,7 +1840,7 @@ pydantic==2.10.3 \
     --hash=sha256:be04d85bbc7b65651c5f8e6b9976ed9c6f41782a55524cef079a34a0bb82144d \
     --hash=sha256:cb5ac360ce894ceacd69c403187900a02c4b20b693a9dd1d643e1effab9eadf9
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-based/requirements.txt
     #   -r packages/cmk-ccc/requirements.txt
     #   -r packages/cmk-messaging/requirements.txt
@@ -1852,7 +1852,7 @@ pydantic[email]==2.10.3 \
     --hash=sha256:be04d85bbc7b65651c5f8e6b9976ed9c6f41782a55524cef079a34a0bb82144d \
     --hash=sha256:cb5ac360ce894ceacd69c403187900a02c4b20b693a9dd1d643e1effab9eadf9
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-based/requirements.txt
     #   -r packages/cmk-ccc/requirements.txt
     #   -r packages/cmk-messaging/requirements.txt
@@ -1961,12 +1961,12 @@ pydantic-core==2.27.1 \
     --hash=sha256:f69ed81ab24d5a3bd93861c8c4436f54afdf8e8cc421562b0c7504cf3be58206 \
     --hash=sha256:f82d068a2d6ecfc6e054726080af69a6764a10015467d7d7b9f66d6ed5afa23b
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   pydantic
 pyghmi==1.5.60 \
     --hash=sha256:9c18ef0be1b4ba6a9477d426031eebff32897a8f95cbfe27b58fd410f8c31736 \
     --hash=sha256:d61839df5a56d3e3845483abf35e3a48cbf2669e41c1110912157808ce1a194b
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pygments==2.18.0 \
     --hash=sha256:786ff802f32e91311bff3889f6e9a86e81505fe99f2735bb6d60ae0c5004f199 \
     --hash=sha256:b8e6aca0523f3ab76fee51799c488e38782ac06eafcf95e7ba832985c8e7b13a
@@ -1975,7 +1975,7 @@ pyjwt[crypto]==2.10.1 \
     --hash=sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953 \
     --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   msal
 pymssql==2.3.1 \
     --hash=sha256:001b3321a5f620b80d1427933fcca11b05f29a808d7772a84d18d01e640ee60a \
@@ -2059,11 +2059,11 @@ pymssql==2.3.1 \
     --hash=sha256:ebb11b61d99ec5bbe0b8c411ff748a90263cdaf474881de231da8184e721c42c \
     --hash=sha256:f00f618d1c0f58617de548e5094f7d55ab6034b94068d7eebba60a034866b10b \
     --hash=sha256:fdfadb055a9ecad58356decfecc41626999ad7b548cc7ea898cf159e2217f7bb
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pymysql==1.1.1 \
     --hash=sha256:4de15da4c61dc132f4fb9ab763063e693d521a80fd0e87943b9a453dd4c19d6c \
     --hash=sha256:e127611aaf2b417403c60bf4dc570124aeb4a57f5f37b8e95ae399a42f904cd0
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pynacl==1.5.0 \
     --hash=sha256:06b8f6fa7f5de8d5d2f7573fe8c863c051225a27b61e6860fd047b1775807858 \
     --hash=sha256:0c84947a22519e013607c9be43706dd42513f9e6ae5d39d3613ca1e142fba44d \
@@ -2080,39 +2080,39 @@ pyopenssl==24.3.0 \
     --hash=sha256:49f7a019577d834746bc55c5fce6ecbcec0f2b4ec5ce1cf43a9a173b8138bb36 \
     --hash=sha256:e474f5a473cd7f92221cc04976e48f4d11502804657a08a989fb3be5514c904a
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   pysaml2
 pyparsing==3.2.0 \
     --hash=sha256:93d9577b88da0bbea8cc8334ee8b918ed014968fd2ec383e868fb8afb1ccef84 \
     --hash=sha256:cbf74e27246d595d9a74b186b810f6fbb86726dbf3b9532efb343f6d7294fe9c
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   httplib2
 pypdf==5.1.0 \
     --hash=sha256:3bd4f503f4ebc58bae40d81e81a9176c400cbbac2ba2d877367595fb524dfdfc \
     --hash=sha256:425a129abb1614183fd1aca6982f650b47f8026867c0ce7c4b9f281c443d2740
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pysaml2==7.5.0 \
     --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
     --hash=sha256:f36871d4e5ee857c6b85532e942550d2cf90ea4ee943d75eb681044bbc4f54f7
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pysmb==1.2.9.1 \
     --hash=sha256:ad613988d54b1317ca0466dc3546f47b2dddea16e645d755d29fb75a86903326
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pysmi-lextudio==1.4.3 \
     --hash=sha256:7d255fb38669410835acf6c2e8ab41975a6d8e64593b119552e36ecba004054f \
     --hash=sha256:cb629c6386a30c976f83c29fc71e53b06d60f15094d0c0114cf8d095351b76e5
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   pysnmp-lextudio
 pysnmp-lextudio==6.1.2 \
     --hash=sha256:4035677d236f9fb6da5dbcfae2dc9122ee3652f535efeb904a56f54f162f28c9 \
     --hash=sha256:5a30d289f73fbdd56ca4a6b83e43cef3a1871eee402651748c8ff47f603e5cb2
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   snmpsim-lextudio
 pysnmpcrypto==0.0.4 \
     --hash=sha256:5889733caa030f45d9e03ea9d6370fb06426a8cb7f839aabbcdde33c6f634679 \
@@ -2175,12 +2175,12 @@ python-active-directory==2.0.1 \
     --hash=sha256:f760e7f4f2f9d671efb09e1ef7b7064c3ab03dd492e5dabb0108b5e59a997848 \
     --hash=sha256:fc5f5bf45840e33e000527eaa9241b264e651c764b800bdd9a920449e3f3c57a \
     --hash=sha256:febd238057469a11650db2a178d269a5142e106381197e3754c6c15815c97082
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
     #   -r packages/cmk-crypto/requirements.txt
     #   botocore
@@ -2194,7 +2194,7 @@ python-dateutil==2.9.0.post0 \
 python-ldap==3.4.3 \
     --hash=sha256:ab26c519a0ef2a443a2a10391fa3c5cb52d7871323399db949ebfaa9f25ee2a0
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   python-active-directory
 python-multipart==0.0.19 \
     --hash=sha256:905502ef39050557b7a6af411f454bc19526529ca46ae6831508438890ce12cc \
@@ -2207,7 +2207,7 @@ python-snap7==1.3 \
     --hash=sha256:c33ab26d7617ed527eaebdaf098f6947e70bb9338ada532db28397837a631831 \
     --hash=sha256:f8bb72cf387b1af8e1e1b4bbbabf086ca7694c6024129c7a52054e3913f40ad6 \
     --hash=sha256:fc2dada8e157a6e8f5e02b7a702f3103ec1d99ad2f06b69748a2c40405b3e229
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 pytz==2024.2 \
     --hash=sha256:2aa355083c50a0f93fa581709deac0c9ad65cca8a9e9beac660adcbd493c798a \
     --hash=sha256:31c7c1817eb7fae7ca4b8c7ee50c72f93aa2dd863de768e1ef4245d426aa0725
@@ -2269,7 +2269,7 @@ pyyaml==6.0.1 \
     --hash=sha256:fd1592b3fdf65fff2ad0004b5e363300ef59ced41c2e6b3a99d4089fa8c5435d \
     --hash=sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   datamodel-code-generator
     #   jsonschema-path
     #   kubernetes
@@ -2278,15 +2278,15 @@ pyyaml==6.0.1 \
 recurring-ical-events==2.0.2 \
     --hash=sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339 \
     --hash=sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 redfish==3.2.6 \
     --hash=sha256:68f0fdd53611320402cd5307b13debc8673db6b2a5a04976598d53de7329deca \
     --hash=sha256:8e3aedf630c8678bfc4e8686f640981f2c20d5a86e08ed775cb47ceb9993ab2a
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 redis==4.5.4 \
     --hash=sha256:2c19e6767c474f2e85167909061d525ed65bea9301c0770bb151e041b7ac89a2 \
     --hash=sha256:73ec35da4da267d6847e47f68730fdd5f62e2ca69e3ef5885c6a78a9374c3893
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 referencing==0.35.1 \
     --hash=sha256:25b42124a6c8b632a425174f24087783efb348a6f1e0008e63cd4466fedf703c \
     --hash=sha256:eda6d3234d62814d1c64e305c1331c9a3a6132da475ab6382eaa997b21ee75de
@@ -2297,12 +2297,12 @@ referencing==0.35.1 \
 reportlab==4.1.0 \
     --hash=sha256:28a40d5000afbd8ccae15a47f7abe2841768461354bede1a9d42841132997c98 \
     --hash=sha256:3a99faf412691159c068b3ff01c15307ce2fd2cf6b860199434874e002040a84
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 requests==2.32.3 \
     --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760 \
     --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   -r packages/cmk-agent-receiver/requirements.txt
     #   azure-core
     #   exchangelib
@@ -2329,7 +2329,7 @@ requests-oauthlib==1.3.1 \
     --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5 \
     --hash=sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   exchangelib
     #   jira
     #   kubernetes
@@ -2351,11 +2351,11 @@ rfc3339-validator==0.1.4 \
 robotframework==7.1.1 \
     --hash=sha256:0461360be00dfb8ce1ab3f42370fa6eea3779e41c0b8d79a1f8ddcd2ec8e3679 \
     --hash=sha256:f85919c68c4d0837006e5f09dde1ef689f082eba2e7e64d5758753f9ee8bfea9
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 roman==4.0 \
     --hash=sha256:6caab7ba51b83c46b5bf8839e5d782769a6b08fdea8abdfa62a4197c041fd513 \
     --hash=sha256:8b8eefb6dedfdfebd789547e49a1274c12aae5a32b43911994f22e276a7b8c8b
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 rpds-py==0.22.3 \
     --hash=sha256:009de23c9c9ee54bf11303a966edf4d9087cd43a6003672e6aa7def643d06518 \
     --hash=sha256:02fbb9c288ae08bcb34fb41d516d5eeb0455ac35b5512d03181d755d80810059 \
@@ -2560,19 +2560,19 @@ setproctitle==1.3.3 \
     --hash=sha256:f5e7266498cd31a4572378c61920af9f6b4676a73c299fce8ba93afd694f8ae7 \
     --hash=sha256:fc74e84fdfa96821580fb5e9c0b0777c1c4779434ce16d3d62a9c4d8c710df39 \
     --hash=sha256:ff814dea1e5c492a4980e3e7d094286077054e7ea116cbeda138819db194b2cd
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 setuptools==70.3.0 \
     --hash=sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5 \
     --hash=sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   kubernetes
     #   opsgenie-sdk
     #   setuptools-scm
 setuptools-scm==4.1.2 \
     --hash=sha256:69258e2eeba5f7ce1ed7a5f109519580fa3578250f8e4d6684859f86d1b15826 \
     --hash=sha256:a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 sgmllib3k==1.0.0 \
     --hash=sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9
     # via feedparser
@@ -2598,7 +2598,7 @@ sniffio==1.3.1 \
 snmpsim-lextudio==1.1.0 \
     --hash=sha256:0d6fe597652b8c0fd517433f0c92b67ad9febbc8733f6658d2aea3b1e3d35e59 \
     --hash=sha256:24eaeacac89fea434126ec3f9c8cf96ebfb27fa7a81b4d4736137c977391b281
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 starlette==0.41.3 \
     --hash=sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835 \
     --hash=sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7
@@ -2607,7 +2607,7 @@ tenacity==9.0.0 \
     --hash=sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b \
     --hash=sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   opsgenie-sdk
 time-machine==2.16.0 \
     --hash=sha256:01bc257e9418980a4922de94775be42a966e1a082fb01a1635917f9afc7b84ca \
@@ -2712,7 +2712,7 @@ urllib3==2.2.3 \
     --hash=sha256:ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac \
     --hash=sha256:e7d814a81dad81e6caf2ec9fdedb284ecc9c73076b62654547cc64ccdcae26e9
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   botocore
     #   kubernetes
     #   netapp-ontap
@@ -2725,7 +2725,7 @@ uvicorn==0.32.1 \
 vcrpy==6.0.1 \
     --hash=sha256:621c3fb2d6bd8aa9f87532c688e4575bcbbde0c0afeb5ebdb7e14cac409edfdd \
     --hash=sha256:9e023fee7f892baa0bbda2f7da7c8ac51165c1c6e38ff8688683a12a4bde9278
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \
     --hash=sha256:20ffe5b202af80ab4266dcd3e91aae72bf2da48c0d33bdb15c66658e685e94e2 \
@@ -2757,7 +2757,7 @@ watchdog==6.0.0 \
     --hash=sha256:e6f0e77c9417e7cd62af82529b10563db3423625c5fce018430b249bf977f9e8 \
     --hash=sha256:e7631a77ffb1f7d2eefa4445ebbee491c720a5661ddf6df3498ebecae5ed375c \
     --hash=sha256:ef810fbf7b781a5a593894e4f439773830bdecb885e6880d957d5b9382a960d2
-    # via -r cmk/requirements_protobuf_pinned.txt
+    # via -r _requirements_runtime.txt
 websocket-client==1.8.0 \
     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526 \
     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da
@@ -2766,7 +2766,7 @@ werkzeug==3.1.3 \
     --hash=sha256:54b78bf3716d19a65be4fceccc0d1d7b89e608834989dfae50ea87564639213e \
     --hash=sha256:60723ce945c19328679790e3282cc758aa4a6040e4bb330f53d30fa546d44746
     # via
-    #   -r cmk/requirements_protobuf_pinned.txt
+    #   -r _requirements_runtime.txt
     #   flask
 wrapt==1.17.0 \
     --hash=sha256:0229b247b0fc7dee0d36176cbb79dbaf2a9eb7ecc50ec3121f40ef443155fb1d \

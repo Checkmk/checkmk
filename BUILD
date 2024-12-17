@@ -91,6 +91,20 @@ genrule(
     cmd = "cat $< > $@; echo '-r requirements_dev.txt' >> $@",
 )
 
+genrule(
+    name = "_append_cmk_dependencies",
+    srcs = [
+        "//cmk:requirements_protobuf_pinned.txt",
+        ":requirements_runtime.txt",
+    ],
+    outs = ["_requirements_runtime.txt"],
+    cmd = "cat $(SRCS) > $@;" + select({
+        "@//:gpl_repo": "",
+        "@//:gpl+enterprise_repo": "echo \"-r non-free/packages/cmk-mknotifyd/requirements.txt\" >> $@;" +
+                                   "echo \"-r non-free/packages/cmk-otel-collector/requirements.txt\" >> $@",
+    }),
+)
+
 # TODO: De-dup with list in cmk/BUILD:CMK_PACKAGES
 REQUIREMENTS_CMK = [
     "//cmk:requirements_protobuf_pinned.txt",
@@ -120,7 +134,7 @@ REQUIREMENTS_CMK = [
 pip_compile(
     name = "requirements_runtime",
     data = REQUIREMENTS_CMK,
-    requirements_in = ":requirements_runtime.txt",
+    requirements_in = ":_requirements_runtime.txt",
     requirements_txt = "@//:requirements_runtime_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],

@@ -520,7 +520,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
     logger.info("Waiting for %r to finish for %ds", condition, timeout)
     while time.time() - start < timeout:
         if condition():
-            logger.info("Wait for %r finished after %ss", condition, time.time() - start)
+            logger.info("Wait for %r finished after %0.2fs", condition, time.time() - start)
             return  # Success. Stop waiting...
         time.sleep(interval)
 

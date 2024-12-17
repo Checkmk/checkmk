@@ -80,15 +80,16 @@ class OracleDatabase:
             Path(os.environ["CMK_ORADATA"]) if "CMK_ORADATA" in os.environ else None
         )
 
-        self.cmk_conf_dir = Path("/etc/check_mk")
+        self.cmk_cfg_dir = Path("/etc/check_mk")
         self.cmk_var_dir = Path("/var/lib/check_mk_agent")
         self.cmk_plugin_dir = Path("/usr/lib/check_mk_agent/plugins")
+        self.cmk_plugin = self.cmk_plugin_dir / "mk_oracle"
         # user name; use "c##<name>" notation for pluggable databases
         self.cmk_username: str = "c##checkmk"
         self.cmk_password: str = "cmk"
-        self.cmk_credentials_cfg: str = "mk_oracle.credentials.cfg"
-        self.cmk_wallet_cfg: str = "mk_oracle.wallet.cfg"
-        self.cmk_cfg: str = "mk_oracle.cfg"
+        self.cmk_credentials_cfg = self.cmk_cfg_dir / "mk_oracle.credentials.cfg"
+        self.cmk_wallet_cfg = self.cmk_cfg_dir / "mk_oracle.wallet.cfg"
+        self.cmk_cfg = self.cmk_cfg_dir / "mk_oracle.cfg"
 
         self.environment = {
             "ORACLE_SID": self.SID,
@@ -96,7 +97,7 @@ class OracleDatabase:
             "ORACLE_PWD": self.password,
             "ORACLE_PASSWORD": self.password,
             "ORACLE_CHARACTERSET": self.charset,
-            "MK_CONFDIR": self.cmk_conf_dir.as_posix(),
+            "MK_CONFDIR": self.cmk_cfg_dir.as_posix(),
             "MK_VARDIR": self.cmk_var_dir.as_posix(),
         }
 
@@ -113,13 +114,13 @@ class OracleDatabase:
             "shutdown.sql": "shutdown immediate;exit;",
         }
         self.cfg_files = {
-            self.cmk_credentials_cfg: "\n".join(
+            self.cmk_credentials_cfg.name: "\n".join(
                 [
                     "MAX_TASKS=10",
                     f"DBUSER='{self.cmk_username}:{self.cmk_password}::localhost:{self.PORT}:{self.SID}'",
                 ]
             ),
-            self.cmk_wallet_cfg: "\n".join(
+            self.cmk_wallet_cfg.name: "\n".join(
                 [
                     "MAX_TASKS=10",
                     "DBUSER='/:'",
@@ -321,7 +322,7 @@ class OracleDatabase:
         logger.info(self.container.logs().decode("utf-8").strip())
 
     def _install_oracle_plugin(self) -> None:
-        plugin_source_path = repo_path() / "agents" / "plugins" / "mk_oracle"
+        plugin_source_path = repo_path() / "agents" / "plugins" / self.cmk_plugin.name
         logger.info(
             "Patching the Oracle plugin: Detect free edition + Use default TNS_ADMIN path..."
         )
@@ -334,7 +335,7 @@ class OracleDatabase:
             r"TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}",
             r"TNS_ADMIN=${TNS_ADMIN:-${ORACLE_HOME}/network/admin}",
         )
-        plugin_temp_path = self.temp_dir / "mk_oracle"
+        plugin_temp_path = self.temp_dir / self.cmk_plugin.name
         with open(plugin_temp_path, "w", encoding="UTF-8") as plugin_file:
             plugin_file.write(plugin_script)
 
@@ -344,12 +345,12 @@ class OracleDatabase:
         ), "Failed to copy Oracle plugin!"
         logger.info('Set ownership for Oracle plugin "%s"...', plugin_source_path)
         rc, output = self.container.exec_run(
-            rf'chmod +x "{self.cmk_plugin_dir}/mk_oracle"', user="root", privileged=True
+            rf'chmod +x "{self.cmk_plugin.as_posix()}"', user="root", privileged=True
         )
         assert rc == 0, f"Error while setting ownership: {output.decode('UTF-8')}"
         logger.info("Installing Oracle plugin configuration files...")
         for cfg_file in self.cfg_files:
-            assert copy_to_container(self.container, self.ORAENV / cfg_file, self.cmk_conf_dir)
+            assert copy_to_container(self.container, self.ORAENV / cfg_file, self.cmk_cfg_dir)
         self.use_credentials()
 
         logger.info("Create a link to Perl...")
@@ -376,7 +377,7 @@ class OracleDatabase:
             self.container, path, self.tns_admin_dir
         ), f'Failed to copy "{path}"!'
         rc, output = self.container.exec_run(
-            rf'cp "{self.cmk_conf_dir}/{self.cmk_credentials_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
+            rf'cp "{self.cmk_credentials_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"',
             user="root",
             privileged=True,
         )
@@ -402,7 +403,7 @@ class OracleDatabase:
             self.container, path, self.tns_admin_dir
         ), f'Failed to copy "{path}"!'
         rc, output = self.container.exec_run(
-            rf'cp "{self.cmk_conf_dir}/{self.cmk_wallet_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
+            rf'cp "{self.cmk_wallet_cfg.as_posix()}" "{self.cmk_cfg.as_posix()}"',
             user="root",
             privileged=True,
         )
@@ -436,7 +437,7 @@ def test_docker_oracle(
     else:
         oracle.use_credentials()
     rc, output = oracle.container.exec_run(
-        f"""bash -c '{oracle.cmk_plugin_dir.as_posix()}/mk_oracle -t'""",
+        f"""bash -c '{oracle.cmk_plugin.as_posix()} -t'""",
         user="root",
         privileged=True,
     )

@@ -2,6 +2,7 @@ load("@cargo_deps_site//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 
 rust_library(
     name = "check-http-lib",
@@ -24,12 +25,21 @@ rust_library(
     deps = all_crate_deps() + ["@openssl"],
 )
 
+file_from_flag(
+    name = "version.rs",
+    out = "src/version.rs",
+    content = ["pub const VERSION: &str = %r;"],
+    value = "//:cmk_version",
+    visibility = ["//visibility:private"],
+)
+
 rust_binary(
     name = "check-http",
     srcs = [
         "src/cli.rs",
         "src/main.rs",
         "src/pwstore.rs",
+        ":version.rs",
     ],
     aliases = aliases(),
     crate_name = "check_http",

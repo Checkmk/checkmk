@@ -32,7 +32,7 @@ $(DEPS_INSTALL_BAZEL):
 	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
-	$(BAZEL_CMD) build \
+	$(BAZEL_CMD) build --cmk_version=$(VERSION) \
 	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    //omd:deps_install_$(EDITION_SHORT)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)

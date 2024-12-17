@@ -4,6 +4,7 @@
 
 use crate::http::Server;
 use crate::pwstore::password_from_store;
+use crate::version;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
@@ -15,6 +16,7 @@ use std::{str::FromStr, time::Duration};
 use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Parser, Debug)]
+#[command(version = version::VERSION)]
 /// check_httpv2
 pub struct Cli {
     /// Username for HTTP Basic Auth

@@ -19,6 +19,7 @@ use tracing_subscriber::{
 
 mod cli;
 mod pwstore;
+mod version;
 
 const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
 

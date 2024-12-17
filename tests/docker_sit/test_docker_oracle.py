@@ -110,6 +110,7 @@ class OracleDatabase:
                     f"GRANT create session TO {self.cmk_username} container=all;",
                 ]
             ),
+            "show_user.sql": "SHOW USER;",
             "register_listener.sql": "ALTER SYSTEM REGISTER;",
             "shutdown.sql": "shutdown immediate;exit;",
         }
@@ -270,6 +271,16 @@ class OracleDatabase:
             user="oracle",
         )
         assert rc == 0, f"Error during user creation: {output.decode('UTF-8')}"
+
+        login = f"{self.cmk_username}/{self.cmk_password}@{self.SID}"
+        logger.info('Testing login "%s"...', login)
+        rc, output = self.container.exec_run(
+            f"""bash -c 'sqlplus -s "{login}" < "{self.ROOT}/show_user.sql"'""",
+            user="oracle",
+        )
+        assert (
+            f"{self.cmk_username}" in output.decode("UTF-8").lower()
+        ), f"Error while checking user: {output.decode('UTF-8')}"
 
         site_ip = self.checkmk.ip
         assert site_ip and site_ip != "127.0.0.1", "Failed to detect IP of checkmk container!"

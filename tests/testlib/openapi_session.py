@@ -628,7 +628,7 @@ class HostsAPI(BaseAPI):
         ignore_existing: bool = False,
     ) -> list[dict[str, Any]]:
         if ignore_existing:
-            existing_hosts = [_.get("id") for _ in self.get_all()]
+            existing_hosts = self.get_all_names()
             entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
         query_string = "?bake_agent=1" if bake_agent else ""
         response = self.session.post(

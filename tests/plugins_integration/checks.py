@@ -135,7 +135,7 @@ def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[st
     host_names = []
     dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
-        hosts = [_ for _ in site.openapi.hosts.get_all() if _.get("id") not in (None, "", site.id)]
+        hosts = [_ for _ in site.openapi.hosts.get_all_names() if _ not in (None, "", site.id)]
         agent_host_names = [
             _.get("id") for _ in hosts if "tag_snmp_ds" not in _.get("attributes", {})
         ]
@@ -605,7 +605,7 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
 
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    return [_.get("id") for _ in site.openapi.hosts.get_all() if _.get("id") != source_host]
+    return [_ for _ in site.openapi.hosts.get_all_names() if _ != source_host]
 
 
 def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:

@@ -54,7 +54,7 @@ def test_automatic_host_removal(
     try:
 
         def _host_removal_done() -> bool:
-            hostnames = {_["id"] for _ in central_site.openapi.hosts.get_all()}
+            hostnames = set(central_site.openapi.hosts.get_all_names())
             return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})
 
         logger.info("Waiting for hosts to be removed")
@@ -77,8 +77,8 @@ def test_automatic_host_removal(
         raise
     finally:
         central_site.openapi.rules.delete(rule_id=rule_id)
-        if unresolvable_host_central in [_.get("id") for _ in central_site.openapi.hosts.get_all()]:
+        if unresolvable_host_central in central_site.openapi.hosts.get_all_names():
             central_site.openapi.hosts.delete(unresolvable_host_central)
-        if unresolvable_host_remote in [_.get("id") for _ in central_site.openapi.hosts.get_all()]:
+        if unresolvable_host_remote in central_site.openapi.hosts.get_all_names():
             central_site.openapi.hosts.delete(unresolvable_host_remote)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

@@ -50,7 +50,7 @@ def _test_rename_preserves_registration(
             connection_details["remote"]["hostname"] == new_hostname
         ), f"Checking if controller sees renaming failed!\nStatus:\n{controller_status}"
     finally:
-        hostnames = {_["id"] for _ in central_site.openapi.hosts.get_all()}
+        hostnames = set(central_site.openapi.hosts.get_all_names())
         for hostname_ in hostnames.intersection({hostname, new_hostname}):
             central_site.openapi.hosts.delete(hostname_)
         central_site.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)

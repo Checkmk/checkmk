@@ -100,6 +100,22 @@ pub struct Levels<T> {
     crit: T,
 }
 
+impl<T> Display for Levels<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        write!(
+            f,
+            "{}",
+            match self.strategy {
+                LevelsStrategy::Upper => format!("warn/crit at {}/{}", self.warn, self.crit),
+                LevelsStrategy::Lower => format!("warn/crit below {}/{}", self.warn, self.crit),
+            }
+        )
+    }
+}
+
 impl<T> Levels<T>
 where
     T: Clone + PartialOrd,
@@ -169,20 +185,6 @@ where
     pub fn new(levels: Levels<T>) -> Self {
         Self { levels }
     }
-
-    fn append_to(&self, text: &str) -> String {
-        format!(
-            "{text} {}",
-            match self.levels.strategy {
-                LevelsStrategy::Upper =>
-                    format!("(warn/crit at {}/{})", self.levels.warn, self.levels.crit),
-                LevelsStrategy::Lower => format!(
-                    "(warn/crit below {}/{})",
-                    self.levels.warn, self.levels.crit
-                ),
-            }
-        )
-    }
 }
 
 impl<T> LevelsChecker<T>
@@ -204,15 +206,9 @@ where
         // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
         let (summary, details) = match (output, state) {
             (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
-            (OutputType::Notice(text), _) => {
-                let text = self.append_to(&text);
-                (Some(text), None)
-            }
+            (OutputType::Notice(text), _) => (Some(format!("{text} ({})", self.levels)), None),
             (OutputType::Summary(text), State::Ok) => (Some(text), None),
-            (OutputType::Summary(text), _) => {
-                let text = self.append_to(&text);
-                (Some(text), None)
-            }
+            (OutputType::Summary(text), _) => (Some(format!("{text} ({})", self.levels)), None),
         };
         CheckResult {
             state,

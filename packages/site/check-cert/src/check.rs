@@ -293,8 +293,8 @@ impl SimpleCheckResult {
         }
     }
 
-    pub fn notice(details: impl Into<String>) -> Self {
-        Self::new(State::Ok, None, as_option(details))
+    pub fn notice(notice: impl Into<String>) -> Self {
+        Self::new(State::Ok, None, as_option(notice))
     }
 
     pub fn ok(summary: impl Into<String>) -> Self {
@@ -363,8 +363,8 @@ where
         }
     }
 
-    pub fn notice(details: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, None, as_option(details), Some(metrics))
+    pub fn notice(notice: impl Into<String>, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, None, as_option(notice), Some(metrics))
     }
 
     pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
@@ -383,14 +383,14 @@ where
         Self::new(State::Unknown, as_option(summary), None, Some(metrics))
     }
 
-    pub fn notice_from_levels(details: impl Into<String>, metrics: Metric<T>) -> Self {
+    pub fn notice_from_levels(notice: impl Into<String>, metrics: Metric<T>) -> Self {
         let state = metrics
             .levels
             .as_ref()
             .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value));
         match state {
-            State::Ok => Self::notice(details, metrics),
-            _ => Self::new(state, as_option(details), None, Some(metrics)),
+            State::Ok => Self::notice(notice, metrics),
+            _ => Self::new(state, as_option(notice), None, Some(metrics)),
         }
     }
 

@@ -18,11 +18,16 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
     [
         pytest.param(
             {
-                "access_key_id": "foo_key",
-                "secret_access_key": (
-                    "cmk_postprocessed",
-                    "explicit_password",
-                    ("uuideb246734-2815-41fe-afbe-d420ed72e81a", "foo_pass"),
+                "auth": (
+                    "access_key",
+                    {
+                        "access_key_id": "foo_key",
+                        "secret_access_key": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuideb246734-2815-41fe-afbe-d420ed72e81a", "foo_pass"),
+                        ),
+                    },
                 ),
                 "proxy_details": {
                     "proxy_host": "proxy_host",
@@ -35,7 +40,6 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 },
                 "access": {
                     "global_service_region": "us-gov-east-1",
-                    "role_arn_id": ("foo_iam", "foo_external_id"),
                 },
                 "global_services": {
                     "ce": None,
@@ -84,11 +88,6 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 ANY,
                 "--global-service-region",
                 "us-gov-east-1",
-                "--assume-role",
-                "--role-arn",
-                "foo_iam",
-                "--external-id",
-                "foo_external_id",
                 "--regions",
                 "ap-northeast-2",
                 "ap-southeast-2",
@@ -150,15 +149,22 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--piggyback-naming-convention",
                 "private_dns_name",
             ],
-            id="full_config",
+            id="full_config_access_key",
         ),
         pytest.param(
             {
-                "access_key_id": "strawberry",
-                "secret_access_key": (
-                    "cmk_postprocessed",
-                    "stored_password",
-                    ("strawberry098", ""),
+                "auth": (
+                    "access_key_sts",
+                    {
+                        "access_key_id": "foo_key",
+                        "secret_access_key": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuideb246734-2815-41fe-afbe-d420ed72e81a", "foo_pass"),
+                        ),
+                        "role_arn_id": "foo_arn_id",
+                        "external_id": "foo_external_id",
+                    },
                 ),
                 "services": {
                     "cloudwatch_alarms": {},
@@ -167,9 +173,14 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
             },
             [
                 "--access-key-id",
-                "strawberry",
+                "foo_key",
                 "--secret-access-key-reference",
                 ANY,
+                "--assume-role",
+                "--role-arn",
+                "foo_arn_id",
+                "--external-id",
+                "foo_external_id",
                 "--services",
                 "cloudwatch_alarms",
                 "--hostname",
@@ -177,15 +188,13 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--piggyback-naming-convention",
                 "ip_region_instance",
             ],
-            id="minimal_config_no_cloudwatch_alarms",
+            id="minimal_config_acces_key_and_sts_no_cloudwatch_alarms",
         ),
         pytest.param(
             {
-                "access_key_id": "strawberry",
-                "secret_access_key": (
-                    "cmk_postprocessed",
-                    "stored_password",
-                    ("strawberry098", ""),
+                "auth": (
+                    "sts",
+                    {"role_arn_id": "foo_arn_id", "external_id": "foo_external_id"},
                 ),
                 "services": {
                     "cloudwatch_alarms": {"alarms": "all"},
@@ -193,10 +202,11 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "piggyback_naming_convention": "ip_region_instance",
             },
             [
-                "--access-key-id",
-                "strawberry",
-                "--secret-access-key-reference",
-                ANY,
+                "--assume-role",
+                "--role-arn",
+                "foo_arn_id",
+                "--external-id",
+                "foo_external_id",
                 "--services",
                 "cloudwatch_alarms",
                 "--cloudwatch-alarms",
@@ -205,16 +215,11 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--piggyback-naming-convention",
                 "ip_region_instance",
             ],
-            id="minimal_config_all_cloudwatch_alarms",
+            id="minimal_config_sts_all_cloudwatch_alarms",
         ),
         pytest.param(
             {
-                "access_key_id": "strawberry",
-                "secret_access_key": (
-                    "cmk_postprocessed",
-                    "stored_password",
-                    ("strawberry098", ""),
-                ),
+                "auth": ("none"),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
@@ -223,10 +228,6 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "piggyback_naming_convention": "ip_region_instance",
             },
             [
-                "--access-key-id",
-                "strawberry",
-                "--secret-access-key-reference",
-                ANY,
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-user",
@@ -238,7 +239,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--piggyback-naming-convention",
                 "ip_region_instance",
             ],
-            id="minimal_config_with_passwords_from_store",
+            id="minimal_config_without_auth",
         ),
     ],
 )

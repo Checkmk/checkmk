@@ -506,6 +506,44 @@ class AWSSpecialAgentValuespecBuilder:
         ]
 
 
+def _migrate_auth(value: object) -> dict[str, object]:
+    """
+    >>> data1 = {'access_key_id': 'XYZ', 'secret_access_key': (), 'access': {'role_arn_id': ('arn:aws:iam::AWSID:role/Rolename', 'UniqueExternalIdFrom-4080-3046-6243') }}
+    >>> data2 = {'access_key_id': 'XYZ', 'secret_access_key': (), 'access': {}}
+    >>> _migrate_auth(data1)
+    {'access': {}, 'auth': ('access_key_sts', {'access_key_id': 'XYZ', 'secret_access_key': (), 'role_arn_id': 'arn:aws:iam::AWSID:role/Rolename', 'external_id': 'UniqueExternalIdFrom-4080-3046-6243'})}
+    >>> _migrate_auth(data2)
+    {'access': {}, 'auth': ('access_key', {'access_key_id': 'XYZ', 'secret_access_key': ()})}
+    """
+
+    assert isinstance(value, dict)
+
+    if "auth" in value:
+        return value
+
+    auth = {}
+    if "access_key_id" in value:
+        auth["access_key_id"] = value["access_key_id"]
+        auth["secret_access_key"] = value["secret_access_key"]
+
+        del value["access_key_id"]
+        del value["secret_access_key"]
+
+    if "access" not in value or "role_arn_id" not in value["access"]:
+        value["auth"] = ("access_key", auth)
+    else:
+        auth["role_arn_id"] = value["access"]["role_arn_id"][0]
+
+        if value["access"]["role_arn_id"][1]:
+            auth["external_id"] = value["access"]["role_arn_id"][1]
+
+        del value["access"]["role_arn_id"]
+
+        value["auth"] = ("access_key_sts", auth)
+
+    return value
+
+
 def _valuespec_special_agents_aws() -> Dictionary:
     valuespec_builder = AWSSpecialAgentValuespecBuilder(
         edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE)
@@ -516,20 +554,130 @@ def _valuespec_special_agents_aws() -> Dictionary:
 
     return Dictionary(
         title=_("Amazon Web Services (AWS)"),
+        migrate=_migrate_auth,
         elements=[
             (
-                "access_key_id",
-                TextInput(
-                    title=_("The access key ID for your AWS account"),
-                    allow_empty=False,
-                    size=50,
-                ),
-            ),
-            (
-                "secret_access_key",
-                _vs_v1_ssc_password(
-                    title=_("The secret access key for your AWS account"),
-                    allow_empty=False,
+                "auth",
+                CascadingDropdown(
+                    title=_("Authentication type"),
+                    help=_(
+                        "Monitoring via an IAM role is recommended, however it requires the monitoring site to be "
+                        "located on an AWS EC2 instance with the according permissions to the accounts to be monitored."
+                    ),
+                    choices=[
+                        (
+                            "access_key",
+                            _("Access key"),
+                            Dictionary(
+                                title=_("Proxy server details"),
+                                optional_keys=False,
+                                elements=[
+                                    (
+                                        "access_key_id",
+                                        TextInput(
+                                            title=_("The access key ID for your AWS account"),
+                                            allow_empty=True,
+                                            size=50,
+                                        ),
+                                    ),
+                                    (
+                                        "secret_access_key",
+                                        _vs_v1_ssc_password(
+                                            title=_("The secret access key for your AWS account"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                        (
+                            "access_key_sts",
+                            _("Access key + IAM role"),
+                            Dictionary(
+                                title=_("Access key information"),
+                                optional_keys=["external_id"],
+                                elements=[
+                                    (
+                                        "access_key_id",
+                                        TextInput(
+                                            title=_("The access key ID for your AWS account"),
+                                            allow_empty=False,
+                                            size=50,
+                                        ),
+                                    ),
+                                    (
+                                        "secret_access_key",
+                                        _vs_v1_ssc_password(
+                                            title=_("The secret access key for your AWS account"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                    (
+                                        "role_arn_id",
+                                        TextInput(
+                                            title=_("The ARN of the IAM role to assume"),
+                                            size=50,
+                                            allow_empty=False,
+                                            help=_(
+                                                "The Amazon Resource Name (ARN) of the role to assume."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "external_id",
+                                        TextInput(
+                                            title=_("External ID"),
+                                            size=50,
+                                            allow_empty=True,
+                                            help=_(
+                                                "A unique identifier that might be required when you assume a role in another "
+                                                "account. If the administrator of the account to which the role belongs provided "
+                                                "you with an external ID, then provide that value in the External ID parameter. "
+                                            ),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                        (
+                            "sts",
+                            _("IAM role (on EC2 instance only)"),
+                            Dictionary(
+                                title=_("Access key information"),
+                                optional_keys=["external_id"],
+                                elements=[
+                                    (
+                                        "role_arn_id",
+                                        TextInput(
+                                            title=_("The ARN of the IAM role to assume"),
+                                            size=50,
+                                            allow_empty=False,
+                                            help=_(
+                                                "The Amazon Resource Name (ARN) of the role to assume."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "external_id",
+                                        TextInput(
+                                            title=_("External ID"),
+                                            size=50,
+                                            allow_empty=True,
+                                            help=_(
+                                                "A unique identifier that might be required when you assume a role in another "
+                                                "account. If the administrator of the account to which the role belongs provided "
+                                                "you with an external ID, then provide that value in the External ID parameter. "
+                                            ),
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                        (
+                            "none",
+                            _("None (on EC2 instance only)"),
+                        ),
+                    ],
                 ),
             ),
             (
@@ -579,30 +727,6 @@ def _valuespec_special_agents_aws() -> Dictionary:
                                     "us-gov-* or cn-* regions have their own global services and may not reach the default one."
                                 ),
                                 default_value=None,
-                            ),
-                        ),
-                        (
-                            "role_arn_id",
-                            Tuple(
-                                title=_("Use STS AssumeRole to assume a different IAM role"),
-                                elements=[
-                                    TextInput(
-                                        title=_("The ARN of the IAM role to assume"),
-                                        size=50,
-                                        help=_(
-                                            "The Amazon Resource Name (ARN) of the role to assume."
-                                        ),
-                                    ),
-                                    TextInput(
-                                        title=_("External ID (optional)"),
-                                        size=50,
-                                        help=_(
-                                            "A unique identifier that might be required when you assume a role in another "
-                                            "account. If the administrator of the account to which the role belongs provided "
-                                            "you with an external ID, then provide that value in the External ID parameter. "
-                                        ),
-                                    ),
-                                ],
                             ),
                         ),
                     ],

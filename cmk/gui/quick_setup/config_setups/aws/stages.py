@@ -338,8 +338,13 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     assert isinstance(regions_to_monitor, list)
     keys_to_rename = {"aws_lambda": "lambda"}
     params = {
-        "access_key_id": params["access_key_id"],
-        "secret_access_key": params["secret_access_key"],
+        "auth": (
+            "access_key",
+            {
+                "access_key_id": params["access_key_id"],
+                "secret_access_key": params["secret_access_key"],
+            },
+        ),
         "global_services": {k: _migrate_aws_service(k) for k in global_services},
         "regions": [region.replace("_", "-") for region in regions_to_monitor],
         "access": {},

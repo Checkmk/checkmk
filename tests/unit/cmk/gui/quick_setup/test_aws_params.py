@@ -43,11 +43,16 @@ QUICK_SETUP_PARAMS = {
 }
 
 EXPECTED_RULE_PARAMS = {
-    "access_key_id": "my_access_key",
-    "secret_access_key": (
-        "cmk_postprocessed",
-        "explicit_password",
-        ("uuidca5b9c84-1faa-4e42-a5a3-10ca28bb8dba", "my_secret_access_key"),
+    "auth": (
+        "access_key",
+        {
+            "access_key_id": "my_access_key",
+            "secret_access_key": (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("uuidca5b9c84-1faa-4e42-a5a3-10ca28bb8dba", "my_secret_access_key"),
+            ),
+        },
     ),
     "global_services": {
         "ce": None,

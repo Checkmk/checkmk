@@ -518,7 +518,7 @@ impl Display for CheckView {
                 Some(sym) => write!(f, "{} ({})", text, sym),
             },
             Self::TextLevels(state, text, levels) => match state.as_sym() {
-                None => write!(f, "{} {}", text, levels),
+                None => write!(f, "{} ({})", text, levels),
                 Some(sym) => write!(f, "{} ({}) ({})", text, levels, sym),
             },
         }
@@ -792,11 +792,8 @@ mod test_metrics_display {
 }
 
 #[cfg(test)]
-mod test_writer_format {
-    use super::{
-        CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, SimpleCheckResult, State,
-        Uom,
-    };
+mod test_checker_format {
+    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult, State};
 
     #[test]
     fn test_with_empty_str() {
@@ -1037,9 +1034,48 @@ mod test_writer_format {
             summary crit (!!)"
         );
     }
+}
+
+#[cfg(test)]
+mod test_from_levels_format {
+    use super::{CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, State, Uom};
 
     #[test]
-    fn test_collection_levels_checker_warn_notice() {
+    fn test_check_ok() {
+        let metric = Metric::builder()
+            .label("label")
+            .value(5)
+            .uom(Uom("ms".to_string()))
+            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .build();
+        let check = CheckResult::from_levels("summary", metric);
+        let coll = Collection::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(
+            format!("{}", coll),
+            "summary (warn/crit at 10/20) | label=5ms;10;20;;\nsummary (warn/crit at 10/20)"
+        );
+    }
+
+    #[test]
+    fn test_notice_ok() {
+        let metric = Metric::builder()
+            .label("label")
+            .value(5)
+            .uom(Uom("ms".to_string()))
+            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .build();
+        let check = CheckResult::notice_from_levels("notice", metric);
+        let coll = Collection::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(
+            format!("{}", coll),
+            "OK | label=5ms;10;20;;\nnotice (warn/crit at 10/20)"
+        );
+    }
+
+    #[test]
+    fn test_notice_warn() {
         let metric = Metric::builder()
             .label("label")
             .value(15)
@@ -1052,6 +1088,23 @@ mod test_writer_format {
         assert_eq!(
             format!("{}", coll),
             "notice (warn/crit at 10/20) (!) | label=15ms;10;20;;\nnotice (warn/crit at 10/20) (!)"
+        );
+    }
+
+    #[test]
+    fn test_notice_crit() {
+        let metric = Metric::builder()
+            .label("label")
+            .value(50)
+            .uom(Uom("ms".to_string()))
+            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .build();
+        let check = CheckResult::notice_from_levels("notice", metric);
+        let coll = Collection::from(&mut vec![check.map(Real::from)]);
+        assert_eq!(coll.state, State::Crit);
+        assert_eq!(
+            format!("{}", coll),
+            "notice (warn/crit at 10/20) (!!) | label=50ms;10;20;;\nnotice (warn/crit at 10/20) (!!)"
         );
     }
 }

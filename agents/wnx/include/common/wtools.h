@@ -78,11 +78,16 @@ private:
     ACL *acl_{nullptr};
 };
 
+template <typename R>
+concept LocalAllocated = requires(R *r) {
+    { LocalFree(reinterpret_cast<HLOCAL>(r)) };
+};
+
 // this is functor to kill any pointer allocated with ::LocalAlloc
 // usually this pointer comes from Windows API
-template <typename T>
+template <LocalAllocated R>
 struct LocalAllocDeleter {
-    void operator()(T *r) const noexcept {
+    void operator()(R *r) const noexcept {
         if (r != nullptr) {
             ::LocalFree(reinterpret_cast<HLOCAL>(r));
         }
@@ -95,8 +100,8 @@ LocalResource<SERVICE_FAILURE_ACTIONS> actions(
     ::WindowsApiToGetActions(handle_to_service));
 #endif
 //
-template <typename T>
-using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+template <LocalAllocated R>
+using LocalResource = std::unique_ptr<R, LocalAllocDeleter<R>>;
 
 struct HandleDeleter {
     using pointer = HANDLE;  // trick to use HANDLE as STL pointer

@@ -11,6 +11,7 @@ use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
+use std::mem;
 use std::time::Duration as StdDuration;
 use std::time::Instant;
 use time::Duration;
@@ -50,11 +51,11 @@ where
     F: FnMut(T2) -> U,
 {
     let lvl: [_; 2] = lvl.try_into().expect("invalid arg count");
-    let Ok(lvl_chk) = LevelsChecker::try_new(strat, Levels::from(&mut lvl.map(|x| conv(x.into()))))
-    else {
+    let mut lvl = lvl.map(|x| conv(x.into()));
+    let Ok(lvl) = Levels::try_new(strat, mem::take(&mut lvl[0]), mem::take(&mut lvl[1])) else {
         check::bail_out("invalid args")
     };
-    lvl_chk
+    LevelsChecker::new(lvl)
 }
 
 #[derive(Parser, Debug)]

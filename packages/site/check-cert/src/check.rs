@@ -8,6 +8,7 @@ use std::str::FromStr;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, PartialOrd))]
 pub enum Real {
     Integer(isize),
     Double(f64),
@@ -77,37 +78,6 @@ where
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct Levels<T> {
-    pub warn: T,
-    pub crit: T,
-}
-
-impl<T> Levels<T>
-where
-    T: Clone,
-{
-    pub fn map<F, U>(self, f: F) -> Levels<U>
-    where
-        F: FnMut(T) -> U,
-        U: Clone + Default,
-    {
-        Levels::from(&mut [self.warn, self.crit].map(f))
-    }
-}
-
-impl<T> From<&mut [T; 2]> for Levels<T>
-where
-    T: Default,
-{
-    fn from(arr: &mut [T; 2]) -> Self {
-        Self {
-            warn: mem::take(&mut arr[0]),
-            crit: mem::take(&mut arr[1]),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub enum LevelsStrategy {
     Upper,
     Lower,
@@ -118,6 +88,47 @@ impl LevelsStrategy {
         match self {
             Self::Upper => PartialOrd::ge(x, y),
             Self::Lower => PartialOrd::lt(x, y),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
+pub struct Levels<T> {
+    strategy: LevelsStrategy,
+    warn: T,
+    crit: T,
+}
+
+impl<T> Levels<T>
+where
+    T: Clone + PartialOrd,
+{
+    pub fn try_new(
+        strategy: LevelsStrategy,
+        warn: T,
+        crit: T,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        strategy
+            .cmp(&crit, &warn)
+            .then_some(Self {
+                strategy,
+                warn,
+                crit,
+            })
+            .ok_or(Box::from("bad values"))
+    }
+
+    pub fn map<F, U>(self, f: F) -> Levels<U>
+    where
+        F: FnMut(T) -> U,
+        U: Clone + Default,
+    {
+        let arr = &mut [self.warn, self.crit].map(f);
+        Levels {
+            strategy: self.strategy,
+            warn: mem::take(&mut arr[0]),
+            crit: mem::take(&mut arr[1]),
         }
     }
 }
@@ -148,7 +159,6 @@ pub struct LevelsCheckerArgs {
 
 #[derive(Debug)]
 pub struct LevelsChecker<T> {
-    strategy: LevelsStrategy,
     levels: Levels<T>,
 }
 
@@ -156,10 +166,14 @@ impl<T> LevelsChecker<T>
 where
     T: Display,
 {
+    pub fn new(levels: Levels<T>) -> Self {
+        Self { levels }
+    }
+
     fn append_to(&self, text: &str) -> String {
         format!(
             "{text} {}",
-            match self.strategy {
+            match self.levels.strategy {
                 LevelsStrategy::Upper =>
                     format!("(warn/crit at {}/{})", self.levels.warn, self.levels.crit),
                 LevelsStrategy::Lower => format!(
@@ -175,21 +189,11 @@ impl<T> LevelsChecker<T>
 where
     T: Clone + PartialOrd + Display,
 {
-    pub fn try_new(
-        strategy: LevelsStrategy,
-        levels: Levels<T>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        strategy
-            .cmp(&levels.crit, &levels.warn)
-            .then_some(Self { strategy, levels })
-            .ok_or(Box::from("bad values"))
-    }
-
     pub fn check(&self, value: T, output: OutputType, args: LevelsCheckerArgs) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
-            if self.strategy.cmp(value, &self.levels.crit) {
+            if self.levels.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
-            } else if self.strategy.cmp(value, &self.levels.warn) {
+            } else if self.levels.strategy.cmp(value, &self.levels.warn) {
                 State::Warn
             } else {
                 State::Ok
@@ -271,7 +275,7 @@ where
 
 impl<T> Metric<T>
 where
-    T: Clone,
+    T: Clone + PartialOrd,
 {
     pub fn map<F, U>(self, mut f: F) -> Metric<U>
     where
@@ -472,7 +476,7 @@ where
 
 impl<T> CheckResult<T>
 where
-    T: Clone,
+    T: Clone + PartialOrd,
 {
     pub fn map<F, U>(self, f: F) -> CheckResult<U>
     where
@@ -700,7 +704,7 @@ pub fn abort(message: impl Into<String>) -> ! {
 
 #[cfg(test)]
 mod test_metrics_map {
-    use super::{Bounds, Levels, Metric, Uom};
+    use super::{Bounds, Levels, LevelsStrategy, Metric, Uom};
 
     fn u(x: &str) -> Uom {
         x.parse().unwrap()
@@ -721,18 +725,10 @@ mod test_metrics_map {
     #[test]
     fn test_levels() {
         assert_eq!(
-            Levels { warn: 1, crit: 10 }.map(&|v| v * 10),
-            Levels {
-                warn: 10,
-                crit: 100
-            }
-        );
-        assert_eq!(
-            Levels::from(&mut [1, 10]).map(&|v| v * 10),
-            Levels {
-                warn: 10,
-                crit: 100,
-            }
+            Levels::try_new(LevelsStrategy::Upper, 1, 10)
+                .unwrap()
+                .map(&|v| v * 10),
+            Levels::try_new(LevelsStrategy::Upper, 10, 100).unwrap()
         );
     }
 
@@ -743,7 +739,7 @@ mod test_metrics_map {
                 .label("Label")
                 .value(42)
                 .uom(u("unit"))
-                .levels(Levels { warn: 5, crit: 10 })
+                .levels(Levels::try_new(LevelsStrategy::Upper, 5, 10).unwrap())
                 .bounds(Bounds { min: 1, max: 10 })
                 .build()
                 .map(|v| v * 10),
@@ -751,10 +747,7 @@ mod test_metrics_map {
                 .label("Label")
                 .value(420)
                 .uom(u("unit"))
-                .levels(Levels {
-                    warn: 50,
-                    crit: 100,
-                })
+                .levels(Levels::try_new(LevelsStrategy::Upper, 50, 100).unwrap())
                 .bounds(Bounds { min: 10, max: 100 })
                 .build()
         );
@@ -763,7 +756,7 @@ mod test_metrics_map {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Bounds, Levels, Metric, Real, Uom};
+    use super::{Bounds, Levels, LevelsStrategy, Metric, Real, Uom};
 
     fn i(x: isize) -> Real {
         Real::Integer(x)
@@ -811,10 +804,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(i(42))
-                    .levels(Levels {
-                        warn: i(24),
-                        crit: i(42)
-                    })
+                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).unwrap())
                     .build()
             ),
             "name=42;24;42;;"
@@ -830,10 +820,7 @@ mod test_metrics_display {
                     .label("name")
                     .value(i(42))
                     .uom(u("ms"))
-                    .levels(Levels {
-                        warn: i(24),
-                        crit: i(42)
-                    })
+                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).unwrap())
                     .bounds(Bounds {
                         min: i(0),
                         max: i(100)
@@ -853,10 +840,7 @@ mod test_metrics_display {
                     .label("name")
                     .value(d(42.0))
                     .uom(u("ms"))
-                    .levels(Levels {
-                        warn: d(24.0),
-                        crit: d(42.0)
-                    })
+                    .levels(Levels::try_new(LevelsStrategy::Upper, d(24.0), d(42.0)).unwrap())
                     .bounds(Bounds {
                         min: d(0.0),
                         max: d(100.0)
@@ -1117,8 +1101,11 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_levels_checker_warn_notice() {
-        let levels =
-            LevelsChecker::try_new(LevelsStrategy::Upper, Levels { warn: 10, crit: 20 }).unwrap();
+        let warn = 10;
+        let crit = 20;
+        let levels = LevelsChecker {
+            levels: Levels::try_new(LevelsStrategy::Upper, warn, crit).unwrap(),
+        };
         let args = LevelsCheckerArgs {
             label: "label".to_string(),
             uom: Some(Uom("ms".to_string())),

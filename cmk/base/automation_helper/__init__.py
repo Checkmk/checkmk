@@ -7,8 +7,8 @@
 
 import os
 import signal
+from contextlib import nullcontext
 from pathlib import Path
-from typing import Final
 
 from setproctitle import setproctitle
 
@@ -26,6 +26,8 @@ from ._reloader import run as run_reloader
 from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
+
+RELATIVE_PATH_FLAG_DISABLE_RELOADER = "disable-automation-helper-reloader"
 
 
 def main() -> int:
@@ -66,10 +68,17 @@ def main() -> int:
                 watcher_schedules(omd_root),
                 cache,
             ),
-            run_reloader(
-                reloader_config(),
-                cache,
-                lambda: os.kill(current_pid, signal.SIGHUP),
+            (
+                nullcontext()
+                # it would be better to handle this via an environment variable, but the automation
+                # helper is started via the omd command, which does not pass through environment
+                # variables
+                if (omd_root / RELATIVE_PATH_FLAG_DISABLE_RELOADER).exists()
+                else run_reloader(
+                    reloader_config(),
+                    cache,
+                    lambda: os.kill(current_pid, signal.SIGHUP),
+                )
             ),
         ):
             try:

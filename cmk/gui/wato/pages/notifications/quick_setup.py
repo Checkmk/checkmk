@@ -836,10 +836,10 @@ def notification_method() -> QuickSetupStage:
                     CascadingSingleChoiceElement(
                         name="timeperiod",
                         title=Title("During time period"),
-                        parameter_form=CascadingSingleChoice(
+                        parameter_form=CascadingSingleChoiceExtended(
                             elements=[
-                                CascadingSingleChoiceElement(
-                                    name=f"_{name}",  # TODO: Should probably use a formspec that doesn't limit the name to a python identifier.
+                                CascadingSingleChoiceElementExtended(
+                                    name=name,
                                     title=Title("%s") % (_("%s") % timeperiod),
                                     parameter_form=bulk_notification(
                                         title="timeperiod",
@@ -1021,7 +1021,7 @@ def notification_method() -> QuickSetupStage:
                                         parameter_form=CascadingSingleChoiceExtended(
                                             title=Title("Method"),
                                             elements=[
-                                                CascadingSingleChoiceElement(
+                                                CascadingSingleChoiceElementExtended(
                                                     title=Title("%s") % (_("%s") % title),
                                                     name=script_name,
                                                     parameter_form=Dictionary(
@@ -1060,7 +1060,7 @@ def notification_method() -> QuickSetupStage:
                                         parameter_form=CascadingSingleChoiceExtended(
                                             title=Title("Method"),
                                             elements=[
-                                                CascadingSingleChoiceElement(
+                                                CascadingSingleChoiceElementExtended(
                                                     title=Title("%s") % (_("%s") % title),
                                                     name=script_name,
                                                     parameter_form=FixedValue(value=None),

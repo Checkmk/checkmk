@@ -50,7 +50,7 @@ def main() {
         ].get(it, it)
     };
     def all_editions = ["enterprise", "cloud", "managed", "raw", "saas"];
-    def selected_editions_default = ["enterprise"];
+    def selected_editions_default = ["enterprise", "cloud", "saas"];
     def selected_editions = (
         params.CIPARAM_OVERRIDE_EDITIONS.replaceAll(',', ' ').split(' ').grep()
         ?: editions_from_comment

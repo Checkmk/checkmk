@@ -1249,7 +1249,7 @@ class Site:
             )
 
         execute(
-            ["cp", "-r", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
+            ["cp", "-rL", self.path("var/log").as_posix(), self.result_dir().as_posix()], sudo=True
         )
 
         # Rename apache logs to get better handling by the browser when opening a log file

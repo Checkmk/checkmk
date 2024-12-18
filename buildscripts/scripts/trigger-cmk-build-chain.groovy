@@ -92,7 +92,13 @@ def main() {
 
     def success = true;
 
-    stage("Build Packages") {
+    // use smart_stage to capture build result, but continue with next steps
+    // this runs the consecutive stages and jobs in any case which makes it easier to re-run or fix only those distros with the next run
+    // which actually failed without triggering all jobs for all but the failing distros
+    success &= smart_stage(
+            name: "Build Packages",
+            condition: true,
+            raiseOnError: false,) {
         build(
             job: "${base_folder}/build-cmk-packages",
             parameters: job_parameters

@@ -50,6 +50,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 
+from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
@@ -66,8 +67,6 @@ except ImportError:
     RulespecGroupMonitoringAgentsAgentPlugins = None
     RulespecGroupMonitoringAgentsLinuxUnixAgent = None
     RulespecGroupMonitoringAgentsWindowsAgent = None
-
-from cmk.rulesets import v1 as ruleset_api_v1
 
 
 @dataclass(frozen=True)

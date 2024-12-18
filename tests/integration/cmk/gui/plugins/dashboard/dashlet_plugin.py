@@ -6,13 +6,13 @@
 # Initialize the UI environment to make loading of the dashlet possible.
 from cmk.gui import main_modules
 
-main_modules.load_plugins()
-
 # Names are made available dynamically
 from cmk.gui.plugins.dashboard.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
     Dashlet,
     dashlet_registry,
 )
+
+main_modules.load_plugins()
 
 
 @dashlet_registry.register

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import main_modules
+from cmk.gui.watolib.config_domain_name import config_domain_registry
 
 main_modules.load_plugins()
-from cmk.gui.watolib.config_domain_name import config_domain_registry
 
 print("test" in config_domain_registry)

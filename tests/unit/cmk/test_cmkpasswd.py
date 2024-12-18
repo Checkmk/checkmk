@@ -11,10 +11,10 @@ from unittest.mock import patch
 import pytest
 from pytest import MonkeyPatch
 
-Capsys = pytest.CaptureFixture[str]
-
 from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
 from cmk.crypto.password import Password
+
+Capsys = pytest.CaptureFixture[str]
 
 
 def _get_pw(pw: str = "hunter2") -> Callable[[], Password]:

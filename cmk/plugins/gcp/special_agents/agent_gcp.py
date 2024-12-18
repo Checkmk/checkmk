@@ -23,17 +23,16 @@ from googleapiclient.discovery import build, Resource  # type: ignore[import-unt
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
 from cmk.plugins.gcp.lib.constants import Extractors
-
-# Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = GoogleAggregation.Aligner
-Reducer = GoogleAggregation.Reducer
-
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+
+# Those are enum classes defined in the Aggregation class. Not nice but works
+Aligner = GoogleAggregation.Aligner
+Reducer = GoogleAggregation.Reducer
 
 ####################
 # Type Definitions #

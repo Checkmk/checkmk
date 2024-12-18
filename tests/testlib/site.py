@@ -616,12 +616,11 @@ class Site:
             stderr=subprocess.STDOUT,
             check=False,
         )
-        log_level = logging.DEBUG if completed_process.returncode == 0 else logging.WARNING
-        logger.log(log_level, "Exit code: %d", completed_process.returncode)
+        logger.debug("Exit code: %d", completed_process.returncode)
         if completed_process.stdout:
-            logger.log(log_level, "Output:")
+            logger.debug("Output:")
         for line in completed_process.stdout.strip().split("\n"):
-            logger.log(log_level, "> %s", line)
+            logger.debug("> %s", line)
 
         if mode == "status":
             logger.info(

@@ -23,7 +23,7 @@ def server_config(*, run_directory: Path, log_directory: Path) -> ServerConfig:
         pid_file=run_directory / "automation-helper.pid",
         access_log=log_directory / "access.log",
         error_log=log_directory / "error.log",
-        num_workers=1,
+        num_workers=2,
     )
 
 

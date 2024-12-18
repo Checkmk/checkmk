@@ -279,6 +279,7 @@ class ChangesAPI(BaseAPI):
         sites: list[str] | None = None,
         force_foreign_changes: bool = False,
         timeout: int = 300,  # TODO: revert to 60 seconds once performance is improved.
+        strict: bool = True,
     ) -> bool:
         """Activate changes via REST API and wait for completion.
 
@@ -286,6 +287,8 @@ class ChangesAPI(BaseAPI):
             * True if changes are activated
             * False if there are no changes to be activated
         """
+        pending_changes_ids_before = set(_.get("id") for _ in self.get_pending())
+
         logger.info("Activate changes and wait %ds for completion...", timeout)
         with self.session.wait_for_completion(timeout, "get", "activate_changes"):
             try:
@@ -293,10 +296,20 @@ class ChangesAPI(BaseAPI):
             except NoActiveChanges:
                 return False
 
-        pending_changes = self.get_pending()
-        assert (
-            not pending_changes
-        ), f"There are pending changes that were not activated: {pending_changes}"
+        pending_changes_after = self.get_pending()
+        if strict:
+            assert (
+                not pending_changes_after
+            ), f"There are pending changes after activation: {pending_changes_after}"
+        else:
+            pending_changes_intersection_ids = set(
+                _.get("id") for _ in pending_changes_after
+            ).intersection(pending_changes_ids_before)
+            assert not pending_changes_intersection_ids, (
+                f"There are pending changes that were not activated: "
+                f"{(_ for _ in pending_changes_after if _.get('id') in
+                     pending_changes_intersection_ids)}"
+            )
 
         return True
 

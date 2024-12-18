@@ -34,19 +34,21 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 </script>
 
 <template>
-  <div v-for="element in props.spec.elements" :key="element.name" class="container">
-    <CmkCheckbox
-      :label="element.title"
-      :model-value="value.includes(element.name)"
-      @update:model-value="(newValue) => change(element, newValue)"
-    />
+  <div>
+    <div v-for="element in props.spec.elements" :key="element.name" class="container">
+      <CmkCheckbox
+        :label="element.title"
+        :model-value="value.includes(element.name)"
+        @update:model-value="(newValue) => change(element, newValue)"
+      />
+    </div>
   </div>
 
   <FormValidation :validation="validation"></FormValidation>
 </template>
 
 <style scoped>
-.container {
+div.container:not(:last-of-type) {
   padding-bottom: 8px;
 }
 </style>

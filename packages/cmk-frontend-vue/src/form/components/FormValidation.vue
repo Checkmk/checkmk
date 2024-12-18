@@ -22,7 +22,7 @@ const props = defineProps<{
 
 <style scoped>
 div.form-validation {
-  margin-top: 12px;
+  margin-top: var(--spacing);
   padding: 8px 12px;
   background-color: var(--error-msg-bg-color);
   border-radius: var(--border-radius);

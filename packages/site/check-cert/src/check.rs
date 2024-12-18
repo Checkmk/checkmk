@@ -173,7 +173,7 @@ pub struct MetricMetaData {
     uom: Option<Uom>,
 }
 
-pub fn check_levels<T: Clone + PartialOrd + Display>(
+pub fn check_levels<T: Clone + PartialOrd>(
     value: T,
     levels: Levels<T>,
     output: OutputType,

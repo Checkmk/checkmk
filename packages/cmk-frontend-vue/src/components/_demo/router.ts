@@ -23,6 +23,7 @@ import DemoFormMetric from './DemoFormMetric.vue'
 import DemoForm from './DemoForm.vue'
 import DemoFormBooleanChoice from './DemoFormBooleanChoice.vue'
 import DemoFormCascadingSingleChoice from './DemoFormCascadingSingleChoice.vue'
+import DemoFormAll from './DemoFormAll.vue'
 import DemoFormOptionalChoice from './DemoFormOptionalChoice.vue'
 import DemoFormDictionary from './DemoFormDictionary.vue'
 import DemoFormCheckboxListChoice from './DemoFormCheckboxListChoice.vue'
@@ -167,6 +168,11 @@ const routes: Route[] = [
         path: 'formtuple',
         name: 'FormTuple',
         component: DemoFormTuple
+      },
+      {
+        path: 'formall',
+        name: 'form all',
+        component: DemoFormAll
       },
       {
         path: 'formlabels',

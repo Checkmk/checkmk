@@ -157,6 +157,7 @@ const dictSpec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'bar',
+      render_only: false,
       required: true,
       default_value: 'baz',
       parameter_form: stringFormSpec,

@@ -46,6 +46,7 @@ const enabledSpec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'tp_default_value',
+      render_only: false,
       required: true,
       default_value: 'foo',
       parameter_form: embeddedSpec,
@@ -53,6 +54,7 @@ const enabledSpec: FormSpec.Dictionary = {
     },
     {
       name: 'tp_values',
+      render_only: false,
       required: true,
       default_value: [],
       parameter_form: listSpec,

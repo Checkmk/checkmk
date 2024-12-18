@@ -22,6 +22,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
 import { staticAssertNever } from '@/lib/typeUtils'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -251,12 +252,20 @@ const { FormEditDispatcher } = useFormEditDispatcher()
                   'group-with-more-items': group.elems.length > 1
                 }"
               >
-                <FormEditDispatcher
-                  v-if="dict_element.is_active"
-                  v-model:data="data[dict_element.dict_config.name]"
-                  :spec="dict_element.dict_config.parameter_form"
-                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                />
+                <template v-if="dict_element.is_active">
+                  <FormEditDispatcher
+                    v-if="!dict_element.dict_config.render_only"
+                    v-model:data="data[dict_element.dict_config.name]"
+                    :spec="dict_element.dict_config.parameter_form"
+                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                  />
+                  <FormReadonly
+                    v-else
+                    :data="data[dict_element.dict_config.name]"
+                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                    :spec="dict_element.dict_config.parameter_form"
+                  ></FormReadonly>
+                </template>
               </div>
             </div>
           </div>

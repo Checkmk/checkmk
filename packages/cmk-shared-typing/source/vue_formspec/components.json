@@ -372,6 +372,9 @@
                     ]
                 },
                 "default_value": {},
+                "render_only": {
+                    "type": "boolean"
+                },
                 "parameter_form": {
                     "$ref": "#/$defs/form_spec"
                 }
@@ -381,6 +384,7 @@
                 "required",
                 "parameter_form",
                 "default_value",
+                "render_only",
                 "group"
             ]
         },

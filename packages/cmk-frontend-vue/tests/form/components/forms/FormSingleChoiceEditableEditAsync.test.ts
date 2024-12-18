@@ -38,6 +38,7 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
             elements: [
               {
                 name: 'element_ident',
+                render_only: false,
                 group: null,
                 required: false,
                 default_value: '',

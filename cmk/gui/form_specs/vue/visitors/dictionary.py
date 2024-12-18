@@ -106,6 +106,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                     default_value=element_vue_value,
                     required=dict_element.required,
                     parameter_form=element_schema,
+                    render_only=dict_element.render_only,
                     group=group,
                 )
             )

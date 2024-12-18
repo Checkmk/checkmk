@@ -42,6 +42,7 @@ const catalog = ref<Catalog>({
         elements: [
           {
             name: 'element_name',
+            render_only: false,
             required: false,
             default_value: '',
             group: null,

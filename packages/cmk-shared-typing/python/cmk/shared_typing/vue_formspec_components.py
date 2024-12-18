@@ -360,6 +360,7 @@ class DictionaryElement:
     required: bool
     group: Optional[DictionaryGroup]
     default_value: Any
+    render_only: bool
     parameter_form: FormSpec
 
 

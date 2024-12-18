@@ -49,6 +49,7 @@ const spec: FormSpec.Dictionary = {
   elements: [
     {
       name: 'bar',
+      render_only: false,
       required: false,
       default_value: 'barDefaultValue',
       parameter_form: stringFormSpec,
@@ -198,6 +199,7 @@ test('FormDictionary renders required only once depending on label presence', as
     elements: [
       {
         name: 'bar',
+        render_only: false,
         required: true,
         default_value: '',
         parameter_form: requiredUnlabeledString,
@@ -205,6 +207,7 @@ test('FormDictionary renders required only once depending on label presence', as
       },
       {
         name: 'labeledBar',
+        render_only: false,
         required: true,
         default_value: '',
         parameter_form: requiredString,
@@ -212,6 +215,7 @@ test('FormDictionary renders required only once depending on label presence', as
       },
       {
         name: 'optional',
+        render_only: false,
         required: false,
         default_value: '',
         parameter_form: optionalUnlabeledString,
@@ -219,6 +223,7 @@ test('FormDictionary renders required only once depending on label presence', as
       },
       {
         name: 'labeledOptional',
+        render_only: false,
         required: false,
         default_value: '',
         parameter_form: optionalString,
@@ -270,6 +275,7 @@ test('FormDictionary appends default of required element if missing in data', as
       elements: [
         {
           name: 'bar',
+          render_only: false,
           required: true,
           default_value: 'baz',
           parameter_form: stringFormSpec,
@@ -316,6 +322,7 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
       elements: [
         {
           name: name,
+          render_only: false,
           required: true,
           default_value: 'something',
           parameter_form: stringFormSpec,

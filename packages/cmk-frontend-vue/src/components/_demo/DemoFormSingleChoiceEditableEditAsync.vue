@@ -78,6 +78,7 @@ const api: API<ObjectId, ObjectId> = {
       elements: [
         {
           name: 'element_name',
+          render_only: false,
           group: null,
           required: false,
           default_value: '',

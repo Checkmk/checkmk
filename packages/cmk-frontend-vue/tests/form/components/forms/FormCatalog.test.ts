@@ -50,6 +50,7 @@ function getDictionaryFormspec(
     elements: elements.map((element) => {
       return {
         required: false,
+        render_only: false,
         default_value: '',
         layout: 'one_column',
         group: null,

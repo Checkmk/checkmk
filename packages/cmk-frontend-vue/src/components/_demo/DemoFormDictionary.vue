@@ -40,6 +40,7 @@ const dictionarySpec: Dictionary = {
   elements: [
     {
       name: 'some_name',
+      render_only: false,
       required: false,
       group: null,
       default_value: 'default_value',
@@ -47,6 +48,7 @@ const dictionarySpec: Dictionary = {
     },
     {
       name: 'unlabeled_fixed_value_null',
+      render_only: false,
       required: false,
       group: null,
       default_value: null,
@@ -61,6 +63,7 @@ const dictionarySpec: Dictionary = {
     },
     {
       name: 'unlabeled_fixed_value',
+      render_only: false,
       required: false,
       group: null,
       default_value: null,
@@ -75,6 +78,7 @@ const dictionarySpec: Dictionary = {
     },
     {
       name: 'labeled_fixed_value',
+      render_only: false,
       required: false,
       group: null,
       default_value: null,

@@ -320,6 +320,7 @@ export interface DictionaryElement {
   required: boolean;
   group: DictionaryGroup | null;
   default_value: unknown;
+  render_only: boolean;
   parameter_form: FormSpec;
 }
 export interface DictionaryGroup {

@@ -242,14 +242,13 @@ class SiteBrokerCertificate:
         The certificate and key are not persisted to disk directly because this method is also used
         to create certificates for remote sites.
         """
-        common_name = site_name  # Note: this is used to identify the rabbitmq user
         organization = f"Checkmk Site {site_name}"
         expires = relativedelta(years=2)
         is_ca = False
         key_size = 4096
 
         cert_bundle = issuer.issue_new_certificate(
-            common_name=common_name,
+            common_name=site_name,
             organization=organization,
             expiry=expires,
             key_size=key_size,

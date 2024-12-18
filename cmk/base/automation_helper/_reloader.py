@@ -11,20 +11,20 @@ from threading import Event
 from typing import Callable, Final
 
 from ._cache import Cache, CacheError
+from ._config import ReloaderConfig
 from ._log import LOGGER
-
-RELOADER_SLEEP_INTERVAL: Final = 5
 
 
 @contextmanager
 def run(
+    config: ReloaderConfig,
     cache: Cache,
     reload_callback: Callable[[], None],
 ) -> Generator[None]:
     LOGGER.info("[reloader] Initializing")
     shutdown_flag = Event()
     with ThreadPoolExecutor(max_workers=1) as executor:
-        executor.submit(_run, cache, reload_callback, shutdown_flag)
+        executor.submit(_run, config, cache, reload_callback, shutdown_flag)
         try:
             LOGGER.info("[reloader] Operational")
             yield
@@ -35,12 +35,13 @@ def run(
 
 
 def _run(
+    config: ReloaderConfig,
     cache: Cache,
     reload_callback: Callable[[], None],
     shutdown_flag: Event,
 ) -> None:
     last_change = _retrieve_last_change(cache)
-    while not shutdown_flag.wait(timeout=RELOADER_SLEEP_INTERVAL):
+    while not shutdown_flag.wait(timeout=config.sleep_inteval):
         if (cached_last_change := _retrieve_last_change(cache)) != last_change:
             LOGGER.info(
                 "[reloader] Change detected %.2f seconds ago, reloading",

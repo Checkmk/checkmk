@@ -20,7 +20,7 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._config import server_config, watcher_schedules
+from ._config import reloader_config, server_config, watcher_schedules
 from ._log import configure_logger, LOGGER
 from ._reloader import run as run_reloader
 from ._server import run as run_server
@@ -67,6 +67,7 @@ def main() -> int:
                 cache,
             ),
             run_reloader(
+                reloader_config(),
                 cache,
                 lambda: os.kill(current_pid, signal.SIGHUP),
             ),

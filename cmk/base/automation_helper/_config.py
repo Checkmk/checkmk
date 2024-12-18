@@ -68,3 +68,12 @@ def watcher_schedules(omd_root: Path) -> list[Schedule]:
             patterns=["stored_passwords"],
         ),
     ]
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ReloaderConfig:
+    sleep_inteval: float
+
+
+def reloader_config() -> ReloaderConfig:
+    return ReloaderConfig(sleep_inteval=5.0)

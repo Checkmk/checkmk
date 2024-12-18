@@ -8,7 +8,7 @@ import traceback
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
@@ -214,7 +214,9 @@ def recap_stage(
 
 class StageActionResult(BaseModel, frozen=False):
     validation_errors: ValidationErrors | None = None
-    stage_recap: Sequence[Widget] = field(default_factory=list)
+    # TODO: This should be a list of widgets using only Sequence[Widget] will remove all fields
+    #  when the data is returned (this is a temporary fix)
+    stage_recap: Sequence[Any] = field(default_factory=list)
     background_job_exception: str | None = None
 
     @classmethod

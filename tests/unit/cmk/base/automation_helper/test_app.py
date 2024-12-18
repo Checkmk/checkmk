@@ -10,7 +10,13 @@ from collections.abc import Callable
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
-from cmk.base.automation_helper._app import AutomationEngine, AutomationPayload, get_application
+from cmk.base.automation_helper._app import (
+    AutomationEngine,
+    AutomationPayload,
+    AutomationResponse,
+    get_application,
+    HealthCheckResponse,
+)
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automations import AutomationExitCode
 
@@ -53,7 +59,10 @@ def test_automation_with_success(mocker: MockerFixture, cache: Cache) -> None:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        exit_code=AutomationExitCode.SUCCESS,
+        output="",
+    )
     mock_reload_config.assert_called_once()  # only at application startup
 
 
@@ -67,7 +76,10 @@ def test_automation_with_failure(mocker: MockerFixture, cache: Cache) -> None:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
-    assert resp.json() == {"exit_code": 1, "output": ""}
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        exit_code=1,
+        output="",
+    )
     mock_reload_config.assert_called_once()  # only at application startup
 
 
@@ -79,10 +91,8 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         mock_reload_config,
     ) as client:
         cache.store_last_detected_change(time.time())
-        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+        client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
-    assert resp.status_code == 200
-    assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
     assert (
         # once at application startup, once when the endpoint is called
         mock_reload_config.call_count == 2
@@ -97,7 +107,5 @@ def test_health_check(cache: Cache) -> None:
     ) as client:
         resp = client.get("/health")
 
-    last_reload_at = resp.json()["last_reload_at"]
-
     assert resp.status_code == 200
-    assert last_reload_at and last_reload_at < time.time()
+    assert HealthCheckResponse.model_validate(resp.json()).last_reload_at < time.time()

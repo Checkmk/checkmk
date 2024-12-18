@@ -950,7 +950,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
                 "sites",
                 {
                     siteid: livestatus.sanitize_site_configuration(config)
-                    for siteid, config in sites
+                    for siteid, config in sites.items()
                 },
             )
         else:

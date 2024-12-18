@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -23,6 +24,7 @@ from tests.testlib.docker import (
     prepare_package,
     start_checkmk,
 )
+from tests.testlib.repo import repo_path
 from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
 
 from cmk.ccc.version import Edition, Version, versions_compatible
@@ -360,7 +362,10 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 )
 def test_update(client: docker.DockerClient) -> None:
     pkg_version = version_from_env()
-    container_name = "%s-monitoring" % pkg_version.branch
+    # make hash of the current workspace/checkout path part of container name in order
+    # to avoid conflicts with running `test_update` instances on the same node
+    workspace_id = hashlib.sha256(repo_path().as_posix().encode("utf-8")).hexdigest()[:10]
+    container_name = f"{pkg_version.branch}-monitoring-{workspace_id}"
 
     update_compatibility = versions_compatible(
         Version.from_str(old_version.version), Version.from_str(pkg_version.version)

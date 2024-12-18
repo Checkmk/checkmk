@@ -189,21 +189,24 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "-m",
         "--sections",
-        default=",".join(sections),
+        type=lambda x: x.split(","),
+        default=sections,
         help=f"Comma separated list of data to query. \
                Possible values: {','.join(sections)} (default: all)",
     )
     parser.add_argument(
         "-n",
         "--disabled_sections",
-        default="",
+        type=lambda x: x.split(","),
+        default=(),
         help=f"Comma separated list of data to ignore. \
                Possible values: {','.join(sections)} (default: None)",
     )
     parser.add_argument(
         "-c",
         "--cached_sections",
-        default="",
+        type=lambda x: x.split(","),
+        default=(),
         help=f"Comma separated list of sections and times. \
                Possible values: {','.join(sections)} (default: None)",
     )
@@ -784,13 +787,10 @@ def agent_redfish_main(args: Args) -> int:
 
     # Start Redfish Session Object
     redfishobj = get_session(args)
-    sections = args.sections.split(",")
-    sections_disabled = args.disabled_sections.split(",")
     redfishobj.cache_per_section = {
-        n: int(m)
-        for n, m, *_ in (element.split("-") for element in args.cached_sections.split(","))
+        n: int(m) for n, m, *_ in (element.split("-") for element in args.cached_sections)
     }
-    redfishobj.sections = set(sections).difference(sections_disabled)
+    redfishobj.sections = {n for n in args.sections if n not in args.disabled_sections}
     get_information(redfishobj)
     # logout not needed anymore if no problem - session saved to file
     # logout is done if some query fails

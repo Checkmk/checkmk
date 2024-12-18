@@ -100,13 +100,10 @@ const elementRequired = computed(() => {
   <CmkDropdown
     v-model:selected-option="selectedConditionGroup"
     :options="remainingGroups.map(([name, value]) => ({ name, title: value.title }))"
-    :input-hint="
-      remainingGroups.length === 0
-        ? spec.i18n.no_more_condition_groups_to_add
-        : spec.i18n.select_condition_group_to_add
-    "
+    :input-hint="spec.i18n.select_condition_group_to_add"
     :show-filter="remainingGroups.length > FILTER_SHOW_THRESHOLD"
     :required-text="elementRequired ? spec.i18n_base.required : ''"
+    :no-elements-text="spec.i18n.no_more_condition_groups_to_add"
     @update:selected-option="addElement"
   />
   <FormValidation :validation="validation"></FormValidation>

@@ -40,6 +40,7 @@ _MAP_STATUS = {
     "7": "erase queued",
     "8": "SSD wear out",
     "9": "not authenticated",
+    "10": "spare",
 }
 
 _MAP_SMART_STATUS = {

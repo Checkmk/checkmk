@@ -3,11 +3,25 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
+[genrule(
+    name = "%s_deployable" % binary,
+    srcs = ["@rrdtool_native//:%s" % binary],
+    outs = [binary],
+    cmd = """
+           cp -L $< $@
+           chmod u+w $@
+           patchelf $@ --force-rpath --set-rpath "\\$$ORIGIN/../lib"
+       """,
+) for binary in [
+    "rrdcached",
+    "rrdtool",
+]]
+
 pkg_files(
     name = "rrdtool_bin",
     srcs = [
-        "@rrdtool_native//:rrdcached",
-        "@rrdtool_native//:rrdtool",
+        "rrdcached",
+        "rrdtool",
     ],
     attributes = pkg_attributes(
         mode = "0755",

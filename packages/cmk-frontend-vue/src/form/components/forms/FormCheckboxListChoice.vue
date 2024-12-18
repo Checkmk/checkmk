@@ -49,7 +49,4 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 .container {
   padding-bottom: 8px;
 }
-[type='checkbox'] + label::before {
-  border-radius: 2px;
-}
 </style>

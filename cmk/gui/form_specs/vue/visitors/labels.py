@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
-from typing import TypeVar
+from collections.abc import Mapping
 
 from cmk.gui.form_specs.private.labels import Labels
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -14,37 +13,30 @@ from cmk.rulesets.v1 import Title
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import INVALID_VALUE, InvalidValue
+from ._type_defs import InvalidValue
 from ._utils import (
-    compute_validation_errors,
     create_validation_error,
     get_title_and_help,
 )
 
-T = TypeVar("T")
+_ParsedValueModel = Mapping[str, str]
+_FrontendModel = Mapping[str, str]
 
 
-class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
-    def _parse_value(self, raw_value: object) -> Mapping[str, str] | InvalidValue:
+class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FrontendModel]):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if not isinstance(raw_value, dict):
-            return INVALID_VALUE
+            return InvalidValue(reason="Invalid data", fallback_value={})
 
         for value in raw_value.values():
             if not isinstance(value, str):
-                return INVALID_VALUE
+                return InvalidValue(reason="Invalid data", fallback_value={})
 
         return raw_value
 
-    def _validators(self) -> Sequence[Callable[[Mapping[str, str]], object]]:
-        # Todo: Implement custom validation
-        return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
-
     def _to_vue(
-        self, raw_value: object, parsed_value: Mapping[str, str] | InvalidValue
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
     ) -> tuple[shared_type_defs.Labels, Mapping[str, str]]:
-        if isinstance(parsed_value, InvalidValue):
-            parsed_value = {}
-
         title, help_text = get_title_and_help(self.form_spec)
 
         return (
@@ -73,15 +65,12 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                 if self.form_spec.label_source
                 else None,
             ),
-            {} if isinstance(parsed_value, InvalidValue) else parsed_value,
+            parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Mapping[str, str] | InvalidValue
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, InvalidValue):
-            return []
-
         unique_pairs = set()
         for key, value in parsed_value.items():
             pair = (key, value)
@@ -91,8 +80,7 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                     Title("Labels need to be unique."),
                 )
             unique_pairs.add(pair)
+        return []
 
-        return compute_validation_errors(self._validators(), parsed_value)
-
-    def _to_disk(self, raw_value: object, parsed_value: Mapping[str, str]) -> Mapping[str, str]:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> Mapping[str, str]:
         return parsed_value

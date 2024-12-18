@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Any, Optional
+from typing import Any, Generic, TypeVar
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 DataForDisk = Any
+FrontendModel = TypeVar("FrontendModel")
+ParsedValueModel = TypeVar("ParsedValueModel")
 
 
 class DefaultValue:
@@ -16,6 +18,13 @@ class DefaultValue:
 
 
 DEFAULT_VALUE = DefaultValue()
+
+
+class Unset:
+    pass
+
+
+UNSET = Unset()
 
 
 class DataOrigin(Enum):
@@ -30,11 +39,9 @@ class VisitorOptions:
 
 
 @dataclass
-class InvalidValue:
-    reason: Optional[str] = None
-
-
-INVALID_VALUE = InvalidValue()
+class InvalidValue(Generic[FrontendModel]):
+    fallback_value: FrontendModel
+    reason: str
 
 
 class FormSpecValidationError(ValueError):

@@ -17,11 +17,9 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
-    compute_validation_errors,
-    compute_validators,
     create_validation_error,
     get_title_and_help,
     localize,
@@ -29,10 +27,11 @@ from ._utils import (
 
 ModelTopic = str
 ModelTopicElement = str
-ModelCatalog = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
+_ParsedValueModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
+_FrontendModel = Mapping[ModelTopic, Mapping[ModelTopicElement, object]]
 
 
-class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
+class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FrontendModel]):
     def _resolve_topic_to_elements(self, topic: Topic) -> Mapping[str, TopicElement]:
         topic_to_elements: dict[str, TopicElement] = {}
         if isinstance(topic.elements, list):
@@ -47,7 +46,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
 
     def _resolve_default_values(
         self, raw_value: DefaultValue | dict[str, dict[str, object] | DefaultValue]
-    ) -> ModelCatalog:
+    ) -> _ParsedValueModel:
         # The catalog can be treated as a dictionary of dictionaries
         # Because of this, the default value are resolved one level deeper
         tmp_value: dict[str, Any]
@@ -72,14 +71,14 @@ class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
 
         return resolved_value
 
-    def _parse_value(self, raw_value: object) -> ModelCatalog | InvalidValue:
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if not isinstance(raw_value, dict) and not isinstance(raw_value, DefaultValue):
-            return INVALID_VALUE
+            return InvalidValue(reason="Invalid catalog data", fallback_value={})
 
         raw_value = self._resolve_default_values(raw_value)
 
         if not all(topic_name in raw_value for topic_name in self.form_spec.elements.keys()):
-            return INVALID_VALUE
+            return InvalidValue(reason="Invalid catalog data", fallback_value={})
 
         return raw_value
 
@@ -108,11 +107,11 @@ class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
         )
 
     def _to_vue(
-        self, raw_value: object, parsed_value: ModelCatalog | InvalidValue
-    ) -> tuple[shared_type_defs.Catalog, Mapping[str, object]]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.Catalog, _FrontendModel]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, InvalidValue):
-            parsed_value = {}
+            parsed_value = parsed_value.fallback_value
 
         vue_value: dict[str, dict[str, object]] = {}
         vue_catalog = shared_type_defs.Catalog(
@@ -159,14 +158,9 @@ class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
         return vue_catalog, vue_value
 
     def _validate(
-        self, raw_value: object, parsed_value: ModelCatalog | InvalidValue
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, InvalidValue):
-            return create_validation_error(raw_value, "Invalid value for catalog")
-
-        element_validations = [
-            *compute_validation_errors(compute_validators(self.form_spec), parsed_value)
-        ]
+        element_validations: list[shared_type_defs.ValidationMessage] = []
         for topic_name, topic in self.form_spec.elements.items():
             topic_values = parsed_value[topic_name]
             for element_name, element in self._resolve_topic_to_elements(topic).items():
@@ -191,7 +185,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, ModelCatalog]):
         return element_validations
 
     def _to_disk(
-        self, raw_value: object, parsed_value: ModelCatalog
+        self, raw_value: object, parsed_value: _ParsedValueModel
     ) -> Mapping[str, dict[str, object]]:
         disk_values: dict[str, dict[str, object]] = {}
         for topic_name, topic in self.form_spec.elements.items():

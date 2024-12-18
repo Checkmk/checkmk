@@ -13,14 +13,14 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_spec_visitor_registry: dict[
-    type[FormSpec[Any]], type[FormSpecVisitor[FormSpec[Any], Any]]
+    type[FormSpec[Any]], type[FormSpecVisitor[FormSpec[Any], Any, Any]]
 ] = {}
 
 form_spec_recomposer_registry: dict[type[FormSpec[Any]], RecomposerFunction] = {}
 
 
 def register_visitor_class(
-    form_spec_class: type[FormSpec[Any]], visitor_class: type[FormSpecVisitor[Any, Any]]
+    form_spec_class: type[FormSpec[Any]], visitor_class: type[FormSpecVisitor[Any, Any, Any]]
 ) -> None:
     form_spec_visitor_registry[form_spec_class] = visitor_class
 
@@ -33,7 +33,7 @@ def register_recomposer_function(
 
 def get_visitor(
     form_spec: FormSpec[Any], options: VisitorOptions
-) -> FormSpecVisitor[FormSpec[Any], Any]:
+) -> FormSpecVisitor[FormSpec[Any], Any, Any]:
     if recompose_function := form_spec_recomposer_registry.get(form_spec.__class__):
         return get_visitor(recompose_function(form_spec), options)
 

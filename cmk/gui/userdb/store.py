@@ -228,7 +228,12 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
                 result[uid][attr] = val
 
         result[uid]["store_automation_secret"] = AutomationUserSecret(uid).exists()
-        result[uid]["is_automation_user"] = AutomationUserFile(uid).load()
+        # The AutomationUserFile was added with 2.4. Previously the info to decide if a user is an
+        # automation user was the automation secret. Instead of creating an update action let's
+        # check both.
+        result[uid]["is_automation_user"] = (
+            AutomationUserSecret(uid).exists() or AutomationUserFile(uid).load()
+        )
 
     return result
 

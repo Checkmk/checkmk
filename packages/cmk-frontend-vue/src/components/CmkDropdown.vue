@@ -42,6 +42,10 @@ const selectedOptionTitle = computed(
   () => options.find(({ name }) => name === selectedOption.value)?.title ?? inputHint
 )
 
+const noChoiceAvailable = computed(
+  () => options.length === 0 || (options.length === 1 && selectedOption.value === options[0]!.name)
+)
+
 const suggestionsShown = ref(false)
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
@@ -63,7 +67,7 @@ watch(filterString, (newFilterString) => {
 })
 
 function showSuggestions(): void {
-  if (!disabled && options.length > 0) {
+  if (!disabled && !noChoiceAvailable.value) {
     suggestionsShown.value = !suggestionsShown.value
     filterString.value = ''
     filteredOptions.value = options.map((_, index) => index)
@@ -150,7 +154,8 @@ function wrap(index: number, length: number): number {
       :aria-expanded="suggestionsShown"
       class="cmk-dropdown__button"
       :class="{
-        disabled: disabled || options.length === 0,
+        disabled,
+        no_choices: noChoiceAvailable,
         no_value: !selectedOption
       }"
       :variant="'transparent'"
@@ -231,6 +236,16 @@ function wrap(index: number, length: number): number {
 
     > .cmk-dropdown__button_arrow {
       color: var(--font-color);
+    }
+  }
+
+  &.no_choices {
+    cursor: auto;
+    &:hover {
+      background-color: var(--default-form-element-bg-color);
+    }
+    > .cmk-dropdown__button_arrow {
+      color: var(--font-color-dimmed);
     }
   }
 }

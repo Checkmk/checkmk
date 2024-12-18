@@ -105,7 +105,6 @@ const elementRequired = computed(() => {
         ? spec.i18n.no_more_condition_groups_to_add
         : spec.i18n.select_condition_group_to_add
     "
-    :disabled="remainingGroups.length === 0"
     :show-filter="remainingGroups.length > FILTER_SHOW_THRESHOLD"
     :required-text="elementRequired ? spec.i18n_base.required : ''"
     @update:selected-option="addElement"

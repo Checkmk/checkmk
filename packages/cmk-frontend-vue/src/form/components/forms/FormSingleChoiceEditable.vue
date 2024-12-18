@@ -113,7 +113,6 @@ const { ErrorBoundary, error } = useErrorBoundary()
       v-model:selected-option="selectedObjectId"
       :options="choices"
       :input-hint="choices.length === 0 ? spec.i18n.no_objects : spec.i18n.no_selection"
-      :disabled="choices.length === 0"
       :show-filter="props.spec.elements.length > 5"
       :required-text="spec.i18n_base.required"
       class="fsce__dropdown"

@@ -144,7 +144,6 @@ watch(selectedOperator, (operator) => {
       <template #item-props="{ index, selectedValue }">
         <CmkDropdown
           :selected-option="selectedValue"
-          :disabled="remainingConditions.length === 0"
           :options="[
             ...props.group.conditions
               .filter(({ name }) => name === selectedValue)

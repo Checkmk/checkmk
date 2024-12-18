@@ -27,7 +27,7 @@ def main() {
 
     def edition = JOB_BASE_NAME.split("-")[-1];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
-    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
+    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters_common = [
@@ -46,7 +46,7 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
         [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
-        [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF],
+        [$class: 'StringParameterValue',  name: 'CUSTOM_GIT_REF', value: effective_git_ref],
         [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],

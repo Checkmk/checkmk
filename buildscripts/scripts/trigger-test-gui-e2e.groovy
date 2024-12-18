@@ -85,7 +85,7 @@ def main() {
                         job: "${base_folder}/builders/test-gui-e2e-f12less",
                         parameters: [
                             string(name: 'EDITION', value: edition),
-                            string(name: 'CUSTOM_GIT_REF', value: params.CUSTOM_GIT_REF),
+                            string(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
                             string(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                             string(name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE),
                         ]

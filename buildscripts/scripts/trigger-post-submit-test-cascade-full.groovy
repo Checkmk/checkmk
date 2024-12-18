@@ -34,7 +34,7 @@ def main() {
                     job: "${base_folder}/${item}",
                     propagate: true,  // Raise any errors
                     parameters: [
-                        string(name: "CUSTOM_GIT_REF", value: checkout_commit_id),
+                        string(name: "CUSTOM_GIT_REF", value: effective_git_ref),
                         string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
                         string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                         string(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),

@@ -14,22 +14,22 @@ from cmk.base.automation_helper._cache import Cache
 from cmk.base.automations import AutomationExitCode
 
 
-class DummyAutomationEngineSuccess:
+class _DummyAutomationEngineSuccess:
     def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
         return AutomationExitCode.SUCCESS
 
 
-class DummyAutomationEngineFailure:
+class _DummyAutomationEngineFailure:
     def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
         raise SystemExit(1)
 
 
-EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
+_EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
 
 
-def get_test_client(*, engine: AutomationEngine) -> TestClient:
+def _get_test_client(engine: AutomationEngine) -> TestClient:
     """Helper for fetching fastapi test client."""
     cache = Cache.setup(client=FakeRedis())
     app = get_application(
@@ -41,23 +41,23 @@ def get_test_client(*, engine: AutomationEngine) -> TestClient:
 
 
 def test_automation_with_success() -> None:
-    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD)
+    with _get_test_client(_DummyAutomationEngineSuccess()) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": AutomationExitCode.SUCCESS, "output": ""}
 
 
 def test_automation_with_failure() -> None:
-    with get_test_client(engine=DummyAutomationEngineFailure()) as client:
-        resp = client.post("/automation", json=EXAMPLE_AUTOMATION_PAYLOAD)
+    with _get_test_client(_DummyAutomationEngineFailure()) as client:
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 
     assert resp.status_code == 200
     assert resp.json() == {"exit_code": 1, "output": ""}
 
 
 def test_health_check() -> None:
-    with get_test_client(engine=DummyAutomationEngineSuccess()) as client:
+    with _get_test_client(_DummyAutomationEngineSuccess()) as client:
         resp = client.get("/health")
 
     last_reload_at = resp.json()["last_reload_at"]

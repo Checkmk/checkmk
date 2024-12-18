@@ -20,24 +20,17 @@ from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._config import watcher_schedules
+from ._config import server_config, watcher_schedules
 from ._log import configure_logger, LOGGER
 from ._reloader import run as run_reloader
-from ._server import ApplicationServerConfig
 from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
 
-APPLICATION_PROCESS_TITLE: Final = "cmk-automation-helper"
-APPLICATION_LOG_DIRECTORY: Final = "automation-helper"
-APPLICATION_ACCESS_LOG: Final = "access.log"
-APPLICATION_ERROR_LOG: Final = "error.log"
-APPLICATION_PID_FILE: Final = "automation-helper.pid"
-
 
 def main() -> int:
     try:
-        setproctitle(APPLICATION_PROCESS_TITLE)
+        setproctitle("cmk-automation-helper")
         os.unsetenv("LANG")
 
         omd_root = Path(os.environ.get("OMD_ROOT", ""))
@@ -45,7 +38,7 @@ def main() -> int:
         configure_tracer(omd_root)
 
         run_directory = omd_root / "tmp" / "run"
-        log_directory = omd_root / "var" / "log" / APPLICATION_LOG_DIRECTORY
+        log_directory = omd_root / "var" / "log" / "automation-helper"
 
         run_directory.mkdir(exist_ok=True, parents=True)
         log_directory.mkdir(exist_ok=True, parents=True)
@@ -54,18 +47,14 @@ def main() -> int:
 
         redis_client = get_redis_client()
         cache = Cache.setup(client=redis_client)
-
+        server_configuration = server_config(
+            run_directory=run_directory,
+            log_directory=log_directory,
+        )
         app = get_application(
             engine=automations,
             cache=cache,
             reload_config=reload_automation_config,
-        )
-
-        server_config = ApplicationServerConfig(
-            unix_socket=run_directory / "automation-helper.sock",
-            pid_file=run_directory / APPLICATION_PID_FILE,
-            access_log=log_directory / APPLICATION_ACCESS_LOG,
-            error_log=log_directory / APPLICATION_ERROR_LOG,
         )
 
         daemonize()
@@ -83,7 +72,10 @@ def main() -> int:
             ),
         ):
             try:
-                run_server(server_config, app)
+                run_server(
+                    server_configuration,
+                    app,
+                )
             except SystemExit:
                 LOGGER.info("Received termination signal, shutting down")
 

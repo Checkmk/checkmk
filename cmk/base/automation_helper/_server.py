@@ -3,50 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import dataclasses
-from pathlib import Path
-from typing import Final
-
 import gunicorn.app.base  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
-APPLICATION_WORKER_CLASS: Final = "uvicorn.workers.UvicornWorker"
-APPLICATION_WORKER_COUNT: Final = 2
-
-
-@dataclasses.dataclass(frozen=True)
-class ApplicationServerConfig:
-    unix_socket: Path
-    pid_file: Path
-    access_log: Path
-    error_log: Path
+from ._config import ServerConfig
 
 
 def run(
-    app_server_config: ApplicationServerConfig,
+    config: ServerConfig,
     app: FastAPI,
 ) -> None:
-    _ApplicationServer(app, app_server_config).run()
+    _ApplicationServer(app, config).run()
 
 
 class _ApplicationServer(gunicorn.app.base.BaseApplication):  # type: ignore[misc] # pylint: disable=abstract-method
     def __init__(
         self,
         app: FastAPI,
-        app_server_config: ApplicationServerConfig,
+        config: ServerConfig,
     ) -> None:
         self._app = app
-        self._app_server_config = app_server_config
+        self._config = config
         super().__init__()
 
     def load_config(self) -> None:
         self.cfg.set("umask", 0o077)
-        self.cfg.set("bind", f"unix:{self._app_server_config.unix_socket}")
-        self.cfg.set("workers", APPLICATION_WORKER_COUNT)
-        self.cfg.set("worker_class", APPLICATION_WORKER_CLASS)
-        self.cfg.set("pidfile", str(self._app_server_config.pid_file))
-        self.cfg.set("accesslog", str(self._app_server_config.access_log))
-        self.cfg.set("errorlog", str(self._app_server_config.error_log))
+        self.cfg.set("bind", f"unix:{self._config.unix_socket}")
+        self.cfg.set("workers", self._config.num_workers)
+        self.cfg.set("worker_class", "uvicorn.workers.UvicornWorker")
+        self.cfg.set("pidfile", str(self._config.pid_file))
+        self.cfg.set("accesslog", str(self._config.access_log))
+        self.cfg.set("errorlog", str(self._config.error_log))
         # clients can dynamically set a timeout per request
         self.cfg.set("timeout", 0)
 

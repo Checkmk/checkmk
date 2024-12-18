@@ -9,6 +9,25 @@ from pathlib import Path
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
+class ServerConfig:
+    unix_socket: Path
+    pid_file: Path
+    access_log: Path
+    error_log: Path
+    num_workers: int
+
+
+def server_config(*, run_directory: Path, log_directory: Path) -> ServerConfig:
+    return ServerConfig(
+        unix_socket=run_directory / "automation-helper.sock",
+        pid_file=run_directory / "automation-helper.pid",
+        access_log=log_directory / "access.log",
+        error_log=log_directory / "error.log",
+        num_workers=1,
+    )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class Schedule:
     path: Path
     ignore_directories: bool

@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{self, CheckResult, Collection, Levels, MetricMetaData, OutputType, Real};
-use time::Duration;
+use std::time::Duration;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, TypedBuilder)]
@@ -18,7 +18,7 @@ pub fn check(response_time: Duration, config: Config) -> Collection {
         config.response_time,
     )
     .unwrap_or_default()
-    .map(|x| Real::from(x.as_seconds_f64()))])
+    .map(|x| Real::from(x.as_secs_f64()))])
 }
 
 fn check_response_time(
@@ -29,10 +29,7 @@ fn check_response_time(
         check::check_levels(
             response_time,
             levels,
-            OutputType::Notice(format!(
-                "Response time: {} ms",
-                response_time.whole_milliseconds()
-            )),
+            OutputType::Notice(format!("Response time: {} ms", response_time.as_millis())),
             MetricMetaData::builder()
                 .label("overall_response_time")
                 .uom("s".parse().unwrap())

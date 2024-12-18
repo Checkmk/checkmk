@@ -183,7 +183,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = parse_levels(
         LevelsStrategy::Upper,
         args.response_time,
-        Duration::seconds_f64,
+        StdDuration::from_secs_f64,
     );
 
     info("load trust store...");
@@ -230,7 +230,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     );
     collection.join(&mut fetcher_check::check(
-        time::Duration::new(elapsed.as_secs() as i64, elapsed.subsec_nanos() as i32),
+        elapsed,
         FetcherChecks::builder()
             .response_time(Some(response_time))
             .build(),

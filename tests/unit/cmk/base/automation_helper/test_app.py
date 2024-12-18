@@ -90,8 +90,15 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         cache,
         mock_reload_config,
     ) as client:
+        last_reload_before_cache_update = HealthCheckResponse.model_validate(
+            client.get("/health").json()
+        ).last_reload_at
         cache.store_last_detected_change(time.time())
         client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+        assert (
+            HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
+            > last_reload_before_cache_update
+        )
 
     assert (
         # once at application startup, once when the endpoint is called

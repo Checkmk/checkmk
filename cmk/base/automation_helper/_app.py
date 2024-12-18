@@ -84,8 +84,9 @@ def get_application(
     async def automation(request: Request, payload: AutomationPayload) -> AutomationResponse:
         LOGGER.info("[automation] %s with args: %s received.", payload.name, payload.args)
         if cache.reload_required(request.app.state.last_reload_at):
+            request.app.state.last_reload_at = time.time()
             reload_config()
-            LOGGER.warn("[automation] configurations were reloaded due to a stale state.")
+            LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
         with (
             TRACER.start_as_current_span(

@@ -189,13 +189,10 @@ pub fn check_levels<T: Clone + PartialOrd + Display>(
         }
     };
     let state = evaluate(&value);
-    // According to documentation the details default to the summary.
-    // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
     let (summary, details) = match (output, state) {
-        (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
-        (OutputType::Notice(text), _) => (Some(format!("{text} ({})", levels)), None),
-        (OutputType::Summary(text), State::Ok) => (Some(text), None),
-        (OutputType::Summary(text), _) => (Some(format!("{text} ({})", levels)), None),
+        (OutputType::Notice(text), State::Ok) => (None, Some(text)),
+        (OutputType::Notice(text), _) => (Some(text), None),
+        (OutputType::Summary(text), _) => (Some(text), None),
     };
     CheckResult {
         state,
@@ -234,6 +231,15 @@ impl State {
             Self::Warn => "WARNING",
             Self::Crit => "CRITICAL",
             Self::Unknown => "UNKNOWN",
+        }
+    }
+
+    fn as_sym(&self) -> Option<&'static str> {
+        match self {
+            State::Ok => None,
+            State::Warn => Some("!"),
+            State::Crit => Some("!!"),
+            State::Unknown => Some("?"),
         }
     }
 }
@@ -495,89 +501,51 @@ struct TaggedText {
     text: String,
 }
 
-impl Display for TaggedText {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        match self.state {
-            State::Ok => write!(f, "{}", self.text),
-            State::Warn => write!(f, "{} (!)", self.text),
-            State::Crit => write!(f, "{} (!!)", self.text),
-            State::Unknown => write!(f, "{} (?)", self.text),
-        }
-    }
-}
-
 #[derive(Debug)]
-enum Details {
-    Empty(),
+enum CheckView {
     Text(TaggedText),
-    Metric(Metric<Real>),
-    TextMetric(TaggedText, Metric<Real>),
+    TextLevels(TaggedText, Levels<Real>),
 }
 
-impl Details {
-    fn new(state: State, text: Option<String>, metric: Option<Metric<Real>>) -> Self {
-        match (text, metric) {
-            (None, None) => Self::Empty(),
-            (None, Some(m)) => Self::Metric(m),
-            (Some(text), None) => Self::Text(TaggedText { state, text }),
-            (Some(text), Some(m)) => Self::TextMetric(TaggedText { state, text }, m),
+impl CheckView {
+    fn new(state: State, text: &str, levels: Option<Levels<Real>>) -> Self {
+        match levels {
+            None => CheckView::Text(TaggedText {
+                state,
+                text: text.to_string(),
+            }),
+            Some(levels) => CheckView::TextLevels(
+                TaggedText {
+                    state,
+                    text: text.to_string(),
+                },
+                levels,
+            ),
         }
     }
 }
 
-#[derive(Debug)]
-enum FlatDetailsView<'a> {
-    Text(&'a TaggedText),
-    Metric(&'a Metric<Real>),
-}
-
-impl Display for FlatDetailsView<'_> {
+impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         match self {
-            Self::Text(t) => write!(f, "{}", t),
-            Self::Metric(m) => write!(f, "{}", m),
+            Self::Text(t) => match t.state.as_sym() {
+                None => write!(f, "{}", t.text),
+                Some(sym) => write!(f, "{} ({})", t.text, sym),
+            },
+            Self::TextLevels(t, l) => match t.state.as_sym() {
+                None => write!(f, "{} {}", t.text, l),
+                Some(sym) => write!(f, "{} ({}) ({})", t.text, l, sym),
+            },
         }
-    }
-}
-
-impl<'a> IntoIterator for &'a Details {
-    type Item = FlatDetailsView<'a>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        match self {
-            Details::Empty() => vec![].into_iter(),
-            Details::Text(t) => vec![FlatDetailsView::Text(t)].into_iter(),
-            Details::Metric(m) => vec![FlatDetailsView::Metric(m)].into_iter(),
-            Details::TextMetric(t, m) => {
-                vec![FlatDetailsView::Text(t), FlatDetailsView::Metric(m)].into_iter()
-            }
-        }
-    }
-}
-
-#[derive(Debug)]
-struct Summary(TaggedText);
-
-impl Summary {
-    fn new(state: State, text: String) -> Self {
-        Self(TaggedText { state, text })
-    }
-
-    fn state(&self) -> State {
-        self.0.state
-    }
-
-    fn text(&self) -> &String {
-        &self.0.text
     }
 }
 
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
-    summary: Vec<Summary>,
-    details: Vec<Details>,
+    summary: Vec<CheckView>,
+    details: Vec<CheckView>,
+    metrics: Vec<Metric<Real>>,
 }
 
 impl Collection {
@@ -585,6 +553,7 @@ impl Collection {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
         self.details.append(&mut other.details);
+        self.metrics.append(&mut other.metrics);
     }
 }
 
@@ -593,19 +562,9 @@ impl Display for Collection {
         let summary = self
             .summary
             .iter()
-            .map(|s| match s.state() {
-                State::Ok => s.text().to_string(),
-                State::Warn => format!("{} (!)", s.text()),
-                State::Crit => format!("{} (!!)", s.text()),
-                State::Unknown => format!("{} (?)", s.text()),
-            })
+            .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        let (details, metrics): (Vec<_>, Vec<_>) =
-            self.details.iter().flatten().partition(|elem| match elem {
-                FlatDetailsView::Text(_) => true,
-                FlatDetailsView::Metric(_) => false,
-            });
         let mut out = if summary.is_empty() {
             String::from(self.state.as_str())
         } else {
@@ -613,22 +572,22 @@ impl Display for Collection {
             // but follows our internal requirements.
             summary.to_string()
         };
-        if !metrics.is_empty() {
+        if !self.metrics.is_empty() {
             out = format!(
                 "{} | {}",
                 out,
-                metrics
+                self.metrics
                     .iter()
                     .map(ToString::to_string)
                     .collect::<Vec<_>>()
                     .join(" ")
             );
         }
-        if !details.is_empty() {
+        if !self.details.is_empty() {
             out = format!(
                 "{}\n{}",
                 out,
-                details
+                self.details
                     .iter()
                     .map(ToString::to_string)
                     .collect::<Vec<_>>()
@@ -653,14 +612,24 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.state);
                 if let Some(ref summary) = cr.summary {
-                    out.summary.push(Summary::new(cr.state, summary.clone()));
+                    out.summary.push(match cr.metrics {
+                        None => CheckView::new(cr.state, summary, None),
+                        Some(ref metrics) => {
+                            CheckView::new(cr.state, summary, metrics.levels.clone())
+                        }
+                    })
                 }
-                out.details.extend(match (cr.details, cr.metrics) {
-                    (None, None) => cr
-                        .summary
-                        .map_or(vec![], |t| vec![Details::new(cr.state, Some(t), None)]),
-                    (d, m) => vec![Details::new(cr.state, d.or(cr.summary), m)],
-                });
+                if let Some(ref details) = cr.details.or(cr.summary) {
+                    out.details.push(match cr.metrics {
+                        None => CheckView::new(cr.state, details, None),
+                        Some(ref metrics) => {
+                            CheckView::new(cr.state, details, metrics.levels.clone())
+                        }
+                    })
+                }
+                if let Some(ref metrics) = cr.metrics {
+                    out.metrics.push(metrics.clone())
+                }
                 out
             })
     }

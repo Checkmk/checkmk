@@ -492,22 +492,23 @@ where
 #[derive(Debug)]
 struct TaggedText {
     state: State,
-    text: Option<String>,
+    text: String,
 }
 
 impl Display for TaggedText {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        self.text.as_ref().map_or(Ok(()), |text| match self.state {
-            State::Ok => write!(f, "{}", text),
-            State::Warn => write!(f, "{} (!)", text),
-            State::Crit => write!(f, "{} (!!)", text),
-            State::Unknown => write!(f, "{} (?)", text),
-        })
+        match self.state {
+            State::Ok => write!(f, "{}", self.text),
+            State::Warn => write!(f, "{} (!)", self.text),
+            State::Crit => write!(f, "{} (!!)", self.text),
+            State::Unknown => write!(f, "{} (?)", self.text),
+        }
     }
 }
 
 #[derive(Debug)]
 enum Details {
+    Empty(),
     Text(TaggedText),
     Metric(Metric<Real>),
     TextMetric(TaggedText, Metric<Real>),
@@ -516,9 +517,10 @@ enum Details {
 impl Details {
     fn new(state: State, text: Option<String>, metric: Option<Metric<Real>>) -> Self {
         match (text, metric) {
+            (None, None) => Self::Empty(),
             (None, Some(m)) => Self::Metric(m),
-            (t, None) => Self::Text(TaggedText { state, text: t }),
-            (t, Some(m)) => Self::TextMetric(TaggedText { state, text: t }, m),
+            (Some(text), None) => Self::Text(TaggedText { state, text }),
+            (Some(text), Some(m)) => Self::TextMetric(TaggedText { state, text }, m),
         }
     }
 }
@@ -544,6 +546,7 @@ impl<'a> IntoIterator for &'a Details {
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
+            Details::Empty() => vec![].into_iter(),
             Details::Text(t) => vec![FlatDetailsView::Text(t)].into_iter(),
             Details::Metric(m) => vec![FlatDetailsView::Metric(m)].into_iter(),
             Details::TextMetric(t, m) => {
@@ -557,16 +560,16 @@ impl<'a> IntoIterator for &'a Details {
 struct Summary(TaggedText);
 
 impl Summary {
+    fn new(state: State, text: String) -> Self {
+        Self(TaggedText { state, text })
+    }
+
     fn state(&self) -> State {
         self.0.state
     }
 
-    fn text(&self) -> Option<&String> {
-        self.0.text.as_ref()
-    }
-
-    fn new(state: State, text: Option<String>) -> Self {
-        Self(TaggedText { state, text })
+    fn text(&self) -> &String {
+        &self.0.text
     }
 }
 
@@ -590,13 +593,11 @@ impl Display for Collection {
         let summary = self
             .summary
             .iter()
-            .flat_map(|s| {
-                s.text().map(|text| match s.state() {
-                    State::Ok => text.to_string(),
-                    State::Warn => format!("{} (!)", text),
-                    State::Crit => format!("{} (!!)", text),
-                    State::Unknown => format!("{} (?)", text),
-                })
+            .map(|s| match s.state() {
+                State::Ok => s.text().to_string(),
+                State::Warn => format!("{} (!)", s.text()),
+                State::Crit => format!("{} (!!)", s.text()),
+                State::Unknown => format!("{} (?)", s.text()),
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -651,7 +652,9 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.state);
-                out.summary.push(Summary::new(cr.state, cr.summary.clone()));
+                if let Some(ref summary) = cr.summary {
+                    out.summary.push(Summary::new(cr.state, summary.clone()));
+                }
                 out.details.extend(match (cr.details, cr.metrics) {
                     (None, None) => cr
                         .summary

@@ -496,31 +496,16 @@ where
 }
 
 #[derive(Debug)]
-struct TaggedText {
-    state: State,
-    text: String,
-}
-
-#[derive(Debug)]
 enum CheckView {
-    Text(TaggedText),
-    TextLevels(TaggedText, Levels<Real>),
+    Text(State, String),
+    TextLevels(State, String, Levels<Real>),
 }
 
 impl CheckView {
     fn new(state: State, text: &str, levels: Option<Levels<Real>>) -> Self {
         match levels {
-            None => CheckView::Text(TaggedText {
-                state,
-                text: text.to_string(),
-            }),
-            Some(levels) => CheckView::TextLevels(
-                TaggedText {
-                    state,
-                    text: text.to_string(),
-                },
-                levels,
-            ),
+            None => CheckView::Text(state, text.to_string()),
+            Some(levels) => CheckView::TextLevels(state, text.to_string(), levels),
         }
     }
 }
@@ -528,13 +513,13 @@ impl CheckView {
 impl Display for CheckView {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         match self {
-            Self::Text(t) => match t.state.as_sym() {
-                None => write!(f, "{}", t.text),
-                Some(sym) => write!(f, "{} ({})", t.text, sym),
+            Self::Text(state, text) => match state.as_sym() {
+                None => write!(f, "{}", text),
+                Some(sym) => write!(f, "{} ({})", text, sym),
             },
-            Self::TextLevels(t, l) => match t.state.as_sym() {
-                None => write!(f, "{} {}", t.text, l),
-                Some(sym) => write!(f, "{} ({}) ({})", t.text, l, sym),
+            Self::TextLevels(state, text, levels) => match state.as_sym() {
+                None => write!(f, "{} {}", text, levels),
+                Some(sym) => write!(f, "{} ({}) ({})", text, levels, sym),
             },
         }
     }

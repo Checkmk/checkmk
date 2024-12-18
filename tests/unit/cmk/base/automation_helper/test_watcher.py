@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Generator
 from pathlib import Path
 from typing import ContextManager, Final
 
 import pytest
-from fakeredis import FakeRedis
 from watchdog.events import (
     DirCreatedEvent,
     DirDeletedEvent,
@@ -35,11 +33,6 @@ _WATCHED_MK_PATTERN: Final = "*.mk"
 _WATCHED_TXT_FILE: Final = "foo.txt"
 _WATCHED_DIRECTORY: Final = "some_dir"
 _MK_FILE: Final = "foo.mk"
-
-
-@pytest.fixture(name="cache")
-def get_cache() -> Generator[Cache]:
-    yield Cache.setup(client=FakeRedis())
 
 
 @pytest.fixture(name="mk_file_watcher_handler")

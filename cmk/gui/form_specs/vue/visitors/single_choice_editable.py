@@ -13,31 +13,33 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, INVALID_VALUE, InvalidValue
+from ._type_defs import DefaultValue, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
-    compute_validation_errors,
     compute_validators,
     get_title_and_help,
 )
 
-OptionId = str
+_ParsedValueModel = str
+_FrontendModel = str | None
 
 
-class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId]):
-    def _parse_value(self, raw_value: object) -> OptionId | InvalidValue:
+class SingleChoiceEditableVisitor(
+    FormSpecVisitor[SingleChoiceEditable, _ParsedValueModel, _FrontendModel]
+):
+    def _parse_value(self, raw_value: object) -> _ParsedValueModel | InvalidValue[_FrontendModel]:
         if isinstance(raw_value, DefaultValue):
-            return INVALID_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
         if not isinstance(raw_value, str):
-            return INVALID_VALUE
+            return InvalidValue[_FrontendModel](reason=_("Invalid data"), fallback_value=None)
         return raw_value
 
-    def _validators(self) -> Sequence[Callable[[OptionId], object]]:
+    def _validators(self) -> Sequence[Callable[[_ParsedValueModel], object]]:
         return compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: OptionId | InvalidValue
-    ) -> tuple[shared_type_defs.SingleChoiceEditable, OptionId | None]:
+        self, raw_value: object, parsed_value: _ParsedValueModel | InvalidValue[_FrontendModel]
+    ) -> tuple[shared_type_defs.SingleChoiceEditable, _FrontendModel]:
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (
             get_list_of_configuration_entities,
@@ -85,12 +87,5 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
             None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
-    def _validate(
-        self, raw_value: object, parsed_value: OptionId | InvalidValue
-    ) -> list[shared_type_defs.ValidationMessage]:
-        return compute_validation_errors(
-            self._validators(), "" if isinstance(parsed_value, InvalidValue) else parsed_value
-        )
-
-    def _to_disk(self, raw_value: object, parsed_value: OptionId) -> OptionId:
+    def _to_disk(self, raw_value: object, parsed_value: _ParsedValueModel) -> _ParsedValueModel:
         return parsed_value

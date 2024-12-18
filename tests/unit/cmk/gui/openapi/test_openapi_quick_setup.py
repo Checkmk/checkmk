@@ -185,7 +185,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
                 {
                     "location": [UniqueBundleIDStr],
                     "message": "Invalid string",
-                    "invalid_value": 5,
+                    "invalid_value": "",
                 },
             ],
         },
@@ -302,7 +302,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
 
 
 @pytest.mark.parametrize(
-    "id,is_valid",
+    "ident,is_valid",
     [
         pytest.param(
             "letters_underscores_and_digits_123", True, id="Letters, underscores, and digits"
@@ -318,7 +318,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
         pytest.param("Contain spaces", False, id="Contain spaces"),
     ],
 )
-def test_id_validation(id: str, is_valid: bool) -> None:
+def test_id_validation(ident: str, is_valid: bool) -> None:
     """test_id_validation
 
     The ID must accept
@@ -331,9 +331,9 @@ def test_id_validation(id: str, is_valid: bool) -> None:
     """
     regex = widgets.ID_VALIDATION_REGEX
     if is_valid:
-        assert regex.match(id)
+        assert regex.match(ident)
     else:
-        assert not regex.match(id)
+        assert not regex.match(ident)
 
 
 def test_unique_id_must_be_unique(

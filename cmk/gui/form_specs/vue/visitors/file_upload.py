@@ -17,17 +17,15 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.encrypter import Encrypter
 
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Message
 from cmk.rulesets.v1.form_specs import FileUpload
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as VueComponents
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, INVALID_VALUE, InvalidValue
+from ._type_defs import DataOrigin, DefaultValue, InvalidValue
 from ._utils import (
-    compute_validation_errors,
     compute_validators,
-    create_validation_error,
     get_title_and_help,
 )
 
@@ -99,14 +97,16 @@ class _FileExtensionValidator:
         )
 
 
-class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
-    def _parse_value(self, raw_value: object) -> FileUploadModel | InvalidValue:
+class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel, FileUploadModel]):
+    def _parse_value(self, raw_value: object) -> FileUploadModel | InvalidValue[FileUploadModel]:
         if isinstance(raw_value, DefaultValue):
-            return INVALID_VALUE
+            return InvalidValue(reason=_("Using default value"), fallback_value=FileUploadModel())
 
         if self.options.data_origin == DataOrigin.DISK:
             if not isinstance(raw_value, tuple):
-                return INVALID_VALUE
+                return InvalidValue(
+                    reason=_("Invalid data format"), fallback_value=FileUploadModel()
+                )
 
             return FileUploadModel(
                 file_name=raw_value[0],
@@ -116,7 +116,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
 
         # Handle DataOrigin.FRONTEND
         if not isinstance(raw_value, dict):
-            return INVALID_VALUE
+            return InvalidValue(reason=_("Invalid data format"), fallback_value=FileUploadModel())
 
         input_uuid = raw_value["input_uuid"]
         uploaded_file = request.files.get(input_uuid)
@@ -134,7 +134,9 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
                 )
 
         if raw_value.get("file_name") is None:
-            return INVALID_VALUE
+            return InvalidValue(
+                reason=_("Invalid data. Missing filename"), fallback_value=FileUploadModel()
+            )
 
         # Existing file, all data is already in raw_value
         return FileUploadModel(
@@ -155,7 +157,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
         return base64.b64decode(Encrypter.decrypt(base64.b64decode(content)))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: FileUploadModel | InvalidValue
+        self, raw_value: object, parsed_value: FileUploadModel | InvalidValue[FileUploadModel]
     ) -> tuple[VueComponents.FileUpload, FileUploadModel]:
         title, help_text = get_title_and_help(self.form_spec)
         help_text = (
@@ -164,8 +166,6 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
             )
             + help_text
         )
-        if isinstance(parsed_value, InvalidValue):
-            parsed_value = FileUploadModel()
 
         return (
             VueComponents.FileUpload(
@@ -176,7 +176,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
                     replace_file=_("Replace file"),
                 ),
             ),
-            parsed_value,
+            parsed_value.fallback_value if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validators(self) -> Sequence[Callable[[tuple[str, str, bytes]], object]]:
@@ -192,14 +192,7 @@ class FileUploadVisitor(FormSpecVisitor[FileUpload, FileUploadModel]):
 
         return validators + compute_validators(self.form_spec)
 
-    def _validate(
-        self, raw_value: object, parsed_value: FileUploadModel | InvalidValue
-    ) -> list[VueComponents.ValidationMessage]:
-        if isinstance(parsed_value, InvalidValue):
-            return create_validation_error("", Title("Invalid file"))
-        return compute_validation_errors(self._validators(), self._to_disk(raw_value, parsed_value))
-
-    def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> object:
+    def _to_disk(self, raw_value: object, parsed_value: FileUploadModel) -> tuple[str, str, bytes]:
         assert parsed_value.file_name is not None
         assert parsed_value.file_type is not None
         assert parsed_value.file_content_encrypted is not None

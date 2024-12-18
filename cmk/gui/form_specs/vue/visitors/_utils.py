@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypeVar
 
-from cmk.gui.form_specs.vue.visitors._type_defs import INVALID_VALUE, InvalidValue
+from cmk.gui.form_specs.vue.visitors._type_defs import FrontendModel, InvalidValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
@@ -77,12 +77,16 @@ def compute_validators(form_spec: FormSpec[Any]) -> list[Callable[[Any], object]
     return list(form_spec.custom_validate) if form_spec.custom_validate else []
 
 
-_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title] | InvalidValue
+_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title]
 
 
-def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | InvalidValue:
+def get_prefill_default(
+    prefill: _PrefillTypes[ModelT], fallback_value: FrontendModel
+) -> ModelT | InvalidValue[FrontendModel]:
     if not isinstance(prefill, DefaultValue):
-        return INVALID_VALUE
+        return InvalidValue[FrontendModel](
+            reason=_("Prefill value is an input hint"), fallback_value=fallback_value
+        )
     return prefill.value
 
 

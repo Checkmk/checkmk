@@ -19,7 +19,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -32,18 +32,18 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
     def _compute_default_values(self) -> Mapping[str, object]:
         return {topic.name: DEFAULT_VALUE for topic in self.form_spec.topics}
 
-    def _parse_value(self, raw_value: object) -> Mapping[str, object] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Mapping[str, object] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             raw_value = self._compute_default_values()
         if not isinstance(raw_value, dict):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | InvalidValue
     ) -> tuple[shared_type_defs.Catalog, Mapping[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = {}
         topics = []
         topic_values = {}
@@ -70,9 +70,9 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if isinstance(raw_value, DefaultValue) else raw_value,
                 Title("Invalid integer number"),

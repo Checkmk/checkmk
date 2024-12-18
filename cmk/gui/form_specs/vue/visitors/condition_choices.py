@@ -17,7 +17,7 @@ from cmk.rulesets.v1 import Title
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DEFAULT_VALUE, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_validation_errors,
@@ -101,51 +101,51 @@ def _value_to_condition(condition_value: object) -> tuple[ConditionGroupID, Cond
         raise TypeError(_UNSUPPORTED_VALUE_FROM_FRONTEND)
 
 
-def _parse_frontend(raw_value: object) -> Conditions | EmptyValue:
+def _parse_frontend(raw_value: object) -> Conditions | InvalidValue:
     if not isinstance(raw_value, list):
-        return EMPTY_VALUE
+        return INVALID_VALUE
 
     try:
         return dict(_value_to_condition(c) for c in raw_value)
     except TypeError:
-        return EMPTY_VALUE
+        return INVALID_VALUE
 
 
-def _parse_disk(raw_value: object) -> Conditions | EmptyValue:
+def _parse_disk(raw_value: object) -> Conditions | InvalidValue:
     if not isinstance(raw_value, dict):
-        return EMPTY_VALUE
+        return INVALID_VALUE
 
     for group in raw_value.values():
         if isinstance(group, dict):
             if any(key not in ["$ne", "$or", "$nor"] for key in group):
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
             if cond := group.get("$ne"):
                 if not isinstance(cond, str):
-                    return EMPTY_VALUE
+                    return INVALID_VALUE
             elif cond := (group.get("$or") or group.get("$nor")):
                 if not isinstance(cond, list):
-                    return EMPTY_VALUE
+                    return INVALID_VALUE
             elif not isinstance(cond, str):
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
             continue
 
         if not isinstance(group, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
     return cast(Conditions, raw_value)
 
 
 class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
-    def _parse_value(self, raw_value: object) -> Conditions | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Conditions | InvalidValue:
         if self.options.data_origin == DataOrigin.FRONTEND:
             return _parse_frontend(raw_value)
 
         return _parse_disk(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Conditions | EmptyValue
+        self, raw_value: object, parsed_value: Conditions | InvalidValue
     ) -> tuple[shared_type_defs.ConditionChoices, list[shared_type_defs.ConditionChoicesValue]]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -153,7 +153,7 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
 
         value = (
             [_condition_to_value(name, c) for name, c in parsed_value.items()]
-            if not isinstance(parsed_value, EmptyValue)
+            if not isinstance(parsed_value, InvalidValue)
             else []
         )
 
@@ -182,16 +182,16 @@ class ConditionChoicesVisitor(FormSpecVisitor[ConditionChoices, Conditions]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Conditions | EmptyValue
+        self, raw_value: object, parsed_value: Conditions | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid conditions")
             )
 
         vue_value = (
             [_condition_to_value(name, c) for name, c in parsed_value.items()]
-            if not isinstance(parsed_value, EmptyValue)
+            if not isinstance(parsed_value, InvalidValue)
             else []
         )
 

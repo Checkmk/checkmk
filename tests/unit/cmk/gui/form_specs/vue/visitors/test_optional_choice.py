@@ -61,7 +61,7 @@ def test_optional_choice_invalid_parameter_form_value(
 
     visitor = get_visitor(optional_choice_spec, VisitorOptions(data_origin=data_origin))
     _vue_spec, vue_value = visitor.to_vue(SomeClass)
-    # Note: this is the EMPTY_VALUE result of the embedded Integer parameter_form
+    # Note: this is the INVALID_VALUE result of the embedded Integer parameter_form
     assert vue_value == ""
 
     # Check validation message

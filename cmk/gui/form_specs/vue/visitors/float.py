@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import Float
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -27,29 +27,29 @@ from ._utils import (
 
 
 class FloatVisitor(FormSpecVisitor[Float, float]):
-    def _parse_value(self, raw_value: object) -> float | EmptyValue:
+    def _parse_value(self, raw_value: object) -> float | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
 
         #  23 / -23 / "23" / "-23" / 23.0 / "-23.0" -> OK
-        #  other                                    -> EMPTY_VALUE
+        #  other                                    -> INVALID
         if not isinstance(raw_value, (float, int)):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         try:
             return float(raw_value)
         except ValueError:
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
     def _validators(self) -> Sequence[Callable[[float], object]]:
         return [IsFloat()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: float | EmptyValue
+        self, raw_value: object, parsed_value: float | InvalidValue
     ) -> tuple[shared_type_defs.Float, Literal[""] | float]:
         title, help_text = get_title_and_help(self.form_spec)
         input_hint = compute_input_hint(self.form_spec.prefill)
@@ -64,13 +64,13 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
                 input_hint=input_hint_str,
                 i18n_base=base_i18n_form_spec(),
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: float | EmptyValue
+        self, raw_value: object, parsed_value: float | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid float number")
             )

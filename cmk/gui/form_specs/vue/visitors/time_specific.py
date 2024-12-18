@@ -21,7 +21,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DEFAULT_VALUE, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -38,14 +38,14 @@ class _TimeperiodConfig(TypedDict):
 
 
 class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _parse_value(self, raw_value: object) -> object | InvalidValue:
         # Since an inactive time specific form spec leaves no traces in the data
         # we can not make any assumptions/tests on the raw_value and return it "as is".
         if self._is_active(raw_value):
             # At least some basic tests if both keys are present
             assert isinstance(raw_value, dict)
             if not (_ts_values_key in raw_value and _default_value_key in raw_value):
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
             if self.options.data_origin == DataOrigin.DISK:
                 return {
@@ -66,7 +66,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
         return [(x["timeperiod"], x["parameters"]) for x in config]
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> tuple[shared_type_defs.TimeSpecific, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -92,7 +92,7 @@ class TimeSpecificVisitor(FormSpecVisitor[TimeSpecific, object]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
         validation_errors = compute_validation_errors(
             compute_validators(self.form_spec), parsed_value

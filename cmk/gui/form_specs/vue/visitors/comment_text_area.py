@@ -10,12 +10,12 @@ from cmk.gui.logged_in import user
 
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._type_defs import EmptyValue
+from ._type_defs import InvalidValue
 
 
 class CommentTextAreaVisitor(MultilineTextVisitor):
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> tuple[shared_type_defs.CommentTextArea, str]:
         multiline_text, value = super()._to_vue(raw_value, parsed_value)
         multiline_text_args = asdict(multiline_text)

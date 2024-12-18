@@ -14,7 +14,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_validation_errors,
@@ -55,26 +55,26 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
             return True
         return False
 
-    def _parse_value(self, raw_value: object) -> dict[str, object] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> dict[str, object] | InvalidValue:
         raw_value = (
             self._compute_default_values() if isinstance(raw_value, DefaultValue) else raw_value
         )
         if not isinstance(raw_value, Mapping):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         try:
             resolved_dict = self._resolve_static_elements(raw_value)
             if self._has_invalid_keys(resolved_dict):
-                return EMPTY_VALUE
+                return INVALID_VALUE
             return resolved_dict
         except ValueError:
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | InvalidValue
     ) -> tuple[shared_type_defs.Dictionary, dict[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             # TODO: add warning message somewhere "falling back to defaults"
             parsed_value = self._compute_default_values()
 
@@ -127,9 +127,9 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, object] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(raw_value, "Expected a valid value, got EmptyValue")
 
         # NOTE: the parsed_value may include keys with default values, e.g. {"ce": default_value}

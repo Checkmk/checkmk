@@ -12,7 +12,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -22,26 +22,26 @@ from ._utils import (
 
 
 class TupleVisitor(FormSpecVisitor[Tuple, tuple[object, ...]]):
-    def _parse_value(self, raw_value: object) -> tuple[Any, ...] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> tuple[Any, ...] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             return (DEFAULT_VALUE,) * len(self.form_spec.elements)
 
         if not isinstance(raw_value, (list, tuple)):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         if len(raw_value) != len(self.form_spec.elements):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: tuple[Any, ...] | EmptyValue
+        self, raw_value: object, parsed_value: tuple[Any, ...] | InvalidValue
     ) -> tuple[shared_type_defs.Tuple, list[object]]:
         title, help_text = get_title_and_help(self.form_spec)
         vue_specs = []
         vue_elements = []
 
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = (DEFAULT_VALUE,) * len(self.form_spec.elements)
 
         for element_spec, value in zip(self.form_spec.elements, parsed_value):
@@ -62,9 +62,9 @@ class TupleVisitor(FormSpecVisitor[Tuple, tuple[object, ...]]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: tuple[object, ...] | EmptyValue
+        self, raw_value: object, parsed_value: tuple[object, ...] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if isinstance(raw_value, DefaultValue) else raw_value,
                 Title("Invalid tuple"),

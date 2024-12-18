@@ -16,7 +16,7 @@ from cmk.rulesets.v1 import Title
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import create_validation_error, get_title_and_help
 
 
@@ -32,9 +32,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         try:
             return super()._migrate_disk_value(value)
         except MKUserError:
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _parse_value(self, raw_value: object) -> object | InvalidValue:
         return raw_value
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
@@ -51,7 +51,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         return input_html, str(readonly_html)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> tuple[shared_type_defs.LegacyValuespec, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -106,9 +106,9 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(raw_value, Title("Invalid value for valuespec"))
 
         varprefix = ""

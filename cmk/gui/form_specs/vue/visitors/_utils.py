@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypeVar
 
-from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
+from cmk.gui.form_specs.vue.visitors._type_defs import INVALID_VALUE, InvalidValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils import escaping
@@ -75,12 +75,12 @@ def compute_validators(form_spec: FormSpec[Any]) -> list[Callable[[Any], object]
     return list(form_spec.custom_validate) if form_spec.custom_validate else []
 
 
-_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title] | EmptyValue
+_PrefillTypes = DefaultValue[ModelT] | InputHint[ModelT] | InputHint[Title] | InvalidValue
 
 
-def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
+def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | InvalidValue:
     if not isinstance(prefill, DefaultValue):
-        return EMPTY_VALUE
+        return INVALID_VALUE
     return prefill.value
 
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Any
+from typing import Any, Optional
 
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
@@ -29,11 +29,12 @@ class VisitorOptions:
     data_origin: DataOrigin
 
 
-class EmptyValue:
-    pass
+@dataclass
+class InvalidValue:
+    reason: Optional[str] = None
 
 
-EMPTY_VALUE = EmptyValue()
+INVALID_VALUE = InvalidValue()
 
 
 class FormSpecValidationError(ValueError):

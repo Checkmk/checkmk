@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import FixedValue
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -27,14 +27,14 @@ T = TypeVar("T", int, float, str, bool, None)
 
 
 class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
-    def _parse_value(self, raw_value: object) -> T | EmptyValue:
+    def _parse_value(self, raw_value: object) -> T | InvalidValue:
         return self.form_spec.value
 
     def _validators(self) -> Sequence[Callable[[T], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: T | EmptyValue
+        self, raw_value: object, parsed_value: T | InvalidValue
     ) -> tuple[shared_type_defs.FixedValue, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -49,16 +49,16 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: T | EmptyValue
+        self, raw_value: object, parsed_value: T | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             # Note: this code should be unreachable, because the parse function always returns a valid value
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid FixedValue")
             )
         return compute_validation_errors(compute_validators(self.form_spec), raw_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: T | EmptyValue) -> T:
-        if isinstance(parsed_value, EmptyValue):
+    def _to_disk(self, raw_value: object, parsed_value: T | InvalidValue) -> T:
+        if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

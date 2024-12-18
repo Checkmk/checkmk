@@ -10,7 +10,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.form_specs.vue.visitors._type_defs import (
     DataForDisk,
     DataOrigin,
-    EmptyValue,
+    InvalidValue,
     VisitorOptions,
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
@@ -41,7 +41,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
     @final
     def to_disk(self, raw_value: object) -> DataForDisk:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return self._to_disk(raw_value, parsed_value)
 
@@ -55,7 +55,7 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
         return value
 
     @abc.abstractmethod
-    def _parse_value(self, raw_value: object) -> ModelT | EmptyValue:
+    def _parse_value(self, raw_value: object) -> ModelT | InvalidValue:
         """Handle the raw value from the form and return a parsed value.
 
         E.g., replaces DefaultValue sentinel with the actual default value
@@ -63,13 +63,13 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
 
     @abc.abstractmethod
     def _to_vue(
-        self, raw_value: object, parsed_value: ModelT | EmptyValue
+        self, raw_value: object, parsed_value: ModelT | InvalidValue
     ) -> tuple[shared_type_defs.FormSpec, object]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     @abc.abstractmethod
     def _validate(
-        self, raw_value: object, parsed_value: ModelT | EmptyValue
+        self, raw_value: object, parsed_value: ModelT | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
         """Validates the parsed value and returns a list of validation error messages."""
 

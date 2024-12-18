@@ -14,7 +14,7 @@ from cmk.rulesets.v1 import Title
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import EMPTY_VALUE, EmptyValue
+from ._type_defs import INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     create_validation_error,
@@ -25,19 +25,19 @@ T = TypeVar("T")
 
 
 class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
-    def _parse_value(self, raw_value: object) -> Mapping[str, str] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Mapping[str, str] | InvalidValue:
         if not isinstance(raw_value, dict):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         for value in raw_value:
             if not isinstance(value, str):
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
         raw_value = [value for value in raw_value if value]
         parsed_value = {}
         for label in raw_value:
             if ":" not in label:
-                return EMPTY_VALUE
+                return INVALID_VALUE
             key, value = label.split(":", 1)
             parsed_value[key] = value
 
@@ -48,9 +48,9 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Mapping[str, str] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, str] | InvalidValue
     ) -> tuple[shared_type_defs.Labels, Mapping[str, str]]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = {}
 
         title, help_text = get_title_and_help(self.form_spec)
@@ -81,13 +81,13 @@ class LabelsVisitor(FormSpecVisitor[Labels, Mapping[str, str]]):
                 if self.form_spec.label_source
                 else None,
             ),
-            {} if isinstance(parsed_value, EmptyValue) else parsed_value,
+            {} if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Mapping[str, str] | EmptyValue
+        self, raw_value: object, parsed_value: Mapping[str, str] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return []
 
         for key, value in parsed_value.items():

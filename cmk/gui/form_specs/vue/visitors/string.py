@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import FieldSize
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_input_hint,
@@ -26,16 +26,16 @@ from ._utils import (
 
 
 class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
-    def _parse_value(self, raw_value: object) -> str | EmptyValue:
+    def _parse_value(self, raw_value: object) -> str | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
 
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         # TODO: what about types which inherit from str?
         return raw_value
 
@@ -43,7 +43,7 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> tuple[shared_type_defs.String, str]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -57,13 +57,13 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
                 autocompleter=self.form_spec.autocompleter,
                 i18n_base=base_i18n_form_spec(),
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid string")
             )

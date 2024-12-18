@@ -14,7 +14,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_label,
@@ -30,31 +30,31 @@ from ._utils import (
 class CascadingSingleChoiceVisitor(
     FormSpecVisitor[CascadingSingleChoiceExtended, tuple[str, object]]
 ):
-    def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> tuple[str, object] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             # The default value for a cascading_single_choice element only
             # contains the name of the selected element, not the value.
             return (prefill_default, DEFAULT_VALUE)
         if not isinstance(raw_value, (list, tuple)) or len(raw_value) != 2:
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         name = raw_value[0]
         if not any(name == element.name for element in self.form_spec.elements):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         assert isinstance(name, str)
         assert len(raw_value) == 2
         return tuple(raw_value)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: tuple[str, object] | InvalidValue
     ) -> tuple[shared_type_defs.CascadingSingleChoice, tuple[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = ("", None)
 
         selected_name, selected_value = parsed_value
@@ -91,9 +91,9 @@ class CascadingSingleChoiceVisitor(
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
+        self, raw_value: object, parsed_value: tuple[str, object] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(raw_value, Title("Invalid selection"))
 
         selected_name, selected_value = parsed_value

@@ -12,7 +12,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -23,7 +23,7 @@ from ._utils import (
 
 
 class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _parse_value(self, raw_value: object) -> object | InvalidValue:
         # Note: the raw_value None is reserved for the optional choice checkbox
         if isinstance(raw_value, DefaultValue):
             return None
@@ -38,7 +38,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
         return localize(Label(" Activate this option"))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> tuple[shared_type_defs.OptionalChoice, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -50,7 +50,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
             raise MKGeneralException(
                 "Unable to configure OptionalChoice with None as embedded value"
             )
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = None
 
         return (
@@ -69,9 +69,9 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             # Do not display the optional choice value
             # It might include sensitive data from the wrapped form spec
             return create_validation_error(

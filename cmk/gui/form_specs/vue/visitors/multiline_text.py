@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import MultilineText
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_input_hint,
     compute_label,
@@ -23,23 +23,23 @@ from ._utils import (
 
 
 class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
-    def _parse_value(self, raw_value: object) -> str | EmptyValue:
+    def _parse_value(self, raw_value: object) -> str | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
 
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[str], object]]:
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> tuple[shared_type_defs.MultilineText, str]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -52,13 +52,13 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
                 macro_support=self.form_spec.macro_support,
                 label=compute_label(self.form_spec.label),
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid text")
             )

@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import validators
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     create_validation_error,
@@ -22,17 +22,17 @@ from ._utils import (
 
 
 class FolderVisitor(FormSpecVisitor[Folder, str]):
-    def _parse_value(self, raw_value: object) -> str | EmptyValue:
+    def _parse_value(self, raw_value: object) -> str | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 input_hint_default := self.form_spec.input_hint,
-                EmptyValue,
+                InvalidValue,
             ):
                 return input_hint_default
             raw_value = input_hint_default
 
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[str], object]]:
@@ -50,7 +50,7 @@ class FolderVisitor(FormSpecVisitor[Folder, str]):
         )
 
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> tuple[shared_type_defs.Folder, str]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
@@ -60,13 +60,13 @@ class FolderVisitor(FormSpecVisitor[Folder, str]):
                 validators=build_vue_validators(self._validators()),
                 input_hint=self.form_spec.input_hint,
             ),
-            "" if isinstance(parsed_value, EmptyValue) else parsed_value,
+            "" if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid folder")
             )

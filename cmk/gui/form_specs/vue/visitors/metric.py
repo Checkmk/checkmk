@@ -5,7 +5,7 @@
 from dataclasses import asdict
 from typing import Callable, Sequence
 
-from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, EmptyValue
+from cmk.gui.form_specs.vue.visitors._type_defs import DEFAULT_VALUE, InvalidValue
 from cmk.gui.form_specs.vue.visitors._utils import (
     compute_validation_errors,
     create_validation_error,
@@ -19,7 +19,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 class MetricVisitor(StringVisitor):
     def _to_vue(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> tuple[shared_type_defs.Metric, str]:
         string_autocompleter, value = super()._to_vue(raw_value, parsed_value)
         string_autocompleter_args = asdict(string_autocompleter)
@@ -57,9 +57,9 @@ class MetricVisitor(StringVisitor):
         return list(self.form_spec.custom_validate) if self.form_spec.custom_validate else []
 
     def _validate(
-        self, raw_value: object, parsed_value: str | EmptyValue
+        self, raw_value: object, parsed_value: str | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, _("Invalid metric")
             )

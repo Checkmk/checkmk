@@ -13,7 +13,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_validation_errors,
@@ -25,18 +25,18 @@ OptionId = str
 
 
 class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId]):
-    def _parse_value(self, raw_value: object) -> OptionId | EmptyValue:
+    def _parse_value(self, raw_value: object) -> OptionId | InvalidValue:
         if isinstance(raw_value, DefaultValue):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         if not isinstance(raw_value, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _validators(self) -> Sequence[Callable[[OptionId], object]]:
         return compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: OptionId | EmptyValue
+        self, raw_value: object, parsed_value: OptionId | InvalidValue
     ) -> tuple[shared_type_defs.SingleChoiceEditable, OptionId | None]:
         # This one here requires a local import to avoid circular dependencies at import time
         from cmk.gui.watolib.configuration_entity.configuration_entity import (
@@ -82,14 +82,14 @@ class SingleChoiceEditableVisitor(FormSpecVisitor[SingleChoiceEditable, OptionId
                 ),
                 i18n_base=base_i18n_form_spec(),
             ),
-            None if isinstance(parsed_value, EmptyValue) else parsed_value,
+            None if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: OptionId | EmptyValue
+        self, raw_value: object, parsed_value: OptionId | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
         return compute_validation_errors(
-            self._validators(), "" if isinstance(parsed_value, EmptyValue) else parsed_value
+            self._validators(), "" if isinstance(parsed_value, InvalidValue) else parsed_value
         )
 
     def _to_disk(self, raw_value: object, parsed_value: OptionId) -> OptionId:

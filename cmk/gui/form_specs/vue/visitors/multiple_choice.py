@@ -12,7 +12,7 @@ from cmk.gui.form_specs.private.multiple_choice import (
 )
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
-from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
+from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue, INVALID_VALUE, InvalidValue
 from cmk.gui.form_specs.vue.visitors._utils import (
     compute_validation_errors,
     compute_validators,
@@ -40,22 +40,22 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
         valid_choices = {x.name for x in self.form_spec.elements}
         return list(set(raw_value) & valid_choices)
 
-    def _parse_value(self, raw_value: object) -> Sequence[str] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Sequence[str] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
 
         if not isinstance(raw_value, list):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         # Filter out invalid choices without warning
         return sorted(self._strip_invalid_choices(raw_value))
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[str] | InvalidValue
     ) -> tuple[
         shared_type_defs.DualListChoice | shared_type_defs.CheckboxListChoice, Sequence[str]
     ]:
@@ -98,7 +98,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                     ),
                     show_toggle_all=self.form_spec.show_toggle_all,
                 ),
-                [] if isinstance(parsed_value, EmptyValue) else parsed_value,
+                [] if isinstance(parsed_value, InvalidValue) else parsed_value,
             )
         # checkbox list or auto with <= 15 elements
         return (
@@ -108,13 +108,13 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoiceExtended, Sequence[str
                 elements=elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
             ),
-            [] if isinstance(parsed_value, EmptyValue) else parsed_value,
+            [] if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[str] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 [] if isinstance(raw_value, DefaultValue) else raw_value,
                 Title("Invalid multiple choice value"),

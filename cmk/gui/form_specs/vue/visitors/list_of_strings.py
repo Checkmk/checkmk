@@ -13,7 +13,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -23,24 +23,24 @@ from ._utils import (
 
 
 class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, Sequence[str]]):
-    def _parse_value(self, raw_value: object) -> Sequence[str] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Sequence[str] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
         if not isinstance(raw_value, list):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         for value in raw_value:
             if not isinstance(value, str):
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
         # Filter empty strings
         return [x for x in raw_value if x]
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[str] | InvalidValue
     ) -> tuple[shared_type_defs.ListOfStrings, Sequence[str]]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             parsed_value = []
 
         title, help_text = get_title_and_help(self.form_spec)
@@ -62,9 +62,9 @@ class ListOfStringsVisitor(FormSpecVisitor[ListOfStrings, Sequence[str]]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[str] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
 
         element_validations = [

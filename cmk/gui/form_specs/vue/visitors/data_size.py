@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_input_hint,
     compute_validation_errors,
@@ -45,13 +45,13 @@ _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
 
 
 class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
-    def _convert_to_value_and_unit(self, parsed_value: float | EmptyValue) -> tuple[str, str]:
+    def _convert_to_value_and_unit(self, parsed_value: float | InvalidValue) -> tuple[str, str]:
         displayed_magnitudes = self.form_spec.displayed_magnitudes
         used_magnitudes = [_magnitudes_map[x] for x in displayed_magnitudes]
         # Just in case they are ordered incorrectly..
         used_magnitudes.sort(key=lambda x: x[1])
 
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return "0", used_magnitudes[-1][0]
 
         for unit, factor in reversed(used_magnitudes):
@@ -63,21 +63,21 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
 
         return str(parsed_value), used_magnitudes[-1][0]
 
-    def _convert_to_value(self, value: str, unit: str) -> int | EmptyValue:
+    def _convert_to_value(self, value: str, unit: str) -> int | InvalidValue:
         try:
             converted_value = float(value)
         except ValueError:
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         for unit_name, factor in _magnitudes_map.values():
             if unit_name == unit:
                 return int(converted_value * factor)
         return int(converted_value)
 
-    def _parse_value(self, raw_value: object) -> int | EmptyValue:
+    def _parse_value(self, raw_value: object) -> int | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
@@ -86,16 +86,16 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
             raw_value = self._convert_to_value(raw_value[0], raw_value[1])
 
         if not isinstance(raw_value, int):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: int | float | EmptyValue
+        self, raw_value: object, parsed_value: int | float | InvalidValue
     ) -> tuple[shared_type_defs.DataSize, list[str]]:
         title, help_text = get_title_and_help(self.form_spec)
 
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             displayed_value = ""
             displayed_unit = _magnitudes_map[self.form_spec.displayed_magnitudes[0]][0]
         else:
@@ -121,9 +121,9 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: int | EmptyValue
+        self, raw_value: object, parsed_value: int | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if isinstance(raw_value, DefaultValue) else raw_value,
                 Title("Invalid integer number"),

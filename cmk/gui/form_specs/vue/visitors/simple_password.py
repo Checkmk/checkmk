@@ -14,7 +14,7 @@ from cmk.rulesets.v1 import Title
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validators,
     create_validation_error,
@@ -28,20 +28,20 @@ VuePassword = tuple[str, bool]
 
 
 class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, str]):
-    def _parse_value(self, raw_value: object) -> DecryptedPassword | EmptyValue:
+    def _parse_value(self, raw_value: object) -> DecryptedPassword | InvalidValue:
         if isinstance(raw_value, DefaultValue):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         if self.options.data_origin == DataOrigin.DISK:
             if not isinstance(raw_value, str):
-                return EMPTY_VALUE
+                return INVALID_VALUE
             return raw_value
 
         if not isinstance(raw_value, list):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         password, encrypted = raw_value
         if not isinstance(password, str):
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         return (
             Encrypter.decrypt(base64.b64decode(password.encode("ascii"))) if encrypted else password
@@ -51,10 +51,10 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, str]):
         return [not_empty()] + compute_validators(self.form_spec)
 
     def _to_vue(
-        self, raw_value: object, parsed_value: DecryptedPassword | EmptyValue
+        self, raw_value: object, parsed_value: DecryptedPassword | InvalidValue
     ) -> tuple[shared_type_defs.SimplePassword, VuePassword]:
         title, help_text = get_title_and_help(self.form_spec)
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             encrypted_password = ""
         else:
             encrypted_password = base64.b64encode(Encrypter.encrypt(parsed_value)).decode("ascii")
@@ -69,9 +69,9 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, str]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: DecryptedPassword | EmptyValue
+        self, raw_value: object, parsed_value: DecryptedPassword | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error("", Title("No password provided"))
         return [
             shared_type_defs.ValidationMessage(location=[], message=x, invalid_value="")

@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import BooleanChoice
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -22,19 +22,19 @@ from ._utils import (
 
 
 class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
-    def _parse_value(self, raw_value: object) -> bool | EmptyValue:
+    def _parse_value(self, raw_value: object) -> bool | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
         if not isinstance(raw_value, bool):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: bool | EmptyValue
+        self, raw_value: object, parsed_value: bool | InvalidValue
     ) -> tuple[shared_type_defs.BooleanChoice, bool]:
         title, help_text = get_title_and_help(self.form_spec)
-        assert not isinstance(parsed_value, EmptyValue)
+        assert not isinstance(parsed_value, InvalidValue)
         return (
             shared_type_defs.BooleanChoice(
                 title=title,
@@ -48,15 +48,15 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
         )
 
     def _validate(
-        self, raw_value: object, parsed_value: bool | EmptyValue
+        self, raw_value: object, parsed_value: bool | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid boolean choice")
             )
         return compute_validation_errors(compute_validators(self.form_spec), raw_value)
 
-    def _to_disk(self, raw_value: object, parsed_value: bool | EmptyValue) -> bool:
-        if isinstance(parsed_value, EmptyValue):
+    def _to_disk(self, raw_value: object, parsed_value: bool | InvalidValue) -> bool:
+        if isinstance(parsed_value, InvalidValue):
             raise MKGeneralException("Unable to serialize empty value")
         return parsed_value

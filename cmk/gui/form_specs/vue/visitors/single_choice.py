@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import cast, Generic, TypeGuard, TypeVar
+from typing import Generic, TypeGuard, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue.validators import build_vue_validators
@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import InvalidElementMode
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DataOrigin, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     base_i18n_form_spec,
     compute_title_input_hint,
@@ -33,7 +33,7 @@ NO_SELECTION = None
 
 class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtended[T], object]):
     def _is_valid_choice(self, value: object) -> TypeGuard[T]:
-        if isinstance(value, EmptyValue):
+        if isinstance(value, InvalidValue):
             return False
         if not self.form_spec.elements:
             return False
@@ -43,10 +43,10 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
     def option_id(cls, val: object) -> str:
         return option_id(val)
 
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _parse_value(self, raw_value: object) -> object | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
-                prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
+                prefill_default := get_prefill_default(self.form_spec.prefill), InvalidValue
             ):
                 return prefill_default
             raw_value = prefill_default
@@ -59,7 +59,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                     break
             else:
                 # Found no matching option
-                return EMPTY_VALUE
+                return INVALID_VALUE
 
         if not self._is_valid_choice(raw_value):
             # Note: An invalid choice does not always result in an empty value
@@ -80,12 +80,12 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
             ):
                 # This is the only case where we might return `object` instead of T
                 return raw_value
-            return EMPTY_VALUE
+            return INVALID_VALUE
 
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
@@ -99,7 +99,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
         input_hint = compute_title_input_hint(self.form_spec.prefill)
         if not self._is_valid_choice(parsed_value):
-            parsed_value = EMPTY_VALUE
+            parsed_value = INVALID_VALUE
             invalid_validation = self.form_spec.invalid_element_validation
             if invalid_validation and invalid_validation.display:
                 input_hint = localize(invalid_validation.display)
@@ -118,7 +118,9 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 no_elements_text=localize(self.form_spec.no_elements_text),
                 i18n_base=base_i18n_form_spec(),
             ),
-            NO_SELECTION if isinstance(parsed_value, EmptyValue) else self.option_id(parsed_value),
+            NO_SELECTION
+            if isinstance(parsed_value, InvalidValue)
+            else self.option_id(parsed_value),
         )
 
     def _compute_invalid_value_display_message(self, raw_value: object) -> str:
@@ -136,9 +138,9 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
         return message_localized
 
     def _validate(
-        self, raw_value: object, parsed_value: object | EmptyValue
+        self, raw_value: object, parsed_value: object | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue) or not self._is_valid_choice(parsed_value):
+        if isinstance(parsed_value, InvalidValue) or not self._is_valid_choice(parsed_value):
             return create_validation_error(
                 "", self._compute_invalid_value_display_message(raw_value)
             )

@@ -20,7 +20,7 @@ from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, INVALID_VALUE, InvalidValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -33,18 +33,18 @@ T = TypeVar("T")
 
 
 class ListUniqueSelectionVisitor(Generic[T], FormSpecVisitor[ListUniqueSelection[T], Sequence[T]]):
-    def _parse_value(self, raw_value: object) -> Sequence[T] | EmptyValue:
+    def _parse_value(self, raw_value: object) -> Sequence[T] | InvalidValue:
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
         if not isinstance(raw_value, list):
-            return EMPTY_VALUE
+            return INVALID_VALUE
         return raw_value
 
     def _to_vue(
-        self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[T] | InvalidValue
     ) -> tuple[shared_type_defs.ListUniqueSelection, list[object]]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             # TODO: fallback to default message
             parsed_value = []
 
@@ -123,9 +123,9 @@ class ListUniqueSelectionVisitor(Generic[T], FormSpecVisitor[ListUniqueSelection
         raise ValueError("Invalid single_choice_type")
 
     def _validate(
-        self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
+        self, raw_value: object, parsed_value: Sequence[T] | InvalidValue
     ) -> list[shared_type_defs.ValidationMessage]:
-        if isinstance(parsed_value, EmptyValue):
+        if isinstance(parsed_value, InvalidValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
 
         element_validations = [

@@ -27,7 +27,7 @@ pytest.register_assert_rewrite(
     "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
 )
 
-from tests.testlib.repo import (  # noqa: E402
+from tests.testlib.repo import (
     add_python_paths,
     current_base_branch_name,
     is_cloud_repo,
@@ -36,7 +36,7 @@ from tests.testlib.repo import (  # noqa: E402
     is_saas_repo,
     repo_path,
 )
-from tests.testlib.utils import run, verbose_called_process_error  # noqa: E402
+from tests.testlib.utils import run, verbose_called_process_error
 
 logger = logging.getLogger(__name__)
 

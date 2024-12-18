@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TypeVar
 
-from cmk.rulesets.v1.form_specs import FormSpec
-
 ModelT = TypeVar("ModelT")
+
+from cmk.rulesets.v1.form_specs import FormSpec
 
 T = TypeVar("T")
 

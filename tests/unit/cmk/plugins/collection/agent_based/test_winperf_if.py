@@ -25,9 +25,6 @@ from cmk.plugins.collection.agent_based.winperf_if import (
     SectionTeaming,
     TeamingData,
 )
-from cmk.plugins.lib import interfaces
-
-from .utils_inventory import sort_inventory_result
 
 
 class Names(StrEnum):
@@ -54,6 +51,10 @@ class Names(StrEnum):
     ISATAP_7A = "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}"
     NIN = "isatap.corp.nintendo.eu"
 
+
+from cmk.plugins.lib import interfaces
+
+from .utils_inventory import sort_inventory_result
 
 _counters: Final[dict[Names, interfaces.Counters]] = {
     Names.INTEL_PRO: interfaces.Counters(

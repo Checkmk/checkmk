@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import main_modules
-from cmk.gui.visuals.filter import filter_registry
 
 main_modules.load_plugins()
+from cmk.gui.visuals.filter import filter_registry
+
 print("test" in filter_registry)

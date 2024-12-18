@@ -15,8 +15,6 @@ from cmk.utils.hostaddress import HostAddress
 
 from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
-from .snmp_helpers import default_config, get_single_oid, get_snmp_table
-
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
     oids=[
@@ -25,6 +23,8 @@ INFO_TREE = BackendSNMPTree(
         BackendOIDSpec("5.0", "string", False),
     ],
 )
+
+from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 
 
 # Missing in currently used dump:

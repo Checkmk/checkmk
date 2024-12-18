@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, CheckResult, Collection, Levels, LevelsCheckerArgs, OutputType, Real, SimpleCheckResult,
+    self, CheckResult, Collection, Levels, MetricMetaData, OutputType, Real, SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -324,7 +324,7 @@ fn check_validity_not_after(
                 "Server certificate validity: {} day(s)",
                 time_to_expiration.whole_days(),
             )),
-            LevelsCheckerArgs::builder()
+            MetricMetaData::builder()
                 .label("certificate_remaining_validity")
                 .uom("s".parse().unwrap())
                 .build(),

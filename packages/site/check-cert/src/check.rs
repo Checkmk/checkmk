@@ -166,7 +166,7 @@ impl Display for Uom {
 }
 
 #[derive(Debug, TypedBuilder)]
-pub struct LevelsCheckerArgs {
+pub struct MetricMetaData {
     #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
     label: String,
     #[builder(default, setter(strip_option))]
@@ -177,7 +177,7 @@ pub fn check_levels<T: Clone + PartialOrd + Display>(
     value: T,
     levels: Levels<T>,
     output: OutputType,
-    args: LevelsCheckerArgs,
+    mmd: MetricMetaData,
 ) -> CheckResult<T> {
     let evaluate = |value: &T| -> State {
         if levels.strategy.cmp(value, &levels.crit) {
@@ -202,9 +202,9 @@ pub fn check_levels<T: Clone + PartialOrd + Display>(
         summary,
         details,
         metrics: Some(Metric::<T> {
-            label: args.label,
+            label: mmd.label,
             value,
-            uom: args.uom,
+            uom: mmd.uom,
             levels: Some(levels.clone()),
             bounds: None,
         }),
@@ -837,7 +837,7 @@ mod test_metrics_display {
 #[cfg(test)]
 mod test_writer_format {
     use super::{
-        check_levels, CheckResult, Collection, Levels, LevelsCheckerArgs, LevelsStrategy, Metric,
+        check_levels, CheckResult, Collection, Levels, LevelsStrategy, Metric, MetricMetaData,
         OutputType, Real, SimpleCheckResult, State, Uom,
     };
 
@@ -1086,11 +1086,11 @@ mod test_writer_format {
         let warn = 10;
         let crit = 20;
         let levels = Levels::try_new(LevelsStrategy::Upper, warn, crit).unwrap();
-        let args = LevelsCheckerArgs {
+        let mmd = MetricMetaData {
             label: "label".to_string(),
             uom: Some(Uom("ms".to_string())),
         };
-        let check = check_levels(15, levels, OutputType::Notice("notice".to_string()), args);
+        let check = check_levels(15, levels, OutputType::Notice("notice".to_string()), mmd);
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
         assert_eq!(

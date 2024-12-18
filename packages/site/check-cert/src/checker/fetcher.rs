@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{self, CheckResult, Collection, Levels, LevelsCheckerArgs, OutputType, Real};
+use crate::check::{self, CheckResult, Collection, Levels, MetricMetaData, OutputType, Real};
 use time::Duration;
 use typed_builder::TypedBuilder;
 
@@ -33,7 +33,7 @@ fn check_response_time(
                 "Response time: {} ms",
                 response_time.whole_milliseconds()
             )),
-            LevelsCheckerArgs::builder()
+            MetricMetaData::builder()
                 .label("overall_response_time")
                 .uom("s".parse().unwrap())
                 .build(),

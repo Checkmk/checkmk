@@ -3,8 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, OutputType, Real,
-    SimpleCheckResult,
+    self, CheckResult, Collection, Levels, LevelsCheckerArgs, OutputType, Real, SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -51,7 +50,7 @@ pub struct Config {
     issuer_ou: Option<String>,
     issuer_st: Option<String>,
     issuer_c: Option<String>,
-    not_after: Option<LevelsChecker<Duration>>,
+    not_after: Option<Levels<Duration>>,
     max_validity: Option<Duration>,
 }
 
@@ -313,13 +312,14 @@ fn check_pubkey_size(
 
 fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
-    levels: Option<LevelsChecker<Duration>>,
+    levels: Option<Levels<Duration>>,
     not_after: ASN1Time,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| match time_to_expiration {
         None => SimpleCheckResult::crit(format!("Certificate expired ({not_after})")).into(),
-        Some(time_to_expiration) => levels.check(
+        Some(time_to_expiration) => check::check_levels(
             time_to_expiration,
+            levels,
             OutputType::Summary(format!(
                 "Server certificate validity: {} day(s)",
                 time_to_expiration.whole_days(),

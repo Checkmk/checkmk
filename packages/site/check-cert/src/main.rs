@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
+use check_cert::check::{self, Levels, LevelsStrategy};
 use check_cert::checker::certificate::{self, Config as CertChecks};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::info::{self, Config as InfoConfig};
@@ -43,7 +43,7 @@ impl ClapPubKeyAlgorithm {
     }
 }
 
-fn parse_levels<F, T1, T2, U>(strat: LevelsStrategy, lvl: Vec<T1>, mut conv: F) -> LevelsChecker<U>
+fn parse_levels<F, T1, T2, U>(strat: LevelsStrategy, lvl: Vec<T1>, mut conv: F) -> Levels<U>
 where
     T1: std::fmt::Debug,
     T2: std::fmt::Debug + std::convert::From<T1>,
@@ -55,7 +55,7 @@ where
     let Ok(lvl) = Levels::try_new(strat, mem::take(&mut lvl[0]), mem::take(&mut lvl[1])) else {
         check::bail_out("invalid args")
     };
-    LevelsChecker::new(lvl)
+    lvl
 }
 
 #[derive(Parser, Debug)]

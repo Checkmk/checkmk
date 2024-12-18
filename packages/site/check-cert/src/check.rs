@@ -173,55 +173,41 @@ pub struct LevelsCheckerArgs {
     uom: Option<Uom>,
 }
 
-#[derive(Debug)]
-pub struct LevelsChecker<T> {
+pub fn check_levels<T: Clone + PartialOrd + Display>(
+    value: T,
     levels: Levels<T>,
-}
-
-impl<T> LevelsChecker<T>
-where
-    T: Display,
-{
-    pub fn new(levels: Levels<T>) -> Self {
-        Self { levels }
-    }
-}
-
-impl<T> LevelsChecker<T>
-where
-    T: Clone + PartialOrd + Display,
-{
-    pub fn check(&self, value: T, output: OutputType, args: LevelsCheckerArgs) -> CheckResult<T> {
-        let evaluate = |value: &T| -> State {
-            if self.levels.strategy.cmp(value, &self.levels.crit) {
-                State::Crit
-            } else if self.levels.strategy.cmp(value, &self.levels.warn) {
-                State::Warn
-            } else {
-                State::Ok
-            }
-        };
-        let state = evaluate(&value);
-        // According to documentation the details default to the summary.
-        // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
-        let (summary, details) = match (output, state) {
-            (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
-            (OutputType::Notice(text), _) => (Some(format!("{text} ({})", self.levels)), None),
-            (OutputType::Summary(text), State::Ok) => (Some(text), None),
-            (OutputType::Summary(text), _) => (Some(format!("{text} ({})", self.levels)), None),
-        };
-        CheckResult {
-            state,
-            summary,
-            details,
-            metrics: Some(Metric::<T> {
-                label: args.label,
-                value,
-                uom: args.uom,
-                levels: Some(self.levels.clone()),
-                bounds: None,
-            }),
+    output: OutputType,
+    args: LevelsCheckerArgs,
+) -> CheckResult<T> {
+    let evaluate = |value: &T| -> State {
+        if levels.strategy.cmp(value, &levels.crit) {
+            State::Crit
+        } else if levels.strategy.cmp(value, &levels.warn) {
+            State::Warn
+        } else {
+            State::Ok
         }
+    };
+    let state = evaluate(&value);
+    // According to documentation the details default to the summary.
+    // see: plugin-api/cmk.agent_based/v2.html#cmk.agent_based.v2.Result
+    let (summary, details) = match (output, state) {
+        (OutputType::Notice(text), State::Ok) => (None, Some(text.to_string())),
+        (OutputType::Notice(text), _) => (Some(format!("{text} ({})", levels)), None),
+        (OutputType::Summary(text), State::Ok) => (Some(text), None),
+        (OutputType::Summary(text), _) => (Some(format!("{text} ({})", levels)), None),
+    };
+    CheckResult {
+        state,
+        summary,
+        details,
+        metrics: Some(Metric::<T> {
+            label: args.label,
+            value,
+            uom: args.uom,
+            levels: Some(levels.clone()),
+            bounds: None,
+        }),
     }
 }
 
@@ -851,7 +837,7 @@ mod test_metrics_display {
 #[cfg(test)]
 mod test_writer_format {
     use super::{
-        CheckResult, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Metric,
+        check_levels, CheckResult, Collection, Levels, LevelsCheckerArgs, LevelsStrategy, Metric,
         OutputType, Real, SimpleCheckResult, State, Uom,
     };
 
@@ -1099,14 +1085,12 @@ mod test_writer_format {
     fn test_collection_levels_checker_warn_notice() {
         let warn = 10;
         let crit = 20;
-        let levels = LevelsChecker {
-            levels: Levels::try_new(LevelsStrategy::Upper, warn, crit).unwrap(),
-        };
+        let levels = Levels::try_new(LevelsStrategy::Upper, warn, crit).unwrap();
         let args = LevelsCheckerArgs {
             label: "label".to_string(),
             uom: Some(Uom("ms".to_string())),
         };
-        let check = levels.check(15, OutputType::Notice("notice".to_string()), args);
+        let check = check_levels(15, levels, OutputType::Notice("notice".to_string()), args);
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
         assert_eq!(

@@ -2,14 +2,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, OutputType, Real};
+use crate::check::{self, CheckResult, Collection, Levels, LevelsCheckerArgs, OutputType, Real};
 use time::Duration;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
-    response_time: Option<LevelsChecker<Duration>>,
+    response_time: Option<Levels<Duration>>,
 }
 
 pub fn check(response_time: Duration, config: Config) -> Collection {
@@ -23,11 +23,12 @@ pub fn check(response_time: Duration, config: Config) -> Collection {
 
 fn check_response_time(
     response_time: Duration,
-    levels: Option<LevelsChecker<Duration>>,
+    levels: Option<Levels<Duration>>,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| {
-        levels.check(
+        check::check_levels(
             response_time,
+            levels,
             OutputType::Notice(format!(
                 "Response time: {} ms",
                 response_time.whole_milliseconds()

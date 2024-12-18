@@ -84,34 +84,34 @@ const { buttonPadding = '16px' } = defineProps<{
     padding-top: calc(var(--spacing) - var(--button-padding-top));
     padding-left: v-bind(buttonPadding);
   }
-}
 
-.cmk-list-item--first {
-  .cmk-list-item__button-container {
-    padding-top: var(--button-padding-top);
+  &.cmk-list-item--first {
+    > .cmk-list-item__button-container {
+      padding-top: var(--button-padding-top);
+    }
+
+    > .cmk-list-item__content {
+      padding-top: 0;
+    }
   }
 
-  .cmk-list-item__content {
-    padding-top: 0;
-  }
-}
-
-.cmk-list-item--last {
-  .cmk-list-item__button-container,
-  .cmk-list-item__content {
-    padding-bottom: 0;
-  }
-}
-
-.cmk-list-item--only {
-  .cmk-list-item__button-container {
-    padding-top: var(--button-padding-top);
-    padding-bottom: var(--button-padding-top);
+  &.cmk-list-item--last {
+    > .cmk-list-item__button-container,
+    > .cmk-list-item__content {
+      padding-bottom: 0;
+    }
   }
 
-  .cmk-list-item__content {
-    padding-top: 0;
-    padding-bottom: 0;
+  &.cmk-list-item--only {
+    > .cmk-list-item__button-container {
+      padding-top: var(--button-padding-top);
+      padding-bottom: var(--button-padding-top);
+    }
+
+    > .cmk-list-item__content {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
   }
 }
 </style>

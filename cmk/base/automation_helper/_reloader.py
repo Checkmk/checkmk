@@ -8,7 +8,7 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from threading import Event
-from typing import Callable, Final
+from typing import Callable
 
 from ._cache import Cache, CacheError
 from ._config import ReloaderConfig
@@ -41,14 +41,16 @@ def _run(
     shutdown_flag: Event,
 ) -> None:
     last_change = _retrieve_last_change(cache)
-    while not shutdown_flag.wait(timeout=config.sleep_inteval):
-        if (cached_last_change := _retrieve_last_change(cache)) != last_change:
-            LOGGER.info(
-                "[reloader] Change detected %.2f seconds ago, reloading",
-                time.time() - cached_last_change,
-            )
-            reload_callback()
-            last_change = cached_last_change
+    while not shutdown_flag.wait(timeout=config.poll_interval):
+        if (cached_last_change := _retrieve_last_change(cache)) == last_change:
+            continue
+        shutdown_flag.wait(timeout=config.aggregation_interval)
+        LOGGER.info(
+            "[reloader] Change detected %.2f seconds ago, reloading",
+            time.time() - cached_last_change,
+        )
+        reload_callback()
+        last_change = cached_last_change
 
 
 def _retrieve_last_change(cache: Cache) -> float:

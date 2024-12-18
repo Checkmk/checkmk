@@ -72,8 +72,12 @@ def watcher_schedules(omd_root: Path) -> list[Schedule]:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ReloaderConfig:
-    sleep_inteval: float
+    poll_interval: float
+    aggregation_interval: float
 
 
 def reloader_config() -> ReloaderConfig:
-    return ReloaderConfig(sleep_inteval=5.0)
+    return ReloaderConfig(
+        poll_interval=1.0,
+        aggregation_interval=5.0,
+    )

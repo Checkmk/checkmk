@@ -14,4 +14,4 @@ dependencies = { file = ["requirements.txt"] }
 "cmk.shared_typing" = ["py.typed"]
 
 [tool.setuptools]
-package-dir = {"" = "python"}
+package-dir = { "" = "python" }

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import shutil
-import time
 from collections.abc import Generator
 from pathlib import Path
 from typing import ContextManager, Final
@@ -23,6 +21,8 @@ from watchdog.events import (
     FileMovedEvent,
     FileSystemEvent,
 )
+
+from tests.testlib.utils import wait_until
 
 from cmk.base.automation_helper._cache import Cache
 from cmk.base.automation_helper._config import Schedule
@@ -82,67 +82,73 @@ def get_observer(cache: Cache, tmp_path: Path) -> ContextManager:
     )
 
 
-def wait_for_observer_log_output(
-    log: pytest.LogCaptureFixture,
-    output_to_wait_for: str,
-    interval: float = 0.001,
-    tries: int = 100,
-) -> None:
-    while tries:
-        if output_to_wait_for in log.text:
-            return
-        tries -= 1
-        time.sleep(interval)
-    raise AssertionError(f"Expected output '{output_to_wait_for}' not found in log output")
-
-
-@pytest.mark.xfail(reason="Cannot reproduce the 'moved' event with shutil")
 def test_observer_handles_moved_mk_file(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path, observer: ContextManager, target_mk_file: Path
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    target_mk_file: Path,
 ) -> None:
-    target_mk_file.write_bytes(b"hello")
-    tmp_file = tmp_path / f"{_MK_FILE}.tmp"
-    tmp_file.write_bytes(b"goodbye")
-
+    tmp_file = target_mk_file.with_suffix(".tmp")
+    tmp_file.touch()
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
-        shutil.move(tmp_file, target_mk_file)
-        wait_for_observer_log_output(caplog, "foo.mk (overwritten)")
+        tmp_file.rename(target_mk_file)
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"{_MK_FILE} (overwritten)" in caplog.text
 
 
 def test_observer_handles_created_mk_file(
-    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_mk_file: Path
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    target_mk_file: Path,
 ) -> None:
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.touch()
-        wait_for_observer_log_output(caplog, "foo.mk (created)")
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"{_MK_FILE} (created)" in caplog.text
 
 
 def test_observer_handles_modified_mk_file(
-    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_mk_file: Path
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    target_mk_file: Path,
 ) -> None:
     target_mk_file.touch()
-
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.write_bytes(b"hello")
-        wait_for_observer_log_output(caplog, "foo.mk (modified)")
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"{_MK_FILE} (modified)" in caplog.text
 
 
 def test_observer_handles_deleted_mk_file(
-    caplog: pytest.LogCaptureFixture, observer: ContextManager, target_mk_file: Path
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    target_mk_file: Path,
 ) -> None:
     target_mk_file.touch()
-
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
         target_mk_file.unlink()
-        wait_for_observer_log_output(caplog, "foo.mk (deleted)")
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"{_MK_FILE} (deleted)" in caplog.text
 
 
 def test_observer_also_handles_txt_files(
-    caplog: pytest.LogCaptureFixture, observer: ContextManager, tmp_path: Path
+    caplog: pytest.LogCaptureFixture,
+    cache: Cache,
+    observer: ContextManager,
+    tmp_path: Path,
 ) -> None:
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO), observer:
         (tmp_path / _WATCHED_TXT_FILE).touch()
-        wait_for_observer_log_output(caplog, "foo.txt (created)")
+        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
+    assert f"{_WATCHED_TXT_FILE} (created)" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -181,12 +187,14 @@ def test_automation_watcher_logging_pattern_match(
 )
 def test_automation_watcher_logging_no_match(
     caplog: pytest.LogCaptureFixture,
+    cache: Cache,
     mk_file_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
 ) -> None:
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO):
         mk_file_watcher_handler.dispatch(event)
-
+    assert cache.get_last_detected_change() == last_change_reference
     assert not caplog.text
 
 
@@ -217,13 +225,15 @@ def test_automation_watcher_logging_no_match(
 )
 def test_automation_watcher_logging_directory_match(
     caplog: pytest.LogCaptureFixture,
+    cache: Cache,
     directory_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
     output: str,
 ) -> None:
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO):
         directory_watcher_handler.dispatch(event)
-
+    assert cache.get_last_detected_change() > last_change_reference
     assert output in caplog.text
 
 
@@ -241,10 +251,23 @@ def test_automation_watcher_logging_directory_match(
 )
 def test_automation_watcher_logging_directories_ignored(
     caplog: pytest.LogCaptureFixture,
+    cache: Cache,
     mk_file_watcher_handler: _AutomationWatcherHandler,
     event: FileSystemEvent,
 ) -> None:
+    last_change_reference = cache.get_last_detected_change()
     with caplog.at_level(logging.INFO):
         mk_file_watcher_handler.dispatch(event)
-
+    assert cache.get_last_detected_change() == last_change_reference
     assert not caplog.text
+
+
+def _wait_for_last_change_timestamp_to_increment(
+    cache: Cache,
+    reference_timestamp: float,
+) -> None:
+    wait_until(
+        lambda: cache.get_last_detected_change() > reference_timestamp,
+        timeout=0.5,
+        interval=0.05,
+    )

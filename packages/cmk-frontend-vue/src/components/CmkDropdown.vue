@@ -47,6 +47,7 @@ const noChoiceAvailable = computed(
 )
 
 const suggestionsShown = ref(false)
+const suggestionsRef = ref<HTMLUListElement | null>(null)
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 const comboboxButtonRef = ref<HTMLButtonElement | null>(null)
 const optionRefs = ref<(HTMLLIElement | null)[]>([])
@@ -69,11 +70,22 @@ watch(filterString, (newFilterString) => {
 function showSuggestions(): void {
   if (!disabled && !noChoiceAvailable.value) {
     suggestionsShown.value = !suggestionsShown.value
+    if (!suggestionsShown.value) {
+      return
+    }
     filterString.value = ''
     filteredOptions.value = options.map((_, index) => index)
     selectedSuggestionOptionIndex.value = filteredOptions.value[0] ?? null
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     nextTick(() => {
+      if (suggestionsRef.value) {
+        const suggestionsRect = suggestionsRef.value.getBoundingClientRect()
+        if (window.innerHeight - suggestionsRect.bottom < suggestionsRect.height) {
+          suggestionsRef.value.style.bottom = `calc(2 * var(--spacing))`
+        } else {
+          suggestionsRef.value.style.removeProperty('bottom')
+        }
+      }
       suggestionInputRef.value?.focus()
     })
   }
@@ -170,6 +182,7 @@ function wrap(index: number, length: number): number {
     <span v-else>{{ noElementsText }}</span>
     <ul
       v-if="!!suggestionsShown"
+      ref="suggestionsRef"
       class="cmk-dropdown__suggestions"
       @keydown.escape.prevent="hideSuggestions"
       @keydown.tab.prevent="hideSuggestions"

@@ -324,7 +324,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 
 .table-header {
   .head {
-    color: white;
+    color: var(--font-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;

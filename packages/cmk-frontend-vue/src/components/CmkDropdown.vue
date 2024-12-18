@@ -8,6 +8,7 @@ import { computed, nextTick, ref, watch, type Ref } from 'vue'
 import CmkButton from './CmkButton.vue'
 import useClickOutside from '@/lib/useClickOutside'
 import FormRequired from '@/form/private/FormRequired.vue'
+import ArrowDown from '@/components/graphics/ArrowDown.vue'
 
 export interface DropdownOption {
   name: string
@@ -154,8 +155,9 @@ function wrap(index: number, length: number): number {
     >
       {{ selectedOptionTitle
       }}<template v-if="requiredText !== '' && !selectedOption!!">
-        {{ ' ' }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText"
-      /></template>
+        {{ ' '
+        }}<FormRequired :show="true" :space="'before'" :i18n-required="requiredText" /></template
+      ><ArrowDown class="cmk-dropdown__button_arrow" />
     </CmkButton>
     <span v-else>{{ noElementsText }}</span>
     <ul
@@ -201,12 +203,13 @@ function wrap(index: number, length: number): number {
   background-color: var(--default-form-element-bg-color);
   margin: 0;
   padding: 3px 2.5em 3px 6px;
-  background-image: var(--icon-select-arrow);
-  background-position: right 50%;
-  background-repeat: no-repeat;
-  background-size: 20px 11px;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+
+  .cmk-dropdown__button_arrow {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
 
   &:hover {
     background-color: var(--input-hover-bg-color);

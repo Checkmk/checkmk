@@ -6,6 +6,7 @@
 
 def main() {
     def all_lightweight_jobs = [
+        "test-python3-pylint",
         "test-python3-bandit",
         "test-agent-plugin-unit",
         "test-python3-code-quality",

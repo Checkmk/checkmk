@@ -149,7 +149,10 @@ function wrap(index: number, length: number): number {
       :aria-label="selectedOptionTitle"
       :aria-expanded="suggestionsShown"
       class="cmk-dropdown__button"
-      :class="{ disabled: disabled || options.length === 0 }"
+      :class="{
+        disabled: disabled || options.length === 0,
+        no_value: !selectedOption
+      }"
       :variant="'transparent'"
       @click.prevent="showSuggestions"
     >
@@ -220,6 +223,14 @@ function wrap(index: number, length: number): number {
     color: var(--font-color-dimmed);
     &:hover {
       background-color: var(--default-form-element-bg-color);
+    }
+  }
+
+  &.no_value {
+    color: var(--font-color-dimmed);
+
+    > .cmk-dropdown__button_arrow {
+      color: var(--font-color);
     }
   }
 }

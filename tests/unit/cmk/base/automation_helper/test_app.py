@@ -15,12 +15,12 @@ from cmk.base.automations import AutomationExitCode
 
 
 class DummyAutomationEngineSuccess:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
         return AutomationExitCode.SUCCESS
 
 
 class DummyAutomationEngineFailure:
-    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:  # noqa: ARG002
+    def execute(self, cmd: str, args: list[str], *, reload_config: bool) -> AutomationExitCode:
         raise SystemExit(1)
 
 

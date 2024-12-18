@@ -17,6 +17,7 @@ from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFiles
 from tests.testlib.playwright.pom.setup.notification_configuration import NotificationConfiguration
 from tests.testlib.playwright.pom.setup.notification_rules import (
     AddNotificationRule,
+    EditNotificationRule,
 )
 from tests.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.site import Site
@@ -52,17 +53,26 @@ def test_filesystem_email_notifications(
     used_space = "10"
     notification_description = "Test rule for email notifications"
 
+    logger.info("Clone the existing default notification rule")
     notification_configuration_page = NotificationConfiguration(dashboard_page.page)
     # The scrollbar interrupts the interaction with rule edit button -> collapse overview
     notification_configuration_page.collapse_notification_overview(True)
     notification_configuration_page.notification_rule_copy_button(0).click()
 
+    logger.info("Modify the cloned rule")
     add_notification_rule_page = AddNotificationRule(
         notification_configuration_page.page, navigate_to_page=False
     )
     add_notification_rule_page.modify_notification_rule(
         username, f"{service_name}$", notification_description
     )
+
+    logger.info("Disable the default notification rule")
+    edit_notification_rule_page = EditNotificationRule(
+        notification_configuration_page.page, rule_position=0
+    )
+    edit_notification_rule_page.check_disable_rule(True)
+    edit_notification_rule_page.apply_and_create_another_rule_button.click()
 
     logger.info(
         "Add rule for filesystems to change status '%s' when used space is more then %s percent",
@@ -106,8 +116,16 @@ def test_filesystem_email_notifications(
             email_page.check_table_content(expected_content)
 
     finally:
+        logger.info("Delete the created rule")
         notification_configuration_page.navigate()
         notification_configuration_page.delete_notification_rule(notification_description)
+
+        logger.info("Enable the default notification rule")
+        edit_notification_rule_page = EditNotificationRule(
+            notification_configuration_page.page, rule_position=0
+        )
+        edit_notification_rule_page.check_disable_rule(False)
+        edit_notification_rule_page.apply_and_create_another_rule_button.click()
 
         if service_search_page is not None:
             filesystems_rules_page = Ruleset(

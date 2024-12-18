@@ -140,6 +140,10 @@ class BaseNotificationPage(CmkPage):
     def description_text_field(self) -> Locator:
         return self.main_area.locator().get_by_label("Description").get_by_role("textbox")
 
+    @property
+    def _disable_rule_button(self) -> Locator:
+        return self.main_area.locator().get_by_role("checkbox", name="Disable rule")
+
     def add_service_event(
         self,
         index: int,
@@ -182,6 +186,10 @@ class BaseNotificationPage(CmkPage):
             self._add_new_entry_button(index).click()
             self._recipient_first_dropdown(index).click()
             self._select_recipient_option(index, recipient_value).click()
+
+    def check_disable_rule(self, disable: bool) -> None:
+        if self._disable_rule_button.is_checked() != disable:
+            self._disable_rule_button.click()
 
     def modify_notification_rule(self, user: str, service: str, description: str) -> None:
         """Modify the default notification rule.

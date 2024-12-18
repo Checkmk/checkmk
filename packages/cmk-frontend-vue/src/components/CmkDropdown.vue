@@ -283,8 +283,10 @@ function wrap(index: number, length: number): number {
 
     &.selectable {
       cursor: pointer;
-      &:hover,
       &.selected {
+        color: var(--default-select-focus-color);
+      }
+      &:hover {
         color: var(--default-select-hover-color);
       }
     }

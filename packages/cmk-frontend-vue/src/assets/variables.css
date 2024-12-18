@@ -79,7 +79,6 @@
     /* Fonts */
     --font-color: var(--grey-4);
     --font-color-dimmed: var(--grey-4-dimmed);
-    --font-color-green: var(--success-dimmed-2);
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
@@ -98,7 +97,8 @@
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-6);
     --default-form-element-border-color: rgb(183, 180, 180);
-    --default-select-hover-color: var(--font-color-green);
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
     --default-button-emphasis-color: rgb(13, 141, 91);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(233, 233, 233);
@@ -129,7 +129,6 @@
     /* Fonts */
     --font-color: var(--white);
     --font-color-dimmed: var(--white-dimmed);
-    --font-color-green: var(--success);
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
@@ -148,7 +147,8 @@
     --default-form-element-bg-color: var(--ux-theme-5);
     --default-form-element-bg-color-disabled: var(--ux-theme-3);
     --default-form-element-border-color: rgb(69, 77, 89);
-    --default-select-hover-color: var(--font-color-green);
+    --default-select-hover-color: var(--success);
+    --default-select-focus-color: var(--success-dimmed);
     --default-button-emphasis-color: rgb(19, 211, 137);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(83, 83, 83);

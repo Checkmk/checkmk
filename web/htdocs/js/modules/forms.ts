@@ -91,17 +91,16 @@ export function enable_select2_dropdowns(
     const elements = $(container)
         .find(".select2-enable")
         .not(".vlof_prototype .select2-enable");
-    const max_wait_seconds = 3; // Let the user wait for max 3 seconds. We can convert ~60-80 selects per second.
-    if (elements.length > 60 * max_wait_seconds) {
-        // If we've got too many of those, we bail out early instead of letting the user wait potentially "forever".
-        return;
-    }
-    elements.select2({
-        dropdownAutoWidth: true,
-        minimumResultsForSearch: 5,
-        templateResult: format_select2_item,
-        templateSelection: format_select2_item,
-    });
+
+    (async () => {
+        elements.select2({
+            dropdownAutoWidth: true,
+            minimumResultsForSearch: 5,
+            templateResult: format_select2_item,
+            templateSelection: format_select2_item,
+        });
+    })();
+
     initialize_autocompleters(container);
 
     // workaround for select2-input not being in focus

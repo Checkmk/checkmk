@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{self, CheckResult, Collection, Levels, MetricMetaData, OutputType, Real};
+use crate::check::{CheckResult, Collection, Levels, Metric, Real};
 use std::time::Duration;
 use typed_builder::TypedBuilder;
 
@@ -26,13 +26,13 @@ fn check_response_time(
     levels: Option<Levels<Duration>>,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| {
-        check::check_levels(
-            response_time,
-            levels,
-            OutputType::Notice(format!("Response time: {} ms", response_time.as_millis())),
-            MetricMetaData::builder()
+        CheckResult::notice_from_levels(
+            format!("Response time: {} ms", response_time.as_millis()),
+            Metric::builder()
                 .label("overall_response_time")
+                .value(response_time)
                 .uom("s".parse().unwrap())
+                .levels(Some(levels))
                 .build(),
         )
     })

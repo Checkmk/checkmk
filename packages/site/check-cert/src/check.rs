@@ -147,6 +147,16 @@ where
             crit: mem::take(&mut arr[1]),
         }
     }
+
+    fn evaluate(&self, value: &T) -> State {
+        if self.strategy.cmp(value, &self.crit) {
+            State::Crit
+        } else if self.strategy.cmp(value, &self.warn) {
+            State::Warn
+        } else {
+            State::Ok
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -163,55 +173,6 @@ impl Display for Uom {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         self.0.fmt(f)
     }
-}
-
-#[derive(Debug, TypedBuilder)]
-pub struct MetricMetaData {
-    #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
-    label: String,
-    #[builder(default, setter(strip_option))]
-    uom: Option<Uom>,
-}
-
-pub fn check_levels<T: Clone + PartialOrd>(
-    value: T,
-    levels: Levels<T>,
-    output: OutputType,
-    mmd: MetricMetaData,
-) -> CheckResult<T> {
-    let evaluate = |value: &T| -> State {
-        if levels.strategy.cmp(value, &levels.crit) {
-            State::Crit
-        } else if levels.strategy.cmp(value, &levels.warn) {
-            State::Warn
-        } else {
-            State::Ok
-        }
-    };
-    let state = evaluate(&value);
-    let (summary, details) = match (output, state) {
-        (OutputType::Notice(text), State::Ok) => (None, Some(text)),
-        (OutputType::Notice(text), _) => (Some(text), None),
-        (OutputType::Summary(text), _) => (Some(text), None),
-    };
-    CheckResult {
-        state,
-        summary,
-        details,
-        metrics: Some(Metric::<T> {
-            label: mmd.label,
-            value,
-            uom: mmd.uom,
-            levels: Some(levels.clone()),
-            bounds: None,
-        }),
-    }
-}
-
-#[derive(Debug)]
-pub enum OutputType {
-    Summary(String),
-    Notice(String),
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -255,9 +216,9 @@ where
     value: T,
     #[builder(default, setter(strip_option))]
     uom: Option<Uom>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     levels: Option<Levels<T>>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     bounds: Option<Bounds<T>>,
 }
 
@@ -386,7 +347,7 @@ where
 
 impl<T> CheckResult<T>
 where
-    T: Clone,
+    T: Clone + PartialOrd,
 {
     fn new(
         state: State,
@@ -422,6 +383,29 @@ where
         Self::new(State::Unknown, as_option(summary), None, Some(metrics))
     }
 
+    pub fn notice_from_levels(details: impl Into<String>, metrics: Metric<T>) -> Self {
+        let state = metrics
+            .levels
+            .as_ref()
+            .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value));
+        match state {
+            State::Ok => Self::notice(details, metrics),
+            _ => Self::new(state, as_option(details), None, Some(metrics)),
+        }
+    }
+
+    pub fn from_levels(summary: impl Into<String>, metrics: Metric<T>) -> Self {
+        Self::new(
+            metrics
+                .levels
+                .as_ref()
+                .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value)),
+            as_option(summary),
+            None,
+            Some(metrics),
+        )
+    }
+
     pub fn ok_with_details(
         summary: impl Into<String>,
         details: impl Into<String>,
@@ -455,6 +439,22 @@ where
     ) -> Self {
         Self::new(
             State::Crit,
+            as_option(summary),
+            as_option(details),
+            Some(metrics),
+        )
+    }
+
+    pub fn from_levels_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            metrics
+                .levels
+                .as_ref()
+                .map_or(State::Unknown, |levels| levels.evaluate(&metrics.value)),
             as_option(summary),
             as_option(details),
             Some(metrics),
@@ -678,16 +678,16 @@ mod test_metrics_map {
                 .label("Label")
                 .value(42)
                 .uom(u("unit"))
-                .levels(Levels::try_new(LevelsStrategy::Upper, 5, 10).unwrap())
-                .bounds(Bounds { min: 1, max: 10 })
+                .levels(Levels::try_new(LevelsStrategy::Upper, 5, 10).ok())
+                .bounds(Some(Bounds { min: 1, max: 10 }))
                 .build()
                 .map(|v| v * 10),
             Metric::builder()
                 .label("Label")
                 .value(420)
                 .uom(u("unit"))
-                .levels(Levels::try_new(LevelsStrategy::Upper, 50, 100).unwrap())
-                .bounds(Bounds { min: 10, max: 100 })
+                .levels(Levels::try_new(LevelsStrategy::Upper, 50, 100).ok())
+                .bounds(Some(Bounds { min: 10, max: 100 }))
                 .build()
         );
     }
@@ -743,7 +743,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(i(42))
-                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).unwrap())
+                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).ok())
                     .build()
             ),
             "name=42;24;42;;"
@@ -759,11 +759,11 @@ mod test_metrics_display {
                     .label("name")
                     .value(i(42))
                     .uom(u("ms"))
-                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).unwrap())
-                    .bounds(Bounds {
+                    .levels(Levels::try_new(LevelsStrategy::Upper, i(24), i(42)).ok())
+                    .bounds(Some(Bounds {
                         min: i(0),
                         max: i(100)
-                    })
+                    }))
                     .build()
             ),
             "name=42ms;24;42;0;100"
@@ -779,11 +779,11 @@ mod test_metrics_display {
                     .label("name")
                     .value(d(42.0))
                     .uom(u("ms"))
-                    .levels(Levels::try_new(LevelsStrategy::Upper, d(24.0), d(42.0)).unwrap())
-                    .bounds(Bounds {
+                    .levels(Levels::try_new(LevelsStrategy::Upper, d(24.0), d(42.0)).ok())
+                    .bounds(Some(Bounds {
                         min: d(0.0),
                         max: d(100.0)
-                    })
+                    }))
                     .build()
             ),
             "name=42.000000ms;24.000000;42.000000;0.000000;100.000000"
@@ -794,8 +794,8 @@ mod test_metrics_display {
 #[cfg(test)]
 mod test_writer_format {
     use super::{
-        check_levels, CheckResult, Collection, Levels, LevelsStrategy, Metric, MetricMetaData,
-        OutputType, Real, SimpleCheckResult, State, Uom,
+        CheckResult, Collection, Levels, LevelsStrategy, Metric, Real, SimpleCheckResult, State,
+        Uom,
     };
 
     #[test]
@@ -1040,14 +1040,13 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_levels_checker_warn_notice() {
-        let warn = 10;
-        let crit = 20;
-        let levels = Levels::try_new(LevelsStrategy::Upper, warn, crit).unwrap();
-        let mmd = MetricMetaData {
-            label: "label".to_string(),
-            uom: Some(Uom("ms".to_string())),
-        };
-        let check = check_levels(15, levels, OutputType::Notice("notice".to_string()), mmd);
+        let metric = Metric::builder()
+            .label("label")
+            .value(15)
+            .uom(Uom("ms".to_string()))
+            .levels(Levels::try_new(LevelsStrategy::Upper, 10, 20).ok())
+            .build();
+        let check = CheckResult::notice_from_levels("notice", metric);
         let coll = Collection::from(&mut vec![check.map(Real::from)]);
         assert_eq!(coll.state, State::Warn);
         assert_eq!(

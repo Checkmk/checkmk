@@ -131,7 +131,6 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     **********
     """
 
-    # no idea why pylint will not see that we inherit these four anyway.
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], SimpleLevelsConfigModel[_NumberT]] | None = None
@@ -186,7 +185,6 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
 
     """
 
-    # no idea why pylint will not see that we inherit these four anyway.
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None

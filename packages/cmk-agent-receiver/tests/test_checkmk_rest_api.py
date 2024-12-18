@@ -12,8 +12,6 @@ from requests import Response
 
 from cmk.agent_receiver.checkmk_rest_api import link_host_with_uuid
 
-# pylint does not understand the syntax of cmk.agent_receiver.checkmk_rest_api.log_http_exception
-
 
 def test_link_host_with_uuid_unauthorized(
     mocker: MockerFixture,

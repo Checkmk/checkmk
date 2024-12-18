@@ -75,7 +75,6 @@ echo "========================================================================="
 bazel build \
     ${BAZEL_CI_ARGS} \
     --verbose_failures \
-    --sandbox_debug \
     --subcommands=pretty_print \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=PATH="$PATH" \

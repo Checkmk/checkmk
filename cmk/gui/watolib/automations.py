@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 import subprocess
 import time
@@ -78,6 +79,8 @@ tracer = trace.get_tracer()
 # HTTPS request is being made". We warn the user using analyze configuration.
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+ENV_VARIABLE_FORCE_CLI_INTERFACE: Final[str] = "_CMK_AUTOMATIONS_FORCE_CLI_INTERFACE"
+
 
 class MKAutomationException(MKGeneralException):
     pass
@@ -112,7 +115,9 @@ def check_mk_local_automation_serialized(
 
         executor: AutomationExecutor = (
             automation_subprocess.SubprocessExecutor()
-            if force_cli_interface or not active_config.automation_helper_active
+            if force_cli_interface
+            or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
+            or not active_config.automation_helper_active
             else automation_helper.HelperExecutor()
         )
 

@@ -52,6 +52,12 @@ public:
         allowed_from_time_ = std::chrono::steady_clock::now();
     }
     explicit Basic(std::string_view name) noexcept : Basic(name, '\0') {}
+
+    Basic(const Basic &) = delete;
+    Basic &operator=(const Basic &) = delete;
+
+    Basic(Basic &&) = delete;
+    Basic &operator=(Basic &&) = delete;
     virtual ~Basic() = default;
 
     /// internal_port format "type:value", where type:

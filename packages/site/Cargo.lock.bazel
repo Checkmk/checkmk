@@ -1,5 +1,5 @@
 {
-  "checksum": "8ac935245dbcf006be47cd173caaee79ee9082949fbd69deedd161211d367311",
+  "checksum": "cd3f1e35db3c97dbd1455a0b26ef9cda00aaf13a1277323e25013f61a1f2bd27",
   "crates": {
     "addr2line 0.24.1": {
       "name": "addr2line",
@@ -1781,8 +1781,8 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "check_cert 0.1.0": {
-      "name": "check_cert",
+    "check-cert 0.1.0": {
+      "name": "check-cert",
       "version": "0.1.0",
       "package_url": null,
       "repository": null,
@@ -1862,8 +1862,8 @@
       "license_ids": [],
       "license_file": null
     },
-    "check_http 0.1.0": {
-      "name": "check_http",
+    "check-http 0.1.0": {
+      "name": "check-http",
       "version": "0.1.0",
       "package_url": null,
       "repository": null,
@@ -18486,8 +18486,8 @@
   },
   "binary_crates": [],
   "workspace_members": {
-    "check_cert 0.1.0": "packages/site/check-cert",
-    "check_http 0.1.0": "packages/site/check-http"
+    "check-cert 0.1.0": "packages/site/check-cert",
+    "check-http 0.1.0": "packages/site/check-http"
   },
   "conditions": {
     "aarch64-apple-darwin": [

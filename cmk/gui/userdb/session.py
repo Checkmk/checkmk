@@ -85,6 +85,8 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     if (session_timeout := active_config.single_user_session) is None:
         return  # No login session limitation enabled, no validation
     for session_info in load_session_infos(username).values():
+        if session_info.logged_out:
+            continue
         idle_time = now.timestamp() - session_info.last_activity
         if idle_time <= session_timeout:
             auth_logger.debug(

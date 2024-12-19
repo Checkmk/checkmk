@@ -3,19 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import NamedTuple
 
 import pytest
 
-
-class ChangedFiles(NamedTuple):
-    test_all_files: bool
-    file_paths: Collection[Path]
-
-    def is_changed(self, path: Path) -> bool:
-        return self.test_all_files or path in self.file_paths
+from tests.code_quality.utils import ChangedFiles
 
 
 def pytest_addoption(parser):

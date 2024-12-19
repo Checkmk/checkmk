@@ -28,17 +28,23 @@ def test_automatic_host_removal(
 ) -> None:
     assert not central_site.openapi.changes.get_pending()
 
-    unresolvable_host_central = "not-dns-resolvable-central"
-    unresolvable_host_remote = "not-dns-resolvable-remote"
+    hostname_central = "auto-remove-central"
+    hostname_remote = "auto-remove-remote"
 
     with disable_core_check_scheduling(central_site), disable_core_check_scheduling(remote_site):
         central_site.openapi.hosts.create(
-            hostname=unresolvable_host_central,
-            attributes={"site": central_site.id},
+            hostname=hostname_central,
+            attributes={
+                "ipaddress": "127.0.0.1",
+                "site": central_site.id,
+            },
         )
         central_site.openapi.hosts.create(
-            hostname=unresolvable_host_remote,
-            attributes={"site": remote_site.id},
+            hostname=hostname_remote,
+            attributes={
+                "ipaddress": "127.0.0.1",
+                "site": remote_site.id,
+            },
         )
 
         rule_id = central_site.openapi.rules.create(
@@ -46,7 +52,7 @@ def test_automatic_host_removal(
             value=("enabled", {"checkmk_service_crit": 1}),
             conditions={
                 "host_name": {
-                    "match_on": [unresolvable_host_remote, unresolvable_host_central],
+                    "match_on": [hostname_remote, hostname_central],
                     "operator": "one_of",
                 }
             },
@@ -54,18 +60,14 @@ def test_automatic_host_removal(
 
         central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
-        central_site.send_service_check_result(
-            unresolvable_host_central, "Check_MK", 2, "FAKE CRIT"
-        )
-        remote_site.send_service_check_result(unresolvable_host_remote, "Check_MK", 2, "FAKE CRIT")
+        central_site.send_service_check_result(hostname_central, "Check_MK", 2, "FAKE CRIT")
+        remote_site.send_service_check_result(hostname_remote, "Check_MK", 2, "FAKE CRIT")
 
         try:
 
             def _host_removal_done() -> bool:
                 hostnames = set(central_site.openapi.hosts.get_all_names())
-                return not hostnames.intersection(
-                    {unresolvable_host_central, unresolvable_host_remote}
-                )
+                return not hostnames.intersection({hostname_central, hostname_remote})
 
             logger.info("Waiting for hosts to be removed")
             wait_until(
@@ -83,10 +85,10 @@ def test_automatic_host_removal(
 
         finally:
             central_site.openapi.rules.delete(rule_id=rule_id)
-            if unresolvable_host_central in central_site.openapi.hosts.get_all_names():
-                central_site.openapi.hosts.delete(unresolvable_host_central)
-            if unresolvable_host_remote in central_site.openapi.hosts.get_all_names():
-                central_site.openapi.hosts.delete(unresolvable_host_remote)
+            if hostname_central in central_site.openapi.hosts.get_all_names():
+                central_site.openapi.hosts.delete(hostname_central)
+            if hostname_remote in central_site.openapi.hosts.get_all_names():
+                central_site.openapi.hosts.delete(hostname_remote)
             central_site.openapi.changes.activate_and_wait_for_completion(
                 force_foreign_changes=True
             )

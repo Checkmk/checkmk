@@ -380,6 +380,17 @@ def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> 
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
+def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId) -> None:
+    session.initialize(user_id, auth_type="web_server")
+    session.invalidate()
+    userdb.session.save_session_infos(
+        user_id, {session.session_info.session_id: session.session_info}
+    )
+
+    userdb.session.ensure_user_can_init_session(user_id, datetime.now())
+
+
+@pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_not_init_with_previous_session(
     single_auth_request: SingleRequest,
 ) -> None:

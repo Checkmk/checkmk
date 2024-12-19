@@ -65,7 +65,7 @@ def get_container_ip(c: docker.models.containers.Container) -> str:
 def send_to_container(c: docker.models.containers.Container, text: str) -> None:
     """Send text to the STDIN of a given container."""
     s = c.attach_socket(c, params={"stdin": 1, "stream": 1})
-    s._sock.send(text.encode("utf-8"))  # noqa: SLF001
+    s._sock.send(text.encode("utf-8"))
     s.close()
 
 

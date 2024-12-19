@@ -3,8 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// provides basic api to start and stop service
-
 #pragma once
 #ifndef SERVICE_PROCESSOR_H
 #define SERVICE_PROCESSOR_H

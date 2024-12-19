@@ -354,7 +354,7 @@ public:
     }
 
     [[nodiscard]] fs::path markerFile() const {
-        return temp_fs_->data() / ac::kCmkAgentUnistall;
+        return temp_fs_->data() / ac::kCmkAgentUninstall;
     }
 
     [[nodiscard]] fs::path flagFile() const {

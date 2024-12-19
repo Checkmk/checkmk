@@ -70,6 +70,10 @@ const showAddButton = computed(() => {
     return true
   }
 
+  if (data.value.length === props.spec.unique_selection_elements.length) {
+    return false
+  }
+
   for (const element of props.spec.element_template.elements) {
     if (!usedKeys.value.includes(element['name'])) {
       return true

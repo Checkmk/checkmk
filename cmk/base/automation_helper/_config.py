@@ -31,6 +31,7 @@ class WatcherConfig(BaseModel, frozen=True):
 
 
 class ReloaderConfig(BaseModel, frozen=True):
+    active: bool  # for testing purposes
     poll_interval: float
     aggregation_interval: float
 
@@ -90,6 +91,7 @@ def default_config(
             ]
         ),
         reloader_config=ReloaderConfig(
+            active=True,
             poll_interval=1.0,
             aggregation_interval=5.0,
         ),

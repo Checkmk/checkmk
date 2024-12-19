@@ -15,6 +15,7 @@ from cmk.base.automation_helper._reloader import run
 def test_reloader(mocker: MockerFixture, cache: Cache) -> None:
     mock_reload_callback = mocker.MagicMock()
     reloader_config = ReloaderConfig(
+        active=True,
         poll_interval=0.01,
         aggregation_interval=0.0,
     )

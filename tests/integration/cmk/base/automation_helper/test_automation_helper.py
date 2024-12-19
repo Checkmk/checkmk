@@ -11,15 +11,20 @@ from pathlib import Path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
-from cmk.base.automation_helper import RELATIVE_PATH_FLAG_DISABLE_RELOADER
 from cmk.base.automation_helper._app import AutomationPayload, HealthCheckResponse
-from cmk.base.automation_helper._config import default_config
+from cmk.base.automation_helper._config import (
+    Config,
+    default_config,
+    RELATIVE_CONFIG_PATH_FOR_TESTING,
+    ReloaderConfig,
+    ServerConfig,
+)
 
 from ._helper_query_automation_helper import AutomationMode, HealthMode
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:
-    with _disable_automation_helper_reloader(site):
+    with _disable_automation_helper_reloader_and_set_worker_count_to_one(site):
         current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
             _query_automation_helper(site, HealthMode().model_dump_json())
         ).last_reload_at
@@ -81,13 +86,33 @@ def test_standard_workflow_involving_automations(site: Site) -> None:
 
 
 @contextmanager
-def _disable_automation_helper_reloader(site: Site) -> Generator[None]:
-    site.write_text_file(RELATIVE_PATH_FLAG_DISABLE_RELOADER, "")
+def _disable_automation_helper_reloader_and_set_worker_count_to_one(site: Site) -> Generator[None]:
+    default_configuration = default_config(
+        omd_root=site.root,
+        run_directory=site.root / "tmp" / "run",
+        log_directory=site.root / "var" / "log" / "automation-helper",
+    )
+    adjusted_configuration = Config(
+        server_config=ServerConfig(
+            unix_socket=default_configuration.server_config.unix_socket,
+            pid_file=default_configuration.server_config.pid_file,
+            access_log=default_configuration.server_config.access_log,
+            error_log=default_configuration.server_config.error_log,
+            num_workers=1,
+        ),
+        watcher_config=default_configuration.watcher_config,
+        reloader_config=ReloaderConfig(
+            active=False,
+            poll_interval=default_configuration.reloader_config.poll_interval,
+            aggregation_interval=default_configuration.reloader_config.aggregation_interval,
+        ),
+    )
+    site.write_text_file(RELATIVE_CONFIG_PATH_FOR_TESTING, adjusted_configuration.model_dump_json())
     site.run(["omd", "restart", "automation-helper"])
     try:
         yield
     finally:
-        site.delete_file(RELATIVE_PATH_FLAG_DISABLE_RELOADER)
+        site.delete_file(RELATIVE_CONFIG_PATH_FOR_TESTING)
         site.run(["omd", "restart", "automation-helper"])
 
 

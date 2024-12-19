@@ -28,8 +28,6 @@ from ._server import run as run_server
 from ._tracer import configure_tracer
 from ._watcher import run as run_watcher
 
-RELATIVE_PATH_FLAG_DISABLE_RELOADER = "disable-automation-helper-reloader"
-
 
 def main() -> int:
     try:
@@ -68,16 +66,13 @@ def main() -> int:
                 cache,
             ),
             (
-                nullcontext()
-                # it would be better to handle this via an environment variable, but the automation
-                # helper is started via the omd command, which does not pass through environment
-                # variables
-                if (omd_root / RELATIVE_PATH_FLAG_DISABLE_RELOADER).exists()
-                else run_reloader(
+                run_reloader(
                     config.reloader_config,
                     cache,
                     lambda: os.kill(current_pid, signal.SIGHUP),
                 )
+                if config.reloader_config.active
+                else nullcontext()
             ),
         ):
             try:

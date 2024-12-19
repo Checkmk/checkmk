@@ -51,7 +51,7 @@ def test_status_pull(
         site=central_site,
         ctl_path=agent_ctl,
         hostname=HostName("pull-host"),
-        host_attributes={},
+        host_attributes={"ipaddress": "127.0.0.1"},
     ) as controller_status:
         connection_details = controller_connection_json(controller_status, central_site)
         assert (

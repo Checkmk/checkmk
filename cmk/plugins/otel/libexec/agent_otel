@@ -8,6 +8,45 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Iterable, Sequence
+
+# TODO: fix this layer violation by putting cmk/plugins/otel into cmk-otel-collector!
+from cmk.otel_collector.constants import (  # pylint: disable=cmk-module-layer-violation
+    COLLECTOR_EXPORTED_FILES_PATH,
+)
+
+
+def _get_safe_file_list(folder: Path) -> Sequence[Path]:
+    try:
+        file_paths = tuple(folder.iterdir())
+    except FileNotFoundError:
+        # Give a message, but this is ok in general.
+        sys.stderr.write(f"No data available in {folder}\n")
+        return ()
+
+    # The collector starts a new file every second, so:
+    time.sleep(1)
+    # Investing one second here means the collector
+    # is done writing into all files in our list.
+    return file_paths
+
+
+def _output_from_file(files: Iterable[Path]) -> Iterable[tuple[int, str]]:
+    for file in files:
+        try:
+            content = file.read_text()
+        except FileNotFoundError:
+            # race condition: file was deleted between listing and reading
+            continue
+        except IsADirectoryError:
+            sys.stderr.write(f"Skipping folder {file}\n")
+
+        try:
+            timestamp = int(file.stem)
+        except ValueError:
+            sys.stderr.write(f"Cannot extract timestamp of {file}\n")
+
+        yield timestamp, content
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -23,29 +62,16 @@ def main() -> int:
     args = parse_arguments()
     folder = Path(
         os.environ["OMD_ROOT"],
-        f"tmp/check_mk/otel_collector/{args.host_name}",
+        COLLECTOR_EXPORTED_FILES_PATH,
+        args.host_name,
     )
 
-    # The collector starts a new file every second, so:
-    file_paths = list(folder.iterdir())
-    time.sleep(1)
-    # Investing one second here means the collector
-    # is done writing into all files in our list.
-
-    by_timestamp: dict[int, str] = {}
-    for file_path in file_paths:
-        try:
-            by_timestamp.setdefault(int(file_path.stem), file_path.read_text())
-        except ValueError:
-            sys.stderr.write(f"Cannot extract timestamp of file {file_path}\n")
-        except FileNotFoundError:
-            sys.stderr.write(f"No such file {file_path}\n")
-        except IsADirectoryError:
-            sys.stderr.write(f"Skip folder {file_path}\n")
+    file_paths = _get_safe_file_list(folder)
 
     sys.stdout.write("<<<otel_metrics:sep(0)>>>\n")
-    for timestamp, content in by_timestamp.items():
+    for timestamp, content in _output_from_file(file_paths):
         sys.stdout.write(f"{timestamp} {content}" + "\n")
+
     return 0
 
 

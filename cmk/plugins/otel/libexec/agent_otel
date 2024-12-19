@@ -15,6 +15,8 @@ from cmk.otel_collector.constants import (  # pylint: disable=cmk-module-layer-v
     COLLECTOR_EXPORTED_FILES_PATH,
 )
 
+_SELF_MONITORING_FOLDER = "self+monitoring"
+
 
 def _get_safe_file_list(folder: Path) -> Sequence[Path]:
     try:
@@ -54,6 +56,11 @@ def parse_arguments() -> argparse.Namespace:
         description=__doc__,
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.add_argument(
+        "--self-monitoring",
+        action="store_true",
+        help="Include self-monitoring data in agent output.",
+    )
     parser.add_argument("host_name")
     return parser.parse_args()
 
@@ -63,11 +70,12 @@ def main() -> int:
     folder = Path(
         os.environ["OMD_ROOT"],
         COLLECTOR_EXPORTED_FILES_PATH,
-        args.host_name,
     )
 
-    file_paths = _get_safe_file_list(folder)
-
+    file_paths = [
+        *_get_safe_file_list(folder / args.host_name),
+        *(_get_safe_file_list(folder / _SELF_MONITORING_FOLDER) if args.self_monitoring else ()),
+    ]
     sys.stdout.write("<<<otel_metrics:sep(0)>>>\n")
     for timestamp, content in _output_from_file(file_paths):
         sys.stdout.write(f"{timestamp} {content}" + "\n")

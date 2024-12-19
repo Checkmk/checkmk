@@ -14,13 +14,14 @@ from setproctitle import setproctitle
 
 from cmk.ccc.daemon import daemonize
 
+from cmk.utils.paths import omd_root
 from cmk.utils.redis import get_redis_client
 
 from cmk.base.automations import automations
 
 from ._app import get_application, reload_automation_config
 from ._cache import Cache
-from ._config import reloader_config, server_config, watcher_schedules
+from ._config import config_from_disk_or_default_config
 from ._log import configure_logger, LOGGER
 from ._reloader import run as run_reloader
 from ._server import run as run_server
@@ -35,8 +36,6 @@ def main() -> int:
         setproctitle("cmk-automation-helper")
         os.unsetenv("LANG")
 
-        omd_root = Path(os.environ.get("OMD_ROOT", ""))
-
         configure_tracer(omd_root)
 
         run_directory = omd_root / "tmp" / "run"
@@ -47,9 +46,9 @@ def main() -> int:
 
         configure_logger(log_directory)
 
-        redis_client = get_redis_client()
-        cache = Cache.setup(client=redis_client)
-        server_configuration = server_config(
+        cache = Cache.setup(client=get_redis_client())
+        config = config_from_disk_or_default_config(
+            omd_root=omd_root,
             run_directory=run_directory,
             log_directory=log_directory,
         )
@@ -65,7 +64,7 @@ def main() -> int:
 
         with (
             run_watcher(
-                watcher_schedules(omd_root),
+                config.watcher_config,
                 cache,
             ),
             (
@@ -75,7 +74,7 @@ def main() -> int:
                 # variables
                 if (omd_root / RELATIVE_PATH_FLAG_DISABLE_RELOADER).exists()
                 else run_reloader(
-                    reloader_config(),
+                    config.reloader_config,
                     cache,
                     lambda: os.kill(current_pid, signal.SIGHUP),
                 )
@@ -83,7 +82,7 @@ def main() -> int:
         ):
             try:
                 run_server(
-                    server_configuration,
+                    config.server_config,
                     app,
                 )
             except SystemExit:

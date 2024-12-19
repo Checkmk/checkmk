@@ -11,15 +11,15 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from ._cache import Cache, CacheError
-from ._config import Schedule
+from ._config import WatcherConfig
 from ._log import LOGGER
 
 
 @contextlib.contextmanager
-def run(schedules: Sequence[Schedule], cache: Cache) -> Generator[None]:
+def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
     LOGGER.info("[watcher] Initializing")
     observer = Observer()
-    for schedule in schedules:
+    for schedule in config.schedules:
         handler = _AutomationWatcherHandler(
             cache=cache,
             patterns=schedule.patterns,

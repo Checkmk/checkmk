@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
 from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
 from cmk.base.automation_helper import RELATIVE_PATH_FLAG_DISABLE_RELOADER
 from cmk.base.automation_helper._app import AutomationPayload, HealthCheckResponse
-from cmk.base.automation_helper._config import reloader_config
+from cmk.base.automation_helper._config import default_config
 
 from ._helper_query_automation_helper import AutomationMode, HealthMode
 
@@ -45,11 +45,15 @@ def test_config_reloading_without_reloader(site: Site) -> None:
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
+    reloader_configuration = default_config(
+        omd_root=Path(),
+        run_directory=Path(),
+        log_directory=Path(),
+    ).reloader_config
     current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
         _query_automation_helper(site, HealthMode().model_dump_json())
     ).last_reload_at
     with _fake_config_file(site):
-        reloader_configuration = reloader_config()
         wait_until(
             lambda: (
                 HealthCheckResponse.model_validate_json(

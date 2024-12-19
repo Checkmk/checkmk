@@ -23,7 +23,7 @@ from watchdog.events import (
 from tests.testlib.utils import wait_until
 
 from cmk.base.automation_helper._cache import Cache
-from cmk.base.automation_helper._config import Schedule
+from cmk.base.automation_helper._config import Schedule, WatcherConfig
 from cmk.base.automation_helper._watcher import (
     _AutomationWatcherHandler,
     run,
@@ -57,20 +57,22 @@ def get_mk_target_file(tmp_path: Path) -> Path:
 @pytest.fixture(name="observer")
 def get_observer(cache: Cache, tmp_path: Path) -> ContextManager:
     return run(
-        [
-            Schedule(
-                path=tmp_path,
-                ignore_directories=True,
-                recursive=True,
-                patterns=[_WATCHED_MK_PATTERN],
-            ),
-            Schedule(
-                path=tmp_path,
-                ignore_directories=True,
-                recursive=True,
-                patterns=[_WATCHED_TXT_FILE],
-            ),
-        ],
+        WatcherConfig(
+            schedules=[
+                Schedule(
+                    path=tmp_path,
+                    ignore_directories=True,
+                    recursive=True,
+                    patterns=[_WATCHED_MK_PATTERN],
+                ),
+                Schedule(
+                    path=tmp_path,
+                    ignore_directories=True,
+                    recursive=True,
+                    patterns=[_WATCHED_TXT_FILE],
+                ),
+            ],
+        ),
         cache,
     )
 

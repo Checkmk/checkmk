@@ -223,7 +223,7 @@ function wrap(index: number, length: number): number {
   cursor: pointer;
   background-color: var(--default-form-element-bg-color);
   margin: 0;
-  padding: 3px 2.5em 3px 6px;
+  padding: 3px 2.5em 4px 6px;
 
   .cmk-dropdown__button_arrow {
     position: absolute;

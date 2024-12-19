@@ -94,6 +94,9 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
         excludes.append("var/pnp4nagios/states/*")
         excludes.append("var/check_mk/rrd/*")
 
+    if "no-agents" in options or "no-past" in options:
+        excludes.append("var/check_mk/agents/*")
+
     if "no-logs" in options or "no-past" in options:
         # Logs of different components
         excludes.append("var/log/*.log")

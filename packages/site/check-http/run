@@ -152,7 +152,8 @@ $RUSTFLAGS \
 }
 
 run_cargo_cmd_with_explicit_package() {
-    cargo "${1}" --package check_http "${@:2}"
+    DIRNAME="${PWD##*/}" # FIXME: Package name and directory name differ
+    cargo "${1}" --package "${DIRNAME//-/_}" "${@:2}"
 }
 
 run_check_format() {

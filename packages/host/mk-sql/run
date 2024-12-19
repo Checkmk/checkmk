@@ -152,7 +152,7 @@ $RUSTFLAGS \
 }
 
 run_cargo_cmd_with_explicit_package() {
-    cargo "${1}" --package mk-sql "${@:2}"
+    cargo "${1}" --package "${PWD##*/}" "${@:2}"
 }
 
 run_check_format() {

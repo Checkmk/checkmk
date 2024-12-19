@@ -4,13 +4,22 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import './assets/main.css'
+import './_demo/assets/main.css'
 import '@/assets/variables.css'
 
 import { createApp } from 'vue'
-import DemoApp from './DemoApp.vue'
-import router from './router'
+import DemoApp from './_demo/DemoApp.vue'
+import router from './_demo/router'
 
 const app = createApp(DemoApp)
 app.use(router)
 app.mount('#app')
+
+import 'vue-router'
+export {}
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    name: string
+  }
+}

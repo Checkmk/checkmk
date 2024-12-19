@@ -34,6 +34,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve('./src'),
+        '@demo': path.resolve('./demo'),
         // This is only a temporary hack to allow resolving icons and the demo css. Do not use this in new code!
         '~cmk-frontend': path.resolve('../cmk-frontend/dist')
       }

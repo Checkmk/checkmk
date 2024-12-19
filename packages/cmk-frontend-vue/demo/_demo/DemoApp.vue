@@ -5,18 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
+import { type RouteRecordNormalized } from 'vue-router'
 import { immediateWatch } from '@/lib/watch'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import router from './router'
 
-import { filterRoutes } from './utils'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
-const routes = computed(() => {
-  return filterRoutes(router.getRoutes(), '')
-})
+const routes = ref<Array<RouteRecordNormalized>>([])
+const crumbs = ref<Array<RouteRecordNormalized>>([])
+const currentFolder = ref<string>('/')
 
 const selectedTheme = ref<'facelift' | 'modern-dark'>('facelift')
 const selectedCss = ref<'cmk' | 'none'>('cmk')
@@ -27,6 +27,35 @@ const screenshotMode = ref(currentRoute.query.screenshot === 'true')
 async function enableScreenshotMode() {
   await router.push({ path: currentRoute.path, query: { screenshot: 'true' } })
 }
+function changeToFolder(folder: string) {
+  currentFolder.value = folder
+
+  routes.value = router.getRoutes().filter((r) => r.meta.inFolder === folder)
+
+  const crumbPaths = ['/']
+  let path = '/'
+
+  for (const element of currentFolder.value.split('/')) {
+    if (element === '') {
+      continue
+    }
+    path = `${path}${element}/`
+    crumbPaths.push(path)
+  }
+
+  crumbs.value = crumbPaths.map((c) => router.getRoutes().filter((r) => r.path === c)[0]!)
+}
+
+useRouter().afterEach(() => {
+  if (currentRoute.meta.type === 'folder') {
+    changeToFolder(currentRoute.fullPath)
+  } else if (currentRoute.meta.type === 'page' && !routes.value.length) {
+    // if this is a page, and we just refreshed the page (no routes yet)
+    const fullPath = currentRoute.fullPath
+    const folder = fullPath.substring(0, fullPath.lastIndexOf('/') + 1)
+    changeToFolder(folder)
+  }
+})
 
 watch(
   () => currentRoute.query.screenshot,
@@ -89,14 +118,21 @@ immediateWatch(
         />
         <CmkButton @click="enableScreenshotMode">screenshot mode</CmkButton>
       </fieldset>
+      <ul class="breadcrumbs">
+        <li v-for="crumb in crumbs" :key="crumb.path">
+          <RouterLink :to="crumb.path">{{ crumb.meta.name }}/</RouterLink>
+        </li>
+      </ul>
       <ul>
         <li v-for="route in routes" :key="route.path">
-          <RouterLink :to="route.path">{{ route.name }}</RouterLink>
+          <RouterLink :to="route.path" :class="route.meta.type">
+            <span v-if="route.meta.type === 'folder'">🗀</span>{{ route.meta.name }}
+          </RouterLink>
         </li>
       </ul>
     </nav>
     <main>
-      <h1>{{ $route.name }}</h1>
+      <h1>{{ $route.meta.name }}</h1>
       <div class="demo-area">
         <RouterView :screenshot-mode="screenshotMode" />
       </div>
@@ -106,9 +142,19 @@ immediateWatch(
 </template>
 
 <style scoped>
-* {
-  padding: 10px;
+.demo {
+  padding: 10px 10px 10px 0;
 }
+.demo ul.breadcrumbs > li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+.demo ul.breadcrumbs > li > a {
+  padding: 0;
+  padding-right: 0.3em;
+}
+
 .demo {
   display: flex;
   color: var(--font-color);
@@ -120,24 +166,26 @@ immediateWatch(
       color: inherit;
     }
     height: fit-content;
-    border: 2px solid var(--default-form-element-bg-color);
-    background-color: var(--default-component-bg-color);
-    border-radius: 5px;
     .demo-area {
       padding: 1em;
+      border: 2px solid var(--default-form-element-bg-color);
+      background-color: var(--default-component-bg-color);
     }
   }
   nav {
-    margin: 0 1em;
+    margin: 0 1em 0 0;
     ul {
       list-style: none;
       padding: 0;
       li {
-        margin: 0.5em 0;
+        margin: 0.2em 0;
       }
     }
     a {
       color: inherit;
+    }
+    a.page.router-link-exact-active {
+      font-weight: bold;
     }
   }
   fieldset {

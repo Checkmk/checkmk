@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-// TODO: move this file CMK-19774
 import { ref, computed } from 'vue'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 import type * as vue_formspec_components from 'cmk-shared-typing/typescript/vue_formspec_components'

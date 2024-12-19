@@ -16,7 +16,7 @@ RUN apt-get update
 # lsb-release: needed for install_docker
 # msitools:  needed for `msiinfo` in test source package
 # jq: for parsing json in shell unit tests
-
+# tree: for debugging purposes (quickly get insights about eg generated or downloaded folders)
 
 RUN apt-get install -y \
     default-jdk-headless \

@@ -174,6 +174,7 @@ RestfulEndpointName = Literal[
     ".../domain-types",
     ".../element",
     ".../element-type",
+    ".../fetch",
     ".../invoke",
     ".../modify",
     ".../persist",

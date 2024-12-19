@@ -385,7 +385,7 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
 
 @Endpoint(
     object_href("quick_setup_action_result", "{job_id}"),
-    "cmk/fetch",
+    ".../fetch",
     tag_group="Checkmk Internal",
     method="get",
     path_params=[JOB_ID],
@@ -432,3 +432,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(fetch_quick_setup_stage_action_result)
     endpoint_registry.register(quick_setup_run_action)
     endpoint_registry.register(edit_quick_setup_action)
+    endpoint_registry.register(fetch_quick_setup_action_result)

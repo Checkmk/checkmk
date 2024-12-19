@@ -60,12 +60,6 @@ COPY \
     /opt/
 RUN /opt/install-nodejs.sh
 
-# timing: real 0m8.166s user 0m5.136s sys 0m1.044s
-COPY \
-    install-shellcheck.sh \
-    /opt/
-RUN /opt/install-shellcheck.sh
-
 # timing: real 0m9.666s user 0m5.302s sys 0m1.281s
 COPY \
     install-musl-tools.sh \

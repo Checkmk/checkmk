@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "7e0d15496861edec7b0642c47dcc03b9b2d867beb37eb3a925c119b1847d4450",
+  "moduleFileHash": "48a12b6158e670f460260bbbc8fb73147a89d3d109fed8842bd0d48412fcacfd",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -39,7 +39,8 @@
             "repo_license": "repo_license",
             "forked_cc_toolchain_config": "forked_cc_toolchain_config",
             "patch": "patch",
-            "otel-collector": "otel-collector"
+            "otel-collector": "otel-collector",
+            "shellcheck": "shellcheck"
           },
           "devImports": [],
           "tags": [
@@ -114,6 +115,25 @@
                 "file": "@@//:MODULE.bazel",
                 "line": 139,
                 "column": 10
+              }
+            },
+            {
+              "tagName": "@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+              "attributeValues": {
+                "build_file_content": "\nexports_files([\n    \"shellcheck\",\n])\n",
+                "sha256": "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87",
+                "strip_prefix": "shellcheck-v0.10.0",
+                "urls": [
+                  "https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.x86_64.tar.xz",
+                  "https://artifacts.lan.tribe29.com/repository/upstream-archives//shellcheck-v0.10.0.linux.x86_64.tar.xz"
+                ],
+                "name": "shellcheck"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 148,
+                "column": 13
               }
             }
           ],

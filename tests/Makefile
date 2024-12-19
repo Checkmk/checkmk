@@ -15,6 +15,7 @@ PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
+SHELLCHECK := bazel run //bazel/tools:shellcheck_bin --
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -224,7 +225,7 @@ test-docker-docker:
 
 test-docker:
 	docker run --rm -i $$(../buildscripts/docker_image_aliases/resolve.py IMAGE_HADOLINT) < ../docker_image/Dockerfile
-	shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
+	$(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
 test-format-python: test-format-python-sort test-format-python-format
@@ -404,7 +405,7 @@ test-ruff-docker:
 	../scripts/run-in-docker.sh make --quiet test-ruff
 
 test-shellcheck:
-	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
+	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
 test-shellcheck-docker:
 	../scripts/run-in-docker.sh make --quiet test-shellcheck

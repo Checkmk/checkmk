@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 
@@ -47,4 +48,17 @@ genrule(
     # * last but not least, we could just use our tools the way they were designed
     #   and make a single pass with ruff.
     cmd = r"perl -0pe 's/(\[tool\.ruff\.lint\](?:\n.*?)+select\ =\ \[)(.*?)(]\n)/$$1\"I\"$$3/g' $< > $@",
+)
+
+copy_file(
+    name = "shellcheck_binary",
+    src = "@shellcheck",
+    out = "shellcheck",
+)
+
+# Shell wrapper to execute shellcheck in the callers working directory
+sh_binary(
+    name = "shellcheck_bin",
+    srcs = ["run-shellcheck"],
+    data = [":shellcheck_binary"],
 )

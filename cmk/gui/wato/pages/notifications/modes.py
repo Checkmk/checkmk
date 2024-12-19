@@ -1149,7 +1149,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
                                     ),
                                     is_shortcut=False,
                                     is_suggested=False,
@@ -1468,7 +1470,9 @@ class ModeTestNotifications(ModeNotifications):
                                     title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notification_rule")])
+                                        folder_preserving_link(
+                                            [("mode", "notification_rule_quick_setup")]
+                                        )
                                     ),
                                     is_shortcut=False,
                                     is_suggested=False,

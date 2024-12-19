@@ -16,7 +16,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
         #added here instead of above because of disappearing file
         "//omd/packages/Python:python_tar",
         "//omd/packages/net-snmp:net-snmp_tar",
-        "//omd/packages/openssl:openssl_tar",
+        "//omd/packages/openssl:openssl_tar_" + edition,
         "//omd/packages/perl-modules",
         "//omd/packages/python3-modules:python3-modules.tar",
         "//omd/packages/rrdtool:rrdtool_perl_bindings",

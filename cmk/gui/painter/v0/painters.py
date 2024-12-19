@@ -906,7 +906,7 @@ class PainterSvcNotesURL(Painter):
         return "svc_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Services")
+        return _("Notes (URL) for Services")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")
@@ -2116,7 +2116,7 @@ class PainterHostNotesURL(Painter):
         return "host_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Notes URL for Hosts")
+        return _("Notes (URL) for Hosts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Notes URL")

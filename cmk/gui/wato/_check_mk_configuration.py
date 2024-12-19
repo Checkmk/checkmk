@@ -5062,7 +5062,7 @@ def _valuespec_extra_service_conf_service_period():
 def _valuespec_extra_host_conf_notes_url():
     return TextInput(
         label=_("URL:"),
-        title=_("Notes URL for Hosts"),
+        title=_("Notes (URL) for Hosts"),
         help=_(
             "With this setting you can set links to documentations for Hosts. "
             "You can use some macros within the URL which are dynamically "
@@ -5122,7 +5122,7 @@ ExtraServiceConfDisplayName = ServiceRulespec(
 def _valuespec_extra_service_conf_notes_url():
     return TextInput(
         label=_("URL:"),
-        title=_("Notes URL for Services"),
+        title=_("Notes (URL) for Services"),
         help=_(
             "With this setting you can set links to documentations for each service. "
             "You can use some macros within the URL which are dynamically "

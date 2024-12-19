@@ -213,55 +213,56 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
 
     errors: list[str] = []
 
-    for plugin in discovered_plugins.plugins.values():
-        match plugin:
-            case agent_based_v2.CheckPlugin():
-                if (
-                    error := _validate_agent_based_plugin_v2_ruleset_ref(
-                        plugin,
-                        rule_group=lambda x: f"{x}",
-                        ruleset_ref_attr="discovery_ruleset_name",
-                        default_params_attr="discovery_default_parameters",
-                    )
-                ) is not None:
-                    errors.append(error)
-                if (
-                    error := _validate_agent_based_plugin_v2_ruleset_ref(
-                        plugin,
-                        rule_group=RuleGroup.CheckgroupParameters,
-                        fallback_rule_group=RuleGroup.StaticChecks,
-                        ruleset_ref_attr="check_ruleset_name",
-                        default_params_attr="check_default_parameters",
-                    )
-                ) is not None:
-                    errors.append(error)
-            case agent_based_v2.InventoryPlugin():
-                if (
-                    error := _validate_agent_based_plugin_v2_ruleset_ref(
-                        plugin,
-                        rule_group=RuleGroup.InvParameters,
-                        ruleset_ref_attr="inventory_ruleset_name",
-                        default_params_attr="inventory_default_parameters",
-                    )
-                ) is not None:
-                    errors.append(error)
-            case (
-                agent_based_v2.SimpleSNMPSection()
-                | agent_based_v2.SNMPSection()
-                | agent_based_v2.AgentSection()
-            ):
-                if (
-                    error := _validate_agent_based_plugin_v2_ruleset_ref(
-                        plugin,
-                        rule_group=lambda x: f"{x}",
-                        ruleset_ref_attr="host_label_ruleset_name",
-                        default_params_attr="host_label_default_parameters",
-                    )
-                ) is not None:
-                    errors.append(error)
+    with gui_context():
+        for plugin in discovered_plugins.plugins.values():
+            match plugin:
+                case agent_based_v2.CheckPlugin():
+                    if (
+                        error := _validate_agent_based_plugin_v2_ruleset_ref(
+                            plugin,
+                            rule_group=lambda x: f"{x}",
+                            ruleset_ref_attr="discovery_ruleset_name",
+                            default_params_attr="discovery_default_parameters",
+                        )
+                    ) is not None:
+                        errors.append(error)
+                    if (
+                        error := _validate_agent_based_plugin_v2_ruleset_ref(
+                            plugin,
+                            rule_group=RuleGroup.CheckgroupParameters,
+                            fallback_rule_group=RuleGroup.StaticChecks,
+                            ruleset_ref_attr="check_ruleset_name",
+                            default_params_attr="check_default_parameters",
+                        )
+                    ) is not None:
+                        errors.append(error)
+                case agent_based_v2.InventoryPlugin():
+                    if (
+                        error := _validate_agent_based_plugin_v2_ruleset_ref(
+                            plugin,
+                            rule_group=RuleGroup.InvParameters,
+                            ruleset_ref_attr="inventory_ruleset_name",
+                            default_params_attr="inventory_default_parameters",
+                        )
+                    ) is not None:
+                        errors.append(error)
+                case (
+                    agent_based_v2.SimpleSNMPSection()
+                    | agent_based_v2.SNMPSection()
+                    | agent_based_v2.AgentSection()
+                ):
+                    if (
+                        error := _validate_agent_based_plugin_v2_ruleset_ref(
+                            plugin,
+                            rule_group=lambda x: f"{x}",
+                            ruleset_ref_attr="host_label_ruleset_name",
+                            default_params_attr="host_label_default_parameters",
+                        )
+                    ) is not None:
+                        errors.append(error)
 
-            case other:
-                assert_never(other)
+                case other:
+                    assert_never(other)
 
     return to_result(ValidationStep.RULE_SPEC_REFERENCED, errors)
 

@@ -5,10 +5,11 @@
 
 from logging import Logger
 from pathlib import Path
+from typing import assert_never, Literal
 
 import cmk.utils.paths
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.crypto.password_hashing import hash_password, matches
+from cmk.utils.crypto.password_hashing import hash_password, is_unsupported_legacy_hash, matches
 from cmk.utils.store.htpasswd import Htpasswd
 
 from cmk.gui.userdb import load_users
@@ -43,6 +44,8 @@ class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
 
             password_hash = htpasswd_entries.get(user_id)
             locked = False
+            reason: Literal["legacy_hash", "nomatch", "nohash"] = "nohash"
+
             if password_hash is not None:
                 if password_hash.startswith("!"):
                     locked = True
@@ -53,8 +56,12 @@ class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
                         "Automation user %r is locked!",
                         user_id,
                     )
-                if matches(automation_user_password, password_hash):
+                if is_unsupported_legacy_hash(password_hash):
+                    reason = "legacy_hash"
+                elif matches(automation_user_password, password_hash):
                     continue
+                else:
+                    reason = "nomatch"
 
             htpasswd.save(
                 user_id,
@@ -64,10 +71,19 @@ class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
                     else hash_password(automation_user_password)
                 ),
             )
-            logger.warning(
-                "Automationuser's (%r) secret does not match the password hash in etc/htpasswd. Updating the hash.",
-                user_id,
-            )
+            match reason:
+                case "nomatch" | "nohash":
+                    logger.warning(
+                        "Automationuser's (%r) secret does not match the password hash in etc/htpasswd. Updating the hash.",
+                        user_id,
+                    )
+                case "legacy_hash":
+                    logger.warning(
+                        "Automationuser's (%r) secret hash used an old format. Updating the hash.",
+                        user_id,
+                    )
+                case _:
+                    assert_never(reason)
 
 
 update_action_registry.register(

@@ -392,14 +392,22 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
     password_hash = htpwd_entries.get(user_id)
 
-    return (
-        secret != ""
-        and password_hash is not None
-        and not password_hash.startswith("!")  # user is locked
-        and (stored_secret := AutomationUserSecret(user_id)).exists()
-        and password_hashing.matches(Password(secret), password_hash)
-        and stored_secret.check(secret)
-    )
+    try:
+        return (
+            secret != ""
+            and password_hash is not None
+            and not password_hash.startswith("!")  # user is locked
+            and (stored_secret := AutomationUserSecret(user_id)).exists()
+            and password_hashing.matches(Password(secret), password_hash)
+            and stored_secret.check(secret)
+        )
+    except ValueError:
+        # e.g. in case of an unsupported hash
+        logger.warning(
+            "Something went wrong while authenticating user %s, probably an unsupported password hash",
+            user_id,
+        )
+        return False
 
 
 def _verify_user_login(user_id: UserId, password: Password) -> bool:

@@ -12,7 +12,7 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
-from tests.testlib.version import ABCPackageManager, code_name
+from tests.testlib.package_manager import ABCPackageManager, code_name
 
 from cmk.ccc.version import Edition
 

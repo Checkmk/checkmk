@@ -30,6 +30,8 @@ from tests.testlib.site import (
 )
 from tests.testlib.utils import is_containerized, run
 
+from cmk.ccc.version import Edition
+
 site_factory = get_site_factory(prefix="comp_")
 
 logger = logging.getLogger(__name__)
@@ -78,7 +80,9 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         description=request.node.name,
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
-        global_settings_update={"automation_helper_active": True},
+        global_settings_update=None
+        if site_factory.version.edition is Edition.CRE
+        else {"automation_helper_active": True},
     ) as central_site:
         with _increased_logging_level(central_site):
             yield central_site
@@ -108,7 +112,9 @@ def _make_connected_remote_site(
         description=site_description,
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
-        global_settings_update={"automation_helper_active": True},
+        global_settings_update=None
+        if site_factory.version.edition is Edition.CRE
+        else {"automation_helper_active": True},
     ) as remote_site:
         with _connection(central_site=central_site, remote_site=remote_site):
             yield remote_site

@@ -58,14 +58,12 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
-from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
 
 ImportTuple = tuple[HostName, HostAttributes, None]
-
-from cmk.gui.watolib.mode import ModeRegistry
 
 
 def register(mode_registry: ModeRegistry) -> None:

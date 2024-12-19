@@ -47,7 +47,8 @@ if (
     os.execv(sys.argv[0], sys.argv)
     sys.exit("Cannot run execv() %s" % sys.argv[0])
 
-import omdlib.main
+# Needs to be after the hacks above
+import omdlib.main  # noqa: E402
 
 if __name__ == "__main__":
     omdlib.main.main()

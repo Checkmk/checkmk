@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import main_modules
-
-main_modules.load_plugins()
-
 from cmk.gui.graphing._legacy import metric_info
 
+main_modules.load_plugins()
 print("test" in metric_info)

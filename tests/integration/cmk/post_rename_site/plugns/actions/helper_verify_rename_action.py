@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.post_rename_site.main import load_plugins
+from cmk.post_rename_site.registry import rename_action_registry
 
 load_plugins()
-from cmk.post_rename_site.registry import rename_action_registry
 
 print("test" in rename_action_registry)

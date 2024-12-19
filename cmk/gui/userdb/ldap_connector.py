@@ -526,9 +526,10 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return self._config["active_plugins"]
 
     def _active_sync_plugins(self) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
+        plugins = dict(all_attribute_plugins())
         for key, params in self._config["active_plugins"].items():
             try:
-                plugin = ldap_attribute_plugin_registry[key]()
+                plugin = plugins[key]()
             except KeyError:
                 continue
             if not params:
@@ -1726,13 +1727,20 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
 ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
 
 
+def all_attribute_plugins() -> list[tuple[str, type[LDAPAttributePlugin]]]:
+    return [
+        *ldap_attribute_plugin_registry.items(),
+        *config_based_custom_user_attribute_sync_plugins(),
+    ]
+
+
 def ldap_attribute_plugins_elements(
     connection: LDAPUserConnector | None,
 ) -> list[tuple[str, FixedValue | Dictionary]]:
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     elements = []
     items = sorted(
-        [(ident, plugin_class()) for ident, plugin_class in ldap_attribute_plugin_registry.items()],
+        [(ident, plugin_class()) for ident, plugin_class in all_attribute_plugins()],
         key=lambda x: x[1].title,
     )
     for key, plugin in items:
@@ -1740,56 +1748,60 @@ def ldap_attribute_plugins_elements(
     return elements
 
 
-def register_user_attribute_sync_plugins() -> None:
+def config_based_custom_user_attribute_sync_plugins() -> (
+    list[tuple[str, type[LDAPUserAttributePlugin]]]
+):
     """Register sync plug-ins for all custom user attributes (assuming simple data types)"""
-    # Remove old user attribute plugins
-    for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
-        plugin = plugin_class()
-        if not plugin.is_builtin:
-            ldap_attribute_plugin_registry.unregister(ident)
-
-    for name, attr in get_user_attributes():
-        plugin_class = type(
-            "LDAPUserAttributePlugin%s" % name.title(),
-            (LDAPUserAttributePlugin,),
-            {
-                "ident": name,
-                "title": attr.valuespec().title(),
-                "help": attr.valuespec().help(),
-                "needed_attributes": lambda self, connection, params: [
-                    params.get("attr", connection._ldap_attr(self.ident)).lower()
-                ],
-                "lock_attributes": lambda self, params: [self.ident],
-                "parameters": lambda self, connection: Dictionary(
-                    title=self.title,
-                    help=self.help,
-                    elements=[
-                        (
-                            "attr",
-                            TextInput(
-                                title=_("LDAP attribute to sync"),
-                                help=_(
-                                    "The LDAP attribute whose contents shall be synced into this custom attribute."
-                                ),
-                                default_value=lambda: ldap_attr_of_connection(
-                                    connection, self.ident
+    return [
+        (
+            name,
+            type(
+                "LDAPUserAttributePlugin%s" % name.title(),
+                (LDAPUserAttributePlugin,),
+                {
+                    "ident": name,
+                    "title": attr.valuespec().title(),
+                    "help": attr.valuespec().help(),
+                    "needed_attributes": lambda self, connection, params: [
+                        params.get("attr", connection._ldap_attr(self.ident)).lower()
+                    ],
+                    "lock_attributes": lambda self, params: [self.ident],
+                    "parameters": lambda self, connection: Dictionary(
+                        title=self.title,
+                        help=self.help,
+                        elements=[
+                            (
+                                "attr",
+                                TextInput(
+                                    title=_("LDAP attribute to sync"),
+                                    help=_(
+                                        "The LDAP attribute whose contents shall be synced into this custom attribute."
+                                    ),
+                                    default_value=lambda: ldap_attr_of_connection(
+                                        connection, self.ident
+                                    ),
                                 ),
                             ),
-                        ),
-                    ],
-                ),
-                "sync_func": lambda self,
-                connection,
-                plugin,
-                params,
-                user_id,
-                ldap_user,
-                user: _ldap_sync_simple(
-                    user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
-                ),
-            },
+                        ],
+                    ),
+                    "sync_func": lambda self,
+                    connection,
+                    plugin,
+                    params,
+                    user_id,
+                    ldap_user,
+                    user: _ldap_sync_simple(
+                        user_id,
+                        ldap_user,
+                        user,
+                        plugin,
+                        self.needed_attributes(connection, params)[0],
+                    ),
+                },
+            ),
         )
-        ldap_attribute_plugin_registry.register(plugin_class)
+        for name, attr in get_user_attributes()
+    ]
 
 
 # Helper function for gathering the default LDAP attribute names of a connection.

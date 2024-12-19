@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any
 
-from cmk.gui.config import active_config
 from cmk.gui.valuespec import TextInput, ValueSpec
 
-from . import ldap_connector
-from ._user_attribute import get_user_attributes, user_attribute_registry, UserAttribute
+from ._base import UserAttribute
 
 
 class GenericUserAttribute(UserAttribute):
@@ -53,13 +52,15 @@ class GenericUserAttribute(UserAttribute):
         return False
 
 
-def register_custom_user_attributes(attributes: list[dict[str, Any]]) -> None:
+def config_based_custom_user_attributes(
+    attributes: list[dict[str, Any]],
+) -> list[tuple[str, type[GenericUserAttribute]]]:
+    custom_attributes: list[tuple[str, type[GenericUserAttribute]]] = []
     for attr in attributes:
         if attr["type"] != "TextAscii":
             raise NotImplementedError()
 
-        @user_attribute_registry.register
-        class _LegacyUserAttribute(GenericUserAttribute):
+        class CustomUserAttribute(GenericUserAttribute):
             # Play safe: Grab all necessary data at class construction time,
             # it's highly unclear if the attr dict is mutated later or not.
             _name = attr["name"]
@@ -93,15 +94,6 @@ def register_custom_user_attributes(attributes: list[dict[str, Any]]) -> None:
             def is_custom(cls) -> bool:
                 return True
 
-    ldap_connector.register_user_attribute_sync_plugins()
+        custom_attributes.append((str(attr["name"]), CustomUserAttribute))
 
-
-def update_config_based_user_attributes() -> None:
-    _clear_config_based_user_attributes()
-    register_custom_user_attributes(active_config.wato_user_attrs)
-
-
-def _clear_config_based_user_attributes() -> None:
-    for _name, attr in get_user_attributes():
-        if attr.from_config():
-            user_attribute_registry.unregister(attr.name())
+    return custom_attributes

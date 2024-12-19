@@ -13,7 +13,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.userdb import user_attribute_registry
+from cmk.gui.userdb import all_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk import fields
@@ -231,7 +231,7 @@ class CustomUserAttributes(BaseSchema):
             original_data.pop(field, None)
 
         for name, value in original_data.items():
-            attribute = user_attribute_registry.get(name)
+            attribute = dict(all_user_attributes()).get(name)
             if attribute is None:
                 raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
             if not attribute.is_custom():

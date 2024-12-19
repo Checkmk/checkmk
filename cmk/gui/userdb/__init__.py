@@ -72,7 +72,6 @@ from ._connector import (
     UserConnector,
     UserConnectorRegistry,
 )
-from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
 from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
@@ -90,6 +89,7 @@ from ._two_factor import (
     make_two_factor_backup_codes,
 )
 from ._user_attribute import (
+    all_user_attributes,
     get_user_attributes,
     get_user_attributes_by_topic,
     user_attribute_registry,
@@ -130,6 +130,7 @@ __all__ = [
     "add_internal_attributes",
     "ActivePlugins",
     "ACTIVE_DIR",
+    "all_user_attributes",
     "builtin_connections",
     "check_credentials",
     "clear_user_connection_cache",
@@ -213,7 +214,6 @@ __all__ = [
     "SAMLUserConnectionConfig",
     "HtpasswdUserConnectionConfig",
     "TEMP_UNIT",
-    "update_config_based_user_attributes",
     "user_attribute_registry",
     "user_connector_registry",
     "user_exists",

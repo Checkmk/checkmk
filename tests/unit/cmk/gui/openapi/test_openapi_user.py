@@ -1321,7 +1321,7 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="mock_ldap_locked_attributes")
-def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
+def fixture_mock_ldap_locked_attributes(request_context: None, mocker: MockerFixture) -> MagicMock:
     """Mock the locked attributes of a LDAP user"""
     ldap_config = LDAPUserConnectionConfig(
         id="CMKTest",

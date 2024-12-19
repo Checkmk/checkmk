@@ -21,7 +21,6 @@ import cmk.ccc.version
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # pylint: disable-unused-import
 from cmk.gui import http, userdb
@@ -486,21 +485,7 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
-    monkeypatch.setattr(userdb, "user_attribute_registry", UserAttributeRegistry())
-    monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._registry, "user_attribute_registry", UserAttributeRegistry()
-    )
-    monkeypatch.setattr(
-        userdb._user_attribute._registry,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(
-        cmk.gui.userdb._custom_attributes,
-        "user_attribute_registry",
-        userdb.user_attribute_registry,
-    )
-    monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
+    # Need to use a new context here to patch the config initialized by request_context
     with monkeypatch.context() as m:
         m.setattr(
             active_config,
@@ -518,14 +503,6 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
                 }
             ],
         )
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
-
-        userdb.update_config_based_user_attributes()
-
-        assert "vip" in userdb.user_attribute_registry
-        assert "vip" in ldap.ldap_attribute_plugin_registry
 
         connection = ldap.LDAPUserConnector(
             LDAPUserConnectionConfig(
@@ -584,19 +561,15 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
             )
         )
 
-        ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
+        plugins = dict(ldap.all_attribute_plugins())
+        ldap_plugin = plugins["vip"]()
         assert ldap_plugin.title == "VIP"
         assert ldap_plugin.help == "VIP attribute"
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
         assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
-        # Test removing previously registered ones
-        with set_config(wato_user_attrs=[]):
-            userdb.update_config_based_user_attributes()
-
-        assert "vip" not in userdb.user_attribute_registry
-        assert "vip" not in ldap.ldap_attribute_plugin_registry
+        assert "vip" in dict(ldap.ldap_attribute_plugins_elements(connection)).keys()
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:

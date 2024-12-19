@@ -25,6 +25,7 @@ def register(
     info_line: Callable[[], str],
     learning_items: Callable[[], list[TopicMenuItem]],
     developer_items: Callable[[], list[TopicMenuItem]],
+    about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> None:
     mega_menu_registry.register(
         MegaMenu(
@@ -32,7 +33,7 @@ def register(
             title=_l("Help"),
             icon="main_help",
             sort_index=18,
-            topics=_help_menu_topics(learning_items, developer_items),
+            topics=_help_menu_topics(learning_items, developer_items, about_checkmk_items),
             info_line=info_line,
         )
     )
@@ -139,9 +140,29 @@ def default_developer_items() -> list[TopicMenuItem]:
     ]
 
 
+def default_about_checkmk_items() -> list[TopicMenuItem]:
+    return [
+        TopicMenuItem(
+            name="info",
+            title=_("Info"),
+            url="info.py",
+            sort_index=20,
+            icon="checkmk_logo_min",
+        ),
+        TopicMenuItem(
+            name="change_log",
+            title=_("Change log (Werks)"),
+            url="change_log.py",
+            sort_index=30,
+            icon="checkmk_logo_min",
+        ),
+    ]
+
+
 def _help_menu_topics(
     learning_items: Callable[[], list[TopicMenuItem]],
     developer_items: Callable[[], list[TopicMenuItem]],
+    about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> Callable[[], list[TopicMenuTopic]]:
     def _fun():
         return [
@@ -176,22 +197,7 @@ def _help_menu_topics(
                 name="about_checkmk",
                 title=_("About Checkmk"),
                 icon="about_checkmk",
-                items=[
-                    TopicMenuItem(
-                        name="info",
-                        title=_("Info"),
-                        url="info.py",
-                        sort_index=10,
-                        icon="checkmk_logo_min",
-                    ),
-                    TopicMenuItem(
-                        name="change_log",
-                        title=_("Change log (Werks)"),
-                        url="change_log.py",
-                        sort_index=20,
-                        icon="checkmk_logo_min",
-                    ),
-                ],
+                items=about_checkmk_items(),
             ),
         ]
 

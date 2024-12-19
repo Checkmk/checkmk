@@ -151,10 +151,15 @@ def register(
     help_info_line: Callable[[], str],
     help_learning_items: Callable[[], list[TopicMenuItem]],
     help_developer_items: Callable[[], list[TopicMenuItem]],
+    help_about_checkmk_items: Callable[[], list[TopicMenuItem]],
 ) -> None:
     pagetypes.register(mega_menu_registry)
     help_menu.register(
-        mega_menu_registry, help_info_line, help_learning_items, help_developer_items
+        mega_menu_registry,
+        help_info_line,
+        help_learning_items,
+        help_developer_items,
+        help_about_checkmk_items,
     )
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)

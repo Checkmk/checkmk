@@ -317,6 +317,10 @@ class MainMenu(LocatorHelper):
         return self.help_menu("Suggest a product improvement")
 
     @property
+    def help_saas_status_page(self) -> Locator:
+        return self.help_menu("Status page")
+
+    @property
     def help_werks(self) -> Locator:
         return self.help_menu("Change log (Werks)")
 

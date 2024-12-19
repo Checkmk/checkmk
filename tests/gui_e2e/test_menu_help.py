@@ -8,6 +8,7 @@ import pytest
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
+from tests.testlib.pytest_helpers.marks import skip_if_not_saas_edition
 
 
 @pytest.mark.parametrize(
@@ -26,6 +27,12 @@ from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
             "help_suggest_product_improvement",
             "ideas.checkmk.com",
             id="suggest_product_improvement",
+        ),
+        pytest.param(
+            "help_saas_status_page",
+            "status.checkmk.com",
+            id="saas_status_page",
+            marks=skip_if_not_saas_edition,
         ),
     ],
 )

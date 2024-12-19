@@ -7,7 +7,7 @@
 
 from pytest import MonkeyPatch
 
-from tests.testlib.base import Scenario
+from tests.testlib.base_configuration_scenario import Scenario
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition, edition

@@ -172,7 +172,7 @@ main() {
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && run_cargo_cmd_with_explicit_package clean
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && run_cargo_cmd_with_explicit_package build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_BUILD} = yes && bazel build //packages/host/cmk-agent-ctl
     test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_CLIPPY} = yes && run_cargo_cmd_with_explicit_package clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings

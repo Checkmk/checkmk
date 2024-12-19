@@ -59,7 +59,7 @@ match backend_type:
 
 walk_cache: dict[tuple[str, str, bool], list[tuple[str, bytes]]] = {}
 
-print(
+sys.stdout.write(
     repr(
         (
             get_snmp_table(
@@ -72,4 +72,5 @@ print(
             walk_cache,
         )
     )
+    + "\n"
 )

@@ -441,7 +441,6 @@ def test_tracing_with_background_job(tmp_path: Path) -> None:
                     interval=0.1,
                 )
             except TimeoutError:
-                print(job.get_status())
                 raise
 
             status = job.get_status()

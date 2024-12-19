@@ -917,13 +917,15 @@ def main(argv=None):
         # default cases always must be there
         api_client = PrometheusAPI(session)
         api_data = ApiData(api_client, exporter_options)
-        print(api_data.prometheus_build_section())
-        print(api_data.promql_section(config_args["custom_services"]))
+        sys.stdout.write(api_data.prometheus_build_section() + "\n")
+        sys.stdout.write(api_data.promql_section(config_args["custom_services"]) + "\n")
         if "cadvisor" in exporter_options:
-            print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])), sep="\n")
+            sys.stdout.write(
+                "\n".join(api_data.cadvisor_section(exporter_options["cadvisor"])) + "\n"
+            )
         if "node_exporter" in exporter_options:
-            print(
-                *list(api_data.node_exporter_section(exporter_options["node_exporter"])), sep="\n"
+            sys.stdout.write(
+                "\n".join(api_data.node_exporter_section(exporter_options["node_exporter"])) + "\n"
             )
 
     except Exception as e:

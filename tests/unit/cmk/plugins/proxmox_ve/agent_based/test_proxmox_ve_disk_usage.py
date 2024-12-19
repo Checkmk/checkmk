@@ -88,7 +88,6 @@ def test_check_proxmox_ve_disk_usage(
     params: Mapping[str, object], section: pvdu.Section, expected_results: CheckResult
 ) -> None:
     results = tuple(pvdu.check_proxmox_ve_disk_usage(params, section))
-    print("\n" + "\n".join(map(str, results)))
     assert results == expected_results
 
 

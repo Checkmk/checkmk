@@ -674,8 +674,6 @@ def test_parse_juniper_trpz_aps(
 )
 def test_check_juniper_trpz_aps(section: SectionAps, expected_results: CheckResult) -> None:
     results = list(check_juniper_trpz_aps(section))
-    for r in results:
-        print(r)
     assert results == expected_results
 
 
@@ -698,8 +696,6 @@ def test_cluster_check_juniper_trpz_aps(
     node_sections: Mapping[str, SectionAps | None], expected_results: CheckResult
 ) -> None:
     results = list(cluster_check_juniper_trpz_aps(node_sections))
-    for r in results:
-        print(r)
     assert results == expected_results
 
 

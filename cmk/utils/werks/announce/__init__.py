@@ -5,6 +5,7 @@
 
 import argparse
 import itertools
+import sys
 from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
@@ -101,11 +102,12 @@ def main(args: argparse.Namespace) -> None:
         raise NotImplementedError(f"Can not create announcement for {version.release.release_type}")
 
     template = env.get_template(f"announce.{args.format}.jinja2")
-    print(
+    sys.stdout.write(
         template.render(
             werks=werks,
             release_type=release_type,
             version=args.version,
             feedback_mail=feedback_mail,
         )
+        + "\n"
     )

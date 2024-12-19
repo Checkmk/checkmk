@@ -149,12 +149,12 @@ def patch_windows_version(
     """
 
     if len(new_version) != 3:
-        print("New version must have size 3")
+        sys.stdout.write("New version must have size 3\n")
         return False
 
     p = f_name
     if not p.exists():
-        print(f"The file {p} isn't found")
+        sys.stdout.write(f"The file {p} isn't found\n")
         return False
 
     data = p.read_bytes()
@@ -166,7 +166,7 @@ def patch_windows_version(
             p.write_bytes(ret)
             return True
 
-    print("VersionNT matrix isn't found, impossible to patch")
+    sys.stdout.write("VersionNT matrix isn't found, impossible to patch\n")
     return False
 
 
@@ -242,6 +242,6 @@ if __name__ == "__main__":
             )
             sys.exit(0 if success else 1)
         case _:
-            print(f"Invalid mode '{params.mode}'")
+            sys.stdout.write(f"Invalid mode '{params.mode}'\n")
 
     sys.exit(1)

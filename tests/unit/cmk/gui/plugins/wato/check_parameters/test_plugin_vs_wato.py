@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import logging
 import typing as t
-from pprint import pprint
+from pprint import pformat
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
@@ -24,6 +25,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     RulespecSubGroup,
 )
+
+logger = logging.getLogger(__name__)
 
 T = t.TypeVar("T")
 TF = t.TypeVar("TF", bound=Rulespec)
@@ -310,7 +313,7 @@ class ErrorReporter:
         if element in self._known_wato_unused:
             self._known_wato_unused.remove(element)
             return
-        print(f"{wato.get_description()} is not used by any plugin")
+        logger.info(f"{wato.get_description()} is not used by any plugin")
         self._failed |= True
 
     def report_wato_missing(self, plugin: PluginProtocol) -> None:
@@ -318,7 +321,7 @@ class ErrorReporter:
         if element in self._known_wato_missing:
             self._known_wato_missing.remove(element)
             return
-        print(
+        logger.info(
             f"{plugin.get_description()} wants to use "
             f"wato ruleset '{plugin.get_merge_name()}' but this can not be found"
         )
@@ -340,11 +343,11 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        print(
+        logger.info(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
-        print("    wato   handles item:", wato.has_item())
-        print("    plug-in handles items:", plugin.has_item())
+        logger.info("    wato   handles item: %r", wato.has_item())
+        logger.info("    plug-in handles items: %r", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -353,7 +356,7 @@ class ErrorReporter:
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
-        print(
+        logger.info(
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
         )
@@ -379,8 +382,8 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        pprint(self._known_wato_missing)
-        pprint(self._known_wato_unused)
+        logger.info(pformat(self._known_wato_missing))
+        logger.info(pformat(self._known_wato_unused))
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 

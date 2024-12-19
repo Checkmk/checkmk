@@ -203,9 +203,8 @@ def test_HTMLWriter() -> None:
                     id_="something",
                     class_="test_%s" % a,
                 )
-            except Exception as e:
+            except Exception:
                 traceback.print_exc()
-                print(e)
 
 
 @pytest.mark.usefixtures("request_context")

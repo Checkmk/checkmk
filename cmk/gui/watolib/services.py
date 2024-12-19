@@ -1052,7 +1052,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def discover(self, action: DiscoveryAction, *, raise_errors: bool) -> None:
         """Target function of the background job"""
-        print("Starting job...")
+        sys.stdout.write("Starting job...\n")
         self._pre_discovery_preview = self._get_discovery_preview()
 
         if action == DiscoveryAction.REFRESH:
@@ -1065,7 +1065,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
         else:
             raise NotImplementedError()
-        print("Completed.")
+        sys.stdout.write("Completed.\n")
 
     def _perform_service_scan(self, *, raise_errors: bool) -> None:
         """The service-discovery-preview automation refreshes the Checkmk internal cache and makes

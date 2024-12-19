@@ -9,6 +9,7 @@ import difflib
 import json
 import logging
 import re
+import sys
 import textwrap
 from collections.abc import Sequence
 from email.headerregistry import Address
@@ -389,7 +390,9 @@ def send_mail(
         if args.do_send_mail:
             send_mail_sendmail(mail, MailString(str(mail_address)), MailString(""))
         else:
-            print(textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True))
+            sys.stdout.write(
+                textwrap.indent(mail.as_string(), "DRY RUN: ", lambda line: True) + "\n"
+            )
 
 
 def main(argparse_args: argparse.Namespace) -> None:
@@ -449,7 +452,7 @@ def main(argparse_args: argparse.Namespace) -> None:
         if args.do_add_notes:
             add_note(repo, werk_commit.commit, args)
         else:
-            print(f"DRY RUN: add note to commit {werk_commit.commit}")
+            sys.stdout.write(f"DRY RUN: add note to commit {werk_commit.commit}\n")
 
         for change, werk in change_with_werk:
             send_mail(werk, change, template, translator, args)

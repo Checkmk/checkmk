@@ -253,10 +253,13 @@ if __name__ == "__main__":
 
     import cmk.utils.paths
 
-    print(
-        create_settings(
-            str(cmk_version.__version__),
-            cmk.utils.paths.omd_root,
-            sys.argv,
+    sys.stdout.write(
+        repr(
+            create_settings(
+                str(cmk_version.__version__),
+                cmk.utils.paths.omd_root,
+                sys.argv,
+            )
         )
+        + "\n"
     )

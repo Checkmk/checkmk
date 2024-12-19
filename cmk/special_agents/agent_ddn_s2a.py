@@ -60,8 +60,8 @@ def main(sys_argv=None):
     ]
 
     for command, section in sections:
-        print("<<<%s>>>" % section)
+        sys.stdout.write("<<<%s>>>\n" % section)
         sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         sock.connect((ip_address, port))
-        print(query(sock, commandstring(command, username, password)))
+        sys.stdout.write(query(sock, commandstring(command, username, password)) + "\n")
         sock.close()

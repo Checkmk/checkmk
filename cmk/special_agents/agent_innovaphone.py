@@ -64,8 +64,8 @@ def get_informations(
             if child.get("c"):
                 c = child.get("c")
     if c:
-        print("<<<%s>>>" % name)
-        print(org_name + " " + c)
+        sys.stdout.write("<<<%s>>>\n" % name)
+        sys.stdout.write(org_name + " " + c + "\n")
 
 
 def pri_channels_section(

@@ -4,6 +4,7 @@ rules:
       pattern-either:
           - pattern: print(...)
           - pattern: pprint(...)
+          # - pattern: pprint.pprint(...)
       message: Found call to print, which may be some left over debug output.
       languages: [python]
       severity: ERROR
@@ -11,8 +12,7 @@ rules:
           # TODO: Make this an exclude list
           include:
               - "bin"
-              # TODO: Why don't we check the whole cmk module?
-              - "cmk/base"
+              - "cmk"
               - "packages"
               - "notifications"
               - "active_checks"

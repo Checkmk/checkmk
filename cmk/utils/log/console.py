@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import sys
 from typing import TextIO
 
 from ._level import VERBOSE as VERBOSE
@@ -13,32 +14,50 @@ _console = logging.getLogger("cmk.base.console")
 
 
 def error(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(logging.ERROR):
-        print(text, file=file, flush=True)
+        file.write(text + "\n")
+        file.flush()
 
 
 def warning(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(logging.WARNING):
-        print(text, file=file, flush=True)
+        file.write(text + "\n")
+        file.flush()
 
 
 def info(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(logging.INFO):
-        print(text, file=file, flush=True)
+        file.write(text + "\n")
+        file.flush()
 
 
 # TODO: Figure out where this is used for a "real" console vs. some internal protocol.
 # The latter should really be disentangled from this file here.
 def verbose_no_lf(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(VERBOSE):
-        print(text, end="", file=file, flush=True)
+        file.write(text)
+        file.flush()
 
 
 def verbose(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(VERBOSE):
-        print(text, file=file, flush=True)
+        file.write(text + "\n")
+        file.flush()
 
 
 def debug(text: str, *, file: TextIO | None = None) -> None:
+    if file is None:
+        file = sys.stdout
     if _console.isEnabledFor(logging.DEBUG):
-        print(text, file=file, flush=True)
+        file.write(text + "\n")
+        file.flush()

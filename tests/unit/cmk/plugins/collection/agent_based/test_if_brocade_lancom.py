@@ -621,7 +621,6 @@ def test_parse_if_lancom(string_table: list[StringByteTable], expected_results: 
         (r.index, r.descr, r.extra_info, r.type, r.speed)
         for r in (iface.attributes for iface in parse_if_lancom(string_table))
     )
-    print("\n" + ",\n".join(map(str, results)))
     assert results == expected_results
 
 

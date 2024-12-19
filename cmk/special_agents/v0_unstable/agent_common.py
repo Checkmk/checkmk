@@ -148,7 +148,7 @@ def _special_agent_main_core(
     try:
         return main_fn(args)
     except CannotRecover as exc:
-        print(exc, file=sys.stderr)
+        sys.stderr.write(f"{exc}\n")
     except Exception:
         if args.debug:
             raise

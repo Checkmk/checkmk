@@ -1432,8 +1432,6 @@ def test_openapi_minimum_configuration(clients: ClientRegistry) -> None:
     create_resp = clients.User.create(username="user", fullname="User Test")
     get_resp = clients.User.get(username="user")
 
-    print(create_resp.json)
-    print(get_resp.json)
     assert create_resp.json == get_resp.json
     assert create_resp.json["id"] == "user"
     assert create_resp.json["extensions"]["fullname"] == "User Test"

@@ -189,6 +189,7 @@ create_venv(
     destination_folder = ".venv",
     requirements_txt = "@//:requirements_all_lock.txt",
     site_packages_extra_files = [":sitecustomize.py"],
+    whls = ["@rrdtool_native//:rrdtool_python_wheel"],
 )
 
 copy_file(

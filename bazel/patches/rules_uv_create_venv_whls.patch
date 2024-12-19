@@ -1,0 +1,69 @@
+diff --git a/uv/private/venv.bzl b/uv/private/venv.bzl
+index 1ec9035..399e8cf 100644
+--- a/uv/private/venv.bzl
++++ b/uv/private/venv.bzl
+@@ -1,12 +1,12 @@
+ "uv based venv generation"
+ 
++load("@rules_python//python:packaging.bzl", "PyWheelInfo")
+ load(":transition_to_target.bzl", "transition_to_target")
+ 
+ _PY_TOOLCHAIN = "@bazel_tools//tools/python:toolchain_type"
+ 
+ def _uv_template(ctx, template, executable):
+     py_toolchain = ctx.toolchains[_PY_TOOLCHAIN]
+-
+     ctx.actions.expand_template(
+         template = template,
+         output = executable,
+@@ -16,14 +16,17 @@ def _uv_template(ctx, template, executable):
+             "{{resolved_python}}": py_toolchain.py3_runtime.interpreter.short_path,
+             "{{destination_folder}}": ctx.attr.destination_folder,
+             "{{site_packages_extra_files}}": " ".join(["'" + file.short_path + "'" for file in ctx.files.site_packages_extra_files]),
+-            "{{args}}": " \\\n    ".join(ctx.attr.uv_args),
++            "{{args}}": " \\\n    ".join(
++                ctx.attr.uv_args +
++                [whl[PyWheelInfo].wheel.short_path for whl in ctx.attr.whls],
++            ),
+         },
+     )
+ 
+ def _runfiles(ctx):
+     py_toolchain = ctx.toolchains[_PY_TOOLCHAIN]
+     runfiles = ctx.runfiles(
+-        files = [ctx.file.requirements_txt] + ctx.files.site_packages_extra_files,
++        files = [ctx.file.requirements_txt] + ctx.files.site_packages_extra_files + ctx.files.whls,
+         transitive_files = py_toolchain.py3_runtime.files,
+     )
+     runfiles = runfiles.merge(ctx.attr._uv[0].default_runfiles)
+@@ -45,13 +48,21 @@ _venv = rule(
+         "_uv": attr.label(default = "@multitool//tools/uv", executable = True, cfg = transition_to_target),
+         "template": attr.label(allow_single_file = True),
+         "uv_args": attr.string_list(default = []),
++        "whls": attr.label_list(default = [], providers = [PyWheelInfo]),
+     },
+     toolchains = [_PY_TOOLCHAIN],
+     implementation = _venv_impl,
+     executable = True,
+ )
+ 
+-def create_venv(name, requirements_txt = None, target_compatible_with = None, destination_folder = None, site_packages_extra_files = [], uv_args = []):
++def create_venv(
++        name,
++        requirements_txt = None,
++        target_compatible_with = None,
++        destination_folder = None,
++        site_packages_extra_files = [],
++        uv_args = [],
++        whls = []):
+     _venv(
+         name = name,
+         destination_folder = destination_folder,
+@@ -59,6 +70,7 @@ def create_venv(name, requirements_txt = None, target_compatible_with = None, de
+         requirements_txt = requirements_txt or "//:requirements.txt",
+         target_compatible_with = target_compatible_with,
+         uv_args = uv_args,
++        whls = whls,
+         template = "@rules_uv//uv/private:create_venv.sh",
+     )
+ 

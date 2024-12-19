@@ -22,6 +22,7 @@ single_version_override(
     patches = [
         "//bazel/patches:rules_uv_rm_venv.patch",
         "//bazel/patches:rules_uv_quiet.patch",
+        "//bazel/patches:rules_uv_create_venv_whls.patch",
     ],
 )
 

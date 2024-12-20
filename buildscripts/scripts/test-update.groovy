@@ -2,28 +2,6 @@
 
 /// file: test-update.groovy
 
-def build_make_target(edition, cross_edition_target="") {
-    def prefix = "test-update-";
-    def suffix = "-docker";
-    switch(edition) {
-        case 'enterprise':
-            switch(cross_edition_target) {
-                case 'cce':
-                case 'cme':
-                    // from CEE to CCE or CME
-                    return prefix + "cross-edition-" + cross_edition_target + suffix;
-                default:
-                    return prefix + "cee" + suffix;
-            }
-        case 'cloud':
-            return prefix + "cce" + suffix;
-        case 'saas':
-            return prefix + "cse" + suffix;
-        default:
-            error("The update tests are not yet enabled for edition: " + edition);
-    }
-}
-
 def main() {
     check_job_parameters([
         "VERSION",
@@ -48,24 +26,21 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def edition = params.EDITION;
+    def all_distros = versioning.get_distros(override: "all");
     def distros = versioning.get_distros(edition: edition, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def docker_tag = versioning.select_docker_tag(
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
-    def cross_edition_target = env.CROSS_EDITION_TARGET ?: "";
-    if (cross_edition_target) {
-        // see CMK-18366
-        distros = ["ubuntu-22.04"];
-    }
-    def make_target = build_make_target(EDITION, cross_edition_target);
+    def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
 
     print(
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
         |edition:.................. │${edition}│
+        |cross_edition_target:..... │${cross_edition_target}│
         |branch_name:.............. │${branch_name}│
         |safe_branch_name:......... │${safe_branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -74,24 +49,51 @@ def main() {
         |docker_tag:............... │${docker_tag}│
         |cross_edition_target:..... |${cross_edition_target}|
         |checkout_dir:............. │${checkout_dir}│
-        |make_target:.............. |${make_target}|
         |===================================================
         """.stripMargin());
 
-    stage("Run `make ${make_target}`") {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            testing_helper.run_make_targets(
-                DOCKER_GROUP_ID: get_docker_group_id(),
-                DISTRO_LIST: distros,
-                EDITION: edition,
-                VERSION: VERSION,
-                DOCKER_TAG: docker_tag,
-                MAKE_TARGET: make_target,
-                BRANCH: branch_name,
-                cmk_version: cmk_version_rc_aware,
-                OTEL_EXPORTER_OTLP_ENDPOINT: "",
-            );
+    def build_for_parallel = [:];
+    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-3].join('/')}";
+    def relative_job_name = "${base_folder}/builders/test-update-single-f12less";
+
+    all_distros.each { item ->
+        def distro = item;
+        def stepName = "Update test for ${distro}";
+
+        build_for_parallel[stepName] = { ->
+            def run_condition = distro in distros;
+            println("Should ${distro} be tested? ${run_condition}");
+
+            /// this makes sure the whole parallel thread is marked as skipped
+            if (! run_condition){
+                Utils.markStageSkippedForConditional(stepName);
+            }
+
+            smart_stage(
+                name: stepName,
+                condition: run_condition,
+                raiseOnError: true,
+            ) {
+                build(
+                    job: relative_job_name,
+                    propagate: true,  // Raise any errors
+                    parameters: [
+                        string(name: "DISTRO", value: item),
+                        string(name: "EDITION", value: edition),
+                        string(name: "VERSION", value: version),
+                        string(name: "DOCKER_TAG", value: docker_tag),
+                        string(name: "CROSS_EDITION_TARGET", value: cross_edition_target),
+                        string(name: "CUSTOM_GIT_REF", value: CUSTOM_GIT_REF),
+                        string(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: CIPARAM_OVERRIDE_BUILD_NODE),
+                        string(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
+                    ],
+                );
+            }
         }
+    }
+
+    stage('Run update tests') {
+        parallel build_for_parallel;
     }
 }
 
